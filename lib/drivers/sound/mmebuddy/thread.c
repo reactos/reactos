@@ -11,6 +11,7 @@
     History:
         4 July 2008 - Created
         5 July 2008 - Implemented basic request processing
+        6 July 2008 - Added I/O completion handling
 */
 
 /*
@@ -24,21 +25,24 @@
 #include <mmebuddy.h>
 
 
+/*
+    This is the sound thread's processing loop. Its job is to aid in
+    asynchronous streaming of sound data with a kernel-mode driver. It's
+    basically a loop in which we wait for a request from the client, or
+    completed data from the kernel-mode driver.
+
+    When either of these events occur, the relevant details get passed on
+    to one of the routines specified when the thread was started.
+*/
 DWORD WINAPI
 SoundThreadProc(
     IN  LPVOID lpParameter)
 {
     PSOUND_DEVICE_INSTANCE Instance;
     PSOUND_THREAD Thread;
-    /*HANDLE Events[2];*/
 
     Instance = (PSOUND_DEVICE_INSTANCE) lpParameter;
     Thread = Instance->Thread;
-
-/*
-    Events[0] = Thread->KillEvent;
-    Events[1] = Thread->RequestEvent;
-*/
 
     Thread->Running = TRUE;
 
@@ -76,7 +80,29 @@ SoundThreadProc(
         else if ( WaitResult == WAIT_IO_COMPLETION )
         {
             /* This gets called after I/O completion */
-            /* Do we need to do anything special here? */
+            PSOUND_THREAD_COMPLETED_IO CompletionData;
+            SOUND_ASSERT(Thread->FirstCompletedIo);
+
+            SOUND_DEBUG(L"Outside I/O completion APC");
+
+            /*
+                Purge the completed data queue
+                FIXME? This will be done in the WRONG ORDER!
+                Is this such a problem? The caller won't care. We'll need
+                to remove them from our queue though!
+            */
+            while ( (CompletionData = Thread->FirstCompletedIo) )
+            {
+                /* Call high-level custom I/O completion routine */
+                Thread->IoCompletionHandler(Instance,
+                                            CompletionData->ContextData,
+                                            CompletionData->BytesTransferred);
+
+                /* TODO: I'm sure I've forgotten something ... */
+
+                Thread->FirstCompletedIo = CompletionData->Next;
+                FreeMemory(CompletionData);
+            }
         }
     }
 
@@ -141,6 +167,7 @@ MMRESULT
 StartSoundThread(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
     IN  LPVOID PrivateThreadData)
 {
     PSOUND_THREAD SoundThread = NULL;
@@ -166,10 +193,14 @@ StartSoundThread(
     SoundThread->PrivateData = PrivateThreadData;
     SoundThread->Running = FALSE;
     SoundThread->Handle = INVALID_HANDLE_VALUE;
+
     SoundThread->RequestHandler = RequestHandler;
     SoundThread->ReadyEvent = INVALID_HANDLE_VALUE;
     SoundThread->RequestEvent = INVALID_HANDLE_VALUE;
     SoundThread->DoneEvent = INVALID_HANDLE_VALUE;
+
+    SoundThread->IoCompletionHandler = IoCompletionHandler;
+    SoundThread->FirstCompletedIo = NULL;
 
     /* No need to initialise the requests */
 
@@ -292,4 +323,93 @@ GetSoundThreadPrivateData(
     *PrivateData = SoundDeviceInstance->Thread->PrivateData;
 
     return MMSYSERR_NOERROR;
+}
+
+VOID CALLBACK
+CompleteSoundThreadIo(
+    IN  DWORD dwErrorCode,
+    IN  DWORD dwNumberOfBytesTransferred,
+    IN  LPOVERLAPPED lpOverlapped)
+{
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_THREAD_OVERLAPPED SoundThreadOverlapped;
+    PSOUND_THREAD_COMPLETED_IO CompletionData;
+
+    SoundThreadOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
+    SOUND_ASSERT(SoundThreadOverlapped);
+
+    CompletionData = SoundThreadOverlapped->CompletionData;
+    SOUND_ASSERT(CompletionData);
+
+    SoundDeviceInstance = SoundThreadOverlapped->SoundDeviceInstance;
+    SOUND_ASSERT(SoundDeviceInstance);
+    SOUND_ASSERT(SoundDeviceInstance->Thread);
+
+    SOUND_DEBUG(L"New I/O Completion Callback Called");
+
+    /* This is going at the start of the list */
+    CompletionData->Next = SoundDeviceInstance->Thread->FirstCompletedIo;
+    SoundDeviceInstance->Thread->FirstCompletedIo = CompletionData;
+
+    /* Whatever information was supplied to us originally by the caller */
+    CompletionData->ContextData = SoundThreadOverlapped->ContextData;
+
+    /* How much data was transferred */
+    CompletionData->BytesTransferred = dwNumberOfBytesTransferred;
+
+    /* Overlapped structure gets freed now, but we still need the completion */
+    FreeMemory(SoundThreadOverlapped);
+
+    SOUND_DEBUG(L"New I/O Completion Callback Done");
+}
+
+MMRESULT
+OverlappedWriteToSoundDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID ContextData,
+    IN  PVOID Buffer,
+    IN  DWORD BufferSize)
+{
+    PSOUND_THREAD_OVERLAPPED Overlapped;
+    PSOUND_THREAD_COMPLETED_IO CompletedIo;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! SoundDeviceInstance->Thread )
+        return MMSYSERR_ERROR;  /* FIXME - better return code? */
+
+    if ( ! Buffer )
+        return MMSYSERR_INVALPARAM;
+
+    /* This will contain information about the write operation */
+    Overlapped = AllocateMemoryFor(SOUND_THREAD_OVERLAPPED);
+    if ( ! Overlapped )
+        return MMSYSERR_NOMEM;
+
+    /* We collect this on I/O completion */
+    CompletedIo = AllocateMemoryFor(SOUND_THREAD_COMPLETED_IO);
+    if ( ! CompletedIo )
+    {
+        FreeMemory(Overlapped);
+        return MMSYSERR_NOMEM;
+    }
+
+    ZeroMemory(Overlapped, sizeof(SOUND_THREAD_OVERLAPPED));
+    ZeroMemory(CompletedIo, sizeof(SOUND_THREAD_COMPLETED_IO));
+
+    /* We'll want to know which device to queue completion data to */
+    Overlapped->SoundDeviceInstance = SoundDeviceInstance;
+
+    /* Caller-supplied data, gets passed back on completion */
+    Overlapped->ContextData = ContextData;
+
+    /* The completion data buffer which will be filled later */
+    Overlapped->CompletionData = CompletedIo;
+
+    return WriteSoundDeviceBuffer(SoundDeviceInstance,
+                                  Buffer,
+                                  BufferSize,
+                                  CompleteSoundThreadIo,
+                                  (LPOVERLAPPED) Overlapped);
 }

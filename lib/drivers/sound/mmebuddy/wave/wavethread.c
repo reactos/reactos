@@ -10,6 +10,7 @@
 
     History:
         4 July 2008 - Created
+        6 July 2008 - Restructured to hide some of the low-level threading
 
     TODO:
         Track if a buffer has already been inserted?
@@ -20,35 +21,10 @@
 
 #include <mmebuddy.h>
 
-MMRESULT
-WriteWaveBufferToSoundDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVE_THREAD_DATA ThreadData,
-    IN  PWAVEHDR WaveHeader);
 
-
-
-VOID CALLBACK
-WaveBufferCompleted(
-    IN  DWORD dwErrorCode,
-    IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped)
-{
-    PWAVE_OVERLAPPED WaveOverlapped = (PWAVE_OVERLAPPED) lpOverlapped;
-    /*PWAVE_THREAD_DATA ThreadData = WaveOverlapped->ThreadData;*/
-    WCHAR msg[1024];
-
-    wsprintf(msg, L"Buffer %x done\nWrote %d bytes\nErrCode %d",
-             WaveOverlapped->Header,
-             dwNumberOfBytesTransferred,
-             dwErrorCode);
-
-    MessageBox(0, msg, L"File IO Callback", MB_OK | MB_TASKMODAL);
-
-    WriteWaveBufferToSoundDevice(WaveOverlapped->SoundDeviceInstance,
-                                 WaveOverlapped->ThreadData,
-                                 WaveOverlapped->Header);
-}
+/*
+    Just a neat wrapper around the writing routine.
+*/
 
 MMRESULT
 WriteWaveBufferToSoundDevice(
@@ -60,21 +36,16 @@ WriteWaveBufferToSoundDevice(
     SOUND_ASSERT(ThreadData);
     SOUND_ASSERT(WaveHeader);
 
-    /* Prepare our overlapped data */
-    ZeroMemory(&ThreadData->Overlapped, sizeof(WAVE_OVERLAPPED));
-    ThreadData->Overlapped.SoundDeviceInstance = SoundDeviceInstance;
-    ThreadData->Overlapped.ThreadData = ThreadData;
-    ThreadData->Overlapped.Header = WaveHeader;
-
-    return WriteSoundDeviceBuffer(SoundDeviceInstance,
-                                  WaveHeader->lpData,
-                                  WaveHeader->dwBufferLength,
-                                  WaveBufferCompleted,
-                                  (LPOVERLAPPED) &ThreadData->Overlapped);
+    return OverlappedWriteToSoundDevice(SoundDeviceInstance,
+                                        (PVOID) WaveHeader,
+                                        WaveHeader->lpData,
+                                        WaveHeader->dwBufferLength);
 }
 
 
-/* Internal dispatch routines */
+/*
+    Private thread dispatch routines
+*/
 
 MMRESULT
 SubmitWaveBuffer(
@@ -123,7 +94,9 @@ SubmitWaveBuffer(
 }
 
 
-/* Thread callback */
+/*
+    Thread request dispatcher
+*/
 
 MMRESULT
 ProcessWaveThreadRequest(
@@ -156,6 +129,48 @@ ProcessWaveThreadRequest(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+
+/*
+    I/O completion
+    Called from outside the overlapped I/O completion APC
+*/
+
+VOID
+ProcessWaveIoCompletion(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PVOID ContextData,
+    IN  DWORD BytesTransferred)
+{
+    LPWAVEHDR WaveHeader = (LPWAVEHDR) ContextData;
+
+    SOUND_DEBUG(L"ProcessWaveIoCompletion called :)");
+    SOUND_DEBUG_HEX(WaveHeader);
+
+    /*
+        At this point we know:
+        - The sound device instance involved in the transaction
+        - The wave header for the buffer which just completed
+        - How much data was transferred
+
+        The next task is to figure out how much of the buffer
+        got played, and enqueue the next buffer if the current
+        one has been completed.
+
+        Basically, this routine is responsible for keeping the
+        stream of audio data to/from the sound driver going.
+
+        When no more WAVEHDRs are queued (ie, WaveHeader->lpNext
+        is NULL), no more buffers are submitted and the sound
+        thread will wait for more requests from the client before
+        it does anything else.
+    */
+}
+
+
+/*
+    Wave thread start/stop routines
+*/
+
 MMRESULT
 StartWaveThread(
     IN  PSOUND_DEVICE_INSTANCE Instance)
@@ -181,6 +196,7 @@ StartWaveThread(
     /* Kick off the thread */
     Result = StartSoundThread(Instance,
                               ProcessWaveThreadRequest,
+                              ProcessWaveIoCompletion,
                               WaveThreadData);
     if ( Result != MMSYSERR_NOERROR )
     {
