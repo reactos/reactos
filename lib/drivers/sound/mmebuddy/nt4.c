@@ -167,7 +167,9 @@ EnumerateNt4ServiceSoundDevices(
     if ( ! ServiceName )
         return MMSYSERR_INVALPARAM;
 
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
+    /* Device type zero means "all" */
+    if ( ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) ) &&
+         ( DeviceType != 0 ) )
         return MMSYSERR_INVALPARAM;
 
     while ( OpenSoundDeviceRegKey(ServiceName, KeyIndex, &Key) == MMSYSERR_NOERROR )

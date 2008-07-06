@@ -48,11 +48,13 @@
     Some memory allocation helper macros
 */
 
+/*
 #define AllocateMemory(size) \
     HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
 
 #define FreeMemory(ptr) \
     HeapFree(GetProcessHeap(), 0, ptr)
+*/
 
 #define AllocateMemoryFor(thing) \
     (thing*) AllocateMemory(sizeof(thing))
@@ -248,22 +250,21 @@ GetSoundDevicePath(
     IN  PSOUND_DEVICE SoundDevice,
     OUT LPWSTR* DevicePath);
 
-VOID
-RemoveAllSoundDevices();
-
-BOOLEAN
-RemoveSoundDevices(
-    IN  UCHAR DeviceType);
-
 BOOLEAN
 AddSoundDevice(
     IN  UCHAR DeviceType,
     IN  PWSTR DevicePath);
 
-BOOLEAN
+MMRESULT
 RemoveSoundDevice(
-    IN  UCHAR DeviceType,
-    IN  ULONG Index);
+    IN  PSOUND_DEVICE SoundDevice);
+
+MMRESULT
+RemoveSoundDevices(
+    IN  UCHAR DeviceType);
+
+VOID
+RemoveAllSoundDevices();
 
 MMRESULT
 GetSoundDeviceType(
@@ -363,6 +364,17 @@ WriteSoundDeviceBuffer(
 /*
     utility.c
 */
+
+PVOID
+AllocateMemory(
+    IN  DWORD Size);
+
+VOID
+FreeMemory(
+    IN  PVOID Pointer);
+
+DWORD
+GetMemoryAllocations();
 
 ULONG
 GetDigitCount(

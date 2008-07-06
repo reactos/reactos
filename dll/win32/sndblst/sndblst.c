@@ -43,13 +43,18 @@ DriverProc(
             SOUND_DEBUG(L"DRV_LOAD");
 
             EnumerateNt4ServiceSoundDevices(L"sndblst",
-                                            WAVE_OUT_DEVICE_TYPE,
+                                            0,
                                             FoundDevice);
 
             return 1L;
 
         case DRV_FREE :
             SOUND_DEBUG(L"DRV_FREE");
+
+            RemoveAllSoundDevices();
+
+            SOUND_DEBUG_HEX(GetMemoryAllocations());
+
             return 1L;
 
         default :
@@ -70,6 +75,8 @@ int APIENTRY wWinMain(
     DriverProc(0, 0, DRV_LOAD, 0, 0);
 
     SOUND_DEBUG_HEX(wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0));
+
+    DriverProc(0, 0, DRV_FREE, 0, 0);
 
     return 0;
 }

@@ -15,6 +15,56 @@
 #include <windows.h>
 #include <mmsystem.h>
 
+#include <mmebuddy.h>
+
+/*
+    Memory
+*/
+
+static HANDLE ProcessHeapHandle = INVALID_HANDLE_VALUE;
+static DWORD CurrentAllocations = 0;
+
+PVOID
+AllocateMemory(
+    IN  DWORD Size)
+{
+    PVOID Pointer = NULL;
+
+    if ( ProcessHeapHandle == INVALID_HANDLE_VALUE )
+        ProcessHeapHandle = GetProcessHeap();
+
+    Pointer = HeapAlloc(ProcessHeapHandle, HEAP_ZERO_MEMORY, Size);
+
+    if ( ! Pointer )
+        return NULL;
+
+    ++ CurrentAllocations;
+
+    return Pointer;
+}
+
+VOID
+FreeMemory(
+    IN  PVOID Pointer)
+{
+    SOUND_ASSERT(ProcessHeapHandle != INVALID_HANDLE_VALUE);
+
+    HeapFree(ProcessHeapHandle, 0, Pointer);
+
+    -- CurrentAllocations;
+}
+
+DWORD
+GetMemoryAllocations()
+{
+    return CurrentAllocations;
+}
+
+
+/*
+    Other
+*/
+
 ULONG
 GetDigitCount(
     ULONG Number)

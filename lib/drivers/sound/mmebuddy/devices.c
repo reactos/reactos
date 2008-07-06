@@ -16,7 +16,9 @@
 
 
 /*
-    TODO: Free up devicepath on exit
+    TODO:
+        The removal of devices from the list needs to be separated from
+        the destruction of the device structure.
 */
 
 #include <windows.h>
@@ -139,110 +141,96 @@ AddSoundDevice(
 }
 
 
-BOOLEAN
+MMRESULT
 RemoveSoundDevice(
-    IN  UCHAR DeviceType,
-    IN  ULONG Index)
+    IN  PSOUND_DEVICE SoundDevice)
 {
-    ULONG Counter = 0;
     ULONG TypeIndex;
     PSOUND_DEVICE CurrentDevice = NULL;
     PSOUND_DEVICE PreviousDevice = NULL;
 
-    DPRINT("Removing a sound device from list %d\n", DeviceType);
+    /*DPRINT("Removing a sound device from list %d\n", DeviceType);*/
 
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    TypeIndex = SoundDevice->DeviceType - MIN_SOUND_DEVICE_TYPE;
+
+    /* Clean up any instances */
+    if ( SoundDevice->FirstInstance != NULL )
     {
-        return FALSE;
+        DestroyAllInstancesOfSoundDevice(SoundDevice);
     }
 
-    TypeIndex = DeviceType - MIN_SOUND_DEVICE_TYPE;
-
-    CurrentDevice = SoundDeviceLists[TypeIndex];
-    PreviousDevice = NULL;
-
-    while ( CurrentDevice )
+    /* Close handle (if open) */
+    if ( SoundDevice->Handle != INVALID_HANDLE_VALUE )
     {
-        if ( Counter == Index )
+        CloseHandle(SoundDevice->Handle);
+        SoundDevice->Handle = INVALID_HANDLE_VALUE;
+    }
+
+    if ( SoundDeviceLists[TypeIndex] == SoundDevice )
+    {
+        SoundDeviceLists[TypeIndex] = SoundDevice->Next;
+    }
+    else
+    {
+        /* Remove from list */
+        CurrentDevice = SoundDeviceLists[TypeIndex];
+        PreviousDevice = NULL;
+
+        while ( CurrentDevice )
         {
-            /* Clean up any instances */
-            if ( CurrentDevice->FirstInstance != NULL )
+            if ( CurrentDevice == SoundDevice )
             {
-                DestroyAllInstancesOfSoundDevice(CurrentDevice);
-            }
-
-            /* Close handle (if open) */
-            if ( CurrentDevice->Handle != INVALID_HANDLE_VALUE )
-            {
-                CloseHandle(CurrentDevice->Handle);
-                CurrentDevice->Handle = INVALID_HANDLE_VALUE;
-            }
-
-            if ( ! PreviousDevice )
-            {
-                /* Head of list */
-                SoundDeviceLists[TypeIndex] = CurrentDevice->Next;
-            }
-            else
-            {
-                /* Not the head of list */
+                SOUND_ASSERT(PreviousDevice != NULL);
                 PreviousDevice->Next = CurrentDevice->Next;
+
+                break;
             }
 
-            /* Free the memory associated with the device info */
-            FreeMemory(CurrentDevice->DevicePath);
-            FreeMemory(CurrentDevice);
-            /*HeapFree(GetProcessHeap(), 0, CurrentDevice);*/
-            CurrentDevice = NULL;
-
-            DPRINT("Removal succeeded\n");
-
-            return TRUE;
+            PreviousDevice = CurrentDevice;
+            CurrentDevice = CurrentDevice->Next;
         }
-
-        PreviousDevice = CurrentDevice;
-        ++ Counter;
     }
 
-    DPRINT("Not found\n");
-    /* Not found */
-    return FALSE;
+    /* Free the memory associated with the device info */
+    FreeMemory(SoundDevice->DevicePath);
+    FreeMemory(SoundDevice);
+
+    return MMSYSERR_NOERROR;;
 }
 
 
-BOOLEAN
+MMRESULT
 RemoveSoundDevices(
     IN  UCHAR DeviceType)
 {
     PSOUND_DEVICE CurrentDevice;
-    PSOUND_DEVICE NextDevice;
 
     DPRINT("Emptying device list for device type %d\n", DeviceType);
 
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
         DPRINT("Invalid device type - %d\n", DeviceType);
-        return FALSE;
+        return MMSYSERR_INVALPARAM;
     }
 
-    /* Clean out the device list */
-    CurrentDevice = SoundDeviceLists[DeviceType - MIN_SOUND_DEVICE_TYPE];
-
-    while ( CurrentDevice )
+    /*
+        Clean out the device list. This works by repeatedly removing the
+        first entry.
+    */
+    while ( (CurrentDevice =
+             SoundDeviceLists[DeviceType - MIN_SOUND_DEVICE_TYPE]) )
     {
-        /* Save the next device pointer so we can reference it later */
-        NextDevice = CurrentDevice->Next;
-
-        FreeMemory(CurrentDevice);
-        /*HeapFree(GetProcessHeap(), 0, CurrentDevice);*/
-        CurrentDevice = NextDevice;
+        RemoveSoundDevice(CurrentDevice);
     }
 
     /* Reset the list content and item count */
     SoundDeviceLists[DeviceType - MIN_SOUND_DEVICE_TYPE] = NULL;
     SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE] = 0;
 
-    return TRUE;
+    return MMSYSERR_NOERROR;
 }
 
 
@@ -253,7 +241,7 @@ RemoveAllSoundDevices()
 
     DPRINT("Emptying all device lists\n");
 
-    for ( i = 0; i < SOUND_DEVICE_TYPES; ++ i )
+    for ( i = MIN_SOUND_DEVICE_TYPE; i <= MAX_SOUND_DEVICE_TYPE; ++ i )
     {
         RemoveSoundDevices(i);
     }
