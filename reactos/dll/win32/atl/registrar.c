@@ -454,8 +454,6 @@ static HRESULT resource_register(Registrar *This, LPCOLESTR resFileName,
                 WARN("could not load resource\n");
                 hres = HRESULT_FROM_WIN32(GetLastError());
             }
-            // Sent to wine-patches http://www.winehq.org/pipermail/wine-patches/2008-May/054603.html
-            //HeapFree(GetProcessHeap(), 0, regstra);
         }else {
             WARN("Could not find source\n");
             hres = HRESULT_FROM_WIN32(GetLastError());
