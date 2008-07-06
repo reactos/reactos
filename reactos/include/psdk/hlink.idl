@@ -416,3 +416,25 @@ interface IHlinkFrame : IUnknown
         [in, unique] LPCWSTR pwzLocation, 
         [in, unique] LPCWSTR pwzFriendlyName);
 }
+
+/*****************************************************************************
+ *    IExtensionServices interface
+ */
+[
+    object,
+    uuid(79eac9cb-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+interface IExtensionServices: IUnknown
+{
+    typedef IExtensionServices *LPEXTENSIONSERVICES;
+
+    HRESULT SetAdditionalHeaders(
+        [in] LPCWSTR pwzAdditionalHeaders);
+
+    HRESULT SetAuthenticateData(
+        [in] HWND phwnd,
+        [in] LPCWSTR pwzUsername,
+        [in] LPCWSTR pwzPassword);
+}
