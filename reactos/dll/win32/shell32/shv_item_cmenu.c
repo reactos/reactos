@@ -304,6 +304,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
 {
     UINT i;
     WCHAR buffer[111];
+    WCHAR szProgKey[20];
     char ebuf[10];
     HRESULT hr;
     HRESULT hResult;
@@ -322,8 +323,6 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
                 NULL,
                 &bGroupPolicyActive,
                 &dwSize);
-    
-
 
     SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj, bGroupPolicyActive);
 
@@ -349,7 +348,15 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             ebuf[0] = L'.';
             buffer[0] = L'\0';
             if (MultiByteToWideChar(CP_ACP, 0, ebuf, -1, buffer, 111))
+            {
                 SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, bGroupPolicyActive);
+                dwSize = sizeof(szProgKey);
+                if (RegGetValueW(HKEY_CLASSES_ROOT, buffer, NULL, RRF_RT_REG_SZ, NULL, szProgKey, &dwSize) == ERROR_SUCCESS)
+                {
+                     szProgKey[(sizeof(szProgKey)/sizeof(WCHAR))-1] = L'\0';
+                     SH_EnumerateDynamicContextHandlerForKey(szProgKey, This, pDataObj, bGroupPolicyActive);
+                }
+            }
         }
     }
     TRACE("-- done loading\n");

@@ -163,7 +163,6 @@ typedef struct
     BOOL          bRunAs;
 	BOOL          bDirty;
         INT           iIdOpen;  /* id of the "Open" entry in the context menu */
-        INT           iIdProperties; /* id of the "Properties" entry in the context menu */
 	IUnknown      *site;
 } IShellLinkImpl;
 
@@ -2475,8 +2474,7 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
                             UINT idCmdFirst, UINT idCmdLast, UINT uFlags )
 {
     IShellLinkImpl *This = impl_from_IContextMenu(iface);
-    static WCHAR szOpen[] = { 'O','p','e','n',0 };
-    static WCHAR szProperties[] = { 'P','r','o','p','e','r','t','i','e','s',0 };
+    WCHAR szOpen[20];
     MENUITEMINFOW mii;
     int id = 1;
 
@@ -2485,6 +2483,11 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
 
     if ( !hmenu )
         return E_INVALIDARG;
+
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_VERB, szOpen, sizeof(szOpen)/sizeof(WCHAR)))
+        szOpen[0] = L'\0';
+    else
+        szOpen[(sizeof(szOpen)/sizeof(WCHAR))-1] = L'\0';
 
     memset( &mii, 0, sizeof(mii) );
     mii.cbSize = sizeof (mii);
@@ -2497,18 +2500,6 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
     if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
         return E_FAIL;
     This->iIdOpen = 0;
-
-    mii.fState = MFS_ENABLED;
-    mii.dwTypeData = (LPWSTR)szProperties;
-    mii.cch = strlenW( mii.dwTypeData );
-    mii.wID = idCmdFirst + id++;
-    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
-    {
-        TRACE("ShellLink_QueryContextMenu failed to insert item properties");
-        return E_FAIL;
-    }
-    This->iIdProperties = 1;
-    id++;
 
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
@@ -2723,7 +2714,7 @@ SH_ShellLinkDlgProc(
  * creates a shortcut property dialog
  */
 
-static HRESULT WINAPI
+HRESULT WINAPI
 ShellLink_ShowProperties( IShellLinkImpl *This )
 {
     PROPSHEETHEADERW pinfo;
@@ -2782,12 +2773,6 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 
     if ( lpici->cbSize < sizeof (CMINVOKECOMMANDINFO) )
         return E_INVALIDARG;
-
-    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
-    {
-        ShellLink_ShowProperties(This);
-        return S_OK;
-    }
 
     if ( lpici->lpVerb != MAKEINTRESOURCEA(This->iIdOpen) )
     {

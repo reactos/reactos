@@ -1626,6 +1626,18 @@ BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
+BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_NetworkPlaces);
+    return FALSE;
+}
+
+
 LPITEMIDLIST _ILCreateNetHood(void)
 {
     return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
