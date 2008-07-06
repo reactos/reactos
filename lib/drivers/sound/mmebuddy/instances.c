@@ -50,6 +50,7 @@ CreateSoundDeviceInstance(
     /* Initialise */
     NewInstance->Next = NULL;
     NewInstance->Device = SoundDevice;
+    NewInstance->Thread = NULL;
 
     /* Search for an appropriate place in the list to put this instance */
     CurrentInstance = SoundDevice->FirstInstance;

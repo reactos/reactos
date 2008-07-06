@@ -115,11 +115,17 @@ typedef MMRESULT (*MMGETCAPS_FUNC)(
     IN  struct _SOUND_DEVICE* SoundDevice,
     OUT PUNIVERSAL_CAPS Capabilities);
 
+typedef MMRESULT (*MMQUERYWAVEFORMAT_FUNC)(
+    IN  struct _SOUND_DEVICE* SoundDevice,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
 typedef struct _MMFUNCTION_TABLE
 {
-    MMOPEN_FUNC     Open;
-    MMCLOSE_FUNC    Close;
-    MMGETCAPS_FUNC  GetCapabilities;
+    MMOPEN_FUNC             Open;
+    MMCLOSE_FUNC            Close;
+    MMGETCAPS_FUNC          GetCapabilities;
+    MMQUERYWAVEFORMAT_FUNC  QueryWaveFormat;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -321,6 +327,18 @@ MMRESULT
 DefaultGetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE Device,
     OUT PUNIVERSAL_CAPS Capabilities);
+
+MMRESULT
+QueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
+MMRESULT
+DefaultQueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
 
 
 /*

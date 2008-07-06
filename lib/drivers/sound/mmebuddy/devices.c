@@ -149,6 +149,7 @@ InitSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE Device)
 {
     Device->Functions.GetCapabilities = DefaultGetSoundDeviceCapabilities;
+    Device->Functions.QueryWaveFormat = DefaultQueryWaveDeviceFormatSupport;
 }
 
 
@@ -306,28 +307,142 @@ DestroySoundDevice(
 }
 
 
+#include <ntddk.h>      /* How do I avoid this? */
 
-/* Should this go somewhere else? */
+/* Should these go somewhere else? */
 
 MMRESULT
 GetSoundDeviceCapabilities(
-    PSOUND_DEVICE SoundDevice,
+    PSOUND_DEVICE Device,
     PUNIVERSAL_CAPS Capabilities)
 {
-    if ( ! SoundDevice )
+    if ( ! Device )
         return MMSYSERR_INVALPARAM;
 
     if ( ! Capabilities )
         return MMSYSERR_INVALPARAM;
 
-    return SoundDevice->Functions.GetCapabilities(SoundDevice, Capabilities);
+    return Device->Functions.GetCapabilities(Device, Capabilities);
 }
 
 MMRESULT
-IsSoundDeviceFormatSupported(
-    IN  PSOUND_DEVICE SoundDevice /* what else? */)
+DefaultGetSoundDeviceCapabilities(
+    IN  PSOUND_DEVICE Device,
+    OUT PUNIVERSAL_CAPS Capabilities)
 {
-    /* TODO */
-    return MMSYSERR_NOTSUPPORTED;
+    PVOID RawCapsPtr = NULL;
+    ULONG CapsSize = 0;
+    DWORD Ioctl;
+    MMRESULT Result;
+    DWORD BytesReturned;
+
+    ZeroMemory(Capabilities, sizeof(UNIVERSAL_CAPS));
+
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! Capabilities )
+        return MMSYSERR_INVALPARAM;
+
+    /* Select appropriate IOCTL and capabilities structure */
+    switch ( Device->DeviceType )
+    {
+        case WAVE_OUT_DEVICE_TYPE :
+            Ioctl = IOCTL_WAVE_GET_CAPABILITIES;
+            RawCapsPtr = (PVOID) &Capabilities->WaveOut;
+            CapsSize = sizeof(WAVEOUTCAPS);
+            break;
+
+        case WAVE_IN_DEVICE_TYPE :
+            Ioctl = IOCTL_WAVE_GET_CAPABILITIES;
+            RawCapsPtr = (PVOID) &Capabilities->WaveIn;
+            CapsSize = sizeof(WAVEINCAPS);
+            break;
+
+        case MIDI_OUT_DEVICE_TYPE :
+            Ioctl = IOCTL_MIDI_GET_CAPABILITIES;
+            RawCapsPtr = (PVOID) &Capabilities->MidiOut;
+            CapsSize = sizeof(MIDIOUTCAPS);
+            break;
+
+        case MIDI_IN_DEVICE_TYPE :
+            Ioctl = IOCTL_MIDI_GET_CAPABILITIES;
+            RawCapsPtr = (PVOID) &Capabilities->MidiIn;
+            CapsSize = sizeof(MIDIINCAPS);
+            break;
+
+        case MIXER_DEVICE_TYPE :
+            /* TODO */
+            /*Ioctl = IOCTL_MIX_GET_CAPABILITIES;*/
+            return MMSYSERR_NOTSUPPORTED;
+
+        case AUX_DEVICE_TYPE :
+            /* TODO */
+            Ioctl = IOCTL_AUX_GET_CAPABILITIES;
+            return MMSYSERR_NOTSUPPORTED;
+
+        default :
+            return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Call the driver */
+    Result = ReadSoundDevice(
+        Device,
+        Ioctl,
+        (LPVOID) RawCapsPtr,
+        CapsSize,
+        &BytesReturned,
+        NULL);
+
+    return Result;
+}
+
+MMRESULT
+QueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
+{
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! WaveFormat )
+        return MMSYSERR_INVALPARAM;
+
+    /* TODO: Should we check the size? */
+
+    return Device->Functions.QueryWaveFormat(Device, WaveFormat, WaveFormatSize);
+}
+
+MMRESULT
+DefaultQueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
+{
+    MMRESULT Result;
+    DWORD BytesReturned = 0;
+
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! WaveFormat )
+        return MMSYSERR_INVALPARAM;
+
+    /* Make sure we have a wave device */
+    if ( ( Device->DeviceType != WAVE_OUT_DEVICE_TYPE ) &&
+         ( Device->DeviceType != WAVE_IN_DEVICE_TYPE ) )
+    {
+        return MMSYSERR_INVALPARAM;
+    }
+
+    Result = WriteSoundDevice(Device,
+                              IOCTL_WAVE_QUERY_FORMAT,
+                              (LPVOID) WaveFormat,
+                              WaveFormatSize,
+                              &BytesReturned,
+                              NULL);
+
+    return Result;
 }
 

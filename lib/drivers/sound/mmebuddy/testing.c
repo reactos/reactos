@@ -114,54 +114,49 @@ TestGetCaps()
 
     wsprintf(DevInfo, L"Device name: %hS\nManufacturer ID: %d\nProduct ID: %d\nDriver version: %x\nChannels: %d", Caps.WaveOut.szPname, Caps.WaveOut.wMid, Caps.WaveOut.wPid, Caps.WaveOut.vDriverVersion, Caps.WaveOut.wChannels);
 
-    MessageBox(0, DevInfo, L"Result", MB_OK | MB_TASKMODAL);
+    MessageBox(0, DevInfo, L"Device caps", MB_OK | MB_TASKMODAL);
+}
 
-#if 0
-    HANDLE Handle;
+
+VOID
+TestFormatQuery()
+{
+    WCHAR msg[1024];
+    PSOUND_DEVICE Device;
     MMRESULT Result;
-    WAVEOUTCAPS Caps;
-    DWORD BytesReturned = 0;
-    WCHAR DevInfo[1024];
+    WAVEFORMATEX fmt;
 
-    Result = OpenKernelSoundDevice(
-        L"\\\\.\\SBWaveOut0",
-        GENERIC_READ,
-        &Handle);
+    CreateSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
 
     if ( Result != MMSYSERR_NOERROR )
     {
-        MessageBox(0, L"Fail open", L"Fail open", MB_OK | MB_TASKMODAL);
+        MessageBox(0, L"Fail 1", L"Fail", MB_OK | MB_TASKMODAL);
         return;
     }
 
-    ZeroMemory(&Caps, sizeof(WAVEOUTCAPS));
+    /* Request a valid format */
+    fmt.wFormatTag = WAVE_FORMAT_PCM;
+    fmt.nChannels = 1;
+    fmt.nSamplesPerSec = 22050;
+    fmt.wBitsPerSample = 16;
+    fmt.nBlockAlign = fmt.nChannels * (fmt.wBitsPerSample / 8);
+    fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
+    fmt.cbSize = 0;
 
-    if ( !
-    DeviceIoControl(Handle,
-                    IOCTL_WAVE_GET_CAPABILITIES,
-                    NULL,
-                    0,
-                    (LPVOID) &Caps,
-                    sizeof(WAVEOUTCAPS),
-                    &BytesReturned,
-                    NULL) )
-    {
-        MessageBox(0, L"Fail", L"Fail", MB_OK | MB_TASKMODAL);
-    }
-    else
-    {
-        wsprintf(DevInfo, L"%02x %02x %02x %02x %02x %02x", Caps.szPname[0], Caps.szPname[1], Caps.szPname[2], Caps.szPname[3], Caps.szPname[4], Caps.szPname[5]);
-/*
-        wsprintf(DevInfo, L"Device name: %hS\nManufacturer ID: %d\nProduct ID: %d\nDriver version: %x\nChannels: %d", Caps.szPname, Caps.wMid, Caps.wPid, Caps.vDriverVersion, Caps.wChannels);
-*/
+    Result = QueryWaveDeviceFormatSupport(Device, &fmt, sizeof(WAVEFORMATEX));
 
-        MessageBox(0, DevInfo, L"Result", MB_OK | MB_TASKMODAL);
-    }
+    wsprintf(msg, L"Format support query result: %d", Result);
+    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
 
-    CloseHandle(Handle);
-#endif
+    /* Send it some garbage */
+    fmt.nChannels = 6969;
+
+    Result = QueryWaveDeviceFormatSupport(Device, &fmt, sizeof(WAVEFORMATEX));
+
+    wsprintf(msg, L"Format support query result: %d", Result);
+    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
 }
- 
 
 
 APIENTRY VOID
@@ -238,7 +233,8 @@ int APIENTRY wWinMain(
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
-    TestDevEnum();
+    TestFormatQuery();
+//    TestDevEnum();
 /*
     TestThreading();
 */
