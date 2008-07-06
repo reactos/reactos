@@ -332,7 +332,6 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 	fcb->FileObject = fileObject;
 	fcb->RefCount++;
 
-	/* FIXME: Guard by SEH. */
 	CcInitializeCacheMap(fileObject,
 		(PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
 		FALSE,
