@@ -2462,9 +2462,14 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
-    string linker = "${host_ld}";
 
 	GenerateRules ();
+
+	string linker;
+	if ( module.cplusplus )
+		linker = "${host_gpp}";
+	else
+		linker = "${host_gcc}";
 
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: %s %s | %s\n",
