@@ -30,8 +30,10 @@ wodMessage(
 {
     MMRESULT Result = MMSYSERR_NOERROR;
     PSOUND_DEVICE Device = NULL;
-    PSOUND_DEVICE_INSTANCE Instance = NULL;
-    DPRINT("wodMessageStub called\n");
+    PSOUND_DEVICE_INSTANCE Instance =
+        (PSOUND_DEVICE_INSTANCE)private_handle;
+
+    SOUND_DEBUG(L"wodMessageStub called\n");
 
     switch ( message )
     {
@@ -62,6 +64,7 @@ wodMessage(
         {
             WAVEOPENDESC* OpenParameters = (WAVEOPENDESC*) parameter1;
 
+            SOUND_DEBUG(L"In WODM_OPEN");
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
@@ -74,6 +77,8 @@ wodMessage(
 
                 return Result;
             }
+
+            ASSERT(private_handle != 0);
 
             Result = CreateSoundDeviceInstance(Device, &Instance);
             if ( Result != MMSYSERR_NOERROR )
@@ -89,16 +94,48 @@ wodMessage(
                 return Result;
             }
 
-            /* TODO: Provide winmm with instance handle */
+            /* Start the wave handling thread */
+            Result = StartWaveThread(Instance);
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                /* TODO: Do we need to do anything more */
+                DestroySoundDeviceInstance(Instance);
+                return Result;
+            }
+
+            /* Provide winmm with instance handle */
+            *((PSOUND_DEVICE_INSTANCE*)private_handle) = Instance;
+
             /* TODO: Send callback... */
 
             return MMSYSERR_NOERROR;
         }
 
         case WODM_CLOSE :
+        {
+            //SOUND_DEBUG_HEX(Instance);
+            SOUND_ASSERT(Instance != NULL);
+
+            /* TODO: Ensure its OK to close */
+
+            Result = StopWaveThread(Instance);
+            SOUND_ASSERT(Result == MMSYSERR_NOERROR);
+
+            Result = DestroySoundDeviceInstance(Instance);
+            SOUND_DEBUG_HEX(Result);
+
+            return Result;
             /* CloseSoundDevice() */
+        }
 
         case WODM_WRITE :
+        {
+            SOUND_ASSERT(Instance != NULL);
+            SOUND_ASSERT(parameter1 != 0);
+
+            return QueueWaveDeviceBuffer(Instance, (PWAVEHDR) parameter1);
+        }
+
         case WODM_PAUSE :
         case WODM_RESTART :
         case WODM_RESET :

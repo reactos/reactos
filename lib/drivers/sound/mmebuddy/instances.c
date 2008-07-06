@@ -206,20 +206,15 @@ DestroyAllInstancesOfSoundDevice(
     IN  PSOUND_DEVICE SoundDevice)
 {
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
-    PSOUND_DEVICE_INSTANCE NextInstance = NULL;
     MMRESULT Result;
 
     if ( ! SoundDevice )
         return MMSYSERR_INVALPARAM;
 
-    CurrentInstance = SoundDevice->FirstInstance;
-
-    while ( CurrentInstance )
+    /* Just munch away at the first item repeatedly */
+    while ( (CurrentInstance = SoundDevice->FirstInstance) )
     {
-        NextInstance = CurrentInstance->Next;
-
         Result = DestroySoundDeviceInstance(CurrentInstance);
-        ASSERT(Result == MMSYSERR_NOERROR);
     }
 
     return MMSYSERR_NOERROR;

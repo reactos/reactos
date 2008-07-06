@@ -47,21 +47,34 @@ GetSoundDeviceCount(
 
 VOID
 InitSoundDeviceFunctionTable(
-    IN  PSOUND_DEVICE Device)
+    IN  PSOUND_DEVICE Device,
+    IN  PMMFUNCTION_TABLE SourceFunctionTable)
 {
+    /* Defaults... TODO - Make all these over-rideable! */
     Device->Functions.Constructor = DefaultInstanceConstructor;
     Device->Functions.Destructor = DefaultInstanceDestructor;
 
     Device->Functions.GetCapabilities = DefaultGetSoundDeviceCapabilities;
     Device->Functions.QueryWaveFormat = DefaultQueryWaveDeviceFormatSupport;
     Device->Functions.SetWaveFormat = DefaultSetWaveDeviceFormat;
+
+    if ( ! SourceFunctionTable )
+        return;
+
+    /* If we get here, the function table is being over-ridden */
+    if ( SourceFunctionTable->GetCapabilities )
+    {
+        Device->Functions.GetCapabilities =
+            SourceFunctionTable->GetCapabilities;
+    }
 }
 
 
 BOOLEAN
 AddSoundDevice(
     IN  UCHAR DeviceType,
-    IN  LPWSTR DevicePath)
+    IN  LPWSTR DevicePath,
+    IN  PMMFUNCTION_TABLE FunctionTable)
 {
     PSOUND_DEVICE NewDevice;
     UCHAR TypeIndex;
@@ -108,7 +121,7 @@ AddSoundDevice(
     /*CopyMemory(NewDevice->DevicePath, DevicePath, DevicePathSize);*/
 
     /* Set up function table */
-    InitSoundDeviceFunctionTable(NewDevice);
+    InitSoundDeviceFunctionTable(NewDevice, FunctionTable);
 
     /* Start or add to list */
     if ( ! SoundDeviceLists[TypeIndex] )
@@ -261,7 +274,7 @@ GetSoundDevice(
         return MMSYSERR_INVALPARAM;
 
     if ( DeviceIndex >= SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE] )
-        return MMSYSERR_INVALPARAM;
+        return MMSYSERR_BADDEVICEID;
 
     if ( ! Device )
         return MMSYSERR_INVALPARAM;

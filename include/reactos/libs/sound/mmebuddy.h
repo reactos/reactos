@@ -253,7 +253,8 @@ GetSoundDevicePath(
 BOOLEAN
 AddSoundDevice(
     IN  UCHAR DeviceType,
-    IN  PWSTR DevicePath);
+    IN  PWSTR DevicePath,
+    IN  PMMFUNCTION_TABLE FunctionTable);
 
 MMRESULT
 RemoveSoundDevice(
