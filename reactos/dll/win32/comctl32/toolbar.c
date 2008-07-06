@@ -1280,7 +1280,7 @@ TOOLBAR_WrapToolbar( HWND hwnd, DWORD dwStyle )
     TBUTTON_INFO *btnPtr;
     INT x, cx, i, j;
     RECT rc;
-    BOOL bWrap, bButtonWrap;
+    BOOL bButtonWrap;
 
     /* 	When the toolbar window style is not TBSTYLE_WRAPABLE,	*/
     /*	no layout is necessary. Applications may use this style */
@@ -1314,7 +1314,6 @@ TOOLBAR_WrapToolbar( HWND hwnd, DWORD dwStyle )
 
     for (i = 0; i < infoPtr->nNumButtons; i++ )
     {
-	bWrap = FALSE;
 	btnPtr[i].fsState &= ~TBSTATE_WRAP;
 
 	if (btnPtr[i].fsState & TBSTATE_HIDDEN)
@@ -2406,8 +2405,8 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETCURSEL, index, 0);
 		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETTOPINDEX, index, 0);
 
-        MakeDragList(GetDlgItem(hwnd, IDC_TOOLBARBTN_LBOX));
-        MakeDragList(GetDlgItem(hwnd, IDC_AVAILBTN_LBOX));
+		MakeDragList(GetDlgItem(hwnd, IDC_TOOLBARBTN_LBOX));
+		MakeDragList(GetDlgItem(hwnd, IDC_AVAILBTN_LBOX));
 
 		/* set focus and disable buttons */
 		PostMessageW (hwnd, WM_USER, 0, 0);
@@ -4762,7 +4761,7 @@ TOOLBAR_SetHotItem (HWND hwnd, WPARAM wParam)
 
     TRACE("hwnd = %p, nHit = %d\n", hwnd, (INT)wParam);
 
-    if ((INT)wParam > infoPtr->nNumButtons)
+    if ((INT)wParam >= infoPtr->nNumButtons)
         return infoPtr->nHotItem;
     
     if ((INT)wParam < 0)
@@ -4985,7 +4984,7 @@ TOOLBAR_SetRows (HWND hwnd, WPARAM wParam, LPARAM lParam)
         /* FIXME: Separators make this quite complex */
         if (seps) FIXME("Separators unhandled\n");
 
-        /* Round up so more per line, ie less rows */
+        /* Round up so more per line, i.e., less rows */
         idealWrap = (infoPtr->nNumButtons - hidden + (rows-1)) / rows;
 
         /* Calculate ideal wrap point if we are allowed to grow, but cannot
@@ -5779,7 +5778,6 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
     POINT pt;
     INT   nHit;
     INT   nOldIndex = -1;
-    BOOL  bSendMessage = TRUE;
     NMHDR hdr;
     NMMOUSE nmmouse;
     NMTOOLBARA nmtb;
@@ -5866,8 +5864,6 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		if (btnPtr->fsStyle & BTNS_GROUP) {
 		    nOldIndex = TOOLBAR_GetCheckedGroupButtonIndex (infoPtr,
 			nHit);
-		    if (nOldIndex == nHit)
-			bSendMessage = FALSE;
 		    if ((nOldIndex != nHit) &&
 			(nOldIndex != -1))
 			infoPtr->buttons[nOldIndex].fsState &= ~TBSTATE_CHECKED;
@@ -6075,7 +6071,7 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
             /* call TRACKMOUSEEVENT so we receive a WM_MOUSELEAVE message */
             /* and can properly deactivate the hot toolbar button */
             _TrackMouseEvent(&trackinfo);
-       }
+        }
     }
 
     if (infoPtr->hwndToolTip)

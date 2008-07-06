@@ -170,6 +170,8 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
     IPADDRESS_INFO *infoPtr;
     RECT rcClient, edit;
     int i, fieldsize;
+    HFONT hFont, hSysFont;
+    LOGFONTW logFont, logSysFont;
 
     TRACE("\n");
 
@@ -191,6 +193,12 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
     infoPtr->Enabled = TRUE;
     infoPtr->Notify = lpCreate->hwndParent;
 
+    hSysFont = (HFONT) GetStockObject(ANSI_VAR_FONT);
+    GetObjectW(hSysFont, sizeof(LOGFONTW), &logSysFont);
+    SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+    strcpyW(logFont.lfFaceName, logSysFont.lfFaceName);
+    hFont = CreateFontIndirectW(&logFont);
+
     for (i = 0; i < 4; i++) {
 	IPPART_INFO* part = &infoPtr->Part[i];
 
@@ -203,6 +211,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
                                edit.left, edit.top, edit.right - edit.left,
 			       edit.bottom - edit.top, hwnd, (HMENU) 1,
 			       (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
+        SendMessageW(part->EditHwnd, WM_SETFONT, (WPARAM) hFont, FALSE);
 	SetPropW(part->EditHwnd, IP_SUBCLASS_PROP, hwnd);
         part->OrigProc = (WNDPROC)
 		SetWindowLongPtrW (part->EditHwnd, GWLP_WNDPROC,

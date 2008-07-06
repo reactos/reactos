@@ -555,8 +555,8 @@ static INT
 PAGER_SetFixedWidth(PAGER_INFO* infoPtr)
 {
   /* Must set the non-scrollable dimension to be less than the full height/width
-   * so that NCCalcSize is called.  The Msoft docs mention 3/4 factor for button
-   * size, and experimentation shows that affect is almost right. */
+   * so that NCCalcSize is called.  The Microsoft docs mention 3/4 factor for button
+   * size, and experimentation shows that the effect is almost right. */
 
     RECT wndRect;
     INT delta, h;
@@ -586,8 +586,8 @@ static INT
 PAGER_SetFixedHeight(PAGER_INFO* infoPtr)
 {
   /* Must set the non-scrollable dimension to be less than the full height/width
-   * so that NCCalcSize is called.  The Msoft docs mention 3/4 factor for button
-   * size, and experimentation shows that affect is almost right. */
+   * so that NCCalcSize is called.  The Microsoft docs mention 3/4 factor for button
+   * size, and experimentation shows that the effect is almost right. */
 
     RECT wndRect;
     INT delta, w;

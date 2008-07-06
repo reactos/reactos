@@ -470,6 +470,28 @@ static LRESULT UPDOWN_KeyPressed(UPDOWN_INFO *infoPtr, int key)
 }
 
 /***********************************************************************
+ * UPDOWN_MouseWheel
+ *
+ * Handle mouse wheel scrolling
+ */
+static LRESULT UPDOWN_MouseWheel(UPDOWN_INFO *infoPtr, WPARAM wParam)
+{
+    int iWheelDelta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+
+    if (wParam & (MK_SHIFT | MK_CONTROL))
+        return 0;
+
+    if (iWheelDelta != 0)
+    {
+        UPDOWN_GetBuddyInt(infoPtr);
+        UPDOWN_DoAction(infoPtr, abs(iWheelDelta), iWheelDelta > 0 ? FLAG_INCR : FLAG_DECR);
+    }
+
+    return 1;
+}
+
+
+/***********************************************************************
  * UPDOWN_Buddy_SubclassProc used to handle messages sent to the buddy
  *                           control.
  */
@@ -485,6 +507,11 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
 
 	UPDOWN_KeyPressed(UPDOWN_GetInfoPtr(upDownHwnd), (int)wParam);
+    }
+    else if (uMsg == WM_MOUSEWHEEL) {
+        HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
+
+       UPDOWN_MouseWheel(UPDOWN_GetInfoPtr(upDownHwnd), (int)wParam);
     }
 
     return CallWindowProcW( superClassWndProc, hwnd, uMsg, wParam, lParam);
@@ -928,6 +955,10 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    if(UPDOWN_IsEnabled(infoPtr))
 		UPDOWN_HandleMouseEvent (infoPtr, message, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 	    break;
+
+        case WM_MOUSEWHEEL:
+            UPDOWN_MouseWheel(infoPtr, wParam);
+            break;
 
 	case WM_KEYDOWN:
 	    if((infoPtr->dwStyle & UDS_ARROWKEYS) && UPDOWN_IsEnabled(infoPtr))

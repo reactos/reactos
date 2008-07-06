@@ -984,12 +984,6 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
     dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
     /* native seems to clear WS_BORDER, too */
     dwStyle &= ~WS_BORDER;
-
-    /* statusbars on managed windows should not have SIZEGRIP style */
-    if ((dwStyle & SBARS_SIZEGRIP) && lpCreate->hwndParent &&
-        GetPropA( lpCreate->hwndParent, "__wine_x11_managed" ))
-        dwStyle &= ~SBARS_SIZEGRIP;
-
     SetWindowLongW (hwnd, GWL_STYLE, dwStyle);
 
     if ((hdc = GetDC (hwnd))) {
