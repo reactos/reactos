@@ -10,6 +10,7 @@
 
     History:
         4 July 2008 - Created
+        6 July 2008 - Moved from mmebuddy to mmdrv
 */
 
 #include <windows.h>

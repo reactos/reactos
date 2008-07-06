@@ -8,7 +8,6 @@
     <file>nt4.c</file>
     <file>utility.c</file>
     <file>thread.c</file>
-    <file>testing.c</file>
     <directory name="mme">
         <file>DriverProc.c</file>
         <file>wodMessage.c</file>

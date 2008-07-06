@@ -232,10 +232,14 @@ EnumerateNt4ServiceSoundDevices(
                 if ( ( ValueType == REG_DWORD ) &&
                      ( ValueDataLength == sizeof(DWORD) ) )
                 {
-                    SoundDeviceDetectedProc(
-                        DeviceType,
-                        DevicePath,
-                        INVALID_HANDLE_VALUE);
+                    if ( ( DeviceType == 0 ) ||
+                         ( DeviceType == ValueData ) )
+                    {
+                        SoundDeviceDetectedProc(
+                            ValueData,
+                            DevicePath,
+                            INVALID_HANDLE_VALUE);
+                    }
                 }
 
                 /* Reset variables for the next iteration */

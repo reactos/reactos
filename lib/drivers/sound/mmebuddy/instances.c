@@ -10,6 +10,7 @@
 
     History:
         4 July 2008 - Created
+        6 July 2008 - Re-structured
 */
 
 #include <windows.h>
