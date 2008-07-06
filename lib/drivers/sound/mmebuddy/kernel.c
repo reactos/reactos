@@ -212,13 +212,12 @@ WriteSoundDeviceBuffer(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     LPVOID Buffer,
     DWORD BufferSize,
-    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
+    LPOVERLAPPED Overlapped)
 {
     WCHAR msg[128];
     if ( ( ! SoundDeviceInstance ) || ( ! Buffer ) || ( BufferSize == 0 ) )
         return MMSYSERR_INVALPARAM;
-
-    ZeroMemory(&SoundDeviceInstance->Overlapped, sizeof(OVERLAPPED));
 
     wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);
     SOUND_DEBUG(msg);
@@ -226,7 +225,7 @@ WriteSoundDeviceBuffer(
     if ( ! WriteFileEx(SoundDeviceInstance->Device->Handle,
                        Buffer,
                        BufferSize,
-                       &SoundDeviceInstance->Overlapped,
+                       Overlapped,
                        CompletionRoutine) )
     {
         wsprintf(msg, L"Win32 Error %d", GetLastError());

@@ -124,6 +124,8 @@ wodMessage(
             Result = DestroySoundDeviceInstance(Instance);
             SOUND_DEBUG_HEX(Result);
 
+            /* TODO: When do we send the callback? */
+
             return Result;
             /* CloseSoundDevice() */
         }

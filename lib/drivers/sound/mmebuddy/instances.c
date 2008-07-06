@@ -31,6 +31,7 @@ InitSoundDeviceInstance(
     SoundDeviceInstance->Next = NULL;
     SoundDeviceInstance->Device = NULL;
     SoundDeviceInstance->Thread = NULL;
+    /* TODO: WinMM callback entry */
 }
 
 PSOUND_DEVICE_INSTANCE

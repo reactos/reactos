@@ -132,6 +132,10 @@ int APIENTRY wWinMain(
     WAVEFORMATEX Format;
     MMRESULT Result;
     PVOID InstanceData;
+    int i;
+
+    for ( i = 0; i < 65536; ++ i )
+        Buffer[i] = rand();
 
     /* DRV_LOAD */
     DriverProc(0, 0, DRV_LOAD, 0, 0);

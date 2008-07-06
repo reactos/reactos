@@ -59,6 +59,7 @@ SoundThreadProc(
             /* Do the work (request 0 kills the thread) */
             Thread->Request.Result =
                 Thread->RequestHandler(Instance,
+                                       Thread->PrivateData,
                                        Thread->Request.RequestId,
                                        Thread->Request.Data);
 
@@ -139,7 +140,8 @@ DestroyThreadEvents(
 MMRESULT
 StartSoundThread(
     IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler)
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  LPVOID PrivateThreadData)
 {
     PSOUND_THREAD SoundThread = NULL;
 
@@ -161,6 +163,7 @@ StartSoundThread(
         return MMSYSERR_NOMEM;
 
     /* Initialise */
+    SoundThread->PrivateData = PrivateThreadData;
     SoundThread->Running = FALSE;
     SoundThread->Handle = INVALID_HANDLE_VALUE;
     SoundThread->RequestHandler = RequestHandler;
@@ -239,35 +242,54 @@ StopSoundThread(
 
 MMRESULT
 CallSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD RequestId,
     IN  PVOID RequestData)
 {
     MMRESULT Result;
 
-    if ( ! Instance )
+    if ( ! SoundDeviceInstance )
         return MMSYSERR_INVALPARAM;
 
-    if ( ! Instance->Thread )
+    if ( ! SoundDeviceInstance->Thread )
         return MMSYSERR_ERROR;
 
     /* Wait for the thread to be ready */
-    WaitForSingleObject(Instance->Thread->ReadyEvent, INFINITE);
+    WaitForSingleObject(SoundDeviceInstance->Thread->ReadyEvent, INFINITE);
 
     /* Load the request */
-    Instance->Thread->Request.DeviceInstance = Instance;
-    Instance->Thread->Request.RequestId = RequestId;
-    Instance->Thread->Request.Data = RequestData;
-    Instance->Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
+    SoundDeviceInstance->Thread->Request.DeviceInstance = SoundDeviceInstance;
+    SoundDeviceInstance->Thread->Request.RequestId = RequestId;
+    SoundDeviceInstance->Thread->Request.Data = RequestData;
+    SoundDeviceInstance->Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
 
     /* Notify the thread that there's a request to be processed */
-    SetEvent(Instance->Thread->RequestEvent);
+    SetEvent(SoundDeviceInstance->Thread->RequestEvent);
 
     /* Wait for the thread to be ready (request complete) */
-    WaitForSingleObject(Instance->Thread->DoneEvent, INFINITE);
+    WaitForSingleObject(SoundDeviceInstance->Thread->DoneEvent, INFINITE);
 
     /* Grab the result */
-    Result = Instance->Thread->Request.Result;
+    Result = SoundDeviceInstance->Thread->Request.Result;
 
     return Result;
+}
+
+MMRESULT
+GetSoundThreadPrivateData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID* PrivateData)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! SoundDeviceInstance->Thread )
+        return MMSYSERR_ERROR;
+
+    if ( ! PrivateData )
+        return MMSYSERR_INVALPARAM;
+
+    *PrivateData = SoundDeviceInstance->Thread->PrivateData;
+
+    return MMSYSERR_NOERROR;
 }

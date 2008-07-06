@@ -101,18 +101,17 @@ typedef struct _THREAD_REQUEST
     MMRESULT Result;
 } THREAD_REQUEST, *PTHREAD_REQUEST;
 
-
-/*
-    Thread helper operations
-*/
 typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PVOID PrivateThreadData,
     IN  DWORD RequestId,
     IN  PVOID Data);
 
 typedef struct _SOUND_THREAD
 {
+    /* Thread management */
     HANDLE Handle;
+    PVOID PrivateData;
     BOOLEAN Running;
     SOUND_THREAD_REQUEST_HANDLER RequestHandler;
     HANDLE ReadyEvent;      /* Thread waiting for a request */
@@ -123,8 +122,30 @@ typedef struct _SOUND_THREAD
 
 
 /*
+    Wave thread
+*/
+
+typedef struct _WAVE_OVERLAPPED
+{
+    OVERLAPPED General;
+    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+    struct _WAVE_THREAD_DATA* ThreadData;
+    PWAVEHDR Header;
+} WAVE_OVERLAPPED, *PWAVE_OVERLAPPED;
+
+typedef struct _WAVE_THREAD_DATA
+{
+    /* Wave thread specific */
+    WAVE_OVERLAPPED Overlapped;
+
+    DWORD BufferCount;
+    PWAVEHDR CurrentBuffer;
+    PWAVEHDR FirstBuffer;
+    PWAVEHDR LastBuffer;
+} WAVE_THREAD_DATA, *PWAVE_THREAD_DATA;
+
+/*
     Audio device function table
-    TODO - create/destroy instance need to work
 */
 
 typedef MMRESULT (*MMCREATEINSTANCE_FUNC)(
@@ -193,20 +214,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
     {
         DWORD ClientCallback;
     } WinMM;
-
-    /* Everything below this is used by the worker thread only */
-    OVERLAPPED Overlapped;
-
-    union
-    {
-        struct
-        {
-            DWORD BufferCount;
-            PWAVEHDR CurrentBuffer;
-            PWAVEHDR FirstBuffer;
-            PWAVEHDR LastBuffer;
-        } Wave;
-    };
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 
@@ -359,7 +366,8 @@ WriteSoundDeviceBuffer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  LPVOID Buffer,
     IN  DWORD BufferSize,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
+    LPOVERLAPPED Overlapped);
 
 
 /*
@@ -467,7 +475,8 @@ QueueWaveDeviceBuffer(
 MMRESULT
 StartSoundThread(
     IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler);
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  PVOID Data);
 
 MMRESULT
 StopSoundThread(
@@ -478,6 +487,11 @@ CallSoundThread(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  DWORD RequestId,
     IN  PVOID RequestData);
+
+MMRESULT
+GetSoundThreadPrivateData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID* PrivateData);
 
 
 
