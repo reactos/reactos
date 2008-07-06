@@ -119,7 +119,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-CHOOSE_FONT DIALOG LOADONCALL MOVEABLE DISCARDABLE 13, 54, 264, 147
+CHOOSE_FONT DIALOG DISCARDABLE 13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Písmo"
 FONT 8, "MS Shell Dlg"
@@ -151,7 +151,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 185
+CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Barvy"
 FONT 8, "MS Shell Dlg"
@@ -163,11 +163,11 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "&Zelená:",727/*1095*/,249,140,24,10
  EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "&Modrá:", 1096, 150, 166, 40, 9
+ LTEXT "&Modrá:", 728, 249, 154, 24, 10
  EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "&Odstín:" , 723 /*1091*/,202,126,22,10
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "&Sytost:" , 1092, 150, 146, 40, 9
+ LTEXT "&Sytost:" , 724, 202, 140, 22, 10
  EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "&Jas:" , 725 /*1093*/,202,154,22,10
  EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -373,7 +373,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Soubor neexistuje.\nChcete ho vytvoøit ?"
     IDS_OVERWRITEFILE       "Soubor již existuje.\nChcete ho pøepsat novým ?"
     IDS_INVALID_FILENAME_TITLE "Nedovolený(é) znak(y) v cestì k souboru."
-    IDS_INVALID_FILENAME    "Název souboru nesmí obsahovat žádný z následujících znakù: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Název souboru nesmí obsahovat žádný z následujících znakù:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Adresáø neexistuje"
     IDS_FILENOTEXISTING     "Soubor neexistuje"
 }

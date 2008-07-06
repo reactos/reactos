@@ -997,6 +997,54 @@ GpStatus WINGDIPAPI GdipDrawBezierI(GpGraphics *graphics, GpPen *pen, INT x1,
     return retval;
 }
 
+GpStatus WINGDIPAPI GdipDrawBeziers(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPointF *points, INT count)
+{
+    INT i;
+    GpStatus ret;
+
+    if(!graphics || !pen || !points || (count <= 0))
+        return InvalidParameter;
+
+    for(i = 0; i < floor(count / 4); i++){
+        ret = GdipDrawBezier(graphics, pen,
+                             points[4*i].X, points[4*i].Y,
+                             points[4*i + 1].X, points[4*i + 1].Y,
+                             points[4*i + 2].X, points[4*i + 2].Y,
+                             points[4*i + 3].X, points[4*i + 3].Y);
+        if(ret != Ok)
+            return ret;
+    }
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipDrawBeziersI(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPoint *points, INT count)
+{
+    GpPointF *pts;
+    GpStatus ret;
+    INT i;
+
+    if(!graphics || !pen || !points || (count <= 0))
+        return InvalidParameter;
+
+    pts = GdipAlloc(sizeof(GpPointF) * count);
+    if(!pts)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        pts[i].X = (REAL)points[i].X;
+        pts[i].Y = (REAL)points[i].Y;
+    }
+
+    ret = GdipDrawBeziers(graphics,pen,pts,count);
+
+    GdipFree(pts);
+
+    return ret;
+}
+
 GpStatus WINGDIPAPI GdipDrawCurve(GpGraphics *graphics, GpPen *pen,
     GDIPCONST GpPointF *points, INT count)
 {

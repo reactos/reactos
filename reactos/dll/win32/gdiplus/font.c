@@ -445,7 +445,7 @@ GpStatus WINGDIPAPI GdipDeleteFontFamily(GpFontFamily *FontFamily)
         return InvalidParameter;
     TRACE("Deleting %p (%s)\n", FontFamily, debugstr_w(FontFamily->FamilyName));
 
-    if (FontFamily->FamilyName) GdipFree (FontFamily->FamilyName);
+    GdipFree (FontFamily->FamilyName);
     GdipFree (FontFamily);
 
     return Ok;

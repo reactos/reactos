@@ -240,6 +240,15 @@ GpStatus WINGDIPAPI GdipBitmapUnlockBits(GpBitmap* bitmap,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
+{
+    if (!(image && cloneImage)) return InvalidParameter;
+
+    FIXME("stub: %p, %p", image, cloneImage);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipCreateBitmapFromFile(GDIPCONST WCHAR* filename,
     GpBitmap **bitmap)
 {

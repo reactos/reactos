@@ -196,7 +196,7 @@ static void    FILEDLG95_SHELL_Clean(HWND hwnd);
 static BOOL    FILEDLG95_SHELL_BrowseToDesktop(HWND hwnd);
 
 /* Functions used by the EDIT box */
-static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed, char separator);
+static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed);
 
 /* Functions used by the filetype combo box */
 static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd);
@@ -858,11 +858,10 @@ LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode)
     return hook_result;
 }
 
-static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer)
+static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID result)
 {
-    UINT sizeUsed = 0, n, total;
-    LPWSTR lpstrFileList = NULL;
-    WCHAR lpstrCurrentDir[MAX_PATH];
+    UINT len, total;
+    WCHAR *p, *buffer;
     FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 
     TRACE("CDM_GETFILEPATH:\n");
@@ -871,79 +870,29 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer
         return -1;
 
     /* get path and filenames */
-    COMDLG32_GetDisplayNameOf(fodInfos->ShellInfos.pidlAbsCurrent, lpstrCurrentDir);
-    n = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, ' ');
-
-    TRACE("path >%s< filespec >%s< %d files\n",
-         debugstr_w(lpstrCurrentDir),debugstr_w(lpstrFileList),n);
-
-    if( fodInfos->unicode )
+    len = SendMessageW( fodInfos->DlgInfos.hwndFileName, WM_GETTEXTLENGTH, 0, 0 );
+    buffer = HeapAlloc( GetProcessHeap(), 0, (len + 2 + MAX_PATH) * sizeof(WCHAR) );
+    COMDLG32_GetDisplayNameOf( fodInfos->ShellInfos.pidlAbsCurrent, buffer );
+    if (len)
     {
-        LPWSTR bufW = buffer;
-        total = lstrlenW(lpstrCurrentDir) + 1 + sizeUsed;
-
-        /* Prepend the current path */
-        n = lstrlenW(lpstrCurrentDir) + 1;
-        memcpy( bufW, lpstrCurrentDir, min(n,size) * sizeof(WCHAR));
-        if(n<size)
-        {
-            /* 'n' includes trailing \0 */
-            bufW[n-1] = '\\';
-            lstrcpynW( &bufW[n], lpstrFileList, size - n );
-        }
-        TRACE("returned -> %s\n",debugstr_wn(bufW, total));
+        p = buffer + strlenW(buffer);
+        *p++ = '\\';
+        SendMessageW( fodInfos->DlgInfos.hwndFileName, WM_GETTEXT, len + 1, (LPARAM)p );
+    }
+    if (fodInfos->unicode)
+    {
+        total = strlenW( buffer) + 1;
+        if (result) lstrcpynW( result, buffer, size );
+        TRACE( "CDM_GETFILEPATH: returning %u %s\n", total, debugstr_w(result));
     }
     else
     {
-        LPSTR bufA = buffer;
-        total = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
-                                    NULL, 0, NULL, NULL);
-        total += WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
-                                    NULL, 0, NULL, NULL);
-
-        /* Prepend the current path */
-        n = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
-                                bufA, size, NULL, NULL);
-
-        if(n<size)
-        {
-            /* 'n' includes trailing \0 */
-            bufA[n-1] = '\\';
-            WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
-                                &bufA[n], size-n, NULL, NULL);
-        }
-
-        TRACE("returned -> %s\n",debugstr_an(bufA, total));
+        total = WideCharToMultiByte( CP_ACP, 0, buffer, -1, NULL, 0, NULL, NULL );
+        if (total <= size) WideCharToMultiByte( CP_ACP, 0, buffer, -1, result, size, NULL, NULL );
+        TRACE( "CDM_GETFILEPATH: returning %u %s\n", total, debugstr_a(result));
     }
-    MemFree(lpstrFileList);
-
+    HeapFree( GetProcessHeap(), 0, buffer );
     return total;
-}
-
-static INT_PTR FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPVOID buffer)
-{
-    UINT sizeUsed = 0;
-    LPWSTR lpstrFileList = NULL;
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
-
-    TRACE("CDM_GETSPEC:\n");
-
-    FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, ' ');
-    if( fodInfos->unicode )
-    {
-        lstrcpynW( buffer, lpstrFileList, size );
-    }
-    else
-    {
-        LPSTR bufA = buffer;
-        DWORD sizeA = WideCharToMultiByte( CP_ACP, 0, lpstrFileList, sizeUsed, NULL, 0, NULL, NULL);
-        WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, bufA, size, NULL, NULL);
-        if (size && size < sizeA) bufA[size - 1] = 0;
-        sizeUsed = sizeA;
-    }
-    MemFree(lpstrFileList);
-
-    return sizeUsed;
 }
 
 /***********************************************************************
@@ -979,8 +928,22 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
             retval = lstrlenW(lpstrPath);
             break;
 
+        case CDM_GETFOLDERIDLIST:
+            retval = COMDLG32_PIDL_ILGetSize(fodInfos->ShellInfos.pidlAbsCurrent);
+            if (retval <= wParam)
+                memcpy((void*)lParam, fodInfos->ShellInfos.pidlAbsCurrent, retval);
+            break;
+
         case CDM_GETSPEC:
-            retval = FILEDLG95_Handle_GetFileSpec(hwnd, (UINT)wParam, (LPSTR)lParam);
+            TRACE("CDM_GETSPEC:\n");
+            retval = SendMessageW(fodInfos->DlgInfos.hwndFileName, WM_GETTEXTLENGTH, 0, 0) + 1;
+            if (lParam)
+            {
+                if (fodInfos->unicode)
+                    SendMessageW(fodInfos->DlgInfos.hwndFileName, WM_GETTEXT, wParam, lParam);
+                else
+                    SendMessageA(fodInfos->DlgInfos.hwndFileName, WM_GETTEXT, wParam, lParam);
+            }
             break;
 
         case CDM_SETCONTROLTEXT:
@@ -1797,7 +1760,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
   TRACE("hwnd=%p\n", hwnd);
 
   /* get the files from the edit control */
-  nFileCount = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed, '\0');
+  nFileCount = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
 
   /* try if the user selected a folder in the shellview */
   if(nFileCount == 0)
@@ -3204,7 +3167,7 @@ static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, LPI
  * The delimiter is specified by the parameter 'separator',
  *  usually either a space or a nul
  */
-static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed, char separator)
+static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed)
 {
 	FileOpenDlgInfos *fodInfos  = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 	UINT nStrCharCount = 0;	/* index in src buffer */
@@ -3238,7 +3201,7 @@ static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, U
 	      (*lpstrFileList)[nFileIndex++] = lpstrEdit[nStrCharCount];
 	      nStrCharCount++;
 	    }
-	    (*lpstrFileList)[nFileIndex++] = separator;
+	    (*lpstrFileList)[nFileIndex++] = 0;
 	    nFileCount++;
 	  }
 	  nStrCharCount++;
@@ -3253,7 +3216,6 @@ static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, U
 	}
 
         /* trailing \0 */
-        if (nFileIndex && separator) nFileIndex--;  /* remove trailing separator */
         (*lpstrFileList)[nFileIndex++] = '\0';
 
         *sizeUsed = nFileIndex;

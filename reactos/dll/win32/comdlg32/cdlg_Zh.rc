@@ -215,7 +215,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "File does not exist\nDo you want to create file"
     IDS_OVERWRITEFILE       "File does already exist.\nDo you want to replace it?"
     IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
-    IDS_INVALID_FILENAME    "A filename cannot contain any of the following characters: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "A filename cannot contain any of the following characters:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Path does not exist"
     IDS_FILENOTEXISTING     "File does not exist"
 }

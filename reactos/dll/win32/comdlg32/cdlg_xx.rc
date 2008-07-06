@@ -40,20 +40,20 @@ STRINGTABLE DISCARDABLE
 {
     IDS_FAKEDOCTEXT
         "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. \
-        Nulla a tortor. Etiam aliquet libero venenatis nunc. \n \
-        \n \
+        Nulla a tortor. Etiam aliquet libero venenatis nunc.\n\
+\n\
         Sed augue ante, fermentum sit amet, imperdiet et, gravida eu, enim. \
-        Donec nibh quam, sodales in, commodo vel, facilisis id, neque. \n \
-        \n \
+        Donec nibh quam, sodales in, commodo vel, facilisis id, neque.\n\
+\n\
         Nunc eleifend bibendum nibh. Phasellus in lorem. Ut vel odio quis \
-        libero adipiscing consequat. Donec consectetuer laoreet mauris. \n \
-        \n \
+        libero adipiscing consequat. Donec consectetuer laoreet mauris.\n\
+\n\
         Maecenas tempor, ligula sed congue nonummy, arcu dolor ornare erat, \
-        egestas iaculis magna purus sed turpis. \n \
-        \n \
+        egestas iaculis magna purus sed turpis.\n\
+\n\
         Morbi ultricies est non ipsum. Cum sociis natoque penatibus et magnis \
-        dis parturient montes, nascetur ridiculus mus. \n \
-        \n \
+        dis parturient montes, nascetur ridiculus mus.\n\
+\n\
         Duis sit amet nibh quis purus sollicitudin blandit. Curabitur justo. \
         Phasellus varius, erat eu luctus pharetra, odio elit fringilla leo, \
         non vulputate turpis elit id neque. Vestibulum sit amet tellus sed \

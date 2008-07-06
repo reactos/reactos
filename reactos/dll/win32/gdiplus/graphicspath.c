@@ -813,7 +813,7 @@ GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath *path, REAL x, REAL y,
     ptf[1].X = x;
     ptf[1].Y = y+height;
 
-    if((retstat = GdipAddPathLine2(path,(GDIPCONST GpPointF*)&ptf,2)) != Ok)  goto fail;
+    if((retstat = GdipAddPathLine2(path, ptf, 2)) != Ok)  goto fail;
     path->pathdata.Types[path->pathdata.Count-1] |= PathPointTypeCloseSubpath;
 
     /* free backup */

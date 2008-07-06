@@ -52,16 +52,16 @@
 @ stdcall GdipCloneCustomLineCap(ptr ptr)
 @ stdcall GdipCloneFont(ptr ptr)
 @ stub GdipCloneFontFamily
-@ stub GdipCloneImage
+@ stdcall GdipCloneImage(ptr ptr)
 @ stdcall GdipCloneImageAttributes(ptr ptr)
 @ stdcall GdipCloneMatrix(ptr ptr)
 @ stdcall GdipClonePath(ptr ptr)
 @ stdcall GdipClonePen(ptr ptr)
-@ stub GdipCloneRegion
+@ stdcall GdipCloneRegion(ptr ptr)
 @ stdcall GdipCloneStringFormat(ptr ptr)
 @ stdcall GdipClosePathFigure(ptr)
 @ stdcall GdipClosePathFigures(ptr)
-@ stub GdipCombineRegionPath
+@ stdcall GdipCombineRegionPath(ptr ptr long)
 @ stdcall GdipCombineRegionRect(ptr ptr long)
 @ stdcall GdipCombineRegionRectI(ptr ptr long)
 @ stdcall GdipCombineRegionRegion(ptr ptr long)
@@ -123,11 +123,11 @@
 @ stdcall GdipCreatePen1(long long long ptr)
 @ stdcall GdipCreatePen2(ptr long long ptr)
 @ stdcall GdipCreateRegion(ptr)
-@ stub GdipCreateRegionHrgn
+@ stdcall GdipCreateRegionHrgn(ptr ptr)
 @ stdcall GdipCreateRegionPath(ptr ptr)
 @ stdcall GdipCreateRegionRect(ptr ptr)
 @ stdcall GdipCreateRegionRectI(ptr ptr)
-@ stub GdipCreateRegionRgnData
+@ stdcall GdipCreateRegionRgnData(ptr long ptr)
 @ stdcall GdipCreateSolidFill(long ptr)
 @ stdcall GdipCreateStreamOnFile(ptr long ptr)
 @ stdcall GdipCreateStringFormat(long long ptr)
@@ -135,7 +135,7 @@
 @ stub GdipCreateTexture2I
 @ stub GdipCreateTexture
 @ stdcall GdipCreateTextureIA(ptr ptr long long long long ptr)
-@ stub GdipCreateTextureIAI
+@ stdcall GdipCreateTextureIAI(ptr ptr long long long long ptr)
 @ stdcall GdipDeleteBrush(ptr)
 @ stub GdipDeleteCachedBitmap
 @ stdcall GdipDeleteCustomLineCap(ptr)
@@ -156,8 +156,8 @@
 @ stdcall GdipDrawArcI(ptr ptr long long long long long long)
 @ stdcall GdipDrawBezier(ptr ptr long long long long long long long long)
 @ stdcall GdipDrawBezierI(ptr ptr long long long long long long long long)
-@ stub GdipDrawBeziers
-@ stub GdipDrawBeziersI
+@ stdcall GdipDrawBeziers(ptr ptr ptr long)
+@ stdcall GdipDrawBeziersI(ptr ptr ptr long)
 @ stub GdipDrawCachedBitmap
 @ stub GdipDrawClosedCurve2
 @ stub GdipDrawClosedCurve2I
@@ -375,8 +375,8 @@
 @ stub GdipGetPropertyItem
 @ stdcall GdipGetPropertyItemSize(ptr long ptr)
 @ stub GdipGetPropertySize
-@ stub GdipGetRegionBounds
-@ stub GdipGetRegionBoundsI
+@ stdcall GdipGetRegionBounds(ptr ptr ptr)
+@ stdcall GdipGetRegionBoundsI(ptr ptr ptr)
 @ stdcall GdipGetRegionData(ptr ptr long ptr)
 @ stdcall GdipGetRegionDataSize(ptr ptr)
 @ stdcall GdipGetRegionHRgn(ptr ptr ptr)
@@ -415,9 +415,9 @@
 @ stub GdipInitializePalette
 @ stub GdipInvertMatrix
 @ stub GdipIsClipEmpty
-@ stub GdipIsEmptyRegion
-@ stub GdipIsEqualRegion
-@ stub GdipIsInfiniteRegion
+@ stdcall GdipIsEmptyRegion(ptr ptr ptr)
+@ stdcall GdipIsEqualRegion(ptr ptr ptr ptr)
+@ stdcall GdipIsInfiniteRegion(ptr ptr ptr)
 @ stdcall GdipIsMatrixEqual(ptr ptr ptr)
 @ stdcall GdipIsMatrixIdentity(ptr ptr)
 @ stub GdipIsMatrixInvertible
@@ -451,10 +451,10 @@
 @ stub GdipNewInstalledFontCollection
 @ stub GdipNewPrivateFontCollection
 @ stdcall GdipPathIterCopyData(ptr ptr ptr ptr long long)
-@ stub GdipPathIterEnumerate
+@ stdcall GdipPathIterEnumerate(ptr ptr ptr ptr long)
 @ stdcall GdipPathIterGetCount(ptr ptr)
 @ stub GdipPathIterGetSubpathCount
-@ stub GdipPathIterHasCurve
+@ stdcall GdipPathIterHasCurve(ptr ptr)
 @ stub GdipPathIterIsValid
 @ stub GdipPathIterNextMarker
 @ stub GdipPathIterNextMarkerPath
@@ -608,15 +608,15 @@
 @ stdcall GdipTransformPath(ptr ptr)
 @ stub GdipTransformPoints
 @ stub GdipTransformPointsI
-@ stub GdipTransformRegion
+@ stdcall GdipTransformRegion(ptr ptr)
 @ stub GdipTranslateClip
 @ stub GdipTranslateClipI
 @ stub GdipTranslateLineTransform
 @ stdcall GdipTranslateMatrix(ptr long long long)
 @ stub GdipTranslatePathGradientTransform
 @ stub GdipTranslatePenTransform
-@ stub GdipTranslateRegion
-@ stub GdipTranslateRegionI
+@ stdcall GdipTranslateRegion(ptr long long)
+@ stdcall GdipTranslateRegionI(ptr long long)
 @ stub GdipTranslateTextureTransform
 @ stdcall GdipTranslateWorldTransform(ptr long long long)
 @ stdcall GdipVectorTransformMatrixPoints(ptr ptr long)

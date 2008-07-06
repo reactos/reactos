@@ -116,7 +116,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-CHOOSE_FONT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 147
+CHOOSE_FONT DIALOG DISCARDABLE 36, 24, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tiparo"
 FONT 8, "MS Shell Dlg"
@@ -368,7 +368,7 @@ IDS_VERIFYFILE          "Kontrolu la øustecon je havigita dosiernomo."
 IDS_CREATEFILE          "Dosiero estas neekzistanta\nÆu vi volas krei dosieron?"
 IDS_OVERWRITEFILE       "Dosiero estas jam ekzistanta.\nÆu vi volas superskribi øin?"
 IDS_INVALID_FILENAME_TITLE "Nekorekta(j) tipo(j) en vojo"
-IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn: \n / : < > |"
+IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn:\n / : < > |"
 IDS_PATHNOTEXISTING     "Vojo estas neekzistanta"
 IDS_FILENOTEXISTING     "Dosiero estas neekzistanta"
 }

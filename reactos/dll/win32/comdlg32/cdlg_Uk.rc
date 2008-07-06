@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Зберегти як ..."
+CAPTION "Зберегти як..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&&Ім'я файлу:", 1090, 6, 6, 76, 9
@@ -309,7 +309,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
     LTEXT	"Файли &типу",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
-    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL	"Лише для &читання",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
@@ -339,7 +339,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Файл не існує\nЧи хочете Ви його створити?"
     IDS_OVERWRITEFILE       "Файл уже існує.\nЗамінити його?"
     IDS_INVALID_FILENAME_TITLE "Невірний символ в запису шляху"
-    IDS_INVALID_FILENAME    "Ім'я файлу не може містити наступні символи: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Ім'я файлу не може містити наступні символи:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Шлях не існує"
     IDS_FILENOTEXISTING     "Файл не існує"
 }

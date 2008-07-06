@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "另存为 ..."
+CAPTION "另存为..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "文件名(&N):", 1090, 6, 6, 76, 9
@@ -370,7 +370,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "找不到文件\n是否创建新文件?"
     IDS_OVERWRITEFILE       "文件已经存在。\n要替换吗?"
     IDS_INVALID_FILENAME_TITLE "文件名中存在无效的字符"
-    IDS_INVALID_FILENAME    "文件名中不能包含任何一下字符:: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "文件名中不能包含任何一下字符::\n                          / : < > |"
     IDS_PATHNOTEXISTING     "文件夹不存在"
     IDS_FILENOTEXISTING     "文件不存在"
 }

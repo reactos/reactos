@@ -3,7 +3,7 @@
  * French language support
  *
  * Copyright 1995 Alexandre Julliard
- * Copyright 2005 Jonathan Ernst
+ * Copyright 2005-2008 Jonathan Ernst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,15 +31,15 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ouvrir"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Nom de fichier:", 1090, 6, 6, 76, 9
+ LTEXT "&Nom de fichier :", 1090, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "&Répertoires", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Liste des fichiers de &type:", 1089, 6, 104, 90, 9
+ LTEXT "Liste des fichiers de &type :", 1089, 6, 104, 90, 9
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Lecteurs:", 1091, 110, 104, 92, 9
+ LTEXT "&Lecteurs :", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuler", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
@@ -50,16 +50,16 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Enregistrer sous ..."
+CAPTION "Enregistrer sous..."
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Nom de fichier:", 1090, 6, 6, 76, 9
+ LTEXT "&Nom de fichier :", 1090, 6, 6, 76, 9
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Répertoires:", -1, 110, 6, 92, 9
+ LTEXT "&Répertoires :", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Liste des fichiers de &type:", 1089, 6, 104, 90, 9
+ LTEXT "Liste des fichiers de &type :", 1089, 6, 104, 90, 9
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "&Lecteurs:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -75,7 +75,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Imprimer"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Imprimante:", 1088, 6, 6, 40, 9
+ LTEXT "Imprimante :", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
  GROUPBOX "Étendue", grp1, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "&Tout", rad1, 16, 45, 60, 12
@@ -112,8 +112,8 @@ FONT 8, "MS Shell Dlg"
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
  GROUPBOX "Papier", grp3, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "&Taille :", 1089, 130, 95, 30, 9
- LTEXT "&Ali&mentation :", 1090, 130, 110, 30, 9
+ LTEXT "&Taille :", 1089, 130, 95, 30, 9
+ LTEXT "&Source :", 1090, 130, 110, 30, 9
  COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -156,20 +156,20 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Couleurs"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Couleurs de &base:",   1088, 4,    4,  140, 10
- LTEXT "&Couleurs personnalisées:",  1089, 4,   106, 140, 10
+ LTEXT "Couleurs de &base :",   1088, 4,    4,  140, 10
+ LTEXT "&Couleurs personnalisées :",  1089, 4,   106, 140, 10
  LTEXT "Couleur |  &Uni",  1090, 150, 151,  48, 10
- LTEXT   "&Rouge:", 726 /*1094*/,249,126,24,10
+ LTEXT   "&Rouge :", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Vert:",727/*1095*/,249,140,24,10
+ LTEXT   "&Vert :",727/*1095*/,249,140,24,10
  EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "Bl&eu:",728 /*1096*/,249,154,24,10
+ LTEXT   "Bl&eu :",728 /*1096*/,249,154,24,10
  EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Teinte:" ,723 /*1091*/,202,126,22,10
+ LTEXT  "&Teinte :" ,723 /*1091*/,202,126,22,10
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Sat.:" ,724 /*1092*/,202,140,22,10
+ LTEXT  "&Sat. :" ,724 /*1092*/,202,140,22,10
  EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Lum.:" ,725 /*1093*/,202,154,22,10
+ LTEXT  "&Lum. :" ,725 /*1093*/,202,154,22,10
  EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -190,7 +190,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Rechercher"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Rechercher:", -1, 4, 8, 42, 8
+ LTEXT "&Rechercher :", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "M&ot seulement", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Respect des &majuscules/minuscules", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -209,9 +209,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Remplacer"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Rechercher:", -1, 4, 9, 48, 8
+ LTEXT "&Rechercher :", -1, 4, 9, 48, 8
  EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "R&emplacer par:", -1, 4, 26, 48, 8
+ LTEXT "R&emplacer par :", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "M&ot seulement", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Respect des &majuscules/minuscules", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -237,13 +237,13 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Imprimante",     grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Imprimer dans un fichier", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
     PUSHBUTTON      "Propriétés",     psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Nom:",          stc6,  16, 20,  36,8
+    LTEXT           "&Nom :",          stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Etat:",          stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "État :",          stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Type :",          stc7,  16, 48,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Emplacement:",   stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Emplacement :",   stc10, 16, 60,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Commentaire:",   stc9,  16, 72,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -260,8 +260,8 @@ FONT 8, "MS Shell Dlg"
     CONTROL         "Selection",      rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&de:",           stc2,  52,124,  20,8
-    RTEXT           "&à:",            stc3, 100,124,  16,8
+    RTEXT           "&de :",           stc2,  52,124,  20,8
+    RTEXT           "&à :",            stc3, 100,124,  16,8
 }
 
 PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
@@ -276,15 +276,15 @@ BEGIN
 
     GROUPBOX        "Imprimante",     grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Propriétés",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Nom:",          stc6,  16, 20,  36,8
+    LTEXT           "&Nom :",          stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Etat:",          stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "État:",          stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "[aucun]",        stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Type:",          stc7,  16, 48,  36,10, SS_NOPREFIX
     LTEXT           "[aucun]",        stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Emplacement:",   stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Emplacement :",   stc10, 16, 60,  36,10, SS_NOPREFIX
     LTEXT           "[aucun]",        stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Commentaire:",   stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Commentaire :",   stc9,  16, 72,  36,10, SS_NOPREFIX
     LTEXT           "[aucun]",        stc13, 60, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Papier",         grp2,   8, 92, 164,56, WS_GROUP
@@ -308,21 +308,21 @@ BEGIN
   CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX "Papier", grp2, 8, 96, 224, 56, BS_GROUPBOX
-  LTEXT "&Taille:", stc2, 16, 112, 36, 8
+  LTEXT "&Taille :", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  LTEXT "&Source:", stc3, 16, 132, 36, 8
+  LTEXT "&Source :", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Orientation", grp1, 8, 156, 64, 56, BS_GROUPBOX
   AUTORADIOBUTTON "&Portrait", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "P&aysage", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Marges", grp4, 80, 156, 152, 56, BS_GROUPBOX
-  LTEXT "&Droite:", stc15, 88, 172, 21, 8
+  LTEXT "&Droite :", stc15, 88, 172, 21, 8
   EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
-  LTEXT "&Gauche:", stc16, 159, 172, 27, 8
+  LTEXT "&Gauche :", stc16, 159, 172, 27, 8
   EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
-  LTEXT "&Haut:", stc17, 88, 192, 21, 8
+  LTEXT "&Haut :", stc17, 88, 192, 21, 8
   EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
-  LTEXT "&Bas:", stc18, 159, 192, 23, 8
+  LTEXT "&Bas :", stc18, 159, 192, 23, 8
   EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Annuler", IDCANCEL, 126, 220, 50, 14
@@ -340,7 +340,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"&Nom du fichier:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    LTEXT	"&Nom du fichier :",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
     LTEXT	"&Type du fichier",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
@@ -356,9 +356,9 @@ FONT 8, "MS Shell Dlg"
 STRINGTABLE DISCARDABLE
 {
     IDS_ABOUTBOX            "À propos du choix de répertoires"
-    IDS_DOCUMENTFOLDERS     "Répertoire Documents"
-    IDS_PERSONAL            "Mes Documents"
-    IDS_FAVORITES           "Mes Favoris"
+    IDS_DOCUMENTFOLDERS     "Répertoire documents"
+    IDS_PERSONAL            "Mes documents"
+    IDS_FAVORITES           "Mes favoris"
     IDS_PATH                "Répertoire système"
     IDS_DESKTOP             "Bureau"
     IDS_FONTS               "Polices"
@@ -371,10 +371,10 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALHARDRIVES      "Disques locaux"
     IDS_FILENOTFOUND        "Fichier non trouvé"
     IDS_VERIFYFILE          "Prière de vérifier que le nom de fichier indiqué est correct"
-    IDS_CREATEFILE          "Ce fichier n'existe pas.\nSouhaitez-vous le créer ?"
-    IDS_OVERWRITEFILE       "Ce fichier existe déjà.\nVoulez-vous le remplacer ?"
+    IDS_CREATEFILE          "Ce fichier n'existe pas.\nSouhaitez-vous le créer ?"
+    IDS_OVERWRITEFILE       "Ce fichier existe déjà.\nVoulez-vous le remplacer ?"
     IDS_INVALID_FILENAME_TITLE "Le chemin d'accès contient des caractères invalides"
-    IDS_INVALID_FILENAME    "Un nom de fichier ne peut contenir un des caractères suivants : \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Un nom de fichier ne peut contenir un des caractères suivants :\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Le chemin d'accès n'existe pas"
     IDS_FILENOTEXISTING     "Le fichier n'existe pas"
 }
@@ -395,11 +395,11 @@ STRINGTABLE DISCARDABLE
     PD32_VALUE_UREADABLE                  "Entrée illisible"
     PD32_INVALID_PAGE_RANGE "Cette valeur n'est pas dans l'intervalle de pages\n\
 Veuillez indiquer une valeur entre %d et %d."
-    PD32_FROM_NOT_ABOVE_TO                "Le champ 'de' ne peut être plus grand \
-que le champ 'à'."
+    PD32_FROM_NOT_ABOVE_TO                "Le champ « de » ne peut être plus grand \
+que le champ « à »."
     PD32_MARGINS_OVERLAP                  "Les marges se recouvrent ou dépassent du papier\n\
 Veuillez indiquer de nouvelles valeurs."
-    PD32_NR_OF_COPIES_EMPTY               "Le champ 'Copies' est vide.\n\
+    PD32_NR_OF_COPIES_EMPTY               "Le champ « Copies » est vide.\n\
 Veuillez entrer un nombre et r&essayer."
     PD32_TOO_LARGE_COPIES                 "Votre imprimante ne peut gérer autant de copies.\n\
 Veuillez indiquer un nombre de copies entre 1 et %d."
@@ -413,39 +413,48 @@ Veuillez indiquer un nombre de copies entre 1 et %d."
 comme la configuration de l'imprimante ou l'impression d'un document, vous devez installer une imprimante. \
 Veuillez en installer une et réessayez."
 
-    PD32_DEFAULT_PRINTER                  "Imprimante par défaut; "
+    PD32_DEFAULT_PRINTER                  "Imprimante par défaut ; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Il y a %d documents dans la file d'attente"
     PD32_MARGINS_IN_INCHES                "Marges [pouces]"
     PD32_MARGINS_IN_MILIMETERS            "Marges [mm]"
     PD32_MILIMETERS                       "mm"
 
-    PD32_PRINTER_STATUS_READY             "Prêt; "
-    PD32_PRINTER_STATUS_PAUSED            "Suspendu; "
-    PD32_PRINTER_STATUS_ERROR             "Erreur; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  "En attente de suppression; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Bourrage papier; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Plus de papier; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "Insertion manuelle du papier; "
+    PD32_PRINTER_STATUS_READY             "Prêt ; "
+    PD32_PRINTER_STATUS_PAUSED            "Suspendu ; "
+    PD32_PRINTER_STATUS_ERROR             "Erreur ; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "En attente de suppression ; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Bourrage papier ; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Plus de papier ; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Insertion manuelle du papier ; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problème de papier; "
     PD32_PRINTER_STATUS_OFFLINE           "L'imprimante n'est pas en ligne; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "IO Active; "
     PD32_PRINTER_STATUS_BUSY              "Occupée; "
     PD32_PRINTER_STATUS_PRINTING          "En cours d'impression; "
     PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Le bac de sortie est plein; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Non disponible; "
-    PD32_PRINTER_STATUS_WAITING           "En attente; "
-    PD32_PRINTER_STATUS_PROCESSING        "Traitement en cours; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Démarrage en cours; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Préchauffage; "
-    PD32_PRINTER_STATUS_TONER_LOW         "Toner presque vide; "
-    PD32_PRINTER_STATUS_NO_TONER          "Pas de toner; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "Annulé par utilisateur; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Plus assez de mémoire; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "La porte de l'imprimante est ouverte; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Serveur d'impression inconnu; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Mode économie d'énergie; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Non disponible ; "
+    PD32_PRINTER_STATUS_WAITING           "En attente ; "
+    PD32_PRINTER_STATUS_PROCESSING        "Traitement en cours ; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Démarrage en cours ; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Préchauffage ; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Toner presque vide ; "
+    PD32_PRINTER_STATUS_NO_TONER          "Pas de toner ; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Abandon de page ; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Annulé par utilisateur ; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Plus assez de mémoire ; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "La porte de l'imprimante est ouverte ; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Serveur d'impression inconnu ; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Mode économie d'énergie ; "
 }
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normal"
+    IDS_FONT_BOLD          "Gras"
+    IDS_FONT_ITALIC        "Italique"
+    IDS_FONT_BOLD_ITALIC   "Gras italique"
+}
+
 
 STRINGTABLE DISCARDABLE /* Color names */
 {
@@ -471,7 +480,7 @@ STRINGTABLE DISCARDABLE
 {
     IDS_FONT_SIZE   "Sélectionnez une taille de police entre %d et %d points."
     IDS_SAVE_BUTTON "&Sauver"
-    IDS_SAVE_IN     "Sauver &dans:"
+    IDS_SAVE_IN     "Sauver &dans :"
     IDS_SAVE        "Enregistrer"
     IDS_SAVE_AS     "Enregistrer sous"
     IDS_OPEN_FILE   "Ouvrir Fichier"

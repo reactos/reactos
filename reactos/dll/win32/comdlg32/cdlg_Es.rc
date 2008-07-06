@@ -1,6 +1,6 @@
 /*
  * Copyright 1995 Jon Tombs
- * Copyright 2004, 2005 José Manuel Ferrer Ortiz
+ * Copyright 2004, 2005, 2008 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,8 +38,8 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "U&nidades:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Abrir", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancelar", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Abrir", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Sólo lectura", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
@@ -60,8 +60,8 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "U&nidades:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "&Guardar como", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancelar", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&Guardar como", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Sólo lectura", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
@@ -78,8 +78,8 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "&Todo", rad1, 16, 45, 60, 12
  RADIOBUTTON "Selecc&ión", rad2, 16, 60, 60, 12
  RADIOBUTTON "&Páginas", rad3, 16, 75, 60, 12
- DEFPUSHBUTTON "Imprimir", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancelar", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Imprimir", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", 2, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Configuración", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&Desde:", 1090, 60, 80, 30, 9
  LTEXT "&Hasta:", 1091, 120, 80, 30, 9
@@ -130,10 +130,10 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "&Tamaño:",stc3,179,3,30,9
     COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
-    DEFPUSHBUTTON   "Aceptar",IDOK,218,6,40,14,WS_GROUP
-    PUSHBUTTON      "Cancelar",IDCANCEL,218,23,40,14,WS_GROUP
-    PUSHBUTTON      "A&plicar", psh3,218,40,40,14,WS_GROUP
-    PUSHBUTTON      "A&yuda" , pshHelp,218,57,40,14,WS_GROUP
+    DEFPUSHBUTTON   "Aceptar",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Cancelar",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "A&plicar", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "A&yuda" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "&Efectos",grp1,6,72,84,34,WS_GROUP
     CHECKBOX        "&Tachado", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX        "&Subrayado", chx2, 10,94,50,10, BS_AUTOCHECKBOX
@@ -173,8 +173,8 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
- DEFPUSHBUTTON "Aceptar",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancelar", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Aceptar",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp,100,166, 44, 14
  PUSHBUTTON "Añadir a &colores personalizados", 712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Definir colores personalizados >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
@@ -187,14 +187,15 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Buscar"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Buscar:", -1, 4, 8, 42, 8
+ LTEXT "&Buscar:", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Sólo palabra entera", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sólo palabra &entera", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Mayúsculas/minúsculas", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Dirección", grp1, 107, 26, 68, 28
  CONTROL "A&rriba", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 20, 12
  CONTROL "&Abajo", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
- DEFPUSHBUTTON "Buscar &siguiente", IDOK, 182, 5, 50, 14, WS_GROUP | WS_TABSTOP
+
+ DEFPUSHBUTTON "Buscar &siguiente", IDOK, 182, 5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Cancelar", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
@@ -205,13 +206,14 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Reemplazar"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Buscar:", -1, 4, 9, 48, 8
+ LTEXT "&Buscar:", -1, 4, 9, 48, 8
  EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "Re&emplazar por:", -1, 4, 26, 48, 8
+ LTEXT "Reem&plazar por:", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Comparar palabra entera solamente", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sólo palabra &entera", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Mayúsculas/minúsculas", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- DEFPUSHBUTTON "Reemplazar &siguiente", IDOK, 174, 4, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+
+ DEFPUSHBUTTON "Reemplazar &siguiente", IDOK, 174, 4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Reemplazar", psh1, 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Reemplazar &todo", psh2, 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Cancelar", IDCANCEL, 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
@@ -235,13 +237,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "&Nombre:",       stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Estado:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Estado ficticio",stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Tipo:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipo ficticio",  stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Dónde:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Lugar ficticio", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Comentario:",    stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Remark",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Nota ficticia",  stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Copias",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Número de &copias:",stc5,168,108,68,8
@@ -274,13 +276,13 @@ BEGIN
     LTEXT           "&Nombre:",       stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Estado:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Estado ficticio",stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Tipo:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Tipo ficticio",  stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Dónde:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Lugar ficticio", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Comentario:",    stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Dummy Remark",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Nota ficticia",  stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Papel",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "&Tamaño:",       stc2,  16,108,  36, 8
@@ -369,7 +371,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "El archivo no existe\n¿Desea crearlo?"
     IDS_OVERWRITEFILE       "El archivo ya existe.\n¿Desea reemplazarlo?"
     IDS_INVALID_FILENAME_TITLE "Caracter(es) inválidos en la ruta"
-    IDS_INVALID_FILENAME    "Un nombre de archivo no puede contener ninguno de los siguientes caracteres: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Un nombre de archivo no puede contener ninguno de los siguientes caracteres:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "La ruta no existe"
     IDS_FILENOTEXISTING     "El archivo no existe"
 }
@@ -406,9 +408,9 @@ defecto."
     PD32_GENERIC_ERROR                    "Ocurrió un error."
     PD32_DRIVER_UNKNOWN                   "Manejador de la impresora \
 desconocido."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Antes de que pueda realizar tareas de impresión \
+como configurar la página o imprimir un documento, necesita instalar una impresora. \
+Por favor, instale una y vuelva a intentarlo."
 
     PD32_DEFAULT_PRINTER                  "Impresora por defecto; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Hay %d documentos en la cola"
@@ -442,6 +444,14 @@ Please install one and retry."
     PD32_PRINTER_STATUS_DOOR_OPEN         "Puerta de la impresora abierta; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Servidor de impresión desconocido; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Modo de ahorro de energía; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Normal"
+    IDS_FONT_BOLD          "Negrita"
+    IDS_FONT_ITALIC        "Cursiva"
+    IDS_FONT_BOLD_ITALIC   "Cursiva negrita"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */

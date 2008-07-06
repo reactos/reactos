@@ -143,10 +143,10 @@ static LPCWSTR FD31_GetFileType(LPCWSTR cfptr, LPCWSTR fptr, const WORD index)
  */
 static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
 {
-    WCHAR		buffer[BUFFILE];
-    HWND 		hdlg, hdlgDir;
-    LRESULT             lRet = TRUE;
-    HCURSOR             hCursorWait, oldCursor;
+    WCHAR   buffer[BUFFILE];
+    HWND    hdlg;
+    LRESULT lRet = TRUE;
+    HCURSOR hCursorWait, oldCursor;
 
     TRACE("Trying to change to %s\n", debugstr_w(newPath));
     if  ( newPath[0] && !SetCurrentDirectoryW( newPath ))
@@ -180,7 +180,7 @@ static BOOL FD31_ScanDir(const OPENFILENAMEW *ofn, HWND hWnd, LPCWSTR newPath)
     /* list of directories */
     strcpyW(buffer, FILE_star);
 
-    if ((hdlgDir = GetDlgItem(hWnd, lst2)) != 0) {
+    if (GetDlgItem(hWnd, lst2) != 0) {
         lRet = DlgDirListW(hWnd, buffer, lst2, stc1, DDL_EXCLUSIVE | DDL_DIRECTORY);
     }
     SetCursor(oldCursor);

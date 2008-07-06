@@ -453,17 +453,6 @@ static BOOL CRYPT_GetObjectFromCache(LPCWSTR pszURL, PCRYPT_BLOB_ARRAY pObject,
     return ret;
 }
 
-static inline LPWSTR strndupW(LPWSTR string, int len)
-{
-    LPWSTR ret = NULL;
-    if (string && (ret = CryptMemAlloc((len + 1) * sizeof(WCHAR))) != NULL)
-    {
-        memcpy(ret, string, len * sizeof(WCHAR));
-        ret[len] = 0;
-    }
-    return ret;
-}
-
 /* Parses the URL, and sets components's lpszHostName and lpszUrlPath members
  * to NULL-terminated copies of those portions of the URL (to be freed with
  * CryptMemFree.)

@@ -1247,7 +1247,6 @@ static LRESULT check_printer_setup(HWND hDlg)
 {
     DWORD needed,num;
     WCHAR resourcestr[256],resultstr[256];
-    int res;
 
     EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, 2, NULL, 0, &needed, &num);
     if(needed == 0)
@@ -1260,7 +1259,7 @@ static LRESULT check_printer_setup(HWND hDlg)
     {
           LoadStringW(COMDLG32_hInstance, PD32_NO_DEVICES,resultstr, 255);
           LoadStringW(COMDLG32_hInstance, PD32_PRINT_TITLE,resourcestr, 255);
-          res = MessageBoxW(hDlg, resultstr, resourcestr,MB_OK | MB_ICONWARNING);
+          MessageBoxW(hDlg, resultstr, resourcestr,MB_OK | MB_ICONWARNING);
           return FALSE;
     }
 }
@@ -2566,15 +2565,13 @@ _c_str2sizeW(const PAGESETUPDLGW *dlga, LPCWSTR strin) {
  */
 static BOOL
 PRINTDLG_PS_UpdateDlgStructA(HWND hDlg, PageSetupDataA *pda) {
-    DEVNAMES	*dn;
     DEVMODEA	*dm;
     DWORD 	paperword;
 
     memcpy(pda->dlga, &pda->curdlg, sizeof(pda->curdlg));
     pda->dlga->hDevMode  = pda->pdlg.hDevMode;
     pda->dlga->hDevNames = pda->pdlg.hDevNames;
-    
-    dn = GlobalLock(pda->pdlg.hDevNames);
+
     dm = GlobalLock(pda->pdlg.hDevMode);
 
     /* Save paper orientation into device context */
@@ -2599,7 +2596,6 @@ PRINTDLG_PS_UpdateDlgStructA(HWND hDlg, PageSetupDataA *pda) {
     else
         FIXME("could not get dialog text for papersize cmbbox?\n");
 
-    GlobalUnlock(pda->pdlg.hDevNames);
     GlobalUnlock(pda->pdlg.hDevMode);
 
     return TRUE;

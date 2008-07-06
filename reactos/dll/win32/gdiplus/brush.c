@@ -433,6 +433,12 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipCreateTextureIAI(GpImage *image, GDIPCONST GpImageAttributes *imageattr,
+    INT x, INT y, INT width, INT height, GpTexture **texture)
+{
+    return GdipCreateTextureIA(image,imageattr,(REAL)x,(REAL)y,(REAL)width,(REAL)height,texture);
+}
+
 GpStatus WINGDIPAPI GdipGetBrushType(GpBrush *brush, GpBrushType *type)
 {
     if(!brush || !type)  return InvalidParameter;

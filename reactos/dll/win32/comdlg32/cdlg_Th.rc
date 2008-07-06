@@ -139,8 +139,11 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "สี:", stc4 ,6,110,30,9
     COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "ตัวอย่าง",grp2,98,72,160,49,WS_GROUP
-    CTEXT           "AฺBCกขฃ",stc5,104,81,149,37,SS_NOPREFIX | NOT WS_VISIBLE
+    GROUPBOX        "ตัวอย่าง",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AฺBCกขฃ",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Scr&ipt:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+                    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
 
 

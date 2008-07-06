@@ -67,6 +67,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
  *
  */
 
+GpStatus WINGDIPAPI GdipCloneRegion(GpRegion *region, GpRegion **clone)
+{
+    FIXME("(%p %p): stub\n", region, clone);
+
+    *clone = NULL;
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, CombineMode mode)
+{
+    FIXME("(%p %p %d): stub\n", region, path, mode);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region, GDIPCONST GpRectF *rect,
                                           CombineMode mode)
 {
@@ -120,9 +134,39 @@ GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *rect, GpRegion **reg
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *data, INT size, GpRegion **region)
+{
+    FIXME("(%p, %d, %p): stub\n", data, size, region);
+
+    *region = NULL;
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
+{
+    FIXME("(%p, %p): stub\n", hrgn, region);
+
+    *region = NULL;
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *region)
 {
     FIXME("(%p): stub\n", region);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionBounds(GpRegion *region, GpGraphics *graphics, GpRectF *rect)
+{
+    FIXME("(%p, %p, %p): stub\n", region, graphics, rect);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *region, GpGraphics *graphics, GpRect *rect)
+{
+    FIXME("(%p, %p, %p): stub\n", region, graphics, rect);
+
     return NotImplemented;
 }
 
@@ -148,6 +192,28 @@ GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *region, GpGraphics *graphics, HR
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *region, GpGraphics *graphics, BOOL *res)
+{
+    FIXME("(%p, %p, %p): stub\n", region, graphics, res);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipIsEqualRegion(GpRegion *region, GpRegion *region2, GpGraphics *graphics,
+                                      BOOL *res)
+{
+    FIXME("(%p, %p, %p, %p): stub\n", region, region2, graphics, res);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipIsInfiniteRegion(GpRegion *region, GpGraphics *graphics, BOOL *res)
+{
+    FIXME("(%p, %p, %p): stub\n", region, graphics, res);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipSetEmpty(GpRegion *region)
 {
     static int calls;
@@ -164,6 +230,27 @@ GpStatus WINGDIPAPI GdipSetInfinite(GpRegion *region)
 
     if(!(calls++))
         FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTransformRegion(GpRegion *region, GpMatrix *matrix)
+{
+    FIXME("(%p, %p): stub\n", region, matrix);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTranslateRegion(GpRegion *region, REAL dx, REAL dy)
+{
+    FIXME("(%p, %f, %f): stub\n", region, dx, dy);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTranslateRegionI(GpRegion *region, INT dx, INT dy)
+{
+    FIXME("(%p, %d, %d): stub\n", region, dx, dy);
 
     return NotImplemented;
 }
