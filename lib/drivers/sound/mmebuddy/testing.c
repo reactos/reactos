@@ -14,11 +14,13 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <mmddk.h>
 #include <ntddsnd.h>
 #include <debug.h>
 
 #include <ntddk.h>
 #include <mmebuddy.h>
+
 
 
 /*
@@ -40,7 +42,7 @@ BOOLEAN TestCallback(
     PWSTR DevicePath,
     HANDLE Handle)
 {
-    MessageBox(0, DevicePath, L"CALLBACK", MB_OK | MB_TASKMODAL);
+/*    MessageBox(0, DevicePath, L"CALLBACK", MB_OK | MB_TASKMODAL);*/
 
     AddSoundDevice(DeviceType, DevicePath);
 
@@ -48,8 +50,8 @@ BOOLEAN TestCallback(
 }
 
 
-APIENTRY VOID
-Test()
+VOID
+TestDeviceDetection()
 {
     ULONG WaveInCount, WaveOutCount;
     ULONG MidiInCount, MidiOutCount;
@@ -196,7 +198,7 @@ TestPlaybackHackingly()
         return;
     }
 
-    Result = OpenKernelSoundDevice(Device, GENERIC_READ | GENERIC_WRITE);
+/*    Result = OpenKernelSoundDevice(Device, GENERIC_READ | GENERIC_WRITE);
     if ( Result != MMSYSERR_NOERROR )
     {
         MessageBox(0, L"Fail open", L"Fail", MB_OK | MB_TASKMODAL);
@@ -204,6 +206,7 @@ TestPlaybackHackingly()
     }
     wsprintf(msg, L"Opened handle %x", Device->Handle);
     MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
+*/
 
     Result = CreateSoundDeviceInstance(Device, &Instance);
     if ( Result != MMSYSERR_NOERROR )
@@ -249,6 +252,9 @@ TestPlaybackHackingly()
 */
     wsprintf(msg, L"Play result: %d", Result);
     MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
+
+    StopWaveThread(Instance);
+    DestroySoundDeviceInstance(Instance);
 }
 
 
@@ -312,12 +318,42 @@ TestThreading()
 }
 
 
+VOID
+wodTest()
+{
+    //MMRESULT Result;
+    DWORD NumWaveOuts;
+    WAVEOUTCAPS Caps;
+    MMRESULT Result;
+    WCHAR String[1024];
+
+    /* Report the number of wave output devices */
+    NumWaveOuts = wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0);
+    SOUND_DEBUG_HEX(NumWaveOuts);
+
+    if ( NumWaveOuts < 1 )
+    {
+        SOUND_DEBUG(L"Nothing to do as no waveout devices!");
+        return;
+    }
+
+    Result = wodMessage(0, WODM_GETDEVCAPS, 0,
+                        (DWORD) &Caps, sizeof(WAVEOUTCAPS));
+
+    wsprintf(String, L"Device name: %hS\nManufacturer ID: %d\nProduct ID: %d\nDriver version: %x\nChannels: %d", Caps.szPname, Caps.wMid, Caps.wPid, Caps.vDriverVersion, Caps.wChannels);
+
+    MessageBox(0, String, L"Device caps", MB_OK | MB_TASKMODAL);
+}
+
+
 int APIENTRY wWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
+//    TestDeviceDetection();
+//    wodTest();
 //    TestFormatQuery();
     TestPlaybackHackingly();
 //    TestDevEnum();

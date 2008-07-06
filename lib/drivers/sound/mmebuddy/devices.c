@@ -31,14 +31,14 @@ PSOUND_DEVICE SoundDeviceLists[SOUND_DEVICE_TYPES];
 
 ULONG
 GetSoundDeviceCount(
-    UCHAR DeviceType)
+    IN  UCHAR DeviceType)
 {
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
         return 0;
     }
 
-    return SoundDeviceTotals[DeviceType];
+    return SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE];
 }
 
 
@@ -96,7 +96,7 @@ GetSoundDevicePath(
 
 
 VOID
-DestroyAllSoundDevices()
+RemoveAllSoundDevices()
 {
     ULONG i;
 
@@ -104,14 +104,14 @@ DestroyAllSoundDevices()
 
     for ( i = 0; i < SOUND_DEVICE_TYPES; ++ i )
     {
-        DestroySoundDevices(i);
+        RemoveSoundDevices(i);
     }
 }
 
 
 BOOLEAN
-DestroySoundDevices(
-    UCHAR DeviceType)
+RemoveSoundDevices(
+    IN  UCHAR DeviceType)
 {
     PSOUND_DEVICE CurrentDevice;
     PSOUND_DEVICE NextDevice;
@@ -149,6 +149,9 @@ VOID
 InitSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE Device)
 {
+    Device->Functions.Constructor = DefaultInstanceConstructor;
+    Device->Functions.Destructor = DefaultInstanceDestructor;
+
     Device->Functions.GetCapabilities = DefaultGetSoundDeviceCapabilities;
     Device->Functions.QueryWaveFormat = DefaultQueryWaveDeviceFormatSupport;
     Device->Functions.SetWaveFormat = DefaultSetWaveDeviceFormat;
@@ -157,8 +160,8 @@ InitSoundDeviceFunctionTable(
 
 BOOLEAN
 AddSoundDevice(
-    UCHAR DeviceType,
-    LPWSTR DevicePath)
+    IN  UCHAR DeviceType,
+    IN  LPWSTR DevicePath)
 {
     PSOUND_DEVICE NewDevice;
     UCHAR TypeIndex;
@@ -240,8 +243,8 @@ AddSoundDevice(
 
 BOOLEAN
 RemoveSoundDevice(
-    UCHAR DeviceType,
-    ULONG Index)
+    IN  UCHAR DeviceType,
+    IN  ULONG Index)
 {
     ULONG Counter = 0;
     ULONG TypeIndex;
@@ -309,14 +312,31 @@ RemoveSoundDevice(
 }
 
 
+MMRESULT
+GetSoundDeviceType(
+    IN  PSOUND_DEVICE Device,
+    OUT PUCHAR DeviceType)
+{
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! DeviceType )
+        return MMSYSERR_INVALPARAM;
+
+    *DeviceType = Device->DeviceType;
+
+    return MMSYSERR_NOERROR;
+}
+
+
 #include <ntddk.h>      /* How do I avoid this? */
 
 /* Should these go somewhere else? */
 
 MMRESULT
 GetSoundDeviceCapabilities(
-    PSOUND_DEVICE Device,
-    PUNIVERSAL_CAPS Capabilities)
+    IN  PSOUND_DEVICE Device,
+    OUT PUNIVERSAL_CAPS Capabilities)
 {
     if ( ! Device )
         return MMSYSERR_INVALPARAM;
@@ -494,6 +514,62 @@ DefaultSetWaveDeviceFormat(
 
     return Result;
 }
+
+MMRESULT
+DefaultInstanceConstructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance)
+{
+    PSOUND_DEVICE SoundDevice;
+    UCHAR DeviceType;
+    DWORD AccessRights = GENERIC_READ;
+    MMRESULT Result;
+
+    SOUND_DEBUG(L"Default instance ctor");
+
+    SOUND_ASSERT(SoundDeviceInstance != NULL);
+    GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SOUND_ASSERT(SoundDevice != NULL);
+
+    /* If this fails, we have an internal error somewhere */
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        SOUND_ASSERT(Result != MMSYSERR_NOERROR);
+        return MMSYSERR_ERROR;
+    }
+
+    if ( DeviceType == WAVE_OUT_DEVICE_TYPE )
+        AccessRights |= GENERIC_WRITE;
+
+    Result = OpenKernelSoundDevice(SoundDevice, AccessRights);
+    if ( Result != MMSYSERR_NOERROR )
+        return Result;
+
+    SOUND_DEBUG(L"Returning from default ctor");
+
+    return MMSYSERR_NOERROR;
+}
+
+
+VOID
+DefaultInstanceDestructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance)
+{
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
+
+    /* TODO: Close device */
+    SOUND_DEBUG(L"Default instance dtor");
+
+    SOUND_ASSERT(SoundDeviceInstance);
+    GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SOUND_ASSERT(SoundDevice);
+
+    Result = CloseKernelSoundDevice(SoundDevice);
+
+    ASSERT(Result == MMSYSERR_NOERROR);
+}
+
 
 MMRESULT
 QueueWaveDeviceBuffer(

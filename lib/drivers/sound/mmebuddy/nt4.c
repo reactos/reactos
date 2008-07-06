@@ -49,11 +49,6 @@ OpenSoundDriverParametersRegKey(
 
     /* Allocate memory for the string */
     ParametersKeyName = AllocateWideString(KeyLength);
-/*
-    ParametersKeyName = (PWCHAR) HeapAlloc(GetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           KeyLength);
-*/
 
     if ( ! ParametersKeyName )
         return MMSYSERR_NOMEM;
@@ -76,12 +71,10 @@ OpenSoundDriverParametersRegKey(
     {
         /* Couldn't open the key */
         FreeMemory(ParametersKeyName);
-        /*HeapFree(GetProcessHeap(), 0, ParametersKeyName);*/
         return MMSYSERR_ERROR;
     }
 
     FreeMemory(ParametersKeyName);
-    /*HeapFree(GetProcessHeap(), 0, ParametersKeyName);*/
 
     return MMSYSERR_NOERROR;
 }
@@ -121,11 +114,6 @@ OpenSoundDeviceRegKey(
 
     /* Allocate storage for the string */
     RegPath = AllocateWideString(PathLength);
-/*
-    RegPath = (PWCHAR) HeapAlloc(GetProcessHeap(),
-                                 HEAP_ZERO_MEMORY,
-                                 PathSize);
-*/
 
     if ( ! RegPath )
     {
@@ -152,12 +140,10 @@ OpenSoundDeviceRegKey(
     {
         /* Couldn't open the key */
         FreeMemory(RegPath);
-        /*HeapFree(GetProcessHeap(), 0, RegPath);*/
         return MMSYSERR_ERROR;
     }
 
     FreeMemory(RegPath);
-    /*HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, RegPath);*/
 
     return MMSYSERR_NOERROR;
 }
@@ -170,9 +156,9 @@ OpenSoundDeviceRegKey(
 */
 MMRESULT
 EnumerateNt4ServiceSoundDevices(
-    LPWSTR ServiceName,
-    UCHAR DeviceType,
-    SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
+    IN  LPWSTR ServiceName,
+    IN  UCHAR DeviceType,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
 {
     HKEY Key;
     DWORD KeyIndex = 0;
@@ -211,13 +197,6 @@ EnumerateNt4ServiceSoundDevices(
                 return MMSYSERR_ERROR;
             }
 
-            /* Account for terminating NULL */
-/*            ++ MaxNameLength;
-
-            DevicePath = (PWSTR) AllocateMemory((MaxNameLength +
-                                                strlen("\\\\.\\")) *
-                                                sizeof(WCHAR));
-*/
             DevicePath = AllocateWideString(MaxNameLength +
                                             strlen("\\\\.\\"));
 
@@ -271,7 +250,6 @@ EnumerateNt4ServiceSoundDevices(
             }
 
             FreeMemory(DevicePath);
-            /*HeapFree(GetProcessHeap(), 0, DevicePath);*/
 
             RegCloseKey(DevicesKey);
         }
@@ -295,9 +273,9 @@ EnumerateNt4ServiceSoundDevices(
 */
 MMRESULT
 DetectNt4SoundDevices(
-    UCHAR DeviceType,
-    PWSTR BaseDeviceName,
-    SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
+    IN  UCHAR DeviceType,
+    IN  PWSTR BaseDeviceName,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc)
 {
     ULONG DeviceNameLength = 0;
     PWSTR DeviceName = NULL;
@@ -317,10 +295,6 @@ DetectNt4SoundDevices(
     DeviceNameLength += GetDigitCount(Index);
 
     DeviceName = AllocateWideString(DeviceNameLength);
-/*
-    DeviceName = (PWSTR)
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DeviceNameSize);
-*/
 
     if ( ! DeviceName )
     {
@@ -331,14 +305,14 @@ DetectNt4SoundDevices(
     {
         /* Nothing like a nice clean device name */
         ZeroWideString(DeviceName);
-/*        ZeroMemory(DeviceName, DeviceNameSize);*/
         wsprintf(DeviceName, L"%ls%d", BaseDeviceName, Index);
 
         if ( OpenKernelSoundDeviceByName(DeviceName,
                                          GENERIC_READ,
                                          &DeviceHandle) == MMSYSERR_NOERROR )
         {
-            DPRINT("Found device %d\n", Index);
+            //DPRINT("Found device %d\n", Index);
+            MessageBox(0, DeviceName, L"Opened device", MB_OK | MB_TASKMODAL);
 
             /* Notify the callback function */
             if ( SoundDeviceDetectedProc(DeviceType, DeviceName, DeviceHandle) )
@@ -357,7 +331,6 @@ DetectNt4SoundDevices(
     }
 
     FreeMemory(DeviceName);
-    /*HeapFree(GetProcessHeap(), 0, DeviceName);*/
 
     return MMSYSERR_NOERROR;
 }

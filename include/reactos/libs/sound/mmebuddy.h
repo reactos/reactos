@@ -10,6 +10,9 @@
 
     Notes:
         MME Buddy was the best name I could come up with...
+
+        The structures etc. here should be treated as internal to the
+        library so should not be directly accessed elsewhere.
 */
 
 #ifndef ROS_AUDIO_MMEBUDDY_H
@@ -119,15 +122,14 @@ typedef struct _SOUND_THREAD
 
 /*
     Audio device function table
+    TODO - create/destroy instance need to work
 */
 
-typedef MMRESULT (*MMOPEN_FUNC)(
-    IN  UCHAR DeviceType,
-    IN  LPWSTR DevicePath,
-    OUT PHANDLE Handle);
+typedef MMRESULT (*MMCREATEINSTANCE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
 
-typedef MMRESULT (*MMCLOSE_FUNC)(
-    IN  HANDLE Handle);
+typedef VOID (*MMDESTROYINSTANCE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
 
 typedef MMRESULT (*MMGETCAPS_FUNC)(
     IN  struct _SOUND_DEVICE* Device,
@@ -143,14 +145,19 @@ typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
+typedef MMRESULT (*MMWAVEQUEUEBUFFER_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PWAVEHDR WaveHeader);
+
 typedef struct _MMFUNCTION_TABLE
 {
-    MMOPEN_FUNC             Open;
-    MMCLOSE_FUNC            Close;
+    MMCREATEINSTANCE_FUNC   Constructor;
+    MMDESTROYINSTANCE_FUNC  Destructor;
     MMGETCAPS_FUNC          GetCapabilities;
 
     MMWAVEQUERYFORMAT_FUNC  QueryWaveFormat;
     MMWAVESETFORMAT_FUNC    SetWaveFormat;
+    MMWAVEQUEUEBUFFER_FUNC  QueueWaveBuffer;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -178,6 +185,12 @@ typedef struct _SOUND_DEVICE_INSTANCE
     struct _SOUND_DEVICE_INSTANCE* Next;
     PSOUND_DEVICE Device;
     PSOUND_THREAD Thread;
+
+    /* Stuff generously donated to us from WinMM */
+    struct
+    {
+        DWORD ClientCallback;
+    } WinMM;
 
     /* Everything below this is used by the worker thread only */
     OVERLAPPED Overlapped;
@@ -222,7 +235,7 @@ DefaultDriverProc(
 
 ULONG
 GetSoundDeviceCount(
-    UCHAR DeviceType);
+    IN  UCHAR DeviceType);
 
 MMRESULT
 GetSoundDevice(
@@ -236,21 +249,26 @@ GetSoundDevicePath(
     OUT LPWSTR* DevicePath);
 
 VOID
-DestroyAllSoundDevices();
+RemoveAllSoundDevices();
 
 BOOLEAN
-DestroySoundDevices(
-    UCHAR DeviceType);
+RemoveSoundDevices(
+    IN  UCHAR DeviceType);
 
 BOOLEAN
 AddSoundDevice(
-    UCHAR DeviceType,
-    PWSTR DevicePath);
+    IN  UCHAR DeviceType,
+    IN  PWSTR DevicePath);
 
 BOOLEAN
 RemoveSoundDevice(
-    UCHAR DeviceType,
-    ULONG Index);
+    IN  UCHAR DeviceType,
+    IN  ULONG Index);
+
+MMRESULT
+GetSoundDeviceType(
+    IN  PSOUND_DEVICE Device,
+    OUT PUCHAR DeviceType);
 
 
 /*
@@ -275,15 +293,15 @@ OpenSoundDeviceRegKey(
 
 MMRESULT
 EnumerateNt4ServiceSoundDevices(
-    LPWSTR ServiceName,
-    UCHAR DeviceType,
-    SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
+    IN  LPWSTR ServiceName,
+    IN  UCHAR DeviceType,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
 
 MMRESULT
 DetectNt4SoundDevices(
-    UCHAR DeviceType,
-    PWSTR BaseDevicePath,
-    SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
+    IN  UCHAR DeviceType,
+    IN  PWSTR BaseDevicePath,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
 
 
 /*
@@ -292,50 +310,54 @@ DetectNt4SoundDevices(
 
 MMRESULT
 OpenKernelSoundDeviceByName(
-    PWSTR DeviceName,
-    DWORD AccessRights,
-    PHANDLE Handle);
+    IN  PWSTR DeviceName,
+    IN  DWORD AccessRights,
+    IN  PHANDLE Handle);
 
 MMRESULT
 OpenKernelSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD AccessRights);
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD AccessRights);
+
+MMRESULT
+CloseKernelSoundDevice(
+    PSOUND_DEVICE SoundDevice);
 
 MMRESULT
 PerformSoundDeviceIo(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID InBuffer,
-    DWORD InBufferSize,
-    LPVOID OutBuffer,
-    DWORD OutBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped);
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
 ReadSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID OutBuffer,
-    DWORD OutBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped);
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD IoControlCode,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
 WriteSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID InBuffer,
-    DWORD InBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped);
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
 WriteSoundDeviceBuffer(
-    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    LPVOID Buffer,
-    DWORD BufferSize,
-    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  LPVOID Buffer,
+    IN  DWORD BufferSize,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 
 /*
@@ -344,10 +366,10 @@ WriteSoundDeviceBuffer(
 
 ULONG
 GetDigitCount(
-    ULONG Number);
+    IN  ULONG Number);
 
 MMRESULT
-Win32ErrorToMmResult(UINT error_code);
+Win32ErrorToMmResult(IN UINT error_code);
 
 
 /*
@@ -366,6 +388,11 @@ DestroySoundDeviceInstance(
 MMRESULT
 DestroyAllInstancesOfSoundDevice(
     IN  PSOUND_DEVICE SoundDevice);
+
+MMRESULT
+GetSoundDeviceFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PSOUND_DEVICE* SoundDevice);
 
 
 /*
@@ -407,6 +434,14 @@ DefaultSetWaveDeviceFormat(
     IN  DWORD WaveFormatSize);
 
 MMRESULT
+DefaultInstanceConstructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
+
+VOID
+DefaultInstanceDestructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
+
+MMRESULT
 QueueWaveDeviceBuffer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEHDR BufferHeader);
@@ -440,6 +475,19 @@ StartWaveThread(
 MMRESULT
 StopWaveThread(
     IN  PSOUND_DEVICE_INSTANCE Instance);
+
+
+/*
+    mme/wodMessage.c
+*/
+
+APIENTRY DWORD
+wodMessage(
+    DWORD device_id,
+    DWORD message,
+    DWORD private_handle,
+    DWORD parameter1,
+    DWORD parameter2);
 
 
 #endif

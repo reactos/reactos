@@ -91,6 +91,22 @@ OpenKernelSoundDevice(
 }
 
 MMRESULT
+CloseKernelSoundDevice(
+    PSOUND_DEVICE SoundDevice)
+{
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    if ( SoundDevice->Handle == INVALID_HANDLE_VALUE )
+        return MMSYSERR_ERROR;  /* ok? */
+
+    CloseHandle(SoundDevice->Handle);
+    SoundDevice->Handle = INVALID_HANDLE_VALUE;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
 PerformSoundDeviceIo(
     PSOUND_DEVICE SoundDevice,
     DWORD IoControlCode,

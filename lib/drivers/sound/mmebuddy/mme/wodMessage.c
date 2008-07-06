@@ -42,6 +42,9 @@ wodMessage(
         {
             UNIVERSAL_CAPS Capabilities;
 
+            if ( parameter2 < sizeof(WAVEOUTCAPS) )
+                return MMSYSERR_INVALPARAM;
+
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
@@ -63,16 +66,14 @@ wodMessage(
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
 
-/*
             if ( parameter2 & WAVE_FORMAT_QUERY )
             {
-                Result = QueryWaveDeviceFormat(Device,
+                Result = QueryWaveDeviceFormatSupport(Device,
                                                OpenParameters->lpFormat,
                                                sizeof(WAVEFORMATEX));
 
                 return Result;
             }
-*/
 
             Result = CreateSoundDeviceInstance(Device, &Instance);
             if ( Result != MMSYSERR_NOERROR )
@@ -88,7 +89,7 @@ wodMessage(
                 return Result;
             }
 
-
+            /* TODO: Provide winmm with instance handle */
             /* TODO: Send callback... */
 
             return MMSYSERR_NOERROR;

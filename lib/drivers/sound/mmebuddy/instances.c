@@ -19,109 +19,185 @@
 #include <mmebuddy.h>
 
 /*
-    Instances
+    Init / New / Delete handlers
 */
 
-MMRESULT
-CreateSoundDeviceInstance(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PSOUND_DEVICE_INSTANCE* Instance)
+VOID
+InitSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    PSOUND_DEVICE_INSTANCE NewInstance = NULL;
+    /* Initialise */
+    SoundDeviceInstance->Next = NULL;
+    SoundDeviceInstance->Device = NULL;
+    SoundDeviceInstance->Thread = NULL;
+}
+
+PSOUND_DEVICE_INSTANCE
+AllocateSoundDeviceInstance()
+{
+    PSOUND_DEVICE_INSTANCE ptr;
+    ptr = AllocateMemoryFor(SOUND_DEVICE_INSTANCE);
+
+    if ( ! ptr )
+        return NULL;
+
+    InitSoundDeviceInstance(ptr);
+
+    return ptr;
+}
+
+VOID
+FreeSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    FreeMemory(SoundDeviceInstance);
+}
+
+
+/*
+    List management
+*/
+
+VOID
+ListSoundDeviceInstance(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
 
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    SOUND_ASSERT(SoundDevice != NULL);
+    SOUND_ASSERT(SoundDeviceInstance != NULL);
+    SOUND_ASSERT(SoundDeviceInstance->Device == NULL);
 
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    NewInstance = AllocateMemoryFor(SOUND_DEVICE_INSTANCE);
-/*
-    NewInstance = (PSOUND_DEVICE_INSTANCE)
-        HeapAlloc(GetProcessHeap(),
-                  HEAP_ZERO_MEMORY,
-                  sizeof(SOUND_DEVICE_INSTANCE));
-*/
-
-    if ( ! NewInstance )
-        return MMSYSERR_NOMEM;
-
-    /* Initialise */
-    NewInstance->Next = NULL;
-    NewInstance->Device = SoundDevice;
-    NewInstance->Thread = NULL;
+    SoundDeviceInstance->Device = SoundDevice;
 
     /* Search for an appropriate place in the list to put this instance */
-    CurrentInstance = SoundDevice->FirstInstance;
-
-    if ( ! CurrentInstance )
+    if ( ! SoundDevice->FirstInstance )
     {
         /* This is going to be the first instance */
-        SoundDevice->FirstInstance = CurrentInstance;
+        SoundDevice->FirstInstance = SoundDeviceInstance;
     }
     else
     {
         /* There is already one or more instances */
+        CurrentInstance = SoundDevice->FirstInstance;
+
         while ( CurrentInstance )
         {
             if ( ! CurrentInstance->Next )
             {
                 /* Add to the end and get outta here */
-                CurrentInstance->Next = NewInstance;
+                CurrentInstance->Next = SoundDeviceInstance;
                 break;
             }
 
             CurrentInstance = CurrentInstance->Next;
         }
     }
-
-    /* Fill the output parameter with this */
-    *Instance = NewInstance;
-
-    return MMSYSERR_NOERROR;
 }
 
-MMRESULT
-DestroySoundDeviceInstance(
-    IN  PSOUND_DEVICE_INSTANCE Instance)
+VOID
+UnlistSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
-    PSOUND_DEVICE SoundDevice = NULL;
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE CurrentInstance;
 
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
+    ASSERT(SoundDeviceInstance != NULL);
+    ASSERT(SoundDeviceInstance->Device != NULL);
 
-    SoundDevice = Instance->Device;
+    SoundDevice = SoundDeviceInstance->Device;
 
-    /* TODO - Perform cleanup, stop playback etc. */
-
-    if ( SoundDevice->FirstInstance == Instance )
+    if ( SoundDevice->FirstInstance == SoundDeviceInstance )
     {
-        /* Deleting the first instance */
+        /* Removing the first instance */
         SoundDevice->FirstInstance = NULL;
     }
     else
     {
-        /* Deleting an instance beyond the first */
+        /* Removing an instance beyond the first */
         CurrentInstance = SoundDevice->FirstInstance;
 
         /* If we hit the end of the list, evidently there's a bug */
-        while ( CurrentInstance->Next != Instance )
+        while ( CurrentInstance->Next != SoundDeviceInstance )
         {
             CurrentInstance = CurrentInstance->Next;
-            ASSERT(CurrentInstance);
+            ASSERT(CurrentInstance != NULL);
         }
 
         /* This is actually the one before the one we want to remove */
-        CurrentInstance->Next = Instance->Next;
+        CurrentInstance->Next = SoundDeviceInstance->Next;
+    }
+}
+
+
+/*
+    Public routines
+*/
+
+MMRESULT
+CreateSoundDeviceInstance(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PSOUND_DEVICE_INSTANCE* SoundDeviceInstance)
+{
+    PSOUND_DEVICE_INSTANCE CreatedInstance = NULL;
+    MMRESULT Result;
+
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    CreatedInstance = AllocateSoundDeviceInstance();
+    if ( ! CreatedInstance )
+        return MMSYSERR_NOMEM;
+
+    /* Add the new instance to the device's instance list */
+    ListSoundDeviceInstance(SoundDevice, CreatedInstance);
+
+    /* Consult the custom construction function */
+    Result = SoundDevice->Functions.Constructor(CreatedInstance);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        SOUND_DEBUG(L"Custom ctor returned failure - unlisting");
+        UnlistSoundDeviceInstance(CreatedInstance);
+        SOUND_DEBUG(L"Freeing");
+        FreeSoundDeviceInstance(CreatedInstance);
+        CreatedInstance = NULL;
+        //DestroySoundDeviceInstance(CreatedInstance);
     }
 
+    /* Fill the output parameter with this */
+    *SoundDeviceInstance = CreatedInstance;
+
+    return Result;
+}
+
+MMRESULT
+DestroySoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    PSOUND_DEVICE SoundDevice = NULL;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    SoundDevice = SoundDeviceInstance->Device;
+
+    /* TODO - Perform cleanup, stop playback etc. */
+
+    /* Call the custom destructor */
+    SoundDevice->Functions.Destructor(SoundDeviceInstance);
+
+    /* Remove the isntance from the device's instance list */
+    UnlistSoundDeviceInstance(SoundDeviceInstance);
+
     /* Kill it! */
-    FreeMemory(Instance);
+    FreeSoundDeviceInstance(SoundDeviceInstance);
     /*HeapFree(GetProcessHeap(), 0, Instance);*/
 
-    return MMSYSERR_NOTSUPPORTED;
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -148,3 +224,18 @@ DestroyAllInstancesOfSoundDevice(
     return MMSYSERR_NOERROR;
 }
 
+MMRESULT
+GetSoundDeviceFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PSOUND_DEVICE* SoundDevice)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    *SoundDevice = SoundDeviceInstance->Device;
+
+    return MMSYSERR_NOERROR;
+}
