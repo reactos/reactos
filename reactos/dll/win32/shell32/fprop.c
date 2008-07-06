@@ -678,13 +678,16 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
     pOffset = wcsrchr(wFileName, L'.');
     if (!pOffset)
     {
+        Length = wcslen(szName);
+        if (Length >=94)
+           return 0;
         wcscpy(szName, L"CLSID\\");
         wcscpy(&szName[6], wFileName);
     }
     else
     {
         Length = wcslen(pOffset);
-        if (Length  >= 70)
+        if (Length  >= 100)
             return 0;
         wcscpy(szName, pOffset);
     }
@@ -700,6 +703,7 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
         if (RegGetValueW(HKEY_CLASSES_ROOT, pOffset, NULL, RRF_RT_REG_SZ, NULL, szName, &dwName) == ERROR_SUCCESS)
         {
             TRACE("EnumPropSheetExt szName %s, pOffset %s\n", debugstr_w(szName), debugstr_w(pOffset));
+            szName[(sizeof(szName)/sizeof(WCHAR))-1] = L'\0';
             hpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
             Pages +=SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)hppages);
         }
