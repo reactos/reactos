@@ -35,7 +35,7 @@ BOOLEAN TestCallback(
 {
     MessageBox(0, DevicePath, L"CALLBACK", MB_OK | MB_TASKMODAL);
 
-    CreateSoundDevice(DeviceType, DevicePath);
+    AddSoundDevice(DeviceType, DevicePath);
 
     return TRUE;
 }
@@ -96,7 +96,7 @@ TestGetCaps()
     PSOUND_DEVICE Device;
     MMRESULT Result;
 
-    CreateSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
     Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
 
     if ( Result != MMSYSERR_NOERROR )
@@ -126,7 +126,7 @@ TestFormatQuery()
     MMRESULT Result;
     WAVEFORMATEX fmt;
 
-    CreateSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
     Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
 
     if ( Result != MMSYSERR_NOERROR )
@@ -188,7 +188,7 @@ TestThreading()
     PSOUND_DEVICE Device;
     PSOUND_DEVICE_INSTANCE Instance;
 
-    CreateSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
     Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
     if ( Result != MMSYSERR_NOERROR )
     {
@@ -216,14 +216,6 @@ TestThreading()
     MessageBox(0, L"Click to kill thread", L"Bai", MB_OK | MB_TASKMODAL);
 
     StopWaveThread(Instance);
-/*
-    P
-
-MMRESULT
-CreateSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    OUT PSOUND_THREAD* Thread);
-*/
 }
 
 

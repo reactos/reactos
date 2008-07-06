@@ -7,6 +7,8 @@
 
     History:
         24 May 2008 - Created
+        2 July 2008 - Added device names as seen from user-mode
+        5 July 2008 - Added macros for checking device type
 
     This file contains definitions and structures for Windows NT4 style
     multimedia drivers. The NT4 DDK has these split across multiple header
@@ -47,6 +49,18 @@
 
 #define VALID_SOUND_DEVICE_TYPE(x) \
     ( ( x >= MIN_SOUND_DEVICE_TYPE ) && ( x <= MAX_SOUND_DEVICE_TYPE ) )
+
+#define IS_WAVE_DEVICE_TYPE(x) \
+    ( ( x == WAVE_IN_DEVICE_TYPE ) || ( x == WAVE_OUT_DEVICE_TYPE ) )
+
+#define IS_MIDI_DEVICE_TYPE(x) \
+    ( ( x == MIDI_IN_DEVICE_TYPE ) || ( x == MIDI_OUT_DEVICE_TYPE ) )
+
+#define IS_AUX_DEVICE_TYPE(x) \
+    ( x == AUX_DEVICE_TYPE )
+
+#define IS_MIXER_DEVICE_TYPE(x) \
+    ( x == MIXER_DEVICE_TYPE )
 
 
 /*

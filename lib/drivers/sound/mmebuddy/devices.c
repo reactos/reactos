@@ -150,11 +150,12 @@ InitSoundDeviceFunctionTable(
 {
     Device->Functions.GetCapabilities = DefaultGetSoundDeviceCapabilities;
     Device->Functions.QueryWaveFormat = DefaultQueryWaveDeviceFormatSupport;
+    Device->Functions.SetWaveFormat = DefaultSetWaveDeviceFormat;
 }
 
 
 BOOLEAN
-CreateSoundDevice(
+AddSoundDevice(
     UCHAR DeviceType,
     LPWSTR DevicePath)
 {
@@ -237,7 +238,7 @@ CreateSoundDevice(
 
 
 BOOLEAN
-DestroySoundDevice(
+RemoveSoundDevice(
     UCHAR DeviceType,
     ULONG Index)
 {
@@ -430,14 +431,61 @@ DefaultQueryWaveDeviceFormatSupport(
         return MMSYSERR_INVALPARAM;
 
     /* Make sure we have a wave device */
-    if ( ( Device->DeviceType != WAVE_OUT_DEVICE_TYPE ) &&
-         ( Device->DeviceType != WAVE_IN_DEVICE_TYPE ) )
+    if ( IS_WAVE_DEVICE_TYPE(Device->DeviceType) )
     {
         return MMSYSERR_INVALPARAM;
     }
 
     Result = WriteSoundDevice(Device,
                               IOCTL_WAVE_QUERY_FORMAT,
+                              (LPVOID) WaveFormat,
+                              WaveFormatSize,
+                              &BytesReturned,
+                              NULL);
+
+    return Result;
+}
+
+MMRESULT
+SetWaveDeviceFormat(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
+{
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! WaveFormat )
+        return MMSYSERR_INVALPARAM;
+
+    /* TODO: Should we check the size? */
+
+    return Device->Functions.SetWaveFormat(Device, WaveFormat, WaveFormatSize);
+}
+
+MMRESULT
+DefaultSetWaveDeviceFormat(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize)
+{
+    MMRESULT Result;
+    DWORD BytesReturned = 0;
+
+    if ( ! Device )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! WaveFormat )
+        return MMSYSERR_INVALPARAM;
+
+    /* Make sure we have a wave device */
+    if ( IS_WAVE_DEVICE_TYPE(Device->DeviceType) )
+    {
+        return MMSYSERR_INVALPARAM;
+    }
+
+    Result = WriteSoundDevice(Device,
+                              IOCTL_WAVE_SET_FORMAT,
                               (LPVOID) WaveFormat,
                               WaveFormatSize,
                               &BytesReturned,

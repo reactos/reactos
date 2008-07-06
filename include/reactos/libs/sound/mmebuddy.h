@@ -115,7 +115,7 @@ typedef MMRESULT (*MMGETCAPS_FUNC)(
     IN  struct _SOUND_DEVICE* SoundDevice,
     OUT PUNIVERSAL_CAPS Capabilities);
 
-typedef MMRESULT (*MMQUERYWAVEFORMAT_FUNC)(
+typedef MMRESULT (*MMWAVEFORMAT_FUNC)(
     IN  struct _SOUND_DEVICE* SoundDevice,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
@@ -125,7 +125,9 @@ typedef struct _MMFUNCTION_TABLE
     MMOPEN_FUNC             Open;
     MMCLOSE_FUNC            Close;
     MMGETCAPS_FUNC          GetCapabilities;
-    MMQUERYWAVEFORMAT_FUNC  QueryWaveFormat;
+
+    MMWAVEFORMAT_FUNC       QueryWaveFormat;
+    MMWAVEFORMAT_FUNC       SetWaveFormat;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -196,12 +198,12 @@ DestroySoundDevices(
     UCHAR DeviceType);
 
 BOOLEAN
-CreateSoundDevice(
+AddSoundDevice(
     UCHAR DeviceType,
     PWSTR DevicePath);
 
 BOOLEAN
-DestroySoundDevice(
+RemoveSoundDevice(
     UCHAR DeviceType,
     ULONG Index);
 
@@ -336,6 +338,18 @@ QueryWaveDeviceFormatSupport(
 
 MMRESULT
 DefaultQueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
+MMRESULT
+SetWaveDeviceFormat(
+    IN  PSOUND_DEVICE Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
+MMRESULT
+DefaultSetWaveDeviceFormat(
     IN  PSOUND_DEVICE Device,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
