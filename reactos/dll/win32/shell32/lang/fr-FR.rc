@@ -3,7 +3,7 @@
  * French language support
  *
  * Copyright 1998 Juergen Schmied
- *           2007 Pierre Schweitzer 
+ *           2007-2008 Pierre Schweitzer 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -684,11 +684,11 @@ BEGIN
 	IDS_LNK_FILE                "Raccourci"
 	IDS_SYS_FILE                "Fichier système"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Ouvrir"
+	IDS_RUNAS_VERB              "Lancer en tant que "
+	IDS_EDIT_VERB               "Éditer"
+	IDS_FIND_VERB               "Chercher"
+	IDS_PRINT_VERB              "Imprimer"
+	IDS_PLAY_VERB               "Lire"
+	IDS_PREVIEW_VERB            "Apercevoir"
 END

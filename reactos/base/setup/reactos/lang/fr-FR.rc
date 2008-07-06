@@ -1,13 +1,15 @@
-/* $Id: En.rc 18526 2005-10-17 18:04:11Z cwittich $ */
-// FRENCH translation by G. Maton (mustang9@gmail.com)
-
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-/* String Tables */
-STRINGTABLE DISCARDABLE
+IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    IDS_CAPTION  "Installation de ReactOS"
-    IDS_TEXT     "Vous ne pouvez pas installer ReactOS directement depuis ce CD!\n\nVeuillez redémarrer votre ordinateur depuis ce CD afin d'installer ReactOS."
+    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Vous ne pouver pas installer ReactOS directement depuis ce CD! "\
+          "Veuillez redÃ©marrer votre ordinateur depuis ce CD pour pouvoir "\
+           "installer ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Cliquez sur Terminer pour quitter l'installation.", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* EOF */
