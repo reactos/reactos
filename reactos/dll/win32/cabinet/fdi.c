@@ -121,7 +121,7 @@ typedef struct {
 
 typedef struct fdi_cds_fwd {
   void *hfdi;                      /* the hfdi we are using                 */
-  int filehf, cabhf;               /* file handle we are using              */
+  INT_PTR filehf, cabhf;           /* file handle we are using              */
   struct fdi_folder *current;      /* current folder we're extracting from  */
   cab_ULONG offset;                /* uncompressed offset within folder     */
   cab_UBYTE *outpos;               /* (high level) start of data to use up  */
@@ -160,21 +160,21 @@ void QTMupdatemodel(struct QTMmodel *model, int sym) {
   if (model->syms[0].cumfreq > 3800) {
     if (--model->shiftsleft) {
       for (i = model->entries - 1; i >= 0; i--) {
-    /* -1, not -2; the 0 entry saves this */
-    model->syms[i].cumfreq >>= 1;
-    if (model->syms[i].cumfreq <= model->syms[i+1].cumfreq) {
-      model->syms[i].cumfreq = model->syms[i+1].cumfreq + 1;
-    }
+        /* -1, not -2; the 0 entry saves this */
+        model->syms[i].cumfreq >>= 1;
+        if (model->syms[i].cumfreq <= model->syms[i+1].cumfreq) {
+          model->syms[i].cumfreq = model->syms[i+1].cumfreq + 1;
+        }
       }
     }
     else {
       model->shiftsleft = 50;
       for (i = 0; i < model->entries ; i++) {
-    /* no -1, want to include the 0 entry */
-    /* this converts cumfreqs into frequencies, then shifts right */
-    model->syms[i].cumfreq -= model->syms[i+1].cumfreq;
-    model->syms[i].cumfreq++; /* avoid losing things entirely */
-    model->syms[i].cumfreq >>= 1;
+        /* no -1, want to include the 0 entry */
+        /* this converts cumfreqs into frequencies, then shifts right */
+        model->syms[i].cumfreq -= model->syms[i+1].cumfreq;
+        model->syms[i].cumfreq++; /* avoid losing things entirely */
+        model->syms[i].cumfreq >>= 1;
       }
 
       /* now sort by frequencies, decreasing order -- this must be an
@@ -182,22 +182,22 @@ void QTMupdatemodel(struct QTMmodel *model, int sym) {
        * characteristics
        */
       for (i = 0; i < model->entries - 1; i++) {
-    for (j = i + 1; j < model->entries; j++) {
-      if (model->syms[i].cumfreq < model->syms[j].cumfreq) {
-        temp = model->syms[i];
-        model->syms[i] = model->syms[j];
-        model->syms[j] = temp;
+        for (j = i + 1; j < model->entries; j++) {
+          if (model->syms[i].cumfreq < model->syms[j].cumfreq) {
+            temp = model->syms[i];
+            model->syms[i] = model->syms[j];
+            model->syms[j] = temp;
+          }
+        }
       }
-    }
-      }
-    
+
       /* then convert frequencies back to cumfreq */
       for (i = model->entries - 1; i >= 0; i--) {
-    model->syms[i].cumfreq += model->syms[i+1].cumfreq;
+        model->syms[i].cumfreq += model->syms[i+1].cumfreq;
       }
       /* then update the other part of the table */
       for (i = 0; i < model->entries; i++) {
-    model->tabloc[model->syms[i].sym] = i;
+        model->tabloc[model->syms[i].sym] = i;
       }
     }
   }
@@ -882,7 +882,7 @@ static int LZXfdi_init(int window, fdi_decomp_state *decomp_state) {
   memcpy(CAB(lzx_position_base), base, sizeof(base));
 
   /* calculate required position slots */
-       if (window == 20) posn_slots = 42;
+  if (window == 20) posn_slots = 42;
   else if (window == 21) posn_slots = 50;
   else posn_slots = window << 1;
 
@@ -1034,7 +1034,8 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
         w += l[h++];            /* add bits already decoded */
 
         /* compute minimum size table less than or equal to *m bits */
-        z = (z = g - w) > (cab_ULONG)*m ? *m : z;        /* upper limit */
+        if ((z = g - w) > (cab_ULONG)*m)    /* upper limit */
+          z = *m;
         if ((f = 1 << (j = k - w)) > a + 1)     /* try a k-w bit table */
         {                       /* too few codes for k-w bit table */
           f -= a + 1;           /* deduct codes from patterns left */
@@ -1177,7 +1178,10 @@ static cab_LONG fdi_Zipinflate_codes(const struct Ziphuft *tl, const struct Ziph
       ZIPDUMPBITS(e)
       do
       {
-        n -= (e = (e = ZIPWSIZE - ((d &= ZIPWSIZE-1) > w ? d : w)) > n ?n:e);
+        d &= ZIPWSIZE - 1;
+        e = ZIPWSIZE - max(d, w);
+        e = min(e, n);
+        n -= e;
         do
         {
           CAB(outbuf)[w++] = CAB(outbuf)[d++];
@@ -2047,7 +2051,8 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
       /* outlen=0 means this block was the last contiguous part
          of a split block, continued in the next cabinet */
       if (outlen == 0) {
-        int pathlen, filenamelen, idx, i, cabhf;
+        int pathlen, filenamelen, idx, i;
+        INT_PTR cabhf;
         char fullpath[MAX_PATH], userpath[256];
         FDINOTIFICATION fdin;
         FDICABINETINFO fdici;
@@ -2428,7 +2433,8 @@ BOOL __cdecl FDICopy(
 { 
   FDICABINETINFO    fdici;
   FDINOTIFICATION   fdin;
-  int               cabhf, filehf = 0, idx;
+  INT_PTR           cabhf, filehf = 0;
+  int               idx;
   unsigned int      i;
   char              fullpath[MAX_PATH];
   size_t            pathlen, filenamelen;

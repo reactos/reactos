@@ -23,6 +23,7 @@
 	<file>rsrc.rc</file>
 	<file>avifil32.spec</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>msacm32</library>
 	<library>msvfw32</library>
 	<library>winmm</library>
@@ -30,7 +31,6 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
-	<library>uuid</library>
 	<library>ntdll</library>
 </module>
 </group>

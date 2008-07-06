@@ -1524,7 +1524,7 @@ HRESULT WINAPI AVISaveOptionsFree(INT nStreams,LPAVICOMPRESSOPTIONS*ppOptions)
   if (nStreams < 0 || ppOptions == NULL)
     return AVIERR_BADPARAM;
 
-  for (; nStreams > 0; nStreams--) {
+  for (nStreams--; nStreams >= 0; nStreams--) {
     if (ppOptions[nStreams] != NULL) {
       ppOptions[nStreams]->dwFlags &= ~AVICOMPRESSF_VALID;
 
