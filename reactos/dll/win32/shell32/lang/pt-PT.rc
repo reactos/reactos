@@ -681,4 +681,12 @@ BEGIN
 	IDS_INI_FILE                "Configuration Settings"
 	IDS_LNK_FILE                "Shortcut"
 	IDS_SYS_FILE                "System file"
+
+	IDS_OPEN_VERB               "Open"
+	IDS_RUNAS_VERB              "Run as "
+	IDS_EDIT_VERB               "Edit"
+	IDS_FIND_VERB               "Find"
+	IDS_PRINT_VERB              "Print"
+	IDS_PLAY_VERB               "Play"
+	IDS_PREVIEW_VERB            "Preview"
 END

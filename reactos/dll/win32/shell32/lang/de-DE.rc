@@ -679,4 +679,12 @@ BEGIN
 	IDS_INI_FILE                "Konfigurationseinstellungen"
 	IDS_LNK_FILE                "Verknüpfung"
 	IDS_SYS_FILE                "Systemdatei"
+
+	IDS_OPEN_VERB               "Öffnen"
+	IDS_RUNAS_VERB              "Ausführen als "
+	IDS_EDIT_VERB               "Bearbeiten"
+	IDS_FIND_VERB               "Finden"
+	IDS_PRINT_VERB              "Drucken"
+	IDS_PLAY_VERB               "Abspielen"
+	IDS_PREVIEW_VERB            "Vorschau"
 END

@@ -676,8 +676,16 @@ BEGIN
 	IDS_EXE_FILE                "Aplikace"
 	IDS_FON_FILE                "Soubor písma"
 	IDS_TTF_FILE                "Soubor písma TrueType"
-  IDS_HLP_FILE                "Soubor nápovìdy"
+	IDS_HLP_FILE                "Soubor nápovìdy"
 	IDS_INI_FILE                "Konfiguraèní nastavení"
 	IDS_LNK_FILE                "Zástupce"
 	IDS_SYS_FILE                "Systémový soubor"
+
+	IDS_OPEN_VERB               "Open"
+	IDS_RUNAS_VERB              "Run as "
+	IDS_EDIT_VERB               "Edit"
+	IDS_FIND_VERB               "Find"
+	IDS_PRINT_VERB              "Print"
+	IDS_PLAY_VERB               "Play"
+	IDS_PREVIEW_VERB            "Preview"
 END

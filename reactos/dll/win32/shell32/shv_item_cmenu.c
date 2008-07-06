@@ -37,6 +37,7 @@
 #include "shell32_main.h"
 #include "shellfolder.h"
 #include "debughlp.h"
+#include "shresdef.h"
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* ugly hack for cut&paste files */
@@ -518,6 +519,8 @@ SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
 {
     MENUITEMINFOW mii;
     PStaticShellEntry curEntry;
+    WCHAR szVerb[20];
+    UINT idResource;
 
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
@@ -530,11 +533,42 @@ SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
 
     while(curEntry)
     {
-       /* FIXME
-        * load localized verbs if its an open edit find print printto openas properties verb
-        */
+       if (!wcsicmp(curEntry->szVerb, L"open"))
+          idResource = IDS_OPEN_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"runas"))
+          idResource = IDS_RUNAS_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"edit"))
+          idResource = IDS_EDIT_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"find"))
+          idResource = IDS_FIND_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"print"))
+          idResource = IDS_PRINT_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"play"))
+          idResource = IDS_PLAY_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"preview"))
+          idResource = IDS_PREVIEW_VERB;
+       else
+          idResource = 0;
 
-       mii.dwTypeData = curEntry->szVerb;
+       if (idResource > 0)
+       {
+          if (LoadStringW(shell32_hInstance, idResource, szVerb, sizeof(szVerb)/sizeof(WCHAR)))
+          {
+             szVerb[(sizeof(szVerb)/sizeof(WCHAR))-1] = L'\0';
+             mii.dwTypeData = szVerb;
+          }
+          else
+          {
+             WARN("unknown verb %s\n", debugstr_w(curEntry->szVerb));
+             mii.dwTypeData = curEntry->szVerb;
+          }
+       }
+       else
+       {
+          WARN("unknown verb %s\n", debugstr_w(curEntry->szVerb));
+          mii.dwTypeData = curEntry->szVerb;
+       }
+
        mii.cch = strlenW(mii.dwTypeData);
        InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
        mii.fState = MFS_ENABLED;

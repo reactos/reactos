@@ -133,6 +133,13 @@
 #define IDS_LNK_FILE                170
 #define IDS_SYS_FILE                171
 #define IDS_EMPTY_BITBUCKET         172
+#define IDS_OPEN_VERB               300
+#define IDS_RUNAS_VERB              301
+#define IDS_EDIT_VERB               302
+#define IDS_FIND_VERB               303
+#define IDS_PRINT_VERB              304
+#define IDS_PLAY_VERB               305
+#define IDS_PREVIEW_VERB            306
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
