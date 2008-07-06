@@ -17,6 +17,10 @@
 
 #define DEBUG_ULTRA    0xFFFFFFFF
 
+#ifdef ASSERT
+#undef ASSERT
+#endif
+
 #ifdef DBG
 
 extern ULONG DebugTraceLevel;
@@ -40,10 +44,6 @@ extern ULONG DebugTraceLevel;
     }
 
 #endif /* _MSC_VER */
-
-#ifdef ASSERT
-#undef ASSERT
-#endif
 
 #ifdef NASSERT
 #define ASSERT(x)
