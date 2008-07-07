@@ -27,6 +27,7 @@ extern unsigned int _image_base__;
 static RTL_CRITICAL_SECTION PebLock;
 static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
+static RTL_BITMAP TlsExpansionBitMap;
 PLDR_DATA_TABLE_ENTRY ExeModule;
 
 NTSTATUS LdrpAttachThread (VOID);
@@ -333,11 +334,16 @@ LdrpInit(PCONTEXT Context,
        Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
        Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
-       /* initialize tls bitmap */
+       /* initialize tls bitmaps */
        RtlInitializeBitMap (&TlsBitMap,
                             Peb->TlsBitmapBits,
                             TLS_MINIMUM_AVAILABLE);
+       RtlInitializeBitMap (&TlsExpansionBitMap,
+                            Peb->TlsExpansionBitmapBits,
+                            TLS_EXPANSION_SLOTS);
+
        Peb->TlsBitmap = &TlsBitMap;
+       Peb->TlsExpansionBitmap = &TlsExpansionBitMap;
        Peb->TlsExpansionCounter = TLS_MINIMUM_AVAILABLE;
 
        /* Initialize table of callbacks for the kernel. */
