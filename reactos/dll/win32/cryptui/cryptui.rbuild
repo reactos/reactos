@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="cryptui" type="win32dll" baseaddress="${BASEADDRESS_CRYPTUI}" installbase="system32" installname="cryptui.dll" allowwarnings="true">
-	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
+	<!--autoregister infsection="OleControlDlls" type="DllRegisterServer" /-->
 	<importlibrary definition="cryptui.spec.def" />
 	<include base="cryptui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
