@@ -1,8 +1,8 @@
 /*
  * HTML Help resources
- * English Language Support
+ * Slovenian Language Support
  *
- * Copyright 2005 James Hawkins
+ * Copyright 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,28 +19,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Contents"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Search"
-    IDS_FAVORITES    "Favor&ites"
+    IDS_CONTENTS     "&Vsebina"
+    IDS_INDEX        "I&ndeks"
+    IDS_SEARCH       "&Iskanje"
+    IDS_FAVORITES    "&Priljubljene"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Show"
-    IDTB_CONTRACT    "Hide"
-    IDTB_STOP        "Stop"
-    IDTB_REFRESH     "Refresh"
-    IDTB_BACK        "Back"
-    IDTB_HOME        "Home"
-    IDTB_SYNC        "Sync"
-    IDTB_PRINT       "Print"
-    IDTB_OPTIONS     "Options"
-    IDTB_FORWARD     "Forward"
+    IDTB_EXPAND      "Pokaži"
+    IDTB_CONTRACT    "Skrij"
+    IDTB_STOP        "Ustavi"
+    IDTB_REFRESH     "Osveži"
+    IDTB_BACK        "Nazaj"
+    IDTB_HOME        "Domov"
+    IDTB_SYNC        "Sinhroniziraj"
+    IDTB_PRINT       "Natisni"
+    IDTB_OPTIONS     "Možnosti"
+    IDTB_FORWARD     "Naprej"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -49,10 +51,12 @@ BEGIN
     IDTB_SEARCH      "IDTB_SEARCH"
     IDTB_HISTORY     "IDTB_HISTORY"
     IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Customize"
+    IDTB_JUMP1       "Skok1"
+    IDTB_JUMP2       "Skok2"
+    IDTB_CUSTOMIZE   "Prilagodi"
     IDTB_ZOOM        "Zoom"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
+
+#pragma code_page(default)

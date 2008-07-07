@@ -108,6 +108,9 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
 
         FIXME("Not all HH cases handled correctly\n");
 
+        if (!filename)
+            return NULL;
+
         index = strstrW(filename, delimW);
         if (index)
         {
@@ -123,21 +126,26 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
         }
 
         info = CreateHelpViewer(filename);
+        if(!info)
+            return NULL;
 
-        if (info)
+        if(!index)
+            index = info->WinType.pszFile;
+
+        res = NavigateToChm(info, info->pCHMInfo->szFile, index);
+        if(!res)
         {
-            if (!index)
-                index = info->WinType.pszFile;
-            res = NavigateToChm(info, info->pCHMInfo->szFile, index);
-            if(!res)
-                ReleaseHelpViewer(info);
+            ReleaseHelpViewer(info);
+            return NULL;
         }
-
-        return NULL; /* FIXME */
+        return info->WinType.hwndHelp;
     }
     case HH_HELP_CONTEXT: {
         HHInfo *info;
         LPWSTR url;
+
+        if (!filename)
+            return NULL;
 
         info = CreateHelpViewer(filename);
         if(!info)
@@ -145,12 +153,14 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
 
         url = FindContextAlias(info->pCHMInfo, data);
         if(!url)
+        {
+            ReleaseHelpViewer(info);
             return NULL;
+        }
 
         NavigateToUrl(info, url);
         heap_free(url);
-
-        return NULL; /* FIXME */
+        return info->WinType.hwndHelp;
     }
     case HH_PRETRANSLATEMESSAGE: {
         static BOOL warned = FALSE;

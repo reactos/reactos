@@ -1579,7 +1579,7 @@ static inline ULONG WINAPI IMAPIProp_fnRelease(LPMAPIPROP iface)
  * NOTES
  *  - If this function succeeds, the returned information in *lppError must be
  *  freed using MAPIFreeBuffer() once the caller is finished with it.
- *  - It is possible for this function to suceed and set *lppError to NULL,
+ *  - It is possible for this function to succeed and set *lppError to NULL,
  *  if there is no further information to report about hRes.
  */
 static inline HRESULT WINAPI
@@ -1598,7 +1598,7 @@ IMAPIProp_fnGetLastError(LPMAPIPROP iface, HRESULT hRes,
 /**************************************************************************
  *  IMAPIProp_SaveChanges {MAPI32}
  *
- * Update any changes made to a tansactional IMAPIProp object.
+ * Update any changes made to a transactional IMAPIProp object.
  *
  * PARAMS
  *  iface    [I] IMAPIProp object to update
@@ -1701,7 +1701,7 @@ IMAPIProp_fnGetProps(LPMAPIPROP iface, LPSPropTagArray lpTags,
  *  iface   [I] IMAPIProp object to get the property tag list from
  *  ulFlags [I] Return 0=Ascii MAPI_UNICODE=Unicode strings for
  *              unspecified types
- *  lppTags [O] Destination for the retrieved peoperty tag list
+ *  lppTags [O] Destination for the retrieved property tag list
  *
  * RETURNS
  *  Success: S_OK. *lppTags contains the tags for all available properties.

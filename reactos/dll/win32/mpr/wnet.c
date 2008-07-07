@@ -1312,6 +1312,7 @@ DWORD WINAPI WNetGetResourceInformationA( LPNETRESOURCEA lpNetResource,
         ret = _thunkNetResourceArrayAToW(lpNetResource, &count, lpNetResourceW, &size);
         if (ret == WN_MORE_DATA)
         {
+            HeapFree(GetProcessHeap(), 0, lpNetResourceW);
             lpNetResourceW = HeapAlloc(GetProcessHeap(), 0, size);
             if (lpNetResourceW)
                 ret = _thunkNetResourceArrayAToW(lpNetResource,
@@ -1343,6 +1344,7 @@ DWORD WINAPI WNetGetResourceInformationA( LPNETRESOURCEA lpNetResource,
                 {
                     ret = _thunkNetResourceArrayWToA(lpBufferW,
                             &count, lpBuffer, cbBuffer);
+                    HeapFree(GetProcessHeap(), 0, lpNetResourceW);
                     lpNetResourceW = lpBufferW;
                     size = sizeof(NETRESOURCEA);
                     size += WideCharToMultiByte(CP_ACP, 0, lpNetResourceW->lpRemoteName,

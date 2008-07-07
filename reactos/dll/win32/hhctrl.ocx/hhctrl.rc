@@ -30,6 +30,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "version.rc"
 
 #include "Cs.rc"
+#include "Da.rc"
 #include "De.rc"
 #include "El.rc"
 #include "En.rc"
@@ -41,5 +42,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "No.rc"
 #include "Pl.rc"
 #include "Ru.rc"
+#include "Si.rc"
 #include "Sv.rc"
 #include "Tr.rc"

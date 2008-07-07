@@ -1,8 +1,8 @@
 /*
  * HTML Help resources
- * English Language Support
+ * Danish Language Support
  *
- * Copyright 2005 James Hawkins
+ * Copyright 2008 Jens Albretsen <jens@albretsen.dk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,28 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Contents"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Search"
-    IDS_FAVORITES    "Favor&ites"
+    IDS_CONTENTS     "&Indhold"
+    IDS_INDEX        "I&ndeks"
+    IDS_SEARCH       "&Søg"
+    IDS_FAVORITES    "Favor&itter"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Show"
-    IDTB_CONTRACT    "Hide"
+    IDTB_EXPAND      "Vis"
+    IDTB_CONTRACT    "Skjul"
     IDTB_STOP        "Stop"
-    IDTB_REFRESH     "Refresh"
-    IDTB_BACK        "Back"
-    IDTB_HOME        "Home"
-    IDTB_SYNC        "Sync"
-    IDTB_PRINT       "Print"
-    IDTB_OPTIONS     "Options"
-    IDTB_FORWARD     "Forward"
+    IDTB_REFRESH     "Opdatér"
+    IDTB_BACK        "Tilbage"
+    IDTB_HOME        "Hjem"
+    IDTB_SYNC        "Synkroniser"
+    IDTB_PRINT       "Udskriv"
+    IDTB_OPTIONS     "Indstillinger"
+    IDTB_FORWARD     "Frem"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -51,8 +51,8 @@ BEGIN
     IDTB_FAVORITES   "IDTB_FAVORITES"
     IDTB_JUMP1       "Jump1"
     IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Customize"
-    IDTB_ZOOM        "Zoom"
+    IDTB_CUSTOMIZE   "Tilpas"
+    IDTB_ZOOM        "Forstør"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END

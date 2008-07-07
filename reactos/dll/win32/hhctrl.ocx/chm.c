@@ -229,7 +229,7 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
         info->WinType.cbStruct=sizeof(info->WinType);
         info->WinType.fUniCodeStrings=TRUE;
         info->WinType.pszType=strdupW(defaultwinW);
-        info->WinType.pszToc = strdupW(info->pCHMInfo->defToc);
+        info->WinType.pszToc = strdupW(info->pCHMInfo->defToc ? info->pCHMInfo->defToc : null);
         info->WinType.pszIndex = strdupW(null);
         info->WinType.fsValidMembers=0;
         info->WinType.fsWinProperties=HHWIN_PROP_TRI_PANE;
@@ -363,14 +363,13 @@ IStream *GetChmStream(CHMInfo *info, LPCWSTR parent_chm, ChmPath *chm_file)
 CHMInfo *OpenCHM(LPCWSTR szFile)
 {
     WCHAR file[MAX_PATH] = {0};
-    DWORD res;
     HRESULT hres;
 
     static const WCHAR wszSTRINGS[] = {'#','S','T','R','I','N','G','S',0};
 
     CHMInfo *ret = heap_alloc_zero(sizeof(CHMInfo));
 
-    res = GetFullPathNameW(szFile, sizeof(file)/sizeof(file[0]), file, NULL);
+    GetFullPathNameW(szFile, sizeof(file)/sizeof(file[0]), file, NULL);
     ret->szFile = strdupW(file);
 
     hres = CoCreateInstance(&CLSID_ITStorage, NULL, CLSCTX_INPROC_SERVER,
@@ -391,7 +390,7 @@ CHMInfo *OpenCHM(LPCWSTR szFile)
             &ret->strings_stream);
     if(FAILED(hres)) {
         WARN("Could not open #STRINGS stream: %08x\n", hres);
-        return CloseCHM(ret);
+        /* It's not critical, so we pass */
     }
 
     if(!ReadChmSystem(ret)) {

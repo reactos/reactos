@@ -1,7 +1,7 @@
 /*
- * MPR dll resources
+ * MPR dll resources for Danish
  *
- * Copyright (C) 2007 Daniel Nylander
+ * Copyright (C) 2008 Jens Albretsen <jens@albretsen.dk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,29 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ENTIRENETWORK "Hela nätverket"
+    IDS_ENTIRENETWORK "Hele netværket"
 }
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ange nätverkslösenord"
+CAPTION "Skriv netværkskodeord"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Ange ditt användarnamn och lösenord:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "Skriv dit brugernavn og kodeord:", IDC_EXPLAIN, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
 /* LTEXT "Realm", -1, 40, 46, 50, 10 */
- LTEXT "Användare", -1, 40, 66, 50, 10
- LTEXT "Lösenord", -1, 40, 86, 50, 10
+ LTEXT "Brugernavn", -1, 40, 66, 50, 10
+ LTEXT "Kodeord", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Spara detta lösenord (osäkert)", IDC_SAVEPASSWORD,
+ CHECKBOX "Gem dette ko&deord (usikkert)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Avbryt", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Annuller", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
