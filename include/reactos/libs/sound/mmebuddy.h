@@ -169,7 +169,8 @@ typedef struct _WAVE_THREAD_DATA
     PWAVEHDR FirstBuffer;
     PWAVEHDR LastBuffer;
 
-    /*DWORD RemainingBytes;*/
+    /* How much data is waiting with the driver */
+    DWORD RemainingBytes;
 } WAVE_THREAD_DATA, *PWAVE_THREAD_DATA;
 
 /*

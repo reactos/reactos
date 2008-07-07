@@ -12,6 +12,11 @@
         4 July 2008 - Created
         5 July 2008 - Implemented basic request processing
         6 July 2008 - Added I/O completion handling
+
+    Possible improvements:
+        Spawn *one* thread to deal with requests and I/O completion, rather
+        than have a thread per sound device instance. This wouldn't be too
+        hard to do but not worth doing right now.
 */
 
 /*
