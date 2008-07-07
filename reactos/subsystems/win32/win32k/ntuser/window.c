@@ -4100,15 +4100,14 @@ NtUserSetInternalWindowPos(DWORD Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserSetLayeredWindowAttributes(DWORD Unknown0,
-                                 DWORD Unknown1,
-                                 DWORD Unknown2,
-                                 DWORD Unknown3)
+BOOL STDCALL
+NtUserSetLayeredWindowAttributes(HWND hwnd,
+			   COLORREF crKey,
+			   BYTE bAlpha,
+			   DWORD dwFlags)
 {
-   UNIMPLEMENTED
-
-   return 0;
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 

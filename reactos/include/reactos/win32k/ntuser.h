@@ -2186,13 +2186,13 @@ NTAPI
 NtUserSetKeyboardState(
   LPBYTE Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetLayeredWindowAttributes(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd,
+  COLORREF crKey,
+  BYTE bAlpha,
+  DWORD dwFlags);
 
 DWORD
 NTAPI

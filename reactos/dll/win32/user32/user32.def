@@ -610,7 +610,7 @@ SetForegroundWindow@4
 SetInternalWindowPos@16
 SetKeyboardState@4
 SetLastErrorEx@8
-SetLayeredWindowAttributes@16
+SetLayeredWindowAttributes@16=NtUserSetLayeredWindowAttributes@16
 SetLogonNotifyWindow@8
 SetMenu@8
 SetMenuContextHelpId@8

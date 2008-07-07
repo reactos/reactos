@@ -1548,20 +1548,6 @@ SetForegroundWindow(HWND hWnd)
 
 
 /*
- * @unimplemented
- */
-BOOL STDCALL
-SetLayeredWindowAttributes(HWND hwnd,
-			   COLORREF crKey,
-			   BYTE bAlpha,
-			   DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @implemented
  */
 HWND STDCALL
