@@ -47,17 +47,25 @@ IntGdiCreateBitmap(
    BitsPixel = BITMAPOBJ_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
-   if (BitsPixel == 0 || Width < 0)
+   if (BitsPixel == 0 || Width <= 0 || Width >= 0x8000000 || Height == 0)
    {
       DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
+   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
 
-   Size.cx = abs(Width);
+   Size.cx = Width;
    Size.cy = abs(Height);
+
+   /* Make sure that cjBits will not overflow */
+   if ((ULONGLONG)WidthBytes * Size.cy >= 0x100000000ULL)
+   {
+      DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
    /* Create the bitmap object. */
    hBitmap = IntCreateBitmap(Size, WidthBytes,
@@ -166,18 +174,10 @@ IntCreateCompatibleBitmap(
 {
 	HBITMAP Bmp;
 
-	Bmp = NULL;
-
-	if ((Width >= 0x10000) || (Height >= 0x10000))
-	{
-		DPRINT1("got bad width %d or height %d, please look for reason\n", Width, Height);
-		return NULL;
-	}
-
 	/* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
 	if (0 == Width || 0 == Height)
 	{
-		Bmp = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
+		Bmp = NtGdiGetStockObject(DEFAULT_BITMAP);
 	}
 	else
 	{
@@ -602,15 +602,11 @@ NtGdiSetPixel(
 
 /*  Internal Functions  */
 
-INT FASTCALL
-BITMAPOBJ_GetRealBitsPixel(INT nBitsPixel)
+UINT FASTCALL
+BITMAPOBJ_GetRealBitsPixel(UINT nBitsPixel)
 {
-	if (nBitsPixel < 0)
-		return 0;
 	if (nBitsPixel <= 1)
 		return 1;
-	if (nBitsPixel <= 2)
-		return 2;
 	if (nBitsPixel <= 4)
 		return 4;
 	if (nBitsPixel <= 8)
