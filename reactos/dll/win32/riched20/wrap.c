@@ -58,21 +58,47 @@ static void ME_BeginRow(ME_WrapContext *wc)
 static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
 {
   ME_DisplayItem *p, *row, *para;
+  BOOL bSkippingSpaces = TRUE;
   int ascent = 0, descent = 0, width=0, shift = 0, align = 0;
   /* wrap text */
   para = ME_GetParagraph(wc->pRowStart);
-  for (p = wc->pRowStart; p!=pEnd; p = p->next)
+
+  for (p = pEnd->prev; p!=wc->pRowStart->prev; p = p->prev)
   {
-    /* ENDPARA run shouldn't affect row height, except if it's the only run in the paragraph */
-    if (p->type==diRun && ((p==wc->pRowStart) || !(p->member.run.nFlags & MERF_ENDPARA))) { /* FIXME add more run types */
-      if (p->member.run.nAscent>ascent)
-        ascent = p->member.run.nAscent;
-      if (p->member.run.nDescent>descent)
-        descent = p->member.run.nDescent;
-      if (!(p->member.run.nFlags & (MERF_ENDPARA|MERF_SKIPPED)))
-        width += p->member.run.nWidth;
-    }
+      /* ENDPARA run shouldn't affect row height, except if it's the only run in the paragraph */
+      if (p->type==diRun && ((p==wc->pRowStart) || !(p->member.run.nFlags & MERF_ENDPARA))) { /* FIXME add more run types */
+        if (p->member.run.nAscent>ascent)
+          ascent = p->member.run.nAscent;
+        if (p->member.run.nDescent>descent)
+          descent = p->member.run.nDescent;
+        if (bSkippingSpaces)
+        {
+          /* Exclude space characters from run width.
+           * Other whitespace or delimiters are not treated this way. */
+          SIZE sz;
+          int len = p->member.run.strText->nLen;
+          WCHAR *text = p->member.run.strText->szData + len - 1;
+
+          assert (len);
+          while (len && *(text--) == ' ')
+              len--;
+          if (len)
+          {
+              if (len == p->member.run.strText->nLen)
+              {
+                  width += p->member.run.nWidth;
+              } else {
+                  sz = ME_GetRunSize(wc->context, &para->member.para,
+                                     &p->member.run, len, p->member.run.pt.x);
+                  width += sz.cx;
+              }
+          }
+          bSkippingSpaces = !len;
+        } else if (!(p->member.run.nFlags & MERF_ENDPARA))
+          width += p->member.run.nWidth;
+      }
   }
+
   row = ME_MakeRow(ascent+descent, ascent, width);
   row->member.row.nYPos = wc->pt.y;
   row->member.row.nLMargin = (!wc->nRow ? wc->nFirstMargin : wc->nLeftMargin);
@@ -98,7 +124,7 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
 static void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   if (wc->pRowStart)
-    ME_InsertRowStart(wc, p->next);
+    ME_InsertRowStart(wc, p);
 
   /*
   p = p->member.para.prev_para->next;
@@ -471,6 +497,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   ME_Context c;
   BOOL bModified = FALSE;
   int yStart = -1;
+  int yLastPos = 0;
 
   ME_InitContext(&c, editor, GetDC(editor->hWnd));
   editor->nHeight = 0;
@@ -496,6 +523,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
 
     bModified = bModified | bRedraw;
 
+    yLastPos = c.pt.y;
     c.pt.y += item->member.para.nHeight;
     item = item->member.para.next_para;
   }
@@ -503,6 +531,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
   
   editor->nTotalLength = c.pt.y;
+  editor->pBuffer->pLast->member.para.nYPos = yLastPos;
 
   ME_DestroyContext(&c, editor->hWnd);
 

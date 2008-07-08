@@ -169,6 +169,7 @@ const char *ME_GetDITypeName(ME_DIType type)
     case diTextEnd: return "diTextEnd";
     case diStartRow: return "diStartRow";
     case diUndoEndTransaction: return "diUndoEndTransaction";
+    case diUndoPotentialEndTransaction: return "diUndoPotentialEndTransaction";
     case diUndoSetParagraphFormat: return "diUndoSetParagraphFormat";
     case diUndoSetCharFormat: return "diUndoSetCharFormat";
     case diUndoInsertRun: return "diUndoInsertRun";

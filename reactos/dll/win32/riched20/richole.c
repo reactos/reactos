@@ -48,6 +48,10 @@ TEXTSERV_GUID(IID_ITextServices, 0x8d33f740, 0xcf58, 0x11ce, 0xa8, 0x9d);
 TEXTSERV_GUID(IID_ITextHost, 0xc5bdd8d0, 0xd26e, 0x11ce, 0xa8, 0x9e);
 TEXTSERV_GUID(IID_ITextHost2, 0xc5bdd8d0, 0xd26e, 0x11ce, 0xa8, 0x9e);
 DEFINE_GUID(IID_ITextDocument, 0x8cc497c0, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+DEFINE_GUID(IID_ITextRange, 0x8cc497c2, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+DEFINE_GUID(IID_ITextSelection, 0x8cc497c1, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+
+typedef struct ITextSelectionImpl ITextSelectionImpl;
 
 typedef struct IRichEditOleImpl {
     const IRichEditOleVtbl *lpRichEditOleVtbl;
@@ -55,7 +59,15 @@ typedef struct IRichEditOleImpl {
     LONG ref;
 
     ME_TextEditor *editor;
+    ITextSelectionImpl *txtSel;
 } IRichEditOleImpl;
+
+struct ITextSelectionImpl {
+    const ITextSelectionVtbl *lpVtbl;
+    LONG ref;
+
+    IRichEditOleImpl *reOle;
+};
 
 static inline IRichEditOleImpl *impl_from_IRichEditOle(IRichEditOle *iface)
 {
@@ -112,6 +124,8 @@ IRichEditOle_fnRelease(IRichEditOle *me)
     if (!ref)
     {
         TRACE ("Destroying %p\n", This);
+        This->txtSel->reOle = NULL;
+        ITextSelection_Release((ITextSelection *) This->txtSel);
         heap_free(This);
     }
     return ref;
@@ -358,8 +372,10 @@ static HRESULT WINAPI
 ITextDocument_fnGetSelection(ITextDocument* me, ITextSelection** ppSel)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
-    FIXME("stub %p\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p)\n", me);
+    *ppSel = (ITextSelection *) This->txtSel;
+    ITextSelection_AddRef(*ppSel);
+    return S_OK;
 }
 
 static HRESULT WINAPI
@@ -532,6 +548,981 @@ static const ITextDocumentVtbl tdvt = {
     ITextDocument_fnRangeFromPoint
 };
 
+static HRESULT WINAPI ITextSelection_fnQueryInterface(
+    ITextSelection *me,
+    REFIID riid,
+    void **ppvObj)
+{
+    *ppvObj = NULL;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+        || IsEqualGUID(riid, &IID_IDispatch)
+        || IsEqualGUID(riid, &IID_ITextRange)
+        || IsEqualGUID(riid, &IID_ITextSelection))
+    {
+        *ppvObj = me;
+        ITextSelection_AddRef(me);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ITextSelection_fnAddRef(
+    ITextSelection *me)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI ITextSelection_fnRelease(
+    ITextSelection *me)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    ULONG ref = InterlockedDecrement(&This->ref);
+    if (ref == 0)
+        heap_free(This);
+    return ref;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetTypeInfoCount(
+    ITextSelection *me,
+    UINT *pctinfo)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetTypeInfo(
+    ITextSelection *me,
+    UINT iTInfo,
+    LCID lcid,
+    ITypeInfo **ppTInfo)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetIDsOfNames(
+    ITextSelection *me,
+    REFIID riid,
+    LPOLESTR *rgszNames,
+    UINT cNames,
+    LCID lcid,
+    DISPID *rgDispId)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnInvoke(
+    ITextSelection *me,
+    DISPID dispIdMember,
+    REFIID riid,
+    LCID lcid,
+    WORD wFlags,
+    DISPPARAMS *pDispParams,
+    VARIANT *pVarResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+/*** ITextRange methods ***/
+static HRESULT WINAPI ITextSelection_fnGetText(
+    ITextSelection *me,
+    BSTR *pbstr)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetText(
+    ITextSelection *me,
+    BSTR bstr)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetChar(
+    ITextSelection *me,
+    long *pch)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetChar(
+    ITextSelection *me,
+    long ch)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetDuplicate(
+    ITextSelection *me,
+    ITextRange **ppRange)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetFormattedText(
+    ITextSelection *me,
+    ITextRange **ppRange)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetFormattedText(
+    ITextSelection *me,
+    ITextRange *pRange)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetStart(
+    ITextSelection *me,
+    long *pcpFirst)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetStart(
+    ITextSelection *me,
+    long cpFirst)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetEnd(
+    ITextSelection *me,
+    long *pcpLim)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetEnd(
+    ITextSelection *me,
+    long cpLim)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetFont(
+    ITextSelection *me,
+    ITextFont **pFont)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetFont(
+    ITextSelection *me,
+    ITextFont *pFont)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetPara(
+    ITextSelection *me,
+    ITextPara **ppPara)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetPara(
+    ITextSelection *me,
+    ITextPara *pPara)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetStoryLength(
+    ITextSelection *me,
+    long *pcch)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetStoryType(
+    ITextSelection *me,
+    long *pValue)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnCollapse(
+    ITextSelection *me,
+    long bStart)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnExpand(
+    ITextSelection *me,
+    long Unit,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetIndex(
+    ITextSelection *me,
+    long Unit,
+    long *pIndex)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetIndex(
+    ITextSelection *me,
+    long Unit,
+    long Index,
+    long Extend)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetRange(
+    ITextSelection *me,
+    long cpActive,
+    long cpOther)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnInRange(
+    ITextSelection *me,
+    ITextRange *pRange,
+    long *pb)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnInStory(
+    ITextSelection *me,
+    ITextRange *pRange,
+    long *pb)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnIsEqual(
+    ITextSelection *me,
+    ITextRange *pRange,
+    long *pb)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSelect(
+    ITextSelection *me)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnStartOf(
+    ITextSelection *me,
+    long Unit,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnEndOf(
+    ITextSelection *me,
+    long Unit,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMove(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveStart(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveEnd(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveWhile(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveStartWhile(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveEndWhile(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveUntil(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveStartUntil(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveEndUntil(
+    ITextSelection *me,
+    VARIANT *Cset,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnFindText(
+    ITextSelection *me,
+    BSTR bstr,
+    long cch,
+    long Flags,
+    long *pLength)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnFindTextStart(
+    ITextSelection *me,
+    BSTR bstr,
+    long cch,
+    long Flags,
+    long *pLength)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnFindTextEnd(
+    ITextSelection *me,
+    BSTR bstr,
+    long cch,
+    long Flags,
+    long *pLength)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnDelete(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnCut(
+    ITextSelection *me,
+    VARIANT *pVar)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnCopy(
+    ITextSelection *me,
+    VARIANT *pVar)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnPaste(
+    ITextSelection *me,
+    VARIANT *pVar,
+    long Format)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnCanPaste(
+    ITextSelection *me,
+    VARIANT *pVar,
+    long Format,
+    long *pb)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnCanEdit(
+    ITextSelection *me,
+    long *pb)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnChangeCase(
+    ITextSelection *me,
+    long Type)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetPoint(
+    ITextSelection *me,
+    long Type,
+    long *cx,
+    long *cy)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetPoint(
+    ITextSelection *me,
+    long x,
+    long y,
+    long Type,
+    long Extend)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnScrollIntoView(
+    ITextSelection *me,
+    long Value)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetEmbeddedObject(
+    ITextSelection *me,
+    IUnknown **ppv)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+/*** ITextSelection methods ***/
+static HRESULT WINAPI ITextSelection_fnGetFlags(
+    ITextSelection *me,
+    long *pFlags)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnSetFlags(
+    ITextSelection *me,
+    long Flags)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnGetType(
+    ITextSelection *me,
+    long *pType)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveLeft(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveRight(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveUp(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnMoveDown(
+    ITextSelection *me,
+    long Unit,
+    long Count,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnHomeKey(
+    ITextSelection *me,
+    long Unit,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnEndKey(
+    ITextSelection *me,
+    long Unit,
+    long Extend,
+    long *pDelta)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextSelection_fnTypeText(
+    ITextSelection *me,
+    BSTR bstr)
+{
+    ITextSelectionImpl *This = (ITextSelectionImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+static const ITextSelectionVtbl tsvt = {
+    ITextSelection_fnQueryInterface,
+    ITextSelection_fnAddRef,
+    ITextSelection_fnRelease,
+    ITextSelection_fnGetTypeInfoCount,
+    ITextSelection_fnGetTypeInfo,
+    ITextSelection_fnGetIDsOfNames,
+    ITextSelection_fnInvoke,
+    ITextSelection_fnGetText,
+    ITextSelection_fnSetText,
+    ITextSelection_fnGetChar,
+    ITextSelection_fnSetChar,
+    ITextSelection_fnGetDuplicate,
+    ITextSelection_fnGetFormattedText,
+    ITextSelection_fnSetFormattedText,
+    ITextSelection_fnGetStart,
+    ITextSelection_fnSetStart,
+    ITextSelection_fnGetEnd,
+    ITextSelection_fnSetEnd,
+    ITextSelection_fnGetFont,
+    ITextSelection_fnSetFont,
+    ITextSelection_fnGetPara,
+    ITextSelection_fnSetPara,
+    ITextSelection_fnGetStoryLength,
+    ITextSelection_fnGetStoryType,
+    ITextSelection_fnCollapse,
+    ITextSelection_fnExpand,
+    ITextSelection_fnGetIndex,
+    ITextSelection_fnSetIndex,
+    ITextSelection_fnSetRange,
+    ITextSelection_fnInRange,
+    ITextSelection_fnInStory,
+    ITextSelection_fnIsEqual,
+    ITextSelection_fnSelect,
+    ITextSelection_fnStartOf,
+    ITextSelection_fnEndOf,
+    ITextSelection_fnMove,
+    ITextSelection_fnMoveStart,
+    ITextSelection_fnMoveEnd,
+    ITextSelection_fnMoveWhile,
+    ITextSelection_fnMoveStartWhile,
+    ITextSelection_fnMoveEndWhile,
+    ITextSelection_fnMoveUntil,
+    ITextSelection_fnMoveStartUntil,
+    ITextSelection_fnMoveEndUntil,
+    ITextSelection_fnFindText,
+    ITextSelection_fnFindTextStart,
+    ITextSelection_fnFindTextEnd,
+    ITextSelection_fnDelete,
+    ITextSelection_fnCut,
+    ITextSelection_fnCopy,
+    ITextSelection_fnPaste,
+    ITextSelection_fnCanPaste,
+    ITextSelection_fnCanEdit,
+    ITextSelection_fnChangeCase,
+    ITextSelection_fnGetPoint,
+    ITextSelection_fnSetPoint,
+    ITextSelection_fnScrollIntoView,
+    ITextSelection_fnGetEmbeddedObject,
+    ITextSelection_fnGetFlags,
+    ITextSelection_fnSetFlags,
+    ITextSelection_fnGetType,
+    ITextSelection_fnMoveLeft,
+    ITextSelection_fnMoveRight,
+    ITextSelection_fnMoveUp,
+    ITextSelection_fnMoveDown,
+    ITextSelection_fnHomeKey,
+    ITextSelection_fnEndKey,
+    ITextSelection_fnTypeText
+};
+
+static ITextSelectionImpl *
+CreateTextSelection(IRichEditOleImpl *reOle)
+{
+    ITextSelectionImpl *txtSel = heap_alloc(sizeof *txtSel);
+    if (!txtSel)
+        return NULL;
+
+    txtSel->lpVtbl = &tsvt;
+    txtSel->ref = 1;
+    txtSel->reOle = reOle;
+    return txtSel;
+}
+
 LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
 {
     IRichEditOleImpl *reo;
@@ -544,6 +1535,12 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
     reo->lpTextDocumentVtbl = &tdvt;
     reo->ref = 1;
     reo->editor = editor;
+    reo->txtSel = CreateTextSelection(reo);
+    if (!reo->txtSel)
+    {
+        heap_free(reo);
+        return 0;
+    }
     TRACE("Created %p\n",reo);
     *ppObj = (LPVOID) reo;
 

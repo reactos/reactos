@@ -32,6 +32,14 @@ extern "C" {
 
 #define cchTextLimitDefault 0x7fff
 
+#if defined(__GNUC__)
+# define MSFTEDIT_CLASS (const WCHAR []){ 'R','i','c','h','E','d','i','t','5','0','W',0 }
+#elif defined(_MSC_VER)
+# define MSFTEDIT_CLASS L"RichEdit50W"
+#else
+static const WCHAR MSFTEDIT_CLASS[] = { 'R','i','c','h','E','d','i','t','5','0','W',0 };
+#endif
+
 #define RICHEDIT_CLASS20A	"RichEdit20A"
 #if defined(__GNUC__)
 # define RICHEDIT_CLASS20W (const WCHAR []){ 'R','i','c','h','E','d','i','t','2','0','W',0 }
@@ -48,6 +56,26 @@ static const WCHAR RICHEDIT_CLASS20W[] = { 'R','i','c','h','E','d','i','t','2','
 #define RICHEDIT_CLASS		RICHEDIT_CLASS10A
 #endif
 
+#ifndef WM_NOTIFY
+#define WM_NOTIFY               0x004e
+#endif
+#ifndef WM_CONTEXTMENU
+#define WM_CONTEXTMENU          0x007b
+#endif
+#ifndef WM_UNICHAR
+#define WM_UNICHAR              0x0109
+#endif
+#ifndef WM_PRINTCLIENT
+#define WM_PRINTCLIENT          0x0318
+#endif
+
+#ifndef EM_GETLIMITTEXT
+#define EM_GETLIMITTEXT         (WM_USER + 37)
+#endif
+#ifndef EM_POSFROMCHAR
+#define EM_POSFROMCHAR          (WM_USER + 38)
+#define EM_CHARFROMPOS          (WM_USER + 39)
+#endif
 #ifndef EM_SCROLLCARET
 #define EM_SCROLLCARET		(WM_USER + 49)
 #endif
@@ -139,6 +167,24 @@ static const WCHAR RICHEDIT_CLASS20W[] = { 'R','i','c','h','E','d','i','t','2','
 #define EM_SETFONTSIZE          (WM_USER + 223)
 #define EM_GETZOOM		(WM_USER + 224)
 #define EM_SETZOOM		(WM_USER + 225)
+#define EM_GETVIEWKIND          (WM_USER + 226)
+#define EM_SETVIEWKIND          (WM_USER + 227)
+
+#define EM_GETPAGE              (WM_USER + 228)
+#define EM_SETPAGE              (WM_USER + 229)
+#define EM_GETHYPHENATEINFO     (WM_USER + 230)
+#define EM_SETHYPHENATEINFO     (WM_USER + 231)
+#define EM_GETPAGEROTATE        (WM_USER + 235)
+#define EM_SETPAGEROTATE        (WM_USER + 236)
+#define EM_GETCTFMODEBIAS       (WM_USER + 237)
+#define EM_SETCTFMODEBIAS       (WM_USER + 238)
+#define EM_GETCTFOPENSTATUS     (WM_USER + 240)
+#define EM_SETCTFOPENSTATUS     (WM_USER + 241)
+#define EM_GETIMECOMPTEXT       (WM_USER + 242)
+#define EM_ISIME                (WM_USER + 243)
+#define EM_GETIMEPROPERTY       (WM_USER + 244)
+#define EM_GETQUERYRTFOBJ       (WM_USER + 269)
+#define EM_SETQUERYRTFOBJ       (WM_USER + 270)
 
 /* New notifications */
 #define EN_MSGFILTER                    0x0700
@@ -155,16 +201,25 @@ static const WCHAR RICHEDIT_CLASS20W[] = { 'R','i','c','h','E','d','i','t','2','
 #define EN_LINK				0x070b
 #define EN_DRAGDROPDONE                 0x070c
 #define EN_PARAGRAPHEXPANDED		0x070d
+#define EN_PAGECHANGE                   0x070e
+#define EN_LOWFIRTF                     0x070f
 #define EN_ALIGNLTR			0x0710
 #define EN_ALIGNRTL			0x0711
 
 
 typedef DWORD (CALLBACK * EDITSTREAMCALLBACK)( DWORD_PTR, LPBYTE, LONG, LONG * );
 
+
+#define yHeightCharPtsMost    1638
+#define lDefaultTab           720
+
 /* tab stops number limit */
 #define MAX_TAB_STOPS         0x00000020
 
+#define MAX_TABLE_CELLS       63
+
 /* Rich edit control styles */
+#define ES_NOOLEDRAGDROP      0x00000008
 #define ES_DISABLENOSCROLL    0x00002000
 #define ES_SUNKEN             0x00004000
 #define ES_SAVESEL            0x00008000
@@ -180,6 +235,18 @@ typedef DWORD (CALLBACK * EDITSTREAMCALLBACK)( DWORD_PTR, LPBYTE, LONG, LONG * )
 #define SCF_WORD              0x00000002
 #define SCF_ALL               0x00000004
 #define SCF_USEUIRULES        0x00000008
+#define SCF_ASSOCIATEFONT     0x00000010
+#define SCF_NOKBUPDATE        0x00000020
+#define SCF_ASSOCIATEFONT2    0x00000040
+
+#ifndef WM_NOTIFY
+typedef struct _nmhdr
+{
+    HWND       hwndFrom;
+    UINT       idFrom;
+    UINT       code;
+} NMHDR;
+#endif
 
 /* CHARFORMAT structure */
 typedef struct _charformat
@@ -207,6 +274,8 @@ typedef struct _charformatw
     BYTE       bPitchAndFamily;
     WCHAR      szFaceName[LF_FACESIZE];
 } CHARFORMATW;
+
+DECL_WINELIB_TYPE_AW(CHARFORMAT)
 
 typedef struct _charformat2a {
     UINT       cbSize;
@@ -252,6 +321,10 @@ typedef struct _charformat2w {
     BYTE       bRevAuthor;
 } CHARFORMAT2W;
 
+DECL_WINELIB_TYPE_AW(CHARFORMAT2)
+
+#define CHARFORMATDELTA       (sizeof(CHARFORMAT2) - sizeof(CHARFORMAT))
+
 /* CHARFORMAT masks */
 #define CFM_BOLD              0x00000001
 #define CFM_ITALIC            0x00000002
@@ -284,7 +357,47 @@ typedef struct _charformat2w {
 #define CFM_FACE              0x20000000
 #define CFM_COLOR             0x40000000
 #define CFM_SIZE              0x80000000
-#define CFM_EFFECTS	      (CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR | CFM_STRIKEOUT | CFE_PROTECTED | CFM_LINK)
+
+#define CFM_EFFECTS           (CFM_BOLD | \
+                               CFM_ITALIC | \
+                               CFM_UNDERLINE | \
+                               CFM_COLOR | \
+                               CFM_STRIKEOUT | \
+                               CFE_PROTECTED | \
+                               CFM_LINK)
+
+#define CFM_EFFECTS2          (CFM_EFFECTS | \
+                               CFM_DISABLED | \
+                               CFM_SMALLCAPS | \
+                               CFM_ALLCAPS | \
+                               CFM_HIDDEN | \
+                               CFM_OUTLINE | \
+                               CFM_SHADOW | \
+                               CFM_EMBOSS | \
+                               CFM_IMPRINT | \
+                               CFM_DISABLED | \
+                               CFM_REVISED | \
+                               CFM_SUBSCRIPT | \
+                               CFM_SUPERSCRIPT | \
+                               CFM_BACKCOLOR)
+
+#define CFM_ALL               (CFM_EFFECTS | \
+                               CFM_SIZE | \
+                               CFM_FACE | \
+                               CFM_OFFSET | \
+                               CFM_CHARSET)
+
+#define CFM_ALL2              (CFM_ALL | \
+                               CFM_EFFECTS2 | \
+                               CFM_BACKCOLOR | \
+                               CFM_LCID | \
+                               CFM_UNDERLINETYPE | \
+                               CFM_WEIGHT | \
+                               CFM_REVAUTHOR | \
+                               CFM_SPACING | \
+                               CFM_KERNING | \
+                               CFM_STYLE | \
+                               CFM_ANIMATION)
 
 /* CHARFORMAT effects */
 #define CFE_BOLD              0x00000001
@@ -308,13 +421,27 @@ typedef struct _charformat2w {
 #define CFE_REVISED           CFM_REVISED
 #define CFE_AUTOBACKCOLOR     CFM_BACKCOLOR
 
-#define CFU_CF1UNDERLINE      0xFF
-#define CFU_INVERT            0xFE
-#define CFU_UNDERLINEDOTTED   0x04
-#define CFU_UNDERLINEDOUBLE   0x03
-#define CFU_UNDERLINEWORD     0x02
-#define CFU_UNDERLINE         0x01
-#define CFU_UNDERLINENONE     0x00
+#define CFU_UNDERLINENONE             0x00
+#define CFU_UNDERLINE                 0x01
+#define CFU_UNDERLINEWORD             0x02
+#define CFU_UNDERLINEDOUBLE           0x03
+#define CFU_UNDERLINEDOTTED           0x04
+#define CFU_UNDERLINEDASH             0x05
+#define CFU_UNDERLINEDASHDOT          0x06
+#define CFU_UNDERLINEDASHDOTDOT       0x07
+#define CFU_UNDERLINEWAVE             0x08
+#define CFU_UNDERLINETHICK            0x09
+#define CFU_UNDERLINEHAIRLINE         0x0a
+#define CFU_UNDERLINEDOUBLEWAVE       0x0b
+#define CFU_UNDERLINEHEAVYWAVE        0x0c
+#define CFU_UNDERLINELONGDASH         0x0d
+#define CFU_UNDERLINETHICKDASH        0x0e
+#define CFU_UNDERLINETHICKDASHDOT     0x0f
+#define CFU_UNDERLINETHICKDASHDOTDOT  0x10
+#define CFU_UNDERLINETHICKDOTTED      0x11
+#define CFU_UNDERLINETHICKLONGDASH    0x12
+#define CFU_INVERT                    0xFE
+#define CFU_CF1UNDERLINE              0xFF
 
 /* ECO operations */
 #define ECOOP_SET             0x0001
@@ -338,6 +465,10 @@ typedef struct _charformat2w {
 #define ENM_CHANGE            0x00000001
 #define ENM_UPDATE            0x00000002
 #define ENM_SCROLL            0x00000004
+#define ENM_SCROLLEVENTS      0x00000008
+#define ENM_DRAGDROPDONE      0x00000010
+#define ENM_PARAGRAPHEXPANDED 0x00000020
+#define ENM_PAGECHANGE        0x00000040
 #define ENM_KEYEVENTS         0x00010000
 #define ENM_MOUSEEVENTS       0x00020000
 #define ENM_REQUESTRESIZE     0x00040000
@@ -346,7 +477,17 @@ typedef struct _charformat2w {
 #define ENM_PROTECTED         0x00200000
 #define ENM_CORRECTTEXT       0x00400000
 #define ENM_IMECHANGE         0x00800000
+#define ENM_LANGCHANGE        0x01000000
+#define ENM_OBJECTPOSITIONS   0x02000000
 #define ENM_LINK              0x04000000
+#define ENM_LOWFIRTF          0x08000000
+
+typedef struct _bidioptions
+{
+    UINT    cbSize;
+    WORD    wMask;
+    WORD    wEffects;
+} BIDIOPTIONS;
 
 #ifndef __RICHEDIT_CHARRANGE_DEFINED
 #define __RICHEDIT_CHARRANGE_DEFINED
@@ -370,6 +511,8 @@ typedef struct _textrangew
     CHARRANGE chrg;
     LPWSTR     lpstrText;
 } TEXTRANGEW;
+
+DECL_WINELIB_TYPE_AW(TEXTRANGE)
 
 typedef struct _editstream
 {
@@ -405,6 +548,11 @@ typedef struct _enlink {
     CHARRANGE  chrg;
 } ENLINK;
 
+typedef struct _enlowfirtf {
+    NMHDR      nmhdr;
+    char       *szControl;
+} ENLOWFIRTF;
+
 typedef struct {
     NMHDR      nmhdr;
     LONG       iob;
@@ -436,6 +584,8 @@ typedef struct _findtextW {
     LPCWSTR    lpstrText;
 } FINDTEXTW;
 
+DECL_WINELIB_TYPE_AW(FINDTEXT)
+
 typedef struct _findtextexA {
     CHARRANGE  chrg;
     LPCSTR     lpstrText;
@@ -448,6 +598,8 @@ typedef struct _findtextexW {
     CHARRANGE  chrgText;
 } FINDTEXTEXW;
 
+DECL_WINELIB_TYPE_AW(FINDTEXTEX)
+
 typedef struct _formatrange {
     HDC        hdc;
     HDC        hdcTarget;
@@ -456,12 +608,43 @@ typedef struct _formatrange {
     CHARRANGE  chrg;
 } FORMATRANGE;
 
+typedef enum tagKHYPH
+{
+    khyphNil           = 0,
+    khyphNormal        = 1,
+    khyphAddBefore     = 2,
+    khyphChangeBefore  = 3,
+    khyphDeleteBefore  = 4,
+    khyphChangeAfter   = 5,
+    khyphDelAndChange  = 6
+} KHYPH;
+
+typedef struct hyphresult
+{
+    KHYPH      khyph;
+    long       ichHyph;
+    WCHAR      chHyph;
+} HYPHRESULT;
+
+typedef struct tagHyphenateInfo
+{
+    SHORT      cbSize;
+    SHORT      dxHyphenateZone;
+    void       (WINAPI* pfnHyphenate)(WCHAR*, LANGID, long, HYPHRESULT*);
+} HYPHENATEINFO;
+
 typedef struct _msgfilter {
     NMHDR      nmhdr;
     UINT       msg;
     WPARAM     wParam;
     LPARAM     lParam;
 } MSGFILTER;
+
+typedef struct _objectpositions {
+    NMHDR      nmhdr;
+    LONG       cObjectCount;
+    LONG       *pcpPositions;
+} OBJECTPOSITIONS;
 
 typedef struct _paraformat {
     UINT       cbSize;
@@ -524,6 +707,13 @@ typedef struct _gettextex {
     LPBOOL     lpUsedDefChar;
 } GETTEXTEX;
 
+typedef struct _imecomptext {
+    LONG       cb;
+    DWORD      flags;
+} IMECOMPTEXT;
+
+void WINAPI HyphenateProc(WCHAR*, LANGID, long, HYPHRESULT*);
+
 #define SF_TEXT		      0x00000001
 #define SF_RTF		      0x00000002
 #define SF_RTFNOOBJS	      0x00000003
@@ -533,11 +723,86 @@ typedef struct _gettextex {
 #define SF_NCRFORNONASCII     0x00000040
 #define SF_RTFVAL             0x00000700
 
+/* BIDIOPTIONS.wMask flag values */
+#define BOM_DEFPARADIR        0x00000001
+#define BOM_PLAINTEXT         0x00000002
+#define BOM_NEUTRALOVERRIDE   0x00000004
+#define BOM_CONTEXTREADING    0x00000008
+#define BOM_CONTEXTALIGNMENT  0x00000010
+#define BOM_LEGACYBIDICLASS   0x00000040
+
+/* BIDIOPTIONS.wEffects flag values */
+#define BOE_RTLDIR            0x00000001
+#define BOE_PLAINTEXT         0x00000002
+#define BOE_NEUTRALOVERRIDE   0x00000004
+#define BOE_CONTEXTREADING    0x00000008
+#define BOE_CONTEXTALIGNMENT  0x00000010
+#define BOE_LEGACYBIDICLASS   0x00000040
+
 /* Clipboard formats */
 #define CF_RTF          TEXT("Rich Text Format")
 #define CF_RTFNOOBJS    TEXT("Rich Text Format Without Objects")
 #define CF_RETEXTOBJ    TEXT("RichEdit Text and Objects")
 
+/* Mode bias wParam values for EM_SETCTFMODEBIAS message */
+#define CTFMODEBIAS_DEFAULT                0x00000000
+#define CTFMODEBIAS_FILENAME               0x00000001
+#define CTFMODEBIAS_NAME                   0x00000002
+#define CTFMODEBIAS_READING                0x00000003
+#define CTFMODEBIAS_DATETIME               0x00000004
+#define CTFMODEBIAS_CONVERSATION           0x00000005
+#define CTFMODEBIAS_NUMERIC                0x00000006
+#define CTFMODEBIAS_HIRAGANA               0x00000007
+#define CTFMODEBIAS_KATAKANA               0x00000008
+#define CTFMODEBIAS_HANGUL                 0x00000009
+#define CTFMODEBIAS_HALFWIDTHKATAKANA      0x0000000a
+#define CTFMODEBIAS_FULLWIDTHALPHANUMERIC  0x0000000b
+#define CTFMODEBIAS_HALFWIDTHALPHANUMERIC  0x0000000c
+
+#define EMO_EXIT              0x00000000
+#define EMO_ENTER             0x00000001
+#define EMO_PROMOTE           0x00000002
+#define EMO_EXPAND            0x00000003
+#define EMO_MOVESELECTION     0x00000004
+#define EMO_GETVIEWMODE       0x00000005
+
+#define EMO_EXPANDSELECTION   0x00000000
+#define EMO_EXPANDDOCUMENT    0x00000001
+
+/* Page Rotate values used in wParam of EM_SETPAGEROTATE message */
+#define EPR_0                 0x00000000
+#define EPR_270               0x00000001
+#define EPR_180               0x00000002
+#define EPR_90                0x00000003
+
+/* Find flags for wParam of EM_FINDTEXT message */
+#define FR_MATCHDIAC          0x20000000
+#define FR_MATCHKASHIDA       0x40000000
+#define FR_MATCHALEFHAMZA     0x80000000
+
+/* IME Compatibility Mode return values for EM_GETIMECOMPMODE message */
+#define ICM_NOTOPEN           0x00000000
+#define ICM_LEVEL3            0x00000001
+#define ICM_LEVEL2            0x00000002
+#define ICM_LEVEL2_5          0x00000003
+#define ICM_LEVEL2_SUI        0x00000004
+#define ICM_CTF               0x00000005
+
+/* Flags value for IMECOMPTEXT structure */
+#define ICT_RESULTREADSTR     0x00000001
+
+/* Input Method Flags used in EM_SETLANGOPTIONS message */
+#define IMF_AUTOKEYBOARD        0x00000001
+#define IMF_AUTOFONT            0x00000002
+#define IMF_IMECANCELCOMPLETE   0x00000004
+#define IMF_IMEALWAYSSENDNOTIFY 0x00000008
+#define IMF_AUTOFONTSIZEADJUST  0x00000010
+#define IMF_UIFONTS             0x00000020
+#define IMF_DUALFONT            0x00000080
+
+/* Parameters values for the EM_SETIMEMODEBIAS message */
+#define IMF_SMODE_PLAURALCLAUSE 0x00000001
+#define IMF_SMODE_NONE          0x00000002
 
 /* Parameters of the EM_SETIMEOPTIONS message */
 #define IMF_FORCENONE         0x00000001
@@ -548,6 +813,7 @@ typedef struct _gettextex {
 #define IMF_FORCEACTIVE       0x00000040
 #define IMF_FORCEINACTIVE     0x00000080
 #define IMF_FORCEREMEMBER     0x00000100
+#define IMF_MULTIPLEEDIT      0x00000400
 
 /* return values of the EM_SELECTION_TYPE message */
 #define SEL_EMPTY             0x00000000
@@ -555,6 +821,15 @@ typedef struct _gettextex {
 #define SEL_OBJECT            0x00000002
 #define SEL_MULTICHAR         0x00000004
 #define SEL_MULTIOBJECT       0x00000008
+
+/* ENOLEOPFAILED.lOper value that indicates operation failure */
+#define OLEOP_DOVERB          0x00000001
+
+/* punctionation type values for wParam of EM_SETPUNCTUATION message */
+#define PC_FOLLOWING          0x00000001
+#define PC_LEADING            0x00000002
+#define PC_OVERFLOW           0x00000003
+#define PC_DELIMITER          0x00000004
 
 /* mask values in the PARAFORMAT structure */
 #define PFM_STARTINDENT       0x00000001
@@ -572,7 +847,6 @@ typedef struct _gettextex {
 #define PFM_STYLE             0x00000400
 #define PFM_BORDER            0x00000800
 #define PFM_SHADING           0x00001000
-
 #define PFM_NUMBERINGSTYLE    0x00002000
 #define PFM_NUMBERINGTAB      0x00004000
 #define PFM_NUMBERINGSTART    0x00008000
@@ -584,10 +858,61 @@ typedef struct _gettextex {
 #define PFM_NOWIDOWCONTROL    0x00200000
 #define PFM_DONOTHYPHEN       0x00400000
 #define PFM_SIDEBYSIDE        0x00800000
+#define PFM_COLLAPSED         0x01000000
+#define PFM_OUTLINELEVEL      0x02000000
+#define PFM_BOX               0x04000000
+#define PFM_RESERVED2         0x08000000
+#define PFM_TABLEROWDELIMITER 0x10000000
+#define PFM_TEXTWRAPPINGBREAK 0x20000000
 #define PFM_TABLE             0x40000000
+
+#define PFM_ALL               (PFM_STARTINDENT | \
+                               PFM_RIGHTINDENT | \
+                               PFM_OFFSET | \
+                               PFM_ALIGNMENT | \
+                               PFM_TABSTOPS | \
+                               PFM_NUMBERING | \
+                               PFM_OFFSETINDENT | \
+                               PFM_RTLPARA)
+
+#define PFM_EFFECTS           (PFM_RTLPARA | \
+                               PFM_KEEP | \
+                               PFM_KEEPNEXT | \
+                               PFM_PAGEBREAKBEFORE | \
+                               PFM_NOLINENUMBER | \
+                               PFM_NOWIDOWCONTROL | \
+                               PFM_DONOTHYPHEN | \
+                               PFM_SIDEBYSIDE | \
+                               PFM_TABLEROWDELIMITER | \
+                               PFM_TABLE)
+
+#define PFM_ALL2              (PFM_ALL | \
+                               PFM_EFFECTS | \
+                               PFM_SPACEBEFORE | \
+                               PFM_SPACEAFTER | \
+                               PFM_LINESPACING | \
+                               PFM_STYLE | \
+                               PFM_BORDER | \
+                               PFM_SHADING | \
+                               PFM_NUMBERINGSTYLE | \
+                               PFM_NUMBERINGTAB | \
+                               PFM_NUMBERINGSTART)
 
 /* numbering option */
 #define PFN_BULLET            0x00000001
+#define PFN_ARABIC            0x00000002
+#define PFN_LCLETTER          0x00000003
+#define PFN_UCLETTER          0x00000004
+#define PFN_LCROMAN           0x00000005
+#define PFN_UCROMAN           0x00000006
+
+/* paragraph format numbering styles */
+#define PFNS_PAREN            0x00000000
+#define PFNS_PARENS           0x00000100
+#define PFNS_PERIOD           0x00000200
+#define PFNS_PLAIN            0x00000300
+#define PFNS_NONUMBER         0x00000400
+#define PFNS_NEWNUMBER        0x00008000
 
 /* paragraph alignment */
 #define PFA_LEFT              0x00000001
@@ -596,6 +921,9 @@ typedef struct _gettextex {
 #define PFA_JUSTIFY           0x00000004
 #define PFA_FULL_INTERWORD    0x00000004
 #define PFA_FULL_INTERLETTER  0x00000005
+#define PFA_FULL_SCALED       0x00000006
+#define PFA_FULL_GLYPHS       0x00000007
+#define PFA_SNAP_GRID         0x00000008
 
 /* paragraph effects */
 #define PFE_RTLPARA           0x00000001
@@ -606,16 +934,63 @@ typedef struct _gettextex {
 #define PFE_NOWIDOWCONTROL    0x00000020
 #define PFE_DONOTHYPHEN       0x00000040
 #define PFE_SIDEBYSIDE        0x00000080
+#define PFE_COLLAPSED         0x00000100
+#define PFE_BOX               0x00000400
+#define PFE_TABLEROWDELIMITER 0x00001000
+#define PFE_TEXTWRAPPINGBREAK 0x00002000
 #define PFE_TABLE             0x00004000
 
+/* Set Edit Style flags for EM_SETEDITSTYLE message */
+#define SES_EMULATESYSEDIT      0x00000001
+#define SES_BEEPONMAXTEXT       0x00000002
+#define SES_EXTENDBACKCOLOR     0x00000004
+#define SES_MAPCPS              0x00000008
+#define SES_EMULATE10           0x00000010
+#define SES_USECRLF             0x00000020
+#define SES_NOXLTSYMBOLRANGE    0x00000020
+#define SES_USEAIMM             0x00000040
+#define SES_NOIME               0x00000080
+#define SES_ALLOWBEEPS          0x00000100
+#define SES_UPPERCASE           0x00000200
+#define SES_LOWERCASE           0x00000400
+#define SES_NOINPUTSEQUENCECHK  0x00000800
+#define SES_BIDI                0x00001000
+#define SES_SCROLLONKILLFOCUS   0x00002000
+#define SES_XLTCRCRLFTOCR       0x00004000
+#define SES_DRAFTMODE           0x00008000
+#define SES_USECTF              0x00010000
+#define SES_HIDEGRIDLINES       0x00020000
+#define SES_USEATFONT           0x00040000
+#define SES_CUSTOMLOOK          0x00080000
+#define SES_LBSCROLLNOTIFY      0x00100000
+#define SES_CTFALLOWEMBED       0x00200000
+#define SES_CTFALLOWSMARTTAG    0x00400000
+#define SES_CTFALLOWPROOFING    0x00800000
+
 /* streaming flags */
+#define SFF_WRITEXTRAPAR      0x00000080
 #define SFF_PWD               0x00000800
 #define SFF_KEEPDOCINFO       0x00001000
 #define SFF_PERSISTVIEWSCALE  0x00002000
 #define SFF_PLAINRTF          0x00004000
 #define SFF_SELECTION         0x00008000
 
+typedef enum _undonameid
+{
+    UID_UNKNOWN     = 0,
+    UID_TYPING      = 1,
+    UID_DELETE      = 2,
+    UID_DRAGDROP    = 3,
+    UID_CUT         = 4,
+    UID_PASTE       = 5,
+    UID_AUTOCORRECT = 6
+} UNDONAMEID;
+
 typedef LONG (*EDITWORDBREAKPROCEX)(char*,LONG,BYTE,INT);
+
+#define VM_OUTLINE            0x00000002
+#define VM_NORMAL             0x00000004
+#define VM_PAGE               0x00000009
 
 /* options of the EM_FINDWORDBREAK message */
 #define WB_CLASSIFY           0x00000003
@@ -636,6 +1011,16 @@ typedef LONG (*EDITWORDBREAKPROCEX)(char*,LONG,BYTE,INT);
 #define WBF_LEVEL2            0x00000100
 #define WBF_CUSTOM            0x00000200
 
+#define WBF_CLASS             ((BYTE) 0x0F)
+#define WBF_ISWHITE           ((BYTE) 0x10)
+#define WBF_BREAKLINE         ((BYTE) 0x20)
+#define WBF_BREAKAFTER        ((BYTE) 0x40)
+
+/* Placeholder unicode character for an embedded object */
+#ifndef WCH_EMBEDDING
+#define WCH_EMBEDDING         (WCHAR)0xFFFC
+#endif
+
 /* options of the EM_SETTEXTMODE message */
 #define TM_PLAINTEXT          0x00000001
 #define TM_RICHTEXT           0x00000002
@@ -648,10 +1033,14 @@ typedef LONG (*EDITWORDBREAKPROCEX)(char*,LONG,BYTE,INT);
 #define GT_DEFAULT            0x00000000
 #define GT_USECRLF            0x00000001
 #define GT_SELECTION          0x00000002
+#define GT_RAWTEXT            0x00000004
+#define GT_NOHIDDENTEXT       0x00000008
 
 /* Options of the EM_SETTYPOGRAPHYOPTIONS message */
-#define TO_ADVANCEDTYPOGRAPHY 0x00000001
-#define TO_SIMPLELINEBREAK    0x00000002
+#define TO_ADVANCEDTYPOGRAPHY   0x00000001
+#define TO_SIMPLELINEBREAK      0x00000002
+#define TO_DISABLECUSTOMTEXTOUT 0x00000004
+#define TO_ADVANCEDLAYOUT       0x00000008
 
 typedef struct _gettextlengthex {
     DWORD      flags;
@@ -675,23 +1064,11 @@ typedef struct _settextex {
 } SETTEXTEX;
 
 /* Flags of the EM_SETTEXTEX message */
-#define ST_DEFAULT	      0x00000000
+#define ST_DEFAULT	      0x00000000	
 #define ST_KEEPUNDO           0x00000001
 #define ST_SELECTION          0x00000002
 
-#ifdef UNICODE
-typedef CHARFORMATW CHARFORMAT;
-typedef CHARFORMAT2W CHARFORMAT2;
-typedef FINDTEXTW FINDTEXT;
-typedef FINDTEXTEXW FINDTEXTEX;
-typedef TEXTRANGEW TEXTRANGE;
-#else
-typedef CHARFORMATA CHARFORMAT;
-typedef CHARFORMAT2A CHARFORMAT2;
-typedef FINDTEXTA FINDTEXT;
-typedef FINDTEXTEXA FINDTEXTEX;
-typedef TEXTRANGEA TEXTRANGE;
-#endif
+#define ST_NEWCHARS           0x00000004
 
 #ifdef __cplusplus
 }

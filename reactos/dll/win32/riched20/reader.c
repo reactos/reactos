@@ -638,14 +638,16 @@ static void _RTFGetToken2(RTF_Info *info)
 		{
 		int	c2;
 
-			if ((c = GetChar (info)) != EOF && (c2 = GetChar (info)) != EOF)
+			if ((c = GetChar (info)) != EOF && (c2 = GetChar (info)) != EOF
+				&& isxdigit(c) && isxdigit(c2))
 			{
-				/* should do isxdigit check! */
 				info->rtfClass = rtfText;
 				info->rtfMajor = RTFCharToHex (c) * 16 + RTFCharToHex (c2);
 				return;
 			}
-			/* early eof, whoops (class is rtfUnknown) */
+			/* early eof, whoops */
+			info->rtfClass = rtfEOF;
+			info->stream->editstream->dwError = -14;
 			return;
 		}
 
@@ -2665,10 +2667,10 @@ RTFPutUnicodeString(RTF_Info *info, const WCHAR *string, int length)
 
                 memmove(info->OutputBuffer + info->dwOutputCount, string, fit * sizeof(WCHAR));
                 info->dwOutputCount += fit;
-                if (fit == sizeof(info->OutputBuffer) / sizeof(WCHAR) - info->dwOutputCount)
-                        RTFFlushUnicodeOutputBuffer(info);
                 length -= fit;
                 string += fit;
+                if (sizeof(info->OutputBuffer) / sizeof(WCHAR) == info->dwOutputCount)
+                        RTFFlushUnicodeOutputBuffer(info);
         }
 }
 

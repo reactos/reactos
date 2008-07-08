@@ -52,7 +52,8 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   
   cf.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
   lstrcpyW(cf.szFaceName, lf.lfFaceName);
-  cf.yHeight = ME_twips2pointsY(&c, lf.lfHeight);
+  /* Convert system font height from logical units to twips for cf.yHeight */
+  cf.yHeight = (lf.lfHeight * 72 * 1440) / (c.dpi.cy * c.dpi.cy);
   if (lf.lfWeight > FW_NORMAL) cf.dwEffects |= CFE_BOLD;
   cf.wWeight = lf.lfWeight;
   if (lf.lfItalic) cf.dwEffects |= CFE_ITALIC;
@@ -104,7 +105,7 @@ void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_D
 
 void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
 {
-  while(first != last)
+  while(first != last && first)
   {
     first->member.para.nFlags |= MEPF_REPAINT;
     first = first->member.para.next_para;

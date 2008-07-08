@@ -98,7 +98,8 @@ void ME_Repaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
     FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
-  ME_SendOldNotify(editor, EN_UPDATE);
+  if (!editor->bEmulateVersion10 || (editor->nEventMask & ENM_UPDATE))
+    ME_SendOldNotify(editor, EN_UPDATE);
   UpdateWindow(editor->hWnd);
 }
 
@@ -288,7 +289,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     }
 }
 
-static struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} border_details[] = {
+static const struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} border_details[] = {
   /* none */            {0, 1, PS_SOLID, FALSE},
   /* 3/4 */             {3, 4, PS_SOLID, FALSE},
   /* 1 1/2 */           {3, 2, PS_SOLID, FALSE},
@@ -303,7 +304,7 @@ static struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} 
   /* 1 1/2 dashed */    {3, 2, PS_DASH, FALSE},
 };
 
-static COLORREF         pen_colors[16] = {
+static const COLORREF pen_colors[16] = {
   /* Black */           RGB(0x00, 0x00, 0x00),  /* Blue */            RGB(0x00, 0x00, 0xFF),
   /* Cyan */            RGB(0x00, 0xFF, 0xFF),  /* Green */           RGB(0x00, 0xFF, 0x00),
   /* Magenta */         RGB(0xFF, 0x00, 0xFF),  /* Red */             RGB(0xFF, 0x00, 0x00),
@@ -675,7 +676,7 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
   
   si.nMin = 0;  
   si.nMax = editor->nTotalLength;
-  
+
   si.nPage = editor->sizeWindow.cy;
      
   TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);

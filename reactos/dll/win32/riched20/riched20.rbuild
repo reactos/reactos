@@ -8,14 +8,6 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
-	<library>ole32</library>
-	<library>imm32</library>
-	<library>user32</library>
-	<library>gdi32</library>
-	<library>kernel32</library>
-	<library>uuid</library>
-	<library>ntdll</library>
 	<file>caret.c</file>
 	<file>clipboard.c</file>
 	<file>context.c</file>
@@ -35,5 +27,13 @@
 	<file>writer.c</file>
 	<file>version.rc</file>
 	<file>riched20.spec</file>
+	<library>wine</library>
+	<library>uuid</library>
+	<library>ole32</library>
+	<library>imm32</library>
+	<library>user32</library>
+	<library>gdi32</library>
+	<library>kernel32</library>
+	<library>ntdll</library>
 </module>
 </group>
