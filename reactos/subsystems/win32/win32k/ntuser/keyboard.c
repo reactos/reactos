@@ -396,17 +396,17 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 
 
 
-DWORD
+SHORT
 STDCALL
 NtUserGetAsyncKeyState(
-   DWORD key)
+   INT key)
 {
-   DECLARE_RETURN(DWORD);
+   DECLARE_RETURN(SHORT);
 
    DPRINT("Enter NtUserGetAsyncKeyState\n");
    UserEnterExclusive();
 
-   RETURN(UserGetAsyncKeyState(key));
+   RETURN((SHORT)UserGetAsyncKeyState(key));
 
 CLEANUP:
    DPRINT("Leave NtUserGetAsyncKeyState, ret=%i\n",_ret_);
@@ -526,7 +526,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD
+BOOL
 STDCALL
 NtUserSetKeyboardState(LPBYTE lpKeyState)
 {

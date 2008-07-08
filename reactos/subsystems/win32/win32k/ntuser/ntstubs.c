@@ -731,8 +731,8 @@ NtUserGetAppImeLevel(
 DWORD
 NTAPI
 NtUserGetAtomName(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    ATOM nAtom,
+    LPWSTR lpBuffer)
 {
     UNIMPLEMENTED;
     return 0;
@@ -832,9 +832,9 @@ NtUserInitialize(
 DWORD
 NTAPI
 NtUserMinMaximize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HWND hWnd,
+    UINT cmd, // Wine SW_ commands
+    BOOL Hide)
 {
     UNIMPLEMENTED;
     return 0;

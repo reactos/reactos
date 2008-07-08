@@ -2792,8 +2792,8 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserFlashWindowEx(DWORD Unknown0)
+BOOL STDCALL
+NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
 
@@ -4088,10 +4088,11 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-NtUserSetInternalWindowPos(DWORD Unknown0,
-                           DWORD Unknown1,
-                           DWORD Unknown2,
-                           DWORD Unknown3)
+NtUserSetInternalWindowPos(
+   HWND    hwnd,
+   UINT    showCmd,
+   LPRECT  rect,
+   LPPOINT pt)
 {
    UNIMPLEMENTED
 
@@ -4117,8 +4118,8 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserSetLogonNotifyWindow(DWORD Unknown0)
+BOOL STDCALL
+NtUserSetLogonNotifyWindow(HWND hWnd)
 {
    UNIMPLEMENTED
 

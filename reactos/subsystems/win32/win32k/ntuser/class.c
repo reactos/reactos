@@ -2103,10 +2103,12 @@ Cleanup:
     return Ret;
 }
 
-DWORD STDCALL
-NtUserSetClassWord(DWORD Unknown0,
-                   DWORD Unknown1,
-                   DWORD Unknown2)
+WORD
+STDCALL
+NtUserSetClassWord(
+  HWND hWnd,
+  INT nIndex,
+  WORD wNewWord)
 {
    return(0);
 }

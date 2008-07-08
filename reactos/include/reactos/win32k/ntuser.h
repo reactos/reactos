@@ -1207,10 +1207,10 @@ NtUserFindWindowEx(
   DWORD dwUnknown
   );
 
-DWORD
+BOOL
 NTAPI
 NtUserFlashWindowEx(
-  DWORD Unknown0);
+  IN PFLASHWINFO pfwi);
 
 BOOL
 NTAPI
@@ -1230,16 +1230,16 @@ NTAPI
 NtUserGetAppImeLevel(
     DWORD dwUnknown1);
 
-DWORD
+SHORT
 NTAPI
 NtUserGetAsyncKeyState(
-  DWORD Unknown0);
+  INT Key);
 
 DWORD
 NTAPI
 NtUserGetAtomName(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    ATOM nAtom,
+    LPWSTR lpBuffer);
 
 UINT
 NTAPI
@@ -1738,9 +1738,9 @@ NtUserMessageCall(
 DWORD
 NTAPI
 NtUserMinMaximize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    HWND hWnd,
+    UINT cmd, // Wine SW_ commands
+    BOOL Hide);
 
 DWORD
 NTAPI
@@ -2072,12 +2072,12 @@ NtUserSetClassLong(
   ULONG_PTR  dwNewLong,
   BOOL  Ansi );
 
-DWORD
+WORD
 NTAPI
 NtUserSetClassWord(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  INT nIndex,
+  WORD wNewWord);
 
 HANDLE
 NTAPI
@@ -2176,15 +2176,15 @@ NtUserSetInformationThread(
 DWORD
 NTAPI
 NtUserSetInternalWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND    hwnd,
+  UINT    showCmd,
+  LPRECT  rect,
+  LPPOINT pt);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetKeyboardState(
-  LPBYTE Unknown0);
+  LPBYTE lpKeyState);
 
 BOOL
 NTAPI
@@ -2194,10 +2194,10 @@ NtUserSetLayeredWindowAttributes(
   BYTE bAlpha,
   DWORD dwFlags);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetLogonNotifyWindow(
-  DWORD Unknown0);
+  HWND hWnd);
 
 BOOL
 NTAPI
