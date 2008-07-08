@@ -41,8 +41,8 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
 
-    /* Check if we're being debugged (user-mode only) */
-    if (!RtlpCheckForActiveDebugger(TRUE))
+    /* Check mode */
+    if (RtlpGetMode() == UserMode)
     {
         /* Raise an exception immediately */
         Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
@@ -50,7 +50,7 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     else
     {
         /* Dispatch the exception and check if we should continue */
-        if (RtlDispatchException(ExceptionRecord, &Context))
+        if (!RtlDispatchException(ExceptionRecord, &Context))
         {
             /* Raise the exception */
             Status = ZwRaiseException(ExceptionRecord, &Context, FALSE);
@@ -62,8 +62,8 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
         }
     }
 
-    /* We should never return */
-    while (TRUE);
+    /* If we returned, raise a status */
+    RtlRaiseStatus(Status);
 }
 
 /*
@@ -94,8 +94,8 @@ RtlRaiseStatus(NTSTATUS Status)
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
 
-    /* Check if we're being debugged (user-mode only) */
-    if (!RtlpCheckForActiveDebugger(TRUE))
+    /* Check mode */
+    if (RtlpGetMode() == UserMode)
     {
         /* Raise an exception immediately */
         ZwRaiseException(&ExceptionRecord, &Context, TRUE);
