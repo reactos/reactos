@@ -885,8 +885,7 @@ BOOL
 STDCALL
 NtUserDragDetect(
    HWND hWnd,
-   LONG x,
-   LONG y)
+   POINT pt) // Just like the User call.
 {
    UNIMPLEMENTED
    return 0;

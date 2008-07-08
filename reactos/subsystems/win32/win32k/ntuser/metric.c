@@ -467,21 +467,5 @@ UserGetSystemMetrics(ULONG Index)
   }
 }
 
-ULONG STDCALL
-NtUserGetSystemMetrics(ULONG Index)
-{
-   DECLARE_RETURN(ULONG);
-
-   DPRINT("Enter NtUserGetSystemMetrics\n");
-   UserEnterShared();
-
-   RETURN(UserGetSystemMetrics(Index));
-
-CLEANUP:
-   DPRINT("Leave NtUserGetSystemMetrics, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 
 /* EOF */

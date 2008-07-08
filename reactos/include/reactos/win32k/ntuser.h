@@ -1062,8 +1062,7 @@ BOOL
 NTAPI
 NtUserDragDetect(
   HWND hWnd,
-  LONG x,
-  LONG y);
+  POINT pt);
 
 DWORD
 NTAPI
@@ -2717,10 +2716,6 @@ NtUserGetScrollInfo(
 HWND
 NTAPI
 NtUserGetShellWindow();
-
-ULONG
-NTAPI
-NtUserGetSystemMetrics(ULONG Index);
 
 HWND
 NTAPI

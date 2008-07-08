@@ -295,3 +295,25 @@ DllMain(
 
    return TRUE;
 }
+
+
+VOID
+FASTCALL
+GetConnected(VOID)
+{
+  PW32PROCESSINFO pi;
+
+  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+     NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+
+  if (g_pi && g_kpi && g_psi) return;
+
+  pi = GetW32ProcessInfo();
+  if (!g_pi)  g_pi = pi;
+  if (!g_kpi) g_kpi = SharedPtrToKernel(pi);
+  if (!g_psi) g_psi = SharedPtrToUser(pi->psi);
+  if (!g_psi) { WARN("Global Share Information has not been initialized!\n"); }
+  if (!gHandleTable) gHandleTable = SharedPtrToUser(pi->UserHandleTable);
+  if (!gHandleEntries) gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+
+}
