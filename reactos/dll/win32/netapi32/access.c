@@ -105,6 +105,34 @@ static struct sam_user* NETAPI_FindUser(LPCWSTR UserName)
     return NULL;
 }
 
+static BOOL NETAPI_IsCurrentUser(LPCWSTR username)
+{
+    LPWSTR curr_user = NULL;
+    DWORD dwSize;
+    BOOL ret = FALSE;
+
+    dwSize = LM20_UNLEN+1;
+    curr_user = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if(!curr_user)
+    {
+        ERR("Failed to allocate memory for user name.\n");
+        goto end;
+    }
+    if(!GetUserNameW(curr_user, &dwSize))
+    {
+        ERR("Failed to get current user's user name.\n");
+        goto end;
+    }
+    if (!lstrcmpW(curr_user, username))
+    {
+        ret = TRUE;
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, curr_user);
+    return ret;
+}
+
 /************************************************************
  *                NetUserAdd (NETAPI32.@)
  */
@@ -226,7 +254,7 @@ NetUserGetInfo(LPCWSTR servername, LPCWSTR username, DWORD level,
         return NERR_InvalidComputer;
     }
 
-    if(!NETAPI_FindUser(username))
+    if(!NETAPI_FindUser(username) && !NETAPI_IsCurrentUser(username))
     {
         TRACE("User %s is unknown.\n", debugstr_w(username));
         return NERR_UserNotFound;

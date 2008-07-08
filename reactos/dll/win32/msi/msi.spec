@@ -187,8 +187,8 @@
 191 stub MsiInvalidateFeatureCache
 192 stdcall MsiUseFeatureExA(str str long long)
 193 stdcall MsiUseFeatureExW(wstr wstr long long)
-194 stdcall MsiGetFileVersionA(str str ptr str ptr)
-195 stdcall MsiGetFileVersionW(wstr wstr ptr wstr ptr)
+194 stdcall MsiGetFileVersionA(str ptr ptr ptr ptr)
+195 stdcall MsiGetFileVersionW(wstr ptr ptr ptr ptr)
 196 stdcall MsiLoadStringA(long long long long long)
 197 stdcall MsiLoadStringW(long long long long long)
 198 stdcall MsiMessageBoxA(long long long long long long)

@@ -458,7 +458,6 @@ HPALETTE VFWAPI DrawDibGetPalette(HDRAWDIB hdd)
 UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground) 
 {
     WINE_HDD *whdd;
-    HPALETTE oldPal;
     UINT ret = 0;
 
     FIXME("(%p, %p, %d), stub\n", hdd, hdc, fBackground);
@@ -475,7 +474,7 @@ UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground)
     if (!whdd->hpal)
         whdd->hpal = CreateHalftonePalette(hdc);
 
-    oldPal = SelectPalette(hdc, whdd->hpal, fBackground);
+    SelectPalette(hdc, whdd->hpal, fBackground);
     ret = RealizePalette(hdc);
 
  out:

@@ -83,7 +83,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     WCHAR path[MAX_PATH];
 
     static const WCHAR backslash[] = {'\\',0};
-    static WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
+    static const WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
 
     TRACE("%s %s\n",debugstr_w(szDBPath),debugstr_w(szPersist) );
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Alexander N. S¯rnes <alex@thehandofagony.com>
+ * Copyright 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,36 +16,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 187, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Videokomprimering"
+CAPTION "Stiskanje videa"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON "OK",IDOK,129,2,49,14
-    PUSHBUTTON "Avbryt",IDCANCEL,129,18,49,14
+    DEFPUSHBUTTON "V redu",IDOK,129,2,49,14
+    PUSHBUTTON "Prekliƒçi",IDCANCEL,129,18,49,14
 
-    LTEXT "&Komprimerer:",-1,9,6,105,8
+    LTEXT "&Kodek za stiskanje:",-1,9,6,105,8
     COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "&Oppsett...",882,129,36,49,14
-    PUSHBUTTON "O&m...",883,129,52,49,14
+    PUSHBUTTON "&Nastavitve ...",882,129,36,49,14
+    PUSHBUTTON "&O ...",883,129,52,49,14
 
     SCROLLBAR 884,9,44,111,9,WS_TABSTOP
 
-    LTEXT "Komprimeringskvalite&t:",886,9,34,80,8
+    LTEXT "Kakovost &stiskanja:",886,9,34,80,8
 
-    CONTROL "N¯&kkelbilde for hvert",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "&Kljuƒçna slika na vsakih",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
-    LTEXT "bilde",889,103,62,26,10
+    LTEXT "slik",889,103,62,26,10
 
-    CONTROL "&Datahastighet",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
+    CONTROL "&Pretok podatkov",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
     EDITTEXT 895,78,76,22,12
-    LTEXT "KB/s",896,102,78,26,10
+    LTEXT "kb/s",896,102,78,26,10
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FULLFRAMES "Fulle bilder (ukomprimert)"
+    IDS_FULLFRAMES "Polne slike (nestisnjeno)"
 }
+
+#pragma code_page(default)
