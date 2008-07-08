@@ -511,7 +511,7 @@ LPWSTR WINAPI StrCpyNW(LPWSTR lpszStr, LPCWSTR lpszSrc, int iLen)
  * Internal implementation of StrStrA/StrStrIA
  */
 static LPSTR SHLWAPI_StrStrHelperA(LPCSTR lpszStr, LPCSTR lpszSearch,
-                                   int (*pStrCmpFn)(LPCSTR,LPCSTR,size_t))
+                                   INT (WINAPI *pStrCmpFn)(LPCSTR,LPCSTR,INT))
 {
   size_t iLen;
 
@@ -545,7 +545,7 @@ LPSTR WINAPI StrStrA(LPCSTR lpszStr, LPCSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_a(lpszStr), debugstr_a(lpszSearch));
 
-  return SHLWAPI_StrStrHelperA(lpszStr, lpszSearch, strncmp);
+  return SHLWAPI_StrStrHelperA(lpszStr, lpszSearch, StrCmpNA);
 }
 
 /*************************************************************************
@@ -650,7 +650,7 @@ LPSTR WINAPI StrStrIA(LPCSTR lpszStr, LPCSTR lpszSearch)
 {
   TRACE("(%s,%s)\n", debugstr_a(lpszStr), debugstr_a(lpszSearch));
 
-  return SHLWAPI_StrStrHelperA(lpszStr, lpszSearch, strncasecmp);
+  return SHLWAPI_StrStrHelperA(lpszStr, lpszSearch, StrCmpNIA);
 }
 
 /*************************************************************************

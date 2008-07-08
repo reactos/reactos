@@ -319,6 +319,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     WCHAR slash = '/';
 
     static const WCHAR wszFile[] = {'f','i','l','e',':'};
+    static const WCHAR wszLocalhost[] = {'l','o','c','a','l','h','o','s','t'};
 
     TRACE("(%s, %p, %p, 0x%08x) *pcchCanonicalized: %d\n", debugstr_w(pszUrl), pszCanonicalized,
         pcchCanonicalized, dwFlags, pcchCanonicalized ? *pcchCanonicalized : -1);
@@ -387,6 +388,12 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
             *wk2++ = *wk1++;
             if (*wk1 != '/') {state = 6; break;}
             *wk2++ = *wk1++;
+            if((dwFlags & URL_FILE_USE_PATHURL) && nByteLen >= sizeof(wszLocalhost)
+                        && !memcmp(wszLocalhost, wk1, sizeof(wszLocalhost))){
+                wk1 += sizeof(wszLocalhost)/sizeof(WCHAR);
+                while(*wk1 == '\\' && (dwFlags & URL_FILE_USE_PATHURL))
+                    wk1++;
+            }
             if(*wk1 == '/' && (dwFlags & URL_FILE_USE_PATHURL))
                 wk1++;
             state = 4;
@@ -495,7 +502,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 	      debugstr_w(pszUrl), debugstr_w(lpszUrlCpy));
     }
     nLen = lstrlenW(lpszUrlCpy);
-    while ((nLen > 0) && ((lpszUrlCpy[nLen-1] == '\r')||(lpszUrlCpy[nLen-1] == '\n')))
+    while ((nLen > 0) && ((lpszUrlCpy[nLen-1] <= ' ')))
         lpszUrlCpy[--nLen]=0;
 
     if(dwFlags & (URL_UNESCAPE | URL_FILE_USE_PATHURL))

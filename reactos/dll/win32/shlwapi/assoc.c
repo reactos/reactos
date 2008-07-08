@@ -503,7 +503,7 @@ static ULONG WINAPI IQueryAssociations_fnRelease(IQueryAssociations *iface)
  * PARAMS
  *  iface      [I] IQueryAssociations interface to initialise
  *  cfFlags    [I] ASSOCF_ flags from "shlwapi.h"
- *  pszAssoc   [I] String for the root key name, or NULL if hkProgid is given
+ *  pszAssoc   [I] String for the root key name, or NULL if hkeyProgid is given
  *  hkeyProgid [I] Handle for the root key, or NULL if pszAssoc is given
  *  hWnd       [I] Reserved, must be NULL.
  *
