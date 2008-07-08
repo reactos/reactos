@@ -833,7 +833,8 @@ interface IInternetProtocolInfo : IUnknown
         QUERY_IS_CACHED_OR_MAPPED,
         QUERY_USES_CACHE,
         QUERY_IS_SECURE,
-        QUERY_IS_SAFE
+        QUERY_IS_SAFE,
+        QUERY_USES_HISTORYFOLDER
     } QUERYOPTION;
 
     HRESULT ParseUrl(

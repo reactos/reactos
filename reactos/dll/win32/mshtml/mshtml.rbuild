@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true">
-	<!--autoregister infsection="OleControlDlls" type="Both" /-->
+	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="mshtml.spec.def" />
 	<include base="mshtml">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -10,15 +10,20 @@
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>conpoint.c</file>
+	<file>dispex.c</file>
 	<file>editor.c</file>
 	<file>hlink.c</file>
 	<file>htmlanchor.c</file>
 	<file>htmlbody.c</file>
+	<file>htmlcomment.c</file>
 	<file>htmldoc.c</file>
 	<file>htmldoc3.c</file>
 	<file>htmldoc5.c</file>
 	<file>htmlelem.c</file>
 	<file>htmlelem2.c</file>
+	<file>htmlevent.c</file>
+	<file>htmlgeneric.c</file>
+	<file>htmlimg.c</file>
 	<file>htmlinput.c</file>
 	<file>htmllocation.c</file>
 	<file>htmlnode.c</file>
@@ -28,8 +33,9 @@
 	<file>htmlstyle.c</file>
 	<file>htmlstylesheet.c</file>
 	<file>htmltable.c</file>
-	<file>htmltextcont.c</file>
 	<file>htmltextarea.c</file>
+	<file>htmltextcont.c</file>
+	<file>htmltextnode.c</file>
 	<file>htmlwindow.c</file>
 	<file>install.c</file>
 	<file>loadopts.c</file>
@@ -52,10 +58,11 @@
 	<file>txtrange.c</file>
 	<file>view.c</file>
 	<file>rsrc.rc</file>
-	<file>nsiface.idl</file>
 	<include base="mshtml" root="intermediate">.</include>
 	<file>mshtml.spec</file>
 	<library>wine</library>
+	<library>strmiids</library>
+	<library>uuid</library>
 	<library>urlmon</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
@@ -64,7 +71,10 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
-	<library>uuid</library>
 	<library>ntdll</library>
+	<dependency>mshtml_nsiface_header</dependency>
+</module>
+<module name="mshtml_nsiface_header" type="idlheader" allowwarnings="true">
+	<file>nsiface.idl</file>
 </module>
 </group>

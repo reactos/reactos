@@ -23,4 +23,6 @@ STRINGTABLE DISCARDABLE
 {
     IDS_HTMLDISABLED    "A HTML rajzolás jelenleg le van tiltva."
     IDS_HTMLDOCUMENT    "HTML Dokumentum"
+    IDS_DOWNLOADING     "Downloading..."
+    IDS_INSTALLING      "Installing..."
 }

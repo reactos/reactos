@@ -129,6 +129,9 @@ static nsresult NSAPI handle_keypress(nsIDOMEventListener *iface,
 static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
     NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    nsIDOMHTMLDocument *nshtmldoc;
+    nsIDOMHTMLElement *nsbody = NULL;
+    nsIDOMDocument *nsdoc;
     task_t *task;
 
     TRACE("(%p)\n", This);
@@ -159,6 +162,19 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
      */
     push_task(task);
 
+
+    nsIWebNavigation_GetDocument(This->navigation, &nsdoc);
+    nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
+    nsIDOMDocument_Release(nsdoc);
+
+    nsIDOMHTMLDocument_GetBody(nshtmldoc, &nsbody);
+    nsIDOMHTMLDocument_Release(nshtmldoc);
+
+    if(nsbody) {
+        fire_event(This->doc, EVENTID_LOAD, (nsIDOMNode*)nsbody);
+        nsIDOMHTMLElement_Release(nsbody);
+    }
+
     return NS_OK;
 }
 
@@ -167,6 +183,7 @@ static nsresult NSAPI handle_node_insert(nsIDOMEventListener *iface, nsIDOMEvent
     NSContainer *This = NSEVENTLIST_THIS(iface)->This;
     nsIDOMHTMLScriptElement *script;
     nsIDOMEventTarget *target;
+    nsIDOMElement *elem;
     nsresult nsres;
 
     TRACE("(%p %p)\n", This, event);
@@ -174,16 +191,59 @@ static nsresult NSAPI handle_node_insert(nsIDOMEventListener *iface, nsIDOMEvent
     nsres = nsIDOMEvent_GetTarget(event, &target);
     if(NS_FAILED(nsres)) {
         ERR("GetTarget failed: %08x\n", nsres);
-        return nsres;
+        return NS_OK;
     }
 
-    nsres = nsISupports_QueryInterface(target, &IID_nsIDOMHTMLScriptElement, (void**)&script);
+    nsres = nsIDOMEventTarget_QueryInterface(target, &IID_nsIDOMElement, (void**)&elem);
+    nsIDOMEventTarget_Release(target);
+    if(NS_FAILED(nsres))
+        return NS_OK;
+
+    nsres = nsIDOMElement_QueryInterface(elem, &IID_nsIDOMHTMLScriptElement, (void**)&script);
     if(SUCCEEDED(nsres)) {
         doc_insert_script(This->doc, script);
         nsIDOMHTMLScriptElement_Release(script);
     }
 
-    nsIDOMEventTarget_Release(target);
+    check_event_attr(This->doc, elem);
+
+    nsIDOMNode_Release(elem);
+    return NS_OK;
+}
+
+static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *event)
+{
+    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
+    const PRUnichar *type;
+    nsIDOMEventTarget *event_target;
+    nsIDOMNode *nsnode;
+    nsAString type_str;
+    eventid_t eid;
+    nsresult nsres;
+
+    nsAString_Init(&type_str, NULL);
+    nsIDOMEvent_GetType(event, &type_str);
+    nsAString_GetData(&type_str, &type);
+    eid = str_to_eid(type);
+    nsAString_Finish(&type_str);
+
+    nsres = nsIDOMEvent_GetTarget(event, &event_target);
+    if(NS_FAILED(nsres) || !event_target) {
+        ERR("GetEventTarget failed: %08x\n", nsres);
+        return NS_OK;
+    }
+
+    nsres = nsIDOMEventTarget_QueryInterface(event_target, &IID_nsIDOMNode, (void**)&nsnode);
+    nsIDOMEventTarget_Release(event_target);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNode: %08x\n", nsres);
+        return NS_OK;
+    }
+
+    fire_event(This->doc, eid, nsnode);
+
+    nsIDOMNode_Release(nsnode);
+
     return NS_OK;
 }
 
@@ -202,6 +262,7 @@ static const nsIDOMEventListenerVtbl focus_vtbl =     EVENTLISTENER_VTBL(handle_
 static const nsIDOMEventListenerVtbl keypress_vtbl =  EVENTLISTENER_VTBL(handle_keypress);
 static const nsIDOMEventListenerVtbl load_vtbl =      EVENTLISTENER_VTBL(handle_load);
 static const nsIDOMEventListenerVtbl node_insert_vtbl = EVENTLISTENER_VTBL(handle_node_insert);
+static const nsIDOMEventListenerVtbl htmlevent_vtbl = EVENTLISTENER_VTBL(handle_htmlevent);
 
 static void init_event(nsIDOMEventTarget *target, const PRUnichar *type,
         nsIDOMEventListener *listener, BOOL capture)
@@ -224,6 +285,29 @@ static void init_listener(nsEventListener *This, NSContainer *container,
     This->This = container;
 }
 
+void add_nsevent_listener(NSContainer *container, LPCWSTR type)
+{
+    nsIDOMWindow *dom_window;
+    nsIDOMEventTarget *target;
+    nsresult nsres;
+
+    nsres = nsIWebBrowser_GetContentDOMWindow(container->webbrowser, &dom_window);
+    if(NS_FAILED(nsres)) {
+        ERR("GetContentDOMWindow failed: %08x\n", nsres);
+        return;
+    }
+
+    nsres = nsIDOMWindow_QueryInterface(dom_window, &IID_nsIDOMEventTarget, (void**)&target);
+    nsIDOMWindow_Release(dom_window);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMEventTarget interface: %08x\n", nsres);
+        return;
+    }
+
+    init_event(target, type, NSEVENTLIST(&container->htmlevent_listener), TRUE);
+    nsIDOMEventTarget_Release(target);
+}
+
 void init_nsevents(NSContainer *This)
 {
     nsIDOMWindow *dom_window;
@@ -242,6 +326,7 @@ void init_nsevents(NSContainer *This)
     init_listener(&This->keypress_listener,    This, &keypress_vtbl);
     init_listener(&This->load_listener,        This, &load_vtbl);
     init_listener(&This->node_insert_listener, This, &node_insert_vtbl);
+    init_listener(&This->htmlevent_listener,   This, &htmlevent_vtbl);
 
     nsres = nsIWebBrowser_GetContentDOMWindow(This->webbrowser, &dom_window);
     if(NS_FAILED(nsres)) {

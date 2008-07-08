@@ -61,6 +61,32 @@ static ULONG WINAPI OleObject_Release(IOleObject *iface)
     return IHTMLDocument2_Release(HTMLDOC(This));
 }
 
+static void update_hostinfo(HTMLDocument *This, DOCHOSTUIINFO *hostinfo)
+{
+    nsIScrollable *scrollable;
+    nsresult nsres;
+
+    if(!This->nscontainer)
+        return;
+
+    nsres = nsIWebBrowser_QueryInterface(This->nscontainer->webbrowser, &IID_nsIScrollable, (void**)&scrollable);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIScrollable_SetDefaultScrollbarPreferences(scrollable, ScrollOrientation_Y,
+                (hostinfo->dwFlags & DOCHOSTUIFLAG_SCROLL_NO) ? Scrollbar_Never : Scrollbar_Always);
+        if(NS_FAILED(nsres))
+            ERR("Could not set default Y scrollbar prefs: %08x\n", nsres);
+
+        nsres = nsIScrollable_SetDefaultScrollbarPreferences(scrollable, ScrollOrientation_X,
+                hostinfo->dwFlags & DOCHOSTUIFLAG_SCROLL_NO ? Scrollbar_Never : Scrollbar_Auto);
+        if(NS_FAILED(nsres))
+            ERR("Could not set default X scrollbar prefs: %08x\n", nsres);
+
+        nsIScrollable_Release(scrollable);
+    }else {
+        ERR("Could not get nsIScrollable: %08x\n", nsres);
+    }
+}
+
 static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite *pClientSite)
 {
     HTMLDocument *This = OLEOBJ_THIS(iface);
@@ -103,6 +129,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
             TRACE("hostinfo = {%u %08x %08x %s %s}\n",
                     hostinfo.cbSize, hostinfo.dwFlags, hostinfo.dwDoubleClick,
                     debugstr_w(hostinfo.pchHostCss), debugstr_w(hostinfo.pchHostNS));
+            update_hostinfo(This, &hostinfo);
             This->hostinfo = hostinfo;
         }
 

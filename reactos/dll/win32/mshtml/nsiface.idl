@@ -18,9 +18,9 @@
 
 /* 
  * NOTE:
- * This file is not an usual idl file. Interfaces in this file are XPCOM interfaces
- * (NOT MSCOM!), but we generate the header file with WIDL compatibile with XPCOM,
- * useable in C code.
+ * This file is not a typical idl file. Interfaces in this file are XPCOM
+ * interfaces (NOT MSCOM!), but we generate the header file with WIDL
+ * compatible with XPCOM, usable in C code.
  */
 
 cpp_quote("#define GECKO_VERSION \"0.1.0\"")
@@ -1293,6 +1293,39 @@ interface nsIDOMHTMLScriptElement : nsIDOMHTMLElement
     nsresult SetSrc(const nsAString *aSrc);
     nsresult GetType(nsAString *aType);
     nsresult SetType(const nsAString *aType);
+}
+
+[
+    object,
+    uuid(a6cf90ab-15b3-11d2-932e-00805f8add32),
+    local
+]
+interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
+{
+    nsresult GetName(nsAString *aName);
+    nsresult SetName(const nsAString *aName);
+    nsresult GetAlign(nsAString *aAlign);
+    nsresult SetAlign(const nsAString *aAlign);
+    nsresult GetAlt(nsAString *aAlt);
+    nsresult SetAlt(const nsAString *aAlt);
+    nsresult GetBorder(nsAString *aBorder);
+    nsresult SetBorder(const nsAString *aBorder);
+    nsresult GetHeight(PRInt32 *aHeight);
+    nsresult SetHeight(PRInt32 aHeight);
+    nsresult GetHspace(PRInt32 *aHspace);
+    nsresult SetHspace(PRInt32 aHspace);
+    nsresult GetIsMap(PRBool *aIsMap);
+    nsresult SetIsMap(PRBool aIsMap);
+    nsresult GetLongDesc(nsAString *aLongDesc);
+    nsresult SetLongDesc(const nsAString *aLongDesc);
+    nsresult GetSrc(nsAString *aSrc);
+    nsresult SetSrc(const nsAString *aSrc);
+    nsresult GetUseMap(nsAString *aUseMap);
+    nsresult SetUseMap(const nsAString *aUseMap);
+    nsresult GetVspace(PRInt32 *aVspace);
+    nsresult SetVspace(PRInt32 aVspace);
+    nsresult GetWidth(PRInt32 *aWidth);
+    nsresult SetWidth(PRInt32 aWidth);
 }
 
 [

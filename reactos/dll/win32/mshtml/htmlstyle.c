@@ -33,6 +33,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
+    DispatchEx dispex;
     const IHTMLStyleVtbl *lpHTMLStyleVtbl;
 
     LONG ref;
@@ -40,10 +41,14 @@ typedef struct {
     nsIDOMCSSStyleDeclaration *nsstyle;
 } HTMLStyle;
 
-#define HTMLSTYLE(x)  ((IHTMLStyle*) &(x)->lpHTMLStyleVtbl);
+#define HTMLSTYLE(x)  ((IHTMLStyle*) &(x)->lpHTMLStyleVtbl)
 
+static const WCHAR attrBackground[] =
+    {'b','a','c','k','g','r','o','u','n','d',0};
 static const WCHAR attrBackgroundColor[] =
     {'b','a','c','k','g','r','o','u','n','d','-','c','o','l','o','r',0};
+static const WCHAR attrBackgroundImage[] =
+    {'b','a','c','k','g','r','o','u','n','d','-','i','m','a','g','e',0};
 static const WCHAR attrBorderLeft[] =
     {'b','o','r','d','e','r','-','l','e','f','t',0};
 static const WCHAR attrColor[] =
@@ -68,6 +73,8 @@ static const WCHAR attrTextDecoration[] =
     {'t','e','x','t','-','d','e','c','o','r','a','t','i','o','n',0};
 static const WCHAR attrVisibility[] =
     {'v','i','s','i','b','i','l','i','t','y',0};
+static const WCHAR attrWidth[] =
+    {'w','i','d','t','h',0};
 
 static const WCHAR valLineThrough[] =
     {'l','i','n','e','-','t','h','r','o','u','g','h',0};
@@ -113,7 +120,27 @@ static LPWSTR fix_px_value(LPCWSTR val)
     return NULL;
 }
 
+static LPWSTR fix_url_value(LPCWSTR val)
+{
+    WCHAR *ret, *ptr;
+
+    static const WCHAR urlW[] = {'u','r','l','('};
+
+    if(strncmpW(val, urlW, sizeof(urlW)/sizeof(WCHAR)) || !strchrW(val, '\\'))
+        return NULL;
+
+    ret = heap_strdupW(val);
+
+    for(ptr = ret; *ptr; ptr++) {
+        if(*ptr == '\\')
+            *ptr = '/';
+    }
+
+    return ret;
+}
+
 #define ATTR_FIX_PX  1
+#define ATTR_FIX_URL 2
 
 static HRESULT set_style_attr(HTMLStyle *This, LPCWSTR name, LPCWSTR value, DWORD flags)
 {
@@ -127,6 +154,8 @@ static HRESULT set_style_attr(HTMLStyle *This, LPCWSTR name, LPCWSTR value, DWOR
 
     if(flags & ATTR_FIX_PX)
         val = fix_px_value(value);
+    if(flags & ATTR_FIX_URL)
+        val = fix_url_value(value);
 
     nsAString_Init(&str_name, name);
     nsAString_Init(&str_value, val ? val : value);
@@ -208,12 +237,11 @@ static HRESULT WINAPI HTMLStyle_QueryInterface(IHTMLStyle *iface, REFIID riid, v
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = HTMLSTYLE(This);
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = HTMLSTYLE(This);
     }else if(IsEqualGUID(&IID_IHTMLStyle, riid)) {
         TRACE("(%p)->(IID_IHTMLStyle %p)\n", This, ppv);
         *ppv = HTMLSTYLE(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
@@ -390,7 +418,18 @@ static HRESULT WINAPI HTMLStyle_get_font(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_color(IHTMLStyle *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(v%d)\n", This, V_VT(&v));
+
+    TRACE("(%p)->(v%d)\n", This, V_VT(&v));
+
+    switch(V_VT(&v)) {
+    case VT_BSTR:
+        TRACE("%s\n", debugstr_w(V_BSTR(&v)));
+        return set_style_attr(This, attrColor, V_BSTR(&v), 0);
+
+    default:
+        FIXME("unsupported vt=%d\n", V_VT(&v));
+    }
+
     return E_NOTIMPL;
 }
 
@@ -407,8 +446,10 @@ static HRESULT WINAPI HTMLStyle_get_color(IHTMLStyle *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle_put_background(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, attrBackground, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_background(IHTMLStyle *iface, BSTR *p)
@@ -451,8 +492,10 @@ static HRESULT WINAPI HTMLStyle_get_backgroundColor(IHTMLStyle *iface, VARIANT *
 static HRESULT WINAPI HTMLStyle_put_backgroundImage(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, attrBackgroundImage, v, ATTR_FIX_URL);
 }
 
 static HRESULT WINAPI HTMLStyle_get_backgroundImage(IHTMLStyle *iface, BSTR *p)
@@ -1196,15 +1239,28 @@ static HRESULT WINAPI HTMLStyle_get_borderLeftStyle(IHTMLStyle *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle_put_width(IHTMLStyle *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(v%d)\n", This, V_VT(&v));
+
+    TRACE("(%p)->(v%d)\n", This, V_VT(&v));
+
+    switch(V_VT(&v)) {
+    case VT_BSTR:
+        TRACE("%s\n", debugstr_w(V_BSTR(&v)));
+        return set_style_attr(This, attrWidth, V_BSTR(&v), 0);
+    default:
+        FIXME("unsupported vt %d\n", V_VT(&v));
+    }
+
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLStyle_get_width(IHTMLStyle *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    V_VT(p) = VT_BSTR;
+    return get_style_attr(This, attrWidth, &V_BSTR(p));
 }
 
 static HRESULT WINAPI HTMLStyle_put_height(IHTMLStyle *iface, VARIANT v)
@@ -1837,6 +1893,17 @@ static const IHTMLStyleVtbl HTMLStyleVtbl = {
     HTMLStyle_toString
 };
 
+static const tid_t HTMLStyle_iface_tids[] = {
+    IHTMLStyle_tid,
+    0
+};
+static dispex_static_data_t HTMLStyle_dispex = {
+    NULL,
+    DispHTMLStyle_tid,
+    NULL,
+    HTMLStyle_iface_tids
+};
+
 IHTMLStyle *HTMLStyle_Create(nsIDOMCSSStyleDeclaration *nsstyle)
 {
     HTMLStyle *ret = heap_alloc(sizeof(HTMLStyle));
@@ -1846,6 +1913,8 @@ IHTMLStyle *HTMLStyle_Create(nsIDOMCSSStyleDeclaration *nsstyle)
     ret->nsstyle = nsstyle;
 
     nsIDOMCSSStyleDeclaration_AddRef(nsstyle);
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLSTYLE(ret),  &HTMLStyle_dispex);
 
     return HTMLSTYLE(ret);
 }

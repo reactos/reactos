@@ -34,6 +34,7 @@
 #include "wine/wine_common_ver.rc"
 
 #include "Bg.rc"
+#include "Da.rc"
 #include "De.rc"
 #include "En.rc"
 #include "Es.rc"

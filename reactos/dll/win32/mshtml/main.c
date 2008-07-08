@@ -49,47 +49,6 @@ DWORD mshtml_tls = 0;
 
 static HINSTANCE shdoclc = NULL;
 
-static ITypeLib *typelib;
-static ITypeInfo *typeinfos[LAST_tid];
-
-static REFIID tid_ids[] = {
-    &IID_IHTMLWindow2
-};
-
-HRESULT get_typeinfo(enum tid_t tid, ITypeInfo **typeinfo)
-{
-    HRESULT hres;
-
-    if(!typelib) {
-        ITypeLib *tl;
-
-        hres = LoadRegTypeLib(&LIBID_MSHTML, 4, 0, LOCALE_SYSTEM_DEFAULT, &tl);
-        if(FAILED(hres)) {
-            ERR("LoadRegTypeLib failed: %08x\n", hres);
-            return hres;
-        }
-
-        if(InterlockedCompareExchangePointer((void**)&typelib, tl, NULL))
-            ITypeLib_Release(tl);
-    }
-
-    if(!typeinfos[tid]) {
-        ITypeInfo *typeinfo;
-
-        hres = ITypeLib_GetTypeInfoOfGuid(typelib, tid_ids[tid], &typeinfo);
-        if(FAILED(hres)) {
-            ERR("GetTypeInfoOfGuid failed: %08x\n", hres);
-            return hres;
-        }
-
-        if(InterlockedCompareExchangePointer((void**)(typeinfos+tid), typeinfo, NULL))
-            ITypeInfo_Release(typeinfo);
-    }
-
-    *typeinfo = typeinfos[tid];
-    return S_OK;
-}
-
 static void thread_detach(void)
 {
     thread_data_t *thread_data;
@@ -107,16 +66,7 @@ static void thread_detach(void)
 static void process_detach(void)
 {
     close_gecko();
-
-    if(typelib) {
-        unsigned i;
-
-        for(i=0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
-            if(typeinfos[i])
-                ITypeInfo_Release(typeinfos[i]);
-
-        ITypeLib_Release(typelib);
-    }
+    release_typelib();
 
     if(shdoclc)
         FreeLibrary(shdoclc);

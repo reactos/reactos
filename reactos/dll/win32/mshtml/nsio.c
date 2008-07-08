@@ -2040,7 +2040,6 @@ static nsresult NSAPI nsIOService_NewURI(nsIIOService *iface, const nsACString *
         const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval)
 {
     const char *spec = NULL;
-    nsACString spec_str;
     NSContainer *nscontainer = NULL;
     nsIURI *uri = NULL;
     LPCWSTR base_wine_url = NULL;
@@ -2078,9 +2077,7 @@ static nsresult NSAPI nsIOService_NewURI(nsIIOService *iface, const nsACString *
         nsACString_Finish(&base_uri_str);
     }
 
-    nsACString_Init(&spec_str, spec);
-    nsres = nsIIOService_NewURI(nsio, &spec_str, aOriginCharset, aBaseURI, &uri);
-    nsACString_Finish(&spec_str);
+    nsres = nsIIOService_NewURI(nsio, aSpec, aOriginCharset, aBaseURI, &uri);
     if(NS_FAILED(nsres))
         TRACE("NewURI failed: %08x\n", nsres);
 

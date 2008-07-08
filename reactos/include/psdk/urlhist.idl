@@ -41,7 +41,7 @@ typedef enum _ADDURL_FLAG
 interface IEnumSTATURL : IUnknown
 {
     typedef [unique] IEnumSTATURL *LPENUMSTATURL;
-
+	
     typedef struct _STATURL
     {
         DWORD cbSize;
@@ -78,7 +78,7 @@ interface IEnumSTATURL : IUnknown
 interface IUrlHistoryStg : IUnknown
 {
     typedef [unique] IUrlHistoryStg *LPURLHISTORYSTG;
-
+	
     HRESULT AddUrl(
         [in] LPCOLESTR pocsUrl,
         [in, unique] LPCOLESTR pocsTitle,
@@ -92,14 +92,14 @@ interface IUrlHistoryStg : IUnknown
         [in] LPCOLESTR pocsUrl,
         [in] DWORD dwFlags,
         [in, out, unique] LPSTATURL lpSTATURL);
-
+	
     HRESULT BindToObject(
         [in] LPCOLESTR pocsUrl,
         [in] REFIID riid,
         [out, iid_is(riid)] void **ppvOut);
 
     HRESULT EnumUrls(
-        [out] IEnumSTATURL **ppEnum);
+        [out] IEnumSTATURL **ppEnum);	
 }
 
 /*****************************************************************************

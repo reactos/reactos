@@ -32,6 +32,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
+    DispatchEx dispex;
     const IOmNavigatorVtbl  *lpIOmNavigatorVtbl;
 
     LONG ref;
@@ -50,12 +51,11 @@ static HRESULT WINAPI OmNavigator_QueryInterface(IOmNavigator *iface, REFIID rii
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = OMNAVIGATOR(This);
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = OMNAVIGATOR(This);
     }else if(IsEqualGUID(&IID_IOmNavigator, riid)) {
         TRACE("(%p)->(IID_IOmNavigator %p)\n", This, ppv);
         *ppv = OMNAVIGATOR(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
@@ -101,8 +101,8 @@ static HRESULT WINAPI OmNavigator_GetTypeInfo(IOmNavigator *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI OmNavigator_GetIDsOfNames(IOmNavigator *iface, REFIID riid,
@@ -110,9 +110,8 @@ static HRESULT WINAPI OmNavigator_GetIDsOfNames(IOmNavigator *iface, REFIID riid
                                                 LCID lcid, DISPID *rgDispId)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI OmNavigator_Invoke(IOmNavigator *iface, DISPID dispIdMember,
@@ -120,9 +119,9 @@ static HRESULT WINAPI OmNavigator_Invoke(IOmNavigator *iface, DISPID dispIdMembe
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI OmNavigator_get_appCodeName(IOmNavigator *iface, BSTR *p)
@@ -297,13 +296,26 @@ static const IOmNavigatorVtbl OmNavigatorVtbl = {
     OmNavigator_get_userProfile
 };
 
+static const tid_t OmNavigator_iface_tids[] = {
+    IOmNavigator_tid,
+    0
+};
+static dispex_static_data_t OmNavigator_dispex = {
+    NULL,
+    IOmNavigator_tid,
+    NULL,
+    OmNavigator_iface_tids
+};
+
 IOmNavigator *OmNavigator_Create(void)
 {
     OmNavigator *ret;
 
-    ret = heap_alloc(sizeof(*ret));
+    ret = heap_alloc_zero(sizeof(*ret));
     ret->lpIOmNavigatorVtbl = &OmNavigatorVtbl;
     ret->ref = 1;
+
+    init_dispex(&ret->dispex, (IUnknown*)OMNAVIGATOR(ret), &OmNavigator_dispex);
 
     return OMNAVIGATOR(ret);
 }
