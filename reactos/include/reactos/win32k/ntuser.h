@@ -1181,13 +1181,13 @@ NtUserExcludeUpdateRgn(
   HDC hDC,
   HWND hWnd);
 
-DWORD
+BOOL
 NTAPI
 NtUserFillWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWndPaint,
+  HWND hWndPaint1,
+  HDC  hDC,
+  HBRUSH hBrush);
 
 HICON
 NTAPI
@@ -1313,13 +1313,13 @@ NtUserGetControlBrush(
   HDC  hdc,
   UINT ctlType);
 
-DWORD
+HBRUSH
 NTAPI
 NtUserGetControlColor(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+   HWND hwndParent,
+   HWND hwnd,
+   HDC hdc,
+   UINT CtlMsg);
 
 DWORD
 NTAPI
@@ -1408,9 +1408,9 @@ NtUserGetImeInfoEx(
 DWORD
 NTAPI
 NtUserGetInternalWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hwnd,
+  LPRECT rectWnd,
+  LPPOINT ptIcon);
 
 HKL
 NTAPI
@@ -1442,10 +1442,10 @@ DWORD
 NTAPI
 NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
 
-DWORD
+SHORT
 NTAPI
 NtUserGetKeyState(
-  DWORD Unknown0);
+  INT VirtKey);
 
 BOOL
 NTAPI
@@ -2497,18 +2497,18 @@ NtUserUpdateInstance(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 NTAPI
 NtUserUpdateLayeredWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7,
-  DWORD Unknown8);
+  HWND hwnd,
+  HDC hdcDst,
+  POINT *pptDst,
+  SIZE *psize,
+  HDC hdcSrc,
+  POINT *pptSrc,
+  COLORREF crKey,
+  BLENDFUNCTION *pblend,
+  DWORD dwFlags);
 
 BOOL
 NTAPI
@@ -2705,7 +2705,7 @@ NtUserGetMonitorInfo(
 /* Should be done in usermode */
 HANDLE
 NTAPI
-NtUserGetProp(HWND hWnd, ATOM Atom);
+NtUserGetProp(HWND hWnd, ATOM Atom); // Done in both User/Kernel
 
 BOOL
 NTAPI
@@ -2829,7 +2829,7 @@ NtUserMonitorFromWindow(
 
 RTL_ATOM
 NTAPI
-NtUserRegisterClassEx(
+NtUserRegisterClassEx(   // Need to use NtUserRegisterClassExWOW.
    CONST WNDCLASSEXW* lpwcx,
    PUNICODE_STRING ClassName,
    PUNICODE_STRING MenuName,

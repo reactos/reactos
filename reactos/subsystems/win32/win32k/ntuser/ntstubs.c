@@ -254,13 +254,17 @@ NtUserGetControlBrush(
    return 0;
 }
 
-DWORD
+
+/*
+ * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
+ */
+HBRUSH
 STDCALL
 NtUserGetControlColor(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+   HWND hwndParent,
+   HWND hwnd, 
+   HDC hdc,
+   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
 {
    UNIMPLEMENTED
 

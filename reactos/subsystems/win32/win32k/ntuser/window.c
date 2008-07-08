@@ -2505,13 +2505,16 @@ NtUserEndDeferWindowPosEx(DWORD Unknown0,
 
 
 /*
+ * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
+ */
+/*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserFillWindow(DWORD Unknown0,
-                 DWORD Unknown1,
-                 DWORD Unknown2,
-                 DWORD Unknown3)
+BOOL STDCALL
+NtUserFillWindow(HWND hWndPaint,
+                 HWND hWndPaint1,
+                 HDC  hDC,
+                 HBRUSH hBrush)
 {
    UNIMPLEMENTED
 
@@ -2949,9 +2952,9 @@ CLEANUP:
  * @unimplemented
  */
 DWORD STDCALL
-NtUserGetInternalWindowPos(DWORD Unknown0,
-                           DWORD Unknown1,
-                           DWORD Unknown2)
+NtUserGetInternalWindowPos( HWND hwnd,
+                            LPRECT rectWnd,
+                            LPPOINT ptIcon)
 {
    UNIMPLEMENTED
 
@@ -4490,23 +4493,23 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserUpdateLayeredWindow(DWORD Unknown0,
-                          DWORD Unknown1,
-                          DWORD Unknown2,
-                          DWORD Unknown3,
-                          DWORD Unknown4,
-                          DWORD Unknown5,
-                          DWORD Unknown6,
-                          DWORD Unknown7,
-                          DWORD Unknown8)
+BOOL
+STDCALL
+NtUserUpdateLayeredWindow(
+   HWND hwnd,
+   HDC hdcDst,
+   POINT *pptDst,
+   SIZE *psize,
+   HDC hdcSrc,
+   POINT *pptSrc,
+   COLORREF crKey,
+   BLENDFUNCTION *pblend,
+   DWORD dwFlags)
 {
    UNIMPLEMENTED
 
    return 0;
 }
-
-
 
 
 /*

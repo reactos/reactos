@@ -361,10 +361,10 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 }
 
 
-DWORD
+SHORT
 STDCALL
 NtUserGetKeyState(
-   DWORD key)
+   INT key)
 {
    DECLARE_RETURN(DWORD);
 
