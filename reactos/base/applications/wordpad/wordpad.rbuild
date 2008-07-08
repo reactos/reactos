@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="wordpad" type="win32gui" installbase="system32" installname="wordpad.exe" unicode="yes" allowwarnings="true">
+<module name="wordpad" type="win32gui" installbase="system32" installname="wordpad.exe" allowwarnings="true">
 	<include base="wordpad">.</include>
+	<define name="UNICODE" />
+	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>comdlg32</library>

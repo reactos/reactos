@@ -595,9 +595,9 @@ static void update_window(void)
 {
     RECT rect;
 
-    GetWindowRect(hMainWnd, &rect);
+    GetClientRect(hMainWnd, &rect);
 
-    (void) OnSize(hMainWnd, SIZE_RESTORED, MAKELONG(rect.right, rect.bottom));
+    OnSize(hMainWnd, SIZE_RESTORED, MAKELPARAM(rect.right, rect.bottom));
 }
 
 static BOOL is_bar_visible(int bandId)
@@ -2490,7 +2490,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     return 0;
 }
 
-int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdParagraph, int res)
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdParagraph, int nCmdShow)
 {
     INITCOMMONCONTROLSEX classes = {8, ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_USEREX_CLASSES};
     HACCEL hAccel;
@@ -2500,6 +2500,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     UINT_PTR hPrevRulerProc;
     HWND hRulerWnd;
     POINTL EditPoint;
+    DWORD bMaximized;
     static const WCHAR wszAccelTable[] = {'M','A','I','N','A','C','C','E','L',
                                           'T','A','B','L','E','\0'};
 
@@ -2522,7 +2523,11 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     registry_read_winrect(&rc);
     hMainWnd = CreateWindowExW(0, wszMainWndClass, wszAppTitle, WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW,
       rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, NULL, NULL, hInstance, NULL);
-    ShowWindow(hMainWnd, SW_SHOWDEFAULT);
+    registry_read_maximized(&bMaximized);
+    if ((nCmdShow == SW_SHOWNORMAL || nCmdShow == SW_SHOWDEFAULT)
+	     && bMaximized)
+        nCmdShow = SW_SHOWMAXIMIZED;
+    ShowWindow(hMainWnd, nCmdShow);
 
     set_caption(NULL);
     set_bar_states();
