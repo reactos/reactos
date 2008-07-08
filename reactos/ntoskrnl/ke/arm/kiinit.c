@@ -80,7 +80,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     PKPCR Pcr;
     ULONG i;
     DPRINT1("[INIT] Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
-            __FUNCTION__, InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
+            InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
 
     //
     // Initialize the platform

@@ -69,8 +69,10 @@
 				<file>stubs_asm.s</file>
 				<file>stubs.c</file>
 				<file>thrdini.c</file>
+				<file>time.c</file>
 				<file>trap.s</file>
 				<file>trapc.c</file>
+				<file>usercall.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">

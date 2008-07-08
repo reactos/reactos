@@ -18,13 +18,6 @@
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
 
-NTSTATUS
-KiSystemCall(
-    IN PVOID Handler,
-    IN PULONG Arguments,
-    IN ULONG ArgumentCount
-);
-
 VOID
 FASTCALL
 KiRetireDpcList(
@@ -35,6 +28,13 @@ VOID
 FASTCALL
 KiQuantumEnd(
     VOID
+);
+
+VOID
+KiSystemService(
+    IN PKTHREAD Thread,
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Instruction
 );
 
 /* FUNCTIONS ******************************************************************/
@@ -237,7 +237,7 @@ KiApcInterrupt(VOID)
     KPROCESSOR_MODE PreviousMode;
     KEXCEPTION_FRAME ExceptionFrame;
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
-    DPRINT1("[APC]\n");
+    //DPRINT1("[APC]\n");
        
     //
     // Isolate previous mode
@@ -360,6 +360,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     ULONG InterruptCause, InterruptMask;
     PKPCR Pcr;
     PKTRAP_FRAME OldTrapFrame;
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
 
     //
     // Increment interrupt count
@@ -424,7 +425,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
 //    DPRINT1("[ISR RETURN]\n");
     
     //
-    // Re-enable interrupts and return IRQL
+    // Restore IRQL and interrupts
     //
     KeLowerIrql(OldIrql);
     _enable();
@@ -435,6 +436,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     NTSTATUS Status;
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
     DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
             KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     
@@ -456,144 +458,12 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-KiSystemService(IN PKTHREAD Thread,
-                IN PKTRAP_FRAME TrapFrame,
-                IN ULONG Instruction)
-{
-    ULONG Id, Number, ArgumentCount, i;
-    PKPCR Pcr;
-    ULONG_PTR ServiceTable, Offset;
-    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
-    PVOID SystemCall;
-    PULONG Argument;
-    ULONG Arguments[16]; // Maximum 20 arguments
-    
-    //
-    // Increase count of system calls
-    //
-    Pcr = (PKPCR)KeGetPcr();
-    Pcr->Prcb->KeSystemCalls++;
-    
-    //
-    // Get the system call ID
-    //
-    Id = Instruction & 0xFFFFF;
-    DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
-    
-    //
-    // Get the descriptor table
-    //
-    ServiceTable = (ULONG_PTR)Thread->ServiceTable;
-    Offset = ((Id >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK);
-    ServiceTable += Offset;
-    DescriptorTable = (PVOID)ServiceTable;
-    
-    //
-    // Get the service call number and validate it
-    //
-    Number = Id & SERVICE_NUMBER_MASK;
-    if (Number > DescriptorTable->Limit)
-    {
-        //
-        // Check if this is a GUI call
-        //
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-    }
-    
-    //
-    // Save the function responsible for handling this system call
-    //
-    SystemCall = (PVOID)DescriptorTable->Base[Number];
-    
-    //
-    // Check if this is a GUI call
-    //
-    if (Offset & SERVICE_TABLE_TEST)
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-    }
-    
-    //
-    // Check how many arguments this system call takes
-    //
-    ArgumentCount = DescriptorTable->Number[Number] / 4;
-    ASSERT(ArgumentCount <= 20);
-    
-    //
-    // Copy the register-arguments first
-    // First four arguments are in a1, a2, a3, a4
-    //
-    Argument = &TrapFrame->R0;
-    for (i = 0; (i < ArgumentCount) && (i < 4); i++)
-    {
-        //
-        // Copy them into the kernel stack
-        //
-        DPRINT1("Argument: %p\n", *Argument);
-        Arguments[i] = *Argument;
-        Argument++;
-    }
-    
-    //
-    // If more than four, we'll have some on the user stack
-    //
-    if (ArgumentCount > 4)
-    {
-        //
-        // Check where the stack is
-        //
-        if (Thread->PreviousMode == UserMode)
-        {
-            //
-            // FIXME: Validate the user stack
-            //
-            Argument = (PULONG)TrapFrame->UserSp;
-        }
-        else
-        {
-            //
-            // We were called from the kernel
-            //
-            Argument = (PULONG)TrapFrame->SvcSp;
-            
-            //
-            // Bias for the values we saved
-            //
-            Argument += 2;
-        }
-
-        //
-        // Copy the rest
-        //
-        for (i = 4; i < ArgumentCount; i++)
-        {
-            //
-            // Copy into kernel stack
-            //
-            DPRINT1("Argument: %p\n", *Argument);
-            Arguments[i] = *Argument;
-            Argument++;
-        }
-    }
-    
-    //
-    // Do the system call and save result in EAX
-    //
-    TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
-    DPRINT1("Returned: %lx\n", TrapFrame->R0);
-}
-
-VOID
 KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     KPROCESSOR_MODE PreviousMode;
     ULONG Instruction;
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
     
     //
     // Get the current thread
@@ -606,9 +476,9 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
-    // FIXME: Save old previous mode
+    // Save old previous mode
     //
-    //TrapFrame->PreviousMode = PreviousMode;
+    TrapFrame->PreviousMode = PreviousMode;
     
     //
     // Save previous mode and trap frame

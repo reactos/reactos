@@ -759,7 +759,6 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
     //
     // Force a software interrupt
     //
-    DPRINT1("[SOFTINT]: %d\n", Request);
     WRITE_REGISTER_ULONG(VIC_SOFT_INT, 1 << Request);
 }
 
@@ -768,9 +767,8 @@ FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request)
 {    
     //
-    // Force a software interrupt
+    // Clear a software interrupt
     //
-    DPRINT1("[SOFTINTC] %d\n", Request);
     WRITE_REGISTER_ULONG(VIC_SOFT_INT_CLEAR, 1 << Request);
 }
 

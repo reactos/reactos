@@ -42,8 +42,27 @@
 /*
  * Trap Frame offsets
  */
-.equ TrR0,                 0x00
-.equ TrapFrameLength,      0x144
+.equ TrDbgArgMark,         0x00
+.equ TrR0,                 0x04
+.equ TrR1,                 0x08
+.equ TrR2,                 0x0C
+.equ TrR3,                 0x10
+.equ TrR4,                 0x14
+.equ TrR5,                 0x18
+.equ TrR6,                 0x1C
+.equ TrR7,                 0x20
+.equ TrR8,                 0x24
+.equ TrR9,                 0x28
+.equ TrR10,                0x2C
+.equ TrR11,                0x30
+.equ TrR12,                0x34
+.equ TrUserSp,             0x38
+.equ TrUserLr,             0x3C
+.equ TrSvcSp,              0x40
+.equ TrSvcLr,              0x44
+.equ TrPc,                 0x48
+.equ TrSpsr,               0x4C
+.equ TrapFrameLength,      (22 * 0x04)
 
 /*
  * PCR
