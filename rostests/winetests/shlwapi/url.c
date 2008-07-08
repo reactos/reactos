@@ -74,6 +74,10 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"file:///c:/tests\\foo%20bar", URL_UNESCAPE , S_OK, "file:///c:/tests/foo bar", FALSE},
     {"file:///c:/tests/foo%20bar", 0, S_OK, "file:///c:/tests/foo%20bar", FALSE},
     {"file:///c:/tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
+    {"file://localhost/c:/tests/../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
+    {"file://localhost\\c:/tests/../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
+    {"file://localhost\\\\c:/tests/../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
+    {"file://localhost\\c:\\tests/../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
     {"file://c:/tests/../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
     {"file://c:/tests\\../tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
     {"file://c:/tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
@@ -575,6 +579,7 @@ static void test_UrlCanonicalizeW(void)
     DWORD dwSize;
     DWORD urllen;
     HRESULT hr;
+    int i;
 
 
     if (!pUrlCanonicalizeW) {
@@ -624,6 +629,21 @@ static void test_UrlCanonicalizeW(void)
         "got 0x%x with %u and size %u for %u (expected 'S_OK' and size %u)\n",
         hr, GetLastError(), dwSize, lstrlenW(szReturnUrl), urllen);
 
+    /* check that the characters 1..32 are chopped from the end of the string */
+    for (i = 1; i < 65536; i++)
+    {
+        WCHAR szUrl[128];
+        BOOL choped;
+        int pos;
+
+        MultiByteToWideChar(CP_UTF8, 0, "http://www.winehq.org/X", -1, szUrl, 128);
+        pos = lstrlenW(szUrl) - 1;
+        szUrl[pos] = i;
+        urllen = INTERNET_MAX_URL_LENGTH;
+        pUrlCanonicalizeW(szUrl, szReturnUrl, &urllen, 0);
+        choped = lstrlenW(szReturnUrl) < lstrlenW(szUrl);
+        ok(choped == (i <= 32), "Incorrect char chopping for char %d\n", i);
+    }
 }
 
 /* ########################### */
@@ -781,8 +801,8 @@ static void test_UrlUnescape(void)
     DWORD dwEscaped;
     size_t i;
     static char inplace[] = "file:///C:/Program%20Files";
-    static WCHAR inplaceW[] = {'f','i','l','e',':','/','/','/','C',':','/',
-                               'P','r','o','g','r','a','m','%','2','0','F','i','l','e','s',0};
+    static const char expected[] = "file:///C:/Program Files";
+    static WCHAR inplaceW[] = {'f','i','l','e',':','/','/','/','C',':','/','P','r','o','g','r','a','m',' ','F','i','l','e','s',0};
 
     for(i=0; i<sizeof(TEST_URL_UNESCAPE)/sizeof(TEST_URL_UNESCAPE[0]); i++) {
         dwEscaped=INTERNET_MAX_URL_LENGTH;
@@ -801,9 +821,12 @@ static void test_UrlUnescape(void)
 
     dwEscaped = sizeof(inplace);
     ok(UrlUnescapeA(inplace, NULL, &dwEscaped, URL_UNESCAPE_INPLACE) == S_OK, "UrlUnescapeA failed unexpectedly\n");
+    ok(!strcmp(inplace, expected), "got %s expected %s\n", inplace, expected);
+    ok(dwEscaped == 27, "got %d expected 27\n", dwEscaped);
 
     dwEscaped = sizeof(inplaceW);
     ok(UrlUnescapeW(inplaceW, NULL, &dwEscaped, URL_UNESCAPE_INPLACE) == S_OK, "UrlUnescapeW failed unexpectedly\n");
+    ok(dwEscaped == 50, "got %d expected 50\n", dwEscaped);
 }
 
 /* ########################### */

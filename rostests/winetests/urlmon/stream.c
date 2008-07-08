@@ -294,7 +294,7 @@ static void create_file(void)
 static void test_URLOpenBlockingStreamW(void)
 {
     HRESULT hr;
-    IStream *pStream;
+    IStream *pStream = NULL;
     char buffer[256];
 
     hr = URLOpenBlockingStreamW(NULL, NULL, &pStream, 0, &BindStatusCallback);
@@ -324,12 +324,14 @@ static void test_URLOpenBlockingStreamW(void)
     CHECK_CALLED(OnStopBinding);
 
     ok(pStream != NULL, "pStream is NULL\n");
+    if(pStream)
+    {
+        hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
+        ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
+        ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
 
-    hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
-    ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
-    ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
-
-    IStream_Release(pStream);
+        IStream_Release(pStream);
+    }
 }
 
 static void test_URLOpenStreamW(void)

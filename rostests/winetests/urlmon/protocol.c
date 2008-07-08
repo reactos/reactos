@@ -426,7 +426,7 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         ok(szStatusText != NULL, "szStatusText == NULL\n");
         if(szStatusText) {
             if(binding_test)
-                ok(szStatusText == expect_wsz, "unexpected szStatusText\n");
+                ok(!lstrcmpW(szStatusText, expect_wsz), "unexpected szStatusText\n");
             else if(tested_protocol == FILE_TEST)
                 ok(!lstrcmpW(szStatusText, file_name), "szStatusText = \"%s\"\n", debugstr_w(szStatusText));
             else
@@ -1342,8 +1342,10 @@ static void test_file_protocol_fail(void)
     SET_EXPECT(GetBindInfo);
     expect_hrResult = MK_E_SYNTAX;
     hres = IInternetProtocol_Start(protocol, wszIndexHtml, &protocol_sink, &bind_info, 0, 0);
-    ok(hres == MK_E_SYNTAX, "Start failed: %08x, expected MK_E_SYNTAX\n", hres);
-    CHECK_CALLED(GetBindInfo);
+    ok(hres == MK_E_SYNTAX ||
+       hres == E_INVALIDARG,
+       "Start failed: %08x, expected MK_E_SYNTAX or E_INVALIDARG\n", hres);
+    CLEAR_CALLED(GetBindInfo); /* GetBindInfo not called in IE7 */
 
     SET_EXPECT(GetBindInfo);
     if(!(bindf & BINDF_FROMURLMON))
@@ -1387,12 +1389,12 @@ static void test_file_protocol_fail(void)
     SET_EXPECT(GetBindInfo);
     hres = IInternetProtocol_Start(protocol, NULL, &protocol_sink, &bind_info, 0, 0);
     ok(hres == E_INVALIDARG, "Start failed: %08x, expected E_INVALIDARG\n", hres);
-    CHECK_CALLED(GetBindInfo);
+    CLEAR_CALLED(GetBindInfo); /* GetBindInfo not called in IE7 */
 
     SET_EXPECT(GetBindInfo);
     hres = IInternetProtocol_Start(protocol, emptyW, &protocol_sink, &bind_info, 0, 0);
     ok(hres == E_INVALIDARG, "Start failed: %08x, expected E_INVALIDARG\n", hres);
-    CHECK_CALLED(GetBindInfo);
+    CLEAR_CALLED(GetBindInfo); /* GetBindInfo not called in IE7 */
 
     IInternetProtocol_Release(protocol);
 }
@@ -1721,13 +1723,23 @@ static void test_mk_protocol(void)
     expect_hrResult = INET_E_RESOURCE_NOT_FOUND;
 
     hres = IInternetProtocol_Start(protocol, wrong_url2, &protocol_sink, &bind_info, 0, 0);
-    ok(hres == INET_E_RESOURCE_NOT_FOUND, "Start failed: %08x, expected INET_E_RESOURCE_NOT_FOUND\n", hres);
+    ok(hres == INET_E_RESOURCE_NOT_FOUND ||
+       hres == INET_E_INVALID_URL, /* win2k3 */
+       "Start failed: %08x, expected INET_E_RESOURCE_NOT_FOUND or INET_E_INVALID_URL\n", hres);
 
-    CHECK_CALLED(GetBindInfo);
-    CLEAR_CALLED(ReportProgress_DIRECTBIND);
-    CHECK_CALLED(ReportProgress_SENDINGREQUEST);
-    CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
-    CHECK_CALLED(ReportResult);
+    if (hres == INET_E_RESOURCE_NOT_FOUND) {
+        CHECK_CALLED(GetBindInfo);
+        CLEAR_CALLED(ReportProgress_DIRECTBIND);
+        CHECK_CALLED(ReportProgress_SENDINGREQUEST);
+        CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
+        CHECK_CALLED(ReportResult);
+    }else {
+        CLEAR_CALLED(GetBindInfo);
+        CLEAR_CALLED(ReportProgress_DIRECTBIND);
+        CLEAR_CALLED(ReportProgress_SENDINGREQUEST);
+        CLEAR_CALLED(ReportProgress_MIMETYPEAVAILABLE);
+        CLEAR_CALLED(ReportResult);
+    }
 
     IInternetProtocol_Release(protocol);
 }

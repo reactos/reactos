@@ -384,9 +384,14 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
     IStream * template = NULL;
     HRESULT ret;
     ULONG refcount;
-    static const WCHAR test_file[] = { 'c', ':', '\\', 't', 'e', 's', 't', '.', 't', 'x', 't', '\0' };
+    WCHAR test_file[MAX_PATH];
+    static const WCHAR testEx_txt[] = { '\\', 't', 'e', 's', 't', 'E','x', '.', 't', 'x', 't', '\0' };
 
     trace("SHCreateStreamOnFileEx: testing mode %d, STGM flags %08x\n", mode, stgm);
+
+    /* Don't used a fixed path for the testEx.txt file */
+    GetTempPathW(MAX_PATH, test_file);
+    lstrcatW(test_file, testEx_txt);
 
     /* invalid arguments */
 

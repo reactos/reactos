@@ -696,6 +696,130 @@ static void test_EM_FINDTEXT(void)
   DestroyWindow(hwndRichEdit);
 }
 
+static void test_EM_POSFROMCHAR(void)
+{
+  HWND hwndRichEdit = new_richedit(NULL);
+  int i;
+  POINTL pl;
+  LRESULT result;
+  unsigned int height = 0;
+  int xpos = 0;
+  static const char text[] = "aa\n"
+      "this is a long line of text that should be longer than the "
+      "control's width\n"
+      "cc\n"
+      "dd\n"
+      "ee\n"
+      "ff\n"
+      "gg\n"
+      "hh\n";
+
+  /* Fill the control to lines to ensure that most of them are offscreen */
+  for (i = 0; i < 50; i++)
+  {
+    /* Do not modify the string; it is exactly 16 characters long. */
+    SendMessage(hwndRichEdit, EM_SETSEL, 0, 0);
+    SendMessage(hwndRichEdit, EM_REPLACESEL, 0, (LPARAM)"0123456789ABCD\r\n");
+  }
+
+  /*
+   Richedit 1.0 receives a POINTL* on wParam and character offset on lParam, returns void.
+   Richedit 2.0 receives character offset on wParam, ignores lParam, returns MAKELONG(x,y)
+   Richedit 3.0 accepts either of the above API conventions.
+   */
+
+  /* Testing Richedit 1.0 API format */
+
+  /* Testing start of lines. X-offset should be constant on all cases (native is 1).
+     Since all lines are identical and drawn with the same font,
+     they should have the same height... right?
+   */
+  for (i = 0; i < 50; i++)
+  {
+    /* All the lines are 16 characters long */
+    result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, i * 16);
+    ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+    if (i == 0)
+    {
+      ok(pl.y == 0, "EM_POSFROMCHAR reports y=%d, expected 0\n", pl.y);
+      todo_wine {
+      ok(pl.x == 1, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+      }
+      xpos = pl.x;
+    }
+    else if (i == 1)
+    {
+      ok(pl.y > 0, "EM_POSFROMCHAR reports y=%d, expected > 0\n", pl.y);
+      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+      height = pl.y;
+    }
+    else
+    {
+      ok(pl.y == i * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, i * height);
+      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+    }
+  }
+
+  /* Testing position at end of text */
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 50 * 16);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == 50 * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, 50 * height);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+
+  /* Testing position way past end of text */
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 55 * 16);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == 50 * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, 50 * height);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+
+
+  /* Testing that vertical scrolling does, in fact, have an effect on EM_POSFROMCHAR */
+  SendMessage(hwndRichEdit, EM_SCROLL, SB_LINEDOWN, 0); /* line down */
+  for (i = 0; i < 50; i++)
+  {
+    /* All the lines are 16 characters long */
+    result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, i * 16);
+    ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+    ok(pl.y == (i - 1) * height,
+        "EM_POSFROMCHAR reports y=%d, expected %d\n",
+        pl.y, (i - 1) * height);
+    ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+  }
+
+  /* Testing position at end of text */
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 50 * 16);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == (50 - 1) * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, (50 - 1) * height);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+
+  /* Testing position way past end of text */
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 55 * 16);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == (50 - 1) * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, (50 - 1) * height);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+
+  /* Testing that horizontal scrolling does, in fact, have an effect on EM_POSFROMCHAR */
+  SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text);
+  SendMessage(hwndRichEdit, EM_SCROLL, SB_LINEUP, 0); /* line up */
+
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 0);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == 0, "EM_POSFROMCHAR reports y=%d, expected 0\n", pl.y);
+  todo_wine {
+  ok(pl.x == 1, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+  }
+  xpos = pl.x;
+
+  SendMessage(hwndRichEdit, WM_HSCROLL, SB_LINERIGHT, 0);
+  result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 0);
+  ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
+  ok(pl.y == 0, "EM_POSFROMCHAR reports y=%d, expected 0\n", pl.y);
+  todo_wine {
+  /* Fails on builtin because horizontal scrollbar is not being shown */
+  ok(pl.x < xpos, "EM_POSFROMCHAR reports x=%hd, expected value less than %d\n", pl.x, xpos);
+  }
+  DestroyWindow(hwndRichEdit);
+}
 
 
 START_TEST( editor )
@@ -717,6 +841,7 @@ START_TEST( editor )
   test_EM_GETLINE();
   test_EM_LINELENGTH();
   test_EM_FINDTEXT();
+  test_EM_POSFROMCHAR();
 
   /* Set the environment variable WINETEST_RICHED32 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.

@@ -2194,6 +2194,8 @@ static void test_BindToObject(int protocol, BOOL emul)
         SET_EXPECT(Start);
         if(test_protocol == HTTP_TEST)
             SET_EXPECT(Terminate);
+        if(test_protocol == FILE_TEST)
+            SET_EXPECT(OnProgress_MIMETYPEAVAILABLE);
         SET_EXPECT(UnlockRequest);
     }else {
         if(test_protocol == HTTP_TEST) {
@@ -2260,6 +2262,8 @@ static void test_BindToObject(int protocol, BOOL emul)
         CHECK_CALLED(Start);
         if(test_protocol == HTTP_TEST)
             CHECK_CALLED(Terminate);
+        if(test_protocol == FILE_TEST)
+            CLEAR_CALLED(OnProgress_MIMETYPEAVAILABLE); /* not called in IE7 */
         CHECK_CALLED(UnlockRequest);
     }else {
         if(test_protocol == HTTP_TEST) {
@@ -2302,9 +2306,13 @@ static void test_BindToObject(int protocol, BOOL emul)
     if(test_protocol != HTTP_TEST || emul || urls[test_protocol] == SHORT_RESPONSE_URL) {
         ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
         ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
-    }else todo_wine {
-        ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
-        ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
+    }else {
+        todo_wine ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
+
+        if(bindf & BINDF_ASYNCHRONOUS)
+            ok(IBindCtx_Release(bctx) != 0, "bctx should not be destroyed here\n");
+        else
+            todo_wine ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
     }
 
     if(emul)

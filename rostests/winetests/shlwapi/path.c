@@ -537,9 +537,13 @@ static void test_PathCombineA(void)
     SetLastError(0xdeadbeef);
     lstrcpyA(dest, "control");
     str = PathCombineA(dest, "relative\\dir", "\\one\\two\\three\\");
-    ok(str == dest, "Expected str == dest, got %p\n", str);
-    ok(!lstrcmp(str, "one\\two\\three\\"), "Expected one\\two\\three\\, got %s\n", str);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
+    /* Vista fails which probably makes sense as PathCombineA expects an absolute dir */
+    if (str)
+    {
+        ok(str == dest, "Expected str == dest, got %p\n", str);
+        ok(!lstrcmp(str, "one\\two\\three\\"), "Expected one\\two\\three\\, got %s\n", str);
+    }
 
     /* try forward slashes */
     SetLastError(0xdeadbeef);
@@ -806,10 +810,8 @@ static void test_PathCanonicalizeA(void)
     ok(!res, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, 
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
-    todo_wine
-    {
-        ok(!lstrcmp(dest, "test"), "Expected test, got %s\n", dest);
-    }
+    ok(dest[0] == 0 || !lstrcmp(dest, "test"),
+       "Expected either an empty string (Vista) or test, got %s\n", dest);
 
     /* try an empty source */
     lstrcpy(dest, "test");
