@@ -378,21 +378,6 @@ DefRawInputProc(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetLayeredWindowAttributes(
-    HWND hwnd,
-    COLORREF *pcrKey,
-    BYTE *pbAlpha,
-    DWORD *pdwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetRawInputBuffer(

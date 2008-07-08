@@ -302,7 +302,7 @@ GetKeyboardState@4
 GetKeyboardType@4
 GetLastActivePopup@4
 GetLastInputInfo@4
-GetLayeredWindowAttributes@16
+GetLayeredWindowAttributes@16=NtUserGetLayeredWindowAttributes@16
 GetListBoxInfo@4
 GetMenu@4
 GetMenuBarInfo@16

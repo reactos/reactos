@@ -552,12 +552,12 @@ NtUserAlterWindowStyle(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 NTAPI
 NtUserAttachThreadInput(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  IN DWORD idAttach,
+  IN DWORD idAttachTo,
+  IN BOOL fAttach);
 
 HDC NTAPI
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs);
@@ -987,12 +987,12 @@ NtUserCreateWindowStation(
   DWORD Unknown5,
   DWORD Unknown6);
 
-DWORD
+BOOL
 NTAPI
 NtUserDdeGetQualityOfService(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  IN HWND hwndClient,
+  IN HWND hWndServer,
+  OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev);
 
 DWORD
 NTAPI
@@ -1003,12 +1003,12 @@ NtUserDdeInitialize(
   DWORD Unknown3,
   DWORD Unknown4);
 
-DWORD
+BOOL
 NTAPI
 NtUserDdeSetQualityOfService(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  IN  HWND hwndClient,
+  IN  PSECURITY_QUALITY_OF_SERVICE pqosNew,
+  OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev);
 
 HDWP NTAPI
 NtUserDeferWindowPos(HDWP WinPosInfo,
@@ -1074,13 +1074,13 @@ NtUserDragObject(
    DWORD   dw1,
    HCURSOR hc1);
 
-DWORD
+BOOL
 NTAPI
 NtUserDrawAnimatedRects(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hwnd,
+  INT idAni,
+  RECT *lprcFrom,
+  RECT *lprcTo);
 
 BOOL
 NTAPI
@@ -1178,8 +1178,8 @@ NtUserEvent(
 DWORD
 NTAPI
 NtUserExcludeUpdateRgn(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HDC hDC,
+  HWND hWnd);
 
 DWORD
 NTAPI
@@ -1212,15 +1212,15 @@ NTAPI
 NtUserFlashWindowEx(
   DWORD Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetAltTabInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+   HWND hwnd,
+   INT  iItem,
+   PALTTABINFO pati,
+   LPTSTR pszItemText,
+   UINT   cchItemText,
+   BOOL   Ansi);
 
 HWND NTAPI
 NtUserGetAncestor(HWND hWnd, UINT Flags);
@@ -1306,12 +1306,12 @@ NtUserGetComboBoxInfo(
   HWND hWnd,
   PCOMBOBOXINFO pcbi);
 
-DWORD
+HBRUSH
 NTAPI
 NtUserGetControlBrush(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hwnd,
+  HDC  hdc,
+  UINT ctlType);
 
 DWORD
 NTAPI
@@ -1447,13 +1447,13 @@ NTAPI
 NtUserGetKeyState(
   DWORD Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetLayeredWindowAttributes(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    HWND hwnd,
+    COLORREF *pcrKey,
+    BYTE *pbAlpha,
+    DWORD *pdwFlags);
 
 DWORD
 NTAPI
@@ -1509,40 +1509,40 @@ NtUserGetProcessWindowStation(VOID);
 DWORD
 NTAPI
 NtUserGetRawInputBuffer(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    PRAWINPUT pData,
+    PUINT pcbSize,
+    UINT cbSizeHeader);
 
 DWORD
 NTAPI
 NtUserGetRawInputData(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5);
+  HRAWINPUT hRawInput,
+  UINT uiCommand,
+  LPVOID pData,
+  PUINT pcbSize,
+  UINT cbSizeHeader);
 
 DWORD
 NTAPI
 NtUserGetRawInputDeviceInfo(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize);
 
 DWORD
 NTAPI
 NtUserGetRawInputDeviceList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    PRAWINPUTDEVICELIST pRawInputDeviceList,
+    PUINT puiNumDevices,
+    UINT cbSize);
 
 DWORD
 NTAPI
 NtUserGetRegisteredRawInputDevices(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    PRAWINPUTDEVICE pRawInputDevices,
+    PUINT puiNumDevices,
+    UINT cbSize);
 
 BOOL
 NTAPI
@@ -1614,11 +1614,11 @@ NtUserHardErrorControl(
     DWORD dwUnknown2,
     DWORD dwUnknown3);
 
-DWORD
+BOOL
 NTAPI
 NtUserImpersonateDdeClientWindow(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWndClient,
+  HWND hWndServer);
 
 DWORD
 NTAPI
@@ -1706,7 +1706,7 @@ NTAPI
 NtUserLockWindowUpdate(
   DWORD Unknown0);
 
-DWORD
+BOOL
 NTAPI
 NtUserLockWorkStation(VOID);
 
@@ -1858,12 +1858,12 @@ NtUserPostThreadMessage(
   WPARAM wParam,
   LPARAM lParam);
 
-DWORD
+BOOL
 NTAPI
 NtUserPrintWindow(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    HWND hwnd,
+    HDC  hdcBlt,
+    UINT nFlags);
 
 DWORD
 NTAPI
@@ -1956,12 +1956,12 @@ NtUserRegisterClassExWOW(
     DWORD dwUnknown6,
     DWORD dwUnknown7);
 
-DWORD
+BOOL
 NTAPI
 NtUserRegisterRawInputDevices(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    IN PCRAWINPUTDEVICE pRawInputDevices,
+    IN UINT uiNumDevices,
+    IN UINT cbSize);
 
 DWORD
 NTAPI
@@ -2396,7 +2396,7 @@ NtUserShowWindowAsync(
   HWND hWnd,
   LONG nCmdShow);
 
-DWORD
+BOOL
 NTAPI
 NtUserSoundSentry(VOID);
 
@@ -2429,10 +2429,10 @@ NtUserToUnicodeEx(
 		  UINT wFlags,
 		  HKL dwhkl );
 
-DWORD
+BOOL
 NTAPI
 NtUserTrackMouseEvent(
-  DWORD Unknown0);
+  LPTRACKMOUSEEVENT lpEventTrack);
 
 int
 NTAPI
@@ -2516,12 +2516,12 @@ NtUserUpdatePerUserSystemParameters(
   DWORD dwReserved,
   BOOL bEnable);
 
-DWORD
+BOOL
 NTAPI
 NtUserUserHandleGrantAccess(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  IN HANDLE hUserHandle,
+  IN HANDLE hJob,
+  IN BOOL bGrant);
 
 BOOL
 NTAPI
@@ -2552,9 +2552,9 @@ NtUserVkKeyScanEx(
 DWORD
 NTAPI
 NtUserWaitForInputIdle(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  IN HANDLE hProcess,
+  IN DWORD dwMilliseconds,
+  IN BOOL Unknown2); // Always FALSE
 
 DWORD
 NTAPI
