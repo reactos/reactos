@@ -141,6 +141,7 @@ NTSTATUS AfdEventReceiveDatagramHandler(
   NTSTATUS Status;
   KIRQL OldIrql;
   ULONG Count;
+  BOOLEAN CompleteIrp;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -173,7 +174,7 @@ NTSTATUS AfdEventReceiveDatagramHandler(
 
   KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
 
-  if (!IsListEmpty(&FCB->ReadRequestQueue)) {
+  if (CompleteIrp = !IsListEmpty(&FCB->ReadRequestQueue)) {
     AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
 
     Entry = RemoveHeadList(&FCB->ReceiveQueue);
@@ -190,15 +191,15 @@ NTSTATUS AfdEventReceiveDatagramHandler(
 
     ReadRequest->Irp->IoStatus.Information = 0;
     ReadRequest->Irp->IoStatus.Status = Status;
-
-    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
-
-    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
   }
 
   KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
-  *BytesTaken = BytesAvailable;
+  if (CompleteIrp) {
+    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
+    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
+    *BytesTaken = BytesAvailable;
+  }
 
   AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
