@@ -22,6 +22,9 @@
     Hacky debug macro
 */
 
+#include <stdio.h>
+#define SOUND_TRACE printf
+
 #define SOUND_DEBUG(x) \
     MessageBox(0, x, L"Debug", MB_OK | MB_TASKMODAL);
 
@@ -90,6 +93,50 @@ typedef union _UNIVERSAL_CAPS
 } UNIVERSAL_CAPS, *PUNIVERSAL_CAPS;
 
 
+
+/* New sound thread code */
+
+typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  OPTIONAL PVOID Parameter);
+
+typedef struct _SOUND_THREAD_REQUEST
+{
+    /* The sound device instance this request relates to */
+    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+    /* What function to call */
+    SOUND_THREAD_REQUEST_HANDLER RequestHandler;
+    /* Caller-defined parameter */
+    PVOID Parameter;
+    /* This will contain the return code of the request function */
+    MMRESULT ReturnValue;
+} SOUND_THREAD_REQUEST, *PSOUND_THREAD_REQUEST;
+
+typedef VOID (*SOUND_THREAD_IO_COMPLETION_HANDLER)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PVOID Parameter OPTIONAL,
+    IN  DWORD BytesWritten);
+
+typedef struct _SOUND_THREAD_COMPLETED_IO
+{
+    struct _SOUND_THREAD_COMPLETED_IO* Previous;
+    struct _SOUND_THREAD_COMPLETED_IO* Next;
+
+    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+    SOUND_THREAD_IO_COMPLETION_HANDLER CompletionHandler;
+    PVOID Parameter;
+    DWORD BytesTransferred;
+} SOUND_THREAD_COMPLETED_IO, *PSOUND_THREAD_COMPLETED_IO;
+
+typedef struct _SOUND_THREAD_OVERLAPPED
+{
+    OVERLAPPED General;
+
+    /* Pointer to structure to fill with completion data */
+    PSOUND_THREAD_COMPLETED_IO CompletionData;
+} SOUND_THREAD_OVERLAPPED, *PSOUND_THREAD_OVERLAPPED;
+
+#if 0
 /*
     Used internally to shuttle data to/from the sound processing thread.
 */
@@ -117,11 +164,6 @@ typedef struct _SOUND_THREAD_OVERLAPPED
     PSOUND_THREAD_COMPLETED_IO CompletionData;
 } SOUND_THREAD_OVERLAPPED, *PSOUND_THREAD_OVERLAPPED;
 
-typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
-    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
-    IN  PVOID PrivateThreadData,
-    IN  DWORD RequestId,
-    IN  PVOID Data);
 
 typedef VOID (*SOUND_THREAD_IO_COMPLETION_HANDLER)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
@@ -147,25 +189,16 @@ typedef struct _SOUND_THREAD
     PSOUND_THREAD_COMPLETED_IO FirstCompletedIo;
     SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler;
 } SOUND_THREAD, *PSOUND_THREAD;
+#endif
 
 
 /*
     Wave thread
 */
-
-typedef struct _WAVE_OVERLAPPED
-{
-    OVERLAPPED General;
-    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
-    struct _WAVE_THREAD_DATA* ThreadData;
-    PWAVEHDR Header;
-} WAVE_OVERLAPPED, *PWAVE_OVERLAPPED;
-
+#if 0
 typedef struct _WAVE_THREAD_DATA
 {
     /* Wave thread specific */
-    WAVE_OVERLAPPED Overlapped;
-
     DWORD BufferCount;
     PWAVEHDR CurrentBuffer;
     PWAVEHDR FirstBuffer;
@@ -174,6 +207,7 @@ typedef struct _WAVE_THREAD_DATA
     /* How much data is waiting with the driver */
     DWORD RemainingBytes;
 } WAVE_THREAD_DATA, *PWAVE_THREAD_DATA;
+#endif
 
 /*
     Audio device function table
@@ -234,17 +268,36 @@ typedef struct _SOUND_DEVICE
     Represents an individual instance of an audio device
 */
 
+typedef struct _WAVE_STREAM_INFO
+{
+    /* Buffer queue head and tail */
+    PWAVEHDR BufferQueueHead;
+    PWAVEHDR BufferQueueTail;
+    /* The buffer currently being processed */
+    PWAVEHDR CurrentBuffer;
+    /* How far into the current buffer we've gone */
+    DWORD BufferOffset;
+    /* How much data we're expecting back */
+    DWORD BytesOutstanding;
+} WAVE_STREAM_INFO, *PWAVE_STREAM_INFO;
+
 typedef struct _SOUND_DEVICE_INSTANCE
 {
     struct _SOUND_DEVICE_INSTANCE* Next;
     PSOUND_DEVICE Device;
-    PSOUND_THREAD Thread;
+/*    PSOUND_THREAD Thread;*/
 
     /* Stuff generously donated to us from WinMM */
     struct
     {
         DWORD ClientCallback;
     } WinMM;
+
+    /* Device-specific parameters */
+    union
+    {
+        WAVE_STREAM_INFO Wave;
+    } Streaming;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 
@@ -493,60 +546,38 @@ VOID
 DefaultInstanceDestructor(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
 
-MMRESULT
-QueueWaveDeviceBuffer(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  PWAVEHDR BufferHeader);
-
 
 /*
     thread.c
 */
 
 MMRESULT
-StartSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
-    IN  LPVOID PrivateThreadData);
-
-MMRESULT
-StopSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance);
-
-MMRESULT
-CallSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  DWORD RequestId,
-    IN  PVOID RequestData);
-
-MMRESULT
-GetSoundThreadPrivateData(
+OverlappedSoundDeviceIo(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PVOID* PrivateData);
-
-VOID CALLBACK
-CompleteSoundThreadIo(
-    IN  DWORD dwErrorCode,
-    IN  DWORD dwNumberOfBytesTransferred,
-    IN  LPOVERLAPPED lpOverlapped);
-
-MMRESULT
-OverlappedWriteToSoundDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID ContextData,
     IN  PVOID Buffer,
-    IN  DWORD BufferSize);
+    IN  DWORD BufferSize,
+    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
+    IN  PVOID CompletionParameter OPTIONAL);
+
+MMRESULT
+StartSoundThread();
+
+MMRESULT
+StopSoundThread();
+
+MMRESULT
+CallUsingSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  PVOID Parameter);
 
 
 
 MMRESULT
-StartWaveThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance);
+QueueWaveDeviceBuffer(
+    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PWAVEHDR BufferHeader);
 
-MMRESULT
-StopWaveThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance);
 
 
 /*

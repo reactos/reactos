@@ -217,10 +217,13 @@ WriteSoundDeviceBuffer(
 {
     WCHAR msg[128];
     if ( ( ! SoundDeviceInstance ) || ( ! Buffer ) || ( BufferSize == 0 ) )
+    {
+        SOUND_DEBUG(L"Invalid parameter!\n");
         return MMSYSERR_INVALPARAM;
+    }
 
-    wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);
-    SOUND_DEBUG(msg);
+    /*wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);*/
+    /*SOUND_DEBUG(msg);*/
 
     if ( ! WriteFileEx(SoundDeviceInstance->Device->Handle,
                        Buffer,

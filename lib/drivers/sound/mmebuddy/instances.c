@@ -30,7 +30,6 @@ InitSoundDeviceInstance(
     /* Initialise */
     SoundDeviceInstance->Next = NULL;
     SoundDeviceInstance->Device = NULL;
-    SoundDeviceInstance->Thread = NULL;
     /* TODO: WinMM callback entry */
 }
 

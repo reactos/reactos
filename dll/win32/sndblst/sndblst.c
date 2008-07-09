@@ -96,10 +96,15 @@ DriverProc(
                                             0,
                                             FoundDevice);
 
+            /* TODO: Check return value */
+            StartSoundThread();
+
             return 1L;
 
         case DRV_FREE :
             SOUND_DEBUG(L"DRV_FREE");
+
+            StopSoundThread();
 
             RemoveAllSoundDevices();
 
@@ -139,7 +144,7 @@ int APIENTRY wWinMain(
     FILE* f;
 
     f = fopen("27may2_a.wav", "rb");
-    fseek(f, 50, SEEK_SET);
+    fseek(f, 48, SEEK_SET);
     fread(Buffer, 1, 5340000, f);
     fclose(f);
 
@@ -160,7 +165,7 @@ int APIENTRY wWinMain(
     /* WODM_OPEN */
     Format.wFormatTag = WAVE_FORMAT_PCM;
     Format.nChannels = 2;
-    Format.nSamplesPerSec = 44100;
+    Format.nSamplesPerSec = 22050;
     Format.wBitsPerSample = 16;
     Format.nBlockAlign = Format.nChannels * (Format.wBitsPerSample / 8);
     Format.nAvgBytesPerSec = Format.nSamplesPerSec * Format.nBlockAlign;
@@ -189,6 +194,14 @@ int APIENTRY wWinMain(
     WaveHeaders[2].dwBufferLength = 1000000;
     WaveHeaders[2].dwFlags = WHDR_PREPARED;
 
+    WaveHeaders[3].lpData = (PVOID) ((PCHAR)Buffer + (1000000 *3));
+    WaveHeaders[3].dwBufferLength = 1000000;
+    WaveHeaders[3].dwFlags = WHDR_PREPARED;
+
+    WaveHeaders[4].lpData = (PVOID) ((PCHAR)Buffer + (1000000 *4));
+    WaveHeaders[4].dwBufferLength = 1000000;
+    WaveHeaders[4].dwFlags = WHDR_PREPARED;
+
 //    WaveHeader2.lpData = (PVOID) Buffer2;
 //    WaveHeader2.dwBufferLength = 10;
 //    WaveHeader2.dwFlags = WHDR_PREPARED;
@@ -196,6 +209,8 @@ int APIENTRY wWinMain(
     Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[0], 0);
     Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[1], 0);
     Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[2], 0);
+    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[3], 0);
+    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[4], 0);
 
     //Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeader2, 0);
 

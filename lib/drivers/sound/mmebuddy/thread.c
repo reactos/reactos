@@ -12,16 +12,7 @@
         4 July 2008 - Created
         5 July 2008 - Implemented basic request processing
         6 July 2008 - Added I/O completion handling
-
-    Possible improvements:
-        Spawn *one* thread to deal with requests and I/O completion, rather
-        than have a thread per sound device instance. This wouldn't be too
-        hard to do but not worth doing right now.
-*/
-
-/*
-    This is used internally by the internal routines
-    (my, how recursive of you...)
+        9 July 2008 - Rewritten to have a single streaming thread
 */
 
 #include <windows.h>
@@ -29,309 +20,29 @@
 
 #include <mmebuddy.h>
 
+/* HAX */
+#include <stdio.h>
 
-/*
-    This is the sound thread's processing loop. Its job is to aid in
-    asynchronous streaming of sound data with a kernel-mode driver. It's
-    basically a loop in which we wait for a request from the client, or
-    completed data from the kernel-mode driver.
+static BOOLEAN ThreadRunning = FALSE;
+static HANDLE SoundThread = INVALID_HANDLE_VALUE;
+static HANDLE ReadyEvent = INVALID_HANDLE_VALUE;
+static HANDLE RequestEvent = INVALID_HANDLE_VALUE;
+static HANDLE DoneEvent = INVALID_HANDLE_VALUE;
 
-    When either of these events occur, the relevant details get passed on
-    to one of the routines specified when the thread was started.
-*/
-DWORD WINAPI
-SoundThreadProc(
-    IN  LPVOID lpParameter)
+static SOUND_THREAD_REQUEST CurrentRequest =
 {
-    PSOUND_DEVICE_INSTANCE Instance;
-    PSOUND_THREAD Thread;
+    NULL,
+    NULL,
+    NULL,
+    MMSYSERR_NOERROR
+};
 
-    Instance = (PSOUND_DEVICE_INSTANCE) lpParameter;
-    Thread = Instance->Thread;
+static SOUND_THREAD_COMPLETED_IO* CompletedIoListHead = NULL;
+static SOUND_THREAD_COMPLETED_IO* CompletedIoListTail = NULL;
 
-    Thread->Running = TRUE;
 
-    /* We're ready to do work */
-    SetEvent(Thread->ReadyEvent);
-
-    /*MessageBox(0, L"Hi from thread!", L"Hi!", MB_OK | MB_TASKMODAL);*/
-
-    while ( Thread->Running )
-    {
-        DWORD WaitResult;
-
-        /* Wait for some work, or I/O completion */
-        WaitResult = WaitForSingleObjectEx(Thread->RequestEvent, INFINITE, TRUE);
-
-        if ( WaitResult == WAIT_OBJECT_0 )
-        {
-            /* Do the work (request 0 kills the thread) */
-            Thread->Request.Result =
-                Thread->RequestHandler(Instance,
-                                       Thread->PrivateData,
-                                       Thread->Request.RequestId,
-                                       Thread->Request.Data);
-
-            if ( Thread->Request.RequestId == 0 )
-            {
-                Thread->Running = FALSE;
-                Thread->Request.Result = MMSYSERR_NOERROR;
-            }
-
-            /* Notify the caller that the work is done */
-            SetEvent(Thread->ReadyEvent);
-            SetEvent(Thread->DoneEvent);
-        }
-        else if ( WaitResult == WAIT_IO_COMPLETION )
-        {
-            /* This gets called after I/O completion */
-            PSOUND_THREAD_COMPLETED_IO CompletionData;
-            SOUND_ASSERT(Thread->FirstCompletedIo);
-
-            //SOUND_DEBUG(L"Outside I/O completion APC");
-
-            /*
-                Purge the completed data queue
-                FIXME? This will be done in the WRONG ORDER!
-                Is this such a problem? The caller won't care. We'll need
-                to remove them from our queue though!
-            */
-            while ( (CompletionData = Thread->FirstCompletedIo) )
-            {
-                /* Call high-level custom I/O completion routine */
-                Thread->IoCompletionHandler(Instance,
-                                            Thread->PrivateData,
-                                            CompletionData->ContextData,
-                                            CompletionData->BytesTransferred);
-
-                /* TODO: I'm sure I've forgotten something ... */
-
-                Thread->FirstCompletedIo = CompletionData->Next;
-                FreeMemory(CompletionData);
-            }
-        }
-    }
-
-    /*MessageBox(0, L"Bye from thread!", L"Bye!", MB_OK | MB_TASKMODAL);*/
-
-    ExitThread(0);
-    return 0;
-}
-
-MMRESULT
-CreateThreadEvents(
-    IN  PSOUND_THREAD Thread)
-{
-    /* Create the request event */
-    Thread->RequestEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    if ( ! Thread->RequestEvent )
-    {
-        return MMSYSERR_NOMEM;
-    }
-
-    /* Create the 'ready' event */
-    Thread->ReadyEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    if ( ! Thread->ReadyEvent )
-    {
-        CloseHandle(Thread->RequestEvent);
-        return MMSYSERR_NOMEM;
-    }
-
-    /* Create the 'done' event */
-    Thread->DoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    if ( ! Thread->DoneEvent )
-    {
-        CloseHandle(Thread->ReadyEvent);
-        CloseHandle(Thread->RequestEvent);
-        return MMSYSERR_NOMEM;
-    }
-
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT
-DestroyThreadEvents(
-    IN  PSOUND_THREAD Thread)
-{
-    CloseHandle(Thread->RequestEvent);
-    Thread->RequestEvent = INVALID_HANDLE_VALUE;
-
-    CloseHandle(Thread->ReadyEvent);
-    Thread->ReadyEvent = INVALID_HANDLE_VALUE;
-
-    CloseHandle(Thread->DoneEvent);
-    Thread->DoneEvent = INVALID_HANDLE_VALUE;
-
-    return MMSYSERR_NOERROR;
-}
-
-
-MMRESULT
-StartSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
-    IN  LPVOID PrivateThreadData)
-{
-    PSOUND_THREAD SoundThread = NULL;
-
-    /* Validate parameters */
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! RequestHandler )
-        return MMSYSERR_INVALPARAM;
-
-    /* Only allowed one thread per instance */
-    if ( Instance->Thread )
-        return MMSYSERR_ERROR;
-
-    /* Allocate memory for the thread info */
-    SoundThread = AllocateMemoryFor(SOUND_THREAD);
-
-    if ( ! SoundThread )
-        return MMSYSERR_NOMEM;
-
-    /* Initialise */
-    SoundThread->PrivateData = PrivateThreadData;
-    SoundThread->Running = FALSE;
-    SoundThread->Handle = INVALID_HANDLE_VALUE;
-
-    SoundThread->RequestHandler = RequestHandler;
-    SoundThread->ReadyEvent = INVALID_HANDLE_VALUE;
-    SoundThread->RequestEvent = INVALID_HANDLE_VALUE;
-    SoundThread->DoneEvent = INVALID_HANDLE_VALUE;
-
-    SoundThread->IoCompletionHandler = IoCompletionHandler;
-    SoundThread->FirstCompletedIo = NULL;
-
-    /* No need to initialise the requests */
-
-    /* Create the events */
-    if ( CreateThreadEvents(SoundThread) != MMSYSERR_NOERROR )
-    {
-        FreeMemory(SoundThread);
-        return MMSYSERR_NOMEM;
-    }
-
-    if ( ! SoundThread->RequestEvent )
-    {
-        CloseHandle(SoundThread->RequestEvent);
-        FreeMemory(SoundThread);
-        return MMSYSERR_NOMEM;
-    }
-
-    /* Do the creation thang */
-    SoundThread->Handle = CreateThread(NULL,
-                                       0,
-                                       &SoundThreadProc,
-                                       (LPVOID) Instance,
-                                       CREATE_SUSPENDED,
-                                       NULL);
-
-    if (SoundThread->Handle == INVALID_HANDLE_VALUE )
-    {
-        FreeMemory(SoundThread);
-        return Win32ErrorToMmResult(GetLastError());
-    }
-
-    /* Assign the thread to the instance */
-    Instance->Thread = SoundThread;
-
-    /* Go! */
-    ResumeThread(SoundThread->Handle);
-
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT
-StopSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance)
-{
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! Instance->Thread )
-        return MMSYSERR_ERROR;
-
-    /* Send request zero to ask the thread to end */
-    CallSoundThread(Instance, 0, NULL);
-
-    /* Wait for the thread to exit */
-    WaitForSingleObject(Instance->Thread->Handle, INFINITE);
-
-    /* Finish with the thread */
-    CloseHandle(Instance->Thread->Handle);
-    Instance->Thread->Handle = INVALID_HANDLE_VALUE;
-
-    /* Clean up the thread events */
-    DestroyThreadEvents(Instance->Thread);
-
-    /* Free memory associated with the thread */
-    FreeMemory(Instance->Thread);
-    Instance->Thread = NULL;
-
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT
-CallSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD RequestId,
-    IN  PVOID RequestData)
-{
-    MMRESULT Result;
-
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! SoundDeviceInstance->Thread )
-        return MMSYSERR_ERROR;
-
-    //SOUND_DEBUG(L"Waiting for Ready event");
-
-    /* Wait for the thread to be ready */
-    WaitForSingleObject(SoundDeviceInstance->Thread->ReadyEvent, INFINITE);
-
-    /* Load the request */
-    SoundDeviceInstance->Thread->Request.DeviceInstance = SoundDeviceInstance;
-    SoundDeviceInstance->Thread->Request.RequestId = RequestId;
-    SoundDeviceInstance->Thread->Request.Data = RequestData;
-    SoundDeviceInstance->Thread->Request.Result = MMSYSERR_NOTSUPPORTED;
-
-    /* Notify the thread that there's a request to be processed */
-    SetEvent(SoundDeviceInstance->Thread->RequestEvent);
-
-    /* Wait for the thread to be ready (request complete) */
-    WaitForSingleObject(SoundDeviceInstance->Thread->DoneEvent, INFINITE);
-
-    /* Grab the result */
-    Result = SoundDeviceInstance->Thread->Request.Result;
-
-    return Result;
-}
-
-MMRESULT
-GetSoundThreadPrivateData(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PVOID* PrivateData)
-{
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! SoundDeviceInstance->Thread )
-        return MMSYSERR_ERROR;
-
-    if ( ! PrivateData )
-        return MMSYSERR_INVALPARAM;
-
-    *PrivateData = SoundDeviceInstance->Thread->PrivateData;
-
-    return MMSYSERR_NOERROR;
-}
+VOID
+CleanupThreadEvents();
 
 VOID CALLBACK
 CompleteSoundThreadIo(
@@ -339,85 +50,337 @@ CompleteSoundThreadIo(
     IN  DWORD dwNumberOfBytesTransferred,
     IN  LPOVERLAPPED lpOverlapped)
 {
-    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
-    PSOUND_THREAD_OVERLAPPED SoundThreadOverlapped;
     PSOUND_THREAD_COMPLETED_IO CompletionData;
+    PSOUND_THREAD_OVERLAPPED SoundOverlapped;
 
-    SoundThreadOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
-    SOUND_ASSERT(SoundThreadOverlapped);
+    printf("Overlapped I/O completion APC called\n");
 
-    CompletionData = SoundThreadOverlapped->CompletionData;
+    SoundOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
+    SOUND_ASSERT(SoundOverlapped);
+
+    CompletionData = SoundOverlapped->CompletionData;
     SOUND_ASSERT(CompletionData);
 
-    SoundDeviceInstance = SoundThreadOverlapped->SoundDeviceInstance;
-    SOUND_ASSERT(SoundDeviceInstance);
-    SOUND_ASSERT(SoundDeviceInstance->Thread);
-
-    //SOUND_DEBUG(L"New I/O Completion Callback Called");
-
-    /* This is going at the start of the list */
-    CompletionData->Next = SoundDeviceInstance->Thread->FirstCompletedIo;
-    SoundDeviceInstance->Thread->FirstCompletedIo = CompletionData;
-
-    /* Whatever information was supplied to us originally by the caller */
-    CompletionData->ContextData = SoundThreadOverlapped->ContextData;
-
-    /* How much data was transferred */
     CompletionData->BytesTransferred = dwNumberOfBytesTransferred;
 
-    /* Overlapped structure gets freed now, but we still need the completion */
-    FreeMemory(SoundThreadOverlapped);
+    /* Is this the first completion? */
+    if ( ! CompletedIoListHead )
+    {
+        printf("First completion - making new head and tail\n");
+        /* This is the first completion */
+        SOUND_ASSERT(CompletedIoListTail == NULL);
 
-    //SOUND_DEBUG(L"New I/O Completion Callback Done");
+        CompletionData->Previous = NULL;
+        CompletionData->Next = NULL;
+
+        CompletedIoListHead = CompletionData;
+        CompletedIoListTail = CompletionData;
+    }
+    else
+    {
+        printf("Not the first completion - making new tail\n");
+        /* This is not the first completion */
+        CompletionData->Previous = CompletedIoListTail;
+        CompletionData->Next = NULL;
+
+        /* Completion data gets made the new tail */
+        CompletedIoListTail->Next = CompletionData;
+        CompletedIoListTail = CompletionData;
+    }
+
+    /* We keep the completion data, but no longer need this: */
+    FreeMemory(SoundOverlapped);
 }
 
 MMRESULT
-OverlappedWriteToSoundDevice(
+OverlappedSoundDeviceIo(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID ContextData,
     IN  PVOID Buffer,
-    IN  DWORD BufferSize)
+    IN  DWORD BufferSize,
+    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
+    IN  PVOID CompletionParameter OPTIONAL)
 {
     PSOUND_THREAD_OVERLAPPED Overlapped;
-    PSOUND_THREAD_COMPLETED_IO CompletedIo;
 
     if ( ! SoundDeviceInstance )
         return MMSYSERR_INVALPARAM;
 
-    if ( ! SoundDeviceInstance->Thread )
-        return MMSYSERR_ERROR;  /* FIXME - better return code? */
-
     if ( ! Buffer )
         return MMSYSERR_INVALPARAM;
 
-    /* This will contain information about the write operation */
+    if ( BufferSize == 0 )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! IoCompletionHandler )
+        return MMSYSERR_INVALPARAM;
+
+    /* Allocate memory for the overlapped I/O structure (auto-zeroed) */
     Overlapped = AllocateMemoryFor(SOUND_THREAD_OVERLAPPED);
+
     if ( ! Overlapped )
         return MMSYSERR_NOMEM;
 
-    /* We collect this on I/O completion */
-    CompletedIo = AllocateMemoryFor(SOUND_THREAD_COMPLETED_IO);
-    if ( ! CompletedIo )
+    /* We also need memory for the completion data (auto-zeroed) */
+    Overlapped->CompletionData = AllocateMemoryFor(SOUND_THREAD_COMPLETED_IO);
+
+    if ( ! Overlapped->CompletionData )
     {
         FreeMemory(Overlapped);
         return MMSYSERR_NOMEM;
     }
 
-    ZeroMemory(Overlapped, sizeof(SOUND_THREAD_OVERLAPPED));
-    ZeroMemory(CompletedIo, sizeof(SOUND_THREAD_COMPLETED_IO));
+    /* Information to be passed to the completion routine */
+    Overlapped->CompletionData->SoundDeviceInstance = SoundDeviceInstance;
+    Overlapped->CompletionData->CompletionHandler = IoCompletionHandler;
+    Overlapped->CompletionData->Parameter = CompletionParameter;
+    Overlapped->CompletionData->BytesTransferred = 0;
 
-    /* We'll want to know which device to queue completion data to */
-    Overlapped->SoundDeviceInstance = SoundDeviceInstance;
-
-    /* Caller-supplied data, gets passed back on completion */
-    Overlapped->ContextData = ContextData;
-
-    /* The completion data buffer which will be filled later */
-    Overlapped->CompletionData = CompletedIo;
-
+    printf("Performing overlapped I/O\n");
     return WriteSoundDeviceBuffer(SoundDeviceInstance,
                                   Buffer,
                                   BufferSize,
                                   CompleteSoundThreadIo,
                                   (LPOVERLAPPED) Overlapped);
+}
+
+MMRESULT
+ProcessThreadExitRequest(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
+    IN  PVOID Parameter OPTIONAL)
+{
+    printf("ProcessThreadExitRequest called\n");
+    ThreadRunning = FALSE;
+    return MMSYSERR_NOERROR;
+}
+
+DWORD WINAPI
+SoundThreadProc(
+    IN  LPVOID lpParameter OPTIONAL)
+{
+    ThreadRunning = TRUE;
+
+    /* We're ready to do work */
+    SetEvent(ReadyEvent);
+
+    while ( ThreadRunning )
+    {
+        DWORD WaitResult;
+
+        /* Wait for a request, or an I/O completion */
+        WaitResult = WaitForSingleObjectEx(RequestEvent, INFINITE, TRUE);
+
+        if ( WaitResult == WAIT_OBJECT_0 )
+        {
+            /* Process the request */
+
+            SOUND_ASSERT(CurrentRequest.RequestHandler != NULL);
+            if ( CurrentRequest.RequestHandler != NULL )
+            {
+                CurrentRequest.ReturnValue = CurrentRequest.RequestHandler(
+                    CurrentRequest.SoundDeviceInstance,
+                    CurrentRequest.Parameter);
+            }
+            else
+            {
+                CurrentRequest.ReturnValue = MMSYSERR_ERROR;
+            }
+
+            /* Announce completion of the request */
+            SetEvent(DoneEvent);
+            /* Accept new requests */
+            SetEvent(ReadyEvent);
+        }
+        else if ( WaitResult == WAIT_IO_COMPLETION )
+        {
+            PSOUND_THREAD_COMPLETED_IO CurrentCompletion;
+
+            /* Process the I/O Completion */
+
+            CurrentCompletion = CompletedIoListHead;
+            SOUND_ASSERT(CurrentCompletion);
+
+            while ( CurrentCompletion )
+            {
+                PSOUND_THREAD_COMPLETED_IO PreviousCompletion;
+
+                /* Call the completion handler */
+                CurrentCompletion->CompletionHandler(
+                    CurrentCompletion->SoundDeviceInstance,
+                    CurrentCompletion->Parameter,
+                    CurrentCompletion->BytesTransferred);
+
+                /* Get the next completion but destroy the previous */
+                PreviousCompletion = CurrentCompletion;
+                CurrentCompletion = CurrentCompletion->Next;
+                FreeMemory(PreviousCompletion);
+            }
+
+            /* Nothing in the completion queue/list now */
+            CompletedIoListHead = NULL;
+            CompletedIoListTail = NULL;
+        }
+        else
+        {
+            /* Shouldn't happen! */
+            SOUND_ASSERT(FALSE);
+        }
+    }
+
+    printf("THREAD: Exiting\n");
+
+    ExitThread(0);
+    return 0;
+}
+
+MMRESULT
+CreateThreadEvents()
+{
+    ReadyEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if ( ReadyEvent == INVALID_HANDLE_VALUE )
+    {
+        CleanupThreadEvents();
+        return MMSYSERR_NOMEM;
+    }
+
+    RequestEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if ( RequestEvent == INVALID_HANDLE_VALUE )
+    {
+        CleanupThreadEvents();
+        return MMSYSERR_NOMEM;
+    }
+
+    DoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if ( DoneEvent == INVALID_HANDLE_VALUE )
+    {
+        CleanupThreadEvents();
+        return MMSYSERR_NOMEM;
+    }
+
+    return MMSYSERR_NOERROR;
+}
+
+VOID
+CleanupThreadEvents()
+{
+    if ( ReadyEvent != INVALID_HANDLE_VALUE )
+    {
+        CloseHandle(ReadyEvent);
+        ReadyEvent = INVALID_HANDLE_VALUE;
+    }
+
+    if ( RequestEvent != INVALID_HANDLE_VALUE )
+    {
+        CloseHandle(RequestEvent);
+        RequestEvent = INVALID_HANDLE_VALUE;
+    }
+
+    if ( DoneEvent != INVALID_HANDLE_VALUE )
+    {
+        CloseHandle(DoneEvent);
+        DoneEvent = INVALID_HANDLE_VALUE;
+    }
+}
+
+MMRESULT
+StartSoundThread()
+{
+    MMRESULT Result;
+
+    /* Create the thread events */
+    Result = CreateThreadEvents();
+
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        return Result;
+    }
+
+    /* Create the thread */
+    SoundThread = CreateThread(NULL,
+                               0,
+                               &SoundThreadProc,
+                               (LPVOID) NULL,   /* Parameter */
+                               CREATE_SUSPENDED,
+                               NULL);
+
+    if ( SoundThread == INVALID_HANDLE_VALUE )
+    {
+        CleanupThreadEvents();
+        return Win32ErrorToMmResult(GetLastError());
+    }
+
+    printf("Starting sound thread\n");
+
+    /* We're all set to go, so let's start the thread up */
+    ResumeThread(SoundThread);
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+CallUsingSoundThread(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  PVOID Parameter OPTIONAL)
+{
+    if ( ! RequestHandler )
+        return MMSYSERR_INVALPARAM;
+
+    SOUND_ASSERT(SoundThread != INVALID_HANDLE_VALUE);
+    if ( SoundThread == INVALID_HANDLE_VALUE )
+    {
+        return MMSYSERR_ERROR;
+    }
+
+    /* Wait for the sound thread to be ready for a request */
+    WaitForSingleObject(ReadyEvent, INFINITE);
+
+    /* Fill in the information about the request */
+    CurrentRequest.SoundDeviceInstance = SoundDeviceInstance;
+    CurrentRequest.RequestHandler = RequestHandler;
+    CurrentRequest.Parameter = Parameter;
+    CurrentRequest.ReturnValue = MMSYSERR_ERROR;
+
+    /* Tell the sound thread there is a request waiting */
+    SetEvent(RequestEvent);
+
+    /* Wait for our request to be dealt with */
+    WaitForSingleObject(DoneEvent, INFINITE);
+
+    return CurrentRequest.ReturnValue;
+}
+
+MMRESULT
+StopSoundThread()
+{
+    MMRESULT Result;
+
+    SOUND_ASSERT(SoundThread != INVALID_HANDLE_VALUE);
+    if ( SoundThread == INVALID_HANDLE_VALUE )
+    {
+        return MMSYSERR_ERROR;
+    }
+
+    printf("Calling thread shutdown function\n");
+
+    Result = CallUsingSoundThread(NULL,
+                                  ProcessThreadExitRequest,
+                                  NULL);
+
+    /* Our request didn't get processed? */
+    SOUND_ASSERT(Result != MMSYSERR_NOERROR);
+    if ( Result != MMSYSERR_NOERROR )
+        return Result;
+
+    WaitForSingleObject(SoundThread, INFINITE);
+
+    printf("Sound thread has quit\n");
+
+    /* Clean up */
+    CloseHandle(SoundThread);
+    CleanupThreadEvents();
+
+    return MMSYSERR_NOERROR;
 }

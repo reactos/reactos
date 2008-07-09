@@ -33,7 +33,7 @@ wodMessage(
     PSOUND_DEVICE_INSTANCE Instance =
         (PSOUND_DEVICE_INSTANCE)private_handle;
 
-    SOUND_DEBUG(L"wodMessageStub called\n");
+    SOUND_TRACE("wodMessageStub called\n");
 
     switch ( message )
     {
@@ -64,7 +64,7 @@ wodMessage(
         {
             WAVEOPENDESC* OpenParameters = (WAVEOPENDESC*) parameter1;
 
-            SOUND_DEBUG(L"In WODM_OPEN");
+            SOUND_TRACE("In WODM_OPEN\n");
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
@@ -94,15 +94,6 @@ wodMessage(
                 return Result;
             }
 
-            /* Start the wave handling thread */
-            Result = StartWaveThread(Instance);
-            if ( Result != MMSYSERR_NOERROR )
-            {
-                /* TODO: Do we need to do anything more */
-                DestroySoundDeviceInstance(Instance);
-                return Result;
-            }
-
             /* Provide winmm with instance handle */
             *((PSOUND_DEVICE_INSTANCE*)private_handle) = Instance;
 
@@ -117,9 +108,6 @@ wodMessage(
             SOUND_ASSERT(Instance != NULL);
 
             /* TODO: Ensure its OK to close */
-
-            Result = StopWaveThread(Instance);
-            SOUND_ASSERT(Result == MMSYSERR_NOERROR);
 
             Result = DestroySoundDeviceInstance(Instance);
             SOUND_DEBUG_HEX(Result);

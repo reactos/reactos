@@ -570,36 +570,3 @@ DefaultInstanceDestructor(
 
     ASSERT(Result == MMSYSERR_NOERROR);
 }
-
-
-MMRESULT
-QueueWaveDeviceBuffer(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  PWAVEHDR BufferHeader)
-{
-    MMRESULT Result;
-
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader->lpData )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader->dwBufferLength )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! (BufferHeader->dwFlags & WHDR_PREPARED ) )
-        return WAVERR_UNPREPARED;
-
-    /* TODO: WHDR_INQUEUE */
-
-    BufferHeader->dwFlags &= ~WHDR_DONE;
-    BufferHeader->lpNext = NULL;
-
-    Result = CallSoundThread(Instance, WAVEREQUEST_QUEUE_BUFFER, BufferHeader);
-
-    return Result;
-}

@@ -30,312 +30,236 @@
 
     Should it be configurable? Some sound drivers let you set buffer size...
 */
-#define MAX_SOUND_BUFFER_SIZE   1500000
+#define MAX_SOUND_BUFFER_SIZE   65536
 
 
-/*
-    Audio buffer I/O streaming handler. Slices 'n dices your buffers and
-    serves them up on a platter with a side dressing of your choice.
 
-    It's safe to update the buffer information post-submission within this
-    routine since any completion will be done in an APC for the same thread,
-    so we're not likely to be rudely interrupted by a completion routine
-    bursting through the door.
-*/
-MMRESULT
-StreamWaveData(
+VOID
+CompleteWaveBuffer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVE_THREAD_DATA ThreadData)
+    IN  PVOID Parameter,
+    IN  DWORD BytesWritten);
+
+
+MMRESULT
+StreamWaveIo(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    PWAVEHDR Buffer = ThreadData->CurrentBuffer;
-    DWORD BufferOffset, BytesToStream, BytesAvailable;
-    MMRESULT Result;
+    PWAVE_STREAM_INFO StreamInfo;
+    DWORD BytesAvailable, BytesToStream;
 
-    SOUND_ASSERT(ThreadData->RemainingBytes <= MAX_SOUND_BUFFER_SIZE);
-    SOUND_ASSERT(Buffer);
+    SOUND_TRACE("<== Streaming wave I/O ==>\n");
 
-    /* Work out how much data can be streamed with the driver */
-    BytesAvailable = MAX_SOUND_BUFFER_SIZE - ThreadData->RemainingBytes;
+    SOUND_ASSERT(SoundDeviceInstance);
 
-    while ( ( Buffer = ThreadData->CurrentBuffer ) && ( BytesAvailable > 0 ) )
+    /* Get the streaming info */
+    StreamInfo = &SoundDeviceInstance->Streaming.Wave;
+
+    BytesAvailable = MAX_SOUND_BUFFER_SIZE - StreamInfo->BytesOutstanding;
+
+    if ( ! BytesAvailable )
     {
-        /* The 'reserved' member of Buffer contains the offset */
-        BufferOffset = Buffer->reserved;
+        SOUND_TRACE("NO BUFFER SPACE AVAILABLE\n");
+    }
 
+    if ( ! StreamInfo->CurrentBuffer )
+    {
+        SOUND_TRACE("NO CURRENT BUFFER\n");
+    }
+
+    while ( StreamInfo->CurrentBuffer && BytesAvailable )
+    {
         /*
-            Adjust the amount of data to be streamed based on how much of the
-            current buffer has actually been dealt with already.
+            Determine how much of the current buffer remains to be
+            streamed.
         */
-        BytesToStream = Buffer->dwBufferLength - BufferOffset;
+        BytesToStream = StreamInfo->CurrentBuffer->dwBufferLength -
+                        StreamInfo->BufferOffset;
+
+        SOUND_TRACE("Buffer %p, offset %d, length %d\nAvailable %d | BytesToStream %d | BytesOutstanding %d\n",
+                StreamInfo->CurrentBuffer,
+                (int) StreamInfo->BufferOffset,
+                (int) StreamInfo->CurrentBuffer->dwBufferLength,
+                (int) BytesAvailable,
+                (int) BytesToStream,
+                (int) StreamInfo->BytesOutstanding);
+
 
         /*
-            We may find that there's nothing to be done with the current
-            buffer, either on initial entry to this loop or after having
-            been through a few iterations. Once the buffer has been squeezed
-            dry, move on to the next victim...
+            We may receive a buffer with no bytes left to stream, for
+            example as a result of an I/O completion triggering this
+            routine, or if on a previous iteration of this loop we managed
+            to finish sending a buffer.
         */
         if ( BytesToStream == 0 )
         {
-            /* TODO */
-            SOUND_DEBUG(L"Advancing buffer");
-            ThreadData->CurrentBuffer = ThreadData->CurrentBuffer->lpNext;
+            SOUND_TRACE("No bytes to stream\n");
+            StreamInfo->CurrentBuffer = StreamInfo->CurrentBuffer->lpNext;
+            StreamInfo->BufferOffset = 0;
             continue;
         }
 
         /*
-            Now we know how much buffer is waiting to be provided to the
-            driver, we need to consider how much the driver can accept.
+            If the buffer can't be sent in its entirety to the sound driver,
+            send a portion of it to fill the available space.
         */
         if ( BytesToStream > BytesAvailable )
         {
-            /* Buffer can't fit entirely - fill the available space */
             BytesToStream = BytesAvailable;
         }
 
-        /*
-            Now the audio buffer sets sail on its merry way to the sound
-            driver...
-            NOTE: Will need to implement a 'read' function, too.
-        */
-        SOUND_DEBUG(L"Writing data");
-        Result = OverlappedWriteToSoundDevice(SoundDeviceInstance,
-                                            (PVOID) Buffer,
-                                            Buffer->lpData + BufferOffset,
-                                            BytesToStream);
+        SOUND_TRACE("Writing %d bytes from buffer %p, offset %d\n",
+                    (int) BytesToStream,
+                    StreamInfo->CurrentBuffer->lpData,
+                    (int)StreamInfo->BufferOffset);
 
-//    if ( Result != MMSYSERR_NOERROR )
-//        return Result;
-
-        /* Update the offset ready for the next streaming operation */
-        BufferOffset += BytesToStream;
-        Buffer->reserved = BufferOffset;
-
-        /* More data has been sent to the driver, so these get updated, too */
-        ThreadData->RemainingBytes += BytesToStream;
-        BytesAvailable = MAX_SOUND_BUFFER_SIZE - ThreadData->RemainingBytes;
+        /* TODO: Do the streaming */
+        OverlappedSoundDeviceIo(SoundDeviceInstance,
+                                (PCHAR) StreamInfo->CurrentBuffer->lpData +
+                                    StreamInfo->BufferOffset,
+                                BytesToStream,
+                                CompleteWaveBuffer,
+                                (PVOID) StreamInfo->CurrentBuffer);
 
         /*
-            If the offset is now equal to the buffer length, this will be
-            because the entirety of the buffer has been sent.
+            Keep track of the amount of data currently in the hands of the
+            sound driver, so we know how much space is being used up so
+            far, and how many bytes will be announced to the completion
+            routines.
         */
-/*
-        if ( BufferOffset == Buffer->dwBufferLength )
-        {
-            SOUND_DEBUG(L"Advancing buffer");
-            ThreadData->CurrentBuffer = ThreadData->CurrentBuffer->lpNext;
-        }
-*/
+        StreamInfo->BytesOutstanding += BytesToStream;
+
+        /*
+            Update the offset within the buffer to reflect the amount of
+            data being transferred in this transaction.
+        */
+        StreamInfo->BufferOffset += BytesToStream;
+
+        /*
+            Update the number of bytes available for the next iteration.
+        */
+        BytesAvailable = MAX_SOUND_BUFFER_SIZE - StreamInfo->BytesOutstanding;
+
     }
 
-    SOUND_DEBUG(L"Leaving");
+    SOUND_TRACE("<== Done filling stream ==>\n");
+
+#if 0
+        /* TODO: Check result */
+        OverlappedSoundDeviceIo(SoundDeviceInstance,
+                                WaveHeader->lpData,
+                                WaveHeader->dwBufferLength,
+                                CompleteWaveBuffer,
+                                (PVOID) WaveHeader);
+#endif
 
     return MMSYSERR_NOERROR;
 }
 
-
-/*
-    Private thread dispatch routines
-*/
-
-MMRESULT
-SubmitWaveBuffer(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  PWAVE_THREAD_DATA ThreadData,
-    IN  PWAVEHDR Buffer)
-{
-/*    DWORD BytesSubmitted = 0;*/
-
-    SOUND_ASSERT(Instance != NULL);
-    SOUND_ASSERT(Buffer != NULL);
-    SOUND_ASSERT(Instance->Thread != NULL);
-
-    /* This is used to mark the offset within the buffer */
-    Buffer->reserved = 0;
-    /* TODO: Clear completion flag */
-
-    /* Set the head of the buffer list if this is the first buffer */
-    if ( ! ThreadData->FirstBuffer )
-    {
-        SOUND_DEBUG(L"First buffer");
-        ThreadData->FirstBuffer = Buffer;
-    }
-
-    /* Attach the buffer to the end of the list, unless this is the first */
-    if ( ThreadData->LastBuffer )
-    {
-        SOUND_DEBUG(L"Adding to end of list");
-        ThreadData->LastBuffer->lpNext = Buffer;
-    }
-
-    /* Update our record of the last buffer */
-    ThreadData->LastBuffer = Buffer;
-
-    /* Increment the number of buffers queued */
-    ++ ThreadData->BufferCount;
-
-    /* If nothing is playing, we'll need to start things off */
-    if ( ThreadData->RemainingBytes == 0 )
-    {
-        SOUND_DEBUG(L"Kicking off processing");
-        ThreadData->CurrentBuffer = ThreadData->FirstBuffer;
-        StreamWaveData(Instance, ThreadData);
-    }
-
-    return MMSYSERR_NOERROR;
-}
-
-
-/*
-    Thread request dispatcher
-*/
-
-MMRESULT
-ProcessWaveThreadRequest(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  PVOID PrivateThreadData,
-    IN  DWORD RequestId,
-    IN  PVOID Data)
-{
-    PWAVE_THREAD_DATA WaveThreadData =
-        (PWAVE_THREAD_DATA) PrivateThreadData;
-
-    /* Just some temporary testing code for now */
-    WCHAR msg[128];
-    wsprintf(msg, L"Request %d received", RequestId);
-
-    MessageBox(0, msg, L"Request", MB_OK | MB_TASKMODAL);
-
-    SOUND_ASSERT(Instance != NULL);
-
-    switch ( RequestId )
-    {
-        case WAVEREQUEST_QUEUE_BUFFER :
-        {
-            PWAVEHDR Buffer = (PWAVEHDR) Data;
-
-            return SubmitWaveBuffer(Instance, WaveThreadData, Buffer);
-        }
-    }
-
-    return MMSYSERR_NOTSUPPORTED;
-}
-
-
-/*
-    I/O completion
-    Called from outside the overlapped I/O completion APC
-*/
 
 VOID
-ProcessWaveIoCompletion(
-    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
-    IN  PVOID PrivateThreadData,
-    IN  PVOID ContextData,
-    IN  DWORD BytesTransferred)
+CompleteWaveBuffer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter,
+    IN  DWORD BytesWritten)
 {
-    PWAVE_THREAD_DATA ThreadData = (PWAVE_THREAD_DATA) PrivateThreadData;
-    PWAVEHDR WaveHeader = (PWAVEHDR) ContextData;
-    SOUND_ASSERT(ThreadData);
-    WCHAR msg[1024];
+    SOUND_TRACE("CompleteWaveBuffer called - wrote %d bytes\n", (int)BytesWritten);
 
-    /*SOUND_DEBUG(L"ProcessWaveIoCompletion called :)");*/
-    /*SOUND_DEBUG_HEX(WaveHeader);*/
+    SoundDeviceInstance->Streaming.Wave.BytesOutstanding -= BytesWritten;
+
+    StreamWaveIo(SoundDeviceInstance);
+}
+
+
+MMRESULT
+QueueBuffer_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
+    PWAVE_STREAM_INFO StreamInfo;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! WaveHeader )
+        return MMSYSERR_INVALPARAM;
+
+    /* To avoid stupidly long variable names we alias this */
+    StreamInfo = &SoundDeviceInstance->Streaming.Wave;
+
+    SOUND_TRACE("QueueBuffer_Request\n");
+
+    /* Initialise fields of interest to us */
+    WaveHeader->lpNext = NULL;
+    WaveHeader->reserved = 0;
 
     /*
-        At this point we know:
-        - The sound device instance involved in the transaction
-        - The wave header for the buffer which just completed
-        - How much data was transferred
-
-        The next task is to figure out how much of the buffer
-        got played, and enqueue the next buffer if the current
-        one has been completed.
-
-        Basically, this routine is responsible for keeping the
-        stream of audio data to/from the sound driver going.
-
-        When no more WAVEHDRs are queued (ie, WaveHeader->lpNext
-        is NULL), no more buffers are submitted and the sound
-        thread will wait for more requests from the client before
-        it does anything else.
+        Is this the first buffer being queued? Streaming only needs to be
+        done here if there's nothing else playing.
     */
-
-    /* Discount the amount of buffer which has been processed */
-    SOUND_ASSERT(BytesTransferred <= ThreadData->RemainingBytes);
-    ThreadData->RemainingBytes -= BytesTransferred;
-
-    wsprintf(msg, L"Wave header: %x\nOffset: %d\nTransferred: %d bytes\nRemaining: %d bytes",
-             WaveHeader,
-             WaveHeader->reserved,
-             BytesTransferred,
-             ThreadData->RemainingBytes);
-
-    MessageBox(0, msg, L"I/O COMPLETE", MB_OK | MB_TASKMODAL);
-
-    /* TODO: Check return value */
-    StreamWaveData(Instance, ThreadData);
-}
-
-
-/*
-    Wave thread start/stop routines
-*/
-
-MMRESULT
-StartWaveThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance)
-{
-    MMRESULT Result = MMSYSERR_NOERROR;
-    PWAVE_THREAD_DATA WaveThreadData = NULL;
-
-    if ( ! Instance )
-        return MMSYSERR_INVALPARAM;
-
-    WaveThreadData = AllocateMemoryFor(WAVE_THREAD_DATA);
-
-    if ( ! WaveThreadData )
-        return MMSYSERR_NOMEM;
-
-    /* Initialise our data */
-    WaveThreadData->CurrentBuffer = NULL;
-    WaveThreadData->FirstBuffer = NULL;
-    WaveThreadData->LastBuffer = NULL;
-    WaveThreadData->BufferCount = 0;
-    /* TODO: More */
-
-    /* Kick off the thread */
-    Result = StartSoundThread(Instance,
-                              ProcessWaveThreadRequest,
-                              ProcessWaveIoCompletion,
-                              WaveThreadData);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! StreamInfo->BufferQueueHead )
     {
-        FreeMemory(WaveThreadData);
-        return Result;
+        SOUND_TRACE("This is the first buffer being queued\n");
+
+        /* Set head, tail and current to this buffer */
+        StreamInfo->BufferQueueHead = WaveHeader;
+        StreamInfo->BufferQueueTail = WaveHeader;
+        StreamInfo->CurrentBuffer = WaveHeader;
+
+        /* Initialise the stream state */
+        StreamInfo->BufferOffset = 0;
+        StreamInfo->BytesOutstanding = 0;
+
+        /* Get the streaming started */
+        StreamWaveIo(SoundDeviceInstance);
+    }
+    else
+    {
+        SOUND_TRACE("This is not the first buffer being queued\n");
+
+        /* Point the existing tail to the new buffer */
+        StreamInfo->BufferQueueTail->lpNext = WaveHeader;
+        /* ...and set the buffer as the new tail */
+        StreamInfo->BufferQueueTail = WaveHeader;
+
+        if ( ! StreamInfo->CurrentBuffer )
+        {
+            /* All buffers so far have been committed to the sound driver */
+            StreamInfo->CurrentBuffer = WaveHeader;
+        }
     }
 
-    /* AddSoundThreadOperation(Instance, 69, SayHello); */
     return MMSYSERR_NOERROR;
 }
 
-MMRESULT
-StopWaveThread(
-    IN  PSOUND_DEVICE_INSTANCE Instance)
-{
-    MMRESULT Result;
-    PWAVE_THREAD_DATA WaveThreadData = NULL;
 
-    if ( ! Instance )
+MMRESULT
+QueueWaveDeviceBuffer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR BufferHeader)
+{
+    if ( ! SoundDeviceInstance )
         return MMSYSERR_INVALPARAM;
 
-    Result = GetSoundThreadPrivateData(Instance, (PVOID*) &WaveThreadData);
-    SOUND_ASSERT( Result == MMSYSERR_NOERROR );
+    if ( ! BufferHeader )
+        return MMSYSERR_INVALPARAM;
 
-    /* This shouldn't fail... */
-    Result = StopSoundThread(Instance);
-    SOUND_ASSERT( Result == MMSYSERR_NOERROR );
+    if ( ! BufferHeader->lpData )
+        return MMSYSERR_INVALPARAM;
 
-    FreeMemory(WaveThreadData);
+    if ( ! BufferHeader->dwBufferLength )
+        return MMSYSERR_INVALPARAM;
 
-    return MMSYSERR_NOERROR;
+    if ( ! (BufferHeader->dwFlags & WHDR_PREPARED ) )
+        return WAVERR_UNPREPARED;
+
+    /* TODO: WHDR_INQUEUE */
+
+    BufferHeader->dwFlags &= ~WHDR_DONE;
+    BufferHeader->lpNext = NULL;
+
+    return CallUsingSoundThread(SoundDeviceInstance,
+                                QueueBuffer_Request,
+                                BufferHeader);
 }

@@ -45,7 +45,7 @@ BOOLEAN TestCallback(
 {
 /*    MessageBox(0, DevicePath, L"CALLBACK", MB_OK | MB_TASKMODAL);*/
 
-    AddSoundDevice(DeviceType, DevicePath);
+    AddSoundDevice(DeviceType, DevicePath, NULL);
 
     return TRUE;
 }
@@ -106,7 +106,7 @@ TestGetCaps()
     PSOUND_DEVICE Device;
     MMRESULT Result;
 
-    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0", NULL);
     Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
 
     if ( Result != MMSYSERR_NOERROR )
@@ -136,7 +136,7 @@ TestFormatQuery()
     MMRESULT Result;
     WAVEFORMATEX fmt;
 
-    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
+    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0", NULL);
     Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
 
     if ( Result != MMSYSERR_NOERROR )
@@ -179,86 +179,6 @@ OverlappedCallback(
 }
 
 
-VOID
-TestPlaybackHackingly()
-{
-    WCHAR msg[1024];
-    MMRESULT Result;
-    WAVEFORMATEX fmt;
-    ULONG i;
-
-    for ( i = 0; i < 65536; ++ i )
-        JunkBuffer[i] = rand();
-
-    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
-    Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
-
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail 1", L"Fail", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-/*    Result = OpenKernelSoundDevice(Device, GENERIC_READ | GENERIC_WRITE);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail open", L"Fail", MB_OK | MB_TASKMODAL);
-        return;
-    }
-    wsprintf(msg, L"Opened handle %x", Device->Handle);
-    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
-*/
-
-    Result = CreateSoundDeviceInstance(Device, &Instance);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail 2", L"Fail 2", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-    /* Request a valid format */
-    fmt.wFormatTag = WAVE_FORMAT_PCM;
-    fmt.nChannels = 1;
-    fmt.nSamplesPerSec = 22050;
-    fmt.wBitsPerSample = 16;
-    fmt.nBlockAlign = fmt.nChannels * (fmt.wBitsPerSample / 8);
-    fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
-    fmt.cbSize = 0;
-
-    Result = SetWaveDeviceFormat(Instance, &fmt, sizeof(WAVEFORMATEX));
-
-    wsprintf(msg, L"Format support set result: %d\nClick to play!", Result);
-    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
-
-    //SOUND_DEBUG_HEX(Instance->Device->Handle);
-
-    Result = StartWaveThread(Instance);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Failed to start thread", L"Fail 3", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-    //SOUND_DEBUG_HEX(Instance->Device->Handle);
-
-    waveheader.lpData = (PVOID) JunkBuffer;
-    waveheader.dwBufferLength = 65536;
-    waveheader.dwFlags = WHDR_PREPARED;
-
-    Result = QueueWaveDeviceBuffer(Instance, &waveheader);
-//    CallSoundThread(Instance, WAVEREQUEST_QUEUE_BUFFER, &waveheader);
-/*
-    Result = WriteSoundDeviceBuffer(Instance,
-                                    JunkBuffer, 65535, OverlappedCallback);
-*/
-    wsprintf(msg, L"Play result: %d", Result);
-    MessageBox(0, msg, L"Result", MB_OK | MB_TASKMODAL);
-
-    StopWaveThread(Instance);
-    DestroySoundDeviceInstance(Instance);
-}
-
-
 APIENTRY VOID
 TestDevEnum()
 {
@@ -278,44 +198,6 @@ TestThreadCallback(
     MessageBox(0, L"Thread Request Callback", L"Woot", MB_OK | MB_TASKMODAL);
 
     return MMSYSERR_NOERROR;
-}
-
-
-WINAPI VOID
-TestThreading()
-{
-    MMRESULT Result;
-    PSOUND_DEVICE Device;
-    PSOUND_DEVICE_INSTANCE Instance;
-
-    AddSoundDevice(WAVE_OUT_DEVICE_TYPE, L"\\\\.\\SBWaveOut0");
-    Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &Device);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail 1", L"Fail 1", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-    Result = CreateSoundDeviceInstance(Device, &Instance);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail 2", L"Fail 2", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-    Result = StartWaveThread(Instance);
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        MessageBox(0, L"Fail 3", L"Fail 3", MB_OK | MB_TASKMODAL);
-        return;
-    }
-
-    MessageBox(0, L"Click to send a request", L"Bai", MB_OK | MB_TASKMODAL);
-    CallSoundThread(Instance, 69, NULL); 
-
-    MessageBox(0, L"Click to kill thread", L"Bai", MB_OK | MB_TASKMODAL);
-
-    StopWaveThread(Instance);
 }
 
 
@@ -353,14 +235,6 @@ int APIENTRY wWinMain(
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
-//    TestDeviceDetection();
-//    wodTest();
-//    TestFormatQuery();
-    TestPlaybackHackingly();
-//    TestDevEnum();
-/*
-    TestThreading();
-*/
     MessageBox(0, L"Le end", L"Bai", MB_OK | MB_TASKMODAL);
     return 0;
 }
