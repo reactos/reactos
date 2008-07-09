@@ -1300,18 +1300,20 @@ GetWindowThreadProcessId(HWND hWnd,
 
   if (!pWnd) return Ret;
 
-  ti = pWnd->ti;
-
+  ti = SharedPtrToUser(pWnd->ti);
+ 
   if ( ti )
   {
     if ( ti == GetW32ThreadInfo() )
     { // We are current.
+      //FIXME("Current!\n");
       if ( lpdwProcessId )
         *lpdwProcessId = (DWORD)NtCurrentTeb()->Cid.UniqueProcess;
       Ret = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
     }
     else
     { // Ask kernel for info.
+      //FIXME("Kernel call!\n");
       if ( lpdwProcessId )
         *lpdwProcessId = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
       Ret = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_THREAD_ID);
