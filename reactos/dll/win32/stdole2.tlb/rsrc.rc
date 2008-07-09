@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -28,4 +27,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "wine/wine_common_ver.rc"
 
+/* @makedep: std_ole_v2.tlb */
 1 TYPELIB LOADONCALL DISCARDABLE std_ole_v2.tlb

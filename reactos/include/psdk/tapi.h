@@ -123,25 +123,6 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINEERR_INVALFEATURE           0x80000055
 #define LINEERR_NOMULTIPLEINSTANCE     0x80000056
 
-#define LINEFORWARDMODE_UNCOND         0x00000001
-#define LINEFORWARDMODE_UNCONDINTERNAL 0x00000002
-#define LINEFORWARDMODE_UNCONDEXTERNAL 0x00000004
-#define LINEFORWARDMODE_UNCONDSPECIFIC 0x00000008
-#define LINEFORWARDMODE_BUSY           0x00000010
-#define LINEFORWARDMODE_BUSYINTERNAL   0x00000020
-#define LINEFORWARDMODE_BUSYEXTERNAL   0x00000040
-#define LINEFORWARDMODE_BUSYSPECIFIC   0x00000080
-#define LINEFORWARDMODE_NOANSW         0x00000100
-#define LINEFORWARDMODE_NOANSWINTERNAL 0x00000200
-#define LINEFORWARDMODE_NOANSWEXTERNAL 0x00000400
-#define LINEFORWARDMODE_NOANSWSPECIFIC 0x00000800
-#define LINEFORWARDMODE_BUSYNA         0x00001000
-#define LINEFORWARDMODE_BUSYNAINTERNAL 0x00002000
-#define LINEFORWARDMODE_BUSYNAEXTERNAL 0x00004000
-#define LINEFORWARDMODE_BUSYNASPECIFIC 0x00008000
-#define LINEFORWARDMODE_UNKNOWN        0x00010000
-#define LINEFORWARDMODE_UNAVAIL        0x00020000
-
 #define STRINGFORMAT_ASCII             0x00000001
 #define STRINGFORMAT_DBCS              0x00000002
 #define STRINGFORMAT_UNICODE           0x00000003
@@ -172,13 +153,6 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINEDEVCAPFLAGS_DIALBILLING    0x00000040
 #define LINEDEVCAPFLAGS_DIALQUIET      0x00000080
 #define LINEDEVCAPFLAGS_DIALDIALTONE   0x00000100
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-#define LINEDEVCAPFLAGS_MSP             0x00000200
-#define LINEDEVCAPFLAGS_CALLHUB         0x00000400
-#define LINEDEVCAPFLAGS_CALLHUBTRACKING 0x00000800
-#define LINEDEVCAPFLAGS_PRIVATEOBJECTS  0x00001000
-#endif
-#define LINEDEVCAPFLAGS_LOCAL          0x00002000
 
 #define LINEDEVSTATE_OTHER             0x00000001
 #define LINEDEVSTATE_RINGING           0x00000002
@@ -206,22 +180,6 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINEDEVSTATE_TRANSLATECHANGE   0x00400000
 #define LINEDEVSTATE_COMPLCANCEL       0x00800000
 #define LINEDEVSTATE_REMOVED           0x01000000
-
-#define LINEDEVSTATUSFLAGS_CONNECTED   0x00000001
-#define LINEDEVSTATUSFLAGS_MSGWAIT     0x00000002
-#define LINEDEVSTATUSFLAGS_INSERVICE   0x00000004
-#define LINEDEVSTATUSFLAGS_LOCKED      0x00000008
-
-#define LINEDIALTONEMODE_NORMAL        0x00000001
-#define LINEDIALTONEMODE_SPECIAL       0x00000002
-#define LINEDIALTONEMODE_INTERNAL      0x00000004
-#define LINEDIALTONEMODE_EXTERNAL      0x00000008
-#define LINEDIALTONEMODE_UNKNOWN       0x00000010
-#define LINEDIALTONEMODE_UNAVAIL       0x00000020
-
-#define LINEDIGITMODE_PULSE            0x00000001
-#define LINEDIGITMODE_DTMF             0x00000002
-#define LINEDIGITMODE_DTMFEND          0x00000004
 
 #define LINELOCATIONOPTION_PULSEDIAL   0x00000001
 
@@ -260,70 +218,12 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINE_CREATE                   19L
 #define PHONE_CREATE                  20L
 
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
 #define LINE_AGENTSPECIFIC            21L
 #define LINE_AGENTSTATUS              22L
 #define LINE_APPNEWCALL               23L
 #define LINE_PROXYREQUEST             24L
 #define LINE_REMOVE                   25L
 #define PHONE_REMOVE                  26L
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-#define LINE_AGENTSESSIONSTATUS       27L
-#define LINE_QUEUESTATUS              28L
-#define LINE_AGENTSTATUSEX            29L
-#define LINE_GROUPSTATUS              30L
-#define LINE_PROXYSTATUS              31L
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-#define LINE_APPNEWCALLHUB            32L
-#define LINE_CALLHUBCLOSE             33L
-#define LINE_DEVSPECIFICEX            34L
-#endif
-
-#define INITIALIZE_NEGOTIATION        0xFFFFFFFFUL
-
-#define LINEADDRCAPFLAGS_FWDNUMRINGS                0x00000001
-#define LINEADDRCAPFLAGS_PICKUPGROUPID              0x00000002
-#define LINEADDRCAPFLAGS_SECURE                     0x00000004
-#define LINEADDRCAPFLAGS_BLOCKIDDEFAULT             0x00000008
-#define LINEADDRCAPFLAGS_BLOCKIDOVERRIDE            0x00000010
-#define LINEADDRCAPFLAGS_DIALED                     0x00000020
-#define LINEADDRCAPFLAGS_ORIGOFFHOOK                0x00000040
-#define LINEADDRCAPFLAGS_DESTOFFHOOK                0x00000080
-#define LINEADDRCAPFLAGS_FWDCONSULT                 0x00000100
-#define LINEADDRCAPFLAGS_SETUPCONFNULL              0x00000200
-#define LINEADDRCAPFLAGS_AUTORECONNECT              0x00000400
-#define LINEADDRCAPFLAGS_COMPLETIONID               0x00000800
-#define LINEADDRCAPFLAGS_TRANSFERHELD               0x00001000
-#define LINEADDRCAPFLAGS_TRANSFERMAKE               0x00002000
-#define LINEADDRCAPFLAGS_CONFERENCEHELD             0x00004000
-#define LINEADDRCAPFLAGS_CONFERENCEMAKE             0x00008000
-#define LINEADDRCAPFLAGS_PARTIALDIAL                0x00010000
-#define LINEADDRCAPFLAGS_FWDSTATUSVALID             0x00020000
-#define LINEADDRCAPFLAGS_FWDINTEXTADDR              0x00040000
-#define LINEADDRCAPFLAGS_FWDBUSYNAADDR              0x00080000
-#define LINEADDRCAPFLAGS_ACCEPTTOALERT              0x00100000
-#define LINEADDRCAPFLAGS_CONFDROP                   0x00200000
-#define LINEADDRCAPFLAGS_PICKUPCALLWAIT             0x00400000
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINEADDRCAPFLAGS_PREDICTIVEDIALER           0x00800000
-#define LINEADDRCAPFLAGS_QUEUE                      0x01000000
-#define LINEADDRCAPFLAGS_ROUTEPOINT                 0x02000000
-#define LINEADDRCAPFLAGS_HOLDMAKESNEW               0x04000000
-#define LINEADDRCAPFLAGS_NOINTERNALCALLS            0x08000000
-#define LINEADDRCAPFLAGS_NOEXTERNALCALLS            0x10000000
-#define LINEADDRCAPFLAGS_SETCALLINGID               0x20000000
-#endif
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-#define LINEADDRCAPFLAGS_ACDGROUP                   0x40000000
-#endif
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-#define LINEADDRCAPFLAGS_NOPSTNADDRESSTRANSLATION   0x80000000
-#endif
-
 /* these are used as Param1 of line_callstate messages */
 #define LINECALLSTATE_IDLE            0x00000001
 #define LINECALLSTATE_OFFERING        0x00000002
@@ -341,21 +241,11 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINECALLSTATE_ONHOLDPENDTRANSFER 0x00002000
 #define LINECALLSTATE_DISCONNECTED    0x00004000
 #define LINECALLSTATE_UNKNOWN         0x00008000
-
 #define LINECONNECTEDMODE_ACTIVE            0x00000001
 #define LINECONNECTEDMODE_INACTIVE          0x00000002
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
 #define LINECONNECTEDMODE_ACTIVEHELD        0x00000004
 #define LINECONNECTEDMODE_INACTIVEHELD      0x00000008
 #define LINECONNECTEDMODE_CONFIRMED         0x00000010
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLTREATMENT_SILENCE           0x00000001
-#define LINECALLTREATMENT_RINGBACK          0x00000002
-#define LINECALLTREATMENT_BUSY              0x00000003
-#define LINECALLTREATMENT_MUSIC             0x00000004
-#endif
 
 /* these are Param2 values for state_disconnected line_callstate messages */
 #define LINEDISCONNECTMODE_NORMAL           0x00000001
@@ -371,7 +261,6 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINEDISCONNECTMODE_INCOMPATIBLE     0x00000400
 #define LINEDISCONNECTMODE_UNAVAIL          0x00000800
 #define LINEDISCONNECTMODE_NODIALTONE       0x00001000
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
 #define LINEDISCONNECTMODE_NUMBERCHANGED    0x00002000
 #define LINEDISCONNECTMODE_OUTOFORDER       0x00004000
 #define LINEDISCONNECTMODE_TEMPFAILURE      0x00008000
@@ -379,41 +268,15 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINEDISCONNECTMODE_BLOCKED          0x00020000
 #define LINEDISCONNECTMODE_DONOTDISTURB     0x00040000
 #define LINEDISCONNECTMODE_CANCELLED        0x00080000
-#endif
 
 #define LINECALLSELECT_LINE                 0x00000001
 #define LINECALLSELECT_ADDRESS              0x00000002
 #define LINECALLSELECT_CALL                 0x00000004
-#if (TAPI_CURRENT_VERSION >= 0x00020001)
 #define LINECALLSELECT_DEVICEID             0x00000008
-#endif
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-#define LINECALLSELECT_CALLID               0x00000010
-#endif
 
 #define LINECALLPRIVILEGE_NONE              0x00000001
 #define LINECALLPRIVILEGE_MONITOR           0x00000002
 #define LINECALLPRIVILEGE_OWNER             0x00000004
-
-#define LINECALLREASON_DIRECT               0x00000001
-#define LINECALLREASON_FWDBUSY              0x00000002
-#define LINECALLREASON_FWDNOANSWER          0x00000004
-#define LINECALLREASON_FWDUNCOND            0x00000008
-#define LINECALLREASON_PICKUP               0x00000010
-#define LINECALLREASON_UNPARK               0x00000020
-#define LINECALLREASON_REDIRECT             0x00000040
-#define LINECALLREASON_CALLCOMPLETION       0x00000080
-#define LINECALLREASON_TRANSFER             0x00000100
-#define LINECALLREASON_REMINDER             0x00000200
-#define LINECALLREASON_UNKNOWN              0x00000400
-#define LINECALLREASON_UNAVAIL              0x00000800
-#define LINECALLREASON_INTRUDE              0x00001000
-#define LINECALLREASON_PARKED               0x00002000
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLREASON_CAMPEDON             0x00004000
-#define LINECALLREASON_ROUTEREQUEST         0x00008000
-#endif
-
 #define LINECALLFEATURE_ACCEPT              0x00000001
 #define LINECALLFEATURE_ADDTOCONF           0x00000002
 #define LINECALLFEATURE_ANSWER              0x00000004
@@ -443,570 +306,6 @@ typedef HANDLE HPHONEAPP, *LPHPHONEAPP;
 #define LINECALLFEATURE_SWAPHOLD            0x04000000
 #define LINECALLFEATURE_UNHOLD              0x08000000
 #define LINECALLFEATURE_RELEASEUSERUSERINFO 0x10000000
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLFEATURE_SETTREATMENT        0x20000000
-#define LINECALLFEATURE_SETQOS              0x40000000
-#define LINECALLFEATURE_SETCALLDATA         0x80000000
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLFEATURE2_NOHOLDCONFERENCE   0x00000001
-#define LINECALLFEATURE2_ONESTEPTRANSFER    0x00000002
-#define LINECALLFEATURE2_COMPLCAMPON        0x00000004
-#define LINECALLFEATURE2_COMPLCALLBACK      0x00000008
-#define LINECALLFEATURE2_COMPLINTRUDE       0x00000010
-#define LINECALLFEATURE2_COMPLMESSAGE       0x00000020
-#define LINECALLFEATURE2_TRANSFERNORM       0x00000040
-#define LINECALLFEATURE2_TRANSFERCONF       0x00000080
-#define LINECALLFEATURE2_PARKDIRECT         0x00000100
-#define LINECALLFEATURE2_PARKNONDIRECT      0x00000200
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-#define LINECALLHUBTRACKING_NONE            0x00000000
-#define LINECALLHUBTRACKING_PROVIDERLEVEL   0x00000001
-#define LINECALLHUBTRACKING_ALLCALLS        0x00000002
-#endif
-
-#define LINECALLINFOSTATE_OTHER              0x00000001
-#define LINECALLINFOSTATE_DEVSPECIFIC        0x00000002
-#define LINECALLINFOSTATE_BEARERMODE         0x00000004
-#define LINECALLINFOSTATE_RATE               0x00000008
-#define LINECALLINFOSTATE_MEDIAMODE          0x00000010
-#define LINECALLINFOSTATE_APPSPECIFIC        0x00000020
-#define LINECALLINFOSTATE_CALLID             0x00000040
-#define LINECALLINFOSTATE_RELATEDCALLID      0x00000080
-#define LINECALLINFOSTATE_ORIGIN             0x00000100
-#define LINECALLINFOSTATE_REASON             0x00000200
-#define LINECALLINFOSTATE_COMPLETIONID       0x00000400
-#define LINECALLINFOSTATE_NUMOWNERINCR       0x00000800
-#define LINECALLINFOSTATE_NUMOWNERDECR       0x00001000
-#define LINECALLINFOSTATE_NUMMONITORS        0x00002000
-#define LINECALLINFOSTATE_TRUNK              0x00004000
-#define LINECALLINFOSTATE_CALLERID           0x00008000
-#define LINECALLINFOSTATE_CALLEDID           0x00010000
-#define LINECALLINFOSTATE_CONNECTEDID        0x00020000
-#define LINECALLINFOSTATE_REDIRECTIONID      0x00040000
-#define LINECALLINFOSTATE_REDIRECTINGID      0x00080000
-#define LINECALLINFOSTATE_DISPLAY            0x00100000
-#define LINECALLINFOSTATE_USERUSERINFO       0x00200000
-#define LINECALLINFOSTATE_HIGHLEVELCOMP      0x00400000
-#define LINECALLINFOSTATE_LOWLEVELCOMP       0x00800000
-#define LINECALLINFOSTATE_CHARGINGINFO       0x01000000
-#define LINECALLINFOSTATE_TERMINAL           0x02000000
-#define LINECALLINFOSTATE_DIALPARAMS         0x04000000
-#define LINECALLINFOSTATE_MONITORMODES       0x08000000
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLINFOSTATE_TREATMENT          0x10000000
-#define LINECALLINFOSTATE_QOS                0x20000000
-#define LINECALLINFOSTATE_CALLDATA           0x40000000
-#endif
-
-#define LINECALLORIGIN_OUTBOUND              0x00000001
-#define LINECALLORIGIN_INTERNAL              0x00000002
-#define LINECALLORIGIN_EXTERNAL              0x00000004
-#define LINECALLORIGIN_UNKNOWN               0x00000010
-#define LINECALLORIGIN_UNAVAIL               0x00000020
-#define LINECALLORIGIN_CONFERENCE            0x00000040
-#define LINECALLORIGIN_INBOUND               0x00000080
-
-#define LINECALLPARAMFLAGS_SECURE            0x00000001
-#define LINECALLPARAMFLAGS_IDLE              0x00000002
-#define LINECALLPARAMFLAGS_BLOCKID           0x00000004
-#define LINECALLPARAMFLAGS_ORIGOFFHOOK       0x00000008
-#define LINECALLPARAMFLAGS_DESTOFFHOOK       0x00000010
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINECALLPARAMFLAGS_NOHOLDCONFERENCE  0x00000020
-#define LINECALLPARAMFLAGS_PREDICTIVEDIAL    0x00000040
-#define LINECALLPARAMFLAGS_ONESTEPTRANSFER   0x00000080
-#endif
-
-#define LINECALLPARTYID_BLOCKED              0x00000001
-#define LINECALLPARTYID_OUTOFAREA            0x00000002
-#define LINECALLPARTYID_NAME                 0x00000004
-#define LINECALLPARTYID_ADDRESS              0x00000008
-#define LINECALLPARTYID_PARTIAL              0x00000010
-#define LINECALLPARTYID_UNKNOWN              0x00000020
-#define LINECALLPARTYID_UNAVAIL              0x00000040
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define LINEPROXYREQUEST_SETAGENTGROUP              0x00000001
-#define LINEPROXYREQUEST_SETAGENTSTATE              0x00000002
-#define LINEPROXYREQUEST_SETAGENTACTIVITY           0x00000003
-#define LINEPROXYREQUEST_GETAGENTCAPS               0x00000004
-#define LINEPROXYREQUEST_GETAGENTSTATUS             0x00000005
-#define LINEPROXYREQUEST_AGENTSPECIFIC              0x00000006
-#define LINEPROXYREQUEST_GETAGENTACTIVITYLIST       0x00000007
-#define LINEPROXYREQUEST_GETAGENTGROUPLIST          0x00000008
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-#define LINEPROXYREQUEST_CREATEAGENT                0x00000009
-#define LINEPROXYREQUEST_SETAGENTMEASUREMENTPERIOD  0x0000000A
-#define LINEPROXYREQUEST_GETAGENTINFO               0x0000000B
-#define LINEPROXYREQUEST_CREATEAGENTSESSION         0x0000000C
-#define LINEPROXYREQUEST_GETAGENTSESSIONLIST        0x0000000D
-#define LINEPROXYREQUEST_SETAGENTSESSIONSTATE       0x0000000E
-#define LINEPROXYREQUEST_GETAGENTSESSIONINFO        0x0000000F
-#define LINEPROXYREQUEST_GETQUEUELIST               0x00000010
-#define LINEPROXYREQUEST_SETQUEUEMEASUREMENTPERIOD  0x00000011
-#define LINEPROXYREQUEST_GETQUEUEINFO               0x00000012
-#define LINEPROXYREQUEST_GETGROUPLIST               0x00000013
-#define LINEPROXYREQUEST_SETAGENTSTATEEX            0x00000014
-#endif
-
-#define TAPI_REPLY                          WM_USER + 99
-
-#define TAPIERR_CONNECTED                   0L
-#define TAPIERR_DROPPED                     -1L
-#define TAPIERR_NOREQUESTRECIPIENT          -2L
-#define TAPIERR_REQUESTQUEUEFULL            -3L
-#define TAPIERR_INVALDESTADDRESS            -4L
-#define TAPIERR_INVALWINDOWHANDLE           -5L
-#define TAPIERR_INVALDEVICECLASS            -6L
-#define TAPIERR_INVALDEVICEID               -7L
-#define TAPIERR_DEVICECLASSUNAVAIL          -8L
-#define TAPIERR_DEVICEIDUNAVAIL             -9L
-#define TAPIERR_DEVICEINUSE                 -10L
-#define TAPIERR_DESTBUSY                    -11L
-#define TAPIERR_DESTNOANSWER                -12L
-#define TAPIERR_DESTUNAVAIL                 -13L
-#define TAPIERR_UNKNOWNWINHANDLE            -14L
-#define TAPIERR_UNKNOWNREQUESTID            -15L
-#define TAPIERR_REQUESTFAILED               -16L
-#define TAPIERR_REQUESTCANCELLED            -17L
-#define TAPIERR_INVALPOINTER                -18L
-#define TAPIERR_NOTADMIN                    -19L
-#define TAPIERR_MMCWRITELOCKED              -20L
-#define TAPIERR_PROVIDERALREADYINSTALLED    -21L
-#define TAPIERR_SCP_ALREADY_EXISTS		    -22L
-#define TAPIERR_SCP_DOES_NOT_EXIST		    -23L
-
-#define TAPIMAXDESTADDRESSSIZE              80L
-#define TAPIMAXAPPNAMESIZE                  40L
-#define TAPIMAXCALLEDPARTYSIZE              40L
-#define TAPIMAXCOMMENTSIZE                  80L
-#define TAPIMAXDEVICECLASSSIZE              40L
-#define TAPIMAXDEVICEIDSIZE                 40L
-
-#define PHONEBUTTONFUNCTION_UNKNOWN         0x00000000
-#define PHONEBUTTONFUNCTION_CONFERENCE      0x00000001
-#define PHONEBUTTONFUNCTION_TRANSFER        0x00000002
-#define PHONEBUTTONFUNCTION_DROP            0x00000003
-#define PHONEBUTTONFUNCTION_HOLD            0x00000004
-#define PHONEBUTTONFUNCTION_RECALL          0x00000005
-#define PHONEBUTTONFUNCTION_DISCONNECT      0x00000006
-#define PHONEBUTTONFUNCTION_CONNECT         0x00000007
-#define PHONEBUTTONFUNCTION_MSGWAITON       0x00000008
-#define PHONEBUTTONFUNCTION_MSGWAITOFF      0x00000009
-#define PHONEBUTTONFUNCTION_SELECTRING      0x0000000A
-#define PHONEBUTTONFUNCTION_ABBREVDIAL      0x0000000B
-#define PHONEBUTTONFUNCTION_FORWARD         0x0000000C
-#define PHONEBUTTONFUNCTION_PICKUP          0x0000000D
-#define PHONEBUTTONFUNCTION_RINGAGAIN       0x0000000E
-#define PHONEBUTTONFUNCTION_PARK            0x0000000F
-#define PHONEBUTTONFUNCTION_REJECT          0x00000010
-#define PHONEBUTTONFUNCTION_REDIRECT        0x00000011
-#define PHONEBUTTONFUNCTION_MUTE            0x00000012
-#define PHONEBUTTONFUNCTION_VOLUMEUP        0x00000013
-#define PHONEBUTTONFUNCTION_VOLUMEDOWN      0x00000014
-#define PHONEBUTTONFUNCTION_SPEAKERON       0x00000015
-#define PHONEBUTTONFUNCTION_SPEAKEROFF      0x00000016
-#define PHONEBUTTONFUNCTION_FLASH           0x00000017
-#define PHONEBUTTONFUNCTION_DATAON          0x00000018
-#define PHONEBUTTONFUNCTION_DATAOFF         0x00000019
-#define PHONEBUTTONFUNCTION_DONOTDISTURB    0x0000001A
-#define PHONEBUTTONFUNCTION_INTERCOM        0x0000001B
-#define PHONEBUTTONFUNCTION_BRIDGEDAPP      0x0000001C
-#define PHONEBUTTONFUNCTION_BUSY            0x0000001D
-#define PHONEBUTTONFUNCTION_CALLAPP         0x0000001E
-#define PHONEBUTTONFUNCTION_DATETIME        0x0000001F
-#define PHONEBUTTONFUNCTION_DIRECTORY       0x00000020
-#define PHONEBUTTONFUNCTION_COVER           0x00000021
-#define PHONEBUTTONFUNCTION_CALLID          0x00000022
-#define PHONEBUTTONFUNCTION_LASTNUM         0x00000023
-#define PHONEBUTTONFUNCTION_NIGHTSRV        0x00000024
-#define PHONEBUTTONFUNCTION_SENDCALLS       0x00000025
-#define PHONEBUTTONFUNCTION_MSGINDICATOR    0x00000026
-#define PHONEBUTTONFUNCTION_REPDIAL         0x00000027
-#define PHONEBUTTONFUNCTION_SETREPDIAL      0x00000028
-#define PHONEBUTTONFUNCTION_SYSTEMSPEED     0x00000029
-#define PHONEBUTTONFUNCTION_STATIONSPEED    0x0000002A
-#define PHONEBUTTONFUNCTION_CAMPON          0x0000002B
-#define PHONEBUTTONFUNCTION_SAVEREPEAT      0x0000002C
-#define PHONEBUTTONFUNCTION_QUEUECALL       0x0000002D
-#define PHONEBUTTONFUNCTION_NONE            0x0000002E
-#if (TAPI_CURRENT_VERSION >= 0x00030001)
-#define PHONEBUTTONFUNCTION_SEND            0x0000002F
-#endif
-
-#define PHONEBUTTONMODE_DUMMY               0x00000001
-#define PHONEBUTTONMODE_CALL                0x00000002
-#define PHONEBUTTONMODE_FEATURE             0x00000004
-#define PHONEBUTTONMODE_KEYPAD              0x00000008
-#define PHONEBUTTONMODE_LOCAL               0x00000010
-#define PHONEBUTTONMODE_DISPLAY             0x00000020
-
-#define PHONEBUTTONSTATE_UP                 0x00000001
-#define PHONEBUTTONSTATE_DOWN               0x00000002
-#define PHONEBUTTONSTATE_UNKNOWN            0x00000004
-#define PHONEBUTTONSTATE_UNAVAIL            0x00000008
-
-#define PHONEERR_ALLOCATED                  0x90000001
-#define PHONEERR_BADDEVICEID                0x90000002
-#define PHONEERR_INCOMPATIBLEAPIVERSION     0x90000003
-#define PHONEERR_INCOMPATIBLEEXTVERSION     0x90000004
-#define PHONEERR_INIFILECORRUPT             0x90000005
-#define PHONEERR_INUSE                      0x90000006
-#define PHONEERR_INVALAPPHANDLE             0x90000007
-#define PHONEERR_INVALAPPNAME               0x90000008
-#define PHONEERR_INVALBUTTONLAMPID          0x90000009
-#define PHONEERR_INVALBUTTONMODE            0x9000000A
-#define PHONEERR_INVALBUTTONSTATE           0x9000000B
-#define PHONEERR_INVALDATAID                0x9000000C
-#define PHONEERR_INVALDEVICECLASS           0x9000000D
-#define PHONEERR_INVALEXTVERSION            0x9000000E
-#define PHONEERR_INVALHOOKSWITCHDEV         0x9000000F
-#define PHONEERR_INVALHOOKSWITCHMODE        0x90000010
-#define PHONEERR_INVALLAMPMODE              0x90000011
-#define PHONEERR_INVALPARAM                 0x90000012
-#define PHONEERR_INVALPHONEHANDLE           0x90000013
-#define PHONEERR_INVALPHONESTATE            0x90000014
-#define PHONEERR_INVALPOINTER               0x90000015
-#define PHONEERR_INVALPRIVILEGE             0x90000016
-#define PHONEERR_INVALRINGMODE              0x90000017
-#define PHONEERR_NODEVICE                   0x90000018
-#define PHONEERR_NODRIVER                   0x90000019
-#define PHONEERR_NOMEM                      0x9000001A
-#define PHONEERR_NOTOWNER                   0x9000001B
-#define PHONEERR_OPERATIONFAILED            0x9000001C
-#define PHONEERR_OPERATIONUNAVAIL           0x9000001D
-#define PHONEERR_RESOURCEUNAVAIL            0x9000001F
-#define PHONEERR_REQUESTOVERRUN             0x90000020
-#define PHONEERR_STRUCTURETOOSMALL          0x90000021
-#define PHONEERR_UNINITIALIZED              0x90000022
-#define PHONEERR_REINIT                     0x90000023
-#define PHONEERR_DISCONNECTED               0x90000024
-#define PHONEERR_SERVICE_NOT_RUNNING        0x90000025
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define PHONEFEATURE_GETBUTTONINFO          0x00000001
-#define PHONEFEATURE_GETDATA                0x00000002
-#define PHONEFEATURE_GETDISPLAY             0x00000004
-#define PHONEFEATURE_GETGAINHANDSET         0x00000008
-#define PHONEFEATURE_GETGAINSPEAKER         0x00000010
-#define PHONEFEATURE_GETGAINHEADSET         0x00000020
-#define PHONEFEATURE_GETHOOKSWITCHHANDSET   0x00000040
-#define PHONEFEATURE_GETHOOKSWITCHSPEAKER   0x00000080
-#define PHONEFEATURE_GETHOOKSWITCHHEADSET   0x00000100
-#define PHONEFEATURE_GETLAMP                0x00000200
-#define PHONEFEATURE_GETRING                0x00000400
-#define PHONEFEATURE_GETVOLUMEHANDSET       0x00000800
-#define PHONEFEATURE_GETVOLUMESPEAKER       0x00001000
-#define PHONEFEATURE_GETVOLUMEHEADSET       0x00002000
-#define PHONEFEATURE_SETBUTTONINFO          0x00004000
-#define PHONEFEATURE_SETDATA                0x00008000
-#define PHONEFEATURE_SETDISPLAY             0x00010000
-#define PHONEFEATURE_SETGAINHANDSET         0x00020000
-#define PHONEFEATURE_SETGAINSPEAKER         0x00040000
-#define PHONEFEATURE_SETGAINHEADSET         0x00080000
-#define PHONEFEATURE_SETHOOKSWITCHHANDSET   0x00100000
-#define PHONEFEATURE_SETHOOKSWITCHSPEAKER   0x00200000
-#define PHONEFEATURE_SETHOOKSWITCHHEADSET   0x00400000
-#define PHONEFEATURE_SETLAMP                0x00800000
-#define PHONEFEATURE_SETRING                0x01000000
-#define PHONEFEATURE_SETVOLUMEHANDSET       0x02000000
-#define PHONEFEATURE_SETVOLUMESPEAKER       0x04000000
-#define PHONEFEATURE_SETVOLUMEHEADSET       0x08000000
-#endif
-#if (TAPI_CURRENT_VERSION >= 0x00030001)
-#define PHONEFEATURE_GENERICPHONE           0x10000000
-#endif
-
-#define PHONEHOOKSWITCHDEV_HANDSET          0x00000001
-#define PHONEHOOKSWITCHDEV_SPEAKER          0x00000002
-#define PHONEHOOKSWITCHDEV_HEADSET          0x00000004
-
-#define PHONEHOOKSWITCHMODE_ONHOOK          0x00000001
-#define PHONEHOOKSWITCHMODE_MIC             0x00000002
-#define PHONEHOOKSWITCHMODE_SPEAKER         0x00000004
-#define PHONEHOOKSWITCHMODE_MICSPEAKER      0x00000008
-#define PHONEHOOKSWITCHMODE_UNKNOWN         0x00000010
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-#define PHONEINITIALIZEEXOPTION_USEHIDDENWINDOW   0x00000001
-#define PHONEINITIALIZEEXOPTION_USEEVENT          0x00000002
-#define PHONEINITIALIZEEXOPTION_USECOMPLETIONPORT 0x00000003
-#endif
-
-#define PHONELAMPMODE_DUMMY                       0x00000001
-#define PHONELAMPMODE_OFF                         0x00000002
-#define PHONELAMPMODE_STEADY                      0x00000004
-#define PHONELAMPMODE_WINK                        0x00000008
-#define PHONELAMPMODE_FLASH                       0x00000010
-#define PHONELAMPMODE_FLUTTER                     0x00000020
-#define PHONELAMPMODE_BROKENFLUTTER               0x00000040
-#define PHONELAMPMODE_UNKNOWN                     0x00000080
-
-#define PHONEPRIVILEGE_MONITOR                    0x00000001
-#define PHONEPRIVILEGE_OWNER                      0x00000002
-
-#define PHONESTATE_OTHER                          0x00000001
-#define PHONESTATE_CONNECTED                      0x00000002
-#define PHONESTATE_DISCONNECTED                   0x00000004
-#define PHONESTATE_OWNER                          0x00000008
-#define PHONESTATE_MONITORS                       0x00000010
-#define PHONESTATE_DISPLAY                        0x00000020
-#define PHONESTATE_LAMP                           0x00000040
-#define PHONESTATE_RINGMODE                       0x00000080
-#define PHONESTATE_RINGVOLUME                     0x00000100
-#define PHONESTATE_HANDSETHOOKSWITCH              0x00000200
-#define PHONESTATE_HANDSETVOLUME                  0x00000400
-#define PHONESTATE_HANDSETGAIN                    0x00000800
-#define PHONESTATE_SPEAKERHOOKSWITCH              0x00001000
-#define PHONESTATE_SPEAKERVOLUME                  0x00002000
-#define PHONESTATE_SPEAKERGAIN                    0x00004000
-#define PHONESTATE_HEADSETHOOKSWITCH              0x00008000
-#define PHONESTATE_HEADSETVOLUME                  0x00010000
-#define PHONESTATE_HEADSETGAIN                    0x00020000
-#define PHONESTATE_SUSPEND                        0x00040000
-#define PHONESTATE_RESUME                         0x00080000
-#define PHONESTATE_DEVSPECIFIC                    0x00100000
-#define PHONESTATE_REINIT                         0x00200000
-#define PHONESTATE_CAPSCHANGE                     0x00400000
-#define PHONESTATE_REMOVED                        0x00800000
-
-#define PHONESTATUSFLAGS_CONNECTED                0x00000001
-#define PHONESTATUSFLAGS_SUSPENDED                0x00000002
-
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-typedef struct lineagentactivityentry_tag
-{
-    DWORD dwID;
-    DWORD dwNameSize;
-    DWORD dwNameOffset;
-} LINEAGENTACTIVITYENTRY, *LPLINEAGENTACTIVITYENTRY;
-
-typedef struct lineagentactivitylist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEAGENTACTIVITYLIST, *LPLINEAGENTACTIVITYLIST;
-
-typedef struct lineagentcaps_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwAgentHandlerInfoSize;
-    DWORD dwAgentHandlerInfoOffset;
-    DWORD dwCapsVersion;
-    DWORD dwFeatures;
-    DWORD dwStates;
-    DWORD dwNextStates;
-    DWORD dwMaxNumGroupEntries;
-    DWORD dwAgentStatusMessages;
-    DWORD dwNumAgentExtensionIDs;
-    DWORD dwAgentExtensionIDListSize;
-    DWORD dwAgentExtensionIDListOffset;
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-    GUID ProxyGUID;
-#endif
-} LINEAGENTCAPS, *LPLINEAGENTCAPS;
-
-typedef struct lineagentgroupentry_tag
-{
-    struct
-    {
-        DWORD dwGroupID1;
-        DWORD dwGroupID2;
-        DWORD dwGroupID3;
-        DWORD dwGroupID4;
-    } GroupID;
-    DWORD dwNameSize;
-    DWORD dwNameOffset;
-} LINEAGENTGROUPENTRY, *LPLINEAGENTGROUPENTRY;
-
-typedef struct lineagentgrouplist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEAGENTGROUPLIST, *LPLINEAGENTGROUPLIST;
-
-typedef struct lineagentstatus_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwGroupListSize;
-    DWORD dwGroupListOffset;
-    DWORD dwState;
-    DWORD dwNextState;
-    DWORD dwActivityID;
-    DWORD dwActivitySize;
-    DWORD dwActivityOffset;
-    DWORD dwAgentFeatures;
-    DWORD dwValidStates;
-    DWORD dwValidNextStates;
-} LINEAGENTSTATUS, *LPLINEAGENTSTATUS;
-
-typedef struct lineappinfo_tag
-{
-    DWORD dwMachineNameSize;
-    DWORD dwMachineNameOffset;
-    DWORD dwUserNameSize;
-    DWORD dwUserNameOffset;
-    DWORD dwModuleFilenameSize;
-    DWORD dwModuleFilenameOffset;
-    DWORD dwFriendlyNameSize;
-    DWORD dwFriendlyNameOffset;
-    DWORD dwMediaModes;
-    DWORD dwAddressID;
-} LINEAPPINFO, *LPLINEAPPINFO;
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-typedef struct lineagententry_tag
-{
-    HAGENT hAgent;
-    DWORD dwNameSize;
-    DWORD dwNameOffset;
-    DWORD dwIDSize;
-    DWORD dwIDOffset;
-    DWORD dwPINSize;
-    DWORD dwPINOffset;
-} LINEAGENTENTRY, *LPLINEAGENTENTRY;
-
-typedef struct lineagentlist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEAGENTLIST, *LPLINEAGENTLIST;
-
-typedef struct lineagentinfo_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwAgentState;
-    DWORD dwNextAgentState;
-    DWORD dwMeasurementPeriod;
-    CURRENCY cyOverallCallRate;
-    DWORD dwNumberOfACDCalls;
-    DWORD dwNumberOfIncomingCalls;
-    DWORD dwNumberOfOutgoingCalls;
-    DWORD dwTotalACDTalkTime;
-    DWORD dwTotalACDCallTime;
-    DWORD dwTotalACDWrapUpTime;
-} LINEAGENTINFO, *LPLINEAGENTINFO;
-
-typedef struct lineagentsession_tag
-{
-    HAGENTSESSION hAgentSession;
-    HAGENT hAgent;
-    GUID GroupID;
-    DWORD dwWorkingAddressID;
-} LINEAGENTSESSIONENTRY, *LPLINEAGENTSESSIONENTRY;
-
-typedef struct lineagentsessionlist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEAGENTSESSIONLIST, *LPLINEAGENTSESSIONLIST;
-
-typedef struct lineagentsessioninfo_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwAgentSessionState;
-    DWORD dwNextAgentSessionState;
-    DATE dateSessionStartTime;
-    DWORD dwSessionDuration;
-    DWORD dwNumberOfCalls;
-    DWORD dwTotalTalkTime;
-    DWORD dwAverageTalkTime;
-    DWORD dwTotalCallTime;
-    DWORD dwAverageCallTime;
-    DWORD dwTotalWrapUpTime;
-    DWORD dwAverageWrapUpTime;
-    CURRENCY cyACDCallRate;
-    DWORD dwLongestTimeToAnswer;
-    DWORD dwAverageTimeToAnswer;
-} LINEAGENTSESSIONINFO, *LPLINEAGENTSESSIONINFO;
-
-typedef struct linequeueentry_tag
-{
-    DWORD dwQueueID;
-    DWORD dwNameSize;
-    DWORD dwNameOffset;
-} LINEQUEUEENTRY, *LPLINEQUEUEENTRY;
-
-typedef struct linequeuelist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEQUEUELIST, *LPLINEQUEUELIST;
-
-typedef struct linequeueinfo_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwMeasurementPeriod;
-    DWORD dwTotalCallsQueued;
-    DWORD dwCurrentCallsQueued;
-    DWORD dwTotalCallsAbandoned;
-    DWORD dwTotalCallsFlowedIn;
-    DWORD dwTotalCallsFlowedOut;
-    DWORD dwLongestEverWaitTime;
-    DWORD dwCurrentLongestWaitTime;
-    DWORD dwAverageWaitTime;
-    DWORD dwFinalDisposition;
-} LINEQUEUEINFO, *LPLINEQUEUEINFO;
-
-typedef struct lineproxyrequestlist_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwNumEntries;
-    DWORD dwListSize;
-    DWORD dwListOffset;
-} LINEPROXYREQUESTLIST, *LPLINEPROXYREQUESTLIST;
-#endif
-
-#if (TAPI_CURRENT_VERSION >= 0x00030000)
-typedef struct linecallhubtrackinginfo_tag
-{
-    DWORD dwTotalSize;
-    DWORD dwNeededSize;
-    DWORD dwUsedSize;
-    DWORD dwAvailableTracking;
-    DWORD dwCurrentTracking;
-} LINECALLHUBTRACKINGINFO, FAR *LPLINECALLHUBTRACKINGINFO;
-#endif
 
 typedef struct lineaddresscaps_tag {
     DWORD dwTotalSize;
@@ -1290,9 +589,9 @@ typedef struct linedevstatus_tag {
     DWORD dwOpenMediaModes;
     DWORD dwNumActiveCalls;
     DWORD dwNumOnHoldCalls;
-    DWORD dwNumOnHoldPendingCalls;
+    DWORD dwNumOnHoldPendCalls;
     DWORD dwLineFeatures;
-    DWORD dwNumCallCompletion;
+    DWORD dwNumCallCompletions;
     DWORD dwRingMode;
     DWORD dwSignalLevel;
     DWORD dwBatteryLevel;
@@ -1333,176 +632,17 @@ typedef struct linegeneratetone_tag {
     DWORD dwVolume;
 } LINEGENERATETONE, *LPLINEGENERATETONE;
 
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-typedef struct lineinitializeexparams_tag
-{
+typedef struct lineinitializeexparams_tag {
     DWORD dwTotalSize;
     DWORD dwNeededSize;
     DWORD dwUsedSize;
     DWORD dwOptions;
-    union { HANDLE hEvent; HANDLE hCompletionPort; } Handles;
+    union {
+    HANDLE hEvent;
+    HANDLE hCompletionPort;
+    } Handles;
     DWORD dwCompletionKey;
-} LINEINITIALIZEEXPARAMS, FAR *LPLINEINITIALIZEEXPARAMS;
-
-typedef struct linemessage_tag
-{
-    DWORD hDevice;
-    DWORD dwMessageID;
-    DWORD_PTR dwCallbackInstance;
-    DWORD_PTR dwParam1;
-    DWORD_PTR dwParam2;
-    DWORD_PTR dwParam3;
-} LINEMESSAGE, FAR *LPLINEMESSAGE;
-
-typedef struct lineproxyrequest_tag
-{
-    DWORD dwSize;
-    DWORD dwClientMachineNameSize;
-    DWORD dwClientMachineNameOffset;
-    DWORD dwClientUserNameSize;
-    DWORD dwClientUserNameOffset;
-    DWORD dwClientAppAPIVersion;
-    DWORD dwRequestType;
-    union
-    {
-        struct
-        {
-            DWORD dwAddressID;
-            LINEAGENTGROUPLIST GroupList;
-        } SetAgentGroup;
-        struct
-        {
-            DWORD dwAddressID;
-            DWORD dwAgentState;
-            DWORD dwNextAgentState;
-        } SetAgentState;
-        struct
-        {
-            DWORD dwAddressID;
-            DWORD dwActivityID;
-        } SetAgentActivity;
-        struct
-        {
-            DWORD dwAddressID;
-            LINEAGENTCAPS AgentCaps;
-        } GetAgentCaps;
-        struct
-        {
-            DWORD dwAddressID;
-            LINEAGENTSTATUS AgentStatus;
-        } GetAgentStatus;
-        struct
-        {
-            DWORD dwAddressID;
-            DWORD dwAgentExtensionIDIndex;
-            DWORD dwSize;
-            BYTE Params[1];
-        } AgentSpecific;
-        struct
-        {
-            DWORD dwAddressID;
-            LINEAGENTACTIVITYLIST ActivityList;
-        } GetAgentActivityList;
-        struct
-        {
-            DWORD dwAddressID;
-            LINEAGENTGROUPLIST GroupList;
-        } GetAgentGroupList;
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-        struct
-        {
-            HAGENT hAgent;
-            DWORD dwAgentIDSize;
-            DWORD dwAgentIDOffset;
-            DWORD dwAgentPINSize;
-            DWORD dwAgentPINOffset;
-        } CreateAgent;
-        struct
-        {
-            HAGENT hAgent;
-            DWORD dwAgentState;
-            DWORD dwNextAgentState;
-        } SetAgentStateEx;
-        struct
-        {
-            HAGENT hAgent;
-            DWORD dwMeasurementPeriod;
-        } SetAgentMeasurementPeriod;
-        struct
-        {
-            HAGENT hAgent;
-            LINEAGENTINFO AgentInfo;
-        } GetAgentInfo;
-        struct
-        {
-            HAGENTSESSION hAgentSession;
-            DWORD dwAgentPINSize;
-            DWORD dwAgentPINOffset;
-            HAGENT hAgent;
-            GUID GroupID;
-            DWORD dwWorkingAddressID;
-        } CreateAgentSession;
-        struct
-        {
-            HAGENT hAgent;
-            LINEAGENTSESSIONLIST SessionList;
-        } GetAgentSessionList;
-        struct
-        {
-            HAGENTSESSION hAgentSession;
-            LINEAGENTSESSIONINFO SessionInfo;
-        } GetAgentSessionInfo;
-        struct
-        {
-            HAGENTSESSION hAgentSession;
-            DWORD dwAgentSessionState;
-            DWORD dwNextAgentSessionState;
-        } SetAgentSessionState;
-        struct
-        {
-            GUID GroupID;
-            LINEQUEUELIST QueueList;
-        } GetQueueList;
-        struct
-        {
-            DWORD dwQueueID;
-            DWORD dwMeasurementPeriod;
-        } SetQueueMeasurementPeriod;
-        struct
-        {
-            DWORD dwQueueID;
-            LINEQUEUEINFO QueueInfo;
-        } GetQueueInfo;
-        struct
-        {
-            LINEAGENTGROUPLIST GroupList;
-        } GetGroupList;
-#endif
-    };
-} LINEPROXYREQUEST, *LPLINEPROXYREQUEST;
-
-typedef struct linereqmakecallW_tag
-{
-    WCHAR szDestAddress[TAPIMAXDESTADDRESSSIZE];
-    WCHAR szAppName[TAPIMAXAPPNAMESIZE];
-    WCHAR szCalledParty[TAPIMAXCALLEDPARTYSIZE];
-    WCHAR szComment[TAPIMAXCOMMENTSIZE];
-} LINEREQMAKECALLW, FAR *LPLINEREQMAKECALLW;
-
-typedef struct linereqmediacallW_tag
-{
-    HWND hWnd;
-    WPARAM wRequestID;
-    WCHAR szDeviceClass[TAPIMAXDEVICECLASSSIZE];
-    unsigned char ucDeviceID[TAPIMAXDEVICEIDSIZE];
-    DWORD dwSize;
-    DWORD dwSecure;
-    WCHAR szDestAddress[TAPIMAXDESTADDRESSSIZE];
-    WCHAR szAppName[TAPIMAXAPPNAMESIZE];
-    WCHAR szCalledParty[TAPIMAXCALLEDPARTYSIZE];
-    WCHAR szComment[TAPIMAXCOMMENTSIZE];
-} LINEREQMEDIACALLW, FAR *LPLINEREQMEDIACALLW;
-#endif /* (TAPI_CURRENT_VERSION >= 0x00020000) */
+} LINEINITIALIZEEXPARAMS, *LPLINEINITIALIZEEXPARAMS;
 
 typedef struct linemediacontrolcallstate_tag {
     DWORD dwCallStates;
@@ -1670,20 +810,6 @@ typedef struct phonecaps_tag {
     DWORD dwGetDataOffset;
     DWORD dwDevSpecificSize;
     DWORD dwDevSpecificOffset;
-#if (TAPI_CURRENT_VERSION >= 0x00020000)
-    DWORD dwDeviceClassesSize;
-    DWORD dwDeviceClassesOffset;
-    DWORD dwPhoneFeatures;
-    DWORD dwSettableHandsetHookSwitchModes;
-    DWORD dwSettableSpeakerHookSwitchModes;
-    DWORD dwSettableHeadsetHookSwitchModes;
-    DWORD dwMonitoredHandsetHookSwitchModes;
-    DWORD dwMonitoredSpeakerHookSwitchModes;
-    DWORD dwMonitoredHeadsetHookSwitchModes;
-#endif
-#if (TAPI_CURRENT_VERSION >= 0x00020002)
-    GUID PermanentPhoneGuid;
-#endif
 } PHONECAPS, *LPPHONECAPS;
 
 typedef struct phoneextensionid_tag {
@@ -1774,6 +900,9 @@ DWORD WINAPI lineGetTranslateCaps(HLINEAPP,DWORD,LPLINETRANSLATECAPS);
 DWORD WINAPI lineHandoff(HCALL,LPCSTR,DWORD);
 DWORD WINAPI lineHold(HCALL);
 DWORD WINAPI lineInitialize(LPHLINEAPP,HINSTANCE,LINECALLBACK,LPCSTR,LPDWORD);
+LONG  WINAPI lineInitializeExA(LPHLINEAPP,HINSTANCE,LINECALLBACK,LPCSTR,LPDWORD,LPDWORD,LPLINEINITIALIZEEXPARAMS);
+LONG  WINAPI lineInitializeExW(LPHLINEAPP,HINSTANCE,LINECALLBACK,LPCWSTR,LPDWORD,LPDWORD,LPLINEINITIALIZEEXPARAMS);
+#define      lineInitializeEx WINELIB_NAME_AW(lineInitializeEx)
 DWORD WINAPI lineMakeCall(HLINE,LPHCALL,LPCSTR,DWORD,LPLINECALLPARAMS);
 DWORD WINAPI lineMonitorDigits(HCALL,DWORD);
 DWORD WINAPI lineMonitorMedia(HCALL,DWORD);

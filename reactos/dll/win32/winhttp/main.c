@@ -140,3 +140,110 @@ HINTERNET WINAPI WinHttpOpen(LPCWSTR pwszUserAgent, DWORD dwAccessType,
     SetLastError(ERROR_NOT_SUPPORTED);
     return NULL;
 }
+
+/***********************************************************************
+ *          WinHttpConnect (winhttp.@)
+ */
+
+HINTERNET WINAPI WinHttpConnect (HINTERNET hSession, LPCWSTR pwszServerName,
+                                 INTERNET_PORT nServerPort, DWORD dwReserved)
+{
+    FIXME("(%s, %d, 0x%x): stub\n", debugstr_w(pwszServerName), nServerPort, dwReserved);
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return NULL;
+}
+
+/***********************************************************************
+ *          WinHttpOpenRequest (winhttp.@)
+ */
+HINTERNET WINAPI WinHttpOpenRequest (HINTERNET hConnect, LPCWSTR pwszVerb, LPCWSTR pwszObjectName,
+                                     LPCWSTR pwszVersion, LPCWSTR pwszReferrer, LPCWSTR* ppwszAcceptTypes,
+                                     DWORD dwFlags)
+{
+    FIXME("(%s, %s, %s, %s, 0x%x): stub\n", debugstr_w(pwszVerb), debugstr_w(pwszObjectName),
+          debugstr_w(pwszVersion), debugstr_w(pwszReferrer), dwFlags);
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return NULL;
+}
+
+/***********************************************************************
+ *          WinHttpSendRequest (winhttp.@)
+ */
+BOOL WINAPI WinHttpSendRequest (HINTERNET hRequest, LPCWSTR pwszHeaders, DWORD dwHeadersLength,
+                                LPVOID lpOptional, DWORD dwOptionalLength, DWORD dwTotalLength,
+                                DWORD_PTR dwContext)
+{
+    FIXME("(%s, %d, %d, %d): stub\n", debugstr_w(pwszHeaders), dwHeadersLength, dwOptionalLength, dwTotalLength);
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpQueryOption (winhttp.@)
+ */
+BOOL WINAPI WinHttpQueryOption (HINTERNET hInternet, DWORD dwOption, LPVOID lpBuffer, LPDWORD lpdwBufferLength)
+{
+    FIXME("(%d): stub\n", dwOption);
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpQueryDataAvailable (winhttp.@)
+ */
+BOOL WINAPI WinHttpQueryDataAvailable (HINTERNET hInternet, LPDWORD lpdwNumberOfBytesAvailable)
+{
+    FIXME("stub\n");
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpReceiveResponse (winhttp.@)
+ */
+BOOL WINAPI WinHttpReceiveResponse (HINTERNET hRequest, LPVOID lpReserved)
+{
+    FIXME("stub\n");
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpSetOption (winhttp.@)
+ */
+BOOL WINAPI WinHttpSetOption (HINTERNET hInternet, DWORD dwOption, LPVOID lpBuffer, DWORD dwBufferLength)
+{
+    FIXME("stub\n");
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpReadData (winhttp.@)
+ */
+BOOL WINAPI WinHttpReadData (HINTERNET hInternet, LPVOID lpBuffer, DWORD dwNumberOfBytesToRead,
+                             LPDWORD lpdwNumberOfBytesRead)
+{
+    FIXME("(%d): stub\n", dwNumberOfBytesToRead);
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
+
+/***********************************************************************
+ *          WinHttpReadData (winhttp.@)
+ */
+BOOL WINAPI WinHttpCloseHandle (HINTERNET hInternet)
+{
+    FIXME("stub\n");
+
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
+}
