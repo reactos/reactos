@@ -1726,3 +1726,10 @@ HRESULT WINAPI ScriptGetLogicalWidths(const SCRIPT_ANALYSIS *sa, int nbchars, in
     for (i = 0; i < nbchars; i++) widths[i] = glyph_width[i];
     return S_OK;
 }
+
+
+VOID WINAPI LpkPresent()   
+{   
+    /* FIXME */   
+    DbgPrint("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);   
+} 
