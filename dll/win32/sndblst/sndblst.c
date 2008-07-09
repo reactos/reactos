@@ -117,8 +117,10 @@ DriverProc(
 }
 
 
-WORD Buffer[65536];
-WAVEHDR WaveHeader;
+#include <stdio.h>
+
+WORD Buffer[5347700 / 2];
+WAVEHDR WaveHeaders[534];
 
 int APIENTRY wWinMain(
     HINSTANCE hInstance,
@@ -126,57 +128,78 @@ int APIENTRY wWinMain(
     LPWSTR lpCmdLine,
     int nCmdShow)
 {
-    WCHAR msg[1024];
-    WAVEOUTCAPS Caps;
+//    WCHAR msg[1024];
+//    WAVEOUTCAPS Caps;
     WAVEOPENDESC OpenDesc;
     WAVEFORMATEX Format;
     MMRESULT Result;
     PVOID InstanceData;
-    int i;
+//    int i;
 
-    for ( i = 0; i < 65536; ++ i )
-        Buffer[i] = rand();
+    FILE* f;
+
+    f = fopen("27may2_a.wav", "rb");
+    fseek(f, 50, SEEK_SET);
+    fread(Buffer, 1, 5340000, f);
+    fclose(f);
 
     /* DRV_LOAD */
     DriverProc(0, 0, DRV_LOAD, 0, 0);
 
     /* WODM_GETNUMDEVS */
-    SOUND_DEBUG_HEX(wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0));
+    //SOUND_DEBUG_HEX(wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0));
 
-    Result = wodMessage(0, WODM_GETDEVCAPS, 0,
-                        (DWORD) &Caps, sizeof(WAVEOUTCAPS));
+    //Result = wodMessage(0, WODM_GETDEVCAPS, 0,
+                        //(DWORD) &Caps, sizeof(WAVEOUTCAPS));
 
     /* WODM_GETDEVCAPS */
-    wsprintf(msg, L"Device name: %ls\nManufacturer ID: %d\nProduct ID: %d\nDriver version: %x\nChannels: %d", Caps.szPname, Caps.wMid, Caps.wPid, Caps.vDriverVersion, Caps.wChannels);
+    //wsprintf(msg, L"Device name: %ls\nManufacturer ID: %d\nProduct ID: %d\nDriver version: %x\nChannels: %d", Caps.szPname, Caps.wMid, Caps.wPid, Caps.vDriverVersion, Caps.wChannels);
 
-    MessageBox(0, msg, L"Device capabilities", MB_OK | MB_TASKMODAL);
+    //MessageBox(0, msg, L"Device capabilities", MB_OK | MB_TASKMODAL);
 
     /* WODM_OPEN */
     Format.wFormatTag = WAVE_FORMAT_PCM;
-    Format.nChannels = 1;
-    Format.nSamplesPerSec = 22050;
+    Format.nChannels = 2;
+    Format.nSamplesPerSec = 44100;
     Format.wBitsPerSample = 16;
     Format.nBlockAlign = Format.nChannels * (Format.wBitsPerSample / 8);
     Format.nAvgBytesPerSec = Format.nSamplesPerSec * Format.nBlockAlign;
     Format.cbSize = 0;
 
-    SOUND_DEBUG(L"WODM_OPEN test 1 (query format support only)");
-    OpenDesc.lpFormat = &Format;
-    Result = wodMessage(0, WODM_OPEN, 0, (DWORD) &OpenDesc, WAVE_FORMAT_QUERY);
-    SOUND_DEBUG_HEX(Result);
+    //SOUND_DEBUG(L"WODM_OPEN test 1 (query format support only)");
+    //OpenDesc.lpFormat = &Format;
+    //Result = wodMessage(0, WODM_OPEN, 0, (DWORD) &OpenDesc, WAVE_FORMAT_QUERY);
+    //SOUND_DEBUG_HEX(Result);
 
-    SOUND_DEBUG(L"WODM_OPEN test 2");
+    //SOUND_DEBUG(L"WODM_OPEN test 2");
     OpenDesc.lpFormat = &Format;
     Result = wodMessage(0, WODM_OPEN, (DWORD) &InstanceData, (DWORD) &OpenDesc, 0);
     SOUND_DEBUG_HEX(Result);
 
     SOUND_DEBUG(L"WODM_WRITE test");
-    WaveHeader.lpData = (PVOID) Buffer;
-    WaveHeader.dwBufferLength = 65536;
-    WaveHeader.dwFlags = WHDR_PREPARED;
+    WaveHeaders[0].lpData = (PVOID) Buffer;
+    WaveHeaders[0].dwBufferLength = 1000000;
+    WaveHeaders[0].dwFlags = WHDR_PREPARED;
 
-    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeader, 0);
-    SOUND_DEBUG_HEX(Result);
+    WaveHeaders[1].lpData = (PVOID) ((PCHAR)Buffer + 1000000);
+    WaveHeaders[1].dwBufferLength = 1000000;
+    WaveHeaders[1].dwFlags = WHDR_PREPARED;
+
+    WaveHeaders[2].lpData = (PVOID) ((PCHAR)Buffer + (1000000 *2));
+    WaveHeaders[2].dwBufferLength = 1000000;
+    WaveHeaders[2].dwFlags = WHDR_PREPARED;
+
+//    WaveHeader2.lpData = (PVOID) Buffer2;
+//    WaveHeader2.dwBufferLength = 10;
+//    WaveHeader2.dwFlags = WHDR_PREPARED;
+
+    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[0], 0);
+    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[1], 0);
+    Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeaders[2], 0);
+
+    //Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeader2, 0);
+
+//    SOUND_DEBUG_HEX(Result);
 
     SOUND_DEBUG(L"WODM_CLOSE test");
     Result = wodMessage(0, WODM_CLOSE, (DWORD) InstanceData, (DWORD) 0, 0);

@@ -88,7 +88,7 @@ SoundThreadProc(
             PSOUND_THREAD_COMPLETED_IO CompletionData;
             SOUND_ASSERT(Thread->FirstCompletedIo);
 
-            SOUND_DEBUG(L"Outside I/O completion APC");
+            //SOUND_DEBUG(L"Outside I/O completion APC");
 
             /*
                 Purge the completed data queue
@@ -100,6 +100,7 @@ SoundThreadProc(
             {
                 /* Call high-level custom I/O completion routine */
                 Thread->IoCompletionHandler(Instance,
+                                            Thread->PrivateData,
                                             CompletionData->ContextData,
                                             CompletionData->BytesTransferred);
 
@@ -290,6 +291,8 @@ CallSoundThread(
     if ( ! SoundDeviceInstance->Thread )
         return MMSYSERR_ERROR;
 
+    //SOUND_DEBUG(L"Waiting for Ready event");
+
     /* Wait for the thread to be ready */
     WaitForSingleObject(SoundDeviceInstance->Thread->ReadyEvent, INFINITE);
 
@@ -350,7 +353,7 @@ CompleteSoundThreadIo(
     SOUND_ASSERT(SoundDeviceInstance);
     SOUND_ASSERT(SoundDeviceInstance->Thread);
 
-    SOUND_DEBUG(L"New I/O Completion Callback Called");
+    //SOUND_DEBUG(L"New I/O Completion Callback Called");
 
     /* This is going at the start of the list */
     CompletionData->Next = SoundDeviceInstance->Thread->FirstCompletedIo;
@@ -365,7 +368,7 @@ CompleteSoundThreadIo(
     /* Overlapped structure gets freed now, but we still need the completion */
     FreeMemory(SoundThreadOverlapped);
 
-    SOUND_DEBUG(L"New I/O Completion Callback Done");
+    //SOUND_DEBUG(L"New I/O Completion Callback Done");
 }
 
 MMRESULT

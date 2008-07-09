@@ -30,7 +30,7 @@
 
     Should it be configurable? Some sound drivers let you set buffer size...
 */
-#define MAX_SOUND_BUFFER_SIZE   16383
+#define MAX_SOUND_BUFFER_SIZE   1500000
 
 
 /*
@@ -54,64 +54,80 @@ StreamWaveData(
     SOUND_ASSERT(ThreadData->RemainingBytes <= MAX_SOUND_BUFFER_SIZE);
     SOUND_ASSERT(Buffer);
 
-    /* The 'reserved' member of Buffer contains the offset */
-    BufferOffset = Buffer->reserved;
-
     /* Work out how much data can be streamed with the driver */
     BytesAvailable = MAX_SOUND_BUFFER_SIZE - ThreadData->RemainingBytes;
 
-    /*
-        If no space available, don't do anything. The routine will be revisited
-        as buffers complete, at which point the backlog will start being
-        dealt with.
-    */
-    if ( BytesAvailable == 0 )
-        return MMSYSERR_NOERROR;
-
-    /*
-        Adjust the amount of data to be streamed based on how much of the
-        current buffer has actually been dealt with already.
-    */
-    BytesToStream = Buffer->dwBufferLength - BufferOffset;
-
-    /*
-        No point in doing work unless we have to... This is, however, a
-        completed buffer, so it should be dealt with!!
-    */
-    if ( BytesToStream == 0 )
+    while ( ( Buffer = ThreadData->CurrentBuffer ) && ( BytesAvailable > 0 ) )
     {
-        /* TODO */
-        return MMSYSERR_NOERROR;
+        /* The 'reserved' member of Buffer contains the offset */
+        BufferOffset = Buffer->reserved;
+
+        /*
+            Adjust the amount of data to be streamed based on how much of the
+            current buffer has actually been dealt with already.
+        */
+        BytesToStream = Buffer->dwBufferLength - BufferOffset;
+
+        /*
+            We may find that there's nothing to be done with the current
+            buffer, either on initial entry to this loop or after having
+            been through a few iterations. Once the buffer has been squeezed
+            dry, move on to the next victim...
+        */
+        if ( BytesToStream == 0 )
+        {
+            /* TODO */
+            SOUND_DEBUG(L"Advancing buffer");
+            ThreadData->CurrentBuffer = ThreadData->CurrentBuffer->lpNext;
+            continue;
+        }
+
+        /*
+            Now we know how much buffer is waiting to be provided to the
+            driver, we need to consider how much the driver can accept.
+        */
+        if ( BytesToStream > BytesAvailable )
+        {
+            /* Buffer can't fit entirely - fill the available space */
+            BytesToStream = BytesAvailable;
+        }
+
+        /*
+            Now the audio buffer sets sail on its merry way to the sound
+            driver...
+            NOTE: Will need to implement a 'read' function, too.
+        */
+        SOUND_DEBUG(L"Writing data");
+        Result = OverlappedWriteToSoundDevice(SoundDeviceInstance,
+                                            (PVOID) Buffer,
+                                            Buffer->lpData + BufferOffset,
+                                            BytesToStream);
+
+//    if ( Result != MMSYSERR_NOERROR )
+//        return Result;
+
+        /* Update the offset ready for the next streaming operation */
+        BufferOffset += BytesToStream;
+        Buffer->reserved = BufferOffset;
+
+        /* More data has been sent to the driver, so these get updated, too */
+        ThreadData->RemainingBytes += BytesToStream;
+        BytesAvailable = MAX_SOUND_BUFFER_SIZE - ThreadData->RemainingBytes;
+
+        /*
+            If the offset is now equal to the buffer length, this will be
+            because the entirety of the buffer has been sent.
+        */
+/*
+        if ( BufferOffset == Buffer->dwBufferLength )
+        {
+            SOUND_DEBUG(L"Advancing buffer");
+            ThreadData->CurrentBuffer = ThreadData->CurrentBuffer->lpNext;
+        }
+*/
     }
 
-    /*
-        Now we know how much buffer is waiting to be provided to the driver,
-        we need to consider how much the driver can accept.
-    */
-    if ( BytesToStream > BytesAvailable )
-    {
-        /* Buffer can't fit entirely - fill the available space */
-        BytesToStream = BytesAvailable;
-    }
-
-    /*
-        Now the audio buffer sets sail on its merry way to the sound driver...
-        NOTE: Will need to implement a 'read' function, too.
-    */
-    Result = OverlappedWriteToSoundDevice(SoundDeviceInstance,
-                                          (PVOID) ThreadData,
-                                          Buffer->lpData + BufferOffset,
-                                          BytesToStream);
-
-    if ( Result != MMSYSERR_NOERROR )
-        return Result;
-
-    /* Update the offset ready for the next streaming operation */
-    BufferOffset += BytesToStream;
-    Buffer->reserved = BufferOffset;
-
-    /* More data has been sent to the driver, so this is updated, too */
-    ThreadData->RemainingBytes += BytesToStream;
+    SOUND_DEBUG(L"Leaving");
 
     return MMSYSERR_NOERROR;
 }
@@ -140,12 +156,14 @@ SubmitWaveBuffer(
     /* Set the head of the buffer list if this is the first buffer */
     if ( ! ThreadData->FirstBuffer )
     {
+        SOUND_DEBUG(L"First buffer");
         ThreadData->FirstBuffer = Buffer;
     }
 
     /* Attach the buffer to the end of the list, unless this is the first */
     if ( ThreadData->LastBuffer )
     {
+        SOUND_DEBUG(L"Adding to end of list");
         ThreadData->LastBuffer->lpNext = Buffer;
     }
 
@@ -158,6 +176,7 @@ SubmitWaveBuffer(
     /* If nothing is playing, we'll need to start things off */
     if ( ThreadData->RemainingBytes == 0 )
     {
+        SOUND_DEBUG(L"Kicking off processing");
         ThreadData->CurrentBuffer = ThreadData->FirstBuffer;
         StreamWaveData(Instance, ThreadData);
     }
@@ -210,10 +229,12 @@ ProcessWaveThreadRequest(
 VOID
 ProcessWaveIoCompletion(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PVOID PrivateThreadData,
     IN  PVOID ContextData,
     IN  DWORD BytesTransferred)
 {
-    PWAVE_THREAD_DATA ThreadData = (PWAVE_THREAD_DATA) ContextData;
+    PWAVE_THREAD_DATA ThreadData = (PWAVE_THREAD_DATA) PrivateThreadData;
+    PWAVEHDR WaveHeader = (PWAVEHDR) ContextData;
     SOUND_ASSERT(ThreadData);
     WCHAR msg[1024];
 
@@ -244,8 +265,8 @@ ProcessWaveIoCompletion(
     ThreadData->RemainingBytes -= BytesTransferred;
 
     wsprintf(msg, L"Wave header: %x\nOffset: %d\nTransferred: %d bytes\nRemaining: %d bytes",
-             ThreadData->CurrentBuffer,
-             ThreadData->CurrentBuffer->reserved,
+             WaveHeader,
+             WaveHeader->reserved,
              BytesTransferred,
              ThreadData->RemainingBytes);
 

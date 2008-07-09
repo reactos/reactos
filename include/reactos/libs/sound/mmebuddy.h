@@ -112,6 +112,7 @@ typedef struct _SOUND_THREAD_OVERLAPPED
 {
     OVERLAPPED General;
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+    PVOID PrivateThreadData;
     PVOID ContextData;  /* eg: PWAVEHDR */
     PSOUND_THREAD_COMPLETED_IO CompletionData;
 } SOUND_THREAD_OVERLAPPED, *PSOUND_THREAD_OVERLAPPED;
@@ -124,6 +125,7 @@ typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
 
 typedef VOID (*SOUND_THREAD_IO_COMPLETION_HANDLER)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PVOID PrivateThreadData,
     IN  PVOID ContextData,
     IN  DWORD BytesTransferred);
 
