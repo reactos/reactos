@@ -1710,7 +1710,7 @@ AllocErr:
    Window->NextSibling = NULL;
    Wnd->ExtraDataSize = Wnd->Class->WndExtra;
 
-   InitializeListHead(&Window->PropListHead);
+   InitializeListHead(&Wnd->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
 
    if (NULL != WindowName->Buffer && WindowName->Length > 0)

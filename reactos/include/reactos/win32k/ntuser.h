@@ -155,6 +155,9 @@ typedef struct _WINDOW
     DWORD ContextHelpId;
 
     HWND hWndLastActive;
+    /* Property list head.*/
+    LIST_ENTRY PropListHead;
+    ULONG PropListItems;
 
     struct
     {
@@ -2702,10 +2705,6 @@ NtUserGetMonitorInfo(
   OUT LPMONITORINFO pMonitorInfo);
 
 /* Should be done in usermode */
-HANDLE
-NTAPI
-NtUserGetProp(HWND hWnd, ATOM Atom); // Done in both User/Kernel
-
 BOOL
 NTAPI
 NtUserGetScrollInfo(

@@ -32,13 +32,51 @@
 
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
 typedef struct _PROPLISTITEM
 {
   ATOM Atom;
   HANDLE Data;
 } PROPLISTITEM, *PPROPLISTITEM;
 
+typedef struct _PROPERTY
+{
+  LIST_ENTRY PropListEntry;
+  HANDLE Data;
+  ATOM Atom;
+} PROPERTY, *PPROPERTY;
+
 #define ATOM_BUFFER_SIZE 256
+
+/* INTERNAL FUNCTIONS ********************************************************/
+
+HANDLE
+FASTCALL
+IntGetProp(HWND hWnd, ATOM Atom)
+{
+  PLIST_ENTRY ListEntry, temp;
+  PPROPERTY Property;
+  PWINDOW pWnd;
+  int i;
+
+  pWnd = ValidateHwnd(hWnd);
+  if (!pWnd) return NULL;
+
+  ListEntry = SharedPtrToUser(pWnd->PropListHead.Flink);
+  for (i = 0; i < pWnd->PropListItems; i++ )
+  {
+      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      if (Property->Atom == Atom)
+      {
+         return(Property);
+      }
+      temp = ListEntry->Flink;
+      ListEntry = SharedPtrToUser(temp);
+  }
+  return NULL;
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -345,15 +383,19 @@ HANDLE STDCALL
 GetPropW(HWND hWnd, LPCWSTR lpString)
 {
   ATOM Atom;
+  HANDLE Data = NULL;
+  PPROPERTY Prop;
   if (HIWORD(lpString))
-    {
-      Atom = GlobalFindAtomW(lpString);
-    }
+  {
+     Atom = GlobalFindAtomW(lpString);
+  }
   else
-    {
-      Atom = LOWORD((DWORD)lpString);
-    }
-  return(NtUserGetProp(hWnd, Atom));
+  {
+     Atom = LOWORD((DWORD)lpString);
+  }
+  Prop = IntGetProp(hWnd, Atom);
+  if (Prop != NULL) Data = Prop->Data;
+  return Data;
 }
 
 

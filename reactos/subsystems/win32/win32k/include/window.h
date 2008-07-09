@@ -53,9 +53,6 @@ typedef struct _WINDOW_OBJECT
   HWND hOwner;
   /* DC Entries (DCE) */
   PDCE Dce;
-  /* Property list head.*/
-  LIST_ENTRY PropListHead;
-  ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
   PETHREAD OwnerThread;
