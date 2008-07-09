@@ -824,13 +824,16 @@ static void test_ScCopyRelocProps(void)
 
     sc = pScCopyProps(1, &pvProp, buffer, &ulCount);
     ok(sc == S_OK, "wrong ret %d\n", sc);
-    ok(lpResProp->ulPropTag == pvProp.ulPropTag, "wrong tag %x\n",lpResProp->ulPropTag);
-    ok(lpResProp->Value.MVszA.cValues == 1, "wrong cValues %d\n", lpResProp->Value.MVszA.cValues);
-    ok(lpResProp->Value.MVszA.lppszA[0] == buffer + sizeof(SPropValue) + sizeof(char*),
-       "wrong lppszA[0] %p\n",lpResProp->Value.MVszA.lppszA[0]);
-    ok(ulCount == sizeof(SPropValue) + sizeof(char*) + 5, "wrong count %d\n", ulCount);
-    ok(!strcmp(lpResProp->Value.MVszA.lppszA[0], szTestA),
-       "wrong string '%s'\n", lpResProp->Value.MVszA.lppszA[0]);
+    if(sc == S_OK)
+    {
+        ok(lpResProp->ulPropTag == pvProp.ulPropTag, "wrong tag %x\n",lpResProp->ulPropTag);
+        ok(lpResProp->Value.MVszA.cValues == 1, "wrong cValues %d\n", lpResProp->Value.MVszA.cValues);
+        ok(lpResProp->Value.MVszA.lppszA[0] == buffer + sizeof(SPropValue) + sizeof(char*),
+           "wrong lppszA[0] %p\n",lpResProp->Value.MVszA.lppszA[0]);
+        ok(ulCount == sizeof(SPropValue) + sizeof(char*) + 5, "wrong count %d\n", ulCount);
+        ok(!strcmp(lpResProp->Value.MVszA.lppszA[0], szTestA),
+           "wrong string '%s'\n", lpResProp->Value.MVszA.lppszA[0]);
+    }
 
     memcpy(buffer2, buffer, sizeof(buffer));
 
@@ -845,18 +848,21 @@ static void test_ScCopyRelocProps(void)
     lpResProp = (LPSPropValue)buffer2;
 
     ok(sc == S_OK, "wrong ret %d\n", sc);
-    ok(lpResProp->ulPropTag == pvProp.ulPropTag, "wrong tag %x\n",lpResProp->ulPropTag);
-    ok(lpResProp->Value.MVszA.cValues == 1, "wrong cValues %d\n", lpResProp->Value.MVszA.cValues);
-    ok(lpResProp->Value.MVszA.lppszA[0] == buffer2 + sizeof(SPropValue) + sizeof(char*),
-       "wrong lppszA[0] %p\n",lpResProp->Value.MVszA.lppszA[0]);
-    /* Native has a bug whereby it calculates the size correctly when copying
-     * but when relocating does not (presumably it uses UlPropSize() which
-     * ignores multivalue pointers). Wine returns the correct value.
-     */
-    ok(ulCount == sizeof(SPropValue) + sizeof(char*) + 5 || ulCount == sizeof(SPropValue) + 5,
-       "wrong count %d\n", ulCount);
-    ok(!strcmp(lpResProp->Value.MVszA.lppszA[0], szTestA),
-       "wrong string '%s'\n", lpResProp->Value.MVszA.lppszA[0]);
+    if(sc == S_OK)
+    {
+        ok(lpResProp->ulPropTag == pvProp.ulPropTag, "wrong tag %x\n",lpResProp->ulPropTag);
+        ok(lpResProp->Value.MVszA.cValues == 1, "wrong cValues %d\n", lpResProp->Value.MVszA.cValues);
+        ok(lpResProp->Value.MVszA.lppszA[0] == buffer2 + sizeof(SPropValue) + sizeof(char*),
+           "wrong lppszA[0] %p\n",lpResProp->Value.MVszA.lppszA[0]);
+        /* Native has a bug whereby it calculates the size correctly when copying
+         * but when relocating does not (presumably it uses UlPropSize() which
+         * ignores multivalue pointers). Wine returns the correct value.
+         */
+        ok(ulCount == sizeof(SPropValue) + sizeof(char*) + 5 || ulCount == sizeof(SPropValue) + 5,
+           "wrong count %d\n", ulCount);
+        ok(!strcmp(lpResProp->Value.MVszA.lppszA[0], szTestA),
+           "wrong string '%s'\n", lpResProp->Value.MVszA.lppszA[0]);
+    }
 
     /* Native crashes with lpNew or lpOld set to NULL so skip testing this */
 }

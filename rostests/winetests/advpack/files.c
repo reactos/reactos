@@ -63,14 +63,6 @@ static void createTestFile(const CHAR *name)
 
 static void create_test_files(void)
 {
-    int len;
-
-    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
-    len = lstrlenA(CURR_DIR);
-
-    if(len && (CURR_DIR[len-1] == '\\'))
-        CURR_DIR[len-1] = 0;
-
     createTestFile("a.txt");
     createTestFile("b.txt");
     CreateDirectoryA("testdir", NULL);
@@ -528,7 +520,21 @@ static void test_AdvInstallFile(void)
 
 START_TEST(files)
 {
+    DWORD len;
+    char temp_path[MAX_PATH], prev_path[MAX_PATH];
+
     init_function_pointers();
+
+    GetCurrentDirectoryA(MAX_PATH, prev_path);
+    GetTempPath(MAX_PATH, temp_path);
+    SetCurrentDirectoryA(temp_path);
+
+    lstrcpyA(CURR_DIR, temp_path);
+    len = lstrlenA(CURR_DIR);
+
+    if(len && (CURR_DIR[len - 1] == '\\'))
+        CURR_DIR[len - 1] = 0;
+
     create_test_files();
     create_cab_file();
 
@@ -539,4 +545,5 @@ START_TEST(files)
     delete_test_files();
 
     FreeLibrary(hAdvPack);
+    SetCurrentDirectoryA(prev_path);
 }

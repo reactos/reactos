@@ -44,6 +44,17 @@
 
 #define TRACE_2 OutputDebugStringA
 
+static CHAR string1[MAX_PATH], string2[MAX_PATH];
+
+#define ok_w2(format, szString1, szString2) \
+\
+    if (lstrcmpW(szString1, szString2) != 0) \
+    { \
+        WideCharToMultiByte(CP_ACP, 0, szString1, -1, string1, MAX_PATH, NULL, NULL); \
+        WideCharToMultiByte(CP_ACP, 0, szString2, -1, string2, MAX_PATH, NULL, NULL); \
+        ok(0, format, string1, string2); \
+    }
+
 static BOOL (WINAPI *pGetCPInfoExA)(UINT,DWORD,LPCPINFOEXA);
 
 static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
@@ -255,6 +266,32 @@ static const char *dump_mime_flags(DWORD flags)
 }
 #endif
 
+static BOOL check_convertible(IMultiLanguage2 *iML2, UINT from, UINT to)
+{
+    CHAR convert[MAX_PATH];
+    BYTE dest[MAX_PATH];
+    HRESULT hr;
+    UINT srcsz, destsz;
+
+    static WCHAR strW[] = {'a','b','c',0};
+
+    srcsz = -1;
+    destsz = MAX_PATH;
+    hr = IMultiLanguage2_ConvertStringFromUnicode(iML2, NULL, from, strW,
+                                                  &srcsz, convert, &destsz);
+    if (hr != S_OK)
+        return FALSE;
+
+    srcsz = -1;
+    destsz = MAX_PATH;
+    hr = IMultiLanguage2_ConvertString(iML2, NULL, from, to, (BYTE *)convert,
+                                       &srcsz, dest, &destsz);
+    if (hr != S_OK)
+        return FALSE;
+
+    return TRUE;
+}
+
 static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 {
     IEnumCodePage *iEnumCP = NULL;
@@ -313,9 +350,10 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 
     for (i = 0; i < n; i++)
     {
-	CPINFOEXA cpinfoex;
 	CHARSETINFO csi;
 	MIMECSETINFO mcsi;
+        BOOL convertible;
+        HRESULT check = S_OK;
 	static const WCHAR autoW[] = {'_','a','u','t','o',0};
 
 #ifdef DUMP_CP_INFO
@@ -349,17 +387,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 	else
 	    trace("TranslateCharsetInfo failed for cp %u\n", cpinfo[i].uiFamilyCodePage);
 
-        if (pGetCPInfoExA)
-        {
-            if (pGetCPInfoExA(cpinfo[i].uiCodePage, 0, &cpinfoex))
-                trace("CodePage %u name: %s\n", cpinfo[i].uiCodePage, cpinfoex.CodePageName);
-            else
-                trace("GetCPInfoExA failed for cp %u\n", cpinfo[i].uiCodePage);
-            if (pGetCPInfoExA(cpinfo[i].uiFamilyCodePage, 0, &cpinfoex))
-                trace("CodePage %u name: %s\n", cpinfo[i].uiFamilyCodePage, cpinfoex.CodePageName);
-            else
-                trace("GetCPInfoExA failed for cp %u\n", cpinfo[i].uiFamilyCodePage);
-        }
+        trace("%u: codepage %u family %u\n", i, cpinfo[i].uiCodePage, cpinfo[i].uiFamilyCodePage);
 
         /* Win95 does not support UTF-7 */
         if (cpinfo[i].uiCodePage == CP_UTF7) continue;
@@ -376,12 +404,16 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 	    ret = IMultiLanguage2_IsConvertible(iML2, CP_UNICODE, cpinfo[i].uiCodePage);
 	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UNICODE -> %u) = %08x\n", cpinfo[i].uiCodePage, ret);
 
+            convertible = check_convertible(iML2, cpinfo[i].uiCodePage, CP_UTF8);
+            if (!convertible)
+                check = S_FALSE;
+
 	    TRACE_2("Call IMultiLanguage2_IsConvertible\n");
 	    ret = IMultiLanguage2_IsConvertible(iML2, cpinfo[i].uiCodePage, CP_UTF8);
-	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(%u -> CP_UTF8) = %08x\n", cpinfo[i].uiCodePage, ret);
+	    ok(ret == check, "IMultiLanguage2_IsConvertible(%u -> CP_UTF8) = %08x\n", cpinfo[i].uiCodePage, ret);
 	    TRACE_2("Call IMultiLanguage2_IsConvertible\n");
 	    ret = IMultiLanguage2_IsConvertible(iML2, CP_UTF8, cpinfo[i].uiCodePage);
-	    ok(ret == S_OK, "IMultiLanguage2_IsConvertible(CP_UTF8 -> %u) = %08x\n", cpinfo[i].uiCodePage, ret);
+	    ok(ret == check, "IMultiLanguage2_IsConvertible(CP_UTF8 -> %u) = %08x\n", cpinfo[i].uiCodePage, ret);
 	}
 	else
 	    trace("IsValidCodePage failed for cp %u\n", cpinfo[i].uiCodePage);
@@ -399,7 +431,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
                 "%s != %s\n",
 		wine_dbgstr_w(cpinfo[i].wszWebCharset), wine_dbgstr_w(mcsi.wszCharset));
 #else
-                "wszWebCharset mismatch");
+                "wszWebCharset mismatch\n");
 #endif
 
 	if (0)
@@ -425,7 +457,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
                 "%s != %s\n",
 		wine_dbgstr_w(cpinfo[i].wszHeaderCharset), wine_dbgstr_w(mcsi.wszCharset));
 #else
-                "wszHeaderCharset mismatch");
+                "wszHeaderCharset mismatch\n");
 #endif
 
 	if (0)
@@ -451,7 +483,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
                 "%s != %s\n",
 		wine_dbgstr_w(cpinfo[i].wszBodyCharset), wine_dbgstr_w(mcsi.wszCharset));
 #else
-                "wszBodyCharset mismatch");
+                "wszBodyCharset mismatch\n");
 #endif
 
 	if (0)
@@ -463,8 +495,6 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 		"%u != %u || %u\n", mcsi.uiCodePage, cpinfo[i].uiCodePage, cpinfo[i].uiFamilyCodePage);
 	}
 	}
-
-	trace("---\n");
     }
 
     /* now IEnumCodePage_Next should fail, since pointer is at the end */
@@ -564,7 +594,6 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
 
     for (i = 0; pGetCPInfoExA && i < n; i++)
     {
-	CPINFOEXA cpinfoex;
 #ifdef DUMP_SCRIPT_INFO
 	trace("SCRIPTINFO #%u:\n"
 	      "ScriptId %08x\n"
@@ -579,12 +608,7 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
 	      wine_dbgstr_w(sinfo[i].wszFixedWidthFont),
 	      wine_dbgstr_w(sinfo[i].wszProportionalFont));
 #endif
-	if (pGetCPInfoExA(sinfo[i].uiCodePage, 0, &cpinfoex))
-	    trace("CodePage %u name: %s\n", sinfo[i].uiCodePage, cpinfoex.CodePageName);
-	else
-	    trace("GetCPInfoExA failed for cp %u\n", sinfo[i].uiCodePage);
-
-	trace("---\n");
+        trace("%u codepage %u\n", i, sinfo[i].uiCodePage);
     }
 
     /* now IEnumScript_Next should fail, since pointer is at the end */
@@ -654,12 +678,26 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
     ok(CodePage == 1252, "Incorrect CodePage Returned (%i)\n",CodePage);
 }
 
+/* copied from libs/wine/string.c */
+WCHAR *strstrW(const WCHAR *str, const WCHAR *sub)
+{
+    while (*str)
+    {
+        const WCHAR *p1 = str, *p2 = sub;
+        while (*p1 && *p2 && *p1 == *p2) { p1++; p2++; }
+        if (!*p2) return (WCHAR *)str;
+        str++;
+    }
+    return NULL;
+}
+
 static void test_rfc1766(IMultiLanguage2 *iML2)
 {
     IEnumRfc1766 *pEnumRfc1766;
     RFC1766INFO info;
     ULONG n;
     HRESULT ret;
+    BSTR rfcstr;
 
     ret = IMultiLanguage2_EnumRfc1766(iML2, LANG_NEUTRAL, &pEnumRfc1766);
     ok(ret == S_OK, "IMultiLanguage2_EnumRfc1766 error %08x\n", ret);
@@ -675,7 +713,17 @@ static void test_rfc1766(IMultiLanguage2 *iML2)
 #endif
 
         ok(n == 1, "couldn't fetch 1 RFC1766INFO structure\n");
-        ok(IsValidLocale(info.lcid, LCID_SUPPORTED), "invalid lcid %04x\n", info.lcid);
+
+        /* verify the Rfc1766 value */
+        ret = IMultiLanguage2_GetRfc1766FromLcid(iML2, info.lcid, &rfcstr);
+        ok(ret == S_OK, "Expected S_OK, got %08x\n", ret);
+
+        /* not an exact 1:1 correspondence between lcid and rfc1766 in the
+         * mlang database, e.g., nb-no -> 1044 -> no */
+        ok(strstrW(info.wszRfc1766, rfcstr) != NULL,
+           "Expected matching locale names\n");
+
+        SysFreeString(rfcstr);
     }
     IEnumRfc1766_Release(pEnumRfc1766);
 }
@@ -734,6 +782,24 @@ static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
     ok(lcid == 0x409, "got wrong lcid: %04x\n", lcid);
 }
 
+static void test_GetRfc1766FromLcid(IMultiLanguage2 *iML2)
+{
+    HRESULT hr;
+    BSTR rfcstr;
+    LCID lcid;
+
+    static WCHAR kok[] = {'k','o','k',0};
+
+    hr = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, kok);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid, &rfcstr);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok_w2("Expected \"%s\",  got \"%s\"n", kok, rfcstr);
+
+    SysFreeString(rfcstr);
+}
+
 START_TEST(mlang)
 {
     IMultiLanguage2 *iML2 = NULL;
@@ -752,6 +818,7 @@ START_TEST(mlang)
 
     test_rfc1766(iML2);
     test_GetLcidFromRfc1766(iML2);
+    test_GetRfc1766FromLcid(iML2);
 
     test_EnumCodePages(iML2, 0);
     test_EnumCodePages(iML2, MIMECONTF_MIME_LATEST);

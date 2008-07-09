@@ -106,6 +106,32 @@ static void test_GetImageDimension(void)
     GdipDisposeImage((GpImage*)bm);
 }
 
+static void test_GdipImageGetFrameDimensionsCount(void)
+{
+    GpBitmap *bm;
+    GpStatus stat;
+    const REAL WIDTH = 10.0, HEIGHT = 20.0;
+    UINT w;
+
+    bm = (GpBitmap*)0xdeadbeef;
+    stat = GdipCreateBitmapFromScan0(WIDTH, HEIGHT, 0, PixelFormat24bppRGB,NULL, &bm);
+    expect(Ok,stat);
+    ok((GpBitmap*)0xdeadbeef != bm, "Expected bitmap to not be 0xdeadbeef\n");
+    ok(NULL != bm, "Expected bitmap to not be NULL\n");
+
+    stat = GdipImageGetFrameDimensionsCount(NULL,&w);
+    expect(InvalidParameter, stat);
+
+    stat = GdipImageGetFrameDimensionsCount((GpImage*)bm,NULL);
+    expect(InvalidParameter, stat);
+
+    w = -1;
+    stat = GdipImageGetFrameDimensionsCount((GpImage*)bm,&w);
+    expect(Ok, stat);
+    expect(1, w);
+    GdipDisposeImage((GpImage*)bm);
+}
+
 static void test_LoadingImages(void)
 {
     GpStatus stat;
@@ -452,6 +478,35 @@ static void test_GdipGetImageFlags(void)
     expect(InvalidParameter, stat);
 }
 
+static void test_GdipCloneImage(void)
+{
+    GpStatus stat;
+    GpRectF rectF;
+    GpUnit unit;
+    GpBitmap *bm;
+    GpImage *image_src, *image_dest = NULL;
+    const INT WIDTH = 10, HEIGHT = 20;
+
+    /* Create an image, clone it, delete the original, make sure the copy works */
+    stat = GdipCreateBitmapFromScan0(WIDTH, HEIGHT, 0, PixelFormat24bppRGB, NULL, &bm);
+    expect(Ok, stat);
+todo_wine
+{
+    image_src = ((GpImage*)bm);
+    stat = GdipCloneImage(image_src, &image_dest);
+    expect(Ok, stat);
+}
+    stat = GdipDisposeImage((GpImage*)bm);
+    expect(Ok, stat);
+todo_wine
+{
+    stat = GdipGetImageBounds(image_dest, &rectF, &unit);
+    expect(Ok, stat);
+    stat = GdipDisposeImage(image_dest);
+    expect(Ok, stat);
+}
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -466,12 +521,14 @@ START_TEST(image)
 
     test_Scan0();
     test_GetImageDimension();
+    test_GdipImageGetFrameDimensionsCount();
     test_LoadingImages();
     test_SavingImages();
     test_encoders();
     test_LockBits();
     test_GdipCreateBitmapFromHBITMAP();
     test_GdipGetImageFlags();
+    test_GdipCloneImage();
 
     GdiplusShutdown(gdiplusToken);
 }

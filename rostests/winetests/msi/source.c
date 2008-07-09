@@ -2319,6 +2319,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
     /* GetLastError is not set by the function */
 
     /* NULL szProductCodeOrPatchCode */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA(NULL, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
@@ -2326,6 +2328,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* empty szProductCodeOrPatchCode */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA("", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
@@ -2333,6 +2337,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* garbage szProductCodeOrPatchCode */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA("garbage", usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);
@@ -2340,6 +2346,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* guid without brackets */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA("51CD2AD5-0482-4C46-8DDD-0ED1022AA1AA",
                                       usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
@@ -2348,6 +2356,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* guid with brackets */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA("{51CD2AD5-0482-4C46-8DDD-0ED1022AA1AA}",
                                       usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
@@ -2356,6 +2366,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
 
     /* dwOptions has MSISOURCETYPE_NETWORK */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT | MSISOURCETYPE_NETWORK,
                                       0, &id, label, &labelsz,
@@ -2364,6 +2376,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* dwOptions has MSISOURCETYPE_URL */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT | MSISOURCETYPE_URL,
                                       0, &id, label, &labelsz,
@@ -2372,6 +2386,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
 
     /* dwIndex is non-zero */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 1, &id, label, &labelsz,
                                       prompt, &promptsz);
@@ -2387,6 +2403,8 @@ static void test_MsiSourceListEnumMediaDisks(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* user product key exists */
+    labelsz = sizeof(label);
+    promptsz = sizeof(prompt);
     r = pMsiSourceListEnumMediaDisksA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                                       MSICODE_PRODUCT, 0, &id, label, &labelsz,
                                       prompt, &promptsz);

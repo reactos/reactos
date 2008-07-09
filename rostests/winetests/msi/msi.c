@@ -735,6 +735,8 @@ static void test_MsiQueryFeatureState(void)
     state = MsiQueryFeatureStateA(prodcode, "feature");
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
 
+    /* MSIINSTALLCONTEXT_USERUNMANAGED */
+
     lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Features\\");
     lstrcatA(keypath, prod_squashed);
 
@@ -748,6 +750,7 @@ static void test_MsiQueryFeatureState(void)
     res = RegSetValueExA(userkey, "feature", 0, REG_SZ, (const BYTE *)"", 2);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
+    /* feature value exists */
     state = MsiQueryFeatureStateA(prodcode, "feature");
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
 
@@ -760,6 +763,7 @@ static void test_MsiQueryFeatureState(void)
     res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &localkey);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
+    /* userdata features key exists */
     state = MsiQueryFeatureStateA(prodcode, "feature");
     ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
 
@@ -811,7 +815,183 @@ static void test_MsiQueryFeatureState(void)
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
 
     RegDeleteValueA(compkey, prod_squashed);
-    RegDeleteValueA(compkey, "");
+    RegDeleteKeyA(compkey, "");
+    RegDeleteValueA(localkey, "feature");
+    RegDeleteValueA(userkey, "feature");
+    RegDeleteKeyA(userkey, "");
+    RegCloseKey(compkey);
+    RegCloseKey(localkey);
+    RegCloseKey(userkey);
+
+    /* MSIINSTALLCONTEXT_USERMANAGED */
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Installer\\Features\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* feature key exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+
+    res = RegSetValueExA(userkey, "feature", 0, REG_SZ, (const BYTE *)"", 2);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* feature value exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+    lstrcatA(keypath, "\\Features");
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &localkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* userdata features key exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaa", 20);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_BADCONFIG, "Expected INSTALLSTATE_BADCONFIG, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaa", 21);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaaa", 22);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)comp_base85, 21);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Components\\");
+    lstrcatA(keypath, comp_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &compkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"", 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+
+    res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"apple", 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+
+    RegDeleteValueA(compkey, prod_squashed);
+    RegDeleteKeyA(compkey, "");
+    RegDeleteValueA(localkey, "feature");
+    RegDeleteValueA(userkey, "feature");
+    RegDeleteKeyA(userkey, "");
+    RegCloseKey(compkey);
+    RegCloseKey(localkey);
+    RegCloseKey(userkey);
+
+    /* MSIINSTALLCONTEXT_MACHINE */
+
+    lstrcpyA(keypath, "Software\\Classes\\Installer\\Features\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* feature key exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+
+    res = RegSetValueExA(userkey, "feature", 0, REG_SZ, (const BYTE *)"", 2);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* feature value exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, "S-1-5-18\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+    lstrcatA(keypath, "\\Features");
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &localkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* userdata features key exists */
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaa", 20);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_BADCONFIG, "Expected INSTALLSTATE_BADCONFIG, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaa", 21);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)"aaaaaaaaaaaaaaaaaaaaa", 22);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(localkey, "feature", 0, REG_SZ, (const BYTE *)comp_base85, 21);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\");
+    lstrcatA(keypath, "S-1-5-18\\Components\\");
+    lstrcatA(keypath, comp_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &compkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_ADVERTISED, "Expected INSTALLSTATE_ADVERTISED, got %d\n", state);
+
+    res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"", 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+
+    res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"apple", 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    state = MsiQueryFeatureStateA(prodcode, "feature");
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+
+    RegDeleteValueA(compkey, prod_squashed);
+    RegDeleteKeyA(compkey, "");
     RegDeleteValueA(localkey, "feature");
     RegDeleteValueA(userkey, "feature");
     RegDeleteKeyA(userkey, "");
@@ -2109,6 +2289,10 @@ static void test_MsiGetFileVersion(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(lang, langcheck), "Expected %s, got %s\n", langcheck, lang);
     ok(langsz == langchecksz, "Expected %d, got %d\n", langchecksz, langsz);
+
+    /* check neither version nor language */
+    r = MsiGetFileVersionA(path, NULL, NULL, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* get pcchVersionBuf */
     versz = MAX_PATH;
@@ -6138,6 +6322,585 @@ static void test_MsiGetProductInfoEx(void)
     RegCloseKey(prodkey);
 }
 
+#define INIT_USERINFO() \
+    lstrcpyA(user, "apple"); \
+    lstrcpyA(org, "orange"); \
+    lstrcpyA(serial, "banana"); \
+    usersz = orgsz = serialsz = MAX_PATH;
+
+static void test_MsiGetUserInfo(void)
+{
+    USERINFOSTATE state;
+    CHAR user[MAX_PATH];
+    CHAR org[MAX_PATH];
+    CHAR serial[MAX_PATH];
+    DWORD usersz, orgsz, serialsz;
+    CHAR keypath[MAX_PATH * 2];
+    CHAR prodcode[MAX_PATH];
+    CHAR prod_squashed[MAX_PATH];
+    HKEY prodkey, userprod, props;
+    LPSTR usersid;
+    LONG res;
+
+    create_test_guid(prodcode, prod_squashed);
+    get_user_sid(&usersid);
+
+    /* NULL szProduct */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(NULL, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* empty szProductCode */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA("", user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* garbage szProductCode */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA("garbage", user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* guid without brackets */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA("6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D",
+                            user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* guid with brackets */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA("{6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D}",
+                            user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL lpUserNameBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL pcchUserNameBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, NULL, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* both lpUserNameBuf and pcchUserNameBuf NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL lpOrgNameBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, NULL, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL pcchOrgNameBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, NULL, serial, &serialsz);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* both lpOrgNameBuf and pcchOrgNameBuf NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, NULL, NULL, serial, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL lpSerialBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, NULL, &serialsz);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* NULL pcchSerialBuf */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, NULL);
+    ok(state == USERINFOSTATE_INVALIDARG,
+       "Expected USERINFOSTATE_INVALIDARG, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+
+    /* both lpSerialBuf and pcchSerialBuf NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, NULL, NULL);
+    ok(state == USERINFOSTATE_UNKNOWN,
+       "Expected USERINFOSTATE_UNKNOWN, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+
+    /* MSIINSTALLCONTEXT_USERMANAGED */
+
+    /* create local system product key */
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Managed\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* managed product key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
+    lstrcatA(keypath, "Installer\\UserData\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userprod);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegCreateKeyA(userprod, "InstallProperties", &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* InstallProperties key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* RegOwner doesn't exist, lpUserNameBuf and pcchUserNameBuf are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    /* RegOwner, RegCompany don't exist, out params are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, NULL, NULL, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegOwner", 0, REG_SZ, (LPBYTE)"owner", 6);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegOwner value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegCompany", 0, REG_SZ, (LPBYTE)"company", 8);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegCompany value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "ProductID", 0, REG_SZ, (LPBYTE)"ID", 3);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* ProductID value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_PRESENT,
+       "Expected USERINFOSTATE_PRESENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "ID"), "Expected \"ID\", got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == 2, "Expected 2, got %d\n", serialsz);
+
+    /* pcchUserNameBuf is too small */
+    INIT_USERINFO();
+    usersz = 0;
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_MOREDATA,
+       "Expected USERINFOSTATE_MOREDATA, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* pcchUserNameBuf has no room for NULL terminator */
+    INIT_USERINFO();
+    usersz = 5;
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_MOREDATA,
+       "Expected USERINFOSTATE_MOREDATA, got %d\n", state);
+    todo_wine
+    {
+        ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    }
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* pcchUserNameBuf is too small, lpUserNameBuf is NULL */
+    INIT_USERINFO();
+    usersz = 0;
+    state = MsiGetUserInfoA(prodcode, NULL, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_PRESENT,
+       "Expected USERINFOSTATE_PRESENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "ID"), "Expected \"ID\", got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == 2, "Expected 2, got %d\n", serialsz);
+
+    RegDeleteValueA(props, "ProductID");
+    RegDeleteValueA(props, "RegCompany");
+    RegDeleteValueA(props, "RegOwner");
+    RegDeleteKeyA(props, "");
+    RegCloseKey(props);
+    RegDeleteKeyA(userprod, "");
+    RegCloseKey(userprod);
+    RegDeleteKeyA(prodkey, "");
+    RegCloseKey(prodkey);
+
+    /* MSIINSTALLCONTEXT_USERUNMANAGED */
+
+    /* create local system product key */
+    lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_CURRENT_USER, keypath, &prodkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* product key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
+    lstrcatA(keypath, "Installer\\UserData\\");
+    lstrcatA(keypath, usersid);
+    lstrcatA(keypath, "\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userprod);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegCreateKeyA(userprod, "InstallProperties", &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* InstallProperties key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* RegOwner doesn't exist, lpUserNameBuf and pcchUserNameBuf are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    /* RegOwner, RegCompany don't exist, out params are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, NULL, NULL, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegOwner", 0, REG_SZ, (LPBYTE)"owner", 6);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegOwner value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegCompany", 0, REG_SZ, (LPBYTE)"company", 8);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegCompany value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "ProductID", 0, REG_SZ, (LPBYTE)"ID", 3);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* ProductID value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_PRESENT,
+       "Expected USERINFOSTATE_PRESENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "ID"), "Expected \"ID\", got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == 2, "Expected 2, got %d\n", serialsz);
+
+    RegDeleteValueA(props, "ProductID");
+    RegDeleteValueA(props, "RegCompany");
+    RegDeleteValueA(props, "RegOwner");
+    RegDeleteKeyA(props, "");
+    RegCloseKey(props);
+    RegDeleteKeyA(userprod, "");
+    RegCloseKey(userprod);
+    RegDeleteKeyA(prodkey, "");
+    RegCloseKey(prodkey);
+
+    /* MSIINSTALLCONTEXT_MACHINE */
+
+    /* create local system product key */
+    lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &prodkey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* product key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH, "Expected MAX_PATH, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
+    lstrcatA(keypath, "Installer\\UserData\\S-1-5-18");
+    lstrcatA(keypath, "\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userprod);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegCreateKeyA(userprod, "InstallProperties", &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* InstallProperties key exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "apple"), "Expected user to be unchanged, got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "orange"), "Expected org to be unchanged, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", usersz);
+    ok(orgsz == MAX_PATH, "Expected MAX_PATH, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH, "Expected MAX_PATH, got %d\n", serialsz);
+
+    /* RegOwner doesn't exist, lpUserNameBuf and pcchUserNameBuf are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    /* RegOwner, RegCompany don't exist, out params are NULL */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, NULL, NULL, NULL, NULL, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegOwner", 0, REG_SZ, (LPBYTE)"owner", 6);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegOwner value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, ""), "Expected empty string, got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 0, "Expected 0, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "RegCompany", 0, REG_SZ, (LPBYTE)"company", 8);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* RegCompany value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_ABSENT,
+       "Expected USERINFOSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "banana"), "Expected serial to be unchanged, got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == MAX_PATH - 1, "Expected MAX_PATH - 1, got %d\n", serialsz);
+
+    res = RegSetValueExA(props, "ProductID", 0, REG_SZ, (LPBYTE)"ID", 3);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* ProductID value exists */
+    INIT_USERINFO();
+    state = MsiGetUserInfoA(prodcode, user, &usersz, org, &orgsz, serial, &serialsz);
+    ok(state == USERINFOSTATE_PRESENT,
+       "Expected USERINFOSTATE_PRESENT, got %d\n", state);
+    ok(!lstrcmpA(user, "owner"), "Expected \"owner\", got \"%s\"\n", user);
+    ok(!lstrcmpA(org, "company"), "Expected \"company\", got \"%s\"\n", org);
+    ok(!lstrcmpA(serial, "ID"), "Expected \"ID\", got \"%s\"\n", serial);
+    ok(usersz == 5, "Expected 5, got %d\n", usersz);
+    ok(orgsz == 7, "Expected 7, got %d\n", orgsz);
+    ok(serialsz == 2, "Expected 2, got %d\n", serialsz);
+
+    RegDeleteValueA(props, "ProductID");
+    RegDeleteValueA(props, "RegCompany");
+    RegDeleteValueA(props, "RegOwner");
+    RegDeleteKeyA(props, "");
+    RegCloseKey(props);
+    RegDeleteKeyA(userprod, "");
+    RegCloseKey(userprod);
+    RegDeleteKeyA(prodkey, "");
+    RegCloseKey(prodkey);
+}
+
 START_TEST(msi)
 {
     init_functionpointers();
@@ -6160,6 +6923,7 @@ START_TEST(msi)
         test_MsiEnumClients();
         test_MsiGetProductInfo();
         test_MsiGetProductInfoEx();
+        test_MsiGetUserInfo();
     }
 
     test_MsiGetFileVersion();

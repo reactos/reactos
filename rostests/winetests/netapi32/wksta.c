@@ -83,7 +83,7 @@ static void run_wkstausergetinfo_tests(void)
        "NetWkstaUserGetInfo is unsuccessful\n");
 
     ok(ui0 != NULL, "ui0 is NULL\n");
-    /* This failure occured when I ran sshd as service and didn't authenticate
+    /* This failure occurred when I ran sshd as service and didn't authenticate
      * Since the test dereferences ui0, the rest of this test is worthless
      */
     if (!ui0)

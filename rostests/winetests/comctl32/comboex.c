@@ -169,7 +169,106 @@ static void test_comboboxex(void) {
 
     /* Cleanup */
     HeapFree(GetProcessHeap(), 0, textBuffer);
+    DestroyWindow(myHwnd);
+}
 
+static void test_WM_LBUTTONDOWN(void)
+{
+    HWND hComboEx, hCombo, hEdit, hList;
+    COMBOBOXINFO cbInfo;
+    UINT x, y, item_height;
+    LRESULT result;
+    int i, idx;
+    RECT rect;
+    WCHAR buffer[3];
+    static const UINT choices[] = {8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
+    static const WCHAR stringFormat[] = {'%','2','d','\0'};
+
+    hComboEx = CreateWindowExA(0, WC_COMBOBOXEXA, NULL,
+            WS_VISIBLE|WS_CHILD|CBS_DROPDOWN, 0, 0, 200, 150,
+            hComboExParentWnd, NULL, hMainHinst, NULL);
+
+    for (i = 0; i < sizeof(choices)/sizeof(UINT); i++){
+        COMBOBOXEXITEMW cbexItem;
+        wsprintfW(buffer, stringFormat, choices[i]);
+
+        memset(&cbexItem, 0x00, sizeof(cbexItem));
+        cbexItem.mask = CBEIF_TEXT;
+        cbexItem.iItem = i;
+        cbexItem.pszText = buffer;
+        cbexItem.cchTextMax = 0;
+        ok(SendMessageW(hComboEx, CBEM_INSERTITEMW, 0, (LPARAM)&cbexItem) >= 0,
+           "Failed to add item %d\n", i);
+    }
+
+    hCombo = (HWND)SendMessage(hComboEx, CBEM_GETCOMBOCONTROL, 0, 0);
+    hEdit = (HWND)SendMessage(hComboEx, CBEM_GETEDITCONTROL, 0, 0);
+
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    result = SendMessage(hCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbInfo);
+    ok(result, "Failed to get combobox info structure. LastError=%d\n",
+       GetLastError());
+    hList = cbInfo.hwndList;
+
+    trace("hWnd=%p, hComboEx=%p, hCombo=%p, hList=%p, hEdit=%p\n",
+         hComboExParentWnd, hComboEx, hCombo, hList, hEdit);
+    ok(GetFocus() == hComboExParentWnd,
+       "Focus not on Main Window, instead on %p\n", GetFocus());
+
+    /* Click on the button to drop down the list */
+    x = cbInfo.rcButton.left + (cbInfo.rcButton.right-cbInfo.rcButton.left)/2;
+    y = cbInfo.rcButton.top + (cbInfo.rcButton.bottom-cbInfo.rcButton.top)/2;
+    result = SendMessage(hCombo, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
+    ok(result, "WM_LBUTTONDOWN was not processed. LastError=%d\n",
+       GetLastError());
+    ok(GetFocus() == hCombo,
+       "Focus not on ComboBoxEx's ComboBox Control, instead on %p\n",
+       GetFocus());
+    ok(SendMessage(hComboEx, CB_GETDROPPEDSTATE, 0, 0),
+       "The dropdown list should have appeared after clicking the button.\n");
+    idx = SendMessage(hCombo, CB_GETTOPINDEX, 0, 0);
+    ok(idx == 0, "For TopIndex expected %d, got %d\n", 0, idx);
+
+    result = SendMessage(hCombo, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
+    ok(result, "WM_LBUTTONUP was not processed. LastError=%d\n",
+       GetLastError());
+    ok(GetFocus() == hCombo,
+       "Focus not on ComboBoxEx's ComboBox Control, instead on %p\n",
+       GetFocus());
+
+    /* Click on the 5th item in the list */
+    item_height = SendMessage(hCombo, CB_GETITEMHEIGHT, 0, 0);
+    ok(GetClientRect(hList, &rect), "Failed to get list's client rect.\n");
+    x = rect.left + (rect.right-rect.left)/2;
+    y = item_height/2 + item_height*4;
+    result = SendMessage(hList, WM_MOUSEMOVE, 0, MAKELPARAM(x, y));
+    ok(!result, "WM_MOUSEMOVE was not processed. LastError=%d\n",
+       GetLastError());
+    ok(GetFocus() == hCombo,
+       "Focus not on ComboBoxEx's ComboBox Control, instead on %p\n",
+       GetFocus());
+
+    result = SendMessage(hList, WM_LBUTTONDOWN, 0, MAKELPARAM(x, y));
+    ok(!result, "WM_LBUTTONDOWN was not processed. LastError=%d\n",
+       GetLastError());
+    ok(GetFocus() == hCombo,
+       "Focus not on ComboBoxEx's ComboBox Control, instead on %p\n",
+       GetFocus());
+    ok(SendMessage(hComboEx, CB_GETDROPPEDSTATE, 0, 0),
+       "The dropdown list should still be visible.\n");
+
+    result = SendMessage(hList, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
+    ok(!result, "WM_LBUTTONUP was not processed. LastError=%d\n",
+       GetLastError());
+    todo_wine ok(GetFocus() == hEdit,
+       "Focus not on ComboBoxEx's Edit Control, instead on %p\n",
+       GetFocus());
+    ok(!SendMessage(hCombo, CB_GETDROPPEDSTATE, 0, 0),
+       "The dropdown list should have been rolled up.\n");
+    idx = SendMessage(hComboEx, CB_GETCURSEL, 0, 0);
+    ok(idx == 4, "Current Selection: expected %d, got %d\n", 4, idx);
+
+    DestroyWindow(hComboEx);
 }
 
 static LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -217,7 +316,7 @@ static int init(void)
     wc.lpfnWndProc = ComboExTestWndProc;
     RegisterClassA(&wc);
 
-    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW, 
+    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW|WS_VISIBLE,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     assert(hComboExParentWnd != NULL);
 
@@ -244,6 +343,7 @@ START_TEST(comboex)
         return;
 
     test_comboboxex();
+    test_WM_LBUTTONDOWN();
 
     cleanup();
 }

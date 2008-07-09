@@ -369,7 +369,8 @@ static void test_LZOpenFileA(void)
   ok(file >= 0, "LZOpenFileA failed on creation\n");
   ok(test.cBytes == sizeof(OFSTRUCT),
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
-  ok(test.nErrCode == ERROR_SUCCESS,
+  ok(test.nErrCode == ERROR_SUCCESS ||
+     test.nErrCode == ERROR_FILE_NOT_FOUND, /* win9x */
      "LZOpenFileA set test.nErrCode to %d\n", test.nErrCode);
   ok(lstrcmpA(test.szPathName, expected) == 0,
      "LZOpenFileA returned '%s', but was expected to return '%s'\n",

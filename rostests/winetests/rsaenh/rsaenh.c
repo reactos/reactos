@@ -1775,12 +1775,12 @@ static void test_null_provider(void)
     ok(!result && GetLastError() == NTE_BAD_PROV_TYPE,
      "Expected NTE_BAD_PROV_TYPE, got %08x\n", GetLastError());
     result = CryptAcquireContext(NULL, szContainer, NULL, PROV_RSA_FULL, 0);
-    ok(!result && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+    ok(!result && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_KEYSET),
+     "Expected ERROR_INVALID_PARAMETER or NTE_BAD_KEYSET, got %08x\n", GetLastError());
     result = CryptAcquireContext(NULL, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
-    ok(!result && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+    ok(!result && ( GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == NTE_BAD_KEYSET),
+     "Expected ERROR_INVALID_PARAMETER or NTE_BAD_KEYSET, got %08x\n", GetLastError());
     result = CryptAcquireContext(&prov, szContainer, NULL, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
     ok(!result && GetLastError() == NTE_BAD_KEYSET,

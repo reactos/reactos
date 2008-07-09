@@ -82,7 +82,11 @@ static BOOL init_function_pointers(void)
 
     if (!pCloseINFEngine || !pDelNode || !pGetVersionFromFile ||
         !pOpenINFEngine || !pSetPerUserSecValues || !pTranslateInfString)
+    {
+        skip("Needed functions are not available\n");
+        FreeLibrary(hAdvPack);
         return FALSE;
+    }
 
     return TRUE;
 }
@@ -331,8 +335,9 @@ static void translateinfstringex_test(void)
 
     /* try an empty filename */
     hr = pOpenINFEngine("", "Options.NTx86", 0, &hinf, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-        "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %08x\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) /* NT+ */ ||
+       hr == HRESULT_FROM_WIN32(E_UNEXPECTED) /* 9x */,
+        "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND or E_UNEXPECTED), got %08x\n", hr);
 
     /* try a NULL hinf */
     hr = pOpenINFEngine(inf_file, "Options.NTx86", 0, NULL, NULL);
@@ -459,6 +464,63 @@ static void translateinfstringex_test(void)
         ok(size == lstrlenA(drive)+1, "Expected size %d, got %d\n",
                lstrlenA(drive)+1, size);
     }
+
+    /* close the INF again */
+    hr = pCloseINFEngine(hinf);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    DeleteFileA(inf_file);
+
+    /* Create another .inf file which is just here to trigger a wine bug */
+    {
+        char data[1024];
+        char *ptr = data;
+        DWORD dwNumberOfBytesWritten;
+        HANDLE hf = CreateFile(inf_file, GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+        append_str(&ptr, "[Version]\n");
+        append_str(&ptr, "Signature=\"$Chicago$\"\n");
+        append_str(&ptr, "[section]\n");
+        append_str(&ptr, "NotACustomDestination=Version\n");
+        append_str(&ptr, "CustomDestination=CustInstDestSection\n");
+        append_str(&ptr, "[CustInstDestSection]\n");
+        append_str(&ptr, "49010=DestA,1\n");
+        append_str(&ptr, "49020=DestB\n");
+        append_str(&ptr, "49030=DestC\n");
+        append_str(&ptr, "49040=DestD\n");
+        append_str(&ptr, "[Options.NTx86]\n");
+        append_str(&ptr, "Result2=%%49030%%\n");
+        append_str(&ptr, "[DestA]\n");
+        append_str(&ptr, "HKLM,\"Software\\Garbage\",\"ProgramFilesDir\",,'%%24%%'\n");
+        /* The point of this test is to have HKCU just before the quoted HKLM */
+        append_str(&ptr, "[DestB]\n");
+        append_str(&ptr, "HKCU,\"Software\\Garbage\",\"ProgramFilesDir\",,'%%24%%'\n");
+        append_str(&ptr, "[DestC]\n");
+        append_str(&ptr, "'HKLM','Software\\Microsoft\\Windows\\CurrentVersion',");
+        append_str(&ptr, "'ProgramFilesDir',,\"%%24%%\"\n");
+        append_str(&ptr, "[DestD]\n");
+        append_str(&ptr, "HKLM,\"Software\\Garbage\",\"ProgramFilesDir\",,'%%24%%'\n");
+
+        WriteFile(hf, data, ptr - data, &dwNumberOfBytesWritten, NULL);
+        CloseHandle(hf);
+    }
+
+    /* open the inf with the install section */
+    hr = pOpenINFEngine(inf_file, "section", 0, &hinf, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    /* Single quote test (Note size includes null on return from call) */
+    memset(buffer, 'a', APP_PATH_LEN);
+    buffer[APP_PATH_LEN - 1] = '\0';
+    size = MAX_PATH;
+    hr = pTranslateInfStringEx(hinf, inf_file, "Options.NTx86", "Result2",
+                              buffer, size, &size, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
+           "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
+    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+           lstrlenA(PROG_FILES_ROOT)+1, size);
 
     /* close the INF again */
     hr = pCloseINFEngine(hinf);

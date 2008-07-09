@@ -848,9 +848,9 @@ static void test_icon_spacing(void)
 {
     /* LVM_SETICONSPACING */
     /* note: LVM_SETICONSPACING returns the previous icon spacing if successful */
-    /* note: the first test will fail if the default icon spacing is not (43,43) */
 
     HWND hwnd;
+    WORD w, h;
     DWORD r;
 
     hwnd = create_custom_listview_control(LVS_ICON);
@@ -859,17 +859,22 @@ static void test_icon_spacing(void)
     r = SendMessage(hwnd, WM_NOTIFYFORMAT, (WPARAM)hwndparent, (LPARAM)NF_REQUERY);
     expect(NFR_ANSI, r);
 
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(-1, -1));
+    w = LOWORD(r);
+    h = LOWORD(r);
+
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     trace("test icon spacing\n");
-    todo_wine {
-        r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(20, 30));
-        expect(MAKELONG(43,43), r);
-    }
-        r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(25, 35));
-        expect(MAKELONG(20,30), r);
-        r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(-1,-1));
-        expect(MAKELONG(25,35), r);
+
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(20, 30));
+    expect(MAKELONG(w,h), r);
+
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(25, 35));
+    expect(MAKELONG(20,30), r);
+
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(-1,-1));
+    expect(MAKELONG(25,35), r);
 
     ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_icon_spacing_seq, "test icon spacing seq", FALSE);
 
@@ -1127,6 +1132,81 @@ static void test_getorigin(void)
 
 }
 
+static void test_multiselect(void)
+{
+    typedef struct t_select_task
+    {
+	const char *descr;
+        int initPos;
+        int loopVK;
+        int count;
+	int result;
+    } select_task;
+
+    HWND hwnd;
+    DWORD r;
+    int i,j,item_count,selected_count;
+    static const int items=5;
+    BYTE kstate[256];
+    select_task task;
+
+    static struct t_select_task task_list[] = {
+        { "using VK_DOWN", 0, VK_DOWN, -1, -1 },
+        { "using VK_UP", -1, VK_UP, -1, -1 },
+        { "using VK_END", 0, VK_END, 1, -1 },
+        { "using VK_HOME", -1, VK_HOME, 1, -1 }
+    };
+
+
+    hwnd = create_listview_control();
+
+    for (i=0;i<items;i++) {
+	    insert_item(hwnd, 0);
+    }
+
+    item_count = (int)SendMessage(hwnd, LVM_GETITEMCOUNT, 0, 0);
+
+    expect(items,item_count);
+
+    for (i=0;i<4;i++) {
+        task = task_list[i];
+
+	/* deselect all items */
+	ListView_SetItemState(hwnd, -1, 0, LVIS_SELECTED);
+	SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+
+	/* set initial position */
+	SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, (task.initPos == -1 ? item_count -1 : task.initPos));
+	ListView_SetItemState(hwnd,(task.initPos == -1 ? item_count -1 : task.initPos),LVIS_SELECTED ,LVIS_SELECTED);
+
+	selected_count = (int)SendMessage(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+
+	ok(selected_count == 1, "There should be only one selected item at the beginning (is %d)\n",selected_count);
+
+	/* Set SHIFT key pressed */
+        GetKeyboardState(kstate);
+        kstate[VK_SHIFT]=0x80;
+        SetKeyboardState(kstate);
+
+	for (j=1;j<=(task.count == -1 ? item_count : task.count);j++) {
+	    r = SendMessage(hwnd, WM_KEYDOWN, task.loopVK, 0);
+	    expect(0,r);
+	    r = SendMessage(hwnd, WM_KEYUP, task.loopVK, 0);
+	    expect(0,r);
+	}
+
+	selected_count = (int)SendMessage(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+
+	ok((task.result == -1 ? item_count : task.result) == selected_count, "Failed multiple selection %s. There should be %d selected items (is %d)\n", task.descr, item_count, selected_count);
+
+	/* Set SHIFT key released */
+	GetKeyboardState(kstate);
+        kstate[VK_SHIFT]=0x00;
+        SetKeyboardState(kstate);
+    }
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
     HMODULE hComctl32;
@@ -1163,4 +1243,5 @@ START_TEST(listview)
     test_item_position();
     test_columns();
     test_getorigin();
+    test_multiselect();
 }

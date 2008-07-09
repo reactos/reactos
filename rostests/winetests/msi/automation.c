@@ -554,16 +554,6 @@ static void test_dispid(void)
     }
     dispid = get_dispid(pInstaller, "RelatedProducts");
     ok(dispid == 40, "Expected 40, got %d\n", dispid);
-    dispid = get_dispid(pInstaller, "RemovePatches");
-    ok(dispid == 49 || dispid == -1, "Expected 49 or -1, got %d\n", dispid);
-    dispid = get_dispid(pInstaller, "ApplyMultiplePatches");
-    ok(dispid == 51 || dispid == -1, "Expected 51 or -1, got %d\n", dispid);
-    dispid = get_dispid(pInstaller, "ProductsEx");
-    ok(dispid == 52 || dispid == -1, "Expected 52 or -1, got %d\n", dispid);
-    dispid = get_dispid(pInstaller, "PatchesEx");
-    ok(dispid == 55 || dispid == -1, "Expected 55 or -1, got %d\n", dispid);
-    dispid = get_dispid(pInstaller, "ExtractPatchXMLData");
-    ok(dispid == 57 || dispid == -1, "Expected 57 or -1, got %d\n", dispid);
     todo_wine
     {
         dispid = get_dispid(pInstaller, "PatchInfo");
@@ -583,20 +573,28 @@ static void test_dispid(void)
         dispid = get_dispid(pInstaller, "FileSignatureInfo");
         ok(dispid == 48, "Expected 48, got %d\n", dispid);
     }
-
-    /* MSDN claims the following functions exist but IDispatch->GetIDsOfNames disagrees */
+    dispid = get_dispid(pInstaller, "RemovePatches");
+    ok(dispid == 49 || dispid == -1, "Expected 49 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ApplyMultiplePatches");
+    ok(dispid == 51 || dispid == -1, "Expected 51 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ProductsEx");
+    ok(dispid == 52 || dispid == -1, "Expected 52 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "PatchesEx");
+    ok(dispid == 55 || dispid == -1, "Expected 55 or -1, got %d\n", dispid);
+    dispid = get_dispid(pInstaller, "ExtractPatchXMLData");
+    ok(dispid == 57 || dispid == -1, "Expected 57 or -1, got %d\n", dispid);
     dispid = get_dispid( pInstaller, "ProductElevated" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
-    dispid = get_dispid( pInstaller, "ProductInfoFromScript" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    ok(dispid == 59 || dispid == -1, "Expected 59 or -1, got %d\n", dispid);
     dispid = get_dispid( pInstaller, "ProvideAssembly" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
-    dispid = get_dispid( pInstaller, "CreateAdvertiseScript" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    ok(dispid == 60 || dispid == -1, "Expected 60 or -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "ProductInfoFromScript" );
+    ok(dispid == 61 || dispid == -1, "Expected 61 or -1, got %d\n", dispid);
     dispid = get_dispid( pInstaller, "AdvertiseProduct" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    ok(dispid == 62 || dispid == -1, "Expected 62 or -1, got %d\n", dispid);
+    dispid = get_dispid( pInstaller, "CreateAdvertiseScript" );
+    ok(dispid == 63 || dispid == -1, "Expected 63 or -1, got %d\n", dispid);
     dispid = get_dispid( pInstaller, "PatchFiles" );
-    ok(dispid == -1, "Expected -1, got %d\n", dispid);
+    ok(dispid == 65 || dispid == -1, "Expected 65 or -1, got %d\n", dispid);
 }
 
 /* Test basic IDispatch functions */
@@ -2011,9 +2009,12 @@ static void test_Installer_Products(BOOL bProductInstalled)
             }
         }
 
-        ok(bProductInstalled == bProductFound, "Product expected to %s installed but product code was %s\n",
-           bProductInstalled ? "be" : "not be",
-           bProductFound ? "found" : "not found");
+        if (bProductInstalled) todo_wine
+        {
+            ok(bProductInstalled == bProductFound, "Product expected to %s installed but product code was %s\n",
+               bProductInstalled ? "be" : "not be",
+               bProductFound ? "found" : "not found");
+        }
 
         if (pEnum)
         {
@@ -2305,7 +2306,7 @@ static void test_Installer_InstallProduct(void)
     RegCloseKey(hkey);
 
     res = RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\05FA3C1F65B896A40AC00077F34EF203");
-    todo_wine ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", res);
 
     /* Delete installation files we installed */
     delete_test_files();

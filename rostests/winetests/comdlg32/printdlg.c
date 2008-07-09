@@ -51,8 +51,7 @@ static LPCSTR load_functions(void)
     LPCSTR  ptr;
 
     ptr = "comdlg32.dll";
-    hcomdlg32 = LoadLibraryA(ptr);
-    if (!hcomdlg32) return ptr;
+    hcomdlg32 = GetModuleHandleA(ptr);
 
     ptr = "PrintDlgExA";
     pPrintDlgExA = (void *) GetProcAddress(hcomdlg32, ptr);

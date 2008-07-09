@@ -99,10 +99,12 @@ DEFINE_EXPECT(Exec_SETDOWNLOADSTATE_0);
 DEFINE_EXPECT(Exec_SETDOWNLOADSTATE_1);
 DEFINE_EXPECT(Exec_ShellDocView_37);
 DEFINE_EXPECT(Exec_ShellDocView_84);
+DEFINE_EXPECT(Exec_ShellDocView_103);
 DEFINE_EXPECT(Exec_UPDATECOMMANDS);
 DEFINE_EXPECT(Exec_SETTITLE);
 DEFINE_EXPECT(Exec_HTTPEQUIV);
 DEFINE_EXPECT(Exec_MSHTML_PARSECOMPLETE);
+DEFINE_EXPECT(Exec_Explorer_69);
 DEFINE_EXPECT(Invoke_AMBIENT_USERMODE);
 DEFINE_EXPECT(Invoke_AMBIENT_DLCONTROL);
 DEFINE_EXPECT(Invoke_AMBIENT_OFFLINEIFNOTCONNECTED);
@@ -356,7 +358,9 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     ok(bindinfo.dwBindVerb == 0, "bindinfo.dwBindVerb=%d\n", bindinfo.dwBindVerb);
     ok(bindinfo.szCustomVerb == 0, "bindinfo.szCustomVerb=%p\n", bindinfo.szCustomVerb);
     ok(bindinfo.cbstgmedData == 0, "bindinfo.cbstgmedData=%d\n", bindinfo.cbstgmedData);
-    ok(bindinfo.dwOptions == 0x80000, "bindinfo.dwOptions=%x\n", bindinfo.dwOptions);
+    ok(bindinfo.dwOptions == 0x80000 ||
+       bindinfo.dwOptions == 0x4080000, /* win2k3 */
+       "bindinfo.dwOptions=%x\n", bindinfo.dwOptions);
     ok(bindinfo.dwOptionsFlags == 0, "bindinfo.dwOptionsFlags=%d\n", bindinfo.dwOptionsFlags);
     /* TODO: test dwCodePage */
     /* TODO: test securityAttributes */
@@ -2067,7 +2071,8 @@ static HRESULT WINAPI OleCommandTarget_QueryStatus(IOleCommandTarget *iface, con
 static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID *pguidCmdGroup,
         DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    test_readyState(NULL);
+    if(!pguidCmdGroup || !IsEqualGUID(pguidCmdGroup, &CGID_Explorer))
+        test_readyState(NULL);
 
     if(!pguidCmdGroup) {
         switch(nCmdID) {
@@ -2166,12 +2171,21 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
         case 84:
             CHECK_EXPECT2(Exec_ShellDocView_84);
 
-            ok(pvaIn == NULL, "pvaIn == NULL\n");
-            ok(pvaOut != NULL, "pvaOut=%p, expected NULL\n", pvaOut);
+            ok(pvaIn == NULL, "pvaIn != NULL\n");
+            ok(pvaOut != NULL, "pvaOut == NULL\n");
             if(pvaIn)
                 ok(V_VT(pvaOut) == VT_EMPTY, "V_VT(pvaOut)=%d\n", V_VT(pvaOut));
 
             return E_NOTIMPL;
+
+        case 103:
+            CHECK_EXPECT2(Exec_ShellDocView_103);
+
+            ok(pvaIn == NULL, "pvaIn != NULL\n");
+            ok(pvaOut == NULL, "pvaOut != NULL\n");
+
+            return E_NOTIMPL;
+
         default:
             ok(0, "unexpected command %d\n", nCmdID);
             return E_FAIL;
@@ -2196,13 +2210,31 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
         return E_FAIL; /* TODO */
 
     if(IsEqualGUID(&CGID_Explorer, pguidCmdGroup)) {
-        ok(0, "unexpected cmd %d of CGID_Explorer\n", nCmdID);
+        ok(nCmdexecopt == 0, "nCmdexecopts=%08x\n", nCmdexecopt);
+
+        switch(nCmdID) {
+        case 69:
+            CHECK_EXPECT2(Exec_Explorer_69);
+            ok(pvaIn == NULL, "pvaIn != NULL\n");
+            ok(pvaOut != NULL, "pvaOut == NULL\n");
+            return E_NOTIMPL;
+        default:
+            ok(0, "unexpected cmd %d of CGID_Explorer\n", nCmdID);
+        }
         return E_NOTIMPL;
     }
 
     if(IsEqualGUID(&CGID_DocHostCommandHandler, pguidCmdGroup)) {
-        ok(0, "unexpected cmd %d of CGID_DocHostCommandHandler\n", nCmdID);
-        return E_NOTIMPL;
+        switch (nCmdID) {
+        case OLECMDID_PAGEACTIONBLOCKED: /* win2k3 */
+            SET_EXPECT(SetStatusText);
+            ok(pvaIn == NULL, "pvaIn != NULL\n");
+            ok(pvaOut == NULL, "pvaOut != NULL\n");
+            return S_OK;
+        default:
+            ok(0, "unexpected command %d\n", nCmdID);
+            return E_FAIL;
+        }
     }
 
     ok(0, "unexpected pguidCmdGroup: %s\n", debugstr_guid(pguidCmdGroup));
@@ -2686,10 +2718,12 @@ static void test_download(BOOL verb_done, BOOL css_dwl, BOOL css_try_dwl)
         SET_EXPECT(Protocol_Read);
         SET_EXPECT(UnlockRequest);
     }
+    SET_EXPECT(Exec_Explorer_69);
     SET_EXPECT(OnChanged_1005);
     SET_EXPECT(OnChanged_READYSTATE);
     SET_EXPECT(Exec_SETPROGRESSPOS);
     SET_EXPECT(Exec_SETDOWNLOADSTATE_0);
+    SET_EXPECT(Exec_ShellDocView_103);
     SET_EXPECT(Exec_MSHTML_PARSECOMPLETE);
     SET_EXPECT(Exec_HTTPEQUIV_DONE);
     expect_status_text = (LPWSTR)0xdeadbeef; /* TODO */
@@ -2731,10 +2765,12 @@ static void test_download(BOOL verb_done, BOOL css_dwl, BOOL css_try_dwl)
             nogecko = TRUE;
         }
     }
+    SET_CALLED(Exec_Explorer_69);
     CHECK_CALLED(OnChanged_1005);
     CHECK_CALLED(OnChanged_READYSTATE);
     CHECK_CALLED(Exec_SETPROGRESSPOS);
     CHECK_CALLED(Exec_SETDOWNLOADSTATE_0);
+    SET_CALLED(Exec_ShellDocView_103);
     CHECK_CALLED(Exec_MSHTML_PARSECOMPLETE);
     CHECK_CALLED(Exec_HTTPEQUIV_DONE);
 
@@ -3665,20 +3701,33 @@ static void test_QueryInterface(IUnknown *unk)
     IUnknown *qi;
     HRESULT hres;
 
+    static const IID IID_UndocumentedScriptIface =
+        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa0}};
+
     qi = (void*)0xdeadbeef;
     hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&qi);
     ok(hres == E_NOINTERFACE, "QueryInterface returned %08x, expected E_NOINTERFACE\n", hres);
-    ok(qi == NULL, "runnable=%p, ezpected NULL\n", qi);
+    ok(qi == NULL, "qirunnable=%p, ezpected NULL\n", qi);
 
     qi = (void*)0xdeadbeef;
     hres = IUnknown_QueryInterface(unk, &IID_IHTMLDOMNode, (void**)&qi);
     ok(hres == E_NOINTERFACE, "QueryInterface returned %08x, expected E_NOINTERFACE\n", hres);
-    ok(qi == NULL, "runnable=%p, ezpected NULL\n", qi);
+    ok(qi == NULL, "qi=%p, ezpected NULL\n", qi);
 
     qi = (void*)0xdeadbeef;
     hres = IUnknown_QueryInterface(unk, &IID_IHTMLDOMNode2, (void**)&qi);
     ok(hres == E_NOINTERFACE, "QueryInterface returned %08x, expected E_NOINTERFACE\n", hres);
-    ok(qi == NULL, "runnable=%p, ezpected NULL\n", qi);
+    ok(qi == NULL, "qi=%p, ezpected NULL\n", qi);
+
+    qi = (void*)0xdeadbeef;
+    hres = IUnknown_QueryInterface(unk, &IID_IPersistPropertyBag, (void**)&qi);
+    ok(hres == E_NOINTERFACE, "QueryInterface returned %08x, expected E_NOINTERFACE\n", hres);
+    ok(qi == NULL, "qi=%p, ezpected NULL\n", qi);
+
+    qi = (void*)0xdeadbeef;
+    hres = IUnknown_QueryInterface(unk, &IID_UndocumentedScriptIface, (void**)&qi);
+    ok(hres == E_NOINTERFACE, "QueryInterface returned %08x, expected E_NOINTERFACE\n", hres);
+    ok(qi == NULL, "qi=%p, ezpected NULL\n", qi);
 }
 
 static void init_test(enum load_state_t ls) {

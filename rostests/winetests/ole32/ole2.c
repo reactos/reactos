@@ -783,7 +783,8 @@ static void test_OleCreate(IStorage *pStorage)
     trace("OleCreate with OLERENDER_FORMAT:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_FORMAT, &formatetc, (IOleClientSite *)0xdeadbeef, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
-    IOleObject_Release(pObject);
+    if (pObject)
+        IOleObject_Release(pObject);
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 
     expected_method_list = methods_olerender_asis;
@@ -839,7 +840,8 @@ static void test_OleLoad(IStorage *pStorage)
     trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
     ok_ole_success(hr, "OleLoad");
-    IOleObject_Release(pObject);
+    if (pObject)
+        IOleObject_Release(pObject);
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
 }
 
@@ -1128,11 +1130,19 @@ static void test_data_cache(void)
     hr = IOleCache_Uncache(pOleCache, 0xdeadbeef);
     ok(hr == OLE_E_NOCONNECTION, "IOleCache_Uncache with invalid value should return OLE_E_NOCONNECTION instead of 0x%x\n", hr);
 
-    hr = IOleCache_Cache(pOleCache, NULL, 0, &dwConnection);
-    ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL fmtetc should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    /* Both tests crash on NT4 and below. StgCreatePropSetStg is only available on w2k and above. */
+    if (GetProcAddress(GetModuleHandleA("ole32.dll"), "StgCreatePropSetStg"))
+    {
+        hr = IOleCache_Cache(pOleCache, NULL, 0, &dwConnection);
+        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL fmtetc should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 
-    hr = IOleCache_Cache(pOleCache, NULL, 0, NULL);
-    ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL pdwConnection should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+        hr = IOleCache_Cache(pOleCache, NULL, 0, NULL);
+        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL pdwConnection should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    }
+    else
+    {
+        skip("tests with NULL parameters will crash on NT4 and below\n");
+    }
 
     for (fmtetc.cfFormat = CF_TEXT; fmtetc.cfFormat < CF_MAX; fmtetc.cfFormat++)
     {

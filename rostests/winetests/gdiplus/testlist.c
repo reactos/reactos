@@ -7,23 +7,27 @@
 #include "wine/test.h"
 
 extern void func_brush(void);
+extern void func_font(void);
 extern void func_graphics(void);
 extern void func_graphicspath(void);
 extern void func_image(void);
 extern void func_matrix(void);
+extern void func_pathiterator(void);
 extern void func_pen(void);
+extern void func_region(void);
 extern void func_stringformat(void);
-extern void func_font(void);
 
 const struct test winetest_testlist[] =
 {
     { "brush", func_brush },
+    { "font", func_font },
     { "graphics", func_graphics },
     { "graphicspath", func_graphicspath },
-    { "font", func_font },
     { "image", func_image },
     { "matrix", func_matrix },
-    { "stringformat", func_stringformat },
+    { "pathiterator", func_pathiterator },
     { "pen", func_pen },
+    { "region", func_region },
+    { "stringformat", func_stringformat },
     { 0, 0 }
 };

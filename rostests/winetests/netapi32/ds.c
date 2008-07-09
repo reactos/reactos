@@ -60,17 +60,17 @@ static void test_get(void)
     SetLastError(0xdeadbeef);
     ret = pDsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE *)&dpdi);
     ok( ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got (%d)\n", ret);
-    pDsRoleFreeMemory(&dpdi);
+    pDsRoleFreeMemory(dpdi);
 
     SetLastError(0xdeadbeef);
     ret = pDsRoleGetPrimaryDomainInformation(NULL, DsRoleUpgradeStatus, (PBYTE *)&dusi);
     todo_wine { ok( ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got (%d)\n", ret); }
-    pDsRoleFreeMemory(&dusi);
+    pDsRoleFreeMemory(dusi);
    
     SetLastError(0xdeadbeef);
     ret = pDsRoleGetPrimaryDomainInformation(NULL, DsRoleOperationState, (PBYTE *)&dosi);
     todo_wine { ok( ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got (%d)\n", ret); }
-    pDsRoleFreeMemory(&dosi);
+    pDsRoleFreeMemory(dosi);
 }
 
 

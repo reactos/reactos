@@ -51,7 +51,6 @@ static WCHAR sTooLongPassword[] = {'a','b','c','d','e','f','g','h','a','b','c','
 
 static WCHAR sTestUserName[] = {'t', 'e', 's', 't', 'u', 's', 'e', 'r', 0};
 static WCHAR sTestUserOldPass[] = {'O', 'l', 'd', 'P', 'a', 's', 's', 'W', '0', 'r', 'd', 'S', 'e', 't', '!', '~', 0};
-static WCHAR sTestUserNewPass[] = {'N', 'e', 'w', 'P', 'a', 's', 's', 'W', '0', 'r', 'd', 'S', 'e', 't', '!', '~', 0};
 static const WCHAR sBadNetPath[] = {'\\','\\','B','a',' ',' ','p','a','t','h',0};
 static const WCHAR sInvalidName[] = {'\\',0};
 static const WCHAR sInvalidName2[] = {'\\','\\',0};
@@ -63,7 +62,6 @@ static NET_API_STATUS (WINAPI *pNetQueryDisplayInformation)(LPWSTR,DWORD,DWORD,D
 static NET_API_STATUS (WINAPI *pNetUserGetInfo)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*)=NULL;
 static NET_API_STATUS (WINAPI *pNetUserModalsGet)(LPCWSTR,DWORD,LPBYTE*)=NULL;
 static NET_API_STATUS (WINAPI *pNetUserAdd)(LPCWSTR,DWORD,LPBYTE,LPDWORD)=NULL;
-static NET_API_STATUS (WINAPI *pNetUserChangePassword)(LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR)=NULL;
 static NET_API_STATUS (WINAPI *pNetUserDel)(LPCWSTR,LPCWSTR)=NULL;
 
 static int init_access_tests(void)
@@ -143,6 +141,11 @@ static void run_usergetinfo_tests(void)
 
     pNetApiBufferFree(ui0);
     pNetApiBufferFree(ui10);
+
+    /* NetUserGetInfo should always work for the current user. */
+    rc=pNetUserGetInfo(NULL, user_name, 0, (LPBYTE*)&ui0);
+    ok(rc == NERR_Success, "NetUsetGetInfo for current user failed: 0x%08x.\n", rc);
+    pNetApiBufferFree(ui0);
 
     /* errors handling */
     rc=pNetUserGetInfo(NULL, sTestUserName, 10000, (LPBYTE *)&ui0);
@@ -294,32 +297,13 @@ static void run_userhandling_tests(void)
     if(ret != NERR_Success)
         return;
 
-    ret = pNetUserChangePassword(NULL, sNonexistentUser, sTestUserOldPass,
-            sTestUserNewPass);
-    ok(ret == NERR_UserNotFound || ret == ERROR_INVALID_PASSWORD,
-            "Changing password for nonexistent user returned 0x%08x.\n", ret);
-
-    ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserOldPass,
-            sTestUserOldPass);
-    /* Apparently NERR_PasswordTooShort can be returned on windows xp if a
-     * strict password policy is enforced
+    /* On Windows XP (and newer), calling NetUserChangePassword with a NULL
+     * domainname parameter creates a user home directory, iff the machine is
+     * not member of a domain.
+     * Using \\127.0.0.1 as domain name does not work on standalone machines
+     * either, unless the ForceGuest option in the registry is turned off.
+     * So let's not test NetUserChangePassword for now.
      */
-    ok(ret == NERR_Success || ret == NERR_PasswordTooShort,
-            "Changing old password to old password returned 0x%08x.\n", ret);
-
-    ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserNewPass,
-            sTestUserOldPass);
-    ok(ret == ERROR_INVALID_PASSWORD,
-            "Trying to change password giving an invalid password returned 0x%08x.\n", ret);
-
-    ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserOldPass,
-            sTooLongPassword);
-    ok(ret == ERROR_PASSWORD_RESTRICTION,
-            "Changing to a password that's too long returned 0x%08x.\n", ret);
-
-    ret = pNetUserChangePassword(NULL, sTestUserName, sTestUserOldPass,
-            sTestUserNewPass);
-    ok(ret == NERR_Success, "Changing the password correctly returned 0x%08x.\n", ret);
 
     ret = pNetUserDel(NULL, sTestUserName);
     ok(ret == NERR_Success, "Deleting the user failed.\n");
@@ -338,7 +322,6 @@ START_TEST(access)
     pNetUserGetInfo=(void*)GetProcAddress(hnetapi32,"NetUserGetInfo");
     pNetUserModalsGet=(void*)GetProcAddress(hnetapi32,"NetUserModalsGet");
     pNetUserAdd=(void*)GetProcAddress(hnetapi32, "NetUserAdd");
-    pNetUserChangePassword=(void*)GetProcAddress(hnetapi32, "NetUserChangePassword");
     pNetUserDel=(void*)GetProcAddress(hnetapi32, "NetUserDel");
 
     /* These functions were introduced with NT. It's safe to assume that

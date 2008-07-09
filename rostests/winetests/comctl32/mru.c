@@ -75,7 +75,7 @@ static INT    (WINAPI *pFindMRUStringA)(HANDLE,LPCSTR,LPINT);
 
 
 /* Based on RegDeleteTreeW from dlls/advapi32/registry.c */
-static LSTATUS mru_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
+static LONG mru_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
 {
     LONG ret;
     DWORD dwMaxSubkeyLen, dwMaxValueLen;

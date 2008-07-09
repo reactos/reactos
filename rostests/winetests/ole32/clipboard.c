@@ -436,7 +436,10 @@ static void test_set_clipboard(void)
     CoInitialize(NULL);
     hr = OleSetClipboard(data1);
     todo_wine
-    ok(hr == CO_E_NOTINITIALIZED, "OleSetClipboard should have failed with CO_E_NOTINITIALIZED instead of 0x%08x\n", hr);
+    ok(hr == CO_E_NOTINITIALIZED ||
+       hr == CLIPBRD_E_CANT_SET, /* win9x */
+       "OleSetClipboard should have failed with "
+       "CO_E_NOTINITIALIZED or CLIPBRD_E_CANT_SET instead of 0x%08x\n", hr);
     CoUninitialize();
 
     hr = OleInitialize(NULL);

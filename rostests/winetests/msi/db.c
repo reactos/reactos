@@ -3248,6 +3248,9 @@ static void test_temporary_table(void)
     ok( cond == MSICONDITION_NONE, "wrong return condition\n");
     }
 
+    cond = MsiDatabaseIsTablePersistent(hdb, "_Storages");
+    ok( cond == MSICONDITION_NONE, "wrong return condition\n");
+
     cond = MsiDatabaseIsTablePersistent(hdb, "_Streams");
     ok( cond == MSICONDITION_NONE, "wrong return condition\n");
 
@@ -3962,6 +3965,11 @@ static void test_special_tables(void)
         "`foo` INT NOT NULL, `bar` INT LOCALIZABLE PRIMARY KEY `foo`)";
     r = run_query(hdb, 0, query);
     ok(r == ERROR_SUCCESS, "failed to create table\n");
+
+    query = "CREATE TABLE `_Storages` ( "
+        "`foo` INT NOT NULL, `bar` INT LOCALIZABLE PRIMARY KEY `foo`)";
+    r = run_query(hdb, 0, query);
+    todo_wine ok(r == ERROR_BAD_QUERY_SYNTAX, "created _Streams table\n");
 
     query = "CREATE TABLE `_Streams` ( "
         "`foo` INT NOT NULL, `bar` INT LOCALIZABLE PRIMARY KEY `foo`)";
@@ -5988,6 +5996,124 @@ static void test_where_viewmodify(void)
     MsiCloseHandle(hdb);
 }
 
+static void test_storages_table(void)
+{
+    MSIHANDLE hdb, hview, hrec;
+    char file[MAX_PATH];
+    char buf[MAX_PATH];
+    DWORD size;
+    UINT r;
+
+    hdb = create_db();
+    ok(hdb, "failed to create db\n");
+
+    r = MsiDatabaseCommit(hdb);
+    ok(r == ERROR_SUCCESS , "Failed to commit database\n");
+
+    MsiCloseHandle(hdb);
+
+    r = MsiOpenDatabase(msifile, MSIDBOPEN_TRANSACT, &hdb);
+    ok(r == ERROR_SUCCESS , "Failed to open database\n");
+
+    /* check the column types */
+    hrec = get_column_info(hdb, "SELECT * FROM `_Storages`", MSICOLINFO_TYPES);
+    ok(hrec, "failed to get column info hrecord\n");
+    todo_wine
+    {
+        ok(check_record(hrec, 1, "s62"), "wrong hrecord type\n");
+        ok(check_record(hrec, 2, "V0"), "wrong hrecord type\n");
+    }
+
+    MsiCloseHandle(hrec);
+
+    /* now try the names */
+    hrec = get_column_info(hdb, "SELECT * FROM `_Storages`", MSICOLINFO_NAMES);
+    ok(hrec, "failed to get column info hrecord\n");
+    todo_wine
+    {
+        ok(check_record(hrec, 1, "Name"), "wrong hrecord type\n");
+        ok(check_record(hrec, 2, "Data"), "wrong hrecord type\n");
+    }
+
+    MsiCloseHandle(hrec);
+
+    /* insert a file into the _Storages table */
+    create_file("test.txt");
+
+    hrec = MsiCreateRecord(2);
+    MsiRecordSetString(hrec, 1, "data");
+
+    r = MsiRecordSetStream(hrec, 2, "test.txt");
+    ok(r == ERROR_SUCCESS, "Failed to add stream data to the hrecord: %d\n", r);
+
+    DeleteFile("test.txt");
+
+    r = MsiDatabaseOpenView(hdb,
+            "INSERT INTO `_Storages` (`Name`, `Data`) VALUES (?, ?)", &hview);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to open database hview: %d\n", r);
+    }
+
+    r = MsiViewExecute(hview, hrec);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to execute hview: %d\n", r);
+    }
+
+    MsiCloseHandle(hrec);
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenView(hdb,
+            "SELECT `Name`, `Data` FROM `_Storages`", &hview);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to open database hview: %d\n", r);
+    }
+
+    r = MsiViewExecute(hview, 0);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to execute hview: %d\n", r);
+    }
+
+    r = MsiViewFetch(hview, &hrec);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to fetch hrecord: %d\n", r);
+    }
+
+    size = MAX_PATH;
+    r = MsiRecordGetString(hrec, 1, file, &size);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to get string: %d\n", r);
+        ok(!lstrcmp(file, "data"), "Expected 'data', got %s\n", file);
+    }
+
+    size = MAX_PATH;
+    lstrcpyA(buf, "apple");
+    r = MsiRecordReadStream(hrec, 2, buf, &size);
+    ok(!lstrcmp(buf, "apple"), "Expected buf to be unchanged, got %s\n", buf);
+    todo_wine
+    {
+        ok(r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
+        ok(size == 0, "Expected 0, got %d\n", size);
+    }
+
+    MsiCloseHandle(hrec);
+
+    r = MsiViewFetch(hview, &hrec);
+    todo_wine
+    {
+        ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    }
+
+    MsiCloseHandle(hview);
+    MsiCloseHandle(hdb);
+    DeleteFile(msifile);
+}
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -6025,4 +6151,5 @@ START_TEST(db)
     test_forcecodepage();
     test_viewmodify_refresh();
     test_where_viewmodify();
+    test_storages_table();
 }

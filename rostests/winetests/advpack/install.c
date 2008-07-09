@@ -73,9 +73,7 @@ static void create_inf_file(LPCSTR filename)
     append_str(&ptr, "Signature=\"$Chicago$\"\n");
     append_str(&ptr, "AdvancedINF=2.5\n");
     append_str(&ptr, "[DefaultInstall]\n");
-    append_str(&ptr, "RegisterOCXs=RegisterOCXsSection\n");
-    append_str(&ptr, "[RegisterOCXsSection]\n");
-    append_str(&ptr, "%%11%%\\ole32.dll\n");
+    append_str(&ptr, "CheckAdminRights=1\n");
 
     WriteFile(hf, data, ptr - data, &dwNumberOfBytesWritten, NULL);
     CloseHandle(hf);
@@ -118,7 +116,9 @@ static void test_RunSetupCommand(void)
     /* try to run an exe with the RSC_FLAG_INF flag */
     hexe = (HANDLE)0xdeadbeef;
     hr = pRunSetupCommand(NULL, "winver.exe", "Install", systemdir, "Title", &hexe, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(is_spapi_err(hr), "Expected a setupapi error, got %d\n", hr);
+    ok(is_spapi_err(hr) ||
+       hr == E_FAIL, /* win9x */
+       "Expected a setupapi error or E_FAIL, got %d\n", hr);
     ok(hexe == (HANDLE)0xdeadbeef, "Expected hexe to be 0xdeadbeef\n");
     ok(!TerminateProcess(hexe, 0), "Expected TerminateProcess to fail\n");
 
@@ -151,7 +151,9 @@ static void test_RunSetupCommand(void)
 
     /* try a relative path to the INF, with working dir provided */
     hr = pRunSetupCommand(NULL, "one\\test.inf", "DefaultInstall", dir, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", hr);
+    ok(hr == ERROR_SUCCESS ||
+       hr == E_FAIL, /* win9x */
+       "Expected ERROR_SUCCESS, got %d\n", hr);
 
     /* try a relative path to the INF, NULL working dir */
     hr = pRunSetupCommand(NULL, "one\\test.inf", "DefaultInstall", NULL, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
@@ -160,12 +162,15 @@ static void test_RunSetupCommand(void)
 
     /* try a relative path to the INF, empty working dir */
     hr = pRunSetupCommand(NULL, "one\\test.inf", "DefaultInstall", "", "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", hr);
+    ok(hr == ERROR_SUCCESS ||
+       hr == E_FAIL, /* win9x */
+       "Expected ERROR_SUCCESS or E_FAIL, got %d\n", hr);
 
     /* try only the INF filename, with working dir provided */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", dir, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %d\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+       hr == E_FAIL, /* win9x */
+       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or E_FAIL, got %d\n", hr);
 
     /* try only the INF filename, NULL working dir */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", NULL, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
@@ -174,8 +179,9 @@ static void test_RunSetupCommand(void)
 
     /* try only the INF filename, empty working dir */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", "", "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %d\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+       hr == E_FAIL, /* win9x */
+       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or E_FAIL, got %d\n", hr);
 
     DeleteFileA("one\\test.inf");
     RemoveDirectoryA("one");
@@ -184,8 +190,9 @@ static void test_RunSetupCommand(void)
 
     /* try INF file in the current directory, working directory provided */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", CURR_DIR, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %d\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+       hr == E_FAIL, /* win9x */
+       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or E_FAIL, got %d\n", hr);
 
     /* try INF file in the current directory, NULL working directory */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", NULL, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
@@ -194,8 +201,9 @@ static void test_RunSetupCommand(void)
 
     /* try INF file in the current directory, empty working directory */
     hr = pRunSetupCommand(NULL, "test.inf", "DefaultInstall", CURR_DIR, "Title", NULL, RSC_FLAG_INF | RSC_FLAG_QUIET, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %d\n", hr);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+       hr == E_FAIL, /* win9x */
+       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or E_FAIL, got %d\n", hr);
 }
 
 static void test_LaunchINFSection(void)
@@ -266,14 +274,26 @@ static void test_LaunchINFSectionEx(void)
 
 START_TEST(install)
 {
+    DWORD len;
+    char temp_path[MAX_PATH], prev_path[MAX_PATH];
+
     if (!init_function_pointers())
         return;
 
-    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
+    GetCurrentDirectoryA(MAX_PATH, prev_path);
+    GetTempPath(MAX_PATH, temp_path);
+    SetCurrentDirectoryA(temp_path);
+
+    lstrcpyA(CURR_DIR, temp_path);
+    len = lstrlenA(CURR_DIR);
+
+    if(len && (CURR_DIR[len - 1] == '\\'))
+        CURR_DIR[len - 1] = 0;
 
     test_RunSetupCommand();
     test_LaunchINFSection();
     test_LaunchINFSectionEx();
 
     FreeLibrary(hAdvPack);
+    SetCurrentDirectoryA(prev_path);
 }

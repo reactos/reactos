@@ -24,7 +24,59 @@
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 
-static WCHAR arial[] = {'A','r','i','a','l','\0'};
+static const WCHAR arial[] = {'A','r','i','a','l','\0'};
+static const WCHAR nonexistant[] = {'T','h','i','s','F','o','n','t','s','h','o','u','l','d','N','o','t','E','x','i','s','t','\0'};
+static const WCHAR MSSansSerif[] = {'M','S',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
+static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
+static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
+static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
+
+static const char *debugstr_w(LPCWSTR str)
+{
+   static char buf[1024];
+   WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
+   return buf;
+}
+
+
+static void test_createfont(void)
+{
+    GpFontFamily* fontfamily = NULL;
+    GpFont* font = NULL;
+    GpStatus stat;
+    Unit unit;
+    UINT i;
+    REAL size;
+
+    stat = GdipCreateFontFamilyFromName(nonexistant, NULL, &fontfamily);
+    expect (FontFamilyNotFound, stat);
+    stat = GdipDeleteFont(font);
+    expect (InvalidParameter, stat);
+    stat = GdipCreateFontFamilyFromName(arial, NULL, &fontfamily);
+    expect (Ok, stat);
+    stat = GdipCreateFont(fontfamily, 12, FontStyleRegular, UnitPoint, &font);
+    expect (Ok, stat);
+    stat = GdipGetFontUnit (font, &unit);
+    expect (Ok, stat);
+    expect (UnitPoint, unit);
+
+    /* Test to see if returned size is based on unit (its not) */
+    GdipGetFontSize(font, &size);
+    ok (size == 12, "Expected 12, got %f\n", size);
+    GdipDeleteFont(font);
+
+    /* Make sure everything is converted correctly for all Units */
+    for (i = UnitWorld; i <=UnitMillimeter; i++)
+    {
+        if (i == UnitDisplay) continue; /* Crashes WindowsXP, wtf? */
+        GdipCreateFont(fontfamily, 24, FontStyleRegular, i, &font);
+        GdipGetFontSize (font, &size);
+        ok (size == 24, "Expected 24, got %f (with unit: %d)\n", size, i);
+        GdipGetFontUnit (font, &unit);
+        expect (i, unit);
+        GdipDeleteFont(font);
+    }
+}
 
 static void test_logfont(void)
 {
@@ -94,6 +146,95 @@ static void test_logfont(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_fontfamily (void)
+{
+    GpFontFamily** family = NULL;
+    WCHAR itsName[LF_FACESIZE];
+    GpStatus stat;
+
+    /* FontFamily can not be NULL */
+    stat = GdipCreateFontFamilyFromName (arial , NULL, family);
+    expect (InvalidParameter, stat);
+
+    family = GdipAlloc (sizeof (GpFontFamily*));
+
+    /* FontFamily must be able to actually find the family.
+     * If it can't, any subsequent calls should fail
+     *
+     * We currently fail (meaning we don't) because we don't actually
+     * test to see if we can successfully get a family
+     */
+    stat = GdipCreateFontFamilyFromName (nonexistant, NULL, family);
+    expect (FontFamilyNotFound, stat);
+    stat = GdipGetFamilyName (*family,itsName, LANG_NEUTRAL);
+    expect (InvalidParameter, stat);
+    ok ((lstrcmpiW(itsName,nonexistant) != 0),
+        "Expected a non-zero value for nonexistant font!\n");
+    stat = GdipDeleteFontFamily(*family);
+    expect (InvalidParameter, stat);
+
+    stat = GdipCreateFontFamilyFromName (arial, NULL, family);
+    expect (Ok, stat);
+
+    stat = GdipGetFamilyName (*family, itsName, LANG_NEUTRAL);
+    expect (Ok, stat);
+    expect (0, lstrcmpiW(itsName,arial));
+
+    if (0)
+    {
+        /* Crashes on Windows XP SP2, Vista, and so Wine as well */
+        stat = GdipGetFamilyName (*family, NULL, LANG_NEUTRAL);
+        expect (Ok, stat);
+    }
+
+    stat = GdipDeleteFontFamily(*family);
+    expect (Ok, stat);
+
+    GdipFree (family);
+}
+
+
+static void test_getgenerics (void)
+{
+    GpStatus stat;
+    GpFontFamily** family;
+    WCHAR familyName[LF_FACESIZE];
+    ZeroMemory(familyName, sizeof(familyName)/sizeof(WCHAR));
+
+    family = GdipAlloc (sizeof (GpFontFamily*));
+
+    stat = GdipGetGenericFontFamilySansSerif (family);
+    expect (Ok, stat);
+    stat = GdipGetFamilyName (*family, familyName, LANG_NEUTRAL);
+    expect (Ok, stat);
+    ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0) ||
+        (lstrcmpiW(familyName,MSSansSerif) == 0),
+        "Expected Microsoft Sans Serif or MS Sans Serif, got %s\n",
+        debugstr_w(familyName));
+    stat = GdipDeleteFontFamily (*family);
+    expect (Ok, stat);
+
+    stat = GdipGetGenericFontFamilySerif (family);
+    expect (Ok, stat);
+    stat = GdipGetFamilyName (*family, familyName, LANG_NEUTRAL);
+    expect (Ok, stat);
+    ok (lstrcmpiW(familyName, TimesNewRoman) == 0,
+        "Expected Times New Roman, got %s\n", debugstr_w(familyName));
+    stat = GdipDeleteFontFamily (*family);
+    expect (Ok, stat);
+
+    stat = GdipGetGenericFontFamilyMonospace (family);
+    expect (Ok, stat);
+    stat = GdipGetFamilyName (*family, familyName, LANG_NEUTRAL);
+    expect (Ok, stat);
+    ok (lstrcmpiW(familyName, CourierNew) == 0,
+        "Expected Courier New, got %s\n", debugstr_w(familyName));
+    stat = GdipDeleteFontFamily (*family);
+    expect (Ok, stat);
+
+    GdipFree (family);
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -106,7 +247,10 @@ START_TEST(font)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_createfont();
     test_logfont();
+    test_fontfamily();
+    test_getgenerics();
 
     GdiplusShutdown(gdiplusToken);
 }

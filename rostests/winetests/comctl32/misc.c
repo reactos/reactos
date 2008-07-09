@@ -42,8 +42,6 @@ static HMODULE hComctl32 = 0;
       FreeLibrary(hComctl32); \
     }
 
-#define expect(expected, got) ok(expected == got, "expected %d, got %d\n", expected,got)
-
 static BOOL InitFunctionPtrs(void)
 {
     hComctl32 = LoadLibraryA("comctl32.dll");
@@ -96,21 +94,29 @@ static void test_GetPtrAW(void)
 
         count = 0;
         count = pStr_GetPtrA(source, NULL, 0);
-        ok (count == sourcelen, "Expected count to be %d, it was %d\n", sourcelen , count);
+        ok (count == sourcelen ||
+            broken(count == sourcelen - 1), /* win9x */
+            "Expected count to be %d, it was %d\n", sourcelen, count);
 
         count = 0;
         strcpy(dest, desttest);
         count = pStr_GetPtrA(source, dest, 0);
-        ok (count == sourcelen, "Expected count to be %d, it was %d\n", sourcelen , count);
+        ok (count == sourcelen ||
+            broken(count == 0), /* win9x */
+            "Expected count to be %d, it was %d\n", sourcelen, count);
         ok (!lstrcmp(dest, desttest), "Expected destination to not have changed\n");
 
         count = 0;
         count = pStr_GetPtrA(source, NULL, destsize);
-        ok (count == sourcelen, "Expected count to be %d, it was %d\n", sourcelen , count);
+        ok (count == sourcelen ||
+            broken(count == sourcelen - 1), /* win9x */
+            "Expected count to be %d, it was %d\n", sourcelen, count);
 
         count = 0;
         count = pStr_GetPtrA(source, dest, destsize);
-        ok (count == sourcelen, "Expected count to be %d, it was %d\n", sourcelen , count);
+        ok (count == sourcelen ||
+            broken(count == sourcelen - 1), /* win9x */
+            "Expected count to be %d, it was %d\n", sourcelen, count);
         ok (!lstrcmp(source, dest), "Expected source and destination to be the same\n");
 
         count = -1;
@@ -122,7 +128,9 @@ static void test_GetPtrAW(void)
         count = 0;
         destsize = 15;
         count = pStr_GetPtrA(source, dest, destsize);
-        ok (count == 15, "Expected count to be 15, it was %d\n", count);
+        ok (count == 15 ||
+            broken(count == 14), /* win9x */
+            "Expected count to be 15, it was %d\n", count);
         ok (!memcmp(source, dest, 14), "Expected first part of source and destination to be the same\n");
         ok (dest[14] == '\0', "Expected destination to be cut-off and 0 terminated\n");
     }
@@ -130,21 +138,57 @@ static void test_GetPtrAW(void)
 
 static void test_Alloc(void)
 {
-    PCHAR p = pAlloc(0);
-    ok(p != NULL, "p=%p\n", p);
-    ok(pFree(p), "\n");
+    PCHAR p;
+    BOOL res;
+    DWORD size, min;
+
+    /* allocate size 0 */
+    p = pAlloc(0);
+    ok(p != NULL, "Expected non-NULL ptr\n");
+
+    /* get the minimum size */
+    min = pGetSize(p);
+
+    /* free the block */
+    res = pFree(p);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+
+    /* allocate size 1 */
     p = pAlloc(1);
-    ok(p != NULL, "\n");
-    *p = '\0';
-    expect(1, pGetSize(p));
+    ok(p != NULL, "Expected non-NULL ptr\n");
+
+    /* get the allocated size */
+    size = pGetSize(p);
+    ok(size == 1 ||
+       broken(size == min), /* win9x */
+       "Expected 1, got %d\n", size);
+
+    /* reallocate the block */
     p = pReAlloc(p, 2);
-    ok(p != NULL, "\n");
-    expect(2, pGetSize(p));
-    ok(pFree(p), "\n");
-    ok(pFree(NULL), "\n");
+    ok(p != NULL, "Expected non-NULL ptr\n");
+
+    /* get the new size */
+    size = pGetSize(p);
+    ok(size == 2 ||
+       broken(size == min), /* win9x */
+       "Expected 2, got %d\n", size);
+
+    /* free the block */
+    res = pFree(p);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
+
+    /* free a NULL ptr */
+    res = pFree(NULL);
+    ok(res == TRUE ||
+       broken(res == FALSE), /* win9x */
+       "Expected TRUE, got %d\n", res);
+
+    /* reallocate a NULL ptr */
     p = pReAlloc(NULL, 2);
-    ok(p != NULL, "\n");
-    ok(pFree(p), "\n");
+    ok(p != NULL, "Expectd non-NULL ptr\n");
+
+    res = pFree(p);
+    ok(res == TRUE, "Expected TRUE, got %d\n", res);
 }
 
 START_TEST(misc)

@@ -54,9 +54,6 @@ static void run_apibuf_tests(void)
 
     ok(pNetApiBufferFree(p) == NERR_Success, "Freed\n");
 
-    /* test errors handling */
-    ok(pNetApiBufferFree(p) == NERR_Success, "Freed\n");
-
     ok(pNetApiBufferSize(p, &dwSize) == NERR_Success, "Got size\n");
     ok(pNetApiBufferSize(NULL, &dwSize) == ERROR_INVALID_PARAMETER, "Error for NULL pointer\n");
 
