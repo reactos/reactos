@@ -1728,8 +1728,8 @@ HRESULT WINAPI ScriptGetLogicalWidths(const SCRIPT_ANALYSIS *sa, int nbchars, in
 }
 
 
-VOID WINAPI LpkPresent()   
-{   
-    /* FIXME */   
-    DbgPrint("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);   
-} 
+VOID WINAPI LpkPresent()
+{
+    /* FIXME */
+    ERR("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);
+}
