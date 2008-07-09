@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * translation updated by Caemyr - Olaf Siejka (Jan,Mar,Apr 2008)
+ * translation updated by Caemyr - Olaf Siejka (Jan,Mar,Apr,Jul 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -686,11 +686,11 @@ BEGIN
 	IDS_LNK_FILE                "Skrót"
 	IDS_SYS_FILE                "Plik systemowy"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Otwórz"
+	IDS_RUNAS_VERB              "Uruchom jako "
+	IDS_EDIT_VERB               "Edytuj"
+	IDS_FIND_VERB               "Wyszukaj"
+	IDS_PRINT_VERB              "Drukuj"
+	IDS_PLAY_VERB               "Odtwórz"
+	IDS_PREVIEW_VERB            "Podgl¹d"
 END
