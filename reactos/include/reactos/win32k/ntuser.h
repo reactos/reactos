@@ -2725,11 +2725,6 @@ LONG
 NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
-DWORD
-NTAPI
-NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
-
-
 
 /* (other FocusedItem values give the position of the focused item) */
 #define NO_SELECTED_ITEM  0xffff

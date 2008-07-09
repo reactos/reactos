@@ -690,7 +690,6 @@ NtUserGetScrollInfo                     3
 NtUserGetShellWindow                    0
 NtUserGetWindow                         2
 NtUserGetWindowLong                     3
-NtUserGetWindowThreadProcessId          2
 NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3

@@ -1294,7 +1294,30 @@ DWORD STDCALL
 GetWindowThreadProcessId(HWND hWnd,
 			 LPDWORD lpdwProcessId)
 {
-   return NtUserGetWindowThreadProcessId(hWnd, lpdwProcessId);
+  DWORD Ret = 0;
+  PW32THREADINFO ti;
+  PWINDOW pWnd = ValidateHwnd(hWnd);
+
+  if (!pWnd) return Ret;
+
+  ti = pWnd->ti;
+
+  if ( ti )
+  {
+    if ( ti == GetW32ThreadInfo() )
+    { // We are current.
+      if ( lpdwProcessId )
+        *lpdwProcessId = (DWORD)NtCurrentTeb()->Cid.UniqueProcess;
+      Ret = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
+    }
+    else
+    { // Ask kernel for info.
+      if ( lpdwProcessId )
+        *lpdwProcessId = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
+      Ret = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_THREAD_ID);
+    }
+  }
+  return Ret;
 }
 
 
@@ -1604,7 +1627,7 @@ SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
   DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  if(!GetWindowThreadProcessId(hWnd, &ProcessId))
   {
     return FALSE;
   }
@@ -1644,7 +1667,7 @@ SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
   DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  if(!GetWindowThreadProcessId(hWnd, &ProcessId))
   {
     return FALSE;
   }

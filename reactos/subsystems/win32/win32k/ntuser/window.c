@@ -3889,39 +3889,6 @@ CLEANUP:
 
 
 /*
- * @implemented
- */
-DWORD STDCALL
-NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
-{
-   PWINDOW_OBJECT Wnd;
-   DWORD tid, pid;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetWindowThreadProcessId\n");
-   UserEnterShared();
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      RETURN( 0);
-   }
-
-   tid = (DWORD)IntGetWndThreadId(Wnd);
-   pid = (DWORD)IntGetWndProcessId(Wnd);
-
-   if (UnsafePid)
-      MmCopyToCaller(UnsafePid, &pid, sizeof(DWORD));
-
-   RETURN( tid);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetWindowThreadProcessId, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-/*
  * @unimplemented
  */
 DWORD STDCALL
