@@ -34,6 +34,7 @@ typedef struct _DESKTOP
     ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
+    HWND hShellWindow;
     struct _WINDOW *Wnd;
 
     union
@@ -333,7 +334,7 @@ typedef struct _W32CLIENTINFO
     ULONG_PTR ulClientDelta;
     PVOID phkCurrent;
     ULONG fsHooks;
-    HWND  hWND;  // Well be replaced with CALLBACKWND.
+    HWND  hWND;  // Will be replaced with CALLBACKWND.
     PVOID pvWND; // " "
     ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
@@ -372,6 +373,8 @@ typedef struct _PROPERTY
   HANDLE Data;
   ATOM Atom;
 } PROPERTY, *PPROPERTY;
+
+
 
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
@@ -1281,7 +1284,7 @@ NtUserGetClassName(HWND hWnd,
 INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
-                   BOOL Unknown, // 0 GetClassNameW, 1 RealGetWindowClassA/W
+                   BOOL Real, // 0 GetClassNameW, 1 RealGetWindowClassA/W
                    PUNICODE_STRING ClassName);
 #endif
 
@@ -2724,10 +2727,6 @@ NtUserGetScrollInfo(
   HWND hwnd,
   int fnBar,
   LPSCROLLINFO lpsi);
-
-HWND
-NTAPI
-NtUserGetShellWindow();
 
 HWND
 NTAPI

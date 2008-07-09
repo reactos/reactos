@@ -3079,7 +3079,14 @@ CLEANUP:
 
 
 
-
+/*
+ * UserGetShellWindow
+ *
+ * Returns a handle to shell window that was set by NtUserSetShellWindowEx.
+ *
+ * Status
+ *    @implemented
+ */
 HWND FASTCALL UserGetShellWindow()
 {
    PWINSTATION_OBJECT WinStaObject;
@@ -3102,32 +3109,6 @@ HWND FASTCALL UserGetShellWindow()
    return( Ret);
 }
 
-
-/*
- * NtUserGetShellWindow
- *
- * Returns a handle to shell window that was set by NtUserSetShellWindowEx.
- *
- * Status
- *    @implemented
- */
-
-HWND STDCALL
-NtUserGetShellWindow()
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetShellWindow\n");
-   UserEnterShared();
-
-   RETURN( UserGetShellWindow() );
-
-CLEANUP:
-   DPRINT("Leave NtUserGetShellWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 /*
  * NtUserSetShellWindowEx
  *
@@ -3137,7 +3118,6 @@ CLEANUP:
  * Status
  *    @implemented
  */
-
 BOOL STDCALL
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
@@ -3146,6 +3126,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
+   PW32THREADINFO ti;;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();
@@ -3206,6 +3187,9 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    WinStaObject->ShellWindow = hwndShell;
    WinStaObject->ShellListView = hwndListView;
+
+   ti = GetW32ThreadInfo();
+   if (ti->Desktop) ((PDESKTOP)ti->Desktop)->hShellWindow = hwndShell;
 
    UserDerefObjectCo(WndShell);
 
