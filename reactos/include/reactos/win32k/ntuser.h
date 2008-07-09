@@ -360,6 +360,19 @@ typedef struct _W32CLIENTINFO
 #define SRV_EVENT_LOCATIONCHANGE  0x0040
 #define SRV_EVENT_CREATE          0x8000
 
+typedef struct _PROPLISTITEM
+{
+  ATOM Atom;
+  HANDLE Data;
+} PROPLISTITEM, *PPROPLISTITEM;
+
+typedef struct _PROPERTY
+{
+  LIST_ENTRY PropListEntry;
+  HANDLE Data;
+  ATOM Atom;
+} PROPERTY, *PPROPERTY;
+
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 

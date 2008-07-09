@@ -32,14 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _PROPLISTITEM
-{
-   ATOM Atom;
-   HANDLE Data;
-}
-PROPLISTITEM, *PPROPLISTITEM;
-
-
 /* STATIC FUNCTIONS **********************************************************/
 
 /* FUNCTIONS *****************************************************************/

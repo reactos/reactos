@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
  * PURPOSE:         Input
@@ -33,19 +32,6 @@
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
-
-typedef struct _PROPLISTITEM
-{
-  ATOM Atom;
-  HANDLE Data;
-} PROPLISTITEM, *PPROPLISTITEM;
-
-typedef struct _PROPERTY
-{
-  LIST_ENTRY PropListEntry;
-  HANDLE Data;
-  ATOM Atom;
-} PROPERTY, *PPROPERTY;
 
 #define ATOM_BUFFER_SIZE 256
 
