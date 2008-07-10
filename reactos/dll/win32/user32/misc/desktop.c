@@ -705,7 +705,8 @@ GetShellWindow(VOID)
 {
    PDESKTOP pdi;
    pdi = GetThreadDesktopInfo();
-   return pdi->hShellWindow;
+   if (pdi) return pdi->hShellWindow;
+   return NULL;
 }
 
 
