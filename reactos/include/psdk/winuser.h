@@ -639,7 +639,7 @@ extern "C" {
 #define CS_BYTEALIGNCLIENT 4096
 #define CS_BYTEALIGNWINDOW 8192
 #define CS_KEYCVTWINDOW 4
-#define CS_NOKEYCVT 256
+#define CS_NOKEYCVT 256 // Class Name to Version
 #define CS_CLASSDC 64
 #define CS_DBLCLKS 8
 #define CS_GLOBALCLASS 16384
