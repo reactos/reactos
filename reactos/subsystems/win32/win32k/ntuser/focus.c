@@ -60,13 +60,16 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 VOID FASTCALL
 co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
-   USER_REFERENCE_ENTRY Ref;
-   PWINDOW_OBJECT Window;
+   USER_REFERENCE_ENTRY Ref, RefPrev;
+   PWINDOW_OBJECT Window, WindowPrev = NULL;
 
    if ((Window = UserGetWindowObject(hWnd)))
-   {
-
+   { 
       UserRefObjectCo(Window, &Ref);
+
+      WindowPrev = UserGetWindowObject(hWndPrev);
+
+      if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
@@ -91,11 +94,11 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
             Window->Wnd->Owner->hWndLastActive = hWnd;
       }
 
-      if (Window && hWndPrev)
+      if (Window && WindowPrev)
       {
          PWINDOW_OBJECT cWindow;
          HWND *List, *phWnd;
-         HANDLE OldTID = IntGetWndThreadId(UserGetWindowObject(hWndPrev));
+         HANDLE OldTID = IntGetWndThreadId(WindowPrev);
          HANDLE NewTID = IntGetWndThreadId(Window);
 
  DPRINT("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
@@ -126,6 +129,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
                ExFreePool(List);
             }
          }
+         UserDerefObjectCo(WindowPrev); // Now allow the previous window to die.
       }
 
       UserDerefObjectCo(Window);
