@@ -620,6 +620,15 @@ RtlSetUserValueHeap(
     IN PVOID UserValue
 );
 
+BOOLEAN
+NTAPI
+RtlSetUserFlagsHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID BaseAddress,
+    IN ULONG UserFlags
+);
+
 NTSYSAPI
 ULONG
 NTAPI

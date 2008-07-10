@@ -69,7 +69,8 @@
 typedef struct tagARENA_INUSE
 {
     DWORD  size;                    /* Block size; must be the first field */
-    DWORD  magic : 24;              /* Magic number */
+    DWORD  magic : 23;              /* Magic number */
+    DWORD  has_user_data : 1;       /* There is user data associated with this block */
     DWORD  unused_bytes : 8;        /* Number of bytes in the block not used by user data (max value is HEAP_MIN_DATA_SIZE+HEAP_MIN_SHRINK_SIZE) */
 } ARENA_INUSE;
 
@@ -123,11 +124,17 @@ typedef struct tagSUBHEAP
     struct tagSUBHEAP  *next;       /* Next sub-heap */
     struct tagHEAP     *heap;       /* Main heap structure */
     DWORD               magic;      /* Magic number */
-    ULONG UserFlags;
-    PVOID UserValue;
 } SUBHEAP;
 
 #define SUBHEAP_MAGIC    ((DWORD)('S' | ('U'<<8) | ('B'<<16) | ('H'<<24)))
+
+typedef struct tagHEAP_USER_DATA
+{
+    LIST_ENTRY          ListEntry;
+    PVOID               BaseAddress;
+    ULONG               UserFlags;
+    PVOID               UserValue;
+} HEAP_USER_DATA, *PHEAP_USER_DATA;
 
 typedef struct tagHEAP
 {
@@ -138,6 +145,7 @@ typedef struct tagHEAP
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
     PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
+    LIST_ENTRY       UserDataHead;
 } HEAP;
 
 #define HEAP_MAGIC       ((DWORD)('H' | ('E'<<8) | ('A'<<16) | ('P'<<24)))
@@ -322,6 +330,35 @@ static void HEAP_DumpEntry( LPPROCESS_HEAP_ENTRY entry )
     }
 }
 #endif
+
+static PHEAP_USER_DATA HEAP_GetUserData(HEAP *heapPtr, PVOID BaseAddress)
+{
+  PLIST_ENTRY CurrentEntry;
+  PHEAP_USER_DATA udata;
+
+  CurrentEntry = heapPtr->UserDataHead.Flink;
+  while (CurrentEntry != &heapPtr->UserDataHead)
+  {
+      udata = CONTAINING_RECORD(CurrentEntry, HEAP_USER_DATA, ListEntry);
+      if (udata->BaseAddress == BaseAddress)
+          return udata;
+      CurrentEntry = CurrentEntry->Flink;
+  }
+  return NULL;
+}
+
+static PHEAP_USER_DATA HEAP_AllocUserData(HEAP *heapPtr, PVOID BaseAddress)
+{
+    /* Allocate user data entry */
+    ARENA_INUSE *pInUse;
+    PHEAP_USER_DATA udata = RtlAllocateHeap(heapPtr, 0, sizeof(HEAP_USER_DATA));
+    if (!udata) return NULL;
+    udata->BaseAddress = BaseAddress;
+    InsertTailList(&heapPtr->UserDataHead, &udata->ListEntry);
+    pInUse  = (ARENA_INUSE *)BaseAddress - 1;
+    pInUse->has_user_data = 1;
+    return udata;
+}
 
 /***********************************************************************
  *           HEAP_GetPtr
@@ -524,6 +561,18 @@ static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena )
 {
     ARENA_FREE *pFree;
     SIZE_T size = (pArena->size & ARENA_SIZE_MASK) + sizeof(*pArena);
+    PHEAP_USER_DATA udata;
+    
+    /* Find and free user data */
+    if (pArena->has_user_data)
+    {
+        udata = HEAP_GetUserData(subheap->heap, pArena + 1);
+        if (udata)
+        {
+            RemoveEntryList(&udata->ListEntry);
+            RtlFreeHeap(subheap->heap, 0, udata);
+        }
+    }
 
     /* Check if we can merge with previous block */
 
@@ -634,6 +683,7 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
          heap->commitRoutine = Parameters->CommitRoutine;
       else
          heap->commitRoutine = NULL;
+        InitializeListHead(&heap->UserDataHead);
 
         /* Build the free lists */
 
@@ -1230,9 +1280,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
      * so we have to add the difference to the size */
     pInUse->size  = (pInUse->size & ~ARENA_FLAG_FREE) + sizeof(ARENA_FREE) - sizeof(ARENA_INUSE);
     pInUse->magic = ARENA_INUSE_MAGIC;
-
-    /* Save user flags */
-    subheap->UserFlags = flags & HEAP_SETTABLE_USER_FLAGS;
+    pInUse->has_user_data = 0;
 
     /* Shrink the block */
 
@@ -1682,7 +1730,7 @@ RtlZeroHeap(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -1691,21 +1739,56 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
                     IN PVOID BaseAddress,
                     IN PVOID UserValue)
 {
-    HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
-    ARENA_INUSE *pInUse;
-    SUBHEAP *subheap;
-
-    /* Get the subheap */
-    pInUse  = (ARENA_INUSE *)BaseAddress - 1;
-    subheap = HEAP_FindSubHeap( heapPtr, pInUse );
-
-    /* Hack */
-    subheap->UserValue = UserValue;
+    HEAP *heapPtr;
+    PHEAP_USER_DATA udata;
+    
+    heapPtr = HEAP_GetPtr(HeapHandle);
+    if (!heapPtr)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_HANDLE );
+        return FALSE;
+    }
+    udata = HEAP_GetUserData(heapPtr, BaseAddress);
+    if (!udata)
+    {
+        udata = HEAP_AllocUserData(heapPtr, BaseAddress);
+        if (!udata) return FALSE;
+    }
+    udata->UserValue = UserValue;
     return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+RtlSetUserFlagsHeap(IN PVOID HeapHandle,
+                    IN ULONG Flags,
+                    IN PVOID BaseAddress,
+                    IN ULONG UserFlags)
+{
+    HEAP *heapPtr;
+    PHEAP_USER_DATA udata;
+
+    heapPtr = HEAP_GetPtr(HeapHandle);
+    if (!heapPtr)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_HANDLE );
+        return FALSE;
+    }
+    udata = HEAP_GetUserData(heapPtr, BaseAddress);
+    if (!udata)
+    {
+        udata = HEAP_AllocUserData(heapPtr, BaseAddress);
+        if (!udata) return FALSE;
+    }
+    udata->UserFlags = UserFlags & HEAP_SETTABLE_USER_FLAGS;
+    return TRUE;
+}
+
+/*
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -1715,18 +1798,23 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
                    OUT PVOID *UserValue,
                    OUT PULONG UserFlags)
 {
-    HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
-    ARENA_INUSE *pInUse;
-    SUBHEAP *subheap;
+    HEAP *heapPtr;
+    PHEAP_USER_DATA udata;
 
-    /* Get the subheap */
-    pInUse  = (ARENA_INUSE *)BaseAddress - 1;
-    subheap = HEAP_FindSubHeap( heapPtr, pInUse );
-
-    /* Hack */
-    DPRINT1("V/F: %lx %p\n", subheap->UserValue, subheap->UserFlags);
-    if (UserValue) *UserValue = subheap->UserValue;
-    if (UserFlags) *UserFlags = subheap->UserFlags;
+    heapPtr = HEAP_GetPtr(HeapHandle);
+    if (!heapPtr)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_HANDLE );
+        return FALSE;
+    }
+    udata = HEAP_GetUserData(heapPtr, BaseAddress);
+    if (!udata)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (UserValue) *UserValue = udata->UserValue;
+    if (UserFlags) *UserFlags = udata->UserFlags;
     return TRUE;
 }
 

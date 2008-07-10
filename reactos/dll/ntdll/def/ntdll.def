@@ -660,7 +660,7 @@ RtlSetSecurityDescriptorRMControl@8
 RtlSetSecurityObject@20
 RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
-;RtlSetUserFlagsHeap
+RtlSetUserFlagsHeap@16
 RtlSetUserValueHeap@16
 RtlSizeHeap@12
 RtlSleepConditionVariableCS@12
