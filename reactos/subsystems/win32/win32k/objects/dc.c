@@ -1327,6 +1327,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   if(!nDc_Attr) nDc_Attr = &newdc->Dc_Attr;
 
   newdc->DcLevel.flPath     = dc->DcLevel.flPath | DCPATH_SAVESTATE;
+
   nDc_Attr->dwLayout        = Dc_Attr->dwLayout;
   nDc_Attr->hpen            = Dc_Attr->hpen;
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
@@ -1358,7 +1359,6 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 #endif
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
   nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
-  newdc->DcLevel.flPath     = dc->DcLevel.flPath;
   newdc->DcLevel.xformWorld2Wnd   = dc->DcLevel.xformWorld2Wnd;
   newdc->DcLevel.xformWorld2Vport = dc->DcLevel.xformWorld2Vport;
   newdc->DcLevel.xformVport2World = dc->DcLevel.xformVport2World;
@@ -1425,7 +1425,6 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 #endif
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
   Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;
-  dc->DcLevel.flPath       = dcs->DcLevel.flPath;
   dc->DcLevel.xformWorld2Wnd     = dcs->DcLevel.xformWorld2Wnd;
   dc->DcLevel.xformWorld2Vport   = dcs->DcLevel.xformWorld2Vport;
   dc->DcLevel.xformVport2World   = dcs->DcLevel.xformVport2World;
