@@ -1847,4 +1847,17 @@ IntUninitMessagePumpHook()
    return FALSE;
 }
 
+DWORD
+NTAPI
+NtUserWaitForInputIdle(
+   IN HANDLE hProcess,
+   IN DWORD dwMilliseconds,
+   IN BOOL Unknown2)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+
 /* EOF */

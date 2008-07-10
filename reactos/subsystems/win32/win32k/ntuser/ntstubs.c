@@ -625,18 +625,6 @@ NtUserUserHandleGrantAccess(
 }
 
 DWORD
-NTAPI
-NtUserWaitForInputIdle(
-   IN HANDLE hProcess,
-   IN DWORD dwMilliseconds,
-   IN BOOL Unknown2) // Always FALSE
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
 STDCALL
 NtUserWaitForMsgAndEvent(
    DWORD Unknown0)
