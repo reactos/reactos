@@ -215,7 +215,8 @@ typedef struct _CHWIDTHINFO
 
 typedef struct _UNIVERSAL_FONT_ID
 {
-    DWORD  dwUfid[2];
+    ULONG CheckSum;
+    ULONG Index;
 } UNIVERSAL_FONT_ID, *PUNIVERSAL_FONT_ID;
 
 typedef struct _REALIZATION_INFO // Based on LOCALESIGNATURE
