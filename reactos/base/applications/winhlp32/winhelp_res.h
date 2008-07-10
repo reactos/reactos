@@ -43,16 +43,17 @@
 #define STID_NOT_IMPLEMENTED 	0x124
 #define STID_HLPFILE_ERROR_s 	0x125
 #define STID_CONTENTS 		0x126
-#define STID_SEARCH	 	0x127
+#define STID_INDEX	 	0x127
 #define STID_BACK 		0x128
-#define STID_TOPICS 		0x12A
 #define STID_ALL_FILES 		0x12B
 #define STID_HELP_FILES_HLP	0x12C
 #define STID_DIALOG_TEST	0x12D
 #define STID_FILE_NOT_FOUND_s	0x12E
 #define STID_NO_RICHEDIT        0x12F
+#define STID_PSH_INDEX          0x130
 
 #define IDD_INDEX               0x150
 #define IDC_INDEXLIST           0x151
+#define IDD_SEARCH              0x152
 
 #define IDI_WINHELP             0xF00

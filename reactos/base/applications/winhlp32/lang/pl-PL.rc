@@ -86,14 +86,14 @@ STID_WARNING,  		"OSTRZE¯ENIE"
 STID_INFO,  		"Informacja"
 STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
 STID_HLPFILE_ERROR_s, 	"B³¹d w trakcie odczytu pliku pomocy `%s'"
-STID_CONTENTS, 		"&Zawartoœæ"
-STID_SEARCH, 		"&Szukaj"
+STID_INDEX, 		"&Zawartoœæ"
+STID_CONTENTS, 		"&Szukaj"
 STID_BACK, 		"&Wstecz"
-STID_TOPICS,		"&Tematy"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaæ tego pliku samodzielnie?"
 STID_NO_RICHEDIT	"Nie uda³o siê znaleŸæ modu³u richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
+STID_PSH_INDEX,		"Help topics: "
 }
 
 

@@ -38,21 +38,21 @@ MAIN_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
  POPUP "&Закладка" {
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "&Настройки" {
+   POPUP	"Видимость окна справки"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "По умолчанию",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Наверху",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Не наверху",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "История",		MNID_OPTS_HISTORY
+  POPUP    "Шрифт"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Мелкий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Обычный",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Крупный",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Использовать системные цвета",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Справка" {
    MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
@@ -84,14 +84,14 @@ STID_WARNING,  		"ВНИМАНИЕ"
 STID_INFO,  		"Информация"
 STID_NOT_IMPLEMENTED, 	"Не реализованно"
 STID_HLPFILE_ERROR_s, 	"Ошибка при чтении файла помощи `%s'"
-STID_CONTENTS, 		"&Содержание"
-STID_SEARCH, 		"&Найти"
+STID_INDEX, 		"&Содержание"
+STID_CONTENTS,		"Summary"
 STID_BACK, 		"&Назад"
-STID_TOPICS,		"&Указатель"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
 STID_NO_RICHEDIT	"Не могу найти richedit"
+STID_PSH_INDEX,		"Help topics: "
 }
 
 CONTEXT_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT

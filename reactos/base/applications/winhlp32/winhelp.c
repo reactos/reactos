@@ -27,6 +27,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -36,6 +39,7 @@
 #include "winhelp_res.h"
 #include "shellapi.h"
 #include "richedit.h"
+#include "commctrl.h"
 
 #include "wine/debug.h"
 
@@ -623,13 +627,11 @@ BOOL WINHELP_CreateHelpWindow(WINHELP_WNDPAGE* wpage, int nCmdShow, BOOL remembe
 
         LoadString(Globals.hInstance, STID_CONTENTS, buffer, sizeof(buffer));
         MACRO_CreateButton("BTN_CONTENTS", buffer, "Contents()");
-        LoadString(Globals.hInstance, STID_SEARCH,buffer, sizeof(buffer));
-        MACRO_CreateButton("BTN_SEARCH", buffer, "Search()");
+        LoadString(Globals.hInstance, STID_INDEX, buffer, sizeof(buffer));
+        MACRO_CreateButton("BTN_INDEX", buffer, "Finder()");
         LoadString(Globals.hInstance, STID_BACK, buffer, sizeof(buffer));
         MACRO_CreateButton("BTN_BACK", buffer, "Back()");
         if (win->back.index <= 1) MACRO_DisableButton("BTN_BACK");
-        LoadString(Globals.hInstance, STID_TOPICS, buffer, sizeof(buffer));
-        MACRO_CreateButton("BTN_TOPICS", buffer, "Finder()");
     }
 
     if (!bReUsed)
@@ -860,7 +862,9 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 	case MNID_FILE_EXIT:	MACRO_Exit();           break;
 
             /* Menu EDIT */
-	case MNID_EDIT_COPYDLG: MACRO_CopyDialog();     break;
+	case MNID_EDIT_COPYDLG:
+            SendMessage(GetDlgItem(hWnd, CTL_ID_TEXT), WM_COPY, 0, 0);
+            break;
 	case MNID_EDIT_ANNOTATE:MACRO_Annotate();       break;
 
             /* Menu Bookmark */
@@ -931,6 +935,14 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 /* EPP         break; */
     case WM_COPYDATA:
         return WINHELP_HandleCommand((HWND)wParam, lParam);
+
+    case WM_CHAR:
+        if (wParam == 3)
+        {
+            SendMessage(GetDlgItem(hWnd, CTL_ID_TEXT), WM_COPY, 0, 0);
+            return 0;
+        }
+        break;
 
     case WM_KEYDOWN:
         keyDelta = 0;
@@ -1536,6 +1548,13 @@ static void cb_KWBTree(void *p, void **next, void *cookie)
     *next = (char*)p + strlen((char*)p) + 7;
 }
 
+struct index_data
+{
+    HLPFILE*    hlpfile;
+    BOOL        jump;
+    ULONG       offset;
+};
+
 /**************************************************************************
  * WINHELP_IndexDlgProc
  *
@@ -1546,23 +1565,24 @@ static void cb_KWBTree(void *p, void **next, void *cookie)
  *  >1: valid offset value +2.
  *  EndDialog itself can return 0 (error).
  */
-INT_PTR CALLBACK WINHELP_SearchDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK WINHELP_IndexDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static HLPFILE *file;
+    static struct index_data* id;
     int sel;
-    ULONG offset = 1;
 
     switch (msg)
     {
     case WM_INITDIALOG:
-        file = (HLPFILE *)lParam;
-        HLPFILE_BPTreeEnum(file->kwbtree, cb_KWBTree,
+        id = (struct index_data*)((PROPSHEETPAGE*)lParam)->lParam;
+        HLPFILE_BPTreeEnum(id->hlpfile->kwbtree, cb_KWBTree,
                            GetDlgItem(hWnd, IDC_INDEXLIST));
+        id->jump = FALSE;
+        id->offset = 1;
         return TRUE;
-    case WM_COMMAND:
-        switch (LOWORD(wParam))
-        {
-        case IDOK:
+    case WM_NOTIFY:
+	switch (((NMHDR*)lParam)->code)
+	{
+	case PSN_APPLY:
             sel = SendDlgItemMessage(hWnd, IDC_INDEXLIST, LB_GETCURSEL, 0, 0);
             if (sel != LB_ERR)
             {
@@ -1575,24 +1595,54 @@ INT_PTR CALLBACK WINHELP_SearchDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
                 if (count > 1)
                 {
                     MessageBox(hWnd, "count > 1 not supported yet", "Error", MB_OK | MB_ICONSTOP);
+                    SetWindowLongPtr(hWnd, DWLP_MSGRESULT, PSNRET_INVALID);
                     return TRUE;
                 }
-                offset = *(ULONG*)((char *)p + strlen((char *)p) + 3);
-                offset = *(long*)(file->kwdata + offset + 9);
-                if (offset == 0xFFFFFFFF)
+                id->offset = *(ULONG*)((char *)p + strlen((char *)p) + 3);
+                id->offset = *(long*)(id->hlpfile->kwdata + id->offset + 9);
+                if (id->offset == 0xFFFFFFFF)
                 {
                     MessageBox(hWnd, "macro keywords not supported yet", "Error", MB_OK | MB_ICONSTOP);
+                    SetWindowLongPtr(hWnd, DWLP_MSGRESULT, PSNRET_INVALID);
                     return TRUE;
                 }
-                offset += 2;
+                id->jump = TRUE;
+                SetWindowLongPtr(hWnd, DWLP_MSGRESULT, PSNRET_NOERROR);
             }
-            /* Fall through */
-        case IDCANCEL:
-            EndDialog(hWnd, offset);
             return TRUE;
         default:
-            break;
+            return FALSE;
         }
+        break;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+/**************************************************************************
+ * WINHELP_SearchDlgProc
+ *
+ */
+INT_PTR CALLBACK WINHELP_SearchDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    static struct index_data* id;
+
+    switch (msg)
+    {
+    case WM_INITDIALOG:
+        id = (struct index_data*)((PROPSHEETPAGE*)lParam)->lParam;
+        return TRUE;
+    case WM_NOTIFY:
+	switch (((NMHDR*)lParam)->code)
+	{
+	case PSN_APPLY:
+            SetWindowLongPtr(hWnd, DWLP_MSGRESULT, PSNRET_NOERROR);
+            return TRUE;
+        default:
+            return FALSE;
+        }
+        break;
     default:
         break;
     }
@@ -1605,30 +1655,61 @@ INT_PTR CALLBACK WINHELP_SearchDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
  * Displays a dialog with keywords of current help file.
  *
  */
-BOOL WINHELP_CreateIndexWindow(void)
+BOOL WINHELP_CreateIndexWindow(BOOL is_search)
 {
-    int ret;
-    HLPFILE *hlpfile;
+    HPROPSHEETPAGE      psPage[3];
+    PROPSHEETPAGE       psp;
+    PROPSHEETHEADER     psHead;
+    struct index_data   id;
+    char                buf[256];
 
     if (Globals.active_win && Globals.active_win->page && Globals.active_win->page->file)
-        hlpfile = Globals.active_win->page->file;
+        id.hlpfile = Globals.active_win->page->file;
     else
         return FALSE;
 
-    if (hlpfile->kwbtree == NULL)
+    if (id.hlpfile->kwbtree == NULL)
     {
         WINE_TRACE("No index provided\n");
         return FALSE;
     }
 
-    ret = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_INDEX),
-                         Globals.active_win->hMainWnd, WINHELP_SearchDlgProc,
-                         (LPARAM)hlpfile);
-    if (ret > 1)
+    InitCommonControls();
+
+    id.jump = FALSE;
+    memset(&psp, 0, sizeof(psp));
+    psp.dwSize = sizeof(psp);
+    psp.dwFlags = 0;
+    psp.hInstance = Globals.hInstance;
+
+    psp.u.pszTemplate = MAKEINTRESOURCE(IDD_INDEX);
+    psp.lParam = (LPARAM)&id;
+    psp.pfnDlgProc = WINHELP_IndexDlgProc;
+    psPage[0] = CreatePropertySheetPage(&psp);
+
+    psp.u.pszTemplate = MAKEINTRESOURCE(IDD_SEARCH);
+    psp.lParam = (LPARAM)&id;
+    psp.pfnDlgProc = WINHELP_SearchDlgProc;
+    psPage[1] = CreatePropertySheetPage(&psp);
+
+    memset(&psHead, 0, sizeof(psHead));
+    psHead.dwSize = sizeof(psHead);
+
+    LoadString(Globals.hInstance, STID_PSH_INDEX, buf, sizeof(buf));
+    strcat(buf, Globals.active_win->info->caption);
+
+    psHead.pszCaption = buf;
+    psHead.nPages = 2;
+    psHead.u2.nStartPage = is_search ? 1 : 0;
+    psHead.hwndParent = Globals.active_win->hMainWnd;
+    psHead.u3.phpage = psPage;
+    psHead.dwFlags = PSH_NOAPPLYNOW;
+
+    PropertySheet(&psHead);
+    if (id.jump)
     {
-        ret -= 2;
-        WINE_TRACE("got %d as an offset\n", ret);
-        WINHELP_OpenHelpWindow(HLPFILE_PageByOffset, hlpfile, ret,
+        WINE_TRACE("got %d as an offset\n", id.offset);
+        WINHELP_OpenHelpWindow(HLPFILE_PageByOffset, id.hlpfile, id.offset,
                                Globals.active_win->info, SW_NORMAL);
     }
     return TRUE;
