@@ -30,58 +30,31 @@
  *
  */
 
-// FIXME: move stubs elsewhere
+#include "unicode/utypes.h"
+#include "unicode/putil.h"
+#include "unicode/utrace.h"
+#include "ucnv_io.h"
 
-#include <stdlib.h>
-#include <unicode/uclean.h>
+// TODO: do a better job of ensuring these internal functions really can be stubbed away
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-void free(void * memory)
-{
-	HeapFree(GetProcessHeap(), 0, memory);
+/* Unused dependencies of udata.c */
+U_CAPI UBool U_EXPORT2
+uprv_pathIsAbsolute(const char *) {
+    return TRUE;
 }
 
-void * malloc(size_t size)
-{
-	return HeapAlloc(GetProcessHeap(), 0, size);
+U_CAPI const char * U_EXPORT2
+u_getDataDirectory() {
+    return "";
 }
 
-void * realloc(void * memory, size_t size)
-{
-	return HeapReAlloc(GetProcessHeap(), 0, memory, size);
+/* Unused dependencies of uinit.c */
+U_CFUNC UBool
+utrace_cleanup() {
+    return TRUE;
 }
 
-void operator delete(void * memory)
-{
-	free(memory);
+U_CFUNC uint16_t
+ucnv_io_countKnownConverters(UErrorCode *) {
+    return 0;
 }
-
-extern "C" int __cdecl _purecall()
-{
-	FatalAppExitW(0, L"pure virtual call");
-	FatalExit(0);
-	return 0;
-}
-
-extern "C" void __cxa_pure_virtual() { _purecall(); }
-
-extern "C" void _assert()
-{
-	FatalAppExitW(0, L"assertion failed");
-	FatalExit(0);
-}
-
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
-
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
-}
-
-// EOF

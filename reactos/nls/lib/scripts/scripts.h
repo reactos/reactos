@@ -30,58 +30,45 @@
  *
  */
 
-// FIXME: move stubs elsewhere
+#ifndef REACTOS_SCRIPTS_H_
+#define REACTOS_SCRIPTS_H_
 
+#include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
-#include <unicode/uclean.h>
+#include <string.h>
+#include <wchar.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-void free(void * memory)
+struct SCRIPTS_Script
 {
-	HeapFree(GetProcessHeap(), 0, memory);
-}
+	WCHAR ScriptName[4];
+	WCHAR Separator;
 
-void * malloc(size_t size)
-{
-	return HeapAlloc(GetProcessHeap(), 0, size);
-}
+	static int Compare(const SCRIPTS_Script * x, const SCRIPTS_Script * y)
+	{
+		for(unsigned i = 0; i < 4; ++ i)
+		{
+			int comparison = (int)x->ScriptName[i] - (int)y->ScriptName[i];
 
-void * realloc(void * memory, size_t size)
-{
-	return HeapReAlloc(GetProcessHeap(), 0, memory, size);
-}
+			if(comparison)
+				return comparison;
+		}
 
-void operator delete(void * memory)
-{
-	free(memory);
-}
+		return 0;
+	}
 
-extern "C" int __cdecl _purecall()
-{
-	FatalAppExitW(0, L"pure virtual call");
-	FatalExit(0);
-	return 0;
-}
+	static int Compare(const void * x, const void * y)
+	{
+		return Compare(static_cast<const SCRIPTS_Script *>(x), static_cast<const SCRIPTS_Script *>(y));
+	}
+};
 
-extern "C" void __cxa_pure_virtual() { _purecall(); }
+C_ASSERT(sizeof(SCRIPTS_Script) == 5 * sizeof(WCHAR));
 
-extern "C" void _assert()
-{
-	FatalAppExitW(0, L"assertion failed");
-	FatalExit(0);
-}
+extern "C" bool SCRIPTS_GetCharScriptCode(UChar32 c, int32_t * code);
+extern "C" bool SCRIPTS_GetScriptCode(const SCRIPTS_Script * pScript, int32_t * code);
+extern "C" void SCRIPTS_GetScriptName(int32_t code, SCRIPTS_Script * pScript);
 
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
+#endif
 
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
-}
-
-// EOF
+/* EOF */

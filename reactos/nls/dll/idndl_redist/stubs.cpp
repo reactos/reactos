@@ -33,7 +33,6 @@
 // FIXME: move stubs elsewhere
 
 #include <stdlib.h>
-#include <unicode/uclean.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -71,17 +70,6 @@ extern "C" void _assert()
 {
 	FatalAppExitW(0, L"assertion failed");
 	FatalExit(0);
-}
-
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
-
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
 }
 
 // EOF

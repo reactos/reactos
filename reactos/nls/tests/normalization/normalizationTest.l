@@ -30,58 +30,79 @@
  *
  */
 
-// FIXME: move stubs elsewhere
-
+%{
 #include <stdlib.h>
-#include <unicode/uclean.h>
+#include <stdio.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-void free(void * memory)
-{
-	HeapFree(GetProcessHeap(), 0, memory);
+#include "normalizationTest.h"
+
+#define YY_EXTRA_TYPE struct TestSuite *
+#define YY_DECL int yylex (YYSTYPE * pyylval, int * pyylloc, yyscan_t yyscanner)
+
+#include "normalizationTest.tab.h"
+%}
+
+%option batch
+%option reentrant
+%option nounistd
+%option nodefault
+
+%%
+
+"#"[^\r\n]*  /* Ignore comments */
+[\t\f\v ]+   /* Ignore whitespace */
+
+;            return TOKEN_COLUMN_SEPARATOR;
+
+\r\n         { ++ *pyylloc; return TOKEN_EOL; }
+\r           { ++ *pyylloc; return TOKEN_EOL; }
+\n           { ++ *pyylloc; return TOKEN_EOL; }
+
+@Part[0-9]+  {
+	pyylval->part = strtoul(yytext + 5, NULL, 10);
+	return TOKEN_PART_HEADER;
 }
 
-void * malloc(size_t size)
-{
-	return HeapAlloc(GetProcessHeap(), 0, size);
+[0-9A-Fa-f]+ {
+	pyylval->codepoint = strtoul(yytext, NULL, 16);
+	return TOKEN_CODEPOINT;
 }
 
-void * realloc(void * memory, size_t size)
-{
-	return HeapReAlloc(GetProcessHeap(), 0, memory, size);
+.            {
+	struct TestSuite * test = yyextra;
+
+	test->line = *pyylloc;
+
+	fprintf
+	(
+		stderr,
+		"FATAL: %s:%d: @Part%d: invalid character \"%s\"\n",
+		test->filename, test->line, test->part,
+		yytext
+	);
+
+	yyterminate();
 }
 
-void operator delete(void * memory)
+%%
+void * NORMTEST_createScanner(struct TestSuite * test)
 {
-	free(memory);
+	yyscan_t scanner;
+	(void)yyunput;
+	yylex_init(&scanner);
+	yyset_in(test->file, scanner);
+	yyset_extra(test, scanner);
+	return (void *)scanner;
 }
 
-extern "C" int __cdecl _purecall()
+void NORMTEST_deleteScanner(void * scanner)
 {
-	FatalAppExitW(0, L"pure virtual call");
-	FatalExit(0);
-	return 0;
+	yylex_destroy((yyscan_t)scanner);
 }
 
-extern "C" void __cxa_pure_virtual() { _purecall(); }
+int yywrap(yyscan_t scanner) { return 1; }
 
-extern "C" void _assert()
-{
-	FatalAppExitW(0, L"assertion failed");
-	FatalExit(0);
-}
-
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
-
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
-}
-
-// EOF
+/* EOF */

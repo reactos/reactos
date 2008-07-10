@@ -30,58 +30,95 @@
  *
  */
 
-// FIXME: move stubs elsewhere
-
-#include <stdlib.h>
-#include <unicode/uclean.h>
-
 #define WIN32_LEAN_AND_MEAN
+#define STRICT
+
+#define WINVER 0x0600
+
 #include <windows.h>
+#include <winnls.h>
 
-void free(void * memory)
+#include <unicode/uidna.h>
+
+static
+int32_t
+IDNA_FlagsToICU
+(
+	DWORD dwFlags
+)
 {
-	HeapFree(GetProcessHeap(), 0, memory);
+	C_ASSERT(IDN_ALLOW_UNASSIGNED == UIDNA_ALLOW_UNASSIGNED);
+	C_ASSERT(IDN_USE_STD3_ASCII_RULES == UIDNA_USE_STD3_RULES);
+	return dwFlags;
 }
 
-void * malloc(size_t size)
+static
+DWORD
+NLS_ErrorFromICU
+(
+	UErrorCode ErrorCode
+)
 {
-	return HeapAlloc(GetProcessHeap(), 0, size);
+	// TODO
+	return ERROR_GEN_FAILURE;
 }
 
-void * realloc(void * memory, size_t size)
+int
+WINAPI
+IdnToAscii
+(
+	DWORD dwFlags,
+	LPCWSTR lpUnicodeCharStr,
+	int cchUnicodeChar,
+	LPWSTR lpASCIICharStr,
+	int cchASCIIChar
+)
 {
-	return HeapReAlloc(GetProcessHeap(), 0, memory, size);
+	UErrorCode status;
+	int32_t retval = uidna_IDNToASCII
+	(
+		lpUnicodeCharStr,
+		cchUnicodeChar,
+		lpASCIICharStr,
+		cchASCIIChar,
+		IDNA_FlagsToICU(dwFlags),
+		NULL,
+		&status
+	);
+
+	if(U_FAILURE(status))
+		SetLastError(NLS_ErrorFromICU(status));
+
+	return retval;
 }
 
-void operator delete(void * memory)
+int
+WINAPI
+IdnToUnicode
+(
+	DWORD dwFlags,
+	LPCWSTR lpASCIICharStr,
+	int cchASCIIChar,
+	LPWSTR lpUnicodeCharStr,
+	int cchUnicodeChar
+)
 {
-	free(memory);
-}
+	UErrorCode status;
+	int32_t retval = uidna_IDNToUnicode
+	(
+		lpASCIICharStr,
+		cchASCIIChar,
+		lpUnicodeCharStr,
+		cchUnicodeChar,
+		IDNA_FlagsToICU(dwFlags),
+		NULL,
+		&status
+	);
 
-extern "C" int __cdecl _purecall()
-{
-	FatalAppExitW(0, L"pure virtual call");
-	FatalExit(0);
-	return 0;
-}
+	if(U_FAILURE(status))
+		SetLastError(NLS_ErrorFromICU(status));
 
-extern "C" void __cxa_pure_virtual() { _purecall(); }
-
-extern "C" void _assert()
-{
-	FatalAppExitW(0, L"assertion failed");
-	FatalExit(0);
-}
-
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
-
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
+	return retval;
 }
 
 // EOF

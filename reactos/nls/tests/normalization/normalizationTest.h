@@ -30,58 +30,21 @@
  *
  */
 
-// FIXME: move stubs elsewhere
-
-#include <stdlib.h>
-#include <unicode/uclean.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-void free(void * memory)
+struct TestSuite
 {
-	HeapFree(GetProcessHeap(), 0, memory);
-}
+	const char * filename;
+	int line;
+	int part;
 
-void * malloc(size_t size)
-{
-	return HeapAlloc(GetProcessHeap(), 0, size);
-}
+	FILE * file;
+};
 
-void * realloc(void * memory, size_t size)
-{
-	return HeapReAlloc(GetProcessHeap(), 0, memory, size);
-}
+extern void * NORMTEST_createScanner(struct TestSuite * test);
+extern void NORMTEST_deleteScanner(void * scanner);
 
-void operator delete(void * memory)
-{
-	free(memory);
-}
+extern void NORMTEST_runTests(struct TestSuite * test);
 
-extern "C" int __cdecl _purecall()
-{
-	FatalAppExitW(0, L"pure virtual call");
-	FatalExit(0);
-	return 0;
-}
+extern void NORMTEST_test(const struct TestSuite * test, const WCHAR * c1, const WCHAR * c2, const WCHAR * c3, const WCHAR * c4, const WCHAR * c5);
+extern void NORMTEST_testInvariant(const struct TestSuite * test, const WCHAR * c);
 
-extern "C" void __cxa_pure_virtual() { _purecall(); }
-
-extern "C" void _assert()
-{
-	FatalAppExitW(0, L"assertion failed");
-	FatalExit(0);
-}
-
-extern "C" BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
-{
-	if(fdwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hinstDll);
-
-	if(fdwReason == DLL_PROCESS_DETACH && lpvReserved == NULL)
-		u_cleanup();
-
-	return TRUE;
-}
-
-// EOF
+/* EOF */

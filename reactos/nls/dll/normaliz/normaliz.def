@@ -30,8 +30,8 @@
 LIBRARY	"normaliz"
 
 EXPORTS
-	IdnToAscii           = IdnToAscii@20           @1
-	IdnToNameprepUnicode = IdnToNameprepUnicode@20 @2
-	IdnToUnicode         = IdnToUnicode@20         @3
-	IsNormalizedString   = IsNormalizedString@12   @4
-	NormalizeString      = NormalizeString@20      @5
+	IdnToAscii@20           = kernel32.IdnToAscii           @1
+	IdnToNameprepUnicode@20 = kernel32.IdnToNameprepUnicode @2
+	IdnToUnicode@20         = kernel32.IdnToUnicode         @3
+	IsNormalizedString@12   = kernel32.IsNormalizedString   @4
+	NormalizeString@20      = kernel32.NormalizeString      @5
