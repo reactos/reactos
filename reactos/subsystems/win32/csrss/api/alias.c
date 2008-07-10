@@ -34,6 +34,21 @@ typedef struct tagALIAS_HEADER
 
 static PALIAS_HEADER RootHeader = NULL;
 
+/* Ensure that a buffer is contained within the process's shared memory section. */
+static BOOL
+ValidateBuffer(PCSRSS_PROCESS_DATA ProcessData, PVOID Buffer, ULONG Size)
+{
+    ULONG Offset = (BYTE *)Buffer - (BYTE *)ProcessData->CsrSectionViewBase;
+    if (Offset >= ProcessData->CsrSectionViewSize
+        || Size > (ProcessData->CsrSectionViewSize - Offset))
+    {
+        DPRINT1("Invalid buffer %p %d; not within %p %d\n",
+            Buffer, Size, ProcessData->CsrSectionViewBase, ProcessData->CsrSectionViewSize);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 static
 PALIAS_HEADER
 IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
@@ -44,7 +59,7 @@ IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
         if (!diff)
             return RootHeader;
 
-        if (diff < 0)
+        if (diff > 0)
             break;
 
         RootHeader = RootHeader->Next;
@@ -62,8 +77,9 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
   if (!Entry)
       return Entry;
   
-  Entry->lpExeName = (LPCWSTR)(Entry + sizeof(ALIAS_HEADER));
+  Entry->lpExeName = (LPCWSTR)(Entry + 1);
   wcscpy((WCHAR*)Entry->lpExeName, lpExeName);
+  Entry->Data = NULL;
   Entry->Next = NULL;
   return Entry;
 }
@@ -117,7 +133,7 @@ IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
         if (!diff)
             return RootHeader;
 
-        if (diff < 0)
+        if (diff > 0)
             break;
 
         RootHeader = RootHeader->Next;
@@ -175,7 +191,7 @@ IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
    if (!Entry)
        return Entry;
 
-   Entry->lpSource = (LPCWSTR)(Entry + sizeof(ALIAS_ENTRY));
+   Entry->lpSource = (LPCWSTR)(Entry + 1);
    wcscpy((LPWSTR)Entry->lpSource, lpSource);
    Entry->lpTarget = Entry->lpSource + dwSource;
    wcscpy((LPWSTR)Entry->lpTarget, lpTarget);
@@ -192,9 +208,10 @@ IntGetConsoleAliasesExesLength(PALIAS_HEADER RootHeader)
    while(RootHeader)
    {
        length += (wcslen(RootHeader->lpExeName) + 1) * sizeof(WCHAR);
+       RootHeader = RootHeader->Next;
    }
    if (length)
-       length++; // last entry entry is terminated with 2 zero bytes
+       length += sizeof(WCHAR); // last entry entry is terminated with 2 zero bytes
 
    return length;
 }
@@ -236,6 +253,7 @@ IntGetAllConsoleAliasesLength(PALIAS_HEADER Header)
        Length += wcslen(CurEntry->lpSource);
        Length += wcslen(CurEntry->lpTarget);
        Length += 2; // zero byte and '='
+       CurEntry = CurEntry->Next;
    }
 
    if (Length)
@@ -374,7 +392,7 @@ CSR_API(CsrGetConsoleAlias)
 
     lpSource = (LPWSTR)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
     lpExeName = lpSource + Request->Data.GetConsoleAlias.SourceLength;
-    lpTarget = (LPWSTR)lpExeName + Request->Data.GetConsoleAlias.ExeLength;
+    lpTarget = Request->Data.GetConsoleAlias.TargetBuffer;
 
 
     DPRINT("CsrGetConsoleAlias entered lpExeName %p lpSource %p TargetBuffer %p TargetBufferLength %u\n", 
@@ -404,23 +422,17 @@ CSR_API(CsrGetConsoleAlias)
     Length = (wcslen(Entry->lpTarget)+1) * sizeof(WCHAR);
     if (Length > Request->Data.GetConsoleAlias.TargetBufferLength)
     {
-        Request->Status = ERROR_INSUFFICIENT_BUFFER;
+        Request->Status = STATUS_BUFFER_TOO_SMALL;
         return Request->Status;      
     }
 
-#if 0
-    if (((PVOID)lpTarget < ProcessData->CsrSectionViewBase)
-      || (((ULONG_PTR)lpTarget + Request->Data.GetConsoleAlias.TargetBufferLength) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    if (!ValidateBuffer(ProcessData, lpTarget, Request->Data.GetConsoleAlias.TargetBufferLength))
     {
         Request->Status = STATUS_ACCESS_VIOLATION;
-        DPRINT1("CsrGetConsoleAlias out of range lpTarget %p LowerViewBase %p UpperViewBase %p Size %p\n", lpTarget, 
-            ProcessData->CsrSectionViewBase, (ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize, ProcessData->CsrSectionViewSize);
         return Request->Status;
     }
-#endif
 
     wcscpy(lpTarget, Entry->lpTarget);
-    lpTarget[CSRSS_MAX_ALIAS_TARGET_LENGTH-1] = '\0';
     Request->Data.GetConsoleAlias.BytesWritten = Length;
     Request->Status = STATUS_SUCCESS;
     return Request->Status;
@@ -446,7 +458,15 @@ CSR_API(CsrGetAllConsoleAliases)
 
     if (IntGetAllConsoleAliasesLength(Header) > Request->Data.GetAllConsoleAlias.AliasBufferLength)
     {
-        Request->Status = ERROR_INSUFFICIENT_BUFFER;
+        Request->Status = STATUS_BUFFER_OVERFLOW;
+        return Request->Status;
+    }
+
+    if (!ValidateBuffer(ProcessData,
+                        Request->Data.GetAllConsoleAlias.AliasBuffer,
+                        Request->Data.GetAllConsoleAlias.AliasBufferLength))
+    {
+        Request->Status = STATUS_ACCESS_VIOLATION;
         return Request->Status;
     }
 
@@ -495,7 +515,7 @@ CSR_API(CsrGetConsoleAliasesExes)
     
     if (ExesLength > Request->Data.GetConsoleAliasesExes.Length)
     {
-        Request->Status = ERROR_INSUFFICIENT_BUFFER;
+        Request->Status = STATUS_BUFFER_OVERFLOW;
         return Request->Status;
     }
 
@@ -505,6 +525,14 @@ CSR_API(CsrGetConsoleAliasesExes)
         return Request->Status;
     }
     
+    if (!ValidateBuffer(ProcessData,
+                        Request->Data.GetConsoleAliasesExes.ExeNames,
+                        Request->Data.GetConsoleAliasesExes.Length))
+    {
+        Request->Status = STATUS_ACCESS_VIOLATION;
+        return Request->Status;
+    }
+
     BytesWritten = IntGetConsoleAliasesExes(RootHeader, 
                                             Request->Data.GetConsoleAliasesExes.ExeNames,
                                             Request->Data.GetConsoleAliasesExes.Length);
