@@ -117,6 +117,7 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
     LONG style;
 
     if (!Wnd) return FALSE;
+	if (!Wnd->Wnd) return FALSE;
     style = Wnd->Wnd->Style;
     if (!(style & WS_VISIBLE) &&
         Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
