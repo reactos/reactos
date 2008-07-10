@@ -75,6 +75,13 @@
     CopyMemory(dest, source, StringLengthToBytes(WCHAR, wcslen(source)))
 
 
+#define MinimumOf(value_a, value_b) \
+    ( value_a < value_b ? value_a : value_b )
+
+#define MaximumOf(value_a, value_b) \
+    ( value_a > value_b ? value_a : value_b )
+
+
 struct _SOUND_DEVICE;
 struct _SOUND_DEVICE_INSTANCE;
 
@@ -135,79 +142,6 @@ typedef struct _SOUND_THREAD_OVERLAPPED
     /* Pointer to structure to fill with completion data */
     PSOUND_THREAD_COMPLETED_IO CompletionData;
 } SOUND_THREAD_OVERLAPPED, *PSOUND_THREAD_OVERLAPPED;
-
-#if 0
-/*
-    Used internally to shuttle data to/from the sound processing thread.
-*/
-typedef struct _THREAD_REQUEST
-{
-    struct _SOUND_DEVICE_INSTANCE* DeviceInstance;
-    DWORD RequestId;
-    PVOID Data;
-    MMRESULT Result;
-} THREAD_REQUEST, *PTHREAD_REQUEST;
-
-typedef struct _SOUND_THREAD_COMPLETED_IO
-{
-    struct _SOUND_THREAD_COMPLETED_IO* Next;
-    PVOID ContextData;  /* eg: PWAVEHDR */
-    DWORD BytesTransferred;
-} SOUND_THREAD_COMPLETED_IO, *PSOUND_THREAD_COMPLETED_IO;
-
-typedef struct _SOUND_THREAD_OVERLAPPED
-{
-    OVERLAPPED General;
-    struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
-    PVOID PrivateThreadData;
-    PVOID ContextData;  /* eg: PWAVEHDR */
-    PSOUND_THREAD_COMPLETED_IO CompletionData;
-} SOUND_THREAD_OVERLAPPED, *PSOUND_THREAD_OVERLAPPED;
-
-
-typedef VOID (*SOUND_THREAD_IO_COMPLETION_HANDLER)(
-    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
-    IN  PVOID PrivateThreadData,
-    IN  PVOID ContextData,
-    IN  DWORD BytesTransferred);
-
-typedef struct _SOUND_THREAD
-{
-    /* Thread management */
-    HANDLE Handle;
-    PVOID PrivateData;
-    BOOLEAN Running;
-
-    HANDLE ReadyEvent;      /* Thread waiting for a request */
-    HANDLE RequestEvent;    /* Caller sending a request */
-    HANDLE DoneEvent;       /* Thread completed a request */
-
-    SOUND_THREAD_REQUEST_HANDLER RequestHandler;
-    THREAD_REQUEST Request;
-
-    SOUND_THREAD_OVERLAPPED Overlapped;
-    PSOUND_THREAD_COMPLETED_IO FirstCompletedIo;
-    SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler;
-} SOUND_THREAD, *PSOUND_THREAD;
-#endif
-
-
-/*
-    Wave thread
-*/
-#if 0
-typedef struct _WAVE_THREAD_DATA
-{
-    /* Wave thread specific */
-    DWORD BufferCount;
-    PWAVEHDR CurrentBuffer;
-    PWAVEHDR FirstBuffer;
-    PWAVEHDR LastBuffer;
-
-    /* How much data is waiting with the driver */
-    DWORD RemainingBytes;
-} WAVE_THREAD_DATA, *PWAVE_THREAD_DATA;
-#endif
 
 /*
     Audio device function table
@@ -276,9 +210,9 @@ typedef struct _WAVE_STREAM_INFO
     /* The buffer currently being processed */
     PWAVEHDR CurrentBuffer;
     /* How far into the current buffer we've gone */
-    DWORD BufferOffset;
-    /* How much data we're expecting back */
-    DWORD BytesOutstanding;
+    //DWORD BufferOffset;
+    /* How many I/O operations have been submitted */
+    DWORD BuffersOutstanding;
 } WAVE_STREAM_INFO, *PWAVE_STREAM_INFO;
 
 typedef struct _SOUND_DEVICE_INSTANCE

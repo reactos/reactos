@@ -165,7 +165,7 @@ int APIENTRY wWinMain(
     /* WODM_OPEN */
     Format.wFormatTag = WAVE_FORMAT_PCM;
     Format.nChannels = 2;
-    Format.nSamplesPerSec = 22050;
+    Format.nSamplesPerSec = 44100;
     Format.wBitsPerSample = 16;
     Format.nBlockAlign = Format.nChannels * (Format.wBitsPerSample / 8);
     Format.nAvgBytesPerSec = Format.nSamplesPerSec * Format.nBlockAlign;
