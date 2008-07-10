@@ -542,7 +542,7 @@ static void PointerMonikerImpl_Construct(PointerMonikerImpl* This, IUnknown *pun
 {
     TRACE("(%p)\n",This);
 
-    /* Initialize the virtual fgunction table. */
+    /* Initialize the virtual function table. */
     This->lpvtbl       = &VT_PointerMonikerImpl;
     This->ref          = 1;
     if (punk)
@@ -567,7 +567,7 @@ HRESULT WINAPI CreatePointerMoniker(LPUNKNOWN punk, LPMONIKER *ppmk)
 {
     PointerMonikerImpl *This;
 
-    FIXME("(%p, %p): stub\n", punk, ppmk);
+    TRACE("(%p, %p)\n", punk, ppmk);
 
     if (!ppmk)
         return E_INVALIDARG;

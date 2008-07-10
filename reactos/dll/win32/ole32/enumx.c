@@ -25,12 +25,15 @@
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
+
+#include "enumx.h"
+
 #include "wine/list.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-typedef struct tagEnumSTATPROPSETSTG_impl
+struct tagEnumSTATPROPSETSTG_impl
 {
     const void *vtbl;
     LONG ref;
@@ -38,7 +41,7 @@ typedef struct tagEnumSTATPROPSETSTG_impl
     struct list *current;
     ULONG elem_size;
     GUID riid;
-} enumx_impl;
+};
 
 /************************************************************************
  * enumx_QueryInterface
@@ -177,7 +180,7 @@ enumx_impl *enumx_allocate(REFIID riid, const void *vtbl, ULONG elem_size)
         enumx->ref = 1;
         enumx->current = NULL;
         enumx->elem_size = elem_size;
-        memcpy(&enumx->riid, riid, sizeof *riid);
+        enumx->riid = *riid;
         list_init(&enumx->elements);
     }
 

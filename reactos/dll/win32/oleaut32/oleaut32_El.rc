@@ -1,7 +1,7 @@
 /*
- * Ukrainian resources for oleaut32
+ * Greek resources for oleaut32
  *
- * Copyright 2006 Artem Reznikov
+ * Copyright 200 Apostolos Alexiadis
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,17 +15,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Істина"
-  IDS_FALSE "Неправда"
-  IDS_YES   "Так"
-  IDS_NO    "Ні"
-  IDS_ON    "Ввімкнено"
-  IDS_OFF   "Вимкнено"
+  IDS_TRUE  "БлзиЭт"
+  IDS_FALSE "ШехдЭт"
+  IDS_YES   "Нбй"
+  IDS_NO    "ьчй"
+  IDS_ON    "Енесгь"
+  IDS_OFF   "Бненесгь"
 }

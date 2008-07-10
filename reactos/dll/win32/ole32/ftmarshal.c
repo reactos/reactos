@@ -141,9 +141,9 @@ FTMarshalImpl_GetUnmarshalClass (LPMARSHAL iface, REFIID riid, void *pv, DWORD d
     TRACE("(%s, %p, 0x%x, %p, 0x%x, %p)\n", debugstr_guid(riid), pv,
         dwDestContext, pvDestContext, mshlflags, pCid);
     if (dwDestContext == MSHCTX_INPROC || dwDestContext == MSHCTX_CROSSCTX)
-        memcpy(pCid, &CLSID_InProcFreeMarshaler, sizeof(CLSID_InProcFreeMarshaler));
+        *pCid = CLSID_InProcFreeMarshaler;
     else
-        memcpy(pCid, &CLSID_DfMarshal, sizeof(CLSID_InProcFreeMarshaler));
+        *pCid = CLSID_DfMarshal;
     return S_OK;
 }
 

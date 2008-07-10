@@ -53,7 +53,7 @@ DEFINE_OLEGUID( CLSID_PSFactoryBuffer, 0x00000320, 0, 0 );
  *         locking is required.
  * LOCK  - The value is written to only using Interlocked* functions.
  * CS    - The value is read or written to inside a critical section.
- *         The identifier following "CS" is the specific critical setion that
+ *         The identifier following "CS" is the specific critical section that
  *         must be used.
  * MUTEX - The value is read or written to with a mutex held.
  *         The identifier following "MUTEX" is the specific mutex that
@@ -92,6 +92,7 @@ struct stub_manager
 
     ULONG             extrefs;    /* number of 'external' references (CS lock) */
     ULONG             refs;       /* internal reference count (CS apt->cs) */
+    ULONG             weakrefs;   /* number of weak references (CS lock) */
     OID               oid;        /* apartment-scoped unique identifier (RO) */
     IUnknown         *object;     /* the object we are managing the stub for (RO) */
     ULONG             next_ipid;  /* currently unused (LOCK) */
@@ -201,15 +202,15 @@ HRESULT FTMarshalCF_Create(REFIID riid, LPVOID *ppv);
 ULONG stub_manager_int_addref(struct stub_manager *This);
 ULONG stub_manager_int_release(struct stub_manager *This);
 struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object);
-ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs);
-ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL last_unlock_releases);
+ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak);
+ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases);
 struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, MSHLFLAGS flags);
 struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags);
 struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid);
 struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object);
 BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid);
 BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid);
-void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid);
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid, BOOL tableweak);
 HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stubmgr_ret);
 HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, IRpcStubBuffer **stub, IRpcChannelBuffer **chan, IID *iid, IUnknown **iface);
 HRESULT start_apartment_remote_unknown(void);
@@ -268,8 +269,7 @@ void apartment_joinmta(void);
 #define DM_HOSTOBJECT   (WM_USER + 1) /* WPARAM = 0, LPARAM = (struct host_object_params *) */
 
 /*
- * Per-thread values are stored in the TEB on offset 0xF80,
- * see http://www.microsoft.com/msj/1099/bugslayer/bugslayer1099.htm
+ * Per-thread values are stored in the TEB on offset 0xF80
  */
 
 /* will create if necessary */

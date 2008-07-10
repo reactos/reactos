@@ -640,7 +640,7 @@ HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)
 /***********************************************************************
  *           CoRevokeMallocSpy  [OLE32.@]
  *
- * Revokes a previousl registered object that receives notifications on memory
+ * Revokes a previously registered object that receives notifications on memory
  * allocations and frees.
  *
  * PARAMS

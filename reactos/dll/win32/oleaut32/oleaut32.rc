@@ -25,14 +25,14 @@
 #include "version.rc"
 
 #include "oleaut32_Bg.rc"
+#include "oleaut32_Da.rc"
 #include "oleaut32_De.rc"
-#include "oleaut32_Dk.rc"
+#include "oleaut32_El.rc"
 #include "oleaut32_En.rc"
 #include "oleaut32_Eo.rc"
 #include "oleaut32_Es.rc"
 #include "oleaut32_Cz.rc"
 #include "oleaut32_Fr.rc"
-#include "oleaut32_Gr.rc"
 #include "oleaut32_Hu.rc"
 #include "oleaut32_It.rc"
 #include "oleaut32_Ja.rc"
@@ -41,7 +41,9 @@
 #include "oleaut32_No.rc"
 #include "oleaut32_Pl.rc"
 #include "oleaut32_Pt.rc"
+#include "oleaut32_Ro.rc"
 #include "oleaut32_Ru.rc"
+#include "oleaut32_Si.rc"
 #include "oleaut32_Sv.rc"
 #include "oleaut32_Th.rc"
 #include "oleaut32_Tr.rc"
@@ -50,6 +52,6 @@
 /*
  * FIXME:
  *  Finnish, Greek, Hebrew, Japanese, Korean,
- *  Turkish, Slovenian (at least) are localised in XP Home.
+ *  Turkish (at least) are localised in XP Home.
  *  I expect Chinese etc are localised in Asian Editions also.
  */

@@ -374,7 +374,7 @@ struct StgStreamImpl
   /*
    * The information in the stream is represented by a chain of small blocks
    * or a chain of large blocks. Depending on the case, one of the two
-   * following variabled points to that information.
+   * following variables points to that information.
    */
   BlockChainStream*      bigBlockChain;
   SmallBlockChainStream* smallBlockChain;

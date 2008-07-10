@@ -689,28 +689,23 @@ static HRESULT WINAPI StgStreamImpl_CopyTo(
   if ( pstm == 0 )
     return STG_E_INVALIDPOINTER;
 
-  totalBytesRead.u.LowPart = totalBytesRead.u.HighPart = 0;
-  totalBytesWritten.u.LowPart = totalBytesWritten.u.HighPart = 0;
+  totalBytesRead.QuadPart = 0;
+  totalBytesWritten.QuadPart = 0;
 
-  /*
-   * use stack to store data temporarily
-   * there is surely a more performant way of doing it, for now this basic
-   * implementation will do the job
-   */
-  while ( cb.u.LowPart > 0 )
+  while ( cb.QuadPart > 0 )
   {
-    if ( cb.u.LowPart >= 128 )
-      copySize = 128;
+    if ( cb.QuadPart >= sizeof(tmpBuffer) )
+      copySize = sizeof(tmpBuffer);
     else
       copySize = cb.u.LowPart;
 
     IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
 
-    totalBytesRead.u.LowPart += bytesRead;
+    totalBytesRead.QuadPart += bytesRead;
 
     IStream_Write(pstm, tmpBuffer, bytesRead, &bytesWritten);
 
-    totalBytesWritten.u.LowPart += bytesWritten;
+    totalBytesWritten.QuadPart += bytesWritten;
 
     /*
      * Check that read & write operations were successful
@@ -723,25 +718,14 @@ static HRESULT WINAPI StgStreamImpl_CopyTo(
     }
 
     if (bytesRead!=copySize)
-      cb.u.LowPart = 0;
+      cb.QuadPart = 0;
     else
-      cb.u.LowPart -= bytesRead;
+      cb.QuadPart -= bytesRead;
   }
 
-  /*
-   * Update number of bytes read and written
-   */
-  if (pcbRead)
-  {
-    pcbRead->u.LowPart = totalBytesRead.u.LowPart;
-    pcbRead->u.HighPart = totalBytesRead.u.HighPart;
-  }
+  if (pcbRead) pcbRead->QuadPart = totalBytesRead.QuadPart;
+  if (pcbWritten) pcbWritten->QuadPart = totalBytesWritten.QuadPart;
 
-  if (pcbWritten)
-  {
-    pcbWritten->u.LowPart = totalBytesWritten.u.LowPart;
-    pcbWritten->u.HighPart = totalBytesWritten.u.HighPart;
-  }
   return hr;
 }
 

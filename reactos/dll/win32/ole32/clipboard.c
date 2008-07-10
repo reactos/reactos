@@ -1312,42 +1312,21 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_QueryGetData(
 	    IDataObject*     iface,
 	    LPFORMATETC      pformatetc)
 {
-  /*
-   * Declare "This" pointer
-   */
-  OLEClipbrd *This = (OLEClipbrd *)iface;
-
   TRACE("(%p, %p)\n", iface, pformatetc);
-
-  /*
-   * If we have a data source placed on the clipboard (via OleSetClipboard)
-   * simply delegate to the source object's QueryGetData
-   */
-  if ( This->pIDataObjectSrc )
-  {
-    return IDataObject_QueryGetData(This->pIDataObjectSrc, pformatetc);
-  }
 
   if (!pformatetc)
     return E_INVALIDARG;
-/*
-   if ( pformatetc->dwAspect != DVASPECT_CONTENT )
-     return DV_E_DVASPECT;
-*/
-  if ( pformatetc->lindex != -1 )
-    return DV_E_LINDEX;
 
-  /* TODO: Handle TYMED_IStorage media which were put on the clipboard
-   * by copying the storage into global memory. We must convert this
-   * TYMED_HGLOBAL back to TYMED_IStorage.
-   */
-  if ( pformatetc->tymed != TYMED_HGLOBAL )
-    return DV_E_TYMED;
+  if ( pformatetc->dwAspect != DVASPECT_CONTENT )
+    return DV_E_FORMATETC;
+
+  if ( pformatetc->lindex != -1 )
+    return DV_E_FORMATETC;
 
   /*
    * Delegate to the Windows clipboard function IsClipboardFormatAvailable
    */
-  return (IsClipboardFormatAvailable(pformatetc->cfFormat)) ? S_OK : DV_E_FORMATETC;
+  return (IsClipboardFormatAvailable(pformatetc->cfFormat)) ? S_OK : DV_E_CLIPFORMAT;
 }
 
 /************************************************************************
@@ -1365,7 +1344,7 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_GetCanonicalFormatEtc(
   if ( !pformatectIn || !pformatetcOut )
     return E_INVALIDARG;
 
-  memcpy(pformatetcOut, pformatectIn, sizeof(FORMATETC));
+  *pformatetcOut = *pformatectIn;
   return DATA_S_SAMEFORMATETC;
 }
 

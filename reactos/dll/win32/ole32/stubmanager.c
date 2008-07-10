@@ -69,6 +69,7 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     /* start off with 2 references because the stub is in the apartment
      * and the caller will also hold a reference */
     sm->refs   = 2;
+    sm->weakrefs = 0;
 
     sm->oxid_info.dwPid = GetCurrentProcessId();
     sm->oxid_info.dwTid = GetCurrentThreadId();
@@ -87,8 +88,8 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     sm->oxid_info.dwAuthnHint = RPC_C_AUTHN_LEVEL_NONE;
     sm->oxid_info.psa = NULL /* FIXME */;
 
-    /* yes, that's right, this starts at zero. that's zero EXTERNAL
-     * refs, ie nobody has unmarshalled anything yet. we can't have
+    /* Yes, that's right, this starts at zero. that's zero EXTERNAL
+     * refs, i.e., nobody has unmarshalled anything yet. We can't have
      * negative refs because the stub manager cannot be explicitly
      * killed, it has to die by somebody unmarshalling then releasing
      * the marshalled ifptr.
@@ -252,15 +253,18 @@ ULONG stub_manager_int_release(struct stub_manager *This)
 }
 
 /* add some external references (ie from a client that unmarshaled an ifptr) */
-ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs)
+ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak)
 {
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
-    
+
     /* make sure we don't overflow extrefs */
     refs = min(refs, (ULONG_MAX-1 - m->extrefs));
     rc = (m->extrefs += refs);
+
+    if (tableweak)
+        rc += ++m->weakrefs;
 
     LeaveCriticalSection(&m->lock);
     
@@ -270,7 +274,7 @@ ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs)
 }
 
 /* remove some external references */
-ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL last_unlock_releases)
+ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases)
 {
     ULONG rc;
 
@@ -279,6 +283,9 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL last_unl
     /* make sure we don't underflow extrefs */
     refs = min(refs, m->extrefs);
     rc = (m->extrefs -= refs);
+
+    if (tableweak)
+        rc += --m->weakrefs;
 
     LeaveCriticalSection(&m->lock);
     
@@ -534,7 +541,7 @@ BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid)
 }
 
 /* handles refcounting for CoReleaseMarshalData */
-void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid)
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid, BOOL tableweak)
 {
     struct ifstub *ifstub;
  
@@ -546,7 +553,7 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
     else if (ifstub->flags & MSHLFLAGS_TABLESTRONG)
         refs = 1;
 
-    stub_manager_ext_release(m, refs, TRUE);
+    stub_manager_ext_release(m, refs, tableweak, TRUE);
 }
 
 /* is an ifstub table marshaled? */
@@ -693,7 +700,7 @@ static HRESULT WINAPI RemUnknown_RemAddRef(IRemUnknown *iface,
             continue;
         }
 
-        stub_manager_ext_addref(stubmgr, InterfaceRefs[i].cPublicRefs);
+        stub_manager_ext_addref(stubmgr, InterfaceRefs[i].cPublicRefs, FALSE);
         if (InterfaceRefs[i].cPrivateRefs)
             FIXME("Adding %ld refs securely not implemented\n", InterfaceRefs[i].cPrivateRefs);
 
@@ -726,7 +733,7 @@ static HRESULT WINAPI RemUnknown_RemRelease(IRemUnknown *iface,
             break;
         }
 
-        stub_manager_ext_release(stubmgr, InterfaceRefs[i].cPublicRefs, TRUE);
+        stub_manager_ext_release(stubmgr, InterfaceRefs[i].cPublicRefs, FALSE, TRUE);
         if (InterfaceRefs[i].cPrivateRefs)
             FIXME("Releasing %ld refs securely not implemented\n", InterfaceRefs[i].cPrivateRefs);
 

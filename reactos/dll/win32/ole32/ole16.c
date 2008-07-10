@@ -409,7 +409,7 @@ HRESULT WINAPI StringFromCLSID16(
  */
 HRESULT WINAPI ProgIDFromCLSID16(
   REFCLSID clsid, /* [in] class id as found in registry */
-  LPOLESTR16 *lplpszProgID/* [out] associated Prog ID */
+  LPOLESTR16 *lplpszProgID/* [out] associated Program ID */
 ) {
   static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
   HKEY     hkey;

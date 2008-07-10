@@ -1,7 +1,6 @@
 /*
- * Swedish resources for oleaut32
- *
  * Copyright 2003 Jon Griffiths
+ * Copyright 2008 Michael Stefaniuc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Sant"
-  IDS_FALSE "Falskt"
-  IDS_YES   "Ja"
-  IDS_NO    "Nej"
-  IDS_ON    "På"
-  IDS_OFF   "Av"
+  IDS_TRUE  "AdevÄƒrat"
+  IDS_FALSE "Fals"
+  IDS_YES   "Da"
+  IDS_NO    "Nu"
+  IDS_ON    "Activat"
+  IDS_OFF   "Dezactivat"
 }
+
+#pragma code_page(default)

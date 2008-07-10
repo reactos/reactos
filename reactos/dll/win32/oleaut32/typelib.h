@@ -576,7 +576,7 @@ typedef struct {
   BYTE flags;
   WORD next;
   WORD name;
-  WORD byte_offs; /* pos in struct, or offset to const type */
+  WORD byte_offs; /* pos in struct, or offset to const type or const data (if flags & 0x08) */
   WORD type; /* if flags & 0x02 this is the type, else offset to type */
   DWORD memid;
   WORD helpcontext; /* ?? */

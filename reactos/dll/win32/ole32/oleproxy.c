@@ -19,22 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Documentation on MSDN:
- *
- * (Top level COM documentation)
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnanchor/html/componentdevelopmentank.asp
- *
- * (COM Proxy)
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/com/htm/comext_1q0p.asp
- *
- * (COM Stub)
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/com/htm/comext_1lia.asp
- *
- * (Marshal)
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/com/htm/comext_1gfn.asp
- *
- */
-
 #include "config.h"
 
 #include <stdlib.h>
@@ -64,7 +48,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 static ULONG WINAPI RURpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface);
 
-/* From: http://msdn.microsoft.com/library/en-us/com/cmi_m_4lda.asp
+/* From msdn:
  *
  * The first time a client requests a pointer to an interface on a
  * particular object, COM loads an IClassFactory stub in the server

@@ -270,7 +270,7 @@ HRESULT WINAPI ItemMonikerImpl_Load(IMoniker* iface,IStream* pStm)
 
     TRACE("\n");
 
-    /* for more details about data read by this function see coments of ItemMonikerImpl_Save function */
+    /* for more details about data read by this function see comments of ItemMonikerImpl_Save function */
 
     /* read item delimiter string length + 1 */
     res=IStream_Read(pStm,&delimiterLength,sizeof(DWORD),&bread);
@@ -376,7 +376,7 @@ HRESULT WINAPI ItemMonikerImpl_GetSizeMax(IMoniker* iface,
     if (!pcbSize)
         return E_POINTER;
 
-    /* for more details see ItemMonikerImpl_Save coments */
+    /* for more details see ItemMonikerImpl_Save comments */
 
     pcbSize->u.LowPart =  sizeof(DWORD) + /* DWORD which contains delimiter length */
                         delimiterLength*4 + /* item delimiter string */
@@ -400,7 +400,7 @@ static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR
 
     TRACE("(%p,%s,%s)\n",This,debugstr_w(lpszDelim),debugstr_w(lpszItem));
 
-    /* Initialize the virtual fgunction table. */
+    /* Initialize the virtual function table. */
     This->lpvtbl1      = &VT_ItemMonikerImpl;
     This->lpvtbl2      = &VT_ROTDataImpl;
     This->ref          = 0;
@@ -956,7 +956,7 @@ ULONG   WINAPI ItemMonikerROTDataImpl_Release(IROTData* iface)
 }
 
 /******************************************************************************
- *        ItemMonikerIROTData_GetComparaisonData
+ *        ItemMonikerIROTData_GetComparisonData
  ******************************************************************************/
 HRESULT WINAPI ItemMonikerROTDataImpl_GetComparisonData(IROTData* iface,
                                                          BYTE* pbData,

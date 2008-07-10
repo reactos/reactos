@@ -151,7 +151,7 @@ static const WCHAR szPercentZeroStar_d[] = { '%','0','*','d','\0' };
  * Common format definitions
  */
 
- /* Fomat types */
+ /* Format types */
 #define FMT_TYPE_UNKNOWN 0x0
 #define FMT_TYPE_GENERAL 0x1
 #define FMT_TYPE_NUMBER  0x2
@@ -284,7 +284,7 @@ typedef struct tagFMT_DATE_HEADER
 #define FMT_STR_COPY_SPACE  0x40 /* Copy len chars with space if no char */
 #define FMT_STR_COPY_SKIP   0x41 /* Copy len chars or skip if no char */
 /* Wine additions */
-#define FMT_WINE_HOURS_12   0x81 /* Hours using 12 hour clockhourCopy len chars or skip if no char */
+#define FMT_WINE_HOURS_12   0x81 /* Hours using 12 hour clock */
 
 /* Named Formats and their tokenised values */
 static const WCHAR szGeneralDate[] = { 'G','e','n','e','r','a','l',' ','D','a','t','e','\0' };
@@ -522,7 +522,6 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
   FMT_HEADER *header = (FMT_HEADER*)rgbTok;
   FMT_STRING_HEADER *str_header = (FMT_STRING_HEADER*)(rgbTok + sizeof(FMT_HEADER));
   FMT_NUMBER_HEADER *num_header = (FMT_NUMBER_HEADER*)str_header;
-  FMT_DATE_HEADER *date_header = (FMT_DATE_HEADER*)str_header;
   BYTE* pOut = rgbTok + sizeof(FMT_HEADER) + sizeof(FMT_STRING_HEADER);
   BYTE* pLastHours = NULL;
   BYTE fmt_number = 0;
@@ -591,7 +590,6 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
         header->starts[fmt_number] = pOut - rgbTok;
         str_header = (FMT_STRING_HEADER*)pOut;
         num_header = (FMT_NUMBER_HEADER*)pOut;
-        date_header = (FMT_DATE_HEADER*)pOut;
         memset(str_header, 0, sizeof(FMT_STRING_HEADER));
         pOut += sizeof(FMT_STRING_HEADER);
         fmt_state = 0;
@@ -1465,7 +1463,8 @@ VARIANT_FormatNumber_Bool:
           while (count-- > 0)
             *pBuff++ = '0';
         }
-        if (*pToken == FMT_NUM_COPY_ZERO || have_int > 1 || *prgbDig > 0)
+        if (*pToken == FMT_NUM_COPY_ZERO || have_int > 1 ||
+            (have_int > 0 && *prgbDig > 0))
         {
           dwState |= NUM_WRITE_ON;
           count = min(count_max, have_int);

@@ -33,12 +33,12 @@ BEGIN
     GROUPBOX        "Risultato",IDC_RESULT,7,103,208,41
     CONTROL         "Crea Nuovo",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,62,10
-    CONTROL         "Crea Controllo",IDC_CREATECONTROL,"Tasto",
+    CONTROL         "Crea Controllo",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
-    CONTROL         "Crea da File",IDC_CREATEFROMFILE,"Tasto",
+    CONTROL         "Crea da File",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
-    PUSHBUTTON      "&Aggiungi Controllo...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    PUSHBUTTON      "&Aggiungi Controllo...",IDC_ADDCONTROL,81,88,73,14,NOT WS_VISIBLE
     CONTROL         "Visualizza come Icona",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
     PUSHBUTTON      "Esplora...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE

@@ -118,7 +118,7 @@ static const char OLEDD_DRAGTRACKERCLASS[] = "WineDragDropTracker32";
 static struct list targetListHead = LIST_INIT(targetListHead);
 
 /******************************************************************************
- * These are the prototypes of miscelaneous utility methods
+ * These are the prototypes of miscellaneous utility methods
  */
 static void OLEUTL_ReadRegistryDWORDValue(HKEY regKey, DWORD* pdwValue);
 
@@ -2734,7 +2734,7 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
     case VT_CLSID:
     case VT_LPSTR:
     case VT_LPWSTR:
-        /* pick an arbitary typed pointer - we don't care about the type
+        /* pick an arbitrary typed pointer - we don't care about the type
          * as we are just freeing it */
         CoTaskMemFree(pvar->u.puuid);
         break;
@@ -2781,7 +2781,7 @@ HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
             }
             if (pvar->vt & ~VT_VECTOR)
             {
-                /* pick an arbitary VT_VECTOR structure - they all have the same
+                /* pick an arbitrary VT_VECTOR structure - they all have the same
                  * memory layout */
                 CoTaskMemFree(pvar->u.capropvar.pElems);
             }
@@ -2811,7 +2811,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
         return hr;
 
     /* this will deal with most cases */
-    CopyMemory(pvarDest, pvarSrc, sizeof(*pvarDest));
+    *pvarDest = *pvarSrc;
 
     switch(pvarSrc->vt)
     {
@@ -2825,7 +2825,7 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
         break;
     case VT_CLSID:
         pvarDest->u.puuid = CoTaskMemAlloc(sizeof(CLSID));
-        CopyMemory(pvarDest->u.puuid, pvarSrc->u.puuid, sizeof(CLSID));
+        *pvarDest->u.puuid = *pvarSrc->u.puuid;
         break;
     case VT_LPSTR:
         len = strlen(pvarSrc->u.pszVal);
@@ -2888,8 +2888,8 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
             case VT_BSTR:     elemSize = sizeof(*pvarSrc->u.bstrVal); break;
             case VT_LPSTR:    elemSize = sizeof(*pvarSrc->u.pszVal); break;
             case VT_LPWSTR:   elemSize = sizeof(*pvarSrc->u.pwszVal); break;
+            case VT_VARIANT:  elemSize = sizeof(*pvarSrc->u.pvarVal); break;
 
-            case VT_VARIANT:
             default:
                 FIXME("Invalid element type: %ul\n", pvarSrc->vt & ~VT_VECTOR);
                 return E_INVALIDARG;

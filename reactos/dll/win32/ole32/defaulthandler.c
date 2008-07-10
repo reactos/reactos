@@ -396,7 +396,7 @@ static HRESULT WINAPI DefaultHandler_SetHostNames(
   if (object_is_running(This))
     IOleObject_SetHostNames(This->pOleDelegate, szContainerApp, szContainerObj);
 
-  /* Be sure to cleanup before re-assinging the strings. */
+  /* Be sure to cleanup before re-assigning the strings. */
   HeapFree( GetProcessHeap(), 0, This->containerApp );
   This->containerApp = NULL;
   HeapFree( GetProcessHeap(), 0, This->containerObj );
@@ -672,7 +672,7 @@ static HRESULT WINAPI DefaultHandler_GetUserClassID(
   if (!pClsid)
     return E_POINTER;
 
-  memcpy(pClsid, &This->clsid, sizeof(CLSID));
+  *pClsid = This->clsid;
 
   return S_OK;
 }
@@ -1744,7 +1744,7 @@ static DefaultHandler* DefaultHandler_Construct(
   /*
    * Initialize the other data members of the class.
    */
-  memcpy(&This->clsid, clsid, sizeof(CLSID));
+  This->clsid = *clsid;
   This->clientSite = NULL;
   This->oleAdviseHolder = NULL;
   This->dataAdviseHolder = NULL;

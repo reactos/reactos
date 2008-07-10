@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* see http://www.microsoft.com/msj/0398/dcom.htm */
-/* and the official DCOM specification
+/* see the official DCOM specification
  * (there's a copy at http://www.grimes.demon.co.uk/DCOM/DCOMSpec.htm) */
 
 import "unknwn.idl";

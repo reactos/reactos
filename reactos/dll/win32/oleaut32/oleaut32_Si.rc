@@ -1,7 +1,7 @@
 /*
- * Greek resources for oleaut32
+ * Slovenian resources for oleaut32
  *
- * Copyright 2006 Dj Apal®
+ * Copyright 2008 Rok Mandeljc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,17 +15,21 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Αληθές"
-  IDS_FALSE "Ψευδές"
-  IDS_YES   "Ναι"
-  IDS_NO    "Όχι"
-  IDS_ON    "Ανοιχτό"
-  IDS_OFF   "Κλειστό"
+  IDS_TRUE  "Da"
+  IDS_FALSE "Ne"
+  IDS_YES   "Da"
+  IDS_NO    "Ne"
+  IDS_ON    "VkljuΔeno"
+  IDS_OFF   "IzkljuΔeno"
 }
+
+#pragma code_page(default)

@@ -34,6 +34,7 @@
  * get localized bitmaps for example.
  */
 #include "oledlg_Cs.rc"
+#include "oledlg_Da.rc"
 #include "oledlg_De.rc"
 #include "oledlg_En.rc"
 #include "oledlg_Es.rc"
@@ -47,6 +48,7 @@
 #include "oledlg_Pl.rc"
 #include "oledlg_Pt.rc"
 #include "oledlg_Ru.rc"
+#include "oledlg_Si.rc"
 #include "oledlg_Sv.rc"
 #include "oledlg_Tr.rc"
 #include "oledlg_Uk.rc"

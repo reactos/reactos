@@ -600,7 +600,7 @@ FileMonikerImpl_BindToStorage(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLef
             /* get the file name */
             IMoniker_GetDisplayName(iface,pbc,pmkToLeft,&filePath);
 
-            /* verifie if the file contains a storage object */
+            /* verify if the file contains a storage object */
             res=StgIsStorageFile(filePath);
 
             if(res==S_OK){
@@ -679,7 +679,7 @@ FileMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 
     IMoniker_IsSystemMoniker(pmkRight,&mkSys);
 
-    /* check if we have two filemonikers to compose or not */
+    /* check if we have two FileMonikers to compose or not */
     if(mkSys==MKSYS_FILEMONIKER){
 
         CreateBindCtx(0,&bind);
@@ -1264,7 +1264,7 @@ FileMonikerROTDataImpl_Release(IROTData* iface)
 }
 
 /******************************************************************************
- *        FileMonikerIROTData_GetComparaisonData
+ *        FileMonikerIROTData_GetComparisonData
  */
 static HRESULT WINAPI
 FileMonikerROTDataImpl_GetComparisonData(IROTData* iface, BYTE* pbData,
@@ -1345,7 +1345,7 @@ FileMonikerImpl_Construct(FileMonikerImpl* This, LPCOLESTR lpszPathName)
 
     TRACE("(%p,%s)\n",This,debugstr_w(lpszPathName));
 
-    /* Initialize the virtual fgunction table. */
+    /* Initialize the virtual function table. */
     This->lpvtbl1      = &VT_FileMonikerImpl;
     This->lpvtbl2      = &VT_ROTDataImpl;
     This->ref          = 0;

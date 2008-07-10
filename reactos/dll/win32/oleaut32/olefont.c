@@ -941,7 +941,7 @@ static HRESULT WINAPI OLEFontImpl_IsEqual(
 {
   OLEFontImpl *left = (OLEFontImpl *)iface;
   OLEFontImpl *right = (OLEFontImpl *)pFontOther;
-  HRESULT hres;
+  INT ret;
   INT left_len,right_len;
 
   if((iface == NULL) || (pFontOther == NULL))
@@ -964,9 +964,9 @@ static HRESULT WINAPI OLEFontImpl_IsEqual(
   /* Check from string */
   left_len = strlenW(left->description.lpstrName);
   right_len = strlenW(right->description.lpstrName);
-  hres = CompareStringW(0,0,left->description.lpstrName, left_len,
+  ret = CompareStringW(0,0,left->description.lpstrName, left_len,
     right->description.lpstrName, right_len);
-  if (hres != CSTR_EQUAL)
+  if (ret != CSTR_EQUAL)
     return S_FALSE;
 
   return S_OK;
@@ -1377,7 +1377,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return hr;
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_BOOL);
@@ -1399,7 +1398,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return hr;
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_BOOL);
@@ -1421,7 +1419,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return hr;
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_BOOL);
@@ -1440,7 +1437,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return OLEFontImpl_get_Size((IFont *)this, &V_CY(pVarResult));
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_CY);
@@ -1459,7 +1455,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return OLEFontImpl_get_Weight((IFont *)this, &V_I2(pVarResult));
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_I2);
@@ -1478,7 +1473,6 @@ static HRESULT WINAPI OLEFontImpl_Invoke(
       return OLEFontImpl_get_Charset((IFont *)this, &V_I2(pVarResult));
     } else {
       VARIANTARG vararg;
-      HRESULT hr;
 
       VariantInit(&vararg);
       hr = VariantChangeTypeEx(&vararg, &pDispParams->rgvarg[0], lcid, 0, VT_I2);
@@ -1562,7 +1556,7 @@ static HRESULT WINAPI OLEFontImpl_GetClassID(
   if (pClassID==0)
     return E_POINTER;
 
-  memcpy(pClassID, &CLSID_StdFont, sizeof(CLSID_StdFont));
+  *pClassID = CLSID_StdFont;
 
   return S_OK;
 }
@@ -1812,7 +1806,9 @@ static HRESULT WINAPI OLEFontImpl_GetSizeMax(
   pcbSize->u.LowPart += sizeof(BYTE);  /* StrLength */
 
   if (this->description.lpstrName!=0)
-    pcbSize->u.LowPart += lstrlenW(this->description.lpstrName);
+      pcbSize->u.LowPart += WideCharToMultiByte( CP_ACP, 0, this->description.lpstrName,
+                                                 strlenW(this->description.lpstrName),
+                                                 NULL, 0, NULL, NULL );
 
   return S_OK;
 }
