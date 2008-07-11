@@ -7,18 +7,20 @@
 extern "C" {
 #endif
 #define MAXIMUM_LEADBYTES 12
+
+/* Some documentation can be found here: http://www.ping.uio.no/~ovehk/nls/ */
 typedef struct _CPTABLEINFO
 {
    USHORT  CodePage;
-   USHORT  MaximumCharacterSize;
-   USHORT  DefaultChar;
-   USHORT  UniDefaultChar;
-   USHORT  TransDefaultChar;
-   USHORT  TransUniDefaultChar;
+   USHORT  MaximumCharacterSize;       /* 1 = SBCS, 2 = DBCS */
+   USHORT  DefaultChar;                /* Default MultiByte Character for the CP->Unicode conversion */
+   USHORT  UniDefaultChar;             /* Default Unicode Character for the CP->Unicode conversion */
+   USHORT  TransDefaultChar;           /* Default MultiByte Character for the Unicode->CP conversion */
+   USHORT  TransUniDefaultChar;        /* Default Unicode Character for the Unicode->CP conversion */
    USHORT  DBCSCodePage;
    UCHAR LeadByte[MAXIMUM_LEADBYTES];
-   PUSHORT MultiByteTable;
-   PVOID WideCharTable;
+   PUSHORT MultiByteTable;             /* Table for CP->Unicode conversion */
+   PVOID WideCharTable;                /* Table for Unicode->CP conversion */
    PUSHORT DBCSRanges;
    PUSHORT DBCSOffsets;
 } CPTABLEINFO, *PCPTABLEINFO;

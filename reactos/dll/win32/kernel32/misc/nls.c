@@ -688,14 +688,65 @@ IntWideCharToMultiByteUTF8(UINT CodePage, DWORD Flags,
 }
 
 /**
+ * @name IsValidSBCSMapping
+ *
+ * Checks if ch (single-byte character) is a valid mapping for wch
+ *
+ * @see IntWideCharToMultiByteCP
+ */
+static inline BOOL
+IntIsValidSBCSMapping(PCPTABLEINFO CodePageTable, DWORD Flags, WCHAR wch, UCHAR ch)
+{
+   /* If the WC_NO_BEST_FIT_CHARS flag has been specified, the characters need to match exactly. */
+   if(Flags & WC_NO_BEST_FIT_CHARS)
+      return (CodePageTable->MultiByteTable[ch] != wch);
+
+   /* By default, all characters except TransDefaultChar apply as a valid mapping for ch (so also "nearest" characters) */
+   if(ch != CodePageTable->TransDefaultChar)
+      return TRUE;
+
+   /* The only possible left valid mapping is the default character itself */
+   return (wch == CodePageTable->TransUniDefaultChar);
+}
+
+/**
+ * @name IsValidDBCSMapping
+ *
+ * Checks if ch (double-byte character) is a valid mapping for wch
+ *
+ * @see IntWideCharToMultiByteCP
+ */
+static inline BOOL
+IntIsValidDBCSMapping(PCPTABLEINFO CodePageTable, DWORD Flags, WCHAR wch, USHORT ch)
+{
+   /* If ch is the default character, but the wch is not, it can't be a valid mapping */
+   if(ch == CodePageTable->TransDefaultChar && wch != CodePageTable->TransUniDefaultChar)
+      return FALSE;
+
+   /* If the WC_NO_BEST_FIT_CHARS flag has been specified, the characters need to match exactly. */
+   if(Flags & WC_NO_BEST_FIT_CHARS)
+   {
+      if(ch & 0xff00)
+      {
+         UCHAR uOffset = CodePageTable->DBCSOffsets[ch >> 8];
+         return (CodePageTable->MultiByteTable[(uOffset << 8) + (ch & 0xff)] == wch);
+      }
+
+      return (CodePageTable->MultiByteTable[ch] == wch);
+   }
+
+   /* If we're still here, we have a valid mapping */
+   return TRUE;
+}
+
+/**
  * @name IntWideCharToMultiByteCP
  *
  * Internal version of WideCharToMultiByte for code page tables.
  *
  * @see WideCharToMultiByte
- * @todo Handle default characters and flags.
+ * @todo Handle WC_COMPOSITECHECK
  */
-
 static INT STDCALL
 IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
                          LPCWSTR WideCharString, INT WideCharCount,
@@ -715,108 +766,233 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
    }
    CodePageTable = &CodePageEntry->CodePageTable;
 
+
    /* Different handling for DBCS code pages. */
    if (CodePageTable->MaximumCharacterSize > 1)
    {
-      /* FIXME */
+      /* If Flags, DefaultChar or UsedDefaultChar were given, we have to do some more work */
+      if(Flags || DefaultChar || UsedDefaultChar)
+      {
+         BOOL TempUsedDefaultChar;
+         USHORT DefChar;
 
-      USHORT WideChar;
-      USHORT MbChar;
+         /* If UsedDefaultChar is not set, set it to a temporary value, so we don't have to check on every character */
+         if(!UsedDefaultChar)
+            UsedDefaultChar = &TempUsedDefaultChar;
+
+         *UsedDefaultChar = FALSE;
+
+         /* Use the CodePage's TransDefaultChar if none was given. Don't modify the DefaultChar pointer here. */
+         if(DefaultChar)
+            DefChar = DefaultChar[1] ? ((DefaultChar[0] << 8) | DefaultChar[1]) : DefaultChar[0];
+         else
+            DefChar = CodePageTable->TransDefaultChar;
+
+         /* Does caller query for output buffer size? */
+         if(!MultiByteCount)
+         {
+            for(TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
+            {
+               USHORT uChar;
+
+               if((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
+               {
+                  /* FIXME: Handle WC_COMPOSITECHECK */
+               }
+
+               uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
+
+               /* Verify if the mapping is valid for handling DefaultChar and UsedDefaultChar */
+               if(!IntIsValidDBCSMapping(CodePageTable, Flags, *WideCharString, uChar))
+               {
+                  uChar = DefChar;
+                  *UsedDefaultChar = TRUE;
+               }
+
+               /* Increment TempLength again if this is a double-byte character */
+               if(uChar & 0xff00)
+                  TempLength++;
+            }
+
+            return TempLength;
+         }
+
+         /* Convert the WideCharString to the MultiByteString and verify if the mapping is valid */
+         for(TempLength = MultiByteCount; WideCharCount && TempLength; TempLength--, WideCharString++, WideCharCount--)
+         {
+            USHORT uChar;
+
+            if((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
+            {
+               /* FIXME: Handle WC_COMPOSITECHECK */
+            }
+
+            uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
+
+            /* Verify if the mapping is valid for handling DefaultChar and UsedDefaultChar */
+            if(!IntIsValidDBCSMapping(CodePageTable, Flags, *WideCharString, uChar))
+            {
+               uChar = DefChar;
+               *UsedDefaultChar = TRUE;
+            }
+
+            /* Handle double-byte characters */
+            if(uChar & 0xff00)
+            {
+               /* Don't output a partial character */
+               if(TempLength == 1)
+                  break;
+
+               TempLength--;
+               *MultiByteString++ = uChar >> 8;
+            }
+
+            *MultiByteString++ = (char)uChar;
+         }
+
+         /* WideCharCount should be 0 if all characters were converted */
+         if(WideCharCount)
+         {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+         }
+
+         return MultiByteCount - TempLength;
+      }
 
       /* Does caller query for output buffer size? */
-      if (MultiByteCount == 0)
+      if(!MultiByteCount)
       {
-         for (TempLength = 0; WideCharCount; WideCharCount--, TempLength++)
+         for(TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
          {
-            WideChar = *WideCharString++;
-
-            if (WideChar < 0x80)
-               continue;
-
-            MbChar = ((PWCHAR)CodePageTable->WideCharTable)[WideChar];
-
-            if (!(MbChar & 0xff00))
-               continue;
-
-            TempLength++;
+            /* Increment TempLength again if this is a double-byte character */
+            if (((PWCHAR)CodePageTable->WideCharTable)[*WideCharString] & 0xff00)
+               TempLength++;
          }
 
          return TempLength;
       }
 
-      for (TempLength = MultiByteCount; WideCharCount; WideCharCount--)
+      /* Convert the WideCharString to the MultiByteString */
+      for(TempLength = MultiByteCount; WideCharCount && TempLength; TempLength--, WideCharString++, WideCharCount--)
       {
-         WideChar = *WideCharString++;
+         USHORT uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
 
-         if (WideChar < 0x80)
+         /* Is this a double-byte character? */
+         if(uChar & 0xff00)
          {
-            if (!TempLength)
-            {
-               SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            /* Don't output a partial character */
+            if(TempLength == 1)
                break;
-            }
+
             TempLength--;
-
-            *MultiByteString++ = (CHAR)WideChar;
-            continue;
+            *MultiByteString++ = uChar >> 8;
          }
 
-         MbChar = ((PWCHAR)CodePageTable->WideCharTable)[WideChar];
+         *MultiByteString++ = (char)uChar;
+      }
 
-         if (!(MbChar & 0xff00))
-         {
-            if (!TempLength)
-            {
-               SetLastError(ERROR_INSUFFICIENT_BUFFER);
-               break;
-            }
-            TempLength--;
-
-            *MultiByteString++ = (CHAR)MbChar;
-            continue;;
-         }
-
-         if (TempLength >= 2)
-         {
-            MultiByteString[1] = (CHAR)MbChar; MbChar >>= 8;
-            MultiByteString[0] = (CHAR)MbChar;
-            MultiByteString += 2;
-            TempLength -= 2;
-         }
-         else
-         {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            break;
-         }
+      /* WideCharCount should be 0 if all characters were converted */
+      if(WideCharCount)
+      {
+         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+         return 0;
       }
 
       return MultiByteCount - TempLength;
    }
    else /* Not DBCS code page */
    {
-      /* Does caller query for output buffer size? */
-      if (MultiByteCount == 0)
-         return WideCharCount;
+      INT nReturn;
 
-      /* Adjust buffer size. Wine trick ;-) */
-      if (MultiByteCount < WideCharCount)
+      /* If Flags, DefaultChar or UsedDefaultChar were given, we have to do some more work */
+      if(Flags || DefaultChar || UsedDefaultChar)
       {
-         WideCharCount = MultiByteCount;
-         SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      }
+         BOOL TempUsedDefaultChar;
+         CHAR DefChar;
 
-      for (TempLength = WideCharCount;
-           TempLength > 0;
-           WideCharString++, TempLength--)
-      {
-         *MultiByteString++ = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
-      }
+         /* If UsedDefaultChar is not set, set it to a temporary value, so we don't have to check on every character */
+         if(!UsedDefaultChar)
+            UsedDefaultChar = &TempUsedDefaultChar;
 
-      /* FIXME */
-      if (UsedDefaultChar != NULL)
          *UsedDefaultChar = FALSE;
 
-      return WideCharCount;
+         /* Does caller query for output buffer size? */
+         if(!MultiByteCount)
+         {
+            /* Loop through the whole WideCharString and check if we can get a valid mapping for each character */
+            for(TempLength = 0; WideCharCount; TempLength++, WideCharString++, WideCharCount--)
+            {
+               if((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
+               {
+                  /* FIXME: Handle WC_COMPOSITECHECK */
+               }
+
+               if(!*UsedDefaultChar)
+                  *UsedDefaultChar = !IntIsValidSBCSMapping(CodePageTable, Flags, *WideCharString, ((PCHAR)CodePageTable->WideCharTable)[*WideCharString]);
+            }
+
+            return TempLength;
+         }
+
+         /* Use the CodePage's TransDefaultChar if none was given. Don't modify the DefaultChar pointer here. */
+         if(DefaultChar)
+            DefChar = *DefaultChar;
+         else
+            DefChar = CodePageTable->TransDefaultChar;
+
+         /* Convert the WideCharString to the MultiByteString and verify if the mapping is valid */
+         for(TempLength = MultiByteCount; WideCharCount && TempLength; MultiByteString++, TempLength--, WideCharString++, WideCharCount--)
+         {
+            if((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
+            {
+               /* FIXME: Handle WC_COMPOSITECHECK */
+            }
+
+            *MultiByteString = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
+
+            if(!IntIsValidSBCSMapping(CodePageTable, Flags, *WideCharString, *MultiByteString))
+            {
+               *MultiByteString = DefChar;
+               *UsedDefaultChar = TRUE;
+            }
+         }
+
+         /* WideCharCount should be 0 if all characters were converted */
+         if(WideCharCount)
+         {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+         }
+
+         return MultiByteCount - TempLength;
+      }
+
+      /* Does caller query for output buffer size? */
+      if(!MultiByteCount)
+         return WideCharCount;
+
+      /* Is the buffer large enough? */
+      if(MultiByteCount < WideCharCount)
+      {
+         /* Convert the string up to MultiByteCount and return 0 */
+         WideCharCount = MultiByteCount;
+         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+         nReturn = 0;
+      }
+      else
+      {
+         /* Otherwise WideCharCount will be the number of converted characters */
+         nReturn = WideCharCount;
+      }
+
+      /* Convert the WideCharString to the MultiByteString */
+      for(TempLength = WideCharCount; --TempLength >= 0; WideCharString++, MultiByteString++)
+      {
+         *MultiByteString = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
+      }
+
+      return nReturn;
    }
 }
 
