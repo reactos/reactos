@@ -29,6 +29,20 @@ Ext2ReadWriteBlockAsyncCompletionRoutine (
     IN PIRP Irp,
     IN PVOID Context    );
 
+VOID
+Ext2ReadWriteBlocksFinal (
+    IN BOOLEAN Termination,
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PEXT2_EXTENT Chain, 
+    IN PIRP MasterIrp, 
+    IN PNTSTATUS pStatus,
+    IN PEXT2_RW_CONTEXT pContext, 
+    IN BOOLEAN bBugCheck, 
+    IN PEXT2_EXTENT Extent    );
+
+VOID
+Ext2ReadSyncFinal (
+    IN PKEVENT Event    );
 
 NTSTATUS
 Ext2MediaEjectControlCompletion (
@@ -68,18 +82,18 @@ Ext2LockUserBuffer (IN PIRP     Irp,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    __try {
+    _SEH_TRY {
 
         MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
         Status = STATUS_SUCCESS;
 
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    } _SEH_HANDLE {
 
         DbgBreak();
         IoFreeMdl(Irp->MdlAddress);
         Irp->MdlAddress = NULL;
         Status = STATUS_INVALID_USER_BUFFER;
-    }
+    } _SEH_END;
 
     return Status;
 }
@@ -182,6 +196,74 @@ Ext2ReadWriteBlockAsyncCompletionRoutine (
     return STATUS_SUCCESS;
 }
 
+_SEH_DEFINE_LOCALS(Ext2ReadWriteBlocksFinal)
+{
+    IN PEXT2_IRP_CONTEXT    IrpContext;
+    PEXT2_EXTENT            Chain;
+    PIRP                    MasterIrp;
+    PNTSTATUS               pStatus;
+    PEXT2_RW_CONTEXT        pContext;
+    BOOLEAN                 bBugCheck;
+    PEXT2_EXTENT            Extent;
+};
+
+_SEH_FINALLYFUNC(Ext2ReadWriteBlocksFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2ReadWriteBlocksFinal);
+    Ext2ReadWriteBlocksFinal(_SEH_AbnormalTermination(), _SEH_VAR(IrpContext), 
+                             _SEH_VAR(Chain), _SEH_VAR(MasterIrp), 
+                             _SEH_VAR(pStatus), _SEH_VAR(pContext),
+                             _SEH_VAR(bBugCheck), _SEH_VAR(Extent));
+}
+
+VOID
+Ext2ReadWriteBlocksFinal (
+    IN BOOLEAN              Termination,
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PEXT2_EXTENT         Chain,
+    IN PIRP                 MasterIrp,
+    IN PNTSTATUS            pStatus,
+    IN PEXT2_RW_CONTEXT     pContext,
+    IN BOOLEAN              bBugCheck,
+    IN PEXT2_EXTENT         Extent )
+{
+    if (Termination) {
+
+        if (bBugCheck) {
+            Ext2BugCheck(EXT2_BUGCHK_BLOCK, 0, 0, 0);
+        }
+
+        for (Extent = Chain; Extent != NULL; Extent = Extent->Next)  {
+            if (Extent->Irp != NULL ) {
+                if (Extent->Irp->MdlAddress != NULL) {
+                    IoFreeMdl(Extent->Irp->MdlAddress );
+                }
+                IoFreeIrp(Extent->Irp);
+            }
+        }
+
+        if (pContext) {
+            ExFreePoolWithTag(pContext, EXT2_RWC_MAGIC);
+            DEC_MEM_COUNT(PS_RW_CONTEXT, pContext, sizeof(EXT2_RW_CONTEXT));
+        }
+
+    } else {
+
+        if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
+            if (MasterIrp) {
+                *pStatus = MasterIrp->IoStatus.Status;
+            }
+            if (pContext) {
+                ExFreePoolWithTag(pContext, EXT2_RWC_MAGIC);
+                DEC_MEM_COUNT(PS_RW_CONTEXT, pContext, sizeof(EXT2_RW_CONTEXT));
+            }
+        } else {
+            IrpContext->Irp = NULL;
+            *pStatus = STATUS_PENDING;
+        }
+    }
+}
+
 NTSTATUS
 Ext2ReadWriteBlocks(
     IN PEXT2_IRP_CONTEXT    IrpContext,
@@ -196,19 +278,28 @@ Ext2ReadWriteBlocks(
     PIO_STACK_LOCATION  IrpSp;
     NTSTATUS            Status = STATUS_SUCCESS;
     PEXT2_RW_CONTEXT    pContext = NULL;
-    BOOLEAN             bBugCheck = FALSE;
     PEXT2_EXTENT        Extent;
 
     ASSERT(MasterIrp);
 
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ext2ReadWriteBlocksFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(Chain) = Chain;
+        _SEH_VAR(MasterIrp) = IrpContext->Irp;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(pContext) = NULL;
+        _SEH_VAR(bBugCheck) = FALSE;
+        _SEH_VAR(Extent) = Extent;
 
         pContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(EXT2_RW_CONTEXT), EXT2_RWC_MAGIC);
+        _SEH_VAR(pContext) = pContext;
 
         if (!pContext) {
             DEBUG(DL_ERR, ( "Ex2ReadWriteBlocks: failed to allocate pContext.\n"));
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH_LEAVE;
         }
 
         INC_MEM_COUNT(PS_RW_CONTEXT, pContext, sizeof(EXT2_RW_CONTEXT));
@@ -237,7 +328,7 @@ Ext2ReadWriteBlocks(
             pContext->ThreadId = ExGetCurrentResourceThread();
         }
 
-        for (Extent = Chain; Extent != NULL; Extent = Extent->Next) {
+        for (_SEH_VAR(Extent) = Chain; _SEH_VAR(Extent) != NULL; _SEH_VAR(Extent) = _SEH_VAR(Extent)->Next) {
 
             Irp = IoMakeAssociatedIrp( 
                         MasterIrp,
@@ -245,32 +336,32 @@ Ext2ReadWriteBlocks(
 
             if (!Irp) {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                __leave;
+                _SEH_LEAVE;
             }
 
             Mdl = IoAllocateMdl( (PCHAR)MasterIrp->UserBuffer +
-                    Extent->Offset,
-                    Extent->Length,
+                    _SEH_VAR(Extent)->Offset,
+                    _SEH_VAR(Extent)->Length,
                     FALSE,
                     FALSE,
                     Irp );
 
             if (!Mdl)  {
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                __leave;
+                _SEH_LEAVE;
             }
             
             IoBuildPartialMdl( MasterIrp->MdlAddress,
                         Mdl,
-                        (PCHAR)MasterIrp->UserBuffer +Extent->Offset,
-                        Extent->Length );
+                        (PCHAR)MasterIrp->UserBuffer +_SEH_VAR(Extent)->Offset,
+                        _SEH_VAR(Extent)->Length );
                 
             IoSetNextIrpStackLocation( Irp );
             IrpSp = IoGetCurrentIrpStackLocation( Irp );
             
             IrpSp->MajorFunction = IrpContext->MajorFunction;
-            IrpSp->Parameters.Read.Length = Extent->Length;
-            IrpSp->Parameters.Read.ByteOffset.QuadPart = Extent->Lba;
+            IrpSp->Parameters.Read.Length = _SEH_VAR(Extent)->Length;
+            IrpSp->Parameters.Read.ByteOffset.QuadPart = _SEH_VAR(Extent)->Lba;
 
             IoSetCompletionRoutine(
                     Irp,
@@ -285,14 +376,14 @@ Ext2ReadWriteBlocks(
             IrpSp = IoGetNextIrpStackLocation( Irp );
 
             IrpSp->MajorFunction = IrpContext->MajorFunction;
-            IrpSp->Parameters.Read.Length =Extent->Length;
-            IrpSp->Parameters.Read.ByteOffset.QuadPart = Extent->Lba;
+            IrpSp->Parameters.Read.Length = _SEH_VAR(Extent)->Length;
+            IrpSp->Parameters.Read.ByteOffset.QuadPart = _SEH_VAR(Extent)->Lba;
 
             if (bVerify) {
                 SetFlag( IrpSp->Flags, SL_OVERRIDE_VERIFY_VOLUME );
             }
 
-            Extent->Irp = Irp;
+            _SEH_VAR(Extent)->Irp = Irp;
             pContext->Blocks += 1;
         }
 
@@ -302,11 +393,11 @@ Ext2ReadWriteBlocks(
             MasterIrp->AssociatedIrp.IrpCount += 1;
         }
 
-        bBugCheck = TRUE;
+        _SEH_VAR(bBugCheck) = TRUE;
 
-        for (Extent = Chain; Extent != NULL; Extent = Extent->Next) {
+        for (_SEH_VAR(Extent) = Chain; _SEH_VAR(Extent) != NULL; _SEH_VAR(Extent) = _SEH_VAR(Extent)->Next) {
             Status = IoCallDriver ( Vcb->TargetDeviceObject,
-                                    Extent->Irp);
+                                    _SEH_VAR(Extent)->Irp);
         }
 
         if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
@@ -316,46 +407,33 @@ Ext2ReadWriteBlocks(
             KeClearEvent( &(pContext->Event) );
         }
 
-    } __finally {
-
-        if (AbnormalTermination()) {
-
-            if (bBugCheck) {
-                Ext2BugCheck(EXT2_BUGCHK_BLOCK, 0, 0, 0);
-            }
-
-            for (Extent = Chain; Extent != NULL; Extent = Extent->Next)  {
-                if (Extent->Irp != NULL ) {
-                    if (Extent->Irp->MdlAddress != NULL) {
-                        IoFreeMdl(Extent->Irp->MdlAddress );
-                    }
-                    IoFreeIrp(Extent->Irp);
-                }
-            }
-
-            if (pContext) {
-                ExFreePoolWithTag(pContext, EXT2_RWC_MAGIC);
-                DEC_MEM_COUNT(PS_RW_CONTEXT, pContext, sizeof(EXT2_RW_CONTEXT));
-            }
-
-        } else {
-
-            if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)) {
-                if (MasterIrp) {
-                    Status = MasterIrp->IoStatus.Status;
-                }
-                if (pContext) {
-                    ExFreePoolWithTag(pContext, EXT2_RWC_MAGIC);
-                    DEC_MEM_COUNT(PS_RW_CONTEXT, pContext, sizeof(EXT2_RW_CONTEXT));
-                }
-            } else {
-                IrpContext->Irp = NULL;
-                Status = STATUS_PENDING;
-            }
-        }
     }
+    _SEH_FINALLY(Ext2ReadWriteBlocksFinal_PSEH)
+    _SEH_END;
 
     return Status;
+}
+
+_SEH_DEFINE_LOCALS(Ext2ReadSyncFinal)
+{
+    PKEVENT Event;
+};
+
+_SEH_FINALLYFUNC(Ext2ReadSyncFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2ReadSyncFinal);
+    Ext2ReadSyncFinal(_SEH_VAR(Event));
+}
+
+VOID
+Ext2ReadSyncFinal (
+    IN PKEVENT Event
+    )
+{
+    if (Event) {
+        ExFreePoolWithTag(Event, TAG('E', 'K', '2', 'E'));
+        DEC_MEM_COUNT(PS_DISK_EVENT, Event, sizeof(KEVENT));
+    }
 }
 
 NTSTATUS
@@ -378,13 +456,13 @@ Ext2ReadSync(
     ASSERT(Vcb->TargetDeviceObject != NULL);
     ASSERT(Buffer != NULL);
 
-    __try {
+    _SEH_TRY {
     
-        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), 'EK2E');
+        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG('E', 'K', '2', 'E'));
 
         if (NULL == Event) {
             DEBUG(DL_ERR, ( "Ex2ReadSync: failed to allocate Event.\n"));
-            __leave;
+            _SEH_LEAVE;
         }
 
         INC_MEM_COUNT(PS_DISK_EVENT, Event, sizeof(KEVENT));
@@ -403,7 +481,7 @@ Ext2ReadSync(
 
         if (!Irp) {
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (bVerify) {
@@ -425,13 +503,9 @@ Ext2ReadSync(
             Status = IoStatus.Status;
         }
 
-    } __finally {
-
-        if (Event) {
-            ExFreePoolWithTag(Event, 'EK2E');
-            DEC_MEM_COUNT(PS_DISK_EVENT, Event, sizeof(KEVENT));
-        }
     }
+    _SEH_FINALLY(Ext2ReadSyncFinal_PSEH)
+    _SEH_END;
 
     return Status;
 }
