@@ -1854,10 +1854,74 @@ NtUserWaitForInputIdle(
    IN DWORD dwMilliseconds,
    IN BOOL Unknown2)
 {
-   UNIMPLEMENTED
+  ULONGLONG start_time, elapsed, run;
+  DWORD ret;
+  LARGE_INTEGER Timeout; 
+  HANDLE handles[2];
 
-   return 0;
+  UserEnterExclusive();
+
+  handles[0] = hProcess;
+  handles[1] = &PsGetCurrentProcessWin32Process()->InputIdleEvent; // Fixme!
+
+  if (!handles[1]) return 0;  /* no event to wait on */
+
+  start_time = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
+                           SharedUserData->TickCountMultiplier / 16777216);
+  elapsed = 0;
+  run = dwMilliseconds;
+
+  DPRINT("waiting for %p\n", handles[1] );
+  do
+  {
+     Timeout.QuadPart = run - elapsed;
+     UserLeave();
+     ret = KeWaitForMultipleObjects( 2,
+                               handles,
+                               WaitAny,
+                           UserRequest,
+                              UserMode,
+                                 FALSE,
+                              &Timeout,
+                                  NULL);
+     UserEnterExclusive();
+
+     switch (ret)
+     {
+       case STATUS_WAIT_0:
+         ret = (DWORD)-1;
+         goto WaitExit;
+       case STATUS_WAIT_2:
+       {
+         USER_MESSAGE msg;
+         co_IntPeekMessage( &msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
+         break;
+       }
+       case STATUS_USER_APC:
+       case STATUS_ALERTED:
+       case STATUS_TIMEOUT:
+         DPRINT1("timeout\n");
+         ret = STATUS_TIMEOUT;
+         goto WaitExit;
+       default:
+         DPRINT1("finished\n");
+         ret = 0;
+         goto WaitExit;
+     }
+     if (dwMilliseconds != -1 ) //INFINITE)
+     {
+        elapsed = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
+                              SharedUserData->TickCountMultiplier / 16777216) - start_time;
+
+        if (elapsed > run)
+           ret = STATUS_TIMEOUT;
+           break;
+     }
+  }
+  while (1);
+WaitExit:
+  UserLeave();
+  return ret;
 }
-
 
 /* EOF */

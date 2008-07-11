@@ -43,6 +43,7 @@ typedef struct _W32PROCESS
   ULONG Flags;
   LONG GDIObjects;
   LONG UserObjects;
+  KEVENT InputIdleEvent;
 
   W32HEAP_USER_MAPPING HeapMappings;
   PW32PROCESSINFO ProcessInfo;
