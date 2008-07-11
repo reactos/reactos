@@ -90,7 +90,7 @@ DriverProc(
     switch ( message )
     {
         case DRV_LOAD :
-            SOUND_DEBUG(L"DRV_LOAD");
+            DPRINT("DRV_LOAD");
 
             EnumerateNt4ServiceSoundDevices(L"sndblst",
                                             0,
@@ -102,7 +102,7 @@ DriverProc(
             return 1L;
 
         case DRV_FREE :
-            SOUND_DEBUG(L"DRV_FREE");
+            DPRINT("DRV_FREE");
 
             StopSoundThread();
 

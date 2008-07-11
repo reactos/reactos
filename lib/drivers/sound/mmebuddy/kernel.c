@@ -225,6 +225,13 @@ WriteSoundDeviceBuffer(
     /*wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);*/
     /*SOUND_DEBUG(msg);*/
 
+    SOUND_TRACE("WriteFileEx(%p, %p, %d, %p, %p)\n", 
+                    SoundDeviceInstance->Device->Handle,
+                    Buffer,
+                    (int) BufferSize,
+                    Overlapped,
+                    CompletionRoutine);
+
     if ( ! WriteFileEx(SoundDeviceInstance->Device->Handle,
                        Buffer,
                        BufferSize,

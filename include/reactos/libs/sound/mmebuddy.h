@@ -43,6 +43,8 @@
             WCHAR dbgmsg[1024], dbgtitle[1024]; \
             wsprintf(dbgtitle, L"%hS[%d]", __FILE__, __LINE__); \
             wsprintf(dbgmsg, L"ASSERT FAILED:\n%hS", #x); \
+            MessageBox(0, dbgmsg, dbgtitle, MB_OK | MB_TASKMODAL); \
+            exit(1); \
         } \
     }
 
