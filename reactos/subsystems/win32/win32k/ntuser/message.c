@@ -1858,11 +1858,35 @@ NtUserWaitForInputIdle(
   DWORD ret;
   LARGE_INTEGER Timeout; 
   HANDLE handles[2];
+  PEPROCESS Process;
+  PW32PROCESS W32Process;
+  NTSTATUS Status;
 
   UserEnterExclusive();
 
+  Status = ObReferenceObjectByHandle(hProcess,
+                                     PROCESS_QUERY_INFORMATION,
+                                     PsProcessType,
+                                     UserMode,
+                                     (PVOID*)&Process,
+                                     NULL);
+
+  if (!NT_SUCCESS(Status))
+  {
+     SetLastNtError(Status);
+     return (DWORD)-1;
+  }
+
+  W32Process = (PW32PROCESS)Process->Win32Process;
+  if (!W32Process)
+  {
+      ObDereferenceObject(Process);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return (DWORD)-1;
+  }
+
   handles[0] = hProcess;
-  handles[1] = &PsGetCurrentProcessWin32Process()->InputIdleEvent; // Fixme!
+  handles[1] = &W32Process->InputIdleEvent; // Fixme!
 
   if (!handles[1]) return 0;  /* no event to wait on */
 
@@ -1920,6 +1944,7 @@ NtUserWaitForInputIdle(
   }
   while (1);
 WaitExit:
+  ObDereferenceObject(Process);
   UserLeave();
   return ret;
 }
