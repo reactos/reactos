@@ -64,6 +64,17 @@ static PAGED_LOOKASIDE_LIST TimerLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
+//
+// Wakeup any thread/process waiting on idle input.
+//
+static VOID FASTCALL
+IdlePing(VOID)
+{
+  PW32PROCESS W32d = PsGetCurrentProcessWin32Process();
+  if (W32d && W32d->InputIdleEvent)
+     KePulseEvent( W32d->InputIdleEvent, EVENT_INCREMENT, TRUE);
+}
+
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
@@ -490,6 +501,8 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
    {
+      IdlePing();
+
       UserLeaveCo();
 
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -690,6 +703,9 @@ CLEANUP:
    END_CLEANUP;
 }
 
+//
+// Note: Only called from input.c.
+//
 VOID FASTCALL
 co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -697,6 +713,9 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
+
+   // Condition may arise when calling MsqPostMessage and waiting for an event.
+   if (!UserIsEntered()) UserEnterExclusive(); // Fixme: Not sure ATM if this thread is locked.
 
    DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
           uMsg, wParam, lParam);
@@ -726,14 +745,14 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    }
 
    FocusMessageQueue = IntGetFocusMessageQueue();
-      if (FocusMessageQueue == NULL)
-      {
+   if (FocusMessageQueue == NULL)
+   {
          DPRINT("No focus message queue\n");
          return;
-      }
+   }
 
-      if (FocusMessageQueue->FocusWindow != (HWND)0)
-      {
+   if (FocusMessageQueue->FocusWindow != (HWND)0)
+   {
          Msg.hwnd = FocusMessageQueue->FocusWindow;
          DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 
@@ -742,12 +761,13 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
                               &Msg.pt);
          MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
-      }
-      else
-      {
-         DPRINT("Invalid focus window handle\n");
-      }
    }
+   else
+   {
+         DPRINT("Invalid focus window handle\n");
+   }
+   if (UserIsEntered()) UserLeave();
+}
 
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -1087,6 +1107,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    if(Block)
    {
+      IdlePing();
 
       UserLeaveCo();
 
@@ -1149,6 +1170,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
       WaitObjects[1] = ThreadQueue->NewMessages;
       do
       {
+         IdlePing();
 
          UserLeaveCo();
 
@@ -1303,6 +1325,8 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
    {
       Timeout = NULL;
    }
+
+   IdlePing(); // Going to wait so send Idle ping.
 
    UserLeaveCo();
 
