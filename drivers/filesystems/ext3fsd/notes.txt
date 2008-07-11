@@ -1,0 +1,50 @@
+==================================
+Release Notes for Ext2Fsd V0.46
+==================================
+
+Modifications from V0.45:
+
+    1, ext3 journal check and replay implemented. If the journal is
+       not empty ext2fsd will replay the journal and make the file
+       system consistent as an ext2 file system.
+
+    2, flexible-inode-size supported. recent Linux are using 256-byte
+       inode that fails 0.45 and before to show all the files.
+
+    3, FIXME: 2 minor issues that mislead EditPlus. EditPlus is always
+       trying to open any file with directory_only flag set to judge
+       whether the target is a directory or file, when the file isn't
+       a directory, the open request should be denied. But Ext2Fsd 0.45
+       and before doesn't. Another issue is that ext2 file time on disk
+       has different precision against windows (1 second vs 100 nano
+       second), which causes EditPlus thinks the file is being changed.
+
+    4, FIXME: a severe bug (likely happen on win2k system) which cause
+       dirty caches missed and slow down the whole system. 
+
+    5, many other minor changes: bulk block allocation/release, possible
+       inode allocation dead-loop when all inodes are used out, Ext2Mgr
+       win2k support, other performance improvements.
+
+Features to be implemented in future:
+
+    1, LVM support
+    2, Documents improvement: clear and elaborate
+    3, Performance improvement, code optimization
+    4, EXT3 features support (htree, journal)
+    5, Automatic check & update of new versions
+
+    Since 0.38, Ext2fsd is much stable even under heavy i/o loads,
+    both for reading and writing. Performance and stability are
+    highly, improved especially stability. A new and strong era of
+    Ext2Fsd in product shape is coming :)
+
+WARNINGS:
+ 
+    The driver may crash your system and ruin your data unexpectedly,
+    since there might be software conflicts and I could only test it
+    on some of the popular platforms. You should use it with care and
+    use it at your own risk!
+
+Matt <mattwu@163.com>
+http://www.ext2fsd.com

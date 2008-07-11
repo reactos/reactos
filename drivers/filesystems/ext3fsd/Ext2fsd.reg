@@ -1,0 +1,14 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Ext2Fsd]
+"ErrorControl"=dword:00000001
+"Group"="File System"
+"Start"=dword:00000003
+"Type"=dword:00000002
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Ext2Fsd\Parameters]
+"WritingSupport"=dword:00000000
+"CheckingBitmap"=dword:00000000
+"Ext3ForceWriting"=dword:00000000
+"CodePage"="default"
+

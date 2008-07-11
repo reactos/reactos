@@ -1,0 +1,50 @@
+#
+# Sources for Ext2 file system driver for windows
+# mattwu@163.com / http://ext2fsd.sf.net
+#
+
+# Name and type of the output file:
+TARGETNAME=ext2fsd
+TARGETTYPE=DRIVER
+TARGETPATH=..\$(DDK_TARGET_OS)\$(DDKBUILDENV)
+
+DRIVERTYPE=FS
+
+# Creates a file used by Visual Studio to navigate the source code.
+BROWSER_INFO=TRUE
+RCNOFONTMAP=TRUE
+KMDF_VERSION=1
+
+C_DEFINES = $(C_DEFINES) /D__KERNEL__
+INCLUDES=..\include;
+TARGETLIBS= $(TARGETPATH)\*\nlssup.lib \
+            $(TARGETPATH)\*\jbd.lib    \
+            $(TARGETPATH)\*\ext3.lib
+
+# The source code:
+SOURCES=    ..\Ext3fsd.rc  \
+            ..\fastio.c    \
+            ..\memory.c    \
+            ..\close.c      \
+            ..\dirctl.c     \
+            ..\except.c     \
+            ..\read.c       \
+            ..\misc.c       \
+            ..\devctl.c     \
+            ..\volinfo.c    \
+            ..\lock.c       \
+            ..\cleanup.c    \
+            ..\block.c      \
+            ..\cmcb.c       \
+            ..\fileinfo.c   \
+            ..\dispatch.c   \
+            ..\init.c       \
+            ..\debug.c      \
+            ..\create.c     \
+            ..\fsctl.c      \
+            ..\pnp.c        \
+            ..\write.c      \
+            ..\flush.c      \
+            ..\shutdown.c   \
+            ..\nls.c        \
+            ..\linux.c

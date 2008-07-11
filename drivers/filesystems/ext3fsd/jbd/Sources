@@ -1,0 +1,24 @@
+#
+# Sources for Ext2 file system driver for windows
+# mattwu@163.com / http://ext2fsd.sf.net
+#
+
+# Name and type of the output file:
+MAJORCOMP=ext2fsd
+MINORCOMP=jbd
+
+TARGETNAME=jbd
+TARGETTYPE=LIBRARY
+TARGETPATH=..\$(DDK_TARGET_OS)\$(DDKBUILDENV)\
+
+# Creates a file used by Visual Studio to navigate the source code.
+BROWSER_INFO=TRUE
+RCNOFONTMAP=TRUE
+
+C_DEFINES = $(C_DEFINES) /D__KERNEL__
+DRIVERTYPE=FS
+
+INCLUDES=..\include;.;$(DRIVER_INC_PATH);
+
+# The source code:
+SOURCES=recovery.c replay.c revoke.c
