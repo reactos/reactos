@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/stubs.c
@@ -82,8 +81,8 @@ WaitForInputIdle(
   HANDLE hProcess,
   DWORD dwMilliseconds)
 {
-  UNIMPLEMENTED;
-  return 0;
+// Need to call NtQueryInformationProcess and send ProcessId not hProcess.
+  return NtUserWaitForInputIdle(hProcess, dwMilliseconds, FALSE);
 }
 
 /******************************************************************************
