@@ -22,43 +22,12 @@
     Hacky debug macro
 */
 
-#include <stdio.h>
-#define SOUND_TRACE printf
-
-#define SOUND_DEBUG(x) \
-    MessageBox(0, x, L"Debug", MB_OK | MB_TASKMODAL);
-
-#define SOUND_DEBUG_HEX(x) \
-    { \
-        WCHAR dbgmsg[1024], dbgtitle[1024]; \
-        wsprintf(dbgtitle, L"%hS[%d]", __FILE__, __LINE__); \
-        wsprintf(dbgmsg, L"%hS == %x", #x, x); \
-        MessageBox(0, dbgmsg, dbgtitle, MB_OK | MB_TASKMODAL); \
-    }
-
-#define SOUND_ASSERT(x) \
-    { \
-        if ( ! ( x ) ) \
-        { \
-            WCHAR dbgmsg[1024], dbgtitle[1024]; \
-            wsprintf(dbgtitle, L"%hS[%d]", __FILE__, __LINE__); \
-            wsprintf(dbgmsg, L"ASSERT FAILED:\n%hS", #x); \
-            MessageBox(0, dbgmsg, dbgtitle, MB_OK | MB_TASKMODAL); \
-            exit(1); \
-        } \
-    }
+#define POPUP(msg) \
+    MessageBoxA(0, msg, __FUNCTION__, MB_OK | MB_TASKMODAL)
 
 
 /*
     Some memory allocation helper macros
-*/
-
-/*
-#define AllocateMemory(size) \
-    HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
-
-#define FreeMemory(ptr) \
-    HeapFree(GetProcessHeap(), 0, ptr)
 */
 
 #define AllocateMemoryFor(thing) \

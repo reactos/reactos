@@ -108,7 +108,8 @@ DriverProc(
 
             RemoveAllSoundDevices();
 
-            SOUND_DEBUG_HEX(GetMemoryAllocations());
+//            SOUND_DEBUG_HEX(GetMemoryAllocations());
+            DPRINT("Leaving driver with %d memory allocations present\n", GetMemoryAllocations());
 
             return 1L;
 
@@ -179,9 +180,9 @@ int APIENTRY wWinMain(
     //SOUND_DEBUG(L"WODM_OPEN test 2");
     OpenDesc.lpFormat = &Format;
     Result = wodMessage(0, WODM_OPEN, (DWORD) &InstanceData, (DWORD) &OpenDesc, 0);
-    SOUND_DEBUG_HEX(Result);
+    /*SOUND_DEBUG_HEX(Result);*/
 
-    SOUND_DEBUG(L"WODM_WRITE test");
+    POPUP("Click for WODM_WRITE test");
     WaveHeaders[0].lpData = (PVOID) Buffer;
     WaveHeaders[0].dwBufferLength = 1000000;
     WaveHeaders[0].dwFlags = WHDR_PREPARED;
@@ -216,9 +217,9 @@ int APIENTRY wWinMain(
 
 //    SOUND_DEBUG_HEX(Result);
 
-    SOUND_DEBUG(L"WODM_CLOSE test");
+    POPUP("Click for WODM_CLOSE test");
     Result = wodMessage(0, WODM_CLOSE, (DWORD) InstanceData, (DWORD) 0, 0);
-    SOUND_DEBUG_HEX(Result);
+    /* SOUND_DEBUG_HEX(Result); */
 
     /* DRV_UNLOAD */
     DriverProc(0, 0, DRV_FREE, 0, 0);

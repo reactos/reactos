@@ -30,13 +30,13 @@ OpenKernelSoundDeviceByName(
 
     if ( ! Handle )
     {
-        MessageBox(0, L"Failed handle", L"kernel.c", MB_OK | MB_TASKMODAL);
+        DPRINT("No handle ptr\n");
         return MMSYSERR_INVALPARAM;
     }
 
     if ( ! DeviceName )
     {
-        MessageBox(0, L"Failed devname", L"kernel.c", MB_OK | MB_TASKMODAL);
+        DPRINT("No device name\n");
         return MMSYSERR_INVALPARAM;
     }
 
@@ -45,8 +45,7 @@ OpenKernelSoundDeviceByName(
         OpenFlags = FILE_FLAG_OVERLAPPED;
     }
 
-    DPRINT("Attempting to open '%ws'\n", DeviceName);
-    MessageBox(0, DeviceName, L"Attempting to open", MB_OK | MB_TASKMODAL);
+    DPRINT("Attempting to open '%s'\n", DeviceName);
 
     *Handle = CreateFile(DeviceName,
                          AccessRights,
@@ -58,6 +57,7 @@ OpenKernelSoundDeviceByName(
 
     if ( *Handle == INVALID_HANDLE_VALUE )
     {
+        DPRINT("Failed to open\n");
         return Win32ErrorToMmResult(GetLastError());
     }
 
@@ -73,13 +73,13 @@ OpenKernelSoundDevice(
 
     if ( ! SoundDevice )
     {
-        SOUND_DEBUG(L"No sound device specified");
+        DPRINT("No sound device specified");
         return MMSYSERR_INVALPARAM;
     }
 
     if ( SoundDevice->Handle != INVALID_HANDLE_VALUE )
     {
-        SOUND_DEBUG(L"Already open?");
+        DPRINT("Already open?");
         return MMSYSERR_ERROR; /*MMSYSERR_ALLOC;*/
     }
 
@@ -215,22 +215,21 @@ WriteSoundDeviceBuffer(
     LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
     LPOVERLAPPED Overlapped)
 {
-    WCHAR msg[128];
     if ( ( ! SoundDeviceInstance ) || ( ! Buffer ) || ( BufferSize == 0 ) )
     {
-        SOUND_DEBUG(L"Invalid parameter!\n");
+        DPRINT("Invalid parameter in WriteSoundDeviceBuffer!\n");
         return MMSYSERR_INVALPARAM;
     }
 
     /*wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);*/
     /*SOUND_DEBUG(msg);*/
 
-    SOUND_TRACE("WriteFileEx(%p, %p, %d, %p, %p)\n", 
-                    SoundDeviceInstance->Device->Handle,
-                    Buffer,
-                    (int) BufferSize,
-                    Overlapped,
-                    CompletionRoutine);
+    DPRINT("WriteFileEx(%p, %p, %d, %p, %p)\n", 
+           SoundDeviceInstance->Device->Handle,
+           Buffer,
+           (int) BufferSize,
+           Overlapped,
+           CompletionRoutine);
 
     if ( ! WriteFileEx(SoundDeviceInstance->Device->Handle,
                        Buffer,
@@ -238,8 +237,7 @@ WriteSoundDeviceBuffer(
                        Overlapped,
                        CompletionRoutine) )
     {
-        wsprintf(msg, L"Win32 Error %d", GetLastError());
-        SOUND_DEBUG(msg);
+        DPRINT("WriteFileEx -- Win32 Error %d", GetLastError());
         return Win32ErrorToMmResult(GetLastError());
     }
 

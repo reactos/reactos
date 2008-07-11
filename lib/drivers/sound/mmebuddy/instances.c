@@ -66,9 +66,9 @@ ListSoundDeviceInstance(
 {
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
 
-    SOUND_ASSERT(SoundDevice != NULL);
-    SOUND_ASSERT(SoundDeviceInstance != NULL);
-    SOUND_ASSERT(SoundDeviceInstance->Device == NULL);
+    ASSERT(SoundDevice != NULL);
+    ASSERT(SoundDeviceInstance != NULL);
+    ASSERT(SoundDeviceInstance->Device == NULL);
 
     SoundDeviceInstance->Device = SoundDevice;
 
@@ -161,9 +161,9 @@ CreateSoundDeviceInstance(
     Result = SoundDevice->Functions.Constructor(CreatedInstance);
     if ( Result != MMSYSERR_NOERROR )
     {
-        SOUND_DEBUG(L"Custom ctor returned failure - unlisting");
+        DPRINT("Custom ctor returned failure - unlisting");
         UnlistSoundDeviceInstance(CreatedInstance);
-        SOUND_DEBUG(L"Freeing");
+        DPRINT("Freeing");
         FreeSoundDeviceInstance(CreatedInstance);
         CreatedInstance = NULL;
         //DestroySoundDeviceInstance(CreatedInstance);

@@ -196,7 +196,7 @@ RemoveSoundDevice(
         {
             if ( CurrentDevice == SoundDevice )
             {
-                SOUND_ASSERT(PreviousDevice != NULL);
+                ASSERT(PreviousDevice != NULL);
                 PreviousDevice->Next = CurrentDevice->Next;
 
                 break;
@@ -526,17 +526,17 @@ DefaultInstanceConstructor(
     DWORD AccessRights = GENERIC_READ;
     MMRESULT Result;
 
-    SOUND_DEBUG(L"Default instance ctor");
+    DPRINT("Default instance ctor");
 
-    SOUND_ASSERT(SoundDeviceInstance != NULL);
+    ASSERT(SoundDeviceInstance != NULL);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    SOUND_ASSERT(SoundDevice != NULL);
+    ASSERT(SoundDevice != NULL);
 
     /* If this fails, we have an internal error somewhere */
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     if ( Result != MMSYSERR_NOERROR )
     {
-        SOUND_ASSERT(Result != MMSYSERR_NOERROR);
+        ASSERT(Result != MMSYSERR_NOERROR);
         return MMSYSERR_ERROR;
     }
 
@@ -547,7 +547,7 @@ DefaultInstanceConstructor(
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 
-    SOUND_DEBUG(L"Returning from default ctor");
+    DPRINT("Returning from default ctor");
 
     return MMSYSERR_NOERROR;
 }
@@ -560,11 +560,11 @@ DefaultInstanceDestructor(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
-    SOUND_DEBUG(L"Default instance dtor");
+    DPRINT("Default instance dtor");
 
-    SOUND_ASSERT(SoundDeviceInstance);
+    ASSERT(SoundDeviceInstance);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    SOUND_ASSERT(SoundDevice);
+    ASSERT(SoundDevice);
 
     Result = CloseKernelSoundDevice(SoundDevice);
 

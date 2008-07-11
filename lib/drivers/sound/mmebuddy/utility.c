@@ -14,6 +14,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -47,7 +48,8 @@ VOID
 FreeMemory(
     IN  PVOID Pointer)
 {
-    SOUND_ASSERT(ProcessHeapHandle != INVALID_HANDLE_VALUE);
+    ASSERT(ProcessHeapHandle != INVALID_HANDLE_VALUE);
+    ASSERT(Pointer);
 
     HeapFree(ProcessHeapHandle, 0, Pointer);
 

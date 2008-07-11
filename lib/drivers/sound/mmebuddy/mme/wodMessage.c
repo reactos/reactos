@@ -33,7 +33,7 @@ wodMessage(
     PSOUND_DEVICE_INSTANCE Instance =
         (PSOUND_DEVICE_INSTANCE)private_handle;
 
-    SOUND_TRACE("wodMessageStub called\n");
+    DPRINT("wodMessageStub called\n");
 
     switch ( message )
     {
@@ -64,7 +64,7 @@ wodMessage(
         {
             WAVEOPENDESC* OpenParameters = (WAVEOPENDESC*) parameter1;
 
-            SOUND_TRACE("In WODM_OPEN\n");
+            DPRINT("In WODM_OPEN\n");
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
@@ -105,12 +105,12 @@ wodMessage(
         case WODM_CLOSE :
         {
             //SOUND_DEBUG_HEX(Instance);
-            SOUND_ASSERT(Instance != NULL);
+            ASSERT(Instance != NULL);
 
             /* TODO: Ensure its OK to close */
 
             Result = DestroySoundDeviceInstance(Instance);
-            SOUND_DEBUG_HEX(Result);
+            /*SOUND_DEBUG_HEX(Result);*/
 
             /* TODO: When do we send the callback? */
 
@@ -120,8 +120,8 @@ wodMessage(
 
         case WODM_WRITE :
         {
-            SOUND_ASSERT(Instance != NULL);
-            SOUND_ASSERT(parameter1 != 0);
+            ASSERT(Instance != NULL);
+            ASSERT(parameter1 != 0);
 
             return QueueWaveDeviceBuffer(Instance, (PWAVEHDR) parameter1);
         }

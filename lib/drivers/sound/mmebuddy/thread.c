@@ -22,9 +22,6 @@
 
 #include <mmebuddy.h>
 
-/* HAX */
-#include <stdio.h>
-
 static BOOLEAN ThreadRunning = FALSE;
 static HANDLE SoundThread = INVALID_HANDLE_VALUE;
 static HANDLE ReadyEvent = INVALID_HANDLE_VALUE;
@@ -58,10 +55,10 @@ CompleteSoundThreadIo(
     DPRINT("** I/O has completed\n");
 
     SoundOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
-    SOUND_ASSERT(SoundOverlapped);
+    ASSERT(SoundOverlapped);
 
     CompletionData = SoundOverlapped->CompletionData;
-    SOUND_ASSERT(CompletionData);
+    ASSERT(CompletionData);
 
     CompletionData->BytesTransferred = dwNumberOfBytesTransferred;
 
@@ -70,7 +67,7 @@ CompleteSoundThreadIo(
     {
         DPRINT("First completion - making new head and tail\n");
         /* This is the first completion */
-        SOUND_ASSERT(CompletedIoListTail == NULL);
+        ASSERT(CompletedIoListTail);
 
         CompletionData->Previous = NULL;
         CompletionData->Next = NULL;
@@ -81,13 +78,13 @@ CompleteSoundThreadIo(
     else
     {
         DPRINT("Not the first completion - making new tail\n");
-        SOUND_ASSERT(CompletionData);
+        ASSERT(CompletionData);
         /* This is not the first completion */
         CompletionData->Previous = CompletedIoListTail;
         CompletionData->Next = NULL;
 
         /* Completion data gets made the new tail */
-        SOUND_ASSERT(CompletedIoListTail);
+        ASSERT(CompletedIoListTail);
         CompletedIoListTail->Next = CompletionData;
         CompletedIoListTail = CompletionData;
     }
@@ -179,8 +176,8 @@ SoundThreadProc(
         {
             /* Process the request */
 
-            SOUND_ASSERT(CurrentRequest.RequestHandler != NULL);
-            if ( CurrentRequest.RequestHandler != NULL )
+            ASSERT(CurrentRequest.RequestHandler);
+            if ( CurrentRequest.RequestHandler )
             {
                 CurrentRequest.ReturnValue = CurrentRequest.RequestHandler(
                     CurrentRequest.SoundDeviceInstance,
@@ -201,42 +198,41 @@ SoundThreadProc(
             PSOUND_THREAD_COMPLETED_IO CurrentCompletion;
 
             /* Process the I/O Completion */
-            SOUND_TRACE("Returned from I/O completion APC\n");
+            DPRINT("Returned from I/O completion APC\n");
 
             CurrentCompletion = CompletedIoListHead;
-            SOUND_ASSERT(CurrentCompletion);
+            ASSERT(CurrentCompletion);
 
-            SOUND_TRACE("Beginning enumeration of completions\n");
+            DPRINT("Beginning enumeration of completions\n");
             while ( CurrentCompletion )
             {
                 PSOUND_THREAD_COMPLETED_IO PreviousCompletion;
 
-                SOUND_TRACE("Calling completion handler\n");
+                DPRINT("Calling completion handler\n");
                 /* Call the completion handler */
                 CurrentCompletion->CompletionHandler(
                     CurrentCompletion->SoundDeviceInstance,
                     CurrentCompletion->Parameter,
                     CurrentCompletion->BytesTransferred);
 
-                SOUND_TRACE("Advancing to next completion\n");
+                DPRINT("Advancing to next completion\n");
                 /* Get the next completion but destroy the previous */
                 PreviousCompletion = CurrentCompletion;
                 CurrentCompletion = CurrentCompletion->Next;
                 /*CompletedIoListHead = CurrentCompletion;*/
 
-                SOUND_TRACE("Freeing memory\n");
                 FreeMemory(PreviousCompletion);
             }
 
             /* Nothing in the completion queue/list now */
             CompletedIoListHead = NULL;
             CompletedIoListTail = NULL;
-            SOUND_TRACE("Ended enumeration of completions\n");
+            DPRINT("Ended enumeration of completions\n");
         }
         else
         {
             /* Shouldn't happen! */
-            SOUND_ASSERT(FALSE);
+            ASSERT(FALSE);
         }
     }
 
@@ -342,7 +338,7 @@ CallUsingSoundThread(
     if ( ! RequestHandler )
         return MMSYSERR_INVALPARAM;
 
-    SOUND_ASSERT(SoundThread != INVALID_HANDLE_VALUE);
+    ASSERT(SoundThread != INVALID_HANDLE_VALUE);
     if ( SoundThread == INVALID_HANDLE_VALUE )
     {
         return MMSYSERR_ERROR;
@@ -371,7 +367,7 @@ StopSoundThread()
 {
     MMRESULT Result;
 
-    SOUND_ASSERT(SoundThread != INVALID_HANDLE_VALUE);
+    ASSERT(SoundThread != INVALID_HANDLE_VALUE);
     if ( SoundThread == INVALID_HANDLE_VALUE )
     {
         return MMSYSERR_ERROR;
@@ -384,7 +380,7 @@ StopSoundThread()
                                   NULL);
 
     /* Our request didn't get processed? */
-    SOUND_ASSERT(Result != MMSYSERR_NOERROR);
+    ASSERT(Result != MMSYSERR_NOERROR);
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 

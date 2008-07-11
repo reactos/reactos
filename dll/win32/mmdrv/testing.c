@@ -212,11 +212,11 @@ wodTest()
 
     /* Report the number of wave output devices */
     NumWaveOuts = wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0);
-    SOUND_DEBUG_HEX(NumWaveOuts);
+    DPRINT("Wave outs = %d\n", NumWaveOuts);
 
     if ( NumWaveOuts < 1 )
     {
-        SOUND_DEBUG(L"Nothing to do as no waveout devices!");
+        DPRINT("Nothing to do as no waveout devices!");
         return;
     }
 

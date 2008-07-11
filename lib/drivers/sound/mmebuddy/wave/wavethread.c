@@ -67,13 +67,14 @@ PerformWaveIo(
 
     DPRINT("PerformWaveIo\n");
 
-    SOUND_ASSERT(SoundDeviceInstance);
+    ASSERT(SoundDeviceInstance);
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
-    /* If we're out of buffers, do nothing */
+    /* If we're out of buffers, mark stream as stopped and do nothing */
     if ( ! StreamInfo->CurrentBuffer )
     {
+        DPRINT("*** NOTHING TO DO ***\n");
         return 0;
     }
 
@@ -123,7 +124,7 @@ StreamWaveBuffers(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
     PWAVE_STREAM_INFO StreamInfo;
-    SOUND_ASSERT(SoundDeviceInstance);
+    ASSERT(SoundDeviceInstance);
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
@@ -152,12 +153,12 @@ CompleteWaveBuffer(
            Parameter,
           (int) BytesWritten);
 
-    SOUND_ASSERT(SoundDeviceInstance);
+    ASSERT(SoundDeviceInstance);
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
     /* Decrease the number of outstanding buffers */
-    SOUND_ASSERT(StreamInfo->BuffersOutstanding > 0);
+    ASSERT(StreamInfo->BuffersOutstanding > 0);
     -- StreamInfo->BuffersOutstanding;
 
     PerformWaveIo(SoundDeviceInstance);
