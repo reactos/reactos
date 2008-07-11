@@ -278,7 +278,6 @@ Ext2ReadWriteBlocks(
     PIO_STACK_LOCATION  IrpSp;
     NTSTATUS            Status = STATUS_SUCCESS;
     PEXT2_RW_CONTEXT    pContext = NULL;
-    PEXT2_EXTENT        Extent;
 
     ASSERT(MasterIrp);
 
@@ -291,7 +290,6 @@ Ext2ReadWriteBlocks(
         _SEH_VAR(pStatus) = &Status;
         _SEH_VAR(pContext) = NULL;
         _SEH_VAR(bBugCheck) = FALSE;
-        _SEH_VAR(Extent) = Extent;
 
         pContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(EXT2_RW_CONTEXT), EXT2_RWC_MAGIC);
         _SEH_VAR(pContext) = pContext;
