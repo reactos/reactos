@@ -4,7 +4,8 @@
  * FILE:             Debug.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   12 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Fixed some warnings under GCC
  */
 
 /* INCLUDES **************************************************************/
@@ -36,7 +37,7 @@ ULONG  ProcessNameOffset = 0;
 
 /* Static Definitions ****************************************************/
 
-static PUCHAR IrpMjStrings[] = {
+static PCHAR IrpMjStrings[] = {
     "IRP_MJ_CREATE",
     "IRP_MJ_CREATE_NAMED_PIPE",
     "IRP_MJ_CLOSE",
@@ -67,7 +68,7 @@ static PUCHAR IrpMjStrings[] = {
     "IRP_MJ_PNP"
 };
 
-static PUCHAR FileInformationClassStrings[] = {
+static PCHAR FileInformationClassStrings[] = {
     "Unknown FileInformationClass 0",
     "FileDirectoryInformation",
     "FileFullDirectoryInformation",
@@ -107,7 +108,7 @@ static PUCHAR FileInformationClassStrings[] = {
     "FileTrackingInformation"
 };
 
-static PUCHAR FsInformationClassStrings[] = {
+static PCHAR FsInformationClassStrings[] = {
     "Unknown FsInformationClass 0",
     "FileFsVolumeInformation",
     "FileFsLabelInformation",
@@ -742,7 +743,7 @@ Ext2DbgPrintComplete (IN PIRP Irp, IN BOOLEAN bPrint)
     }
 }
 
-PUCHAR
+PCHAR
 Ext2NtStatusToString ( IN NTSTATUS Status )
 {
     switch (Status) {

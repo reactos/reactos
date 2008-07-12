@@ -4,9 +4,9 @@
  * FILE:             block.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY:   11 Jul 2008
- *                     Replaced SEH support with PSEH support (Pierre Schweitzer <heis_spiter@hotmail.com>)
- *                     Fixed some warning under GCC
+ * UPDATE HISTORY:   11 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
+ *                     Fixed some warnings under GCC
  */
 
 /* INCLUDES *****************************************************************/

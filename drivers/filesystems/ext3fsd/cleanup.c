@@ -4,7 +4,8 @@
  * FILE:             cleanup.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   12 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,10 +18,76 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+VOID
+Ext2CleanupFinal (
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PNTSTATUS pStatus,
+    IN PEXT2_VCB Vcb,
+    IN PEXT2_FCB Fcb,
+    IN BOOLEAN VcbResourceAcquired,
+    IN BOOLEAN FcbResourceAcquired,
+    IN BOOLEAN FcbPagingIoResourceAcquired    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Ext2Cleanup)
 #endif
 
+
+/* FUNCTIONS ***************************************************************/
+
+
+_SEH_DEFINE_LOCALS(Ext2CleanupFinal)
+{
+    PEXT2_IRP_CONTEXT       IrpContext;
+    PNTSTATUS               pStatus;
+    PEXT2_VCB               Vcb;
+    PEXT2_FCB               Fcb;
+    BOOLEAN                 VcbResourceAcquired;
+    BOOLEAN                 FcbResourceAcquired;
+    BOOLEAN                 FcbPagingIoResourceAcquired;
+};
+
+_SEH_FINALLYFUNC(Ext2CleanupFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2CleanupFinal);
+    Ext2CleanupFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus), _SEH_VAR(Vcb),
+                     _SEH_VAR(Fcb), _SEH_VAR(VcbResourceAcquired),
+                     _SEH_VAR(FcbResourceAcquired),
+                     _SEH_VAR(FcbPagingIoResourceAcquired));
+}
+
+VOID
+Ext2CleanupFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_FCB            Fcb,
+    IN BOOLEAN              VcbResourceAcquired,
+    IN BOOLEAN              FcbResourceAcquired,
+    IN BOOLEAN              FcbPagingIoResourceAcquired
+    )
+{
+    if (FcbPagingIoResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->PagingIoResource);
+    }
+
+    if (FcbResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
+        
+    if (VcbResourceAcquired) {
+        ExReleaseResourceLite(&Vcb->MainResource);
+    }
+        
+    if (!IrpContext->ExceptionInProgress) {
+        if (*pStatus == STATUS_PENDING) {
+            Ext2QueueRequest(IrpContext);
+        } else {
+            IrpContext->Irp->IoStatus.Status = *pStatus;
+            Ext2CompleteIrpContext(IrpContext, *pStatus);
+        }
+    }
+}
 
 NTSTATUS
 Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
@@ -33,11 +100,14 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
     PEXT2_CCB       Ccb;
     PIRP            Irp;
 
-    BOOLEAN         VcbResourceAcquired = FALSE;
-    BOOLEAN         FcbResourceAcquired = FALSE;
-    BOOLEAN         FcbPagingIoResourceAcquired = FALSE;
+    _SEH_TRY {
 
-    __try {
+        _SEH_DECLARE_LOCALS(Ext2CleanupFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(VcbResourceAcquired) = FALSE;
+        _SEH_VAR(FcbResourceAcquired) = FALSE;
+        _SEH_VAR(FcbPagingIoResourceAcquired) = FALSE;
 
         ASSERT(IrpContext != NULL);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -46,34 +116,36 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
         DeviceObject = IrpContext->DeviceObject;
         if (IsExt2FsDevice(DeviceObject))  {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         Irp = IrpContext->Irp;
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        _SEH_VAR(Vcb) = Vcb;
         ASSERT(Vcb != NULL);
         ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
             (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
 
         if (!IsFlagOn(Vcb->Flags, VCB_INITIALIZED)) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         FileObject = IrpContext->FileObject;
         Fcb = (PEXT2_FCB) FileObject->FsContext;
+        _SEH_VAR(Fcb) = Fcb;
         if (!Fcb || (Fcb->Identifier.Type != EXT2VCB &&
                      Fcb->Identifier.Type != EXT2FCB)) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (IsFlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE)) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
-        VcbResourceAcquired = 
+        _SEH_VAR(VcbResourceAcquired) = 
             ExAcquireResourceExclusiveLite(
                  &Vcb->MainResource,
                  IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
@@ -96,7 +168,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
             }
 
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
@@ -110,12 +182,12 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                !IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED) ) {
                 Status = Ext2FlushFile(IrpContext, Fcb, Ccb);
             }
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (Ccb == NULL) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (IsDirectory(Fcb)) {
@@ -140,9 +212,9 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
         }
 
         ExReleaseResourceLite(&Vcb->MainResource);
-        VcbResourceAcquired = FALSE;
+        _SEH_VAR(VcbResourceAcquired) = FALSE;
 
-        FcbResourceAcquired = 
+        _SEH_VAR(FcbResourceAcquired) = 
             ExAcquireResourceExclusiveLite(
                  &Fcb->MainResource,
                  IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
@@ -235,7 +307,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 LARGE_INTEGER Size;
         
                 ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
-                FcbPagingIoResourceAcquired = TRUE;
+                _SEH_VAR(FcbPagingIoResourceAcquired) = TRUE;
 
                 Size.QuadPart = CEILING_ALIGNED(ULONGLONG, 
                                     (ULONGLONG)Fcb->Mcb->FileSize.QuadPart,
@@ -258,7 +330,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 ClearLongFlag(Fcb->Flags, FCB_ALLOC_IN_CREATE|FCB_ALLOC_IN_WRITE);
                 Fcb->RealSize.QuadPart = 0;
                 ExReleaseResourceLite(&Fcb->PagingIoResource);
-                FcbPagingIoResourceAcquired = FALSE;
+                _SEH_VAR(FcbPagingIoResourceAcquired) = FALSE;
             }
         }
 
@@ -272,9 +344,9 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 // Ext2DeleteFile will acquire these lock inside
                 //
 
-                if (FcbResourceAcquired) {
+                if (_SEH_VAR(FcbResourceAcquired)) {
                     ExReleaseResourceLite(&Fcb->MainResource);
-                    FcbResourceAcquired = FALSE;
+                    _SEH_VAR(FcbResourceAcquired) = FALSE;
                 }
 
                 //
@@ -310,7 +382,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 // re-acquire the main resource lock 
                 //
 
-                FcbResourceAcquired = 
+                _SEH_VAR(FcbResourceAcquired) = 
                     ExAcquireResourceExclusiveLite(
                          &Fcb->MainResource,
                          IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT)
@@ -361,29 +433,9 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
             SetFlag(FileObject->Flags, FO_CLEANUP_COMPLETE);
         }
 
-    } __finally {
-
-        if (FcbPagingIoResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->PagingIoResource);
-        }
-
-        if (FcbResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->MainResource);
-        }
-        
-        if (VcbResourceAcquired) {
-            ExReleaseResourceLite(&Vcb->MainResource);
-        }
-        
-        if (!IrpContext->ExceptionInProgress) {
-            if (Status == STATUS_PENDING) {
-                Ext2QueueRequest(IrpContext);
-            } else {
-                IrpContext->Irp->IoStatus.Status = Status;
-                Ext2CompleteIrpContext(IrpContext, Status);
-            }
-        }
     }
+    _SEH_FINALLY(Ext2CleanupFinal_PSEH)
+    _SEH_END;
     
     return Status;
 }
