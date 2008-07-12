@@ -1149,7 +1149,8 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
       WndParent->FirstChild = Wnd->NextSibling;
 
    Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
-   Wnd->Wnd->Parent = NULL;
+   if (Wnd->Wnd)
+       Wnd->Wnd->Parent = NULL;
 }
 
 BOOL FASTCALL
