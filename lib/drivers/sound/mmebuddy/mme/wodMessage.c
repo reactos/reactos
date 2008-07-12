@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>
-#include <debug.h>
 
 #include <ntddsnd.h>
 #include <mmebuddy.h>
@@ -33,7 +32,7 @@ wodMessage(
     PSOUND_DEVICE_INSTANCE Instance =
         (PSOUND_DEVICE_INSTANCE)private_handle;
 
-    DPRINT("wodMessageStub called\n");
+    TRACE_("wodMessageStub called\n");
 
     switch ( message )
     {
@@ -64,7 +63,7 @@ wodMessage(
         {
             WAVEOPENDESC* OpenParameters = (WAVEOPENDESC*) parameter1;
 
-            DPRINT("In WODM_OPEN\n");
+            TRACE_("In WODM_OPEN\n");
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
                 return Result;

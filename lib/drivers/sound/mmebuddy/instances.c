@@ -15,7 +15,6 @@
 
 #include <windows.h>
 #include <ntddsnd.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -161,9 +160,9 @@ CreateSoundDeviceInstance(
     Result = SoundDevice->Functions.Constructor(CreatedInstance);
     if ( Result != MMSYSERR_NOERROR )
     {
-        DPRINT("Custom ctor returned failure - unlisting");
+        ERR_("Custom ctor returned failure - unlisting");
         UnlistSoundDeviceInstance(CreatedInstance);
-        DPRINT("Freeing");
+        TRACE_("Freeing");
         FreeSoundDeviceInstance(CreatedInstance);
         CreatedInstance = NULL;
         //DestroySoundDeviceInstance(CreatedInstance);

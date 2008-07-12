@@ -17,7 +17,6 @@
 #include <mmsystem.h>
 #include <mmddk.h>
 #include <ntddsnd.h>
-#include <debug.h>
 
 #include <ntddk.h>
 #include <mmebuddy.h>
@@ -212,11 +211,11 @@ wodTest()
 
     /* Report the number of wave output devices */
     NumWaveOuts = wodMessage(0, WODM_GETNUMDEVS, 0, 0, 0);
-    DPRINT("Wave outs = %d\n", NumWaveOuts);
+    TRACE_("Wave outs = %d\n", (int) NumWaveOuts);
 
     if ( NumWaveOuts < 1 )
     {
-        DPRINT("Nothing to do as no waveout devices!");
+        WARN_("Nothing to do as no waveout devices!");
         return;
     }
 

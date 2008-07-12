@@ -23,7 +23,6 @@
 
 #include <windows.h>
 #include <ntddsnd.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -79,7 +78,7 @@ AddSoundDevice(
     PSOUND_DEVICE NewDevice;
     UCHAR TypeIndex;
 
-    DPRINT("Adding a sound device to list %d\n", DeviceType);
+    TRACE_("Adding a sound device to list %d\n", DeviceType);
 
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
@@ -126,14 +125,14 @@ AddSoundDevice(
     /* Start or add to list */
     if ( ! SoundDeviceLists[TypeIndex] )
     {
-        DPRINT("Starting device list\n");
+        TRACE_("Starting device list\n");
         SoundDeviceLists[TypeIndex] = NewDevice;
     }
     else
     {
         PSOUND_DEVICE CurrentDevice = SoundDeviceLists[TypeIndex];
 
-        DPRINT("Adding to device list\n");
+        TRACE_("Adding to device list\n");
 
         while ( CurrentDevice != NULL )
         {
@@ -148,7 +147,7 @@ AddSoundDevice(
     }
 
     ++ SoundDeviceTotals[TypeIndex];
-    DPRINT("Now %d devices of type %d\n", SoundDeviceTotals[TypeIndex], DeviceType);
+    TRACE_("Now %d devices of type %d\n", (int) SoundDeviceTotals[TypeIndex], DeviceType);
 
     return TRUE;
 }
@@ -162,7 +161,7 @@ RemoveSoundDevice(
     PSOUND_DEVICE CurrentDevice = NULL;
     PSOUND_DEVICE PreviousDevice = NULL;
 
-    /*DPRINT("Removing a sound device from list %d\n", DeviceType);*/
+    /*TRACE_("Removing a sound device from list %d\n", DeviceType);*/
 
     if ( ! SoundDevice )
         return MMSYSERR_INVALPARAM;
@@ -221,11 +220,11 @@ RemoveSoundDevices(
 {
     PSOUND_DEVICE CurrentDevice;
 
-    DPRINT("Emptying device list for device type %d\n", DeviceType);
+    TRACE_("Emptying device list for device type %d\n", DeviceType);
 
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
-        DPRINT("Invalid device type - %d\n", DeviceType);
+        ERR_("Invalid device type - %d\n", DeviceType);
         return MMSYSERR_INVALPARAM;
     }
 
@@ -252,7 +251,7 @@ RemoveAllSoundDevices()
 {
     ULONG i;
 
-    DPRINT("Emptying all device lists\n");
+    TRACE_("Emptying all device lists\n");
 
     for ( i = MIN_SOUND_DEVICE_TYPE; i <= MAX_SOUND_DEVICE_TYPE; ++ i )
     {
@@ -526,7 +525,7 @@ DefaultInstanceConstructor(
     DWORD AccessRights = GENERIC_READ;
     MMRESULT Result;
 
-    DPRINT("Default instance ctor");
+    TRACE_("Default instance ctor");
 
     ASSERT(SoundDeviceInstance != NULL);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
@@ -547,7 +546,7 @@ DefaultInstanceConstructor(
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 
-    DPRINT("Returning from default ctor");
+    TRACE_("Returning from default ctor");
 
     return MMSYSERR_NOERROR;
 }
@@ -560,7 +559,7 @@ DefaultInstanceDestructor(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
-    DPRINT("Default instance dtor");
+    TRACE_("Default instance dtor");
 
     ASSERT(SoundDeviceInstance);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);

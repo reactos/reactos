@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <ntddsnd.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -30,13 +29,13 @@ OpenKernelSoundDeviceByName(
 
     if ( ! Handle )
     {
-        DPRINT("No handle ptr\n");
+        ERR_("No handle ptr\n");
         return MMSYSERR_INVALPARAM;
     }
 
     if ( ! DeviceName )
     {
-        DPRINT("No device name\n");
+        ERR_("No device name\n");
         return MMSYSERR_INVALPARAM;
     }
 
@@ -45,7 +44,7 @@ OpenKernelSoundDeviceByName(
         OpenFlags = FILE_FLAG_OVERLAPPED;
     }
 
-    DPRINT("Attempting to open '%s'\n", DeviceName);
+    /*TRACE_("Attempting to open '%ws'\n", DeviceName);*/
 
     *Handle = CreateFile(DeviceName,
                          AccessRights,
@@ -57,7 +56,7 @@ OpenKernelSoundDeviceByName(
 
     if ( *Handle == INVALID_HANDLE_VALUE )
     {
-        DPRINT("Failed to open\n");
+        ERR_("Failed to open\n");
         return Win32ErrorToMmResult(GetLastError());
     }
 
@@ -73,13 +72,13 @@ OpenKernelSoundDevice(
 
     if ( ! SoundDevice )
     {
-        DPRINT("No sound device specified");
+        ERR_("No sound device specified");
         return MMSYSERR_INVALPARAM;
     }
 
     if ( SoundDevice->Handle != INVALID_HANDLE_VALUE )
     {
-        DPRINT("Already open?");
+        ERR_("Already open?");
         return MMSYSERR_ERROR; /*MMSYSERR_ALLOC;*/
     }
 
@@ -217,14 +216,14 @@ WriteSoundDeviceBuffer(
 {
     if ( ( ! SoundDeviceInstance ) || ( ! Buffer ) || ( BufferSize == 0 ) )
     {
-        DPRINT("Invalid parameter in WriteSoundDeviceBuffer!\n");
+        ERR_("Invalid parameter in WriteSoundDeviceBuffer!\n");
         return MMSYSERR_INVALPARAM;
     }
 
     /*wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);*/
     /*SOUND_DEBUG(msg);*/
 
-    DPRINT("WriteFileEx(%p, %p, %d, %p, %p)\n", 
+    TRACE_("WriteFileEx(%p, %p, %d, %p, %p)\n", 
            SoundDeviceInstance->Device->Handle,
            Buffer,
            (int) BufferSize,
@@ -237,7 +236,7 @@ WriteSoundDeviceBuffer(
                        Overlapped,
                        CompletionRoutine) )
     {
-        DPRINT("WriteFileEx -- Win32 Error %d", GetLastError());
+        ERR_("WriteFileEx -- Win32 Error %d", (int) GetLastError());
         return Win32ErrorToMmResult(GetLastError());
     }
 

@@ -18,7 +18,6 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -65,7 +64,7 @@ PerformWaveIo(
     PWAVE_STREAM_INFO StreamInfo;
     DWORD BytesToStream, BytesStreamed = 0;
 
-    DPRINT("PerformWaveIo\n");
+    TRACE_("PerformWaveIo\n");
 
     ASSERT(SoundDeviceInstance);
 
@@ -74,7 +73,7 @@ PerformWaveIo(
     /* If we're out of buffers, mark stream as stopped and do nothing */
     if ( ! StreamInfo->CurrentBuffer )
     {
-        DPRINT("*** NOTHING TO DO ***\n");
+        TRACE_("*** NOTHING TO DO ***\n");
         return 0;
     }
 
@@ -83,9 +82,9 @@ PerformWaveIo(
                                 StreamInfo->CurrentBuffer->reserved,
                               MAX_SOUND_BUFFER_SIZE);
 
-    DPRINT("About to report what I'm about to write...\n");
+    TRACE_("About to report what I'm about to write...\n");
 
-    DPRINT("Writing %p + %d (%d bytes) - buffer length is %d bytes\n",
+    TRACE_("Writing %p + %d (%d bytes) - buffer length is %d bytes\n",
                 StreamInfo->CurrentBuffer->lpData,
                 (int) StreamInfo->CurrentBuffer->reserved,
                 (int) BytesToStream,
@@ -109,7 +108,7 @@ PerformWaveIo(
     if ( StreamInfo->CurrentBuffer->reserved ==
             StreamInfo->CurrentBuffer->dwBufferLength )
     {
-        DPRINT("Advancing to next buffer\n");
+        TRACE_("Advancing to next buffer\n");
         StreamInfo->CurrentBuffer = StreamInfo->CurrentBuffer->lpNext;
     }
 
@@ -128,14 +127,14 @@ StreamWaveBuffers(
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
-    DPRINT("<== Streaming wave I/O ==>\n");
+    TRACE_("<== Streaming wave I/O ==>\n");
     while ( StreamReadyForData(StreamInfo) &&
             StreamHasBuffersQueued(StreamInfo) )
     {
-        DPRINT("Performing wave I/O ...\n");
+        TRACE_("Performing wave I/O ...\n");
         PerformWaveIo(SoundDeviceInstance);
     }
-    DPRINT("<== Done streaming ==>\n");
+    TRACE_("<== Done streaming ==>\n");
 
     return MMSYSERR_NOERROR;
 }
@@ -148,7 +147,7 @@ CompleteWaveBuffer(
 {
     PWAVE_STREAM_INFO StreamInfo;
 
-    DPRINT("CompleteWaveBuffer(%p, %p, %d)\n",
+    TRACE_("CompleteWaveBuffer(%p, %p, %d)\n",
            SoundDeviceInstance,
            Parameter,
           (int) BytesWritten);
@@ -163,7 +162,7 @@ CompleteWaveBuffer(
 
     PerformWaveIo(SoundDeviceInstance);
 
-    DPRINT("Wave completion routine done\n");
+    TRACE_("Wave completion routine done\n");
 }
 
 MMRESULT
@@ -183,7 +182,7 @@ QueueBuffer_Request(
     /* To avoid stupidly long variable names we alias this */
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
-    DPRINT("QueueBuffer_Request\n");
+    TRACE_("QueueBuffer_Request\n");
 
     /* Initialise fields of interest to us */
     WaveHeader->lpNext = NULL;
@@ -195,7 +194,7 @@ QueueBuffer_Request(
     */
     if ( ! StreamInfo->BufferQueueHead )
     {
-        DPRINT("This is the first buffer being queued\n");
+        TRACE_("This is the first buffer being queued\n");
 
         /* Set head, tail and current to this buffer */
         StreamInfo->BufferQueueHead = WaveHeader;
@@ -212,7 +211,7 @@ QueueBuffer_Request(
     }
     else
     {
-        DPRINT("This is not the first buffer being queued\n");
+        TRACE_("This is not the first buffer being queued\n");
 
         /* Point the existing tail to the new buffer */
         StreamInfo->BufferQueueTail->lpNext = WaveHeader;

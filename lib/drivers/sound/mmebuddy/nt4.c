@@ -20,7 +20,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <ntddsnd.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 
@@ -289,7 +288,7 @@ DetectNt4SoundDevices(
     HANDLE DeviceHandle;
     BOOLEAN DoSearch = TRUE;
 
-    DPRINT("Detecting NT4 style sound devices of type %d\n", DeviceType);
+    TRACE_("Detecting NT4 style sound devices of type %d\n", DeviceType);
 
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {

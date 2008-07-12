@@ -18,8 +18,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include <debug.h>
-
 #include <mmebuddy.h>
 
 static BOOLEAN ThreadRunning = FALSE;
@@ -52,7 +50,7 @@ CompleteSoundThreadIo(
     PSOUND_THREAD_COMPLETED_IO CompletionData;
     PSOUND_THREAD_OVERLAPPED SoundOverlapped;
 
-    DPRINT("** I/O has completed\n");
+    TRACE_("** I/O has completed\n");
 
     SoundOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
     ASSERT(SoundOverlapped);
@@ -65,9 +63,9 @@ CompleteSoundThreadIo(
     /* Is this the first completion? */
     if ( ! CompletedIoListHead )
     {
-        DPRINT("First completion - making new head and tail\n");
+        TRACE_("First completion - making new head and tail\n");
         /* This is the first completion */
-        ASSERT(CompletedIoListTail);
+        ASSERT(! CompletedIoListTail);
 
         CompletionData->Previous = NULL;
         CompletionData->Next = NULL;
@@ -77,7 +75,7 @@ CompleteSoundThreadIo(
     }
     else
     {
-        DPRINT("Not the first completion - making new tail\n");
+        TRACE_("Not the first completion - making new tail\n");
         ASSERT(CompletionData);
         /* This is not the first completion */
         CompletionData->Previous = CompletedIoListTail;
@@ -92,7 +90,7 @@ CompleteSoundThreadIo(
     /* We keep the completion data, but no longer need this: */
     FreeMemory(SoundOverlapped);
 
-    DPRINT("** Leaving completion routine\n");
+    TRACE_("** Leaving completion routine\n");
 }
 
 MMRESULT
@@ -138,7 +136,7 @@ OverlappedSoundDeviceIo(
     Overlapped->CompletionData->Parameter = CompletionParameter;
     Overlapped->CompletionData->BytesTransferred = 0;
 
-    DPRINT("Performing overlapped I/O\n");
+    TRACE_("Performing overlapped I/O\n");
     return WriteSoundDeviceBuffer(SoundDeviceInstance,
                                   Buffer,
                                   BufferSize,
@@ -151,7 +149,7 @@ ProcessThreadExitRequest(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
     IN  PVOID Parameter OPTIONAL)
 {
-    DPRINT("ProcessThreadExitRequest called\n");
+    TRACE_("ProcessThreadExitRequest called\n");
     ThreadRunning = FALSE;
     return MMSYSERR_NOERROR;
 }
@@ -198,24 +196,24 @@ SoundThreadProc(
             PSOUND_THREAD_COMPLETED_IO CurrentCompletion;
 
             /* Process the I/O Completion */
-            DPRINT("Returned from I/O completion APC\n");
+            TRACE_("Returned from I/O completion APC\n");
 
             CurrentCompletion = CompletedIoListHead;
             ASSERT(CurrentCompletion);
 
-            DPRINT("Beginning enumeration of completions\n");
+            TRACE_("Beginning enumeration of completions\n");
             while ( CurrentCompletion )
             {
                 PSOUND_THREAD_COMPLETED_IO PreviousCompletion;
 
-                DPRINT("Calling completion handler\n");
+                TRACE_("Calling completion handler\n");
                 /* Call the completion handler */
                 CurrentCompletion->CompletionHandler(
                     CurrentCompletion->SoundDeviceInstance,
                     CurrentCompletion->Parameter,
                     CurrentCompletion->BytesTransferred);
 
-                DPRINT("Advancing to next completion\n");
+                TRACE_("Advancing to next completion\n");
                 /* Get the next completion but destroy the previous */
                 PreviousCompletion = CurrentCompletion;
                 CurrentCompletion = CurrentCompletion->Next;
@@ -227,7 +225,7 @@ SoundThreadProc(
             /* Nothing in the completion queue/list now */
             CompletedIoListHead = NULL;
             CompletedIoListTail = NULL;
-            DPRINT("Ended enumeration of completions\n");
+            TRACE_("Ended enumeration of completions\n");
         }
         else
         {
@@ -236,7 +234,7 @@ SoundThreadProc(
         }
     }
 
-    DPRINT("THREAD: Exiting\n");
+    TRACE_("THREAD: Exiting\n");
 
     ExitThread(0);
     return 0;
@@ -321,7 +319,7 @@ StartSoundThread()
         return Win32ErrorToMmResult(GetLastError());
     }
 
-    DPRINT("Starting sound thread\n");
+    TRACE_("Starting sound thread\n");
 
     /* We're all set to go, so let's start the thread up */
     ResumeThread(SoundThread);
@@ -373,20 +371,20 @@ StopSoundThread()
         return MMSYSERR_ERROR;
     }
 
-    DPRINT("Calling thread shutdown function\n");
+    TRACE_("Calling thread shutdown function\n");
 
     Result = CallUsingSoundThread(NULL,
                                   ProcessThreadExitRequest,
                                   NULL);
 
     /* Our request didn't get processed? */
-    ASSERT(Result != MMSYSERR_NOERROR);
+    ASSERT(Result == MMSYSERR_NOERROR);
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 
     WaitForSingleObject(SoundThread, INFINITE);
 
-    DPRINT("Sound thread has quit\n");
+    TRACE_("Sound thread has quit\n");
 
     /* Clean up */
     CloseHandle(SoundThread);

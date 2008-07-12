@@ -15,7 +15,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>
-#include <debug.h>
+
+#include <mmebuddy.h>
 
 APIENTRY DWORD
 auxMessage(
@@ -25,7 +26,7 @@ auxMessage(
     DWORD parameter1,
     DWORD parameter2)
 {
-    DPRINT("auxMessageStub called\n");
+    TRACE_("auxMessageStub called\n");
     /* TODO */
     return MMSYSERR_NOTSUPPORTED;
 }

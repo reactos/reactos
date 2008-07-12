@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>
-#include <debug.h>
 #include <ntddsnd.h>
 
 #include <mmebuddy.h>
@@ -28,7 +27,7 @@ widMessage(
     DWORD parameter1,
     DWORD parameter2)
 {
-    DPRINT("widMessageStub called\n");
+    TRACE_("widMessageStub called\n");
 
     switch ( message )
     {

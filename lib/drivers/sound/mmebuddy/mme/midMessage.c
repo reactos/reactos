@@ -15,7 +15,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>
-#include <debug.h>
+
+#include <mmebuddy.h>
 
 APIENTRY DWORD
 midMessage(
@@ -25,7 +26,7 @@ midMessage(
     DWORD parameter1,
     DWORD parameter2)
 {
-    DPRINT("midMessageStub called\n");
+    TRACE_("midMessageStub called\n");
 
     switch ( message )
     {

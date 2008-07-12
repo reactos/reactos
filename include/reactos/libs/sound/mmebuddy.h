@@ -26,6 +26,45 @@
     MessageBoxA(0, msg, __FUNCTION__, MB_OK | MB_TASKMODAL)
 
 
+#ifndef NDEBUG
+
+#ifdef ASSERT
+    #undef ASSERT
+#endif
+
+/* HACK for testing */
+#include <stdio.h>
+
+#define TRACE_(...) \
+    { \
+        printf("  %s: ", __FUNCTION__); \
+        printf(__VA_ARGS__); \
+    }
+
+#define WARN_(...) \
+    { \
+        printf("o %s: ", __FUNCTION__); \
+        printf(__VA_ARGS__); \
+    }
+
+#define ERR_(...) \
+    { \
+        printf("X %s: ", __FUNCTION__); \
+        printf(__VA_ARGS__); \
+    }
+
+#define ASSERT(x) \
+    { \
+        if ( ! (x) ) \
+        { \
+            ERR_("ASSERT failed! %s\n", #x); \
+            exit(1); \
+        } \
+    }
+
+#endif
+
+
 /*
     Some memory allocation helper macros
 */

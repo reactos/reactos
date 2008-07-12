@@ -16,8 +16,7 @@
 #include <ntddsnd.h>
 #include <mmddk.h>
 #include <mmebuddy.h>
-#include <debug.h>
-
+//#include <debug.h>
 
 PWSTR SBWaveOutDeviceName = L"Sound Blaster Playback";
 PWSTR SBWaveInDeviceName  = L"Sound Blaster Recording";
@@ -90,7 +89,7 @@ DriverProc(
     switch ( message )
     {
         case DRV_LOAD :
-            DPRINT("DRV_LOAD");
+            TRACE_("DRV_LOAD");
 
             EnumerateNt4ServiceSoundDevices(L"sndblst",
                                             0,
@@ -102,14 +101,14 @@ DriverProc(
             return 1L;
 
         case DRV_FREE :
-            DPRINT("DRV_FREE");
+            TRACE_("DRV_FREE");
 
             StopSoundThread();
 
             RemoveAllSoundDevices();
 
 //            SOUND_DEBUG_HEX(GetMemoryAllocations());
-            DPRINT("Leaving driver with %d memory allocations present\n", GetMemoryAllocations());
+            TRACE_("Leaving driver with %d memory allocations present\n", (int) GetMemoryAllocations());
 
             return 1L;
 

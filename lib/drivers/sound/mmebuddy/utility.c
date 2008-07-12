@@ -14,7 +14,6 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include <debug.h>
 
 #include <mmebuddy.h>
 

@@ -15,7 +15,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmddk.h>
-#include <debug.h>
+
+#include <mmebuddy.h>
 
 APIENTRY DWORD
 mxdMessage(
@@ -25,7 +26,7 @@ mxdMessage(
     DWORD parameter1,
     DWORD parameter2)
 {
-    DPRINT("mxdMessageStub called\n");
+    TRACE_("mxdMessageStub called\n");
     /* TODO */
     return MMSYSERR_NOTSUPPORTED;
 }
