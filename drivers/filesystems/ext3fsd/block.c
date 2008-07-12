@@ -4,7 +4,9 @@
  * FILE:             block.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   11 Jul 2008
+ *                     Replaced SEH support with PSEH support (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Fixed some warning under GCC
  */
 
 /* INCLUDES *****************************************************************/
@@ -198,7 +200,7 @@ Ext2ReadWriteBlockAsyncCompletionRoutine (
 
 _SEH_DEFINE_LOCALS(Ext2ReadWriteBlocksFinal)
 {
-    IN PEXT2_IRP_CONTEXT    IrpContext;
+    PEXT2_IRP_CONTEXT       IrpContext;
     PEXT2_EXTENT            Chain;
     PIRP                    MasterIrp;
     PNTSTATUS               pStatus;
