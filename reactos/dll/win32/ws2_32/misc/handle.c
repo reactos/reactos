@@ -227,7 +227,7 @@ ReferenceProviderByHandle(HANDLE Handle,
     ProviderHandle = GetProviderByHandle(ProviderHandleTable,
                                          Handle);
 
-    WS_DbgPrint(MID_TRACE, ("ProviderHanddle is %x\n", ProviderHandle));
+    WS_DbgPrint(MID_TRACE, ("ProviderHandle is %x\n", ProviderHandle));
 
     LeaveCriticalSection(&ProviderHandleTableLock);
 
