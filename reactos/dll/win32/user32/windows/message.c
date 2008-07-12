@@ -1081,11 +1081,15 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
-  PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
-
+  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+//  FIXME("ISM %x\n",pcti);
   if ( pcti )
-    return (pcti->CTI_flags & CTI_INSENDMESSAGE);
-  else
+  {
+    if (pcti->CTI_flags & CTI_INSENDMESSAGE)
+    {
+       return TRUE;
+    }
+  }
   return FALSE;
 /*    return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);*/
 }
@@ -1099,8 +1103,8 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
-  PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
-
+  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+//  FIXME("ISMEX %x\n",pcti);
   if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
   else
   /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
@@ -2311,8 +2315,9 @@ USER_MESSAGE_PUMP_ADDRESSES gmph = {sizeof(USER_MESSAGE_PUMP_ADDRESSES),
 DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
-{
+{  // Fixme: Need to fully implement this! FF uses this and polls it when Min/Max
    PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+//   FIXME("IIMPH %x\n",pcti);
    return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }
 
