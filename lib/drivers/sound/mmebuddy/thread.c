@@ -1,18 +1,11 @@
 /*
-    ReactOS Sound System
-    MME Driver Helper
-
-    Purpose:
-        Sound device processing thread
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
-        5 July 2008 - Implemented basic request processing
-        6 July 2008 - Added I/O completion handling
-        9 July 2008 - Rewritten to have a single streaming thread
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/thread.c
+ *
+ * PURPOSE:     Manages a thread to assist with the streaming of sound data.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

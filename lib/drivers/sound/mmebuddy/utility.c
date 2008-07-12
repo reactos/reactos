@@ -1,15 +1,11 @@
 /*
-    ReactOS Sound System
-    MME Driver Helper
-
-    Purpose:
-        Utility functions
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/utility.c
+ *
+ * PURPOSE:     Provides utility functions used by the library.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

@@ -1,16 +1,12 @@
 /*
-    ReactOS Sound System
-    MME Driver Helper
-
-    Purpose:
-        Device instance manager
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
-        6 July 2008 - Re-structured
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/instances.c
+ *
+ * PURPOSE:     Handles construction/destruction of sound device instances,
+ *              along with tracking of existing instances.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

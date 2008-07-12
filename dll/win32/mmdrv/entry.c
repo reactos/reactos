@@ -1,21 +1,18 @@
 /*
-    ReactOS Sound System
-    Default MME Driver
-
-    Purpose:
-        MME driver entry-point
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/mmdrv/entry.c
+ *
+ * PURPOSE:     MME generic low-level audio device support library DriverProc
+ *              entry-point.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>
 #include <mmddk.h>
+
 #include <mmebuddy.h>
-#include <debug.h>
 
 APIENTRY LONG
 DriverProc(
@@ -28,11 +25,11 @@ DriverProc(
     switch ( message )
     {
         case DRV_LOAD :
-            DPRINT("DRV_LOAD\n");
+            TRACE_("DRV_LOAD\n");
             return 1L;
 
         case DRV_FREE :
-            DPRINT("DRV_FREE\n");
+            TRACE_("DRV_FREE\n");
             return 1L;
 
         default :

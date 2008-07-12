@@ -1,15 +1,12 @@
 /*
-    ReactOS Sound System
-    MME Interface
-
-    Purpose:
-        MIDI Input device message handler
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/midi/midMessage.c
+ *
+ * PURPOSE:     Provides the midMessage exported function, as required by
+ *              the MME API, for MIDI input device support.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

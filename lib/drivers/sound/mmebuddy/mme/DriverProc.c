@@ -1,15 +1,14 @@
 /*
-    ReactOS Sound System
-    MME Interface
-
-    Purpose:
-        Default DriverProc implementation
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/mme/DriverProc.c
+ *
+ * PURPOSE:     Provides a default/boilerplate implementation of the DriverProc
+ *              export function. (NOTE: This file may be fairly redundant
+ *              because the MME API can provide default functionality anyway.)
+ *              This file will be removed from future revisions.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

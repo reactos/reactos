@@ -1,20 +1,14 @@
 /*
-    ReactOS Sound System
-    MME Driver Helper
-
-    Purpose:
-        Legacy (NT4) sound device support
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
-*/
-
-/*
-    A better way of detecting sound devices...
-    Search the appropriate registry key!
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/nt4.c
+ *
+ * PURPOSE:     Assists in locating Windows NT4 compatible sound devices,
+ *              which mostly use the same device naming convention and/or
+ *              store their created device names within their service key
+ *              within the registry.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>

@@ -1,15 +1,12 @@
 /*
-    ReactOS Sound System
-    MME Interface
-
-    Purpose:
-        Wave output device message handler
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/sound/mmebuddy/wave/wodMessage.c
+ *
+ * PURPOSE:     Provides the wodMessage exported function, as required by
+ *              the MME API, for wave output device support.
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
 #include <windows.h>
