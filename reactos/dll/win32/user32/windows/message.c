@@ -1081,13 +1081,13 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
-  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+  PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
 
   if ( pcti )
     return (pcti->CTI_flags & CTI_INSENDMESSAGE);
   else
-  /* return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND); */
   return FALSE;
+/*    return(NtUserGetThreadState(THREADSTATE_INSENDMESSAGE) != ISMEX_NOSEND);*/
 }
 
 
@@ -1099,7 +1099,7 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
-  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+  PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
 
   if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
   else
@@ -2312,7 +2312,7 @@ DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
 {
-   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+   PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
    return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }
 
