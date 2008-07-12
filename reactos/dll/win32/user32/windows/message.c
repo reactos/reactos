@@ -2312,7 +2312,7 @@ DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
 {
-   PCLIENTTHREADINFO pcti = SharedPtrToUser(((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo);
+   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
    return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }
 
