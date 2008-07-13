@@ -13,7 +13,22 @@
 #define ROS_MMEBUDDY_WAVE_H
 
 MMRESULT
-QueueBuffer_Request(
+QueueWaveBuffer_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter);
+
+MMRESULT
+GetWaveDeviceState_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID Parameter);
+
+MMRESULT
+PauseWaveDevice_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter);
+
+MMRESULT
+ContinueWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter);
 

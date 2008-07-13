@@ -59,6 +59,7 @@ ListSoundDeviceInstance(
     IN  PSOUND_DEVICE SoundDevice,
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
 
     ASSERT(SoundDevice != NULL);
@@ -66,6 +67,26 @@ ListSoundDeviceInstance(
     ASSERT(SoundDeviceInstance->Device == NULL);
 
     SoundDeviceInstance->Device = SoundDevice;
+
+    if ( IS_WAVE_DEVICE_TYPE(SoundDevice->DeviceType) )
+    {
+        Result = InitWaveStreamData(SoundDeviceInstance);
+        ASSERT(Result == MMSYSERR_NOERROR);
+    }
+    else if ( IS_MIDI_DEVICE_TYPE(SoundDevice->DeviceType) )
+    {
+    }
+    else if ( IS_MIXER_DEVICE_TYPE(SoundDevice->DeviceType) )
+    {
+    }
+    else if ( IS_AUX_DEVICE_TYPE(SoundDevice->DeviceType) )
+    {
+    }
+    else
+    {
+        /* What kind of device do we have, then?!?! */
+        ASSERT(FALSE);
+    }
 
     /* Search for an appropriate place in the list to put this instance */
     if ( ! SoundDevice->FirstInstance )
@@ -171,6 +192,25 @@ CreateSoundDeviceInstance(
 }
 
 MMRESULT
+GetSoundDeviceFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PSOUND_DEVICE* SoundDevice)
+{
+    ASSERT(SoundDeviceInstance);
+    ASSERT(SoundDevice);
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    *SoundDevice = SoundDeviceInstance->Device;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
 DestroySoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
@@ -211,22 +251,6 @@ DestroyAllInstancesOfSoundDevice(
     {
         Result = DestroySoundDeviceInstance(CurrentInstance);
     }
-
-    return MMSYSERR_NOERROR;
-}
-
-MMRESULT
-GetSoundDeviceFromInstance(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PSOUND_DEVICE* SoundDevice)
-{
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
-
-    *SoundDevice = SoundDeviceInstance->Device;
 
     return MMSYSERR_NOERROR;
 }

@@ -214,6 +214,8 @@ typedef struct _SOUND_DEVICE
 
 typedef struct _WAVE_STREAM_INFO
 {
+    /* Current wave stream state */
+    WORD State;
     /* Buffer queue head and tail */
     PWAVEHDR BufferQueueHead;
     PWAVEHDR BufferQueueTail;
@@ -306,6 +308,14 @@ MMRESULT
 GetSoundDeviceType(
     IN  PSOUND_DEVICE Device,
     OUT PUCHAR DeviceType);
+
+MMRESULT
+DefaultInstanceConstructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
+
+VOID
+DefaultInstanceDestructor(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
 
 
 /*
@@ -445,7 +455,7 @@ GetSoundDeviceFromInstance(
 
 
 /*
-    ...
+    capabilities.c
 */
 
 MMRESULT
@@ -457,6 +467,11 @@ MMRESULT
 DefaultGetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE Device,
     OUT PUNIVERSAL_CAPS Capabilities);
+
+
+/*
+    wave/format.c
+*/
 
 MMRESULT
 QueryWaveDeviceFormatSupport(
@@ -481,14 +496,6 @@ DefaultSetWaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
-
-MMRESULT
-DefaultInstanceConstructor(
-    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
-
-VOID
-DefaultInstanceDestructor(
-    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
 
 
 /*
@@ -516,6 +523,13 @@ CallUsingSoundThread(
     IN  PVOID Parameter);
 
 
+/*
+    wave/streamcontrol.c
+*/
+
+MMRESULT
+InitWaveStreamData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 MMRESULT
 QueueWaveDeviceBuffer(
@@ -523,9 +537,8 @@ QueueWaveDeviceBuffer(
     IN  PWAVEHDR BufferHeader);
 
 
-
 /*
-    mme/wodMessage.c
+    wave/wodMessage.c
 */
 
 APIENTRY DWORD

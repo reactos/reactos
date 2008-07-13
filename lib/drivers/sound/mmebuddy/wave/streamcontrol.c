@@ -11,8 +11,33 @@
 #include <windows.h>
 #include <mmsystem.h>
 
+#include <ntddk.h>
+#include <ntddsnd.h>
+
 #include <mmebuddy.h>
 #include "wave.h"
+
+MMRESULT
+InitWaveStreamData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    PWAVE_STREAM_INFO StreamInfo;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    StreamInfo = &SoundDeviceInstance->Streaming.Wave;
+
+    StreamInfo->State = WAVE_DD_IDLE;
+
+    StreamInfo->BufferQueueHead = NULL;
+    StreamInfo->BufferQueueTail = NULL;
+    StreamInfo->CurrentBuffer = NULL;
+
+    StreamInfo->BuffersOutstanding = 0;
+
+    return MMSYSERR_NOERROR;
+}
 
 MMRESULT
 QueueWaveDeviceBuffer(
@@ -40,6 +65,34 @@ QueueWaveDeviceBuffer(
     BufferHeader->lpNext = NULL;
 
     return CallUsingSoundThread(SoundDeviceInstance,
-                                QueueBuffer_Request,
+                                QueueWaveBuffer_Request,
                                 BufferHeader);
+}
+
+MMRESULT
+GetWaveDeviceState(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PUCHAR State)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! State )
+        return MMSYSERR_INVALPARAM;
+
+    return CallUsingSoundThread(SoundDeviceInstance,
+                                GetWaveDeviceState_Request,
+                                State);
+}
+
+MMRESULT
+PauseWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    /* TODO */
+
+    return MMSYSERR_NOERROR;
 }

@@ -12,6 +12,9 @@
 #include <windows.h>
 #include <mmsystem.h>
 
+#include <ntddk.h>
+#include <ntddsnd.h>
+
 #include <mmebuddy.h>
 
 
@@ -50,23 +53,40 @@ StreamHasBuffersQueued(
     return (StreamInfo->CurrentBuffer != NULL);
 }
 
-DWORD
+MMRESULT
 PerformWaveIo(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
     PWAVE_STREAM_INFO StreamInfo;
     DWORD BytesToStream, BytesStreamed = 0;
+    UCHAR DeviceType;
 
     TRACE_("PerformWaveIo\n");
 
     ASSERT(SoundDeviceInstance);
+
+    /* These shouldn't fail unless we pass them garbage */
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    ASSERT(Result == MMSYSERR_NOERROR);
+    ASSERT(IS_WAVE_DEVICE_TYPE(DeviceType));
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
     /* If we're out of buffers, mark stream as stopped and do nothing */
     if ( ! StreamInfo->CurrentBuffer )
     {
-        TRACE_("*** NOTHING TO DO ***\n");
+        TRACE_("*** NOTHING TO DO - state is now WAVE_DD_IDLE ***\n");
+
+        /* The stream is idle */
+        StreamInfo->State = WAVE_DD_IDLE;
+
         return 0;
     }
 
@@ -75,23 +95,43 @@ PerformWaveIo(
                                 StreamInfo->CurrentBuffer->reserved,
                               MAX_SOUND_BUFFER_SIZE);
 
-    TRACE_("About to report what I'm about to write...\n");
-
     TRACE_("Writing %p + %d (%d bytes) - buffer length is %d bytes\n",
                 StreamInfo->CurrentBuffer->lpData,
                 (int) StreamInfo->CurrentBuffer->reserved,
                 (int) BytesToStream,
                 (int) StreamInfo->CurrentBuffer->dwBufferLength);
 
-    /* TODO: Error checking */
-    OverlappedSoundDeviceIo(SoundDeviceInstance,
-                            (PCHAR) StreamInfo->CurrentBuffer->lpData +
+    /* Perform I/O */
+    Result =  OverlappedSoundDeviceIo(
+                        SoundDeviceInstance,
+                        (PCHAR) StreamInfo->CurrentBuffer->lpData +
                                 StreamInfo->CurrentBuffer->reserved,
-                            BytesToStream,
-                            CompleteWaveBuffer,
-                            (PVOID) StreamInfo->CurrentBuffer);
+                        BytesToStream,
+                        CompleteWaveBuffer,
+                        (PVOID) StreamInfo->CurrentBuffer);
 
-    /* FIXME? - find out how much was actually sent? */
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        ERR_("Failed to perform wave device I/O! MMSYS Error %d\n",
+            (int) Result);
+        return Result;
+    }
+
+    /* TODO: Deal with INPUT as well */
+    if ( DeviceType == WAVE_OUT_DEVICE_TYPE )
+    {
+        TRACE_("Streamed data - state is now WAVE_DD_PLAYING\n");
+        StreamInfo->State = WAVE_DD_PLAYING;
+    }
+    else
+    {
+    /* NOTE - MME wavein recording does not begin immediately!! */
+    /*
+        TRACE_("Streamed data - state is now WAVE_DD_RECORDING\n");
+        StreamInfo->State = WAVE_DD_RECORDING;
+    */
+    }
+
     BytesStreamed = BytesToStream;
 
     /* Advance the offset */
@@ -108,13 +148,14 @@ PerformWaveIo(
     /* Increase the number of outstanding buffers */
     ++ StreamInfo->BuffersOutstanding;
 
-    return BytesStreamed;
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
 StreamWaveBuffers(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
     PWAVE_STREAM_INFO StreamInfo;
     ASSERT(SoundDeviceInstance);
 
@@ -125,7 +166,10 @@ StreamWaveBuffers(
             StreamHasBuffersQueued(StreamInfo) )
     {
         TRACE_("Performing wave I/O ...\n");
-        PerformWaveIo(SoundDeviceInstance);
+        Result = PerformWaveIo(SoundDeviceInstance);
+
+        if ( Result != MMSYSERR_NOERROR )
+            return Result;
     }
     TRACE_("<== Done streaming ==>\n");
 
@@ -159,7 +203,7 @@ CompleteWaveBuffer(
 }
 
 MMRESULT
-QueueBuffer_Request(
+QueueWaveBuffer_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
@@ -217,6 +261,50 @@ QueueBuffer_Request(
             StreamInfo->CurrentBuffer = WaveHeader;
         }
     }
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+GetWaveDeviceState_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID Parameter)
+{
+    PUCHAR State = (PUCHAR) Parameter;
+
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! State )
+        return MMSYSERR_INVALPARAM;
+
+    *State = SoundDeviceInstance->Streaming.Wave.State;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+PauseWaveDevice_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    /* TODO */
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+ContinueWaveDevice_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    if ( ! SoundDeviceInstance )
+        return MMSYSERR_INVALPARAM;
+
+    /* TODO */
 
     return MMSYSERR_NOERROR;
 }
