@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            include/reactos/arm/targets/pl011.h
+ * FILE:            include/reactos/arm/peripherals/pl011.h
  * PURPOSE:         PL011 Registers and Constants
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
