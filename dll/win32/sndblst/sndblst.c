@@ -222,6 +222,9 @@ int APIENTRY wWinMain(
     POPUP("Click for WODM_RESTART");
     Result = wodMessage(0, WODM_RESTART, (DWORD) InstanceData, (DWORD) 0, 0);
 
+    POPUP("Click for WODM_RESET");
+    Result = wodMessage(0, WODM_RESET, (DWORD) InstanceData, (DWORD) 0, 0);
+
     POPUP("Click for WODM_CLOSE test");
     Result = wodMessage(0, WODM_CLOSE, (DWORD) InstanceData, (DWORD) 0, 0);
     /* SOUND_DEBUG_HEX(Result); */

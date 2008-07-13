@@ -235,6 +235,7 @@ typedef struct _MMFUNCTION_TABLE
     MMGETWAVESTATE_FUNC     GetWaveDeviceState;
     MMSETWAVESTATE_FUNC     PauseWaveDevice;
     MMSETWAVESTATE_FUNC     RestartWaveDevice;
+    MMSETWAVESTATE_FUNC     ResetWaveDevice;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -662,6 +663,14 @@ RestartWaveDevice(
 
 MMRESULT
 DefaultRestartWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+ResetWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+DefaultResetWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 

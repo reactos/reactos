@@ -32,4 +32,9 @@ RestartWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter);
 
+MMRESULT
+ResetWaveDevice_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter);
+
 #endif

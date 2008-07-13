@@ -144,6 +144,12 @@ wodMessage(
         }
 
         case WODM_RESET :
+        {
+            ASSERT(Instance != NULL);
+
+            return ResetWaveDevice(Instance);
+        }
+
         case WODM_BREAKLOOP :
             return MMSYSERR_INVALHANDLE;
 

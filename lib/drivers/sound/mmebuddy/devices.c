@@ -66,6 +66,7 @@ InitSoundDeviceFunctionTable(
     Device->Functions.GetWaveDeviceState = DefaultGetWaveDeviceState;
     Device->Functions.PauseWaveDevice = DefaultPauseWaveDevice;
     Device->Functions.RestartWaveDevice = DefaultRestartWaveDevice;
+    Device->Functions.ResetWaveDevice = DefaultResetWaveDevice;
 
     if ( ! SourceFunctionTable )
     {
@@ -121,6 +122,12 @@ InitSoundDeviceFunctionTable(
     {
         Device->Functions.RestartWaveDevice =
             SourceFunctionTable->RestartWaveDevice;
+    }
+
+    if ( SourceFunctionTable->ResetWaveDevice )
+    {
+        Device->Functions.ResetWaveDevice =
+            SourceFunctionTable->ResetWaveDevice;
     }
 
     TRACE_EXIT(0);
@@ -226,6 +233,7 @@ RemoveSoundDevice(
     PSOUND_DEVICE PreviousDevice = NULL;
 
     /*TRACE_("Removing a sound device from list %d\n", DeviceType);*/
+    TRACE_ENTRY();
 
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
 
@@ -234,11 +242,13 @@ RemoveSoundDevice(
     /* Clean up any instances */
     if ( SoundDevice->FirstInstance != NULL )
     {
+        TRACE_("About to destroy all instances of this sound device\n");
         DestroyAllInstancesOfSoundDevice(SoundDevice);
     }
 
     if ( SoundDeviceLists[TypeIndex] == SoundDevice )
     {
+        TRACE_("Removing head of list\n");
         SoundDeviceLists[TypeIndex] = SoundDevice->Next;
         Done = TRUE;
     }
@@ -247,6 +257,8 @@ RemoveSoundDevice(
         /* Remove from list */
         CurrentDevice = SoundDeviceLists[TypeIndex];
         PreviousDevice = NULL;
+
+        TRACE_("Removing from list\n");
 
         while ( CurrentDevice )
         {
@@ -266,8 +278,11 @@ RemoveSoundDevice(
 
     ASSERT(Done);
 
+    TRACE_("Freeing path at %p\n", SoundDevice->DevicePath);
     /* Free the memory associated with the device info */
     FreeMemory(SoundDevice->DevicePath);
+
+    TRACE_("Freeing struct\n");
     FreeMemory(SoundDevice);
 
     TRACE_EXIT(MMSYSERR_NOERROR);

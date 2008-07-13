@@ -20,6 +20,7 @@
 static HANDLE ProcessHeapHandle = INVALID_HANDLE_VALUE;
 static DWORD CurrentAllocations = 0;
 
+#if 0
 typedef struct _ALLOCATION
 {
     DWORD Tag;
@@ -68,6 +69,40 @@ FreeTaggedMemory(
 
     ZeroMemory(AllocationInfo, AllocationInfo->Size + sizeof(ALLOCATION));
     HeapFree(ProcessHeapHandle, 0, AllocationInfo);
+
+    -- CurrentAllocations;
+}
+#endif
+
+PVOID
+AllocateTaggedMemory(
+    IN  DWORD Tag,
+    IN  DWORD Size)
+{
+    PVOID Pointer = NULL;
+
+    if ( ProcessHeapHandle == INVALID_HANDLE_VALUE )
+        ProcessHeapHandle = GetProcessHeap();
+
+    Pointer = HeapAlloc(ProcessHeapHandle, HEAP_ZERO_MEMORY, Size);
+
+    if ( ! Pointer )
+        return NULL;
+
+    ++ CurrentAllocations;
+
+    return Pointer;
+}
+
+VOID
+FreeTaggedMemory(
+    IN  DWORD Tag,
+    IN  PVOID Pointer)
+{
+    ASSERT(ProcessHeapHandle != INVALID_HANDLE_VALUE);
+    ASSERT(Pointer);
+
+    HeapFree(ProcessHeapHandle, 0, Pointer);
 
     -- CurrentAllocations;
 }

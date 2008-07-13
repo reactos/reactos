@@ -47,14 +47,21 @@ QueueWaveDeviceBuffer(
     VALIDATE_MMSYS_PARAMETER( BufferHeader );
     VALIDATE_MMSYS_PARAMETER( BufferHeader->lpData );
     VALIDATE_MMSYS_PARAMETER( BufferHeader->dwBufferLength > 0 );
-    /* TODO: Check anything more about this buffer? */
 
-    if ( ! (BufferHeader->dwFlags & WHDR_PREPARED ) )
+    /* Make sure the buffer flags are sane */
+    BufferHeader->dwFlags &= WHDR_INQUEUE | WHDR_DONE | WHDR_PREPARED |
+                             WHDR_BEGINLOOP | WHDR_ENDLOOP;
+
+    if ( ! ( BufferHeader->dwFlags & WHDR_PREPARED ) )
         return WAVERR_UNPREPARED;
 
-    /* TODO: WHDR_INQUEUE */
+    if ( ( BufferHeader->dwFlags & WHDR_INQUEUE ) )
+        return WAVERR_STILLPLAYING;
 
+    /* Clear the "done" flag */
     BufferHeader->dwFlags &= ~WHDR_DONE;
+
+    /* ...and at present there's nothing after this buffer, so we do this: */
     BufferHeader->lpNext = NULL;
 
     return CallUsingSoundThread(SoundDeviceInstance,
@@ -156,6 +163,39 @@ DefaultRestartWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
     ULONG RequestedState = WAVE_DD_PLAY;
+    MMRESULT Result;
+
+    TRACE_ENTRY();
+
+    Result = SendToSoundDevice(SoundDeviceInstance,
+                               IOCTL_WAVE_SET_STATE,
+                               &RequestedState,
+                               sizeof(RequestedState),
+                               NULL);
+
+    ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = TranslateInternalMmResult(Result);
+    TRACE_EXIT(Result);
+    return Result;
+}
+
+MMRESULT
+ResetWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    return CallUsingSoundThread(SoundDeviceInstance,
+                                ResetWaveDevice_Request,
+                                NULL);
+}
+
+MMRESULT
+DefaultResetWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    ULONG RequestedState = WAVE_DD_RESET;
     MMRESULT Result;
 
     TRACE_ENTRY();

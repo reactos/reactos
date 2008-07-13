@@ -334,3 +334,29 @@ RestartWaveDevice_Request(
 
     return Functions->RestartWaveDevice(SoundDeviceInstance);
 }
+
+/* This is quite horribly broken */
+MMRESULT
+ResetWaveDevice_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    /* ugly HACK to stop sound playback... FIXME */
+    SoundDeviceInstance->Streaming.Wave.CurrentBuffer = NULL;
+
+    return Functions->ResetWaveDevice(SoundDeviceInstance);
+}
