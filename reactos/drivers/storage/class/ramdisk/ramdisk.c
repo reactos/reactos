@@ -36,8 +36,10 @@ typedef enum _RAMDISK_DEVICE_STATE
 {
     RamdiskStateUninitialized,
     RamdiskStateStarted,
+    RamdiskStatePaused,
     RamdiskStateStopped,
-    RamdiskStateRemoved
+    RamdiskStateRemoved,
+    RamdiskStateBusRemoved,
 } RAMDISK_DEVICE_STATE;
 
 DEFINE_GUID(RamdiskBusInterface,
@@ -281,9 +283,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
     Minor = IoStackLocation->MinorFunction;
     
     //
-    // Check if the device is initialized
+    // Check if the bus is removed
     //
-    if (DeviceExtension->State == RamdiskStateUninitialized)
+    if (DeviceExtension->State == RamdiskStateBusRemoved)
     {
         //
         // Only remove-device and query-id are allowed
@@ -361,11 +363,23 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             DPRINT1("PnP IRP: %lx\n", Minor);
             while (TRUE);
             break;
-            
-        case IRP_MN_QUERY_ID:
+
+        case IRP_MN_SURPRISE_REMOVAL:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
             while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_ID:
+            
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }            
             break;
             
         case IRP_MN_QUERY_BUS_INFORMATION:
@@ -405,10 +419,27 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
     }
     
     //
+    // Are we an FDO?
+    //
+    if (DeviceExtension->Type == RamdiskFdo)
+    {
+        //
+        // Do we have an attached device?
+        //
+        if (DeviceExtension->AttachedDevice)
+        {
+            //
+            // Forward the IRP
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        }
+    }
+    
+    //
     // Release the lock and return status
     //
     IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
-    while (TRUE);
     return Status;
 }
 
