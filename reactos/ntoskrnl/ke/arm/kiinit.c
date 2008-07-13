@@ -32,6 +32,11 @@ KiIdleLoop(
 );
 
 VOID
+STDCALL
+KdpSerialDebugPrint(LPSTR Message,
+                    ULONG Length);
+
+VOID
 DebugService(IN ULONG ServiceType,
              IN PCHAR Buffer,
              IN ULONG Length,
@@ -41,8 +46,7 @@ DebugService(IN ULONG ServiceType,
     //
     // FIXME: ARM Bring-up Hack
     //
-    void arm_kprintf(const char *fmt, ...);
-    arm_kprintf("%s", Buffer);
+    KdpSerialDebugPrint(Buffer, Length);
 }
 
 VOID
@@ -51,10 +55,9 @@ DebugService2(IN ULONG Arg1,
               IN ULONG Service)
 {
     //
-    // FIXME: ARM Bring-up Hack
+    // FIXME: TODO
     //
-    void arm_kprintf(const char *fmt, ...);
-    arm_kprintf("Loading symbols for %Z...\n", (PCHAR)Arg1);
+    return;
 }
 
 VOID
@@ -79,8 +82,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     LARGE_INTEGER PageDirectory;
     PKPCR Pcr;
     ULONG i;
-    DPRINT1("[INIT] Process: %p Thread: %p Stack: %p PRCB: %p Number: %d LoaderBlock: %p\n",
-            InitProcess, InitThread, IdleStack, Prcb, Number, LoaderBlock);
 
     //
     // Initialize the platform
@@ -330,13 +331,6 @@ KiInitializeSystem(IN ULONG Magic,
     ARM_PTE Pte;
     PKPCR Pcr;
     ARM_CONTROL_REGISTER ControlRegister;
-    DPRINT1("-----------------------------------------------------\n");
-    DPRINT1("ReactOS-ARM "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-    DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
-    DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
-            LoaderBlock->NtHalPathName,
-            LoaderBlock->ArcHalDeviceName,
-            LoaderBlock->NtBootPathName);
 
     //
     // Detect ARM version (Architecture 6 is the ARMv5TE-J, go figure!)

@@ -61,7 +61,6 @@
 		<if property="ARCH" value="arm">
 			<directory name="arm">
 				<file first="true">boot.s</file>
-				<file>arm_kprintf.c</file>
 				<file>cpu.c</file>
 				<file>ctxswtch.s</file>
 				<file>exp.c</file>
