@@ -257,12 +257,208 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
+RamdiskCreateDiskDevice(IN PRAMDISK_EXTENSION DeviceExtension,
+						IN PRAMDISK_CREATE_INPUT Input,
+						IN BOOLEAN ValidateOnly,
+						OUT PDEVICE_OBJECT *DeviceObject)
 {
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp,
+					 IN BOOLEAN ValidateOnly)
+{
+	PRAMDISK_CREATE_INPUT Input;
+	ULONG Length;
+	PRAMDISK_EXTENSION DeviceExtension; 
+	ULONG DiskType;
+	PWCHAR FileNameStart, FileNameEnd;
+	NTSTATUS Status;
+	PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+	
+	//
+	// Get the device extension and our input data
+	//
+	DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
+	Length = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
+	Input = (PRAMDISK_CREATE_INPUT)Irp->AssociatedIrp.SystemBuffer;
+	
+	//
+	// Validate input parameters
+	//
+	if ((Length < sizeof(RAMDISK_CREATE_INPUT)) ||
+		(Input->Version != sizeof(RAMDISK_CREATE_INPUT)))
+	{
+		//
+		// Invalid input
+		//
+		return STATUS_INVALID_PARAMETER;
+	}
+	
+	//
+	// Validate the disk type
+	//
+	DiskType = Input->DiskType;
+	if (DiskType == FILE_DEVICE_CONTROLLER) return STATUS_INVALID_PARAMETER;
+	
+	//
+	// Look at the disk type
+	//
+	if (DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+	{
+		//
+		// We only allow this as an early-init boot
+		//
+		if (!KeLoaderBlock) return STATUS_INVALID_PARAMETER;
+		
+		//
+		// Save command-line flags
+		//
+		if (ExportBootDiskAsCd) Input->Options.ExportAsCd = TRUE;
+		if (IsWinPEBoot) Input->Options.NoDriveLetter = TRUE;
+	}
+    
+	//
+	// Validate the disk type
+	//
+	if ((Input->Options.ExportAsCd) && (DiskType != FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+	{
+		//
+		// If the type isn't CDFS, it has to at least be raw CD
+		//
+		if (DiskType != FILE_DEVICE_CD_ROM) return STATUS_INVALID_PARAMETER;
+	}
+	
+	//
+	// Check if this is an actual file
+	//
+	if (DiskType <= FILE_DEVICE_CD_ROM)
+	{
+		//
+		// Validate the file name
+		//
+		FileNameStart = (PWCHAR)((ULONG_PTR)Input + Length);
+		FileNameEnd = Input->FileName + 1;
+		while ((FileNameEnd < FileNameStart) && *(FileNameEnd)) FileNameEnd++;
+		if (FileNameEnd == FileNameStart) return STATUS_INVALID_PARAMETER;
+	}
+    
+	//
+	// Create the actual device
+	//
+	Status = RamdiskCreateDiskDevice(DeviceExtension,
+									 Input, 
+									 ValidateOnly,
+									 &DeviceObject);
+	if (NT_SUCCESS(Status))
+	{
+		//
+		// Invalidate and set success
+		//
+		IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, 0);
+		Irp->IoStatus.Information = STATUS_SUCCESS;
+	}
+	
+	//
+	// We're done
+	//
+	return Status;
+}
+
+NTSTATUS
+NTAPI
+RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    PRAMDISK_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    ULONG Information = 0;
+    
+    //
+    // Grab the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // Fail the IRP
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+    
+    //
+    // Check if this is an FDO or PDO
+    //
+    if (DeviceExtension->Type == RamdiskFdo)
+    {
+        //
+        // Check what the request is
+        //
+        switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+        {
+            //
+            // Request to create a ramdisk
+            //
+            case FSCTL_CREATE_RAM_DISK:
+                
+                //
+                // Do it
+                //
+                Status = RamdiskCreateRamdisk(DeviceObject, Irp, TRUE);
+                if (!NT_SUCCESS(Status)) goto CompleteRequest;
+                break;
+                
+            default:
+                
+                //
+                // We don't handle anything else yet
+                //
+                ASSERT(FALSE);
+                while (TRUE);
+        }
+    }
+    else
+    {
+        //
+        // PDO code not yet done
+        //
+        ASSERT(FALSE);
+    }
+    
+    //
+    // Queue the request to our worker thread
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    
+CompleteRequest:
+    //
+    // Release the lock
+    //
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        //
+        // Complete the request
+        //
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = Information;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    
+    //
+    // Return status
+    //
+    return Status;
 }
 
 NTSTATUS
