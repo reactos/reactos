@@ -8,6 +8,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include <initguid.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
 #include <scsi.h>
@@ -16,11 +17,38 @@
 #include <mountmgr.h>
 #include <helper.h>
 #include <ketypes.h>
+#include <iotypes.h>
+#include <rtlfuncs.h>
 #include <arc/arc.h>
+#include <reactos/drivers/ntddrdsk.h>
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
+
+typedef enum _RAMDISK_DEVICE_TYPE
+{
+    RamdiskFdo,
+    RamdiskPdo
+} RAMDISK_DEVICE_TYPE;
+
+DEFINE_GUID(RamdiskBusInterface,
+		    0x5DC52DF0,
+			0x2F8A,
+			0x410F,
+			0x80, 0xE4, 0x05, 0xF8, 0x10, 0xE7, 0xA8, 0x8A);
+
+typedef struct _RAMDISK_EXTENSION
+{
+    RAMDISK_DEVICE_TYPE Type;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT AttachedDevice;
+    IO_REMOVE_LOCK RemoveLock;
+    UNICODE_STRING SymbolicLinkName;
+    FAST_MUTEX DiskListLock;
+    LIST_ENTRY DiskListHead;
+} RAMDISK_EXTENSION, *PRAMDISK_EXTENSION;
 
 ULONG MaximumViewLength;
 ULONG MaximumPerDiskViewLength;
@@ -34,6 +62,7 @@ ULONG DefaultViewLength;
 UNICODE_STRING DriverRegistryPath;
 BOOLEAN ExportBootDiskAsCd;
 BOOLEAN IsWinPEBoot;
+PDEVICE_OBJECT RamdiskBusFdo;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -284,9 +313,114 @@ NTAPI
 RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject, 
                  IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;    
+	PRAMDISK_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT AttachedDevice;
+	NTSTATUS Status; 
+	UNICODE_STRING DeviceName;
+	PDEVICE_OBJECT DeviceObject;
+	
+	//
+	// Only create the FDO once
+	//
+	if (RamdiskBusFdo) return STATUS_DEVICE_ALREADY_ATTACHED;
+	
+	//
+	// Create the FDO
+	//
+	RtlInitUnicodeString(&DeviceName, L"\\Device\\Ramdisk");
+	Status = IoCreateDevice(DriverObject,
+						    sizeof(RAMDISK_EXTENSION),
+							&DeviceName,
+							FILE_DEVICE_BUS_EXTENDER,
+							FILE_DEVICE_SECURE_OPEN,
+							0,
+							&DeviceObject);
+	if (NT_SUCCESS(Status))
+	{
+		//
+		// Initialize the FDO extension
+		//
+	    DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
+	    RtlZeroMemory(DeviceObject->DeviceExtension, sizeof(RAMDISK_EXTENSION));
+
+		//
+		// Set FDO flags
+		//
+	    DeviceObject->Flags |= DO_POWER_PAGABLE | DO_DIRECT_IO;
+
+		//
+		// Setup the FDO extension
+		//
+	    DeviceExtension->Type = RamdiskFdo;
+		ExInitializeFastMutex(&DeviceExtension->DiskListLock);
+	    IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
+                               TAG('R', 'a', 'm', 'd'),
+                               0,
+                               1);
+		InitializeListHead(&DeviceExtension->DiskListHead);
+	    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+	    DeviceExtension->DeviceObject = DeviceObject;
+
+		//
+		// Register the RAM disk device interface
+		//
+	    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+										   &RamdiskBusInterface,
+										   NULL,
+										   &DeviceExtension->SymbolicLinkName);
+	    if (!NT_SUCCESS(Status))
+	    {
+			//
+			// Fail
+			//
+			IoDeleteDevice(DeviceObject);
+			return Status;
+	    }
+
+		//
+		// Attach us to the device stack
+		//
+	    AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
+													 PhysicalDeviceObject);
+	    DeviceExtension->AttachedDevice = AttachedDevice;
+	    if (!AttachedDevice)
+	    {
+			//
+			// Fail
+			//
+			IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, 0);
+			RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
+			IoDeleteDevice(DeviceObject);
+			return STATUS_NO_SUCH_DEVICE;
+	    }
+
+		//
+		// FDO is initialized
+		//
+	    RamdiskBusFdo = DeviceObject;
+
+		//
+		// Loop for loader block
+		//
+	    if (KeLoaderBlock)
+	    {
+			//
+			// Are we being booted from setup? Not yet supported
+			//
+			ASSERT (!KeLoaderBlock->SetupLdrBlock);
+	    }
+
+		//
+		// All done
+		//
+	    DeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+	    Status = STATUS_SUCCESS;
+	}
+
+	//
+	// Return status
+	//
+	return Status;
 }
 
 NTSTATUS
@@ -295,7 +429,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
     PCHAR BootDeviceName, CommandLine;
-    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
     
     //
@@ -388,7 +522,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     //
     // Installing from Ramdisk isn't supported yet
     //
-    ASSERT(KeLoaderBlock->SetupLdrBlock);
+    ASSERT(!KeLoaderBlock->SetupLdrBlock);
     
     //
     // Are we reporting the device
@@ -408,6 +542,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                                         &PhysicalDeviceObject);
         if (NT_SUCCESS(Status))
         {
+            //
+            // ReactOS Fix
+            // The ReactOS Plug and Play Manager is broken and does not create
+            // the required keys when reporting a detected device.
+            // We hack around this ourselves.
+            //
+            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->InstancePath,
+                                   L"Root\\UNKNOWN\\0000");
+            
             //
             // Create the device object
             //
