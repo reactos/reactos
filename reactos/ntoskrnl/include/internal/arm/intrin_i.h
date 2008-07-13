@@ -40,6 +40,15 @@ KeArmFaultStatusRegisterGet(VOID)
 
 FORCEINLINE
 ULONG
+KeArmInstructionFaultStatusRegisterGet(VOID)
+{
+    ULONG Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c5, c0, 1" : "=r"(Value) : : "cc");
+    return Value;
+}
+
+FORCEINLINE
+ULONG
 KeArmFaultAddressRegisterGet(VOID)
 {
     ULONG Value;
