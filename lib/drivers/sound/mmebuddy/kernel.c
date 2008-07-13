@@ -63,7 +63,8 @@ OpenKernelSoundDeviceByName(
 MMRESULT
 OpenKernelSoundDevice(
     PSOUND_DEVICE SoundDevice,
-    DWORD AccessRights)
+    DWORD AccessRights,
+    PHANDLE Handle)
 {
     MMRESULT Result;
 
@@ -73,74 +74,54 @@ OpenKernelSoundDevice(
         return MMSYSERR_INVALPARAM;
     }
 
-    if ( SoundDevice->Handle != INVALID_HANDLE_VALUE )
+    if ( ! Handle )
     {
-        ERR_("Already open?");
-        return MMSYSERR_ERROR; /*MMSYSERR_ALLOC;*/
+        return MMSYSERR_INVALPARAM;
     }
 
     Result = OpenKernelSoundDeviceByName(SoundDevice->DevicePath,
                                          AccessRights,
-                                         &SoundDevice->Handle);
+                                         Handle);
 
     return Result;
 }
 
 MMRESULT
 CloseKernelSoundDevice(
-    PSOUND_DEVICE SoundDevice)
+    HANDLE Handle)
 {
-    if ( ! SoundDevice )
+    if ( Handle == INVALID_HANDLE_VALUE )
         return MMSYSERR_INVALPARAM;
 
-    if ( SoundDevice->Handle == INVALID_HANDLE_VALUE )
-        return MMSYSERR_ERROR;  /* ok? */
-
-    CloseHandle(SoundDevice->Handle);
-    SoundDevice->Handle = INVALID_HANDLE_VALUE;
+    CloseHandle(Handle);
 
     return MMSYSERR_NOERROR;
 }
 
 MMRESULT
-PerformSoundDeviceIo(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID InBuffer,
-    DWORD InBufferSize,
-    LPVOID OutBuffer,
-    DWORD OutBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped)
+PerformDeviceIo(
+    IN  HANDLE Handle,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
 {
-    BOOLEAN TemporaryOpen = FALSE;
     BOOLEAN IoResult = FALSE;
     DWORD AccessRights = GENERIC_READ;
-    MMRESULT Result;
 
-    if ( ! SoundDevice )
+    if ( Handle == INVALID_HANDLE_VALUE )
         return MMSYSERR_INVALPARAM;
 
     /* Determine if we actually need to write stuff */
     if ( InBuffer != NULL )
         AccessRights |= GENERIC_WRITE;
 
-    /* Open the device temporarily,if it's not open */
-    TemporaryOpen = (SoundDevice->Handle == INVALID_HANDLE_VALUE);
-
-    if ( TemporaryOpen )
-    {
-        MessageBox(0, L"Opening sound device", L"Info", MB_OK | MB_TASKMODAL);
-
-        Result = OpenKernelSoundDevice(SoundDevice, AccessRights);
-
-        if ( Result != MMSYSERR_NOERROR )
-            return Result;
-    }
-
     MessageBox(0, L"Doing IO", L"Info", MB_OK | MB_TASKMODAL);
     IoResult = DeviceIoControl(
-        SoundDevice->Handle,
+        Handle,
         IoControlCode,
         InBuffer,
         InBufferSize,
@@ -154,27 +135,84 @@ PerformSoundDeviceIo(
         return Win32ErrorToMmResult(GetLastError());
     }
 
-    /* If we opened the device, we must close it here */
-    if ( TemporaryOpen )
-    {
-        MessageBox(0, L"Closing sound device", L"Info", MB_OK | MB_TASKMODAL);
-        CloseHandle(SoundDevice->Handle);
-        SoundDevice->Handle = INVALID_HANDLE_VALUE;
-    }
-
     return MMSYSERR_NOERROR;
 }
 
 MMRESULT
-ReadSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID OutBuffer,
-    DWORD OutBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped)
+ReadFromDeviceHandle(
+    IN  HANDLE Handle,
+    IN  DWORD IoControlCode,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
 {
-    return PerformSoundDeviceIo(SoundDevice,
+    return PerformDeviceIo(Handle,
+                           IoControlCode,
+                           NULL,
+                           0,
+                           OutBuffer,
+                           OutBufferSize,
+                           BytesReturned,
+                           Overlapped);
+}
+
+MMRESULT
+WriteToDeviceHandle(
+    IN  HANDLE Handle,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
+{
+    return PerformDeviceIo(Handle,
+                           IoControlCode,
+                           InBuffer,
+                           InBufferSize,
+                           NULL,
+                           0,
+                           BytesReturned,
+                           Overlapped);
+}
+
+MMRESULT
+PerformSoundDeviceIo(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
+{
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALPARAM;
+
+    if ( SoundDeviceInstance->Handle == INVALID_HANDLE_VALUE )
+        return MMSYSERR_ERROR;
+
+    return PerformDeviceIo(SoundDeviceInstance->Handle,
+                           IoControlCode,
+                           InBuffer,
+                           InBufferSize,
+                           OutBuffer,
+                           OutBufferSize,
+                           BytesReturned,
+                           Overlapped);
+}
+
+MMRESULT
+ReadFromSoundDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
+{
+    return PerformSoundDeviceIo(SoundDeviceInstance,
                                 IoControlCode,
                                 NULL,
                                 0,
@@ -185,15 +223,15 @@ ReadSoundDevice(
 }
 
 MMRESULT
-WriteSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID InBuffer,
-    DWORD InBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped)
+WriteToSoundDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped)
 {
-    return PerformSoundDeviceIo(SoundDevice,
+    return PerformSoundDeviceIo(SoundDeviceInstance,
                                 IoControlCode,
                                 InBuffer,
                                 InBufferSize,
@@ -203,6 +241,8 @@ WriteSoundDevice(
                                 Overlapped);
 }
 
+
+/* TODO: move somewhere else */
 MMRESULT
 WriteSoundDeviceBuffer(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -221,13 +261,13 @@ WriteSoundDeviceBuffer(
     /*SOUND_DEBUG(msg);*/
 
     TRACE_("WriteFileEx(%p, %p, %d, %p, %p)\n", 
-           SoundDeviceInstance->Device->Handle,
+           SoundDeviceInstance->Handle,
            Buffer,
            (int) BufferSize,
            Overlapped,
            CompletionRoutine);
 
-    if ( ! WriteFileEx(SoundDeviceInstance->Device->Handle,
+    if ( ! WriteFileEx(SoundDeviceInstance->Handle,
                        Buffer,
                        BufferSize,
                        Overlapped,

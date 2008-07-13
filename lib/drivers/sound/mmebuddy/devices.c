@@ -42,22 +42,70 @@ InitSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE Device,
     IN  PMMFUNCTION_TABLE SourceFunctionTable)
 {
-    /* Defaults... TODO - Make all these over-rideable! */
     Device->Functions.Constructor = DefaultInstanceConstructor;
     Device->Functions.Destructor = DefaultInstanceDestructor;
 
     Device->Functions.GetCapabilities = DefaultGetSoundDeviceCapabilities;
+
+    /* Wave device specific */
     Device->Functions.QueryWaveFormat = DefaultQueryWaveDeviceFormatSupport;
     Device->Functions.SetWaveFormat = DefaultSetWaveDeviceFormat;
+
+    Device->Functions.GetWaveDeviceState = DefaultGetWaveDeviceState;
+    Device->Functions.PauseWaveDevice = DefaultPauseWaveDevice;
+    Device->Functions.RestartWaveDevice = DefaultRestartWaveDevice;
 
     if ( ! SourceFunctionTable )
         return;
 
     /* If we get here, the function table is being over-ridden */
+
+    if ( SourceFunctionTable->Constructor )
+    {
+        Device->Functions.Constructor =
+            SourceFunctionTable->Constructor;
+    }
+
+    if ( SourceFunctionTable->Destructor )
+    {
+        Device->Functions.Destructor =
+            SourceFunctionTable->Destructor;
+    }
+
     if ( SourceFunctionTable->GetCapabilities )
     {
         Device->Functions.GetCapabilities =
             SourceFunctionTable->GetCapabilities;
+    }
+
+    if ( SourceFunctionTable->QueryWaveFormat )
+    {
+        Device->Functions.QueryWaveFormat =
+            SourceFunctionTable->QueryWaveFormat;
+    }
+
+    if ( SourceFunctionTable->SetWaveFormat )
+    {
+        Device->Functions.SetWaveFormat =
+            SourceFunctionTable->SetWaveFormat;
+    }
+
+    if ( SourceFunctionTable->GetWaveDeviceState )
+    {
+        Device->Functions.GetWaveDeviceState =
+            SourceFunctionTable->GetWaveDeviceState;
+    }
+
+    if ( SourceFunctionTable->PauseWaveDevice )
+    {
+        Device->Functions.PauseWaveDevice =
+            SourceFunctionTable->PauseWaveDevice;
+    }
+
+    if ( SourceFunctionTable->RestartWaveDevice )
+    {
+        Device->Functions.RestartWaveDevice =
+            SourceFunctionTable->RestartWaveDevice;
     }
 }
 
@@ -94,7 +142,6 @@ AddSoundDevice(
     NewDevice->Next = NULL;
     NewDevice->FirstInstance = NULL;
     NewDevice->DeviceType = DeviceType;
-    NewDevice->Handle = INVALID_HANDLE_VALUE;
 
     NewDevice->DevicePath = AllocateWideString(wcslen(DevicePath));
 /*
@@ -165,13 +212,6 @@ RemoveSoundDevice(
     if ( SoundDevice->FirstInstance != NULL )
     {
         DestroyAllInstancesOfSoundDevice(SoundDevice);
-    }
-
-    /* Close handle (if open) */
-    if ( SoundDevice->Handle != INVALID_HANDLE_VALUE )
-    {
-        CloseHandle(SoundDevice->Handle);
-        SoundDevice->Handle = INVALID_HANDLE_VALUE;
     }
 
     if ( SoundDeviceLists[TypeIndex] == SoundDevice )
@@ -252,6 +292,14 @@ RemoveAllSoundDevices()
     }
 }
 
+BOOLEAN
+IsValidSoundDevice(
+    IN  PSOUND_DEVICE SoundDevice)
+{
+    /* TODO */
+    return ( SoundDevice != NULL );
+}
+
 
 MMRESULT
 GetSoundDevice(
@@ -308,16 +356,32 @@ GetSoundDevicePath(
 
 MMRESULT
 GetSoundDeviceType(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     OUT PUCHAR DeviceType)
 {
-    if ( ! Device )
+    if ( ! SoundDevice )
         return MMSYSERR_INVALPARAM;
 
     if ( ! DeviceType )
         return MMSYSERR_INVALPARAM;
 
-    *DeviceType = Device->DeviceType;
+    *DeviceType = SoundDevice->DeviceType;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+GetSoundDeviceFunctionTable(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PMMFUNCTION_TABLE* FunctionTable)
+{
+    if ( ! SoundDevice )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! FunctionTable )
+        return MMSYSERR_INVALPARAM;
+
+    *FunctionTable = &SoundDevice->Functions;
 
     return MMSYSERR_NOERROR;
 }
@@ -353,7 +417,9 @@ DefaultInstanceConstructor(
     if ( DeviceType == WAVE_OUT_DEVICE_TYPE )
         AccessRights |= GENERIC_WRITE;
 
-    Result = OpenKernelSoundDevice(SoundDevice, AccessRights);
+    Result = OpenKernelSoundDevice(SoundDevice,
+                                   AccessRights,
+                                   &SoundDeviceInstance->Handle);
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 

@@ -254,3 +254,33 @@ DestroyAllInstancesOfSoundDevice(
 
     return MMSYSERR_NOERROR;
 }
+
+BOOLEAN
+IsValidSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    /* TODO - Once multiple instances are supported */
+    return ( SoundDeviceInstance != NULL );
+}
+
+MMRESULT
+GetSoundDeviceTypeFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PUCHAR DeviceType)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALPARAM;
+
+    if ( ! DeviceType )
+        return MMSYSERR_INVALPARAM;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( Result != MMSYSERR_NOERROR )
+        return Result;
+
+    return GetSoundDeviceType(SoundDevice, DeviceType);
+}

@@ -270,6 +270,9 @@ GetWaveDeviceState_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PVOID Parameter)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
     PUCHAR State = (PUCHAR) Parameter;
 
     if ( ! SoundDeviceInstance )
@@ -278,9 +281,18 @@ GetWaveDeviceState_Request(
     if ( ! State )
         return MMSYSERR_INVALPARAM;
 
-    *State = SoundDeviceInstance->Streaming.Wave.State;
+    // *State = SoundDeviceInstance->Streaming.Wave.State;
 
-    return MMSYSERR_NOERROR;
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->GetWaveDeviceState(SoundDeviceInstance,
+                                         State);
 }
 
 MMRESULT
@@ -288,23 +300,37 @@ PauseWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     if ( ! SoundDeviceInstance )
         return MMSYSERR_INVALPARAM;
 
-    /* TODO */
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
 
-    return MMSYSERR_NOERROR;
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->PauseWaveDevice(SoundDeviceInstance);
 }
 
 MMRESULT
-ContinueWaveDevice_Request(
+RestartWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
     if ( ! SoundDeviceInstance )
         return MMSYSERR_INVALPARAM;
 
-    /* TODO */
+    if ( SoundDeviceInstance->Streaming.Wave.State != WAVE_DD_STOPPED )
+    {
+        WARN_("Nothing to do\n");
+        return MMSYSERR_NOERROR;
+    }
 
     return MMSYSERR_NOERROR;
 }

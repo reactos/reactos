@@ -181,6 +181,13 @@ typedef MMRESULT (*MMWAVEQUEUEBUFFER_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
     IN  PWAVEHDR WaveHeader);
 
+typedef MMRESULT (*MMGETWAVESTATE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    OUT PUCHAR State);
+
+typedef MMRESULT (*MMSETWAVESTATE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance);
+
 typedef struct _MMFUNCTION_TABLE
 {
     MMCREATEINSTANCE_FUNC   Constructor;
@@ -190,6 +197,10 @@ typedef struct _MMFUNCTION_TABLE
     MMWAVEQUERYFORMAT_FUNC  QueryWaveFormat;
     MMWAVESETFORMAT_FUNC    SetWaveFormat;
     MMWAVEQUEUEBUFFER_FUNC  QueueWaveBuffer;
+
+    MMGETWAVESTATE_FUNC     GetWaveDeviceState;
+    MMSETWAVESTATE_FUNC     PauseWaveDevice;
+    MMSETWAVESTATE_FUNC     RestartWaveDevice;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 
@@ -203,7 +214,6 @@ typedef struct _SOUND_DEVICE
     struct _SOUND_DEVICE_INSTANCE* FirstInstance;
     UCHAR DeviceType;
     LPWSTR DevicePath;
-    HANDLE Handle;
     MMFUNCTION_TABLE Functions;
 } SOUND_DEVICE, *PSOUND_DEVICE;
 
@@ -231,6 +241,9 @@ typedef struct _SOUND_DEVICE_INSTANCE
 {
     struct _SOUND_DEVICE_INSTANCE* Next;
     PSOUND_DEVICE Device;
+
+    /* The currently opened handle to the device */
+    HANDLE Handle;
 /*    PSOUND_THREAD Thread;*/
 
     /* Stuff generously donated to us from WinMM */
@@ -304,10 +317,19 @@ RemoveSoundDevices(
 VOID
 RemoveAllSoundDevices();
 
+BOOLEAN
+IsValidSoundDevice(
+    IN  PSOUND_DEVICE SoundDevice);
+
 MMRESULT
 GetSoundDeviceType(
     IN  PSOUND_DEVICE Device,
     OUT PUCHAR DeviceType);
+
+MMRESULT
+GetSoundDeviceFunctionTable(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PMMFUNCTION_TABLE* FunctionTable);
 
 MMRESULT
 DefaultInstanceConstructor(
@@ -363,16 +385,17 @@ OpenKernelSoundDeviceByName(
 
 MMRESULT
 OpenKernelSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice,
-    IN  DWORD AccessRights);
+    PSOUND_DEVICE SoundDevice,
+    DWORD AccessRights,
+    PHANDLE Handle);
 
 MMRESULT
 CloseKernelSoundDevice(
-    PSOUND_DEVICE SoundDevice);
+    IN  HANDLE Handle);
 
 MMRESULT
-PerformSoundDeviceIo(
-    IN  PSOUND_DEVICE SoundDevice,
+PerformDeviceIo(
+    IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,
@@ -382,8 +405,8 @@ PerformSoundDeviceIo(
     IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
-ReadSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice,
+ReadFromDeviceHandle(
+    IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     OUT LPVOID OutBuffer,
     IN  DWORD OutBufferSize,
@@ -391,8 +414,37 @@ ReadSoundDevice(
     IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
-WriteSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice,
+WriteToDeviceHandle(
+    IN  HANDLE Handle,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
+
+MMRESULT
+PerformSoundDeviceIo(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
+
+MMRESULT
+ReadFromSoundDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesReturned,
+    IN  LPOVERLAPPED Overlapped);
+
+MMRESULT
+WriteToSoundDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,
@@ -453,6 +505,15 @@ GetSoundDeviceFromInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PSOUND_DEVICE* SoundDevice);
 
+BOOLEAN
+IsValidSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+GetSoundDeviceTypeFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PUCHAR DeviceType);
+
 
 /*
     capabilities.c
@@ -475,25 +536,25 @@ DefaultGetSoundDeviceCapabilities(
 
 MMRESULT
 QueryWaveDeviceFormatSupport(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
 MMRESULT
 DefaultQueryWaveDeviceFormatSupport(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
 MMRESULT
 SetWaveDeviceFormat(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
 MMRESULT
 DefaultSetWaveDeviceFormat(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
@@ -535,6 +596,32 @@ MMRESULT
 QueueWaveDeviceBuffer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  PWAVEHDR BufferHeader);
+
+MMRESULT
+GetWaveDeviceState(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PUCHAR State);
+
+MMRESULT
+DefaultGetWaveDeviceState(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PUCHAR State);
+
+MMRESULT
+PauseWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+DefaultPauseWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+RestartWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+DefaultRestartWaveDevice(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
 
 /*

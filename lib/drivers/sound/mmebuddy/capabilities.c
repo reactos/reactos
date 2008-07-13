@@ -31,9 +31,10 @@ GetSoundDeviceCapabilities(
 
 MMRESULT
 DefaultGetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     OUT PUNIVERSAL_CAPS Capabilities)
 {
+    HANDLE Handle;
     PVOID RawCapsPtr = NULL;
     ULONG CapsSize = 0;
     DWORD Ioctl;
@@ -42,14 +43,14 @@ DefaultGetSoundDeviceCapabilities(
 
     ZeroMemory(Capabilities, sizeof(UNIVERSAL_CAPS));
 
-    if ( ! Device )
+    if ( ! SoundDevice )
         return MMSYSERR_INVALPARAM;
 
     if ( ! Capabilities )
         return MMSYSERR_INVALPARAM;
 
     /* Select appropriate IOCTL and capabilities structure */
-    switch ( Device->DeviceType )
+    switch ( SoundDevice->DeviceType )
     {
         case WAVE_OUT_DEVICE_TYPE :
             Ioctl = IOCTL_WAVE_GET_CAPABILITIES;
@@ -89,14 +90,25 @@ DefaultGetSoundDeviceCapabilities(
             return MMSYSERR_NOTSUPPORTED;
     }
 
+    Result = OpenKernelSoundDevice(SoundDevice,
+                                   GENERIC_READ,
+                                   &Handle);
+
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        return Result;  /* OK? */
+    }
+
     /* Call the driver */
-    Result = ReadSoundDevice(
-        Device,
+    Result = ReadFromDeviceHandle(
+        Handle,
         Ioctl,
         (LPVOID) RawCapsPtr,
         CapsSize,
         &BytesReturned,
         NULL);
+
+    CloseKernelSoundDevice(Handle);
 
     return Result;
 }

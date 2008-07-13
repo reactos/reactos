@@ -117,13 +117,23 @@ wodMessage(
         case WODM_WRITE :
         {
             ASSERT(Instance != NULL);
-            ASSERT(parameter1 != 0);
+
+            if ( ! parameter1 )
+                return MMSYSERR_INVALPARAM;
 
             return QueueWaveDeviceBuffer(Instance, (PWAVEHDR) parameter1);
         }
 
         case WODM_PAUSE :
+        {
+            return PauseWaveDevice(Instance);
+        }
+
         case WODM_RESTART :
+        {
+            return RestartWaveDevice(Instance);
+        }
+
         case WODM_RESET :
         case WODM_BREAKLOOP :
             return MMSYSERR_INVALHANDLE;

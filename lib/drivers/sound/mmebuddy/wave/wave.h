@@ -28,7 +28,7 @@ PauseWaveDevice_Request(
     IN  PVOID Parameter);
 
 MMRESULT
-ContinueWaveDevice_Request(
+RestartWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter);
 
