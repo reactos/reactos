@@ -164,6 +164,9 @@ IntIsWindowInDestroy(PWINDOW_OBJECT Window);
 BOOL FASTCALL
 IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
 
+LRESULT FASTCALL
+IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
+
 #endif /* _WIN32K_WINDOW_H */
 
 /* EOF */
