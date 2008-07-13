@@ -25,6 +25,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoDisplayClass",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}",,0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Icon",0x00000000,"-5"
+
 ; Default computer name settings
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
