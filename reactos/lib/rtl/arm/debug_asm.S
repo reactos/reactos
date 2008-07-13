@@ -17,9 +17,19 @@
     //
     // Do a breakpoint and return
     //
-    bkpt 3
+    bkpt BREAKPOINT_BREAK
     bx lr
     ENTRY_END DbgBreakPoint
+    
+    NESTED_ENTRY DebugService
+    PROLOG_END DebugService
+    
+    //
+    // Do a breakpoint and return
+    //
+    bkpt BREAKPOINT_PRINT // Could also be PROMPT -- we check later in a1
+    bx lr
+    ENTRY_END DebugService
 
     NESTED_ENTRY RtlCaptureContext
     PROLOG_END RtlCaptureContext

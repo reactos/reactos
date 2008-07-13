@@ -67,9 +67,22 @@
     PROLOG_END KiPrefetchAbortException
     
     //
-    // FIXME: TODO
+    // Handle trap entry
     //
-    b .
+    TRAP_PROLOG 1 // FromAbort
+    
+    //
+    // Call the C handler
+    //
+    adr lr, 1f
+    mov r0, sp
+    ldr pc, =KiPrefetchAbortHandler
+    
+1:
+    //
+    // Handle trap exit
+    // 
+    TRAP_EPILOG 0 // NotFromSystemCall
     
     ENTRY_END KiPrefetchAbortException
 

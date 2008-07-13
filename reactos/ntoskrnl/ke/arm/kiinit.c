@@ -32,24 +32,6 @@ KiIdleLoop(
 );
 
 VOID
-STDCALL
-KdpSerialDebugPrint(LPSTR Message,
-                    ULONG Length);
-
-VOID
-DebugService(IN ULONG ServiceType,
-             IN PCHAR Buffer,
-             IN ULONG Length,
-             IN ULONG Component,
-             IN ULONG Level)
-{
-    //
-    // FIXME: ARM Bring-up Hack
-    //
-    KdpSerialDebugPrint(Buffer, Length);
-}
-
-VOID
 DebugService2(IN ULONG Arg1,
               IN ULONG Arg2,
               IN ULONG Service)

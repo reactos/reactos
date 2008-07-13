@@ -432,6 +432,14 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 NTSTATUS
+KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     NTSTATUS Status;

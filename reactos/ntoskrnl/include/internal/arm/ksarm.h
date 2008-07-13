@@ -102,6 +102,16 @@
 .equ CsPc,                 0x40
 .equ CsPsr,                0x44
 
+/*
+ * DebugService Control Types
+ */
+.equ BREAKPOINT_BREAK,          0
+.equ BREAKPOINT_PRINT,          1
+.equ BREAKPOINT_PROMPT,         2
+.equ BREAKPOINT_LOAD_SYMBOLS,   3
+.equ BREAKPOINT_UNLOAD_SYMBOLS, 4
+.equ BREAKPOINT_COMMAND_STRING, 5
+
 #else
 
 /*
