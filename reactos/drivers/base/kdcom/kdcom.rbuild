@@ -6,6 +6,15 @@
 	<include base="kdcom">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<file>kdbg.c</file>
+	<if property="ARCH" value="i386">
+		<directory name="i386">
+				<file>kdbg.c</file>
+		</directory>
+	</if>
+	<if property="ARCH" value="arm">
+        <directory name="arm">
+				<file>kdbg.c</file>
+		</directory>
+	</if>
 	<file>kdcom.spec</file>
 </module>
