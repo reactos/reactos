@@ -1200,11 +1200,11 @@ MingwBackend::OutputModuleInstallTargets ()
 string
 MingwBackend::GetRegistrySourceFiles ()
 {
-	return "boot" + sSep + "bootdata" + sSep + Environment::GetArch() + sSep + "hivecls.inf "
-		"boot" + sSep + "bootdata" + sSep + Environment::GetArch() + sSep + "hivedef.inf "
-		"boot" + sSep + "bootdata" + sSep + Environment::GetArch() + sSep + "hiveinst.inf "
-		"boot" + sSep + "bootdata" + sSep + Environment::GetArch() + sSep + "hivesft.inf "
-		"boot" + sSep + "bootdata" + sSep + Environment::GetArch() + sSep + "hivesys.inf";
+	return "boot" + sSep + "bootdata" + sSep + "hivecls_" + Environment::GetArch() + ".inf "
+		"boot" + sSep + "bootdata" + sSep + "hivedef_" + Environment::GetArch() + ".inf "
+		"boot" + sSep + "bootdata" + sSep + "hiveinst_" + Environment::GetArch() + ".inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesft_" + Environment::GetArch() + ".inf "
+		"boot" + sSep + "bootdata" + sSep + "hivesys_" + Environment::GetArch() + ".inf ";
 }
 
 string
@@ -1241,9 +1241,9 @@ MingwBackend::OutputRegistryInstallTarget ()
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) boot%cbootdata%c$(ROS_ARCH) %s boot%cbootdata%c$(ROS_ARCH)%chiveinst.inf\n",
-	          cSep, cSep, GetFullPath ( system32 ).c_str (),
-	          cSep, cSep, cSep );
+	          "\t$(MKHIVE_TARGET) boot%cbootdata %s $(ROS_ARCH) boot%cbootdata%chiveinst_$(ROS_ARCH).inf\n",
+	          cSep, GetFullPath ( system32 ).c_str (),
+	          cSep, cSep );
 	fprintf ( fMakefile,
 	          "\n" );
 }
