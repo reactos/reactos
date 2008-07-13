@@ -182,7 +182,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
     //
     // Check if we came from user mode
     //
-    if (0) //(TrapFrame->PreviousMode != KernelMode)
+    if (TrapFrame->PreviousMode != KernelMode)
     {
         //
         // Increase process user time
