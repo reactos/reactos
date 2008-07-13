@@ -19,21 +19,21 @@ static const struct
     UINT ClsId;
 } g_SysClasses[] =
 {
-    { &DIALOG_builtin_class,    CLASS_DIALOG },
-    { &POPUPMENU_builtin_class, CLASS_POPUPMENU },
-    { &COMBO_builtin_class,     CLASS_COMBO },
-    { &COMBOLBOX_builtin_class, CLASS_COMBOLBOX },
-    { &DESKTOP_builtin_class,   CLASS_DESKTOP },
-    { &MDICLIENT_builtin_class, CLASS_MDICLIENT },
+    { &DIALOG_builtin_class,    FNID_DIALOG },
+    { &POPUPMENU_builtin_class, FNID_MENU },
+    { &COMBO_builtin_class,     FNID_COMBOBOX },
+    { &COMBOLBOX_builtin_class, FNID_COMBOLBOX },
+    { &DESKTOP_builtin_class,   FNID_DESKTOP },
+    { &MDICLIENT_builtin_class, FNID_MDICLIENT },
 #if 0
-    { &MENU_builtin_class,      CLASS_MENU },
+    { &MENU_builtin_class,      FNID_MENU },
 #endif
-    { &SCROLL_builtin_class,    CLASS_SCROLL },
-    { &BUTTON_builtin_class,    CLASS_BUTTON },
-    { &LISTBOX_builtin_class,   CLASS_LISTBOX },
-    { &EDIT_builtin_class,      CLASS_EDIT },
-    { &ICONTITLE_builtin_class, CLASS_ICONTITLE },
-    { &STATIC_builtin_class,    CLASS_STATIC },
+    { &SCROLL_builtin_class,    FNID_SCROLLBAR },
+    { &BUTTON_builtin_class,    FNID_BUTTON },
+    { &LISTBOX_builtin_class,   FNID_LISTBOX },
+    { &EDIT_builtin_class,      FNID_EDIT },
+    { &ICONTITLE_builtin_class, FNID_ICONTITLE },
+    { &STATIC_builtin_class,    FNID_STATIC },
 };
 
 BOOL WINAPI RegisterSystemControls(VOID)

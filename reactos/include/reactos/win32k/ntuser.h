@@ -22,6 +22,13 @@ typedef struct _REGISTER_SYSCLASS
     UINT ClassId;
 } REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
 
+typedef struct _CLSMENUNAME
+{
+  LPSTR     pszClientAnsiMenuName;
+  LPWSTR    pwszClientUnicodeMenuName;
+  PUNICODE_STRING pusMenuName;
+} CLSMENUNAME, *PCLSMENUNAME;
+
 typedef struct _USER_OBJHDR
 {
     /* This is the common header for all user handle objects */
@@ -78,7 +85,7 @@ typedef struct _WINDOWCLASS
     INT ClsExtra;
     INT WndExtra;
     PVOID Dce;
-    DWORD fnID;
+    DWORD fnID; // New ClassId
     HINSTANCE hInstance;
     HANDLE hIcon; /* FIXME - Use pointer! */
     HANDLE hIconSm; /* FIXME - Use pointer! */
@@ -93,23 +100,7 @@ typedef struct _WINDOWCLASS
     UINT System : 1;
     UINT Global : 1;
     UINT MenuNameIsString : 1;
-
-#define CLASS_DEFAULT    0x0
-#define CLASS_DESKTOP    0x1
-#define CLASS_DIALOG     0x2
-#define CLASS_POPUPMENU  0x3
-#define CLASS_COMBO      0x4
-#define CLASS_COMBOLBOX  0x5
-#define CLASS_MDICLIENT  0x6
-#define CLASS_MENU       0x7
-#define CLASS_SCROLL     0x8
-#define CLASS_BUTTON     0x9
-#define CLASS_LISTBOX    0xA
-#define CLASS_EDIT       0xB
-#define CLASS_ICONTITLE  0xC
-#define CLASS_STATIC     0xD
-    UINT ClassId : 4;
-
+    UINT NotUsed : 27;
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _WINDOW
@@ -1734,7 +1725,8 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
-
+// Look like fnID's
+#define NUMC_DEFWINDOWPROC          0x029E
 #define NUMC_SENDMESSAGE            0x02B0
 // Kernel has option to use TO or normal msg send, based on type of msg.
 #define NUMC_SENDMESSAGEWTOOPTION   0x02B1
@@ -1963,16 +1955,16 @@ NtUserRedrawWindow
  UINT flags
 );
 
-HWINSTA
+RTL_ATOM
 NTAPI
 NtUserRegisterClassExWOW(
-    CONST WNDCLASSEXW* lpwcx,
-    BOOL bUnicodeClass,
-    WNDPROC wpExtra,
-    DWORD dwUnknown4,
+    WNDCLASSEXW* lpwcx,
+    PUNICODE_STRING pustrClassName,
+    PUNICODE_STRING pustrCNVersion,
+    PCLSMENUNAME pClassMenuName,
     DWORD fnID,
-    DWORD dwUnknown6,
-    DWORD dwUnknown7);
+    DWORD Flags,
+    LPDWORD pWow);
 
 BOOL
 NTAPI
@@ -2490,7 +2482,7 @@ NTAPI
 NtUserUnregisterClass(
   PUNICODE_STRING ClassNameOrAtom,
   HINSTANCE hInstance,
-  DWORD Unknown);
+  PCLSMENUNAME pClassMenuName);
 
 BOOL
 NTAPI
@@ -2668,7 +2660,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES 0xfffd0063
 #define TWOPARAM_ROUTINE_GETSYSCOLORPENS    0xfffd0064
 #define TWOPARAM_ROUTINE_GETSYSCOLORS       0xfffd0065
-#define TWOPARAM_ROUTINE_ROS_SHOWWINDOW     0x1000
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
 #define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003

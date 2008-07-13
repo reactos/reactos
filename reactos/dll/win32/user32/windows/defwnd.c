@@ -1410,21 +1410,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SHOWWINDOW:
         {
-            LONG Style;
-            INT Ret = 0;
-
-            if (!lParam) return 0;
-            Style = GetWindowLongW(hWnd, GWL_STYLE);
-            if ((Style & WS_VISIBLE) && wParam) return 0;
-            if (!(Style & WS_VISIBLE) && !wParam) return 0;
-            if (!GetWindow(hWnd, GW_OWNER)) return 0;
-            Ret = NtUserCallTwoParam((DWORD) hWnd, (DWORD) wParam, TWOPARAM_ROUTINE_ROS_SHOWWINDOW);
-            if(Ret)
-            {
-                if( Ret == -1) return 0;
-                return Ret;
-            }
-            ShowWindow(hWnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, NUMC_DEFWINDOWPROC, FALSE);
             break;
         }
 
