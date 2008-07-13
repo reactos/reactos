@@ -42,7 +42,7 @@ VOID
 NTAPI
 XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, XipBoot, XipRom, XipMegs, XipVerbose;
+    PCHAR CommandLine, XipBoot, XipRom, XipMegs, XipVerbose, XipRam;
     PMEMORY_ALLOCATION_DESCRIPTOR XipDescriptor;
 
     /* Get the command line */
@@ -51,6 +51,7 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Get XIP settings */
     XipBoot = strstr(CommandLine, "XIPBOOT");
+    XipRam = strstr(CommandLine, "XIPRAM=");
     XipRom = strstr(CommandLine, "XIPROM=");
     XipMegs = strstr(CommandLine, "XIPMEGS=");
     XipVerbose = strstr(CommandLine, "XIPVERBOSE");
@@ -69,6 +70,12 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Find the XIP memory descriptor */
     XipDescriptor = XIPpFindMemoryDescriptor(LoaderBlock);
     if (!XipDescriptor) return;
+    
+    //
+    // Make sure this is really XIP, and not RAM Disk -- also validate XIP
+    // Basically, either this is a ROM boot or a RAM boot, but not both nor none
+    //
+    if (!((ULONG_PTR)XipRom ^ (ULONG_PTR)XipRam)) return;
 
     /* FIXME: TODO */
     DPRINT1("ReactOS does not yet support eXecute In Place boot technology\n");
