@@ -79,12 +79,11 @@ DefaultQueryWaveDeviceFormatSupport(
     if ( Result != MMSYSERR_NOERROR )
         return Result;
 
-    Result = WriteToSoundDevice(Handle,
-                                IOCTL_WAVE_QUERY_FORMAT,
-                                (LPVOID) WaveFormat,
-                                WaveFormatSize,
-                                &BytesReturned,
-                                NULL);
+    Result = SendToSoundDevice(Handle,
+                               IOCTL_WAVE_QUERY_FORMAT,
+                               (LPVOID) WaveFormat,
+                               WaveFormatSize,
+                               &BytesReturned);
 
     CloseKernelSoundDevice(Handle);
 
@@ -153,12 +152,11 @@ DefaultSetWaveDeviceFormat(
     /* Make sure we have a wave device */
     VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );
 
-    Result = WriteToSoundDevice(SoundDeviceInstance,
-                                IOCTL_WAVE_SET_FORMAT,
-                                (LPVOID) WaveFormat,
-                                WaveFormatSize,
-                                &BytesReturned,
-                                NULL);
+    Result = SendToSoundDevice(SoundDeviceInstance,
+                               IOCTL_WAVE_SET_FORMAT,
+                               (LPVOID) WaveFormat,
+                               WaveFormatSize,
+                               &BytesReturned);
 
     return Result;
 }

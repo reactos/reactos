@@ -44,6 +44,7 @@ CompleteSoundThreadIo(
     PSOUND_THREAD_OVERLAPPED SoundOverlapped;
 
     TRACE_("** I/O has completed\n");
+    TRACE_("** Returned overlapped at %p\n", lpOverlapped);
 
     SoundOverlapped = (PSOUND_THREAD_OVERLAPPED) lpOverlapped;
     ASSERT(SoundOverlapped);
@@ -155,14 +156,18 @@ SoundThreadProc(
 
         /* Wait for a request, or an I/O completion */
         WaitResult = WaitForSingleObjectEx(RequestEvent, INFINITE, TRUE);
+        TRACE_("Came out of waiting\n");
 
         if ( WaitResult == WAIT_OBJECT_0 )
         {
             /* Process the request */
 
+            TRACE_("Processing request\n");
+
             ASSERT(CurrentRequest.RequestHandler);
             if ( CurrentRequest.RequestHandler )
             {
+                TRACE_("Calling function %p\n", CurrentRequest.RequestHandler);
                 CurrentRequest.ReturnValue = CurrentRequest.RequestHandler(
                     CurrentRequest.SoundDeviceInstance,
                     CurrentRequest.Parameter);

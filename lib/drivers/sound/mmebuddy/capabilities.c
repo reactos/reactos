@@ -95,7 +95,7 @@ DefaultGetSoundDeviceCapabilities(
     }
 
     /* Call the driver */
-    Result = ReadFromDeviceHandle(
+    Result = RetrieveFromDeviceHandle(
         Handle,
         Ioctl,
         (LPVOID) RawCapsPtr,

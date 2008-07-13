@@ -217,7 +217,7 @@ typedef MMRESULT (*MMWAVEQUEUEBUFFER_FUNC)(
 
 typedef MMRESULT (*MMGETWAVESTATE_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
-    OUT PUCHAR State);
+    OUT PULONG State);
 
 typedef MMRESULT (*MMSETWAVESTATE_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance);
@@ -262,8 +262,6 @@ typedef struct _SOUND_DEVICE
 
 typedef struct _WAVE_STREAM_INFO
 {
-    /* Current wave stream state */
-    WORD State;
     /* Buffer queue head and tail */
     PWAVEHDR BufferQueueHead;
     PWAVEHDR BufferQueueTail;
@@ -446,7 +444,7 @@ PerformDeviceIo(
     IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
-ReadFromDeviceHandle(
+RetrieveFromDeviceHandle(
     IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     OUT LPVOID OutBuffer,
@@ -455,7 +453,7 @@ ReadFromDeviceHandle(
     IN  LPOVERLAPPED Overlapped);
 
 MMRESULT
-WriteToDeviceHandle(
+SendToDeviceHandle(
     IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
@@ -471,26 +469,23 @@ PerformSoundDeviceIo(
     IN  DWORD InBufferSize,
     OUT LPVOID OutBuffer,
     IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
+    OUT LPDWORD BytesReturned);
 
 MMRESULT
-ReadFromSoundDevice(
+RetrieveFromSoundDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     OUT LPVOID OutBuffer,
     IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
+    OUT LPDWORD BytesReturned);
 
 MMRESULT
-WriteToSoundDevice(
+SendToSoundDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
+    OUT LPDWORD BytesReturned);
 
 MMRESULT
 WriteSoundDeviceBuffer(
@@ -646,12 +641,12 @@ QueueWaveDeviceBuffer(
 MMRESULT
 GetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PUCHAR State);
+    OUT PULONG State);
 
 MMRESULT
 DefaultGetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PUCHAR State);
+    OUT PULONG State);
 
 MMRESULT
 PauseWaveDevice(

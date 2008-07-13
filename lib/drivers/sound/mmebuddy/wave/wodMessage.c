@@ -131,11 +131,15 @@ wodMessage(
 
         case WODM_PAUSE :
         {
+            ASSERT(Instance != NULL);
+
             return PauseWaveDevice(Instance);
         }
 
         case WODM_RESTART :
         {
+            ASSERT(Instance != NULL);
+
             return RestartWaveDevice(Instance);
         }
 

@@ -27,7 +27,7 @@ InitWaveStreamData(
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
-    StreamInfo->State = WAVE_DD_IDLE;
+    /*StreamInfo->State = WAVE_DD_IDLE;*/
 
     StreamInfo->BufferQueueHead = NULL;
     StreamInfo->BufferQueueTail = NULL;
@@ -65,7 +65,7 @@ QueueWaveDeviceBuffer(
 MMRESULT
 GetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PUCHAR State)
+    OUT PULONG State)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
     VALIDATE_MMSYS_PARAMETER( State );
@@ -78,45 +78,66 @@ GetWaveDeviceState(
 MMRESULT
 DefaultGetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PUCHAR State)
+    OUT PULONG State)
 {
-//    MMRESULT Result;
+    MMRESULT Result;
+
+    TRACE_ENTRY();
 
     ASSERT(SoundDeviceInstance);
     ASSERT(State);
-/*
-    Result = WriteSoundDevice(S
 
-MMRESULT
-WriteSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD IoControlCode,
-    LPVOID InBuffer,
-    DWORD InBufferSize,
-    LPDWORD BytesReturned,
-    LPOVERLAPPED Overlapped)
-*/
-    return MMSYSERR_NOERROR;
+    Result = RetrieveFromSoundDevice(SoundDeviceInstance,
+                                     IOCTL_WAVE_GET_STATE,
+                                     State,
+                                     sizeof(ULONG),
+                                     NULL);
+
+    ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = TranslateInternalMmResult(Result);
+    TRACE_EXIT(Result);
+
+    return Result;
 }
 
 MMRESULT
 PauseWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
+    TRACE_ENTRY();
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    return CallUsingSoundThread(SoundDeviceInstance,
-                                PauseWaveDevice_Request,
-                                NULL);
+    Result = CallUsingSoundThread(SoundDeviceInstance,
+                                  PauseWaveDevice_Request,
+                                  NULL);
+
+    TRACE_EXIT(Result);
+    return Result;
 }
 
 MMRESULT
 DefaultPauseWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    TRACE_("Pausing device\n");
-    /* TODO */
-    return MMSYSERR_NOERROR;
+    ULONG RequestedState = WAVE_DD_STOP;
+    MMRESULT Result;
+
+    TRACE_ENTRY();
+
+    Result = SendToSoundDevice(SoundDeviceInstance,
+                               IOCTL_WAVE_SET_STATE,
+                               &RequestedState,
+                               sizeof(RequestedState),
+                               NULL);
+
+    ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = TranslateInternalMmResult(Result);
+    TRACE_EXIT(Result);
+    return Result;
 }
 
 MMRESULT
@@ -134,7 +155,20 @@ MMRESULT
 DefaultRestartWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    TRACE_("Restarting device\n");
-    /* TODO */
-    return MMSYSERR_NOERROR;
+    ULONG RequestedState = WAVE_DD_PLAY;
+    MMRESULT Result;
+
+    TRACE_ENTRY();
+
+    Result = SendToSoundDevice(SoundDeviceInstance,
+                               IOCTL_WAVE_SET_STATE,
+                               &RequestedState,
+                               sizeof(RequestedState),
+                               NULL);
+
+    ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = TranslateInternalMmResult(Result);
+    TRACE_EXIT(Result);
+    return Result;
 }

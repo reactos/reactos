@@ -82,10 +82,10 @@ PerformWaveIo(
     /* If we're out of buffers, mark stream as stopped and do nothing */
     if ( ! StreamInfo->CurrentBuffer )
     {
-        TRACE_("*** NOTHING TO DO - state is now WAVE_DD_IDLE ***\n");
+        TRACE_("*** NOTHING TO DO ***\n");
 
         /* The stream is idle */
-        StreamInfo->State = WAVE_DD_IDLE;
+        /*StreamInfo->State = WAVE_DD_IDLE;*/
 
         return 0;
     }
@@ -120,8 +120,10 @@ PerformWaveIo(
     /* TODO: Deal with INPUT as well */
     if ( DeviceType == WAVE_OUT_DEVICE_TYPE )
     {
+    /*
         TRACE_("Streamed data - state is now WAVE_DD_PLAYING\n");
         StreamInfo->State = WAVE_DD_PLAYING;
+    */
     }
     else
     {
@@ -270,7 +272,7 @@ GetWaveDeviceState_Request(
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice;
     PMMFUNCTION_TABLE Functions;
-    PUCHAR State = (PUCHAR) Parameter;
+    PULONG State = (PULONG) Parameter;
 
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
     VALIDATE_MMSYS_PARAMETER( State );
@@ -316,13 +318,19 @@ RestartWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    if ( SoundDeviceInstance->Streaming.Wave.State != WAVE_DD_STOPPED )
-    {
-        WARN_("Nothing to do\n");
-        return MMSYSERR_NOERROR;
-    }
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
 
-    return MMSYSERR_NOERROR;
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->RestartWaveDevice(SoundDeviceInstance);
 }

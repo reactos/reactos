@@ -94,15 +94,15 @@ PerformDeviceIo(
     IN  LPOVERLAPPED Overlapped)
 {
     BOOLEAN IoResult = FALSE;
-    DWORD AccessRights = GENERIC_READ;
 
     VALIDATE_MMSYS_PARAMETER( Handle != INVALID_HANDLE_VALUE );
 
-    /* Determine if we actually need to write stuff */
-    if ( InBuffer != NULL )
-        AccessRights |= GENERIC_WRITE;
+    /*MessageBox(0, L"Doing IO", L"Info", MB_OK | MB_TASKMODAL);*/
 
-    MessageBox(0, L"Doing IO", L"Info", MB_OK | MB_TASKMODAL);
+    TRACE_("IoCtl on handle %d - in %p (%d), out %p (%d)\n",
+            (int) Handle, InBuffer, (int) InBufferSize, OutBuffer,
+            (int) OutBufferSize);
+
     IoResult = DeviceIoControl(
         Handle,
         IoControlCode,
@@ -113,8 +113,10 @@ PerformDeviceIo(
         BytesReturned,
         Overlapped);
 
+
     if ( ! IoResult )
     {
+        TRACE_("IoCtl result %d\n", (int) GetLastError());
         return Win32ErrorToMmResult(GetLastError());
     }
 
@@ -122,7 +124,7 @@ PerformDeviceIo(
 }
 
 MMRESULT
-ReadFromDeviceHandle(
+RetrieveFromDeviceHandle(
     IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     OUT LPVOID OutBuffer,
@@ -141,7 +143,7 @@ ReadFromDeviceHandle(
 }
 
 MMRESULT
-WriteToDeviceHandle(
+SendToDeviceHandle(
     IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
@@ -167,33 +169,75 @@ PerformSoundDeviceIo(
     IN  DWORD InBufferSize,
     OUT LPVOID OutBuffer,
     IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped)
+    OUT LPDWORD BytesTransferred)
 {
+    /*
+        NOTE: This will always do overlapped I/O, which we wait for.
+    */
+
+    OVERLAPPED Overlapped;
+    BOOLEAN IoResult;
+    MMRESULT Result;
+    DWORD Transferred;
+
     if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
         return MMSYSERR_INVALPARAM;
 
     if ( SoundDeviceInstance->Handle == INVALID_HANDLE_VALUE )
         return MMSYSERR_ERROR;
 
-    return PerformDeviceIo(SoundDeviceInstance->Handle,
-                           IoControlCode,
-                           InBuffer,
-                           InBufferSize,
-                           OutBuffer,
-                           OutBufferSize,
-                           BytesReturned,
-                           Overlapped);
+    ZeroMemory(&Overlapped, sizeof(OVERLAPPED));
+
+    /* This event is used for announcing the I/O operation completed */
+    Overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if ( Overlapped.hEvent == INVALID_HANDLE_VALUE )
+        return Win32ErrorToMmResult(GetLastError());
+
+    TRACE_("** Overlapped at %p\n", &Overlapped);
+
+    Result = PerformDeviceIo(SoundDeviceInstance->Handle,
+                             IoControlCode,
+                             InBuffer,
+                             InBufferSize,
+                             OutBuffer,
+                             OutBufferSize,
+                             NULL,
+                             &Overlapped);
+
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        return Result;
+    }
+
+    /* Wait for I/O completion */
+    IoResult = GetOverlappedResult(SoundDeviceInstance->Handle,
+                                   &Overlapped,
+                                   &Transferred,
+                                   TRUE);
+
+    CloseHandle(Overlapped.hEvent);
+
+    if ( ! IoResult )
+    {
+        return Win32ErrorToMmResult(GetLastError());
+    }
+
+    if ( BytesTransferred )
+    {
+        *BytesTransferred = Transferred;
+    }
+
+    return Result;
 }
 
 MMRESULT
-ReadFromSoundDevice(
+RetrieveFromSoundDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     OUT LPVOID OutBuffer,
     IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped)
+    OUT LPDWORD BytesReturned)
 {
     return PerformSoundDeviceIo(SoundDeviceInstance,
                                 IoControlCode,
@@ -201,18 +245,16 @@ ReadFromSoundDevice(
                                 0,
                                 OutBuffer,
                                 OutBufferSize,
-                                BytesReturned,
-                                Overlapped);
+                                BytesReturned);
 }
 
 MMRESULT
-WriteToSoundDevice(
+SendToSoundDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped)
+    OUT LPDWORD BytesReturned)
 {
     return PerformSoundDeviceIo(SoundDeviceInstance,
                                 IoControlCode,
@@ -220,8 +262,7 @@ WriteToSoundDevice(
                                 InBufferSize,
                                 NULL,
                                 0,
-                                BytesReturned,
-                                Overlapped);
+                                BytesReturned);
 }
 
 
