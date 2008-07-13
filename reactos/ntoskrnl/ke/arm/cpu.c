@@ -89,7 +89,6 @@ KeFillFixedEntryTb(IN ARM_PTE Pte,
         //
         // On these systems, we'll just keep the PTE mapped
         //
-        DPRINT1("TLB Lockdown Failure (%p). Running on QEMU?\n", Virtual);
     }
     else
     {
