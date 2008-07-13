@@ -62,6 +62,8 @@ ListSoundDeviceInstance(
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
 
+    TRACE_ENTRY();
+
     ASSERT(SoundDevice != NULL);
     ASSERT(SoundDeviceInstance != NULL);
     ASSERT(SoundDeviceInstance->Device == NULL);
@@ -75,12 +77,18 @@ ListSoundDeviceInstance(
     }
     else if ( IS_MIDI_DEVICE_TYPE(SoundDevice->DeviceType) )
     {
+        /* TODO ... */
+        ASSERT(FALSE);
     }
     else if ( IS_MIXER_DEVICE_TYPE(SoundDevice->DeviceType) )
     {
+        /* TODO ... */
+        ASSERT(FALSE);
     }
     else if ( IS_AUX_DEVICE_TYPE(SoundDevice->DeviceType) )
     {
+        /* TODO ... */
+        ASSERT(FALSE);
     }
     else
     {
@@ -111,6 +119,8 @@ ListSoundDeviceInstance(
             CurrentInstance = CurrentInstance->Next;
         }
     }
+
+    TRACE_EXIT(0);
 }
 
 VOID
@@ -119,6 +129,8 @@ UnlistSoundDeviceInstance(
 {
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE CurrentInstance;
+
+    TRACE_ENTRY();
 
     ASSERT(SoundDeviceInstance != NULL);
     ASSERT(SoundDeviceInstance->Device != NULL);
@@ -145,6 +157,8 @@ UnlistSoundDeviceInstance(
         /* This is actually the one before the one we want to remove */
         CurrentInstance->Next = SoundDeviceInstance->Next;
     }
+
+    TRACE_EXIT(0);
 }
 
 
@@ -160,15 +174,20 @@ CreateSoundDeviceInstance(
     PSOUND_DEVICE_INSTANCE CreatedInstance = NULL;
     MMRESULT Result;
 
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    TRACE_("Creating instance of PSOUND_DEVICE %p\n", SoundDevice);
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
 
     CreatedInstance = AllocateSoundDeviceInstance();
+
     if ( ! CreatedInstance )
+    {
+        TRACE_EXIT(MMSYSERR_NOMEM);
         return MMSYSERR_NOMEM;
+    }
 
     /* Add the new instance to the device's instance list */
     ListSoundDeviceInstance(SoundDevice, CreatedInstance);
@@ -183,10 +202,14 @@ CreateSoundDeviceInstance(
         FreeSoundDeviceInstance(CreatedInstance);
         CreatedInstance = NULL;
         //DestroySoundDeviceInstance(CreatedInstance);
+
+        Result = TranslateInternalMmResult(Result);
     }
 
     /* Fill the output parameter with this */
     *SoundDeviceInstance = CreatedInstance;
+
+    TRACE_EXIT(Result);
 
     return Result;
 }
@@ -199,14 +222,14 @@ GetSoundDeviceFromInstance(
     ASSERT(SoundDeviceInstance);
     ASSERT(SoundDevice);
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( SoundDevice );
 
     *SoundDevice = SoundDeviceInstance->Device;
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -216,8 +239,9 @@ DestroySoundDeviceInstance(
 {
     PSOUND_DEVICE SoundDevice = NULL;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     SoundDevice = SoundDeviceInstance->Device;
 
@@ -233,6 +257,7 @@ DestroySoundDeviceInstance(
     FreeSoundDeviceInstance(SoundDeviceInstance);
     /*HeapFree(GetProcessHeap(), 0, Instance);*/
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -243,15 +268,18 @@ DestroyAllInstancesOfSoundDevice(
     PSOUND_DEVICE_INSTANCE CurrentInstance = NULL;
     MMRESULT Result;
 
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
 
     /* Just munch away at the first item repeatedly */
     while ( (CurrentInstance = SoundDevice->FirstInstance) )
     {
         Result = DestroySoundDeviceInstance(CurrentInstance);
+        ASSERT(Result == MMSYSERR_NOERROR);
     }
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -259,8 +287,21 @@ BOOLEAN
 IsValidSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    /* TODO - Once multiple instances are supported */
-    return ( SoundDeviceInstance != NULL );
+    /* TRACE_ENTRY(); */
+
+    if ( ! SoundDeviceInstance )
+    {
+        TRACE_EXIT(FALSE);
+        return FALSE;
+    }
+
+    /* Now what? */
+    return TRUE;
+
+    /* TRACE_EXIT(12345678); */
+
+   TRACE_EXIT(FALSE);
+    return ( FALSE );
 }
 
 MMRESULT
@@ -271,16 +312,22 @@ GetSoundDeviceTypeFromInstance(
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice;
 
-    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! DeviceType )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( DeviceType );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
     if ( Result != MMSYSERR_NOERROR )
+    {
+        TRACE_EXIT(Result);
         return Result;
+    }
 
-    return GetSoundDeviceType(SoundDevice, DeviceType);
+    Result = GetSoundDeviceType(SoundDevice, DeviceType);
+    Result = TranslateInternalMmResult(Result);
+
+    TRACE_EXIT(Result);
+    return Result;
 }

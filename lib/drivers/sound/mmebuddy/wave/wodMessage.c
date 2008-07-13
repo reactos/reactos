@@ -62,6 +62,9 @@ wodMessage(
 
             TRACE_("In WODM_OPEN\n");
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
+            TRACE_("GetSoundDevice == %d\n", (int) Result);
+
+
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
 
@@ -77,6 +80,8 @@ wodMessage(
             ASSERT(private_handle != 0);
 
             Result = CreateSoundDeviceInstance(Device, &Instance);
+            TRACE_("CreateSoundDeviceInstance == %d\n", (int) Result);
+
             if ( Result != MMSYSERR_NOERROR )
                 return Result;
 

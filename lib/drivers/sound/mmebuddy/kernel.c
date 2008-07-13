@@ -24,17 +24,8 @@ OpenKernelSoundDeviceByName(
 {
     DWORD OpenFlags = 0;
 
-    if ( ! Handle )
-    {
-        ERR_("No handle ptr\n");
-        return MMSYSERR_INVALPARAM;
-    }
-
-    if ( ! DeviceName )
-    {
-        ERR_("No device name\n");
-        return MMSYSERR_INVALPARAM;
-    }
+    VALIDATE_MMSYS_PARAMETER( Handle );
+    VALIDATE_MMSYS_PARAMETER( DeviceName );
 
     if ( AccessRights != GENERIC_READ )
     {
@@ -68,21 +59,14 @@ OpenKernelSoundDevice(
 {
     MMRESULT Result;
 
-    if ( ! SoundDevice )
-    {
-        ERR_("No sound device specified");
-        return MMSYSERR_INVALPARAM;
-    }
-
-    if ( ! Handle )
-    {
-        return MMSYSERR_INVALPARAM;
-    }
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( Handle );
 
     Result = OpenKernelSoundDeviceByName(SoundDevice->DevicePath,
                                          AccessRights,
                                          Handle);
 
+    Result = TranslateInternalMmResult(Result);
     return Result;
 }
 
@@ -112,8 +96,7 @@ PerformDeviceIo(
     BOOLEAN IoResult = FALSE;
     DWORD AccessRights = GENERIC_READ;
 
-    if ( Handle == INVALID_HANDLE_VALUE )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( Handle != INVALID_HANDLE_VALUE );
 
     /* Determine if we actually need to write stuff */
     if ( InBuffer != NULL )
@@ -245,18 +228,16 @@ WriteToSoundDevice(
 /* TODO: move somewhere else */
 MMRESULT
 WriteSoundDeviceBuffer(
-    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    LPVOID Buffer,
-    DWORD BufferSize,
-    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
-    LPOVERLAPPED Overlapped)
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  LPVOID Buffer,
+    IN  DWORD BufferSize,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
+    IN  LPOVERLAPPED Overlapped)
 {
-    if ( ( ! SoundDeviceInstance ) || ( ! Buffer ) || ( BufferSize == 0 ) )
-    {
-        ERR_("Invalid parameter in WriteSoundDeviceBuffer!\n");
-        return MMSYSERR_INVALPARAM;
-    }
-
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( Buffer );
+    VALIDATE_MMSYS_PARAMETER( BufferSize > 0 );
+    
     /*wsprintf(msg, L"Writing to handle %x", SoundDeviceInstance->Device->Handle);*/
     /*SOUND_DEBUG(msg);*/
 

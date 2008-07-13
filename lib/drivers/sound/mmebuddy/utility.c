@@ -20,11 +20,20 @@
 static HANDLE ProcessHeapHandle = INVALID_HANDLE_VALUE;
 static DWORD CurrentAllocations = 0;
 
+typedef struct _ALLOCATION
+{
+    DWORD Tag;
+    DWORD Size;
+} ALLOCATION;
+
 PVOID
-AllocateMemory(
+AllocateTaggedMemory(
+    IN  DWORD Tag,
     IN  DWORD Size)
 {
     PVOID Pointer = NULL;
+
+    Size += sizeof(ALLOCATION);
 
     if ( ProcessHeapHandle == INVALID_HANDLE_VALUE )
         ProcessHeapHandle = GetProcessHeap();
@@ -34,19 +43,31 @@ AllocateMemory(
     if ( ! Pointer )
         return NULL;
 
+    /* Store the tag and size */
+    ((ALLOCATION*)Pointer)->Tag = Tag;
+    ((ALLOCATION*)Pointer)->Size = Size;
+
     ++ CurrentAllocations;
 
-    return Pointer;
+    return ((PCHAR)Pointer) + sizeof(ALLOCATION);
 }
 
 VOID
-FreeMemory(
+FreeTaggedMemory(
+    IN  DWORD Tag,
     IN  PVOID Pointer)
 {
+    ALLOCATION* AllocationInfo;
+
     ASSERT(ProcessHeapHandle != INVALID_HANDLE_VALUE);
     ASSERT(Pointer);
 
-    HeapFree(ProcessHeapHandle, 0, Pointer);
+    AllocationInfo = (ALLOCATION*)((PCHAR)Pointer - sizeof(ALLOCATION));
+
+    ASSERT( AllocationInfo->Tag == Tag );
+
+    ZeroMemory(AllocationInfo, AllocationInfo->Size + sizeof(ALLOCATION));
+    HeapFree(ProcessHeapHandle, 0, AllocationInfo);
 
     -- CurrentAllocations;
 }
@@ -78,6 +99,12 @@ GetDigitCount(
     return Digits;
 }
 
+
+
+/*
+    Result codes
+*/
+
 MMRESULT
 Win32ErrorToMmResult(UINT error_code)
 {
@@ -107,4 +134,32 @@ Win32ErrorToMmResult(UINT error_code)
     /* If all else fails, it's just a plain old error */
 
     return MMSYSERR_ERROR;
+}
+
+/*
+    If a function invokes another function, this aids in translating the result
+    code so that it is applicable in the context of the original caller. For
+    example, specifying that an invalid parameter was passed probably does not
+    make much sense if the parameter wasn't passed by the original caller!
+
+    However, things like MMSYSERR_NOMEM make sense to return to the caller.
+
+    This could potentially highlight internal logic problems.
+*/
+MMRESULT
+TranslateInternalMmResult(MMRESULT Result)
+{
+    switch ( Result )
+    {
+        case MMSYSERR_INVALPARAM :
+        case MMSYSERR_INVALFLAG :
+        {
+            ERR_("MMRESULT from an internal routine failed with error %d\n",
+                 (int) Result);
+
+            return MMSYSERR_ERROR;
+        }
+    }
+
+    return Result;
 }

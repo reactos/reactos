@@ -62,12 +62,27 @@
         } \
     }
 
+#define TRACE_ENTRY() \
+    TRACE_("entered function\n")
+
+#define TRACE_EXIT(retval) \
+    TRACE_("returning %d (0x%x)\n", (int)retval, (int)retval)
+
 #endif
 
 
 /*
     Some memory allocation helper macros
 */
+
+#define AllocateMemory(amount) \
+    AllocateTaggedMemory(0x00000000, amount)
+
+#define FreeMemory(ptr) \
+    FreeTaggedMemory(0x00000000, ptr)
+
+#define AllocateTaggedMemoryFor(tag, thing) \
+    (thing*) AllocateTaggedMemory(tag, sizeof(thing))
 
 #define AllocateMemoryFor(thing) \
     (thing*) AllocateMemory(sizeof(thing))
@@ -85,11 +100,30 @@
     CopyMemory(dest, source, StringLengthToBytes(WCHAR, wcslen(source)))
 
 
+/*
+    Helps find the minimum/maximum of two values
+*/
+
 #define MinimumOf(value_a, value_b) \
     ( value_a < value_b ? value_a : value_b )
 
 #define MaximumOf(value_a, value_b) \
     ( value_a > value_b ? value_a : value_b )
+
+
+/*
+    Validation
+*/
+
+#define VALIDATE_MMSYS_PARAMETER(parameter_condition) \
+    { \
+        if ( ! (parameter_condition) ) \
+        { \
+            ERR_("Parameter check: %s\n", #parameter_condition); \
+            TRACE_EXIT(MMSYSERR_INVALPARAM); \
+            return MMSYSERR_INVALPARAM; \
+        } \
+    }
 
 
 struct _SOUND_DEVICE;
@@ -208,6 +242,8 @@ typedef struct _MMFUNCTION_TABLE
     Represents an audio device
 */
 
+#define SOUND_DEVICE_TAG "SndD"
+
 typedef struct _SOUND_DEVICE
 {
     struct _SOUND_DEVICE* Next;
@@ -221,6 +257,8 @@ typedef struct _SOUND_DEVICE
 /*
     Represents an individual instance of an audio device
 */
+
+#define WAVE_STREAM_INFO_TAG "WavS"
 
 typedef struct _WAVE_STREAM_INFO
 {
@@ -236,6 +274,9 @@ typedef struct _WAVE_STREAM_INFO
     /* How many I/O operations have been submitted */
     DWORD BuffersOutstanding;
 } WAVE_STREAM_INFO, *PWAVE_STREAM_INFO;
+
+
+#define SOUND_DEVICE_INSTANCE_TAG "SndI"
 
 typedef struct _SOUND_DEVICE_INSTANCE
 {
@@ -465,11 +506,13 @@ WriteSoundDeviceBuffer(
 */
 
 PVOID
-AllocateMemory(
+AllocateTaggedMemory(
+    IN  DWORD Tag,
     IN  DWORD Size);
 
 VOID
-FreeMemory(
+FreeTaggedMemory(
+    IN  DWORD Tag,
     IN  PVOID Pointer);
 
 DWORD
@@ -481,6 +524,9 @@ GetDigitCount(
 
 MMRESULT
 Win32ErrorToMmResult(IN UINT error_code);
+
+MMRESULT
+TranslateInternalMmResult(MMRESULT Result);
 
 
 /*
@@ -521,7 +567,7 @@ GetSoundDeviceTypeFromInstance(
 
 MMRESULT
 GetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     OUT PUNIVERSAL_CAPS Capabilities);
 
 MMRESULT

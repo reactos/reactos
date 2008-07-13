@@ -23,17 +23,27 @@
 ULONG SoundDeviceTotals[SOUND_DEVICE_TYPES];
 PSOUND_DEVICE SoundDeviceLists[SOUND_DEVICE_TYPES];
 
+#define DEVICE_TYPE_TO_INDEX(device_type) \
+    ( device_type - MIN_SOUND_DEVICE_TYPE )
+
 
 ULONG
 GetSoundDeviceCount(
     IN  UCHAR DeviceType)
 {
+    ULONG Count;
+    TRACE_ENTRY();
+
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
+        TRACE_EXIT(0);
         return 0;
     }
 
-    return SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE];
+    Count = SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE];
+
+    TRACE_EXIT(Count);
+    return Count;
 }
 
 
@@ -42,6 +52,8 @@ InitSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE Device,
     IN  PMMFUNCTION_TABLE SourceFunctionTable)
 {
+    TRACE_ENTRY();
+
     Device->Functions.Constructor = DefaultInstanceConstructor;
     Device->Functions.Destructor = DefaultInstanceDestructor;
 
@@ -56,7 +68,10 @@ InitSoundDeviceFunctionTable(
     Device->Functions.RestartWaveDevice = DefaultRestartWaveDevice;
 
     if ( ! SourceFunctionTable )
+    {
+        TRACE_EXIT(0);
         return;
+    }
 
     /* If we get here, the function table is being over-ridden */
 
@@ -107,6 +122,8 @@ InitSoundDeviceFunctionTable(
         Device->Functions.RestartWaveDevice =
             SourceFunctionTable->RestartWaveDevice;
     }
+
+    TRACE_EXIT(0);
 }
 
 
@@ -119,10 +136,13 @@ AddSoundDevice(
     PSOUND_DEVICE NewDevice;
     UCHAR TypeIndex;
 
+    TRACE_ENTRY();
+
     TRACE_("Adding a sound device to list %d\n", DeviceType);
 
     if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
     {
+        TRACE_EXIT(FALSE);
         return FALSE;
     }
 
@@ -136,6 +156,7 @@ AddSoundDevice(
 
     if ( ! NewDevice )
     {
+        TRACE_EXIT(FALSE);
         return FALSE;
     }
 
@@ -153,6 +174,7 @@ AddSoundDevice(
     {
         FreeMemory(NewDevice);
         /*HeapFree(GetProcessHeap(), 0, NewDevice);*/
+        TRACE_EXIT(FALSE);
         return FALSE;
     }
 
@@ -189,6 +211,7 @@ AddSoundDevice(
     ++ SoundDeviceTotals[TypeIndex];
     TRACE_("Now %d devices of type %d\n", (int) SoundDeviceTotals[TypeIndex], DeviceType);
 
+    TRACE_EXIT(TRUE);
     return TRUE;
 }
 
@@ -198,13 +221,13 @@ RemoveSoundDevice(
     IN  PSOUND_DEVICE SoundDevice)
 {
     ULONG TypeIndex;
+    BOOLEAN Done = FALSE;
     PSOUND_DEVICE CurrentDevice = NULL;
     PSOUND_DEVICE PreviousDevice = NULL;
 
     /*TRACE_("Removing a sound device from list %d\n", DeviceType);*/
 
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
 
     TypeIndex = SoundDevice->DeviceType - MIN_SOUND_DEVICE_TYPE;
 
@@ -217,6 +240,7 @@ RemoveSoundDevice(
     if ( SoundDeviceLists[TypeIndex] == SoundDevice )
     {
         SoundDeviceLists[TypeIndex] = SoundDevice->Next;
+        Done = TRUE;
     }
     else
     {
@@ -230,6 +254,7 @@ RemoveSoundDevice(
             {
                 ASSERT(PreviousDevice != NULL);
                 PreviousDevice->Next = CurrentDevice->Next;
+                Done = TRUE;
 
                 break;
             }
@@ -239,10 +264,13 @@ RemoveSoundDevice(
         }
     }
 
+    ASSERT(Done);
+
     /* Free the memory associated with the device info */
     FreeMemory(SoundDevice->DevicePath);
     FreeMemory(SoundDevice);
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;;
 }
 
@@ -251,15 +279,14 @@ MMRESULT
 RemoveSoundDevices(
     IN  UCHAR DeviceType)
 {
+    MMRESULT Result;
     PSOUND_DEVICE CurrentDevice;
+
+    TRACE_ENTRY();
 
     TRACE_("Emptying device list for device type %d\n", DeviceType);
 
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
-    {
-        ERR_("Invalid device type - %d\n", DeviceType);
-        return MMSYSERR_INVALPARAM;
-    }
+    VALIDATE_MMSYS_PARAMETER( VALID_SOUND_DEVICE_TYPE(DeviceType) );
 
     /*
         Clean out the device list. This works by repeatedly removing the
@@ -268,13 +295,15 @@ RemoveSoundDevices(
     while ( (CurrentDevice =
              SoundDeviceLists[DeviceType - MIN_SOUND_DEVICE_TYPE]) )
     {
-        RemoveSoundDevice(CurrentDevice);
+        Result = RemoveSoundDevice(CurrentDevice);
+        ASSERT(Result == MMSYSERR_NOERROR);
     }
 
     /* Reset the list content and item count */
     SoundDeviceLists[DeviceType - MIN_SOUND_DEVICE_TYPE] = NULL;
     SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE] = 0;
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -283,21 +312,54 @@ VOID
 RemoveAllSoundDevices()
 {
     ULONG i;
+    TRACE_ENTRY();
 
-    TRACE_("Emptying all device lists\n");
+    TRACE_("RemoveAllSoundDevices\n");
 
     for ( i = MIN_SOUND_DEVICE_TYPE; i <= MAX_SOUND_DEVICE_TYPE; ++ i )
     {
         RemoveSoundDevices(i);
     }
+
+    TRACE_EXIT(0);
 }
 
 BOOLEAN
 IsValidSoundDevice(
     IN  PSOUND_DEVICE SoundDevice)
 {
-    /* TODO */
-    return ( SoundDevice != NULL );
+    UCHAR DeviceType;
+    PSOUND_DEVICE CurrentDevice;
+
+    /* TRACE_ENTRY(); */
+
+    if ( ! SoundDevice )
+    {
+        TRACE_EXIT(FALSE);
+        return FALSE;
+    }
+
+    for ( DeviceType = MIN_SOUND_DEVICE_TYPE;
+          DeviceType <= MAX_SOUND_DEVICE_TYPE;
+          ++DeviceType )
+    {
+        CurrentDevice = SoundDeviceLists[DEVICE_TYPE_TO_INDEX(DeviceType)];
+
+        while ( CurrentDevice )
+        {
+            if ( CurrentDevice == SoundDevice )
+            {
+                /* TRACE_EXIT(TRUE); */
+                return TRUE;
+            }
+
+            CurrentDevice = CurrentDevice->Next;
+        }
+    }
+
+    /* Not found in list */
+    TRACE_EXIT(FALSE);
+    return FALSE;
 }
 
 
@@ -310,14 +372,16 @@ GetSoundDevice(
     ULONG Count = 0;
     PSOUND_DEVICE CurrentDevice = NULL;
 
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
+
+    VALIDATE_MMSYS_PARAMETER( VALID_SOUND_DEVICE_TYPE(DeviceType) );
+    VALIDATE_MMSYS_PARAMETER( Device );
 
     if ( DeviceIndex >= SoundDeviceTotals[DeviceType - MIN_SOUND_DEVICE_TYPE] )
+    {
+        TRACE_EXIT(MMSYSERR_BADDEVICEID);
         return MMSYSERR_BADDEVICEID;
-
-    if ( ! Device )
-        return MMSYSERR_INVALPARAM;
+    }
 
     /*
         We know by now that a device at the index should exist
@@ -332,6 +396,7 @@ GetSoundDevice(
         CurrentDevice = CurrentDevice->Next;
     }
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -341,15 +406,15 @@ GetSoundDevicePath(
     IN  PSOUND_DEVICE SoundDevice,
     OUT LPWSTR* DevicePath)
 {
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! DevicePath )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( DevicePath );
 
     MessageBox(0, SoundDevice->DevicePath, L"Foo", MB_TASKMODAL | MB_OK);
     *DevicePath = SoundDevice->DevicePath;
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -359,14 +424,14 @@ GetSoundDeviceType(
     IN  PSOUND_DEVICE SoundDevice,
     OUT PUCHAR DeviceType)
 {
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! DeviceType )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( DeviceType );
 
     *DeviceType = SoundDevice->DeviceType;
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -375,14 +440,14 @@ GetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
     OUT PMMFUNCTION_TABLE* FunctionTable)
 {
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
+    TRACE_ENTRY();
 
-    if ( ! FunctionTable )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( FunctionTable );
 
     *FunctionTable = &SoundDevice->Functions;
 
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -400,7 +465,7 @@ DefaultInstanceConstructor(
     DWORD AccessRights = GENERIC_READ;
     MMRESULT Result;
 
-    TRACE_("Default instance ctor");
+    TRACE_ENTRY();
 
     ASSERT(SoundDeviceInstance != NULL);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
@@ -408,10 +473,12 @@ DefaultInstanceConstructor(
 
     /* If this fails, we have an internal error somewhere */
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    ASSERT(Result == MMSYSERR_NOERROR);
     if ( Result != MMSYSERR_NOERROR )
     {
-        ASSERT(Result != MMSYSERR_NOERROR);
-        return MMSYSERR_ERROR;
+        Result = TranslateInternalMmResult(Result);
+        TRACE_EXIT(Result);
+        return Result;
     }
 
     if ( DeviceType == WAVE_OUT_DEVICE_TYPE )
@@ -420,11 +487,15 @@ DefaultInstanceConstructor(
     Result = OpenKernelSoundDevice(SoundDevice,
                                    AccessRights,
                                    &SoundDeviceInstance->Handle);
+
     if ( Result != MMSYSERR_NOERROR )
+    {
+        Result = TranslateInternalMmResult(Result);
+        TRACE_EXIT(MMSYSERR_NOERROR);
         return Result;
+    }
 
-    TRACE_("Returning from default ctor");
-
+    TRACE_EXIT(MMSYSERR_NOERROR);
     return MMSYSERR_NOERROR;
 }
 
@@ -436,13 +507,14 @@ DefaultInstanceDestructor(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
-    TRACE_("Default instance dtor");
+    TRACE_ENTRY();
 
     ASSERT(SoundDeviceInstance);
     GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     ASSERT(SoundDevice);
 
     Result = CloseKernelSoundDevice(SoundDevice);
-
     ASSERT(Result == MMSYSERR_NOERROR);
+
+    TRACE_EXIT(0);
 }

@@ -17,16 +17,13 @@
 
 MMRESULT
 GetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE Device,
+    IN  PSOUND_DEVICE SoundDevice,
     OUT PUNIVERSAL_CAPS Capabilities)
 {
-    if ( ! Device )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( Capabilities );
 
-    if ( ! Capabilities )
-        return MMSYSERR_INVALPARAM;
-
-    return Device->Functions.GetCapabilities(Device, Capabilities);
+    return SoundDevice->Functions.GetCapabilities(SoundDevice, Capabilities);
 }
 
 MMRESULT
@@ -41,13 +38,10 @@ DefaultGetSoundDeviceCapabilities(
     MMRESULT Result;
     DWORD BytesReturned;
 
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( Capabilities );
+
     ZeroMemory(Capabilities, sizeof(UNIVERSAL_CAPS));
-
-    if ( ! SoundDevice )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! Capabilities )
-        return MMSYSERR_INVALPARAM;
 
     /* Select appropriate IOCTL and capabilities structure */
     switch ( SoundDevice->DeviceType )
@@ -96,7 +90,8 @@ DefaultGetSoundDeviceCapabilities(
 
     if ( Result != MMSYSERR_NOERROR )
     {
-        return Result;  /* OK? */
+        Result = TranslateInternalMmResult(Result);
+        return Result;
     }
 
     /* Call the driver */

@@ -25,11 +25,10 @@ QueryWaveDeviceFormatSupport(
     UCHAR DeviceType;
     MMRESULT Result;
 
-    if ( ! IsValidSoundDevice(SoundDevice) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_("QueryWaveDeviceFormatSupport\n");
 
-    if ( ! WaveFormat )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( WaveFormat );
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     ASSERT(Result == MMSYSERR_NOERROR);
@@ -61,19 +60,17 @@ DefaultQueryWaveDeviceFormatSupport(
     DWORD BytesReturned = 0;
     MMRESULT Result;
 
-    if ( ! IsValidSoundDevice(SoundDevice) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_("DefaultQueryWaveDeviceFormatSupport\n");
 
-    if ( ! WaveFormat )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( WaveFormat );
 
     Result = GetSoundDeviceType(SoundDevice,
                                 &DeviceType);
     ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Make sure we have a wave device */
-    if ( ! IS_WAVE_DEVICE_TYPE(DeviceType) )
-        return MMSYSERR_INVALPARAM; /* FIXME? */
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );
 
     Result = OpenKernelSoundDevice(SoundDevice,
                                    GENERIC_READ | GENERIC_WRITE,
@@ -105,11 +102,10 @@ SetWaveDeviceFormat(
     PMMFUNCTION_TABLE FunctionTable;
     MMRESULT Result;
 
-    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_("SetWaveDeviceFormat\n");
 
-    if ( ! WaveFormat )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( WaveFormat );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     ASSERT(Result == MMSYSERR_NOERROR);
@@ -118,8 +114,7 @@ SetWaveDeviceFormat(
     ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Make sure we have a wave device */
-    if ( ! IS_WAVE_DEVICE_TYPE(DeviceType) )
-        return MMSYSERR_INVALPARAM; /* FIXME? */
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );
 
     /* TODO: Should we check the size? */
 
@@ -144,11 +139,10 @@ DefaultSetWaveDeviceFormat(
     MMRESULT Result;
     DWORD BytesReturned = 0;
 
-    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
-        return MMSYSERR_INVALPARAM;
+    TRACE_("DefaultSetWaveDeviceFormat\n");
 
-    if ( ! WaveFormat )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( WaveFormat );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
     ASSERT(Result == MMSYSERR_NOERROR);
@@ -157,8 +151,7 @@ DefaultSetWaveDeviceFormat(
     ASSERT(Result == MMSYSERR_NOERROR);
 
     /* Make sure we have a wave device */
-    if ( ! IS_WAVE_DEVICE_TYPE(DeviceType) )
-        return MMSYSERR_INVALPARAM; /* FIXME? */
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );
 
     Result = WriteToSoundDevice(SoundDeviceInstance,
                                 IOCTL_WAVE_SET_FORMAT,

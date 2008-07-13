@@ -96,17 +96,10 @@ OverlappedSoundDeviceIo(
 {
     PSOUND_THREAD_OVERLAPPED Overlapped;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! Buffer )
-        return MMSYSERR_INVALPARAM;
-
-    if ( BufferSize == 0 )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! IoCompletionHandler )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( Buffer );
+    VALIDATE_MMSYS_PARAMETER( BufferSize > 0 );
+    VALIDATE_MMSYS_PARAMETER( IoCompletionHandler );
 
     /* Allocate memory for the overlapped I/O structure (auto-zeroed) */
     Overlapped = AllocateMemoryFor(SOUND_THREAD_OVERLAPPED);
@@ -326,8 +319,7 @@ CallUsingSoundThread(
     IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
     IN  PVOID Parameter OPTIONAL)
 {
-    if ( ! RequestHandler )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( RequestHandler );
 
     ASSERT(SoundThread != INVALID_HANDLE_VALUE);
     if ( SoundThread == INVALID_HANDLE_VALUE )

@@ -65,7 +65,7 @@ PerformWaveIo(
 
     TRACE_("PerformWaveIo\n");
 
-    ASSERT(SoundDeviceInstance);
+    ASSERT( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     /* These shouldn't fail unless we pass them garbage */
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
@@ -210,11 +210,8 @@ QueueWaveBuffer_Request(
     PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
     PWAVE_STREAM_INFO StreamInfo;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! WaveHeader )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( WaveHeader );
 
     /* To avoid stupidly long variable names we alias this */
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
@@ -275,11 +272,8 @@ GetWaveDeviceState_Request(
     PMMFUNCTION_TABLE Functions;
     PUCHAR State = (PUCHAR) Parameter;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! State )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( State );
 
     // *State = SoundDeviceInstance->Streaming.Wave.State;
 
@@ -304,8 +298,7 @@ PauseWaveDevice_Request(
     PSOUND_DEVICE SoundDevice;
     PMMFUNCTION_TABLE Functions;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
                                         &SoundDevice);
@@ -323,8 +316,7 @@ RestartWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     if ( SoundDeviceInstance->Streaming.Wave.State != WAVE_DD_STOPPED )
     {

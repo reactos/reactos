@@ -29,11 +29,8 @@ OpenSoundDriverParametersRegKey(
     ULONG KeyLength;
     PWCHAR ParametersKeyName;
 
-    if ( ! ServiceName )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! KeyHandle )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( ServiceName );
+    VALIDATE_MMSYS_PARAMETER( KeyHandle );
 
     /* Work out how long the string will be */
     KeyLength = wcslen(REG_SERVICES_KEY_NAME_U) + 1
@@ -85,11 +82,8 @@ OpenSoundDeviceRegKey(
     DWORD PathLength;
     PWCHAR RegPath;
 
-    if ( ! ServiceName )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! KeyHandle )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( ServiceName );
+    VALIDATE_MMSYS_PARAMETER( KeyHandle );
 
     /*
         Work out the space required to hold the path:
@@ -156,14 +150,11 @@ EnumerateNt4ServiceSoundDevices(
     HKEY Key;
     DWORD KeyIndex = 0;
 
-    /* Validate parameters */
-    if ( ! ServiceName )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( ServiceName );
 
     /* Device type zero means "all" */
-    if ( ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) ) &&
-         ( DeviceType != 0 ) )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( VALID_SOUND_DEVICE_TYPE(DeviceType) ||
+                              DeviceType == 0 );
 
     while ( OpenSoundDeviceRegKey(ServiceName, KeyIndex, &Key) == MMSYSERR_NOERROR )
     {
@@ -284,10 +275,7 @@ DetectNt4SoundDevices(
 
     TRACE_("Detecting NT4 style sound devices of type %d\n", DeviceType);
 
-    if ( ! VALID_SOUND_DEVICE_TYPE(DeviceType) )
-    {
-        return MMSYSERR_INVALPARAM;
-    }
+    VALIDATE_MMSYS_PARAMETER( VALID_SOUND_DEVICE_TYPE(DeviceType) );
 
     DeviceNameLength = wcslen(BaseDeviceName);
     /* Consider the length of the number */

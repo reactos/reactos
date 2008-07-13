@@ -23,8 +23,7 @@ InitWaveStreamData(
 {
     PWAVE_STREAM_INFO StreamInfo;
 
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
@@ -44,17 +43,11 @@ QueueWaveDeviceBuffer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR BufferHeader)
 {
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader->lpData )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! BufferHeader->dwBufferLength )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( BufferHeader );
+    VALIDATE_MMSYS_PARAMETER( BufferHeader->lpData );
+    VALIDATE_MMSYS_PARAMETER( BufferHeader->dwBufferLength > 0 );
+    /* TODO: Check anything more about this buffer? */
 
     if ( ! (BufferHeader->dwFlags & WHDR_PREPARED ) )
         return WAVERR_UNPREPARED;
@@ -74,11 +67,8 @@ GetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PUCHAR State)
 {
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
-
-    if ( ! State )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( State );
 
     return CallUsingSoundThread(SoundDeviceInstance,
                                 GetWaveDeviceState_Request,
@@ -113,8 +103,7 @@ MMRESULT
 PauseWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     return CallUsingSoundThread(SoundDeviceInstance,
                                 PauseWaveDevice_Request,
@@ -134,8 +123,7 @@ MMRESULT
 RestartWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    if ( ! SoundDeviceInstance )
-        return MMSYSERR_INVALPARAM;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     return CallUsingSoundThread(SoundDeviceInstance,
                                 RestartWaveDevice_Request,
