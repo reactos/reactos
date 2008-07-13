@@ -4,7 +4,7 @@
 	<library>kernel32</library>
 	<compilerflag>-fno-exceptions</compilerflag>
 	<compilerflag>-fno-rtti</compilerflag>
-	<linkerflag>-Wl,--entry,0</linkerflag>
+	<entrypoint>0</entrypoint>
 	<file>idndl.cpp</file>
 	<importlibrary definition="idndl.def" />
 </module>

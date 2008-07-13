@@ -123,6 +123,9 @@ extern "C" {
 #define LOCALE_SISO3166CTRYNAME 90
 #define LOCALE_SNAME            92
 #endif
+#if (WINVER >= 0x0600)
+#define LOCALE_SSCRIPTS 108
+#endif
 #define LOCALE_SYSTEM_DEFAULT	0x800
 #define LOCALE_USER_DEFAULT	0x400
 
@@ -430,6 +433,12 @@ extern "C" {
 #define CAL_RETURN_NUMBER LOCALE_RETURN_NUMBER
 #define CAL_USE_CP_ACP LOCALE_USE_CP_ACP
 #endif /* (WINVER >= 0x0500) */
+#if WINVER >= 0x0600
+#define IDN_ALLOW_UNASSIGNED 0x1
+#define IDN_USE_STD3_ASCII_RULES 0x2
+#define VS_ALLOW_LATIN 0x1
+#define GSS_ALLOW_INHERITED_COMMON 0x1
+#endif
 #ifndef  _BASETSD_H
 typedef long LONG_PTR;
 #endif
@@ -638,8 +647,15 @@ LANGID WINAPI GetUserDefaultUILanguage(void);
 BOOL WINAPI IsValidLanguageGroup(LGRPID,DWORD);
 #endif /* (WINVER >= 0x0500) */
 #if (WINVER >= 0x0600)
-int WINAPI NormalizeString(NORM_FORM,LPCWSTR,int,LPWSTR,int);
+WINBASEAPI
+int WINAPI GetLocaleInfoEx(LPCWSTR,LCTYPE,LPWSTR,int);
+int WINAPI IdnToAscii(DWORD,LPCWSTR,int,LPWSTR,int);
+int WINAPI IdnToNameprepUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
+int WINAPI IdnToUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
 BOOL WINAPI IsNormalizedString(NORM_FORM,LPCWSTR,int);
+int WINAPI NormalizeString(NORM_FORM,LPCWSTR,int,LPWSTR,int);
+int WINAPI GetStringScripts(DWORD,LPCWSTR,int,LPWSTR,int);
+BOOL WINAPI VerifyScripts(DWORD,LPCWSTR,int,LPCWSTR,int);
 #endif /* (WINVER >= 0x0600) */
 
 #ifdef UNICODE

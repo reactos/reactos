@@ -4,7 +4,7 @@
 	<include base="icu4ros">icu/source/common</include>
 	<directory name="data"><file>icudt38.c</file></directory>
 </module>
-<module name="normaliz_redist" type="win32dll" installname="normaliz.dll">
+<module name="normaliz_redist" type="win32dll" installname="normaliz_redist.dll">
 	<library>normalize</library>
 	<library>idna</library>
 	<library>icu4ros</library>

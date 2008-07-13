@@ -58,9 +58,6 @@
 	<directory name="modules">
 		<xi:include href="modules/directory.rbuild" />
 	</directory>
-	<!--<directory name="nls">
-		<xi:include href="nls/nls.rbuild" />
-	</directory>-->
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 		<!-- <xi:include href="ntoskrnl/ntkrnlmp.rbuild" /> -->

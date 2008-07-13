@@ -1590,6 +1590,18 @@ INT RosGetRegistryLocaleInfo( LPCWSTR lpValue, LPWSTR lpBuffer, INT nLen )
     return nRet;
 }
 
+int
+WINAPI
+GetLocaleInfoEx (
+	LPCWSTR lpLocaleName,
+	LCTYPE  LCType,
+	LPWSTR  lpLCData,
+	int cchData
+	)
+{
+	return -1;
+}
+
 /*
  * @implemented
  */
@@ -1773,8 +1785,8 @@ CompareStringA (
 }
 
 
-static int compare_unicode_string( 
-    PUNICODE_STRING String1, 
+static int compare_unicode_string(
+    PUNICODE_STRING String1,
     PUNICODE_STRING String2,
     DWORD Flags
     )
@@ -1782,7 +1794,7 @@ static int compare_unicode_string(
     ULONG len1, len2;
     PWCHAR s1, s2;
     WCHAR c1, c2;
-    
+
     if (String1 && String2)
     {
         len1 = String1->Length / sizeof(WCHAR);
@@ -1901,8 +1913,8 @@ CompareStringW (
     else
         Result = RtlCompareUnicodeString(
                       &String1, &String2, (BOOLEAN)(dwCmpFlags & NORM_IGNORECASE));
-    
-    
+
+
     if (Result) /* need to translate result */
         return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
 
@@ -2177,9 +2189,9 @@ IsValidLanguageGroup(
     DWORD   dwFlags)
 {
     static const WCHAR szFormat[] = { '%','x','\0' };
-    UNICODE_STRING szNlsKeyName = 
+    UNICODE_STRING szNlsKeyName =
         RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\System\\CurrentControlSet\\Control\\Nls");
-    UNICODE_STRING szLangGroupsKeyName = 
+    UNICODE_STRING szLangGroupsKeyName =
         RTL_CONSTANT_STRING(L"Language Groups");
     const int MAX_VALUE_NAME = 16;
     const int MAX_VALUE_SYMB = 128;
