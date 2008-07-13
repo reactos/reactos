@@ -379,13 +379,19 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
                 while (TRUE);
-            }            
+            }
             break;
             
         case IRP_MN_QUERY_BUS_INFORMATION:
             
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
             break;
             
         case IRP_MN_EJECT:
@@ -396,8 +402,14 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             
         case IRP_MN_QUERY_DEVICE_TEXT:
             
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
             break;
             
         case IRP_MN_QUERY_DEVICE_RELATIONS:
@@ -408,9 +420,24 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             
         case IRP_MN_QUERY_CAPABILITIES:
             
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
             break;
+            
+        case IRP_MN_QUERY_RESOURCES:
+        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
+            
+            //
+            // Complete immediately without touching it
+            //
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            goto ReleaseAndReturn;
             
         default:
             
@@ -439,6 +466,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
     //
     // Release the lock and return status
     //
+ReleaseAndReturn:
     IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
     return Status;
 }
