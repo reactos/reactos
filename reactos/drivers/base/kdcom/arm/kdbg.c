@@ -18,6 +18,7 @@
 #include "windbgkd.h"
 #include <kddll.h>
 #include <ioaccess.h>
+#include <arm/peripherals/pl011.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -30,18 +31,13 @@ typedef struct _KD_PORT_INFORMATION
 
 KD_PORT_INFORMATION DefaultPort = {0, 0, 0};
 
-/* REACTOS FUNCTIONS **********************************************************/
+//
+// We need to build this in the configuration root and use KeFindConfigurationEntry
+// to recover it later.
+//
+#define HACK 24000000
 
-BOOLEAN
-NTAPI
-KdPortInitialize(IN PKD_PORT_INFORMATION PortInformation,
-                 IN ULONG Unknown1,
-                 IN ULONG Unknown2)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return TRUE;
-}
+/* REACTOS FUNCTIONS **********************************************************/
 
 BOOLEAN
 NTAPI
@@ -49,8 +45,62 @@ KdPortInitializeEx(IN PKD_PORT_INFORMATION PortInformation,
                    IN ULONG Unknown1,
                    IN ULONG Unknown2)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    ULONG Divider, Remainder, Fraction;
+    ULONG Baudrate = PortInformation->BaudRate;
+    
+    //
+    // Calculate baudrate clock divider and remainder
+    //
+    Divider   = HACK / (16 * Baudrate);
+    Remainder = HACK % (16 * Baudrate);
+    
+    //
+    // Calculate the fractional part
+    //
+    Fraction  = (8 * Remainder / Baudrate) >> 1;
+    Fraction += (8 * Remainder / Baudrate) & 1;
+    
+    //
+    // Disable interrupts
+    //
+    WRITE_REGISTER_ULONG(UART_PL011_CR, 0);
+    
+    //
+    // Set the baud rate
+    //
+    WRITE_REGISTER_ULONG(UART_PL011_IBRD, Divider);
+    WRITE_REGISTER_ULONG(UART_PL011_FBRD, Fraction);
+    
+    //
+    // Set 8 bits for data, 1 stop bit, no parity, FIFO enabled
+    //
+    WRITE_REGISTER_ULONG(UART_PL011_LCRH,
+                         UART_PL011_LCRH_WLEN_8 | UART_PL011_LCRH_FEN);
+    
+    //
+    // Clear and enable FIFO
+    //
+    WRITE_REGISTER_ULONG(UART_PL011_CR,
+                         UART_PL011_CR_UARTEN |
+                         UART_PL011_CR_TXE |
+                         UART_PL011_CR_RXE);
+    
+    //
+    // Done
+    //
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KdPortInitialize(IN PKD_PORT_INFORMATION PortInformation,
+                 IN ULONG Unknown1,
+                 IN ULONG Unknown2)
+{
+    //
+    // Call the extended version
+    //
+    return KdPortInitializeEx(PortInformation, Unknown1, Unknown2);
 }
 
 BOOLEAN
@@ -67,6 +117,9 @@ BOOLEAN
 NTAPI
 KdPortGetByte(OUT PUCHAR ByteReceived)
 {
+    //
+    // Call the extended version
+    //
     return KdPortGetByteEx(&DefaultPort, ByteReceived); 
 }
 
@@ -84,6 +137,9 @@ BOOLEAN
 NTAPI
 KdPortPollByte(OUT PUCHAR ByteReceived)
 {
+    //
+    // Call the extended version
+    //
     return KdPortPollByteEx(&DefaultPort, ByteReceived);
 }
 
@@ -92,14 +148,24 @@ NTAPI
 KdPortPutByteEx(IN PKD_PORT_INFORMATION PortInformation,
                 IN UCHAR ByteToSend)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Wait for ready
+    //
+    while ((READ_REGISTER_ULONG(UART_PL01x_FR) & UART_PL01x_FR_TXFF) != 0);
+    
+    //
+    // Send the character
+    //
+    WRITE_REGISTER_ULONG(UART_PL01x_DR, ByteToSend);
 }
 
 VOID
 NTAPI
 KdPortPutByte(IN UCHAR ByteToSend)
 {
+    //
+    // Call the extended version
+    //
     KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
