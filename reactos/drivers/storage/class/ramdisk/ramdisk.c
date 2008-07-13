@@ -32,6 +32,14 @@ typedef enum _RAMDISK_DEVICE_TYPE
     RamdiskPdo
 } RAMDISK_DEVICE_TYPE;
 
+typedef enum _RAMDISK_DEVICE_STATE
+{
+    RamdiskStateUninitialized,
+    RamdiskStateStarted,
+    RamdiskStateStopped,
+    RamdiskStateRemoved
+} RAMDISK_DEVICE_STATE;
+
 DEFINE_GUID(RamdiskBusInterface,
 		    0x5DC52DF0,
 			0x2F8A,
@@ -41,6 +49,7 @@ DEFINE_GUID(RamdiskBusInterface,
 typedef struct _RAMDISK_EXTENSION
 {
     RAMDISK_DEVICE_TYPE Type;
+    RAMDISK_DEVICE_STATE State;
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_OBJECT AttachedDevice;
@@ -223,10 +232,14 @@ QueryParameters(IN PUNICODE_STRING RegistryPath)
 NTSTATUS
 NTAPI
 RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
+                 IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Complete the IRP
+    //
+    Irp->IoStatus.Information = 1;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
@@ -255,9 +268,148 @@ NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    PRAMDISK_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    UCHAR Minor;
+    
+    //
+    // Get the device extension and stack location
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    Minor = IoStackLocation->MinorFunction;
+    
+    //
+    // Check if the device is initialized
+    //
+    if (DeviceExtension->State == RamdiskStateUninitialized)
+    {
+        //
+        // Only remove-device and query-id are allowed
+        //
+        if ((Minor != IRP_MN_REMOVE_DEVICE) || (Minor != IRP_MN_QUERY_ID))
+        {
+            //
+            // Fail anything else
+            //
+            Status = STATUS_NO_SUCH_DEVICE;
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+    }
+    
+    //
+    // Acquire the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // Fail the IRP
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+    
+    //
+    // Query the IRP type
+    //
+    switch (Minor)
+    {
+        case IRP_MN_START_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_CANCEL_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_ID:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_BUS_INFORMATION:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_EJECT:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_DEVICE_TEXT:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);            
+            break;
+            
+        case IRP_MN_QUERY_CAPABILITIES:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        default:
+            
+            DPRINT1("Illegal IRP: %lx\n", Minor);
+            break;
+    }
+    
+    //
+    // Release the lock and return status
+    //
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
     while (TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
