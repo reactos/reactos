@@ -4701,7 +4701,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
 
 BOOL
 FASTCALL
@@ -4711,9 +4710,9 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
    PWINDOW_OBJECT pWnd;
    HWND *win_array;
 
-   ASSERT(OwnerWnd);
+//   ASSERT(OwnerWnd);
 
-   win_array = IntWinListChildren(OwnerWnd);//faxme: use desktop?
+   win_array = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
 
    if (!win_array)
       return TRUE;

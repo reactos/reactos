@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native User stubs
@@ -904,22 +903,6 @@ NTAPI
 NtUserRealWaitMessageEx(
     DWORD dwUnknown1,
     DWORD dwUnknown2)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/* http://www.reactos.org/pipermail/ros-kernel/2003-November/000589.html */
-HWINSTA
-NTAPI
-NtUserRegisterClassExWOW(
-    CONST WNDCLASSEXW* lpwcx,
-    BOOL bUnicodeClass,
-    WNDPROC wpExtra,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6,
-    DWORD dwUnknown7)
 {
     UNIMPLEMENTED;
     return 0;

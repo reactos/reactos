@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
@@ -1855,7 +1854,7 @@ UserRegisterSystemClasses(IN ULONG Count,
                                pi);
         if (Class != NULL)
         {
-            Class->ClassId = SystemClasses[i].ClassId;
+            Class->fnID = SystemClasses[i].ClassId;
 
             ASSERT(Class->System);
             Class->Next = pi->SystemClassList;
@@ -1985,6 +1984,111 @@ InvalidParameter:
     return Ret;
 }
 
+
+RTL_ATOM
+NTAPI
+NtUserRegisterClassExWOW(
+    WNDCLASSEXW* lpwcx,
+    PUNICODE_STRING ClassName,
+    PUNICODE_STRING ClsNVersion,
+    PCLSMENUNAME pClassMenuName,
+    DWORD fnID,
+    DWORD Flags,
+    LPDWORD pWow)
+{
+    WNDCLASSEXW CapturedClassInfo = {0};
+    UNICODE_STRING CapturedName = {0}, ClassnametoVersion = {0};
+    RTL_ATOM Ret = (RTL_ATOM)0;
+
+    UserEnterExclusive();
+
+    _SEH_TRY
+    {
+        /* Probe the parameters and basic parameter checks */
+        if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
+        {
+            goto InvalidParameter;
+        }
+        if (!pClassMenuName)
+        {
+            goto InvalidParameter;
+        }
+
+        ProbeForRead(lpwcx,
+                     sizeof(WNDCLASSEXW),
+                     sizeof(ULONG));
+        RtlCopyMemory(&CapturedClassInfo,
+                      lpwcx,
+                      sizeof(WNDCLASSEXW));
+        /*
+          Need to watch this. When UnregisterClass is called these pointers
+          are freed by the caller in user space. So, we just probe the data
+          for now and pass it on and copy it to the shared class structure.
+         */
+        ProbeForRead(pClassMenuName,
+                     sizeof(CLSMENUNAME),
+                     sizeof(ULONG));
+
+        CapturedName = ProbeForReadUnicodeString(ClassName);
+        ClassnametoVersion = ProbeForReadUnicodeString(ClsNVersion);
+
+        if (CapturedName.Length & 1 || ClassnametoVersion.Length & 1 ||
+            CapturedClassInfo.cbClsExtra < 0 ||
+            CapturedClassInfo.cbClsExtra + CapturedName.Length +
+                ClassnametoVersion.Length + sizeof(WINDOWCLASS) < CapturedClassInfo.cbClsExtra ||
+            CapturedClassInfo.cbWndExtra < 0 ||
+            CapturedClassInfo.hInstance == NULL)
+        {
+            goto InvalidParameter;
+        }
+
+        if (CapturedName.Length != 0)
+        {
+            ProbeForRead(CapturedName.Buffer,
+                         CapturedName.Length,
+                         sizeof(WCHAR));
+        }
+        else
+        {
+            if (!IS_ATOM(CapturedName.Buffer))
+            {
+                goto InvalidParameter;
+            }
+        }
+
+        if (ClassnametoVersion.Length != 0)
+        {
+            ProbeForRead(ClassnametoVersion.Buffer,
+                         ClassnametoVersion.Length,
+                         sizeof(WCHAR));
+        }
+        else if (ClassnametoVersion.Buffer != NULL &&
+                 !IS_INTRESOURCE(ClassnametoVersion.Buffer))
+        {
+InvalidParameter:
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            _SEH_LEAVE;
+        }
+
+        /* Register the class */
+//        Ret = UserRegisterClass(&CapturedClassInfo,
+//                                &CapturedName,
+//                                &ClassnametoVersion,
+//                                hMenu, /* FIXME - pass pointer */
+//                                wpExtra,
+//                                Flags);
+
+    }
+    _SEH_HANDLE
+    {
+        SetLastNtError(_SEH_GetExceptionCode());
+    }
+    _SEH_END;
+
+    UserLeave();
+
+    return Ret;
+}
 
 
 ULONG_PTR NTAPI
@@ -2116,7 +2220,7 @@ NtUserSetClassWord(
 BOOL NTAPI
 NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
                       IN HINSTANCE hInstance,
-                      DWORD Unknown)
+                      OUT PCLSMENUNAME pClassMenuName)
 {
     UNICODE_STRING CapturedClassName;
     BOOL Ret = FALSE;
