@@ -434,8 +434,78 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
 NTSTATUS
 KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
+    PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
     ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    ULONG Instruction = *(PULONG)TrapFrame->Pc;
+    ULONG DebugType, Parameter0;
+    EXCEPTION_RECORD ExceptionRecord;
+    
+    //
+    // What we *SHOULD* do is look at the instruction fault status register
+    // and see if it's equal to 2 (debug trap). Unfortunately QEMU doesn't seem
+    // to emulate this behaviour properly, so we use a workaround.
+    //
+    //if (KeArmInstructionFaultStatusRegisterGet() == 2)
+    if (Instruction & 0xE1200070) // BKPT
+    {
+        //
+        // Okay, we know this is a breakpoint, extract the index
+        //
+        DebugType = Instruction & 0xF;
+        if (DebugType == BREAKPOINT_PRINT)
+        {
+            //
+            // Debug Service
+            //
+            Parameter0 = TrapFrame->R0;
+        }
+        else
+        {
+            //
+            // Standard INT3 (emulate x86 behavior)
+            //
+            Parameter0 = STATUS_SUCCESS;
+        }
+        
+        //
+        // Build the exception record
+        //
+        ExceptionRecord.ExceptionCode = STATUS_BREAKPOINT;
+        ExceptionRecord.ExceptionFlags = 0;
+        ExceptionRecord.ExceptionRecord = NULL;
+        ExceptionRecord.ExceptionAddress = (PVOID)TrapFrame->Pc;
+        ExceptionRecord.NumberParameters = 3;
+        
+        //
+        // Build the parameters
+        //
+        ExceptionRecord.ExceptionInformation[0] = Parameter0;
+        ExceptionRecord.ExceptionInformation[1] = TrapFrame->R1;
+        ExceptionRecord.ExceptionInformation[2] = TrapFrame->R2;
+        
+        //
+        // Dispatch the exception
+        //
+        KiDispatchException(&ExceptionRecord,
+                            NULL,
+                            TrapFrame,
+                            KiGetPreviousMode(TrapFrame),
+                            TRUE);
+        
+        //
+        // TODO
+        //
+        while (TRUE);
+    }
+    
+    //
+    // Unhandled
+    //
     while (TRUE);
+    DPRINT1("[PREFETCH ABORT] (%x) @ %p/%p/%p\n",
+            KeArmInstructionFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -453,11 +523,14 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     {
         Status = MmAccessFault(FALSE,
                                Address,
-                               KernelMode,
+                               KiGetPreviousMode(TrapFrame),
                                TrapFrame);
         if (Status == STATUS_SUCCESS) return Status;
     }
 
+    //
+    // Unhandled
+    //
     DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
             KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     UNIMPLEMENTED;
