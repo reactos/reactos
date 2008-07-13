@@ -290,6 +290,6 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
         // Schedule a quantum end
         //
         Prcb->QuantumEnd = 1;
-        //HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
     }
 }
