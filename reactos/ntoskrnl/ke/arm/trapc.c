@@ -437,9 +437,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     NTSTATUS Status;
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
     ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
-    DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
-            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
-    
+   
     //
     // Check if this is a page fault
     //
@@ -451,7 +449,9 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
                                TrapFrame);
         if (Status == STATUS_SUCCESS) return Status;
     }
-    
+
+    DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
+            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_SUCCESS;
