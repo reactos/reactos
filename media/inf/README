@@ -50,4 +50,4 @@ General issues of multiple (system) languages:
 We can translate the programm files and perhaps the registry entries in the 
 described above. But how to handle files/directories with translatabel names?
 If we intend to have a (native) language for each user, so the directory 
-structure may become confusing and hard to handle correctly.
+structure may become confusing and may be hard to handle correctly.
