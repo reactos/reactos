@@ -6,6 +6,8 @@
  * HOMEPAGE:         http://ext2.yeah.net
  * UPDATE HISTORY:   12 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
  *                     Fixed some warnings under GCC
+ *                   13 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Fixed some warnings under GCC
  */
 
 /* INCLUDES **************************************************************/
@@ -147,7 +149,6 @@ Ext2Printf(
     LARGE_INTEGER       CurrentTime;
     TIME_FIELDS         TimeFields;
     CHAR                Buffer[DBG_BUF_LEN];
-    ULONG               i;
 
     RtlZeroMemory(Buffer, DBG_BUF_LEN);
     va_start(ap, DebugMessage);
@@ -175,7 +176,6 @@ Ext2NiPrintf(
     LARGE_INTEGER       CurrentTime;
     TIME_FIELDS         TimeFields;
     CHAR                Buffer[0x100];
-    ULONG               i;
 
     va_start(ap, DebugMessage);
        
