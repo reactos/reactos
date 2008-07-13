@@ -471,7 +471,7 @@ ImportRegistryFile(PCHAR FileName)
 	/* Load inf file from install media. */
 	if (InfHostOpenFile(&hInf, FileName, &ErrorLine) != 0)
 	{
-		DPRINT1 ("InfHostOpenFile() failed\n");
+		DPRINT1 ("InfHostOpenFile(%s) failed\n", FileName);
 		return FALSE;
 	}
 
