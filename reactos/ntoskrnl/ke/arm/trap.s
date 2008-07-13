@@ -69,7 +69,7 @@
     //
     // Handle trap entry
     //
-    TRAP_PROLOG 1 // FromAbort
+    TRAP_PROLOG 0 // NotFromAbort
     
     //
     // Call the C handler
