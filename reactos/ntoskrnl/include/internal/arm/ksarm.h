@@ -65,6 +65,21 @@
 .equ TrapFrameLength,      (22 * 0x04)
 
 /*
+ * Exception Frame offsets
+ */
+.equ ExR4,                 0x00
+.equ ExR5,                 0x04
+.equ ExR6,                 0x08
+.equ ExR7,                 0x0C
+.equ ExR8,                 0x10
+.equ ExR9,                 0x14
+.equ ExR10,                0x18
+.equ ExR11,                0x1C
+.equ ExLr,                 0x20
+.equ ExSpsr,               0x24
+.equ ExceptionFrameLength, (10 * 0x04)
+
+/*
  * PCR
  */
 .equ KiPcr,                0xFFFFF000
