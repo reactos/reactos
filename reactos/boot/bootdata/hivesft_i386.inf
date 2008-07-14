@@ -997,9 +997,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","Coun
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","Name",0x00000000,"New Zealand"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","CountryCode",0x00010001,0x00000007
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","Name",0x00000000,"Russia"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","CountryCode",0x00010001,0x00000007
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","CountryCode",0x00010001,0x000002C1
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","Name",0x00000000,"Kazakhstan"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\708","CountryCode",0x00010001,0x00000007
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\708","CountryCode",0x00010001,0x000002C4
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\708","Name",0x00000000,"Tajikistan"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\81","CountryCode",0x00010001,0x00000051
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\81","Name",0x00000000,"Japan"
