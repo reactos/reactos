@@ -29,8 +29,73 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                      IN ULONG ContextFlags,
                      IN KPROCESSOR_MODE PreviousMode)
 {
-    while (TRUE);
-    return;
+    KIRQL OldIrql;
+    
+    //
+    // Do this at APC_LEVEL
+    //
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
+    
+    //
+    // Start with the Control flags
+    //
+    if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
+    {
+        //
+        // So this basically means all the special stuff
+        //
+        if (PreviousMode == UserMode)
+        {
+            //
+            // ARM has register banks
+            //
+            TrapFrame->UserSp = Context->Sp;
+            TrapFrame->UserLr = Context->Lr;
+        }
+        else
+        {
+            //
+            // ARM has register banks
+            //
+            TrapFrame->SvcSp = Context->Sp;
+            TrapFrame->SvcLr = Context->Lr;
+        }
+        
+        //
+        // The rest is already in the right mode
+        //
+        TrapFrame->Pc = Context->Pc;
+        TrapFrame->Spsr = Context->Psr;
+    }
+    
+    //
+    // Now do the integers
+    //
+    if ((Context->ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
+    {
+        //
+        // Basically everything else but FPU
+        //
+        TrapFrame->R0 = Context->R0;
+        TrapFrame->R1 = Context->R1;
+        TrapFrame->R2 = Context->R2;
+        TrapFrame->R3 = Context->R3;
+        TrapFrame->R4 = Context->R4;
+        TrapFrame->R5 = Context->R5;
+        TrapFrame->R6 = Context->R6;
+        TrapFrame->R7 = Context->R7;
+        TrapFrame->R8 = Context->R8;
+        TrapFrame->R0 = Context->R9;
+        TrapFrame->R10 = Context->R10;
+        TrapFrame->R11 = Context->R11;
+        TrapFrame->R12 = Context->R12;
+    }
+    
+    //
+    // Restore IRQL
+    //
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);  
 }
 
 VOID
@@ -55,7 +120,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         //
         // So this basically means all the special stuff
         //
-        if (KiGetPreviousMode(TrapFrame))
+        if (KiGetPreviousMode(TrapFrame) == UserMode)
         {
             //
             // ARM has register banks

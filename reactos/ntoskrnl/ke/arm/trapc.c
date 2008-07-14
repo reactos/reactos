@@ -491,7 +491,6 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
                             TrapFrame,
                             KiGetPreviousMode(TrapFrame),
                             TRUE);
-        
         //
         // TODO
         //
