@@ -157,7 +157,11 @@ wodMessage(
         }
 
         case WODM_BREAKLOOP :
-            return MMSYSERR_NOTSUPPORTED;   /* yet */
+        {
+            ASSERT(Instance != NULL);
+
+            return BreakWaveDeviceLoop(Instance);
+        }
 
         /* Let WINMM take care of these */
         case WODM_PREPARE :

@@ -326,6 +326,8 @@ GetWaveDeviceState_Request(
                                          State);
 }
 
+/* These are a bit repetitive... */
+
 MMRESULT
 PauseWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -394,4 +396,26 @@ ResetWaveDevice_Request(
     SoundDeviceInstance->Streaming.Wave.CurrentBuffer = NULL;
 
     return Functions->ResetWaveDevice(SoundDeviceInstance);
+}
+
+MMRESULT
+BreakWaveDeviceLoop_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->BreakWaveDeviceLoop(SoundDeviceInstance);
 }

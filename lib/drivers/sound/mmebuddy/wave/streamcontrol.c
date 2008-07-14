@@ -212,3 +212,30 @@ DefaultResetWaveDevice(
     TRACE_EXIT(Result);
     return Result;
 }
+
+MMRESULT
+BreakWaveDeviceLoop(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    return CallUsingSoundThread(SoundDeviceInstance,
+                                BreakWaveDeviceLoop_Request,
+                                NULL);
+}
+
+MMRESULT
+DefaultBreakWaveDeviceLoop(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
+{
+    ASSERT( SoundDeviceInstance );
+
+    /*
+        This will cause the loop to end. Note that the LoopHead member is
+        left intact otherwise the streaming routine may be processing the
+        start of the loop and think it's starting a new loop.
+    */
+    SoundDeviceInstance->Streaming.Wave.LoopsRemaining = 0;
+
+    return MMSYSERR_NOERROR;
+}

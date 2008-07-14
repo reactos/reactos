@@ -37,4 +37,9 @@ ResetWaveDevice_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter);
 
+MMRESULT
+BreakWaveDeviceLoop_Request(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID Parameter);
+
 #endif

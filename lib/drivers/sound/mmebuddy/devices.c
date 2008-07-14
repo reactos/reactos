@@ -67,6 +67,7 @@ InitSoundDeviceFunctionTable(
     Device->Functions.PauseWaveDevice = DefaultPauseWaveDevice;
     Device->Functions.RestartWaveDevice = DefaultRestartWaveDevice;
     Device->Functions.ResetWaveDevice = DefaultResetWaveDevice;
+    Device->Functions.BreakWaveDeviceLoop = DefaultBreakWaveDeviceLoop;
 
     if ( ! SourceFunctionTable )
     {
@@ -128,6 +129,12 @@ InitSoundDeviceFunctionTable(
     {
         Device->Functions.ResetWaveDevice =
             SourceFunctionTable->ResetWaveDevice;
+    }
+
+    if ( SourceFunctionTable->BreakWaveDeviceLoop )
+    {
+        Device->Functions.BreakWaveDeviceLoop =
+            SourceFunctionTable->BreakWaveDeviceLoop;
     }
 
     TRACE_EXIT(0);

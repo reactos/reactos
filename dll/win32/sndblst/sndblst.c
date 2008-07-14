@@ -185,7 +185,7 @@ int APIENTRY wWinMain(
     WaveHeaders[0].lpData = (PVOID) Buffer;
     WaveHeaders[0].dwBufferLength = 1000000;
     WaveHeaders[0].dwFlags = WHDR_PREPARED | WHDR_BEGINLOOP;
-    WaveHeaders[0].dwLoops = 0;
+    WaveHeaders[0].dwLoops = 5;
 
     WaveHeaders[1].lpData = (PVOID) ((PCHAR)Buffer + 1000000);
     WaveHeaders[1].dwBufferLength = 1000000;
@@ -216,6 +216,9 @@ int APIENTRY wWinMain(
     //Result = wodMessage(0, WODM_WRITE, (DWORD) InstanceData, (DWORD) &WaveHeader2, 0);
 
 //    SOUND_DEBUG_HEX(Result);
+
+    POPUP("Click for WODM_BREAKLOOP");
+    Result = wodMessage(0, WODM_BREAKLOOP, (DWORD) InstanceData, (DWORD) 0, 0);
 
     POPUP("Click for WODM_PAUSE");
     Result = wodMessage(0, WODM_PAUSE, (DWORD) InstanceData, (DWORD) 0, 0);
