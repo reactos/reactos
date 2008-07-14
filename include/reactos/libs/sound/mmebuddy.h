@@ -269,9 +269,12 @@ typedef struct _WAVE_STREAM_INFO
     /* The buffer currently being processed */
     PWAVEHDR CurrentBuffer;
     /* How far into the current buffer we've gone */
-    //DWORD BufferOffset;
+    DWORD BufferOffset;
     /* How many I/O operations have been submitted */
     DWORD BuffersOutstanding;
+    /* Looping */
+    PWAVEHDR LoopHead;
+    DWORD LoopsRemaining;
 } WAVE_STREAM_INFO, *PWAVE_STREAM_INFO;
 
 

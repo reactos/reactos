@@ -9,6 +9,10 @@
  * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
 */
 
+/*
+    TODO: If loops == 0 do we play once, and loops == 1 play twice?
+*/
+
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -90,14 +94,26 @@ PerformWaveIo(
         return 0;
     }
 
+    /* Is this the beginning of a loop? */
+    if ( StreamInfo->CurrentBuffer->dwFlags & WHDR_BEGINLOOP )
+    {
+        /* Avoid infinite looping where the beginning and end are the same */
+        if ( StreamInfo->LoopHead != StreamInfo->CurrentBuffer )
+        {
+            TRACE_("Beginning of loop\n");
+            StreamInfo->LoopHead = StreamInfo->CurrentBuffer;
+            StreamInfo->LoopsRemaining = StreamInfo->CurrentBuffer->dwLoops;
+        }
+    }
+
     /* Work out how much buffer can be submitted */
     BytesToStream = MinimumOf(StreamInfo->CurrentBuffer->dwBufferLength -
-                                StreamInfo->CurrentBuffer->reserved,
+                                StreamInfo->BufferOffset,
                               MAX_SOUND_BUFFER_SIZE);
 
     TRACE_("Writing %p + %d (%d bytes) - buffer length is %d bytes\n",
                 StreamInfo->CurrentBuffer->lpData,
-                (int) StreamInfo->CurrentBuffer->reserved,
+                (int) StreamInfo->BufferOffset,
                 (int) BytesToStream,
                 (int) StreamInfo->CurrentBuffer->dwBufferLength);
 
@@ -105,7 +121,7 @@ PerformWaveIo(
     Result =  OverlappedSoundDeviceIo(
                         SoundDeviceInstance,
                         (PCHAR) StreamInfo->CurrentBuffer->lpData +
-                                StreamInfo->CurrentBuffer->reserved,
+                                StreamInfo->BufferOffset,
                         BytesToStream,
                         CompleteWaveBuffer,
                         (PVOID) StreamInfo->CurrentBuffer);
@@ -137,14 +153,30 @@ PerformWaveIo(
     BytesStreamed = BytesToStream;
 
     /* Advance the offset */
-    StreamInfo->CurrentBuffer->reserved += BytesStreamed;
+    StreamInfo->BufferOffset += BytesStreamed;
 
     /* If we've hit the end of the buffer, move to the next one */
-    if ( StreamInfo->CurrentBuffer->reserved ==
+    if ( StreamInfo->BufferOffset ==
             StreamInfo->CurrentBuffer->dwBufferLength )
     {
         TRACE_("Advancing to next buffer\n");
-        StreamInfo->CurrentBuffer = StreamInfo->CurrentBuffer->lpNext;
+
+        if ( ( StreamInfo->CurrentBuffer->dwFlags & WHDR_ENDLOOP ) &&
+             ( StreamInfo->LoopHead ) &&
+             ( StreamInfo->LoopsRemaining > 0 ) )
+        {
+            /* Loop back to the head */
+            StreamInfo->CurrentBuffer = StreamInfo->LoopHead;
+            -- StreamInfo->LoopsRemaining;
+            TRACE_("Now %d loops remaining\n", (int) StreamInfo->LoopsRemaining);
+        }
+        else
+        {
+            /* Either not looping, or looping expired */
+            StreamInfo->CurrentBuffer = StreamInfo->CurrentBuffer->lpNext;
+        }
+
+        StreamInfo->BufferOffset = 0;
     }
 
     /* Increase the number of outstanding buffers */
@@ -238,9 +270,12 @@ QueueWaveBuffer_Request(
         StreamInfo->CurrentBuffer = WaveHeader;
 
         /* Initialise the stream state */
-        //StreamInfo->BufferOffset = 0;
+        StreamInfo->BufferOffset = 0;
         //StreamInfo->BytesOutstanding = 0;
         StreamInfo->BuffersOutstanding = 0;
+
+        StreamInfo->LoopHead = NULL;
+        StreamInfo->LoopsRemaining = 0;
 
         /* Get the streaming started */
         StreamWaveBuffers(SoundDeviceInstance);

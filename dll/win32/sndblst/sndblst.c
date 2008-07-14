@@ -184,11 +184,12 @@ int APIENTRY wWinMain(
     POPUP("Click for WODM_WRITE test");
     WaveHeaders[0].lpData = (PVOID) Buffer;
     WaveHeaders[0].dwBufferLength = 1000000;
-    WaveHeaders[0].dwFlags = WHDR_PREPARED;
+    WaveHeaders[0].dwFlags = WHDR_PREPARED | WHDR_BEGINLOOP;
+    WaveHeaders[0].dwLoops = 0;
 
     WaveHeaders[1].lpData = (PVOID) ((PCHAR)Buffer + 1000000);
     WaveHeaders[1].dwBufferLength = 1000000;
-    WaveHeaders[1].dwFlags = WHDR_PREPARED;
+    WaveHeaders[1].dwFlags = WHDR_PREPARED | WHDR_ENDLOOP;
 
     WaveHeaders[2].lpData = (PVOID) ((PCHAR)Buffer + (1000000 *2));
     WaveHeaders[2].dwBufferLength = 1000000;
