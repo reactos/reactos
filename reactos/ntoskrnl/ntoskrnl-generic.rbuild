@@ -66,7 +66,6 @@
 				<file>exp.c</file>
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
-				<file>stubs.c</file>
 				<file>thrdini.c</file>
 				<file>time.c</file>
 				<file>trap.s</file>
