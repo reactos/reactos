@@ -458,6 +458,7 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
             // Debug Service
             //
             Parameter0 = TrapFrame->R0;
+            TrapFrame->Pc += sizeof(ULONG);
         }
         else
         {
@@ -491,10 +492,11 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
                             TrapFrame,
                             KiGetPreviousMode(TrapFrame),
                             TRUE);
+
         //
-        // TODO
+        // We're done
         //
-        while (TRUE);
+        return STATUS_SUCCESS;
     }
     
     //
