@@ -24,14 +24,14 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_SECONDS, "seconds"
-	IDS_NOBODY,  "Nobody"
+	IDS_SECONDS, "秒"
+	IDS_NOBODY,  "匿名"
 	IDS_ABOUT,   "by Joshua Thielen and ReactOS developers"
 END
 
 IDM_WINEMINE MENU DISCARDABLE
 BEGIN
-	POPUP "&Game"
+	POPUP "扫雷(&G)"
         BEGIN
 		MENUITEM "开局(&N)\tF2",   IDM_NEW
 		MENUITEM SEPARATOR
@@ -67,7 +67,7 @@ BEGIN
 	LTEXT           "",              IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",              IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "确定",          IDOK,      127,  57,  50,  15
-	PUSHBUTTON      "&Reset Scores", IDRESET,    18,  57,  67,  15
+	PUSHBUTTON      "重新记分(&R)", IDRESET,    18,  57,  67,  15
 END
 
 IDD_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60

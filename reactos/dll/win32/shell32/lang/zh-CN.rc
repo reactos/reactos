@@ -1,30 +1,18 @@
 /*
- * Copyright 2002 Tisheng Chen
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  (Simplified Chinese resources)
+ *  (简体中文资源)
+ *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-#pragma code_page(936)
+
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Lar&ge Icons",  FCIDM_SHVIEW_BIGICON
-	MENUITEM "S&mall Icons",  FCIDM_SHVIEW_SMALLICON
-	MENUITEM "&List",         FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "&Details",      FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "大图标(&G)",  FCIDM_SHVIEW_BIGICON
+	MENUITEM "小图标(&M)",  FCIDM_SHVIEW_SMALLICON
+	MENUITEM "列表(&L)",         FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "详细信息(&D)",      FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -32,31 +20,31 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&View"
+		POPUP "查看(&V)"
 		BEGIN
-			MENUITEM "Lar&ge Icons",       FCIDM_SHVIEW_BIGICON
-			MENUITEM "S&mall Icons",       FCIDM_SHVIEW_SMALLICON
-			MENUITEM "&List",              FCIDM_SHVIEW_LISTVIEW
-			MENUITEM "&Details",           FCIDM_SHVIEW_REPORTVIEW
+			MENUITEM "大图标(&G)",       FCIDM_SHVIEW_BIGICON
+			MENUITEM "小图标(&M)",       FCIDM_SHVIEW_SMALLICON
+			MENUITEM "列表(&L)",              FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "详细信息(&D)",           FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "Arrange &Icons"
+		POPUP "排列图标(&I)"
 		BEGIN
-			MENUITEM "By &Name",           0x30  /* column 0 */
-			MENUITEM "By &Type",           0x32  /* column 2 */
-			MENUITEM "By &Size",           0x31  /* ... */
-			MENUITEM "By &Date",           0x33
+			MENUITEM "名称(&N)",           0x30  /* column 0 */
+			MENUITEM "类型(&T)",           0x32  /* column 2 */
+			MENUITEM "大小(&S)",           0x31  /* ... */
+			MENUITEM "修改时间(&D)",           0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Auto Arrange",      FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "自动排列(&D)",      FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Line up Icons",        FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "排列图标",        FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "Refresh",              FCIDM_SHVIEW_REFRESH
+		MENUITEM "刷新",              FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Paste",                FCIDM_SHVIEW_INSERT
-		MENUITEM "Paste as Link",        FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "粘贴",                FCIDM_SHVIEW_INSERT
+		MENUITEM "粘贴快捷方式",        FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Properties",           FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "属性",           FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -66,16 +54,16 @@ BEGIN
 	POPUP ""
 	BEGIN
 		MENUITEM "E&xplore",             FCIDM_SHVIEW_EXPLORE
-		MENUITEM "&Open",                FCIDM_SHVIEW_OPEN
+		MENUITEM "打开(&O)",                FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "C&ut",                 FCIDM_SHVIEW_CUT
-		MENUITEM "&Copy",                FCIDM_SHVIEW_COPY
+		MENUITEM "剪切(&U)",                 FCIDM_SHVIEW_CUT
+		MENUITEM "复制(&C)",                FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "Create &Link",         FCIDM_SHVIEW_CREATELINK
-		MENUITEM "&Delete",              FCIDM_SHVIEW_DELETE
-		MENUITEM "&Rename",              FCIDM_SHVIEW_RENAME
+		MENUITEM "创建快捷方式(&L)",         FCIDM_SHVIEW_CREATELINK
+		MENUITEM "删除(&D)",              FCIDM_SHVIEW_DELETE
+		MENUITEM "重命名(&R)",              FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "&Properties",          FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "属性(&P)",          FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -84,8 +72,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Browse for Folder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "确定", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "取消", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -102,8 +90,8 @@ BEGIN
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "确定", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "取消", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -196,7 +184,7 @@ BEGIN
 	CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
 	LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
 	CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
-	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
+	PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
 	PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
@@ -319,8 +307,8 @@ BEGIN
 	LTEXT "Password:", -1, 20, 143, 53, 10
 	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
 	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
-	PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-	PUSHBUTTON "Cancel", 14008, 122, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "确定", 14007, 57, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "取消", 14008, 122, 170, 60, 14, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
@@ -349,8 +337,8 @@ BEGIN
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
-	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
-	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
+	PUSHBUTTON "确定", 14005, 150, 236, 50, 14
+	PUSHBUTTON "取消", 14006, 206, 236, 50, 14
 END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
@@ -417,7 +405,7 @@ BEGIN
 	DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
 	PUSHBUTTON "Yes to &All", 12807, 85, 122, 60, 14
 	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 215, 122, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
 	LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
 	LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
@@ -438,7 +426,7 @@ BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
 	LTEXT "Are you sure you want to log off?", -1, 43, 11, 140, 22
 	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 122, 40, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
@@ -449,7 +437,7 @@ BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
 	LTEXT "Are you sure you want to disconnect?", -1, 49, 12, 137, 23
 	DEFPUSHBUTTON "&Disconnect", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 123, 40, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 123, 40, 60, 14
 END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
@@ -475,8 +463,8 @@ BEGIN
 	LTEXT "This disk or device contains more than one type of content.", 1001, 32, 7, 191, 20
 	LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
-	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+	DEFPUSHBUTTON "确定", IDOK, 96, 186, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
 END
 
 MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
@@ -491,8 +479,8 @@ BEGIN
 	LTEXT "What do you want ReactOS to do?", 1002, 32, 41, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
 	AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
-	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+	DEFPUSHBUTTON "确定", IDOK, 96, 185, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 160, 185, 60, 14
 END
 
 AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
@@ -505,8 +493,8 @@ BEGIN
 	LTEXT "&What do you want ReactOS to do?", 1002, 32, 31, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
 	AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
-	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 159, 160, 60, 14
+	DEFPUSHBUTTON "确定", IDOK, 94, 160, 60, 14
+	PUSHBUTTON "取消", IDCANCEL, 159, 160, 60, 14
 END
 
 SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
@@ -518,44 +506,44 @@ BEGIN
 	LTEXT "What do you want the computer to do?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
 	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
-	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-	PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
+	DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
+	PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
 	PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "格式化"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
-	PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-	LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
+	DEFPUSHBUTTON "开始(&S)", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "关闭(&C)", IDCANCEL, 118, 198, 60, 14
+	LTEXT "容量(&P):", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&File system", -1, 7, 35, 170, 9
+	LTEXT "文件系统(&F)", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+	LTEXT "分配单元大小(&A)", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Volume &label", -1, 7, 93, 170, 9
+	LTEXT "卷标(&L)", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-	AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
+	GROUPBOX "格式化选项(&O)", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "快速格式化(&Q)", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "启用压缩(&E)", 28675, 16, 152, 155, 10
 END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "更改图标"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "文件名:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "浏览...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
-    DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    DEFPUSHBUTTON   "确定",IDOK, 107, 181,50, 14
+    PUSHBUTTON      "取消",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -576,16 +564,16 @@ BEGIN
 	IDS_SHV_COLUMN_DELDATE      "Date deleted"
 
 	/* special folders */
-	IDS_DESKTOP                 "Desktop"
-	IDS_MYCOMPUTER              "My Computer"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
-	IDS_CONTROLPANEL            "Control Panel"
+	IDS_DESKTOP                 "桌面"
+	IDS_MYCOMPUTER              "我的电脑"
+	IDS_RECYCLEBIN_FOLDER_NAME  "回收站"
+	IDS_CONTROLPANEL            "控制面板"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "Lar&ge Icons"
-	IDS_VIEW_SMALL              "S&mall Icons"
-	IDS_VIEW_LIST               "&List"
-	IDS_VIEW_DETAILS            "&Details"
+	IDS_VIEW_LARGE              "大图标(&G)"
+	IDS_VIEW_SMALL              "小图标(&M)"
+	IDS_VIEW_LIST               "列表(&L)"
+	IDS_VIEW_DETAILS            "详细信息(&D)"
 	IDS_SELECT                  "Select"
 	IDS_OPEN                    "Open"
 
@@ -608,14 +596,14 @@ BEGIN
 		"the folder?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Restart"
-	IDS_RESTART_PROMPT          "Do you want to restart the system?"
-	IDS_SHUTDOWN_TITLE          "Shutdown"
-	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_RESTART_TITLE           "重新启动"
+	IDS_RESTART_PROMPT          "是否重新启动系统?"
+	IDS_SHUTDOWN_TITLE          "关机"
+	IDS_SHUTDOWN_PROMPT         "是否关闭系统?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
+	IDS_PERSONAL                "我的文档"
 	IDS_FAVORITES               "Favorites"
 	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
 	IDS_RECENT                  "Recent"
@@ -641,7 +629,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
 	IDS_COMMON_VIDEO            "Documents\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "My Network Places"
+	IDS_NETWORKPLACE            "网上邻居"
 
 	IDS_NEWFOLDER               "New Folder"
 
@@ -649,18 +637,17 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
 
-	IDS_OPEN_WITH               "Open With"
-	IDS_OPEN_WITH_CHOOSE        "Select Program"
+	IDS_OPEN_WITH               "打开方式"
+	IDS_OPEN_WITH_CHOOSE        "选择程序"
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
-	FCIDM_SHVIEW_NEW 	    "New"
-	FCIDM_SHVIEW_NEWFOLDER 	    "New &Folder"
-	FCIDM_SHVIEW_NEWLINK 	    "New &Link"
+	FCIDM_SHVIEW_NEW 	    "新建"
+	FCIDM_SHVIEW_NEWFOLDER 	    "文件夹(&F)"
+	FCIDM_SHVIEW_NEWLINK 	    "快捷方式(&L)"
 	IDS_FOLDER_OPTIONS          "Folder Options"
 	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
 	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
-	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
@@ -680,14 +667,5 @@ BEGIN
 	IDS_INI_FILE                "Configuration Settings"
 	IDS_LNK_FILE                "Shortcut"
 	IDS_SYS_FILE                "System file"
-
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
 END
 
-#pragma code_page(default)

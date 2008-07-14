@@ -271,7 +271,7 @@ BEGIN
     CONTROL         "在另一窗口打来子文件夹(&E)",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,135,10
-    LTEXT           "This setting will be used as default for all explorer windows in the future.",
+    LTEXT           "以后资源管理器窗口将使用这些作为缺省设置",
                     IDC_STATIC,7,111,174,22
     DEFPUSHBUTTON   "确定(&O)",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "取消(&C)",IDCANCEL,106,136,50,14
@@ -330,7 +330,7 @@ BEGIN
     IDS_START               "开始"
     IDS_LOGOFF              "注销..."
     IDS_SHUTDOWN            "关闭..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "重新启动..."
     IDS_LAUNCH              "运行..."
     IDS_START_HELP          "帮助"
     IDS_SEARCH_FILES        "搜索..."
