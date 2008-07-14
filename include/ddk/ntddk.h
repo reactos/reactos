@@ -36,6 +36,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <basetyps.h>
+#include <wdm.h>
 
 typedef GUID UUID;
 
