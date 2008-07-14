@@ -1920,7 +1920,7 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
         Status = ObpIncrementHandleCount(&ObjectHeader->Body,
                                          &AccessState,
                                          KernelMode,
-                                         HandleTableEntry->ObAttributes,
+                                         HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES,
                                          Process,
                                          ObInheritHandle);
         if (!NT_SUCCESS(Status))
