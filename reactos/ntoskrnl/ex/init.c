@@ -1703,6 +1703,17 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Initialize in-place execution support */
     XIPInit(LoaderBlock);
+    
+#ifdef _M_ARM
+    //
+    // ARM: Force a wait so we can test thread scheduling, timing and context switching
+    //
+    DPRINT1("Beginning 5 second wait...\n");
+    Timeout.QuadPart = Int32x32To64(5, -10000000);
+    KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+    DPRINT1("Wait complete\n");
+    while (TRUE);
+#endif
 
     /* Set maximum update to 75% */
     InbvSetProgressBarSubset(25, 75);
