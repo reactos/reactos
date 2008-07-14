@@ -889,13 +889,13 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List",,0x00000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List","CountryListVersion",0x00010001,0x00000019
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","CountryCode",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\1","Name",0x00000000,"United States of America"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","CountryCode",0x00010001,0x0000006A
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\106","Name",0x00000000,"British Virgin Islands"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","CountryCode",0x00010001,0x0000006B
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\107","Name",0x00000000,"Canada"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","CountryCode",0x00010001,0x0000006D
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\109","Name",0x00000000,"Dominica"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\110","CountryCode",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\110","CountryCode",0x00010001,0x0000006E
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\110","Name",0x00000000,"Dominican Republic"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\20","CountryCode",0x00010001,0x00000014
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\20","Name",0x00000000,"Egypt"
