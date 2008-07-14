@@ -40,21 +40,3 @@ GENERATE_ARM_STUB RtlInitializeContext
 GENERATE_ARM_STUB KeUserModeCallback 
 GENERATE_ARM_STUB NtCallbackReturn
 GENERATE_ARM_STUB NtContinue
-
-//
-// Non-ARM Functionality
-//
-GENERATE_ARM_STUB NtSetLdtEntries
-GENERATE_ARM_STUB NtVdmControl 
-
-//
-// Ke Arch-Specific Helpers
-//
-GENERATE_ARM_STUB KeDisableInterrupts
-GENERATE_ARM_STUB KeFlushEntireTb 
-GENERATE_ARM_STUB KeGetRecommendedSharedDataAlignment 
-GENERATE_ARM_STUB KeIcacheFlushCount 
-GENERATE_ARM_STUB KeInvalidateAllCaches
-GENERATE_ARM_STUB KeQueryActiveProcessors 
-GENERATE_ARM_STUB KeSaveStateForHibernate 
-GENERATE_ARM_STUB KeSetDmaIoCoherency 

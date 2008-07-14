@@ -16,6 +16,15 @@
 
 ULONG KeFixedTbEntries;
 ULONG KiDmaIoCoherency;
+ULONG KeIcacheFlushCount = 0;
+CCHAR KeNumberProcessors;
+ULONG KeDcacheFlushCount;
+ULONG KeActiveProcessors;
+ULONG KeProcessorArchitecture;
+ULONG KeProcessorLevel;
+ULONG KeProcessorRevision;
+ULONG KeFeatureBits;
+ULONG KeLargestCacheLine = 32; // FIXME: It depends
 
 /* FUNCTIONS ******************************************************************/
 
@@ -117,6 +126,16 @@ KeFlushTb(VOID)
 
 VOID
 NTAPI
+KeFlushCurrentTb(VOID)
+{
+    //
+    // Rename?
+    //
+    KeFlushTb();
+}
+
+VOID
+NTAPI
 KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 {
     //
@@ -126,4 +145,147 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     ProcessorState->SpecialRegisters.LockdownRegister = KeArmLockdownRegisterGet();
     ProcessorState->SpecialRegisters.CacheRegister = KeArmCacheRegisterGet();
     ProcessorState->SpecialRegisters.StatusRegister = KeArmStatusRegisterGet();
+}
+
+BOOLEAN
+NTAPI
+KeInvalidateAllCaches(VOID)
+{
+    //
+    // Invalidate D cache and I cache
+    //
+    KeArmInvalidateAllCaches();
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KeDisableInterrupts(VOID)
+{
+    ARM_STATUS_REGISTER Flags;
+    
+    //
+    // Get current interrupt state and disable interrupts
+    //
+    Flags = KeArmStatusRegisterGet();
+    _disable();
+    
+    //
+    // Return previous interrupt state
+    //
+    return Flags.IrqDisable;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+KeGetRecommendedSharedDataAlignment(VOID)
+{
+    /* Return the global variable */
+    return KeLargestCacheLine;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeFlushEntireTb(IN BOOLEAN Invalid,
+                IN BOOLEAN AllProcessors)
+{
+    KIRQL OldIrql;
+    
+    //
+    // Raise the IRQL for the TB Flush
+    //
+    OldIrql = KeRaiseIrqlToSynchLevel();
+    
+    //
+    // Flush the TB for the Current CPU
+    //
+    KeFlushCurrentTb();
+    
+    //
+    // Return to Original IRQL
+    //
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSetDmaIoCoherency(IN ULONG Coherency)
+{
+    //
+    // Save the coherency globally
+    //
+    KiDmaIoCoherency = Coherency;
+}
+
+/*
+ * @implemented
+ */
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(VOID)
+{
+    PAGED_CODE();
+    
+    //
+    // Simply return the number of active processors
+    //
+    return KeActiveProcessors;
+}
+
+/*
+ * @implemented
+ */
+VOID
+__cdecl
+KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
+{
+    //
+    // Capture the context
+    //
+    RtlCaptureContext(&State->ContextFrame);
+    
+    //
+    // Capture the control state
+    //
+    KiSaveProcessorControlState(State);
+}
+
+/* SYSTEM CALLS NOT VALID ON THIS CPU *****************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtVdmControl(IN ULONG ControlCode,
+             IN PVOID ControlData)
+{
+    //
+    // Does not exist on ARM
+    //
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetLdtEntries(IN ULONG Selector1,
+                IN LDT_ENTRY LdtEntry1,
+                IN ULONG Selector2,
+                IN LDT_ENTRY LdtEntry2)
+{
+    //
+    // Does not exist on ARM
+    //
+    return STATUS_NOT_IMPLEMENTED;
 }
