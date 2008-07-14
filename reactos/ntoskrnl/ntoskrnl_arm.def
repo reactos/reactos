@@ -679,7 +679,6 @@ MmBuildMdlForNonPagedPool
 MmCanFileBeTruncated
 MmCreateMdl
 MmCreateSection
-MmDbgTranslatePhysicalAddress
 MmDisableModifiedWriteOfSection
 MmFlushImageSection
 MmForceSectionClosed
