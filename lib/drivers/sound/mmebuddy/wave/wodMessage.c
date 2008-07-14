@@ -105,18 +105,24 @@ wodMessage(
 
         case WODM_CLOSE :
         {
+            MMRESULT Result;
+            DWORD State;
             //SOUND_DEBUG_HEX(Instance);
             ASSERT(Instance != NULL);
 
-            /* TODO: Ensure its OK to close */
+            /* Ensure its OK to close - is this the right state to check? */
+            Result = GetWaveDeviceState(Instance, &State);
+            ASSERT(Result == MMSYSERR_NOERROR);
+
+            if ( State == WAVE_DD_PLAYING )
+                return WAVERR_STILLPLAYING;
 
             Result = DestroySoundDeviceInstance(Instance);
-            /*SOUND_DEBUG_HEX(Result);*/
+            ASSERT(Result == MMSYSERR_NOERROR);
 
-            /* TODO: When do we send the callback? */
+            /* TODO: Send the callback */
 
             return Result;
-            /* CloseSoundDevice() */
         }
 
         case WODM_WRITE :
@@ -151,11 +157,18 @@ wodMessage(
         }
 
         case WODM_BREAKLOOP :
-            return MMSYSERR_INVALHANDLE;
+            return MMSYSERR_NOTSUPPORTED;   /* yet */
 
         /* Let WINMM take care of these */
         case WODM_PREPARE :
         case WODM_UNPREPARE :
+            return MMSYSERR_NOTSUPPORTED;
+
+        /* TODO */
+        case WODM_SETVOLUME :
+        case WODM_GETVOLUME :
+        case WODM_SETPITCH :
+        case WODM_GETPITCH :
             return MMSYSERR_NOTSUPPORTED;
 
         default :
