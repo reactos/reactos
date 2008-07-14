@@ -213,9 +213,9 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         case STATUS_BREAKPOINT:
             
             //
-            // Decrement PC by one
+            // We want the instruction right before the int 3
             //
-            Context.Pc--;
+            Context.Pc -= sizeof(ULONG);
             break;
             
         //
