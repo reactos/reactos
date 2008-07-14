@@ -99,10 +99,7 @@ KiIdleLoop(VOID)
             // because we're calling this from C code and not assembly.
             // This is similar to how it gets called for unwaiting, on x86
             //
-            DPRINT1("Swapping context!\n");
             KiSwapContext(OldThread, NewThread);
-            DPRINT1("Back\n");
-            ASSERT(FALSE);
         }
         else
         {
@@ -117,34 +114,9 @@ BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
 {
-    PKEXCEPTION_FRAME ExFrame = NewThread->KernelStack;
     PKPCR Pcr = (PKPCR)KeGetPcr();
     PKPRCB Prcb = Pcr->Prcb;
     PKPROCESS OldProcess, NewProcess;
-    DPRINT1("Switching from: %p to %p\n", OldThread, NewThread);
-    DPRINT1("Stacks: %p %p\n", OldThread->KernelStack, NewThread->KernelStack);
-    DPRINT1("Thread Registers:\n"
-            "R4: %lx\n"
-            "R5: %lx\n"
-            "R6: %lx\n"
-            "R7: %lx\n"
-            "R8: %lx\n"
-            "R9: %lx\n"
-            "R10: %lx\n"
-            "R11: %lx\n"
-            "Psr: %lx\n"
-            "Lr: %lx\n",
-            ExFrame->R4,
-            ExFrame->R5,
-            ExFrame->R6,
-            ExFrame->R7,
-            ExFrame->R8,
-            ExFrame->R9,
-            ExFrame->R10,
-            ExFrame->R11,
-            ExFrame->Psr,
-            ExFrame->Lr);
-    DPRINT1("Old priority: %lx\n", OldThread->Priority);
     
     //
     // Increase context switch count
@@ -345,10 +317,7 @@ KiDispatchInterrupt(VOID)
         // because we're calling this from C code and not assembly.
         // This is similar to how it gets called for unwaiting, on x86
         //
-        DPRINT1("Swapping context!\n");
         KiSwapContext(OldThread, NewThread);
-        DPRINT1("Back\n");
-        ASSERT(FALSE);
     }
 }
 
