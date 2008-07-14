@@ -570,7 +570,7 @@ NtUserSetWindowsHookEx(
    /* We only (partially) support local WH_CBT hooks and
     * WH_KEYBOARD_LL/WH_MOUSE_LL hooks for now */
    if ((WH_CBT != HookId || Global)
-         && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId)
+         && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId && WH_GETMESSAGE != HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED

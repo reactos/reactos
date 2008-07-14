@@ -856,6 +856,10 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+   // The WH_GETMESSAGE hook enables an application to monitor messages about to
+   // be returned by the GetMessage or PeekMessage function.
+   co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
+
    if (Present)
    {
       Info.Msg = Msg.Msg;
@@ -1845,6 +1849,7 @@ NtUserMessageCall(
 {
    LRESULT lResult = 0;
    PWINDOW_OBJECT Window = NULL;
+   USER_REFERENCE_ENTRY Ref;
 
    UserEnterExclusive();
 
@@ -1852,15 +1857,15 @@ NtUserMessageCall(
    if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
    {
       return 0;
-   }
-
+   }   
+   UserRefObjectCo(Window, &Ref);
    switch(dwType)
    {
       case NUMC_DEFWINDOWPROC:
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam);
       break;
    }
-
+   UserDerefObjectCo(Window);
    UserLeave();
    return lResult;
 }
