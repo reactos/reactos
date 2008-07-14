@@ -130,5 +130,4 @@ KeArmInitThreadWithContext(IN PKTHREAD Thread,
     // Save back the new value of the kernel stack
     //
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
-    DPRINT1("NEW THREAD %p WITH EX FRAME AT: %p\n", Thread, Thread->KernelStack);
 }
