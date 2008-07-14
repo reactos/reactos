@@ -109,13 +109,17 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     if (KiTimerTableListHead[Hand].Time.QuadPart <= InterruptTime.QuadPart)
     {
         //
-        // Timer has expired!
+        // Check if we are already doing expiration
         //
-        DPRINT1("hand: %d\n", Hand);
-        DPRINT1("Interrupt time: %I64x\n",  InterruptTime.QuadPart);
-        DPRINT1("TIMER EXPIRATION: %I64x!!!\n",
-                KiTimerTableListHead[Hand].Time.QuadPart);
-        while (TRUE);
+        if (!Prcb->TimerRequest)
+        {                        
+            //
+            // Request a DPC to handle this
+            //
+            Prcb->TimerRequest = TrapFrame->SvcSp;
+            Prcb->TimerHand = Hand;
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        }
     }
     
     //
