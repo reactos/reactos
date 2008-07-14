@@ -3571,7 +3571,7 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst.inf\n",
+	          "\t$(MKHIVE_TARGET) boot%cbootdata %s $(ROS_ARCH) boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst_$(ROS_ARCH).inf\n",
 	          cSep, backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
 	          cSep, cSep, cSep, cSep );
 }
