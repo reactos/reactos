@@ -4,7 +4,9 @@
  * FILE:             devctl.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   13 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
+ *                     Fixed some warnings under GCC
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,6 +25,23 @@ Ext2DeviceControlCompletion (
     IN PIRP             Irp,
     IN PVOID            Context);
 
+VOID
+Ext2DeviceControlNormalFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN BOOLEAN              CompleteRequest,
+    IN PNTSTATUS            pStatus);
+
+/* Also used by Ex2ProcessMountPoint() */
+VOID
+Ext2ProcessUserPropertyFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus);
+
+VOID
+Ex2ProcessUserPerfStatFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN BOOLEAN              GlobalDataResourceAcquired);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Ext2DeviceControl)
@@ -36,6 +55,9 @@ Ext2DeviceControlCompletion (
 #pragma alloc_text(PAGE, Ext2PrepareToUnload)
 #endif
 #endif
+
+
+/* FUNCTIONS ***************************************************************/
 
 
 NTSTATUS
@@ -52,12 +74,42 @@ Ext2DeviceControlCompletion (
     return STATUS_SUCCESS;
 }
 
+_SEH_DEFINE_LOCALS(Ext2DeviceControlNormalFinal)
+{
+    IN PEXT2_IRP_CONTEXT    IrpContext;
+    IN BOOLEAN              CompleteRequest;
+    IN PNTSTATUS            pStatus;
+};
+
+_SEH_FINALLYFUNC(Ext2DeviceControlNormalFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2DeviceControlNormalFinal);
+    Ext2DeviceControlNormalFinal(_SEH_VAR(IrpContext), _SEH_VAR(CompleteRequest),
+                                 _SEH_VAR(pStatus));
+}
+
+VOID
+Ext2DeviceControlNormalFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN BOOLEAN              CompleteRequest,
+    IN PNTSTATUS            pStatus
+    )
+{
+    if (!IrpContext->ExceptionInProgress) {
+        if (IrpContext) {
+            if (!CompleteRequest) {
+                IrpContext->Irp = NULL;
+            }
+
+            Ext2CompleteIrpContext(IrpContext, *pStatus);
+        }
+    }
+}
 
 NTSTATUS
 Ext2DeviceControlNormal (IN PEXT2_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT  DeviceObject;
-    BOOLEAN         CompleteRequest = TRUE;
     NTSTATUS        Status = STATUS_UNSUCCESSFUL;
 
     PEXT2_VCB       Vcb;
@@ -68,20 +120,25 @@ Ext2DeviceControlNormal (IN PEXT2_IRP_CONTEXT IrpContext)
 
     PDEVICE_OBJECT  TargetDeviceObject;
     
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ext2DeviceControlNormalFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(CompleteRequest) = TRUE;
+        _SEH_VAR(pStatus) = &Status;
 
         ASSERT(IrpContext != NULL);
         
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
             (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
         
-        CompleteRequest = TRUE;
+        _SEH_VAR(CompleteRequest) = TRUE;
 
         DeviceObject = IrpContext->DeviceObject;
     
         if (IsExt2FsDevice(DeviceObject))  {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH_LEAVE;
         }
         
         Irp = IrpContext->Irp;
@@ -92,7 +149,7 @@ Ext2DeviceControlNormal (IN PEXT2_IRP_CONTEXT IrpContext)
         if (!((Vcb) && (Vcb->Identifier.Type == EXT2VCB) &&
               (Vcb->Identifier.Size == sizeof(EXT2_VCB)))) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
         
         TargetDeviceObject = Vcb->TargetDeviceObject;
@@ -101,7 +158,7 @@ Ext2DeviceControlNormal (IN PEXT2_IRP_CONTEXT IrpContext)
         // Pass on the IOCTL to the driver below
         //
         
-        CompleteRequest = FALSE;
+        _SEH_VAR(CompleteRequest) = FALSE;
 
         NextIrpSp = IoGetNextIrpStackLocation( Irp );
         *NextIrpSp = *IrpSp;
@@ -116,18 +173,9 @@ Ext2DeviceControlNormal (IN PEXT2_IRP_CONTEXT IrpContext)
         
         Status = IoCallDriver(TargetDeviceObject, Irp);
 
-    } __finally  {
-
-        if (!IrpContext->ExceptionInProgress) {
-            if (IrpContext) {
-                if (!CompleteRequest) {
-                    IrpContext->Irp = NULL;
-                }
-
-                Ext2CompleteIrpContext(IrpContext, Status);
-            }
-        }
     }
+    _SEH_FINALLY(Ext2DeviceControlNormalFinal_PSEH)
+    _SEH_END;
     
     return Status;
 }
@@ -438,6 +486,29 @@ errorout:
     return Status;
 }
 
+_SEH_DEFINE_LOCALS(Ext2ProcessUserPropertyFinal)
+{
+    IN PEXT2_IRP_CONTEXT    IrpContext;
+    IN PNTSTATUS            pStatus;
+};
+
+_SEH_FINALLYFUNC(Ext2ProcessUserPropertyFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2DeviceControlNormalFinal);
+    Ext2ProcessUserPropertyFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus));
+}
+
+VOID
+Ext2ProcessUserPropertyFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus
+    )
+{
+    if (!IrpContext->ExceptionInProgress) {
+        Ext2CompleteIrpContext(IrpContext, *pStatus);
+    }
+}
+
 NTSTATUS
 Ext2ProcessUserProperty(
     IN PEXT2_IRP_CONTEXT        IrpContext,
@@ -449,7 +520,11 @@ Ext2ProcessUserProperty(
     PEXT2_VCB   Vcb = NULL;
     PDEVICE_OBJECT  DeviceObject = NULL;
 
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ext2ProcessUserPropertyFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
 
         ASSERT(IrpContext != NULL);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -457,7 +532,7 @@ Ext2ProcessUserProperty(
 
         if (Property->Magic != EXT2_VOLUME_PROPERTY_MAGIC) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         DeviceObject = IrpContext->DeviceObject;
@@ -468,7 +543,7 @@ Ext2ProcessUserProperty(
             if (!((Vcb) && (Vcb->Identifier.Type == EXT2VCB) &&
                            (Vcb->Identifier.Size == sizeof(EXT2_VCB)))) {
                 Status = STATUS_INVALID_PARAMETER;
-                __leave;
+                _SEH_LEAVE;
             }
             Status = Ext2ProcessVolumeProperty(Vcb, Property);
         }
@@ -477,14 +552,41 @@ Ext2ProcessUserProperty(
             IrpContext->Irp->IoStatus.Information = Length;
         }
 
-    } __finally {
-
-        if (!IrpContext->ExceptionInProgress) {
-            Ext2CompleteIrpContext(IrpContext, Status);
-        }
     }
+    _SEH_FINALLY(Ext2ProcessUserPropertyFinal_PSEH)
+    _SEH_END;
     
     return Status;
+}
+
+_SEH_DEFINE_LOCALS(Ex2ProcessUserPerfStatFinal)
+{
+    IN PEXT2_IRP_CONTEXT    IrpContext;
+    IN PNTSTATUS            pStatus;
+    IN BOOLEAN              GlobalDataResourceAcquired;
+};
+
+_SEH_FINALLYFUNC(Ex2ProcessUserPerfStatFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ex2ProcessUserPerfStatFinal);
+    Ex2ProcessUserPerfStatFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus),
+                                _SEH_VAR(GlobalDataResourceAcquired));
+}
+
+VOID
+Ex2ProcessUserPerfStatFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN BOOLEAN              GlobalDataResourceAcquired
+    )
+{
+    if (GlobalDataResourceAcquired) {
+        ExReleaseResourceLite(&Ext2Global->Resource);
+    }
+
+    if (!IrpContext->ExceptionInProgress) {
+        Ext2CompleteIrpContext(IrpContext, *pStatus);
+    }
 }
 
 NTSTATUS
@@ -495,12 +597,15 @@ Ex2ProcessUserPerfStat(
     )
 {
     NTSTATUS    Status = STATUS_SUCCESS;
-    PEXT2_VCB   Vcb = NULL;
-    BOOLEAN     GlobalDataResourceAcquired = FALSE;
 
     PDEVICE_OBJECT  DeviceObject = NULL;
 
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ex2ProcessUserPerfStatFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(GlobalDataResourceAcquired) = FALSE;
 
         ASSERT(IrpContext != NULL);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -511,45 +616,51 @@ Ex2ProcessUserPerfStat(
 
             if (QueryPerf->Magic != EXT2_QUERY_PERFSTAT_MAGIC) {
                 Status = STATUS_INVALID_PARAMETER;
-                __leave;
+                _SEH_LEAVE;
             }
 
             if (QueryPerf->Command != IOCTL_APP_QUERY_PERFSTAT) {
                 Status = STATUS_INVALID_PARAMETER;
-                __leave;
+                _SEH_LEAVE;
             }
 
             if (Length < sizeof(EXT2_QUERY_PERFSTAT)) {
                 Status = STATUS_BUFFER_OVERFLOW;
-                __leave;
+                _SEH_LEAVE;
             }
 
             ExAcquireResourceSharedLite(&Ext2Global->Resource, TRUE);
-            GlobalDataResourceAcquired = TRUE;
+            _SEH_VAR(GlobalDataResourceAcquired) = TRUE;
 
             QueryPerf->PerfStat = Ext2Global->PerfStat;
 
         } else {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (NT_SUCCESS(Status)) {
             IrpContext->Irp->IoStatus.Information = Length;
         }
 
-    } __finally {
-
-        if (GlobalDataResourceAcquired) {
-            ExReleaseResourceLite(&Ext2Global->Resource);
-        }
-
-        if (!IrpContext->ExceptionInProgress) {
-            Ext2CompleteIrpContext(IrpContext, Status);
-        }
     }
+    _SEH_FINALLY(Ex2ProcessUserPerfStatFinal_PSEH)
+    _SEH_END;
     
     return Status;
+}
+
+_SEH_DEFINE_LOCALS(Ex2ProcessMountPointFinal)
+{
+    IN PEXT2_IRP_CONTEXT    IrpContext;
+    IN PNTSTATUS            pStatus;
+};
+
+/* Use Ext2ProcessUserProperty() PSEH final function */
+_SEH_FINALLYFUNC(Ex2ProcessMountPointFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ex2ProcessMountPointFinal);
+    Ext2ProcessUserPropertyFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus));
 }
 
 NTSTATUS
@@ -566,7 +677,11 @@ Ex2ProcessMountPoint(
 
     PDEVICE_OBJECT  DeviceObject = NULL;
 
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ex2ProcessMountPointFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &status;
 
         ASSERT(IrpContext != NULL);
         ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
@@ -575,13 +690,13 @@ Ex2ProcessMountPoint(
         DeviceObject = IrpContext->DeviceObject;
         if (!IsExt2FsDevice(DeviceObject)) {
             status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         if (Length != sizeof(EXT2_MOUNT_POINT) ||
             MountPoint->Magic != EXT2_APP_MOUNTPOINT_MAGIC) {
             status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         RtlInitUnicodeString(&Link, Buffer);
@@ -602,12 +717,9 @@ Ex2ProcessMountPoint(
                 status = STATUS_INVALID_PARAMETER;
         }
 
-    } __finally {
-
-        if (!IrpContext->ExceptionInProgress) {
-            Ext2CompleteIrpContext(IrpContext, status);
-        }
     }
+    _SEH_FINALLY(Ex2ProcessMountPointFinal_PSEH)
+    _SEH_END;
 
     return status;
 }

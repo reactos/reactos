@@ -4,7 +4,8 @@
  * FILE:             dispatch.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   14 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,12 +18,21 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+VOID
+Ext2BuildRequestFinal (
+    IN PBOOLEAN pAtIrqlPassiveLevel,
+    IN PBOOLEAN pIsTopLevelIrp    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Ext2QueueRequest)
 #pragma alloc_text(PAGE, Ext2DeQueueRequest)
 #pragma alloc_text(PAGE, Ext2DispatchRequest)
 #pragma alloc_text(PAGE, Ext2BuildRequest)
 #endif
+
+
+/* FUNCTIONS ***************************************************************/
+
 
 /*
  *  Ext2OplockComplete
@@ -174,6 +184,23 @@ Ext2QueueRequest (IN PEXT2_IRP_CONTEXT IrpContext)
     return STATUS_PENDING;
 }
 
+_SEH_DEFINE_LOCALS(Ext2ExceptionFilter)
+{
+    PEXT2_IRP_CONTEXT IrpContext;
+};
+
+_SEH_FILTER(Ext2ExceptionFilter_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2ExceptionFilter);
+    return Ext2ExceptionFilter(_SEH_VAR(IrpContext), _SEH_GetExceptionPointers());
+}
+
+_SEH_FINALLYFUNC(Ext2DeQueueRequestFinal_PSEH)
+{
+    IoSetTopLevelIrp(NULL);
+
+    FsRtlExitFileSystem();
+}
 
 VOID
 Ext2DeQueueRequest (IN PVOID Context)
@@ -187,9 +214,12 @@ Ext2DeQueueRequest (IN PVOID Context)
     ASSERT((IrpContext->Identifier.Type == EXT2ICX) &&
            (IrpContext->Identifier.Size == sizeof(EXT2_IRP_CONTEXT)));
 
-    __try {
+    _SEH_TRY {
 
-        __try {
+        _SEH_TRY {
+
+            _SEH_DECLARE_LOCALS(Ext2ExceptionFilter);
+            _SEH_VAR(IrpContext) = IrpContext;
 
             FsRtlEnterFileSystem();
 
@@ -199,17 +229,16 @@ Ext2DeQueueRequest (IN PVOID Context)
 
             Ext2DispatchRequest(IrpContext);
 
-        } __except (Ext2ExceptionFilter(IrpContext, GetExceptionInformation())) {
+        }
+        _SEH_EXCEPT(Ext2ExceptionFilter_PSEH) {
 
             Ext2ExceptionHandler(IrpContext);
         }
+        _SEH_END;
 
-    } __finally {
-
-        IoSetTopLevelIrp(NULL);
-
-        FsRtlExitFileSystem();
     }
+    _SEH_FINALLY(Ext2DeQueueRequestFinal_PSEH)
+    _SEH_END;
 }
 
 
@@ -282,6 +311,32 @@ Ext2DispatchRequest (IN PEXT2_IRP_CONTEXT IrpContext)
     }
 }
 
+_SEH_DEFINE_LOCALS(Ext2BuildRequestFinal)
+{
+    PBOOLEAN             pAtIrqlPassiveLevel;
+    PBOOLEAN             pIsTopLevelIrp;
+};
+
+_SEH_FINALLYFUNC(Ext2BuildRequestFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2BuildRequestFinal);
+    Ext2BuildRequestFinal(_SEH_VAR(pAtIrqlPassiveLevel), _SEH_VAR(pIsTopLevelIrp));
+}
+
+VOID
+Ext2BuildRequestFinal (
+    IN PBOOLEAN             pAtIrqlPassiveLevel,
+    IN PBOOLEAN             pIsTopLevelIrp
+    )
+{
+    if (*pIsTopLevelIrp) {
+        IoSetTopLevelIrp(NULL);
+    }
+        
+    if (*pAtIrqlPassiveLevel) {
+        FsRtlExitFileSystem();
+    }
+}
 
 NTSTATUS
 Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
@@ -291,9 +346,16 @@ Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
     PEXT2_IRP_CONTEXT   IrpContext = NULL;
     NTSTATUS            Status = STATUS_UNSUCCESSFUL;
     
-    __try {
+    _SEH_TRY {
 
-        __try {
+        _SEH_DECLARE_LOCALS(Ext2BuildRequestFinal);
+        _SEH_VAR(pAtIrqlPassiveLevel) = &AtIrqlPassiveLevel;
+        _SEH_VAR(pIsTopLevelIrp) = &IsTopLevelIrp;
+
+        _SEH_TRY {
+
+            _SEH_DECLARE_LOCALS(Ext2ExceptionFilter);
+            _SEH_VAR(IrpContext) = IrpContext;
 
 #if EXT2_DEBUG
             Ext2DbgPrintCall(DeviceObject, Irp);
@@ -329,21 +391,16 @@ Ext2BuildRequest (PDEVICE_OBJECT   DeviceObject, PIRP Irp)
 
                 Status = Ext2DispatchRequest(IrpContext);
             }
-        } __except (Ext2ExceptionFilter(IrpContext, GetExceptionInformation())) {
-
-            Status = Ext2ExceptionHandler(IrpContext);
         }
+        _SEH_EXCEPT(Ext2ExceptionFilter_PSEH) {
 
-    } __finally  {
-
-        if (IsTopLevelIrp) {
-            IoSetTopLevelIrp(NULL);
+            Ext2ExceptionHandler(IrpContext);
         }
-        
-        if (AtIrqlPassiveLevel) {
-            FsRtlExitFileSystem();
-        }       
+        _SEH_END;
+
     }
+    _SEH_FINALLY(Ext2BuildRequestFinal_PSEH)
+    _SEH_END;
     
     return Status;
 }
