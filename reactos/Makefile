@@ -125,7 +125,7 @@
 #            -r           Input XML
 #
 #    ROS_AUTOMAKE
-#        Alternate name of makefile.auto
+#        Alternate name of makefile-$(ARCH).auto
 #
 #    ROS_BUILDENGINE
 #        The Build engine to be used. The variable defaults to rbuild (RBUILD_TARGET)
@@ -158,7 +158,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-ROS_AUTOMAKE=makefile.auto
+ROS_AUTOMAKE=makefile-$(ARCH).auto
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -167,20 +167,20 @@ all: $(ROS_AUTOMAKE)
 .SUFFIXES:
 
 ifeq ($(HOST),)
-ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
-ifeq ($(findstring msys,$(shell sh --version 2>nul)),msys)
-export OSTYPE = msys
-HOST=mingw32-linux
-HOST_CFLAGS+=-fshort-wchar
-HOST_CPPFLAGS+=-fshort-wchar
-else
-HOST=mingw32-windows
-endif
-else
-HOST=mingw32-linux
-HOST_CFLAGS+=-fshort-wchar
-HOST_CPPFLAGS+=-fshort-wchar
-endif
+	ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
+		ifeq ($(findstring msys,$(shell sh --version 2>nul)),msys)
+			export OSTYPE = msys
+			HOST=mingw32-linux
+			HOST_CFLAGS+=-fshort-wchar
+			HOST_CPPFLAGS+=-fshort-wchar
+		else
+			HOST=mingw32-windows
+		endif
+	else
+		HOST=mingw32-linux
+		HOST_CFLAGS+=-fshort-wchar
+		HOST_CPPFLAGS+=-fshort-wchar
+	endif
 endif
 
 # Default to half-verbose mode

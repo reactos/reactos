@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile.ppc" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile-ppc.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config-ppc.rbuild">
 		<xi:fallback>
 			<xi:include href="config-ppc.template.rbuild" />
