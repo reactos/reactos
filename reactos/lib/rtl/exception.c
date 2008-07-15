@@ -41,8 +41,8 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
 
-    /* Check mode */
-    if (RtlpGetMode() == UserMode)
+    /* Check if user mode debugger is active */
+    if (RtlpCheckForActiveDebugger(FALSE))
     {
         /* Raise an exception immediately */
         Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
@@ -94,8 +94,8 @@ RtlRaiseStatus(NTSTATUS Status)
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
 
-    /* Check mode */
-    if (RtlpGetMode() == UserMode)
+    /* Check if user mode debugger is active */
+    if (RtlpCheckForActiveDebugger(FALSE))
     {
         /* Raise an exception immediately */
         ZwRaiseException(&ExceptionRecord, &Context, TRUE);
