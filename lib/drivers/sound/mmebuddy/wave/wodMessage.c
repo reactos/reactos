@@ -114,7 +114,8 @@ wodMessage(
             Result = GetWaveDeviceState(Instance, &State);
             ASSERT(Result == MMSYSERR_NOERROR);
 
-            if ( State == WAVE_DD_PLAYING )
+            /* Must not be playing or paused */
+            if ( State != WAVE_DD_IDLE )
                 return WAVERR_STILLPLAYING;
 
             Result = DestroySoundDeviceInstance(Instance);

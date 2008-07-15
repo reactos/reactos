@@ -176,7 +176,14 @@ PerformWaveIo(
             StreamInfo->CurrentBuffer = StreamInfo->CurrentBuffer->lpNext;
         }
 
+        /* Reset the writing offset */
         StreamInfo->BufferOffset = 0;
+
+        if ( StreamInfo->CurrentBuffer )
+        {
+            /* Reset the completion offset */
+            StreamInfo->CurrentBuffer->reserved = 0;
+        }
     }
 
     /* Increase the number of outstanding buffers */
@@ -217,6 +224,7 @@ CompleteWaveBuffer(
     IN  DWORD BytesWritten)
 {
     PWAVE_STREAM_INFO StreamInfo;
+    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
     TRACE_("CompleteWaveBuffer(%p, %p, %d)\n",
            SoundDeviceInstance,
@@ -224,6 +232,25 @@ CompleteWaveBuffer(
           (int) BytesWritten);
 
     ASSERT(SoundDeviceInstance);
+    ASSERT(WaveHeader);
+
+    WaveHeader->reserved += BytesWritten;
+    ASSERT(WaveHeader->reserved <= WaveHeader->dwBufferLength);
+
+    if ( WaveHeader->reserved == WaveHeader->dwBufferLength )
+    {
+        TRACE_("* Completed wavehdr %p (length %d)\n",
+                WaveHeader,
+                (int) WaveHeader->dwBufferLength);
+        /* TODO: Give it back to the client */
+    }
+    else
+    {
+        TRACE_("* Partial wavehdr completion %p (%d/%d)\n",
+                WaveHeader,
+                (int) WaveHeader->reserved,
+                (int) WaveHeader->dwBufferLength);
+    }
 
     StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
