@@ -582,6 +582,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 Quickie:
     /* When we get here, the process is locked, unlock it */
     ExReleasePushLockExclusive(&Process->ProcessLock);
+    KeLeaveCriticalRegion();
 
     /* Uninitailize it */
     KeUninitThread(&Thread->Tcb);
