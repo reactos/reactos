@@ -293,7 +293,10 @@ typedef struct _SOUND_DEVICE_INSTANCE
     /* Stuff generously donated to us from WinMM */
     struct
     {
+        HDRVR Handle;
+        DWORD Flags;
         DWORD ClientCallback;
+        DWORD ClientCallbackInstanceData;
     } WinMM;
 
     /* Device-specific parameters */
@@ -697,6 +700,17 @@ wodMessage(
     DWORD private_handle,
     DWORD parameter1,
     DWORD parameter2);
+
+
+/*
+    mme/callback.c
+*/
+
+VOID
+NotifySoundClient(
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    DWORD Message,
+    DWORD Parameter);
 
 
 #endif

@@ -857,6 +857,20 @@ typedef struct {
     LPWSTR  lpstrText;
 } MCI_DGV_WINDOW_PARMSW, *LPMCI_DGV_WINDOW_PARMSW;
 
+/* Driver callback for multimedia components (implemented in winmm) */
+
+WINAPI BOOL
+DriverCallback(
+    DWORD dwCallBack,
+    DWORD dwFlags,
+    HDRVR hdrvr,
+    DWORD msg,
+    DWORD dwUser,
+    DWORD dwParam1,
+    DWORD dwParam2
+);
+
+
 #ifdef __cplusplus
 }
 #endif

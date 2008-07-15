@@ -237,12 +237,36 @@ CompleteWaveBuffer(
     WaveHeader->reserved += BytesWritten;
     ASSERT(WaveHeader->reserved <= WaveHeader->dwBufferLength);
 
+    StreamInfo = &SoundDeviceInstance->Streaming.Wave;
+
+    /* Did we complete a header sent by the client? */
     if ( WaveHeader->reserved == WaveHeader->dwBufferLength )
     {
         TRACE_("* Completed wavehdr %p (length %d)\n",
                 WaveHeader,
                 (int) WaveHeader->dwBufferLength);
-        /* TODO: Give it back to the client */
+
+        if ( StreamInfo->LoopsRemaining > 0 )
+        {
+            /* Let's go round again... */
+            WaveHeader->reserved = 0;
+
+            /*
+                FIXME:
+                I have no idea wtf happens with completions - tests with the NT4
+                mmdrv indicate that they just randomly throw back completed
+                buffers later on. Like, a lot later on... Like, when the device
+                is being reset.
+            */
+        }
+        else
+        {
+            /* Mark the header as done */
+            WaveHeader->dwFlags |= WHDR_DONE;
+
+            /* Notify the client */
+            NotifySoundClient(SoundDeviceInstance, WOM_DONE, (DWORD) WaveHeader);
+        }
     }
     else
     {
@@ -251,8 +275,6 @@ CompleteWaveBuffer(
                 (int) WaveHeader->reserved,
                 (int) WaveHeader->dwBufferLength);
     }
-
-    StreamInfo = &SoundDeviceInstance->Streaming.Wave;
 
     /* Decrease the number of outstanding buffers */
     ASSERT(StreamInfo->BuffersOutstanding > 0);
@@ -421,6 +443,8 @@ ResetWaveDevice_Request(
 
     /* ugly HACK to stop sound playback... FIXME */
     SoundDeviceInstance->Streaming.Wave.CurrentBuffer = NULL;
+
+    /* TODO: Return all audio buffers to the client, marking as DONE */
 
     return Functions->ResetWaveDevice(SoundDeviceInstance);
 }

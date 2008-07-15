@@ -11,6 +11,7 @@
     <file>utility.c</file>
     <directory name="mme">
         <file>DriverProc.c</file>
+        <file>callback.c</file>
     </directory>
     <directory name="wave">
         <file>wodMessage.c</file>

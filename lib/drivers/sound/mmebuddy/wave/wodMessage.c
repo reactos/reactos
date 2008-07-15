@@ -95,10 +95,18 @@ wodMessage(
                 return Result;
             }
 
+            /* Set up the callback - TODO: Put this somewhere else? */
+            Instance->WinMM.ClientCallback = OpenParameters->dwCallback;
+            Instance->WinMM.ClientCallbackInstanceData =
+                OpenParameters->dwInstance;
+            Instance->WinMM.Handle = (HDRVR) OpenParameters->hWave;
+            Instance->WinMM.Flags = parameter2;
+
             /* Provide winmm with instance handle */
             *((PSOUND_DEVICE_INSTANCE*)private_handle) = Instance;
 
-            /* TODO: Send callback... */
+            /* Notify the client */
+            NotifySoundClient(Instance, WOM_OPEN, 0);
 
             return MMSYSERR_NOERROR;
         }
@@ -118,10 +126,11 @@ wodMessage(
             if ( State != WAVE_DD_IDLE )
                 return WAVERR_STILLPLAYING;
 
+            /* Notify the client */
+            NotifySoundClient(Instance, WOM_CLOSE, 0);
+
             Result = DestroySoundDeviceInstance(Instance);
             ASSERT(Result == MMSYSERR_NOERROR);
-
-            /* TODO: Send the callback */
 
             return Result;
         }

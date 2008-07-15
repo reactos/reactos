@@ -127,6 +127,19 @@ DriverProc(
 WORD Buffer[5347700 / 2];
 WAVEHDR WaveHeaders[534];
 
+VOID CALLBACK
+callback(
+    HWAVEOUT Handle,
+    UINT Message,
+    DWORD_PTR Instance,
+    DWORD_PTR Parameter1,
+    DWORD_PTR Parameter2)
+{
+    printf("Callback called! Handle %d, message %d, instance %d, parameters %d %d\n",
+        (int) Handle, (int) Message, (int) Instance, (int) Parameter1,
+        (int) Parameter2);
+}
+
 int APIENTRY wWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -178,7 +191,9 @@ int APIENTRY wWinMain(
 
     //SOUND_DEBUG(L"WODM_OPEN test 2");
     OpenDesc.lpFormat = &Format;
-    Result = wodMessage(0, WODM_OPEN, (DWORD) &InstanceData, (DWORD) &OpenDesc, 0);
+    OpenDesc.dwCallback = (DWORD) &callback;
+    OpenDesc.dwInstance = 0x69696969;
+    Result = wodMessage(0, WODM_OPEN, (DWORD) &InstanceData, (DWORD) &OpenDesc, CALLBACK_FUNCTION);
     /*SOUND_DEBUG_HEX(Result);*/
 
     POPUP("Click for WODM_WRITE test");
