@@ -218,6 +218,7 @@
 		<file>fsfilter.c</file>
 		<file>fsrtlpc.c</file>
 		<file>largemcb.c</file>
+		<file>mcb.c</file>
 		<file>name.c</file>
 		<file>notify.c</file>
 		<file>oplock.c</file>

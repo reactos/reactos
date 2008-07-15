@@ -2,8 +2,9 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/largemcb.c
- * PURPOSE:         Mapping Control Block (MCB) support for File System Drivers
+ * PURPOSE:         Large Mapped Control Block (MCB) support for File System Drivers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Pierre Schweitzer (heis_spiter@hotmail.com) 
  */
 
 /* INCLUDES ******************************************************************/
@@ -13,6 +14,20 @@
 #include <debug.h>
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
+                     IN LONGLONG Vbn,
+                     IN LONGLONG Lbn,
+                     IN LONGLONG SectorCount)
+{
+    KEBUGCHECK(0);
+    return FALSE;
+}
 
 /*
  * @unimplemented
@@ -29,21 +44,21 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOLEAN
 NTAPI
-FsRtlAddMcbEntry(IN PMCB Mcb,
-                 IN VBN Vbn,
-                 IN LBN Lbn,
-                 IN ULONG SectorCount)
+FsRtlGetNextBaseMcbEntry(IN PBASE_MCB Mcb,
+                         IN ULONG RunIndex,
+                         OUT PLONGLONG Vbn,
+                         OUT PLONGLONG Lbn,
+                         OUT PLONGLONG SectorCount)
 {
-    /* Call the newer function */
-    return FsRtlAddLargeMcbEntry(&Mcb->
-                                 DummyFieldThatSizesThisStructureCorrectly,
-                                 (LONGLONG)Vbn,
-                                 (LONGLONG)Lbn,
-                                 (LONGLONG)SectorCount);
+    KEBUGCHECK(0);
+    *Vbn = 0;
+    *Lbn = 0;
+    *SectorCount= 0;
+    return FALSE;
 }
 
 /*
@@ -65,36 +80,14 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-BOOLEAN
+VOID
 NTAPI
-FsRtlGetNextMcbEntry(IN PMCB Mcb,
-                     IN ULONG RunIndex,
-                     OUT PVBN Vbn,
-                     OUT PLBN Lbn,
-                     OUT PULONG SectorCount)
+FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
+                       IN POOL_TYPE PoolType)
 {
-    BOOLEAN Return = FALSE;
-    LONGLONG llVbn;
-    LONGLONG llLbn;
-    LONGLONG llSectorCount;
-
-    /* Call the Large version */
-    Return = FsRtlGetNextLargeMcbEntry(
-        &Mcb->DummyFieldThatSizesThisStructureCorrectly,
-        RunIndex,
-        &llVbn,
-        &llLbn,
-        &llSectorCount);
-
-    /* Return the lower 32 bits */
-    *Vbn = (ULONG)llVbn;
-    *Lbn = (ULONG)llLbn;
-    *SectorCount = (ULONG)llSectorCount;
-
-    /* And return the original value */
-    return Return;
+    KEBUGCHECK(0);
 }
 
 /*
@@ -109,16 +102,22 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-VOID
+BOOLEAN
 NTAPI
-FsRtlInitializeMcb(IN PMCB Mcb,
-                   IN POOL_TYPE PoolType)
+FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
+                        IN LONGLONG Vbn,
+                        OUT PLONGLONG Lbn OPTIONAL,
+                        OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+                        OUT PLONGLONG StartingLbn OPTIONAL,
+                        OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+                        OUT PULONG Index OPTIONAL)
 {
-    /* Call the newer function */
-    FsRtlInitializeLargeMcb(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
-                            PoolType);
+    KEBUGCHECK(0);
+    *Lbn = 0;
+    *SectorCountFromLbn = 0;
+    return FALSE;
 }
 
 /*
@@ -145,6 +144,23 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
  */
 BOOLEAN
 NTAPI
+FsRtlLookupLastBaseMcbEntryAndIndex(IN PBASE_MCB OpaqueMcb,
+                                    IN OUT PLONGLONG LargeVbn,
+                                    IN OUT PLONGLONG LargeLbn,
+                                    IN OUT PULONG Index)
+{
+    KEBUGCHECK(0);
+    *LargeVbn = 0;
+    *LargeLbn = 0;
+    *Index = 0;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
 FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
                                      OUT PLONGLONG LargeVbn,
                                      OUT PLONGLONG LargeLbn,
@@ -162,72 +178,36 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
  */
 BOOLEAN
 NTAPI
+FsRtlLookupLastBaseMcbEntry(IN PBASE_MCB Mcb,
+                            OUT PLONGLONG Vbn,
+                            OUT PLONGLONG Lbn)
+{
+    KEBUGCHECK(0);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
 FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
                              OUT PLONGLONG Vbn,
                              OUT PLONGLONG Lbn)
 {
     KEBUGCHECK(0);
-    return(FALSE);
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-BOOLEAN
+ULONG
 NTAPI
-FsRtlLookupLastMcbEntry(IN PMCB Mcb,
-                        OUT PVBN Vbn,
-                        OUT PLBN Lbn)
+FsRtlNumberOfRunsInBaseMcb(IN PBASE_MCB Mcb)
 {
-    BOOLEAN Return = FALSE;
-    LONGLONG llVbn = 0;
-    LONGLONG llLbn = 0;
-
-    /* Call the Large version */
-    Return = FsRtlLookupLastLargeMcbEntry(
-        &Mcb->DummyFieldThatSizesThisStructureCorrectly,
-        &llVbn,
-        &llLbn);
-
-    /* Return the lower 32-bits */
-    *Vbn = (ULONG)llVbn;
-    *Lbn = (ULONG)llLbn;
-
-    /* And return the original value */
-    return Return;
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-FsRtlLookupMcbEntry(IN PMCB Mcb,
-                    IN VBN Vbn,
-                    OUT PLBN Lbn,
-                    OUT PULONG SectorCount OPTIONAL,
-                    OUT PULONG Index)
-{
-    BOOLEAN Return = FALSE;
-    LONGLONG llLbn;
-    LONGLONG llSectorCount;
-
-    /* Call the Large version */
-    Return = FsRtlLookupLargeMcbEntry(&Mcb->
-                                      DummyFieldThatSizesThisStructureCorrectly,
-                                      (LONGLONG)Vbn,
-                                      &llLbn,
-                                      &llSectorCount,
-                                      NULL,
-                                      NULL,
-                                      Index);
-
-    /* Return the lower 32-bits */
-    *Lbn = (ULONG)llLbn;
-    if (SectorCount) *SectorCount = (ULONG)llSectorCount;
-
-    /* And return the original value */
-    return Return;
+    /* Return the count */
+    return Mcb->PairCount;
 }
 
 /*
@@ -249,15 +229,16 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
-ULONG
+BOOLEAN
 NTAPI
-FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
+FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
+                        IN LONGLONG Vbn,
+                        IN LONGLONG SectorCount)
 {
-    /* Call the newer function */
-    return FsRtlNumberOfRunsInLargeMcb(
-        &Mcb->DummyFieldThatSizesThisStructureCorrectly);
+    KEBUGCHECK(0);
+    return FALSE;
 }
 
 /*
@@ -273,18 +254,13 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID
 NTAPI
-FsRtlRemoveMcbEntry(IN PMCB Mcb,
-                    IN VBN Vbn,
-                    IN ULONG SectorCount)
+FsRtlResetBaseMcb(IN PBASE_MCB Mcb)
 {
-    /* Call the large function */
-    FsRtlRemoveLargeMcbEntry(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
-                             (LONGLONG)Vbn,
-                             (LONGLONG)SectorCount);
+    KEBUGCHECK(0);
 }
 
 /*
@@ -296,6 +272,19 @@ FsRtlResetLargeMcb(IN PLARGE_MCB Mcb,
                    IN BOOLEAN SelfSynchronized)
 {
     KEBUGCHECK(0);
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
+                  IN LONGLONG Vbn,
+                  IN LONGLONG Amount)
+{
+    KEBUGCHECK(0);
+    return FALSE;
 }
 
 /*
@@ -316,6 +305,17 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
  */
 VOID
 NTAPI
+FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
+                     IN LONGLONG Vbn)
+{
+    KEBUGCHECK(0);
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
@@ -323,16 +323,13 @@ FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 VOID
 NTAPI
-FsRtlTruncateMcb (IN PMCB Mcb,
-                  IN VBN  Vbn)
+FsRtlUninitializeBaseMcb(IN PBASE_MCB Mcb)
 {
-    /* Call the newer function */
-    FsRtlTruncateLargeMcb(&Mcb->DummyFieldThatSizesThisStructureCorrectly,
-                          (LONGLONG)Vbn);
+    KEBUGCHECK(0);
 }
 
 /*
@@ -343,16 +340,5 @@ NTAPI
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
     KEBUGCHECK(0);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-FsRtlUninitializeMcb(IN PMCB Mcb)
-{
-    /* Call the newer function */
-    FsRtlUninitializeLargeMcb(&Mcb->DummyFieldThatSizesThisStructureCorrectly);
 }
 
