@@ -1274,8 +1274,7 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
         /* Validate the entry */
         if ((HandleTableEntry) &&
             (HandleTableEntry->Object) &&
-            (HandleTableEntry->NextFreeTableEntry != -2) &&
-            (HandleTableEntry->Object != (PVOID)0xCDCDCDCD)) // HACK OF ETERNAL LAPDANCE
+            (HandleTableEntry->NextFreeTableEntry != -2))
         {
             /* Lock the entry */
             if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
