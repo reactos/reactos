@@ -73,10 +73,6 @@ IntGdiPolygon(PDC    dc,
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
-    ASSERT(BitmapObj);
-
     /* Convert to screen coordinates */
     IntLPtoDP(dc, UnsafePoints, Count);
     for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
@@ -99,17 +95,22 @@ IntGdiPolygon(PDC    dc,
             DestRect.bottom   = max(DestRect.bottom, UnsafePoints[CurrentPoint].y);
         }
 
-        /* Now fill the polygon with the current brush. */
+        /* Special locking order to avoid lock-ups */
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+        BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+        /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
+        ASSERT(BitmapObj);
+
+        /* Now fill the polygon with the current brush. */
         if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
             ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(Dc_Attr->jROP2), UnsafePoints, Count, DestRect );
         }
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
+        if (FillBrushObj)
+            BRUSHOBJ_UnlockBrush(FillBrushObj);
 
-        /* get BRUSHOBJ from current pen. */
-        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
         if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
@@ -149,7 +150,8 @@ IntGdiPolygon(PDC    dc,
                                    ROP2_TO_MIX(Dc_Attr->jROP2)); /* MIX */
             }
         }
-        PENOBJ_UnlockPen(PenBrushObj);
+        if (PenBrushObj)
+            PENOBJ_UnlockPen(PenBrushObj);
     }
     BITMAPOBJ_UnlockBitmap(BitmapObj);
 
@@ -524,8 +526,8 @@ IntRectangle(PDC dc,
              int RightRect,
              int BottomRect)
 {
-    BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    PGDIBRUSHOBJ PenBrushObj, FillBrushObj;
+    BITMAPOBJ *BitmapObj = NULL;
+    PGDIBRUSHOBJ PenBrushObj = NULL, FillBrushObj = NULL;
     GDIBRUSHINST PenBrushInst, FillBrushInst;
     BOOL       ret = FALSE; // default to failure
     RECTL      DestRect;
@@ -533,29 +535,54 @@ IntRectangle(PDC dc,
     PDC_ATTR Dc_Attr;
 
     ASSERT ( dc ); // caller's responsibility to set this up
-    /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT ( BitmapObj );
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
+    /* Do we rotate or shear? */
+//    if (!(dc->DcLevel.mxWorldToDevice.flAccel & MXACC_DIAGONAL))
+    if (dc->DcLevel.xformWorld2Vport.eM12 != 0. || dc->DcLevel.xformWorld2Vport.eM21 != 0.)
+    {
+        POINTL DestCoords[4];
+        DestCoords[0].x = DestCoords[3].x = LeftRect;
+        DestCoords[0].y = DestCoords[1].y = TopRect;
+        DestCoords[1].x = DestCoords[2].x = RightRect;
+        DestCoords[2].y = DestCoords[3].y = BottomRect;
+        return IntGdiPolygon(dc, DestCoords, 4);
+    }
+
     if ( PATH_IsPathOpen(dc->DcLevel) )
     {
-        ret = PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
-    else
-    {
-        LeftRect   += dc->ptlDCOrig.x;
-        RightRect  += dc->ptlDCOrig.x - 1;
-        TopRect    += dc->ptlDCOrig.y;
-        BottomRect += dc->ptlDCOrig.y - 1;
 
+    {
         DestRect.left = LeftRect;
         DestRect.right = RightRect;
-        DestRect.top = TopRect;      
+        DestRect.top = TopRect;
         DestRect.bottom = BottomRect;
 
+        IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+        DestRect.left   += dc->ptlDCOrig.x;
+        DestRect.right  += dc->ptlDCOrig.x - 1;
+        DestRect.top    += dc->ptlDCOrig.y;
+        DestRect.bottom += dc->ptlDCOrig.y - 1;
+
+        /* Special locking order to avoid lock-ups! */
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+        if (!PenBrushObj)
+        {
+            ret = FALSE;
+            goto cleanup;
+        }
+        BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+        if (!BitmapObj)
+        {
+            ret = FALSE;
+            goto cleanup;
+        }
 
         if ( FillBrushObj )
         {
@@ -576,17 +603,6 @@ IntRectangle(PDC dc,
             }
         }
 
-        BRUSHOBJ_UnlockBrush(FillBrushObj);
-
-        /* get BRUSHOBJ from current pen. */
-        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
-        if (PenBrushObj == NULL)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
-            return FALSE;
-        }
-
         IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
         // Draw the rectangle with the current pen
@@ -599,41 +615,48 @@ IntRectangle(PDC dc,
             ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
                                       dc->CombinedClip,
                                       &PenBrushInst.BrushObject,
-                                      LeftRect, TopRect, RightRect, TopRect,
+                                      DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                       &DestRect, // Bounding rectangle
                                       Mix);
 
             ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
                                       dc->CombinedClip,
                                       &PenBrushInst.BrushObject,
-                                      RightRect, TopRect, RightRect, BottomRect,
+                                      DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                       &DestRect, // Bounding rectangle
                                       Mix);
 
             ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
                                       dc->CombinedClip,
                                       &PenBrushInst.BrushObject,
-                                      RightRect, BottomRect, LeftRect, BottomRect,
+                                      DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                       &DestRect, // Bounding rectangle
                                       Mix);
 
             ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
                                       dc->CombinedClip,
                                       &PenBrushInst.BrushObject,
-                                      LeftRect, BottomRect, LeftRect, TopRect,
+                                      DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                                       &DestRect, // Bounding rectangle
                                       Mix);
         }
 
-        PENOBJ_UnlockPen(PenBrushObj);
     }
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+cleanup:
+    if (FillBrushObj)
+        BRUSHOBJ_UnlockBrush(FillBrushObj);
+
+    if (PenBrushObj)
+        PENOBJ_UnlockPen(PenBrushObj);
+
+    if (BitmapObj)
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
 
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
 
-    return TRUE;
+    return ret;
 }
 
 BOOL
