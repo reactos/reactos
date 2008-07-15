@@ -322,11 +322,60 @@ done:;
 }
 
 
+DWORD
+ScmDeleteRegKey(HKEY hKey, LPCWSTR lpszSubKey)
+{
+    DWORD dwRet, dwMaxSubkeyLen = 0, dwSize;
+    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
+    HKEY hSubKey = 0;
+
+    dwRet = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
+    if (!dwRet)
+    {
+        /* Find the maximum subkey length so that we can allocate a buffer */
+        dwRet = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
+                                                         &dwMaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL);
+        if (!dwRet)
+        {
+            dwMaxSubkeyLen++;
+            if (dwMaxSubkeyLen > sizeof(szNameBuf)/sizeof(WCHAR))
+                /* Name too big: alloc a buffer for it */
+                lpszName = HeapAlloc(GetProcessHeap(), 0, dwMaxSubkeyLen*sizeof(WCHAR));
+
+            if(!lpszName)
+                dwRet = ERROR_NOT_ENOUGH_MEMORY;
+            else
+            {
+                while (dwRet == ERROR_SUCCESS)
+                {
+                    dwSize = dwMaxSubkeyLen;
+                    dwRet = RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL, NULL, NULL, NULL);
+                    if (dwRet == ERROR_SUCCESS || dwRet == ERROR_MORE_DATA)
+                        dwRet = ScmDeleteRegKey(hSubKey, lpszName);
+                }
+                if (dwRet == ERROR_NO_MORE_ITEMS)
+                    dwRet = ERROR_SUCCESS;
+
+                if (lpszName != szNameBuf)
+                    HeapFree(GetProcessHeap(), 0, lpszName); /* Free buffer if allocated */
+            }
+        }
+
+        RegCloseKey(hSubKey);
+        if (!dwRet)
+            dwRet = RegDeleteKeyW(hKey, lpszSubKey);
+    }
+    return dwRet;
+}
+
+
 VOID
 ScmDeleteMarkedServices(VOID)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
+    HKEY hServicesKey;
+    DWORD dwError;
 
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
@@ -337,12 +386,24 @@ ScmDeleteMarkedServices(VOID)
 
         if (CurrentService->bDeleted == TRUE)
         {
-            DPRINT1("Delete service: %S\n", CurrentService->lpServiceName);
-
-            /* FIXME: Delete the registry keys */
-
-            /* FIXME: Delete the service record from the list */
-
+            dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                    L"System\\CurrentControlSet\\Services",
+                                    0,
+                                    DELETE,
+                                    &hServicesKey);
+            if (dwError == ERROR_SUCCESS)
+            {
+                dwError = ScmDeleteRegKey(hServicesKey, CurrentService->lpServiceName);
+                RegCloseKey(hServicesKey);
+                if (dwError == ERROR_SUCCESS)
+                {
+                    RemoveEntryList(&CurrentService->ServiceListEntry);
+                    HeapFree(GetProcessHeap(), 0, CurrentService);
+                }
+            }
+            
+            if (dwError != ERROR_SUCCESS)
+                DPRINT1("Delete service failed: %S\n", CurrentService->lpServiceName);
         }
     }
 }
