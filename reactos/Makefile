@@ -125,7 +125,7 @@
 #            -r           Input XML
 #
 #    ROS_AUTOMAKE
-#        Alternate name of makefile-$(ARCH).auto
+#        Alternate name of makefile.auto
 #
 #    ROS_BUILDENGINE
 #        The Build engine to be used. The variable defaults to rbuild (RBUILD_TARGET)
@@ -158,7 +158,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-ROS_AUTOMAKE=makefile-$(ARCH).auto
+ROS_AUTOMAKE=makefile.auto
 endif
 
 all: $(ROS_AUTOMAKE)
