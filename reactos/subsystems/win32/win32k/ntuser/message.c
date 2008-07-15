@@ -1898,6 +1898,7 @@ NtUserWaitForInputIdle(
 
   if (!NT_SUCCESS(Status))
   {
+     UserLeave();
      SetLastNtError(Status);
      return WAIT_FAILED;
   }
@@ -1906,16 +1907,22 @@ NtUserWaitForInputIdle(
   if (!W32Process)
   {
       ObDereferenceObject(Process);
+      UserLeave();
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return WAIT_FAILED;
   }
 
   EngCreateEvent((PEVENT *)&W32Process->InputIdleEvent);
 
-  Handles[0] = hProcess;
+  Handles[0] = Process;
   Handles[1] = W32Process->InputIdleEvent;
 
-  if (!Handles[1]) return STATUS_SUCCESS;  /* no event to wait on */
+  if (!Handles[1])
+  {
+      ObDereferenceObject(Process);
+      UserLeave();
+      return STATUS_SUCCESS;  /* no event to wait on */
+  }
 
   StartTime = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
                           SharedUserData->TickCountMultiplier / 16777216);
