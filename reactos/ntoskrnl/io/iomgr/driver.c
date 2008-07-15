@@ -1085,7 +1085,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     */
 
     /* Call the load/unload routine, depending on current process */
-   if (DriverObject->DriverUnload)
+   if (DriverObject->DriverUnload && DriverObject->DriverSection)
    {
       if (PsGetCurrentProcess() == PsInitialSystemProcess)
       {
@@ -1111,13 +1111,22 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
          KeWaitForSingleObject(&LoadParams.Event, UserRequest, KernelMode,
              FALSE, NULL);
       }
+
+      /* Unload the driver */
+      ObDereferenceObject(DriverObject);
+      ObDereferenceObject(DriverObject);
+      MmUnloadSystemImage(DriverObject->DriverSection);
+
+      return STATUS_SUCCESS;
    }
+   else
+   {
+      /* Dereference one time (refd inside this function) */
+      ObDereferenceObject(DriverObject);
 
-   ObDereferenceObject(DriverObject);
-   ObDereferenceObject(DriverObject);
-   MmUnloadSystemImage(DriverObject->DriverSection);
-
-   return STATUS_SUCCESS;
+      /* Return unloading failure */
+      return STATUS_INVALID_DEVICE_REQUEST;
+   }
 }
 
 VOID
@@ -1717,6 +1726,9 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
                return;
            }
        }
+
+       /* Store its DriverSection, so that it could be unloaded */
+       DriverObject->DriverSection = ModuleObject;
 
        /* We have a driver for this DeviceNode */
        DeviceNode->Flags |= DN_DRIVER_LOADED;
