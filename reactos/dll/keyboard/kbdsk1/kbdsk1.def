@@ -6,11 +6,3 @@ LIBRARY kbdsk1.dll
 EXPORTS
 KbdLayerDescriptor@0
 ;EOF
-;
-; ReactOS Operating System
-;
-LIBRARY kbdsk1.dll
-
-EXPORTS
-KbdLayerDescriptor@0
-;EOF
