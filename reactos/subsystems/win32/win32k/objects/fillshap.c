@@ -556,91 +556,95 @@ IntRectangle(PDC dc,
         return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
 
+    DestRect.left = LeftRect;
+    DestRect.right = RightRect;
+    DestRect.top = TopRect;
+    DestRect.bottom = BottomRect;
+
+    IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+    DestRect.left   += dc->ptlDCOrig.x;
+    DestRect.right  += dc->ptlDCOrig.x;
+    DestRect.top    += dc->ptlDCOrig.y;
+    DestRect.bottom += dc->ptlDCOrig.y;
+
+    /* In GM_COMPATIBLE, don't include bottom and right edges */
+    if (IntGetGraphicsMode(dc) == GM_COMPATIBLE)
     {
-        DestRect.left = LeftRect;
-        DestRect.right = RightRect;
-        DestRect.top = TopRect;
-        DestRect.bottom = BottomRect;
+        DestRect.right--;
+        DestRect.bottom--;
+    }
 
-        IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+    /* Special locking order to avoid lock-ups! */
+    FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+    PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
+    if (!PenBrushObj)
+    {
+        ret = FALSE;
+        goto cleanup;
+    }
+    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    if (!BitmapObj)
+    {
+        ret = FALSE;
+        goto cleanup;
+    }
 
-        DestRect.left   += dc->ptlDCOrig.x;
-        DestRect.right  += dc->ptlDCOrig.x - 1;
-        DestRect.top    += dc->ptlDCOrig.y;
-        DestRect.bottom += dc->ptlDCOrig.y - 1;
-
-        /* Special locking order to avoid lock-ups! */
-        FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
-        PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
-        if (!PenBrushObj)
+    if ( FillBrushObj )
+    {
+        if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
-            ret = FALSE;
-            goto cleanup;
+            IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+            ret = IntEngBitBlt(&BitmapObj->SurfObj,
+                               NULL,
+                               NULL,
+                               dc->CombinedClip,
+                               NULL,
+                               &DestRect,
+                               NULL,
+                               NULL,
+                               &FillBrushInst.BrushObject,
+                               NULL,
+                               ROP3_TO_ROP4(PATCOPY));
         }
-        BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-        if (!BitmapObj)
-        {
-            ret = FALSE;
-            goto cleanup;
-        }
+    }
 
-        if ( FillBrushObj )
-        {
-            if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
-            {
-                IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-                ret = IntEngBitBlt(&BitmapObj->SurfObj,
-                                   NULL,
-                                   NULL,
-                                   dc->CombinedClip,
-                                   NULL,
-                                   &DestRect,
-                                   NULL,
-                                   NULL,
-                                   &FillBrushInst.BrushObject,
-                                   NULL,
-                                   ROP3_TO_ROP4(PATCOPY));
-            }
-        }
+    IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
-        IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+    // Draw the rectangle with the current pen
 
-        // Draw the rectangle with the current pen
+    ret = TRUE; // change default to success
 
-        ret = TRUE; // change default to success
+    if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+    {
+        Mix = ROP2_TO_MIX(Dc_Attr->jROP2);
+        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+                                  dc->CombinedClip,
+                                  &PenBrushInst.BrushObject,
+                                  DestRect.left, DestRect.top, DestRect.right, DestRect.top,
+                                  &DestRect, // Bounding rectangle
+                                  Mix);
 
-        if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
-        {
-            Mix = ROP2_TO_MIX(Dc_Attr->jROP2);
-            ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
-                                      dc->CombinedClip,
-                                      &PenBrushInst.BrushObject,
-                                      DestRect.left, DestRect.top, DestRect.right, DestRect.top,
-                                      &DestRect, // Bounding rectangle
-                                      Mix);
+        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+                                  dc->CombinedClip,
+                                  &PenBrushInst.BrushObject,
+                                  DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
+                                  &DestRect, // Bounding rectangle
+                                  Mix);
 
-            ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
-                                      dc->CombinedClip,
-                                      &PenBrushInst.BrushObject,
-                                      DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
-                                      &DestRect, // Bounding rectangle
-                                      Mix);
+        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+                                  dc->CombinedClip,
+                                  &PenBrushInst.BrushObject,
+                                  DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
+                                  &DestRect, // Bounding rectangle
+                                  Mix);
 
-            ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
-                                      dc->CombinedClip,
-                                      &PenBrushInst.BrushObject,
-                                      DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
-                                      &DestRect, // Bounding rectangle
-                                      Mix);
-
-            ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
-                                      dc->CombinedClip,
-                                      &PenBrushInst.BrushObject,
-                                      DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
-                                      &DestRect, // Bounding rectangle
-                                      Mix);
-        }
-
+        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+                                  dc->CombinedClip,
+                                  &PenBrushInst.BrushObject,
+                                  DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
+                                  &DestRect, // Bounding rectangle
+                                  Mix);
     }
 
 cleanup:

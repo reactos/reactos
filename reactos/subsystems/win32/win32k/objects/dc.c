@@ -2485,6 +2485,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr->ulDirty_ = 0;  // Server side
 
   Dc_Attr->iMapMode = MM_TEXT;
+  Dc_Attr->iGraphicsMode = GM_COMPATIBLE;
 
   Dc_Attr->szlWindowExt.cx = 1; // Float to Int,,, WRONG!
   Dc_Attr->szlWindowExt.cy = 1;
