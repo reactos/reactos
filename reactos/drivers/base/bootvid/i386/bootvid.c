@@ -301,10 +301,10 @@ VgaIsPresent(VOID)
     }
 
     /* Write the registers we read earlier */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
     WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg2);
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, VgaReg3);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg3);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, VgaReg);
 
     /* Read sequencer address */
     SeqReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4);
