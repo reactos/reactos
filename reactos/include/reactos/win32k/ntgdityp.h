@@ -97,6 +97,12 @@ typedef enum _TRANSFORMTYPE
     GdiLpToDp,
 } TRANSFORMTYPE, *PTRANSFORMTYPE;
 
+/* MATRIX flAccel flags */
+enum
+{
+    MX_SCALE = 1,
+};
+
 typedef enum GDIObjType
 {
     GDIObjType_DEF_TYPE = 0x00,

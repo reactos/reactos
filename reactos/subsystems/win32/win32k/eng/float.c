@@ -219,6 +219,11 @@ gxf_long f;
   FtoEF( &Matrix->efDx, f.l);
   f.f = XForm->eDy;
   FtoEF( &Matrix->efDy, f.l);
+  Matrix->flAccel = 0;
+  if (XForm->eM12 == 0. && XForm->eM21 == 0.)
+  {
+    Matrix->flAccel |= MX_SCALE;
+  }
 }
 
 VOID FASTCALL
