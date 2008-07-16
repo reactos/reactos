@@ -191,9 +191,6 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   /* make console active, and insert into console list */
   Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
   Console->hActiveBuffer = INVALID_HANDLE_VALUE;
-  /* add a reference count because the buffer is tied to the console */
-  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
-
 
   if (! GuiMode)
     {
@@ -229,6 +226,9 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
       return Status;
     }
+
+  /* add a reference count because the buffer is tied to the console */
+  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
 
   /* copy buffer contents to screen */
   ConioDrawConsole(Console);
