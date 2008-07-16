@@ -220,6 +220,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Text",0x00000000,"Slovak"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5039"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041b","Layout File",0x00000000,"kbdsk1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041b","Layout Text",0x00000000,"Slovak (QWERTY)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041b","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5040"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout File",0x00000000,"kbdsw.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Text",0x00000000,"Swedish"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5022"

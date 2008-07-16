@@ -169,6 +169,9 @@
 	<directory name="kbdsk">
 		<xi:include href="kbdsk/kbdsk.rbuild" />
 	</directory>
+	<directory name="kbdsk1">
+		<xi:include href="kbdsk1/kbdsk1.rbuild" />
+	</directory>
 	<directory name="kbdsw">
 		<xi:include href="kbdsw/kbdsw.rbuild" />
 	</directory>
