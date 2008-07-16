@@ -37,7 +37,10 @@
 #define LT (_MLEAD  | _MTRAIL)
 #define PT (_MPUNCT | _MTRAIL)
 
+#define MAX_LOCALE_LENGTH 256
 extern unsigned char _mbctype[257];
+extern int MSVCRT___lc_codepage;
+extern char MSVCRT_current_lc_all[MAX_LOCALE_LENGTH];
 
 #if defined (_MSC_VER)
 

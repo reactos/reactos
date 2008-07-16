@@ -1295,7 +1295,8 @@ WideCharToMultiByte(UINT CodePage, DWORD Flags,
    /* Check the parameters. */
    if (WideCharString == NULL ||
        (MultiByteString == NULL && MultiByteCount > 0) ||
-       (PVOID)WideCharString == (PVOID)MultiByteString)
+       (PVOID)WideCharString == (PVOID)MultiByteString ||
+       MultiByteCount < 0)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return 0;

@@ -26,7 +26,6 @@
  * string to produce lc_all.
  */
 #define MAX_ELEM_LEN 64 /* Max length of country/language/CP string */
-#define MAX_LOCALE_LENGTH 256
 
 unsigned char MSVCRT_mbctype[257];
 static int g_mbcp_is_multibyte = 0;
@@ -388,8 +387,8 @@ char *setlocale(int category, const char *locale)
   {
     MSVCRT_current_lc_all[0] = 'C';
     MSVCRT_current_lc_all[1] = '\0';
-    MSVCRT___lc_codepage = GetACP();
-    MSVCRT___lc_collate_cp = GetACP();
+    MSVCRT___lc_codepage = 1252;
+    MSVCRT___lc_collate_cp = 1252;
 
     switch (category) {
     case MSVCRT_LC_ALL:

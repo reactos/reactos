@@ -2475,23 +2475,28 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
  */
 wint_t CDECL fputwc(wint_t wc, FILE* file)
 {
-  if (file->_flag & _IOBINARY)
-  {
-    wchar_t mwc = wc;
+    if (file->_flag & _IOBINARY)
+    {
+        if (fwrite(&wc, sizeof(wc), 1, file) != 1)
+            return WEOF;
+    }
+    else
+    {
+        /* Convert to multibyte in text mode */
+        char mbc[MB_LEN_MAX];
+        int mb_return;
 
-    if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
-      return WEOF;
-  }
-  else
-  {
-    /* Convert the character to ANSI */
-    char c = (unsigned char)wc;
+        mb_return = wctomb(mbc, wc);
 
-    if (fwrite( &c, sizeof(c), 1, file) != 1)
-      return WEOF;
-  }
+        if(mb_return == -1)
+            return WEOF;
 
-  return wc;
+        /* Output all characters */
+        if (fwrite(mbc, mb_return, 1, file) != 1)
+            return WEOF;
+    }
+
+    return wc;
 }
 
 /*********************************************************************
@@ -3121,7 +3126,6 @@ int CDECL vfprintf(FILE* file, const char *format, va_list valist)
 int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
 {
   wchar_t buf[2048], *mem = buf;
-  char mbbuf[2048], *mbmem = mbbuf;
   int written, resize = sizeof(buf) / sizeof(wchar_t), retval;
   /* See vfprintf comments */
   while ((written = _vsnwprintf(mem, resize, format, valist)) == -1 ||
@@ -3137,17 +3141,22 @@ int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
   /* Check if outputting to a text-file */
   if (fdesc[file->_file].wxflag & WX_TEXT)
   {
-      /* Convert to multibyte then */
-      written = wcstombs(NULL, mem, 0);
+      /* Convert each character and stop at the first invalid character. Behavior verified by tests under WinXP SP2 */
+      char chMultiByte[MB_LEN_MAX];
+      int nReturn;
 
-      if (written >= sizeof(mbbuf) && (written != (int)-1))
-          mbmem = malloc(written + 1);
+      retval = 0;
 
-      wcstombs(mbmem, mem, written);
-      retval = fwrite(mbmem, 1, written, file);
+      while(*mem)
+      {
+          nReturn = wctomb(chMultiByte, *mem);
 
-      if (mbmem != mbbuf)
-        free(mbmem);
+          if(nReturn == -1)
+              break;
+
+          retval += fwrite(chMultiByte, 1, nReturn, file);
+          mem++;
+      }
   }
   else
   {

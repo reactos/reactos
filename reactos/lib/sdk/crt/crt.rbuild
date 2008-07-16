@@ -355,9 +355,7 @@
 		<file>strxfrm.c</file>
 		<file>wcs.c</file>
 		<file>wcstol.c</file>
-		<file>wcstombs.c</file>
 		<file>wcstoul.c</file>
-		<file>wctomb.c</file>
 		<file>wsplitp.c</file>
 		<file>wtoi.c</file>
 		<file>wtoi64.c</file>
