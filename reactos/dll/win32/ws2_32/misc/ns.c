@@ -35,7 +35,8 @@ WSAAddressToStringA(IN      LPSOCKADDR lpsaAddress,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -52,7 +53,8 @@ WSAAddressToStringW(IN      LPSOCKADDR lpsaAddress,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -66,7 +68,8 @@ WSAEnumNameSpaceProvidersA(IN OUT  LPDWORD lpdwBufferLength,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -80,7 +83,8 @@ WSAEnumNameSpaceProvidersW(IN OUT  LPDWORD lpdwBufferLength,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -96,7 +100,8 @@ WSAGetServiceClassInfoA(IN      LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -112,7 +117,8 @@ WSAGetServiceClassInfoW(IN      LPGUID lpProviderId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -127,7 +133,8 @@ WSAGetServiceClassNameByClassIdA(IN      LPGUID lpServiceClassId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -142,7 +149,8 @@ WSAGetServiceClassNameByClassIdW(IN      LPGUID lpServiceClassId,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -155,7 +163,8 @@ WSAInstallServiceClassA(IN  LPWSASERVICECLASSINFOA lpServiceClassInfo)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -168,7 +177,8 @@ WSAInstallServiceClassW(IN  LPWSASERVICECLASSINFOW lpServiceClassInfo)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -183,7 +193,8 @@ WSALookupServiceBeginA(IN  LPWSAQUERYSETA lpqsRestrictions,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -198,7 +209,8 @@ WSALookupServiceBeginW(IN  LPWSAQUERYSETW lpqsRestrictions,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -211,7 +223,8 @@ WSALookupServiceEnd(IN  HANDLE hLookup)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -227,7 +240,8 @@ WSALookupServiceNextA(IN      HANDLE hLookup,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -243,7 +257,8 @@ WSALookupServiceNextW(IN      HANDLE hLookup,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -256,7 +271,8 @@ WSARemoveServiceClass(IN  LPGUID lpServiceClassId)
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -271,7 +287,8 @@ WSASetServiceA(IN  LPWSAQUERYSETA lpqsRegInfo,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -286,7 +303,8 @@ WSASetServiceW(IN  LPWSAQUERYSETW lpqsRegInfo,
 {
     UNIMPLEMENTED
 
-    return 0;
+    WSASetLastError(WSASYSCALLFAILURE);
+    return SOCKET_ERROR;
 }
 
 
@@ -798,25 +816,27 @@ gethostname(OUT CHAR FAR* name,
  *
  * @unimplemented
  */
+ 
+static CHAR *no_aliases = 0;
+static PROTOENT protocols[] =
+{
+    {"icmp",&no_aliases, IPPROTO_ICMP},
+    {"tcp", &no_aliases, IPPROTO_TCP},
+    {"udp", &no_aliases, IPPROTO_UDP},
+    {NULL, NULL, 0}
+};
+ 
 LPPROTOENT
 EXPORT
 getprotobyname(IN  CONST CHAR FAR* name)
 {
-    static CHAR *udp_aliases = 0;
-    static PROTOENT udp = { "udp", &udp_aliases, 17 };
-    static CHAR *tcp_aliases = 0;
-    static PROTOENT tcp = { "tcp", &tcp_aliases, 6 };
-
-    if(!_stricmp(name, "udp"))
+    UINT i;
+    for (i = 0; protocols[i].p_name; i++)
     {
-        return &udp;
+       if (_stricmp(protocols[i].p_name, name) == 0)
+         return &protocols[i];
     }
-    else if (!_stricmp( name, "tcp"))
-    {
-        return &tcp;
-    }
-
-    return 0;
+    return NULL;
 }
 
 /*
@@ -826,9 +846,13 @@ LPPROTOENT
 EXPORT
 getprotobynumber(IN  INT number)
 {
-    UNIMPLEMENTED
-
-    return (LPPROTOENT)NULL;
+    UINT i;
+    for (i = 0; protocols[i].p_name; i++)
+    {
+       if (protocols[i].p_proto == number)
+         return &protocols[i];
+    }
+    return NULL;
 }
 
 #define SKIPWS(ptr,act) \
@@ -1324,5 +1348,189 @@ inet_ntoa(IN  IN_ADDR in)
 }
 
 
-/* EOF */
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+freeaddrinfo(struct addrinfo *pAddrInfo)
+{
+    struct addrinfo *next, *cur;
+    cur = pAddrInfo;
+    while (cur)
+    {
+        next = cur->ai_next;
+        if (cur->ai_addr)
+          HeapFree(GetProcessHeap(), 0, cur->ai_addr);
+        if (cur->ai_canonname)
+          HeapFree(GetProcessHeap(), 0, cur->ai_canonname);
+        HeapFree(GetProcessHeap(), 0, cur);
+        cur = next;
+    }
+}
 
+
+struct addrinfo *
+new_addrinfo(struct addrinfo *prev)
+{
+    struct addrinfo *ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct addrinfo));
+    if (prev)
+      prev->ai_next = ret;
+    return ret;
+}
+
+/*
+ * @implemented
+ */
+INT
+EXPORT
+getaddrinfo(const char FAR * nodename,
+            const char FAR * servname,
+            const struct addrinfo FAR * hints,
+            struct addrinfo FAR * FAR * res)
+{
+    struct addrinfo *ret = NULL, *ai;
+    ULONG addr;
+    USHORT port;
+    struct servent *se;
+    char *proto;
+    LPPROTOENT pent;
+    DNS_STATUS dns_status;
+    PDNS_RECORD dp, currdns;
+    struct sockaddr_in *sin;
+
+    if (res == NULL)
+        return WSAEINVAL;
+    if (nodename == NULL && servname == NULL)
+        return WSAHOST_NOT_FOUND;
+        
+    if (!WSAINITIALIZED)
+        return WSANOTINITIALISED;
+
+    /* converting port number */
+    port = strtoul(servname, NULL, 10);
+    /* service name was specified? */
+    if (port == 0)
+    {
+        /* protocol was specified? */
+        if (hints && hints->ai_protocol)
+        {
+            pent = getprotobynumber(hints->ai_protocol);
+            if (pent == NULL)
+              return WSAEINVAL;
+            proto = pent->p_name;
+        }
+        else
+            proto = NULL;
+        se = getservbyname(servname, proto);
+        if (se == NULL)
+            return WSAHOST_NOT_FOUND;
+        port = se->s_port;
+    }
+        
+    if (nodename)
+    {
+        /* Is it an IPv6 address? */
+        if (strstr(nodename, ":"))
+            return WSAHOST_NOT_FOUND;
+            
+        /* Is it an IPv4 address? */
+        addr = inet_addr(nodename);
+        if (addr != INADDR_NONE)
+        {
+            ai = new_addrinfo(NULL);
+            ai->ai_family = PF_INET;
+            ai->ai_addrlen = sizeof(struct sockaddr_in);
+            ai->ai_addr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ai->ai_addrlen);
+            sin = (struct sockaddr_in *)ai->ai_addr;
+            sin->sin_family = AF_INET;
+            sin->sin_port = port;
+            RtlCopyMemory(&sin->sin_addr, &addr, sizeof(sin->sin_addr));
+            if (hints)
+            {
+                if (ai->ai_socktype == 0)
+                    ai->ai_socktype = hints->ai_socktype;
+                if (ai->ai_protocol == 0)
+                    ai->ai_protocol = hints->ai_protocol;
+            }
+            ret = ai;
+        }
+        else
+        {
+           /* resolving host name */
+            dns_status = DnsQuery_A(nodename,
+                                    DNS_TYPE_A,
+                                    DNS_QUERY_STANDARD,
+                                    0,
+                                    /* extra dns servers */ &dp,
+                                    0);
+
+            if (dns_status == 0)
+            {
+                ai = NULL;
+                for (currdns = dp; currdns; currdns = currdns->pNext )
+                {
+                    /* accept only A records */
+                    if (currdns->wType != DNS_TYPE_A) continue;
+                    
+                    ai = new_addrinfo(ai);
+                    if (ret == NULL)
+                      ret = ai;
+                    ai->ai_family = PF_INET;
+                    ai->ai_addrlen = sizeof(struct sockaddr_in);
+                    ai->ai_addr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ai->ai_addrlen);
+                    sin = (struct sockaddr_in *)ret->ai_addr;
+                    sin->sin_family = AF_INET;
+                    sin->sin_port = port;
+                    RtlCopyMemory(&sin->sin_addr, &currdns->Data.A.IpAddress, sizeof(sin->sin_addr));
+                    if (hints)
+                    {
+                        if (ai->ai_socktype == 0)
+                            ai->ai_socktype = hints->ai_socktype;
+                        if (ai->ai_protocol == 0)
+                            ai->ai_protocol = hints->ai_protocol;
+                    }
+                }
+                DnsRecordListFree(dp, DnsFreeRecordList);
+            }
+        }
+    }
+    else
+    {
+        ai = new_addrinfo(NULL);
+        ai->ai_family = PF_INET;
+        ai->ai_addrlen = sizeof(struct sockaddr_in);
+        ai->ai_addr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ai->ai_addrlen);
+        sin = (struct sockaddr_in *)ret->ai_addr;
+        sin->sin_family = AF_INET;
+        sin->sin_port = port;
+        if (hints)
+        {
+            if (!(hints->ai_flags & AI_PASSIVE))
+            {
+                sin->sin_addr.S_un.S_un_b.s_b1 = 127;
+                sin->sin_addr.S_un.S_un_b.s_b2 = 0;
+                sin->sin_addr.S_un.S_un_b.s_b3 = 0;
+                sin->sin_addr.S_un.S_un_b.s_b4 = 1;
+            }
+            if (ai->ai_socktype == 0)
+                ai->ai_socktype = hints->ai_socktype;
+            if (ai->ai_protocol == 0)
+                ai->ai_protocol = hints->ai_protocol;
+        }
+    }
+
+    if (ret == NULL)
+        return WSAHOST_NOT_FOUND;
+        
+    if (hints && hints->ai_family != PF_UNSPEC && hints->ai_family != PF_INET)
+    {
+        freeaddrinfo(ret);
+        return WSAEAFNOSUPPORT;
+    }
+
+    *res = ret;
+    return 0;
+}
+
+/* EOF */
