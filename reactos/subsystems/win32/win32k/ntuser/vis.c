@@ -69,7 +69,7 @@ VIS_ComputeVisibleRegion(
    while (CurrentWindow)
    {
       CurrentWnd = CurrentWindow->Wnd;
-      if (!(CurrentWnd->Style & WS_VISIBLE))
+      if (!(CurrentWnd) || !(CurrentWnd->Style & WS_VISIBLE))
       {
          NtGdiDeleteObject(VisRgn);
          return NULL;
