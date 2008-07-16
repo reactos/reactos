@@ -267,6 +267,9 @@
 	<directory name="wclickat">
 		<xi:include href="wclickat/wclickat.rbuild" />
 	</directory>
+	<directory name="wcstombs-tests">
+		<xi:include href="wcstombs-tests/wcstombs-tests.rbuild" />
+	</directory>
 	<directory name="winhello">
 		<xi:include href="winhello/winhello.rbuild" />
 	</directory>
