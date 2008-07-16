@@ -95,16 +95,6 @@ DllMain(HANDLE hDll,
 
 NTSTATUS FASTCALL
 Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-                     PHANDLE Handle,
-                     Object_t *Object)
-{
-  InitializeCriticalSection(&(Object->Lock));
-
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrInsertObject2(PCSRSS_PROCESS_DATA ProcessData,
                       PHANDLE Handle,
                       Object_t *Object)
 {

@@ -115,23 +115,23 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle)
 {
   ULONG h = (((ULONG)Handle) >> 2) - 1;
-  NTSTATUS Status;
+  Object_t *Object;
 
   if (ProcessData == NULL)
     {
       return STATUS_INVALID_PARAMETER;
     }
-  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize || ProcessData->HandleTable[h] == NULL)
+  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
+      || (Object = ProcessData->HandleTable[h]) == NULL)
     {
+      RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
       return STATUS_INVALID_HANDLE;
     }
-
-  Status = CsrReleaseObjectByPointer(ProcessData->HandleTable[h]);
-
-  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-  ProcessData->HandleTable[h] = 0;
+  ProcessData->HandleTable[h] = NULL;
   RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-  return Status;
+
+  return CsrReleaseObjectByPointer(Object);
 }
 
 NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object )

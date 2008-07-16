@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-extern NTSTATUS FASTCALL
-Win32CsrInsertObject2(PCSRSS_PROCESS_DATA, PHANDLE, Object_t *);
-
 /* GLOBALS *******************************************************************/
 
 #define ConioInitRect(Rect, Top, Left, Bottom, Right) \
@@ -315,9 +312,9 @@ CSR_API(CsrAllocConsole)
     if (NewConsole || !ProcessData->bInheritHandles)
     {
         /* Insert the Objects */
-        Status = Win32CsrInsertObject2(ProcessData,
-                                       &Request->Data.AllocConsoleRequest.InputHandle,
-                                       &Console->Header);
+        Status = Win32CsrInsertObject(ProcessData,
+                                      &Request->Data.AllocConsoleRequest.InputHandle,
+                                      &Console->Header);
         if (! NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -326,9 +323,9 @@ CSR_API(CsrAllocConsole)
             return Request->Status = Status;
         }
 
-        Status = Win32CsrInsertObject2(ProcessData,
-                                       &Request->Data.AllocConsoleRequest.OutputHandle,
-                                       &Console->ActiveBuffer->Header);
+        Status = Win32CsrInsertObject(ProcessData,
+                                      &Request->Data.AllocConsoleRequest.OutputHandle,
+                                      &Console->ActiveBuffer->Header);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -984,16 +981,14 @@ ConioDeleteConsole(Object_t *Object)
       HeapFree(Win32CsrApiHeap, 0, Event);
     }
 
-#if 0 // FIXME
+  ConioCleanupConsole(Console);
   if (0 == InterlockedDecrement(&Console->ActiveBuffer->Header.ReferenceCount))
     {
       ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
     }
-#endif
 
   Console->ActiveBuffer = NULL;
   Console->hActiveBuffer = INVALID_HANDLE_VALUE;
-  ConioCleanupConsole(Console);
 
   CloseHandle(Console->ActiveEvent);
   DeleteCriticalSection(&Console->Header.Lock);

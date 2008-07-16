@@ -887,6 +887,9 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     EnterCriticalSection(&Buff->Header.Lock);
 
+    if (BottomLine >= Buff->MaxY) BottomLine = Buff->MaxY - 1;
+    if (RightChar >= Buff->MaxX) RightChar = Buff->MaxX - 1;
+
     OldFont = SelectObject(hDC,
                            GuiData->Font);
 
