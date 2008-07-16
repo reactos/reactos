@@ -306,24 +306,15 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
    Size.x = Wnd->WindowRect.left;
    Size.y = Wnd->WindowRect.top;
    WinPosInitInternalPos(Window, &Size, &Wnd->WindowRect);
-   
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_MINMAX, (WPARAM)Window->hSelf, ShowFlag))
-      return SWP_NOSIZE | SWP_NOMOVE;
 
-   if (Wnd->Style & WS_MINIMIZE)
-   {
-      switch (ShowFlag)
+      if (Wnd->Style & WS_MINIMIZE)
       {
-         case SW_MINIMIZE:
-            return SWP_NOSIZE | SWP_NOMOVE;
+         if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
+         {
+            return(SWP_NOSIZE | SWP_NOMOVE);
+         }
+         SwpFlags |= SWP_NOCOPYBITS;
       }
-      if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
-      {
-         return(SWP_NOSIZE | SWP_NOMOVE);
-      }
-      SwpFlags |= SWP_NOCOPYBITS;
-   }
-
       switch (ShowFlag)
       {
          case SW_MINIMIZE:
@@ -1225,7 +1216,7 @@ co_WinPosSetWindowPos(
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
                       /* old code
-            NtGdiOffsetRgn(DirtyRgn, Window->Wnd->WindowRect.left, Window->Wnd->WindowRect.top);
+            NtGdiOffsetRgn(DirtyRgn, Window->WindowRect.left, Window->WindowRect.top);
             IntInvalidateWindows(Window, DirtyRgn,
                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
@@ -1323,7 +1314,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 {
    BOOLEAN WasVisible;
    UINT Swp = 0;
-   RECT NewPos = {0, 0, 0, 0};
+   RECT NewPos;
    BOOLEAN ShowFlag;
    //  HRGN VisibleRgn;
    PWINDOW Wnd;
@@ -1343,29 +1334,53 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
             }
             Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
             if (Window->hSelf != UserGetActiveWindow())
-//            if (Wnd->Style & WS_CHILD)
                Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
             break;
          }
 
       case SW_SHOWMINNOACTIVE:
-      case SW_MINIMIZE:
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWMINIMIZED:
-         DPRINT1("ShowWindow _MINIMIZE\n");
-         Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
-         Swp |= co_WinPosMinMaximize(Window, SW_MINIMIZE, &NewPos);
-//         if ((Wnd->Style & WS_MINIMIZE) && WasVisible) return TRUE;
-         break;
+         Swp |= SWP_SHOWWINDOW;
+         /* Fall through. */
+      case SW_MINIMIZE:
+         {
+            Swp |= SWP_NOACTIVATE;
+            if (!(Wnd->Style & WS_MINIMIZE))
+            {
+               Swp |= co_WinPosMinMaximize(Window, SW_MINIMIZE, &NewPos) |
+                      SWP_FRAMECHANGED;
+            }
+            else
+            {
+               Swp |= SWP_NOSIZE | SWP_NOMOVE;
+               if (! WasVisible)
+               {
+                  Swp |= SWP_FRAMECHANGED;
+               }
+            }
+            break;
+         }
 
       case SW_SHOWMAXIMIZED:
-         DPRINT1("ShowWindow _MAXIMIZE\n");
-         if (!WasVisible) Swp |= SWP_SHOWWINDOW;
-         Swp |= SWP_FRAMECHANGED;
-         Swp |= co_WinPosMinMaximize(Window, SW_MAXIMIZE, &NewPos);
-//         if ((Wnd->Style & WS_MAXIMIZE) && WasVisible) return TRUE;
-         break;
+         {
+            Swp |= SWP_SHOWWINDOW;
+            if (!(Wnd->Style & WS_MAXIMIZE))
+            {
+               Swp |= co_WinPosMinMaximize(Window, SW_MAXIMIZE, &NewPos) |
+                      SWP_FRAMECHANGED;
+            }
+            else
+            {
+               Swp |= SWP_NOSIZE | SWP_NOMOVE;
+               if (! WasVisible)
+               {
+                  Swp |= SWP_FRAMECHANGED;
+               }
+            }
+            break;
+         }
 
       case SW_SHOWNA:
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
@@ -1377,32 +1392,27 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          break;
 
       case SW_SHOWNOACTIVATE:
+         //Swp |= SWP_NOZORDER;
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWNORMAL:
       case SW_SHOWDEFAULT:
       case SW_RESTORE:
-         DPRINT1("ShowWindow _RESTORE\n");
-         if (!WasVisible) Swp |= SWP_SHOWWINDOW;
+         Swp |= SWP_SHOWWINDOW;
          if (Wnd->Style & (WS_MINIMIZE | WS_MAXIMIZE))
          {
-            Swp |= SWP_FRAMECHANGED;
-            Swp |= co_WinPosMinMaximize(Window, SW_RESTORE, &NewPos);
+            Swp |= co_WinPosMinMaximize(Window, SW_RESTORE, &NewPos) |
+                   SWP_FRAMECHANGED;
          }
          else
          {
-//            if (WasVisible) return TRUE;
             Swp |= SWP_NOSIZE | SWP_NOMOVE;
+            if (! WasVisible)
+            {
+               Swp |= SWP_FRAMECHANGED;
+            }
          }
-         if (Wnd->Style & WS_CHILD) Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          break;
-
-       case SW_FORCEMINIMIZE:
-        // Fixme!
-         DPRINT1("Force hung application down! pWindow: %x\n",Window);
-         return WasVisible;
-       default:
-         return WasVisible;
    }
 
    ShowFlag = (Cmd != SW_HIDE);

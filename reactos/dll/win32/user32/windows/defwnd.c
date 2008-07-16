@@ -742,12 +742,8 @@ DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
 LRESULT
 DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-//  WINDOWPLACEMENT wp;
+  WINDOWPLACEMENT wp;
   POINT Pt;
-
-  // ATM, This is for Hook call.
-  if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, 0, NUMC_DEFWINDOWPROC, FALSE))
-    return 0;
 
   switch (wParam & 0xfff0)
     {
@@ -756,40 +752,28 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	DefWndDoSizeMove(hWnd, wParam);
 	break;
       case SC_MINIMIZE:
-        FIXME("SysCommand SC_MINIMIZE\n");
-/*        wp.length = sizeof(WINDOWPLACEMENT);
+        wp.length = sizeof(WINDOWPLACEMENT);
         if(GetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_MINIMIZE;
           SetWindowPlacement(hWnd, &wp);
-        }*/
-        if (hWnd == GetForegroundWindow())
-        ShowOwnedPopups(hWnd,FALSE);
-        ShowWindow( hWnd, SW_MINIMIZE );
+        }
         break;
       case SC_MAXIMIZE:
-        FIXME("SysCommand SC_MAXIMIZE\n");
-/*      wp.length = sizeof(WINDOWPLACEMENT);
+        wp.length = sizeof(WINDOWPLACEMENT);
         if(GetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_MAXIMIZE;
           SetWindowPlacement(hWnd, &wp);
-        }*/
-        if (IsIconic(hWnd) && hWnd == GetForegroundWindow())
-        ShowOwnedPopups(hWnd,TRUE);
-        ShowWindow( hWnd, SW_MAXIMIZE );
+        }
         break;
       case SC_RESTORE:
-        FIXME("SysCommand SC_RESTORE\n");
-/*        wp.length = sizeof(WINDOWPLACEMENT);
+        wp.length = sizeof(WINDOWPLACEMENT);
         if(GetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_RESTORE;
           SetWindowPlacement(hWnd, &wp);
-        }*/
-        if (IsIconic(hWnd) && hWnd == GetForegroundWindow())
-        ShowOwnedPopups(hWnd,TRUE);
-        ShowWindow( hWnd, SW_RESTORE );
+        }
         break;
       case SC_CLOSE:
         SendMessageA(hWnd, WM_CLOSE, 0, 0);
@@ -1426,8 +1410,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SHOWWINDOW:
         {
-            if (lParam) // Call when it is necessary.
-               NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, NUMC_DEFWINDOWPROC, FALSE);
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, NUMC_DEFWINDOWPROC, FALSE);
             break;
         }
 

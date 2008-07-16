@@ -1617,7 +1617,6 @@ SetWindowPos(HWND hWnd,
 	     int cy,
 	     UINT uFlags)
 {
-  FIXME("SetWindowPos\n");
   return NtUserSetWindowPos(hWnd,hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
@@ -1714,7 +1713,6 @@ BOOL STDCALL
 ShowWindow(HWND hWnd,
 	   int nCmdShow)
 {
-  FIXME("ShowWindow\n");
   return NtUserShowWindow(hWnd, nCmdShow);
 }
 

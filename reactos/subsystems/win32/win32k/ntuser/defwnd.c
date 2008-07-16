@@ -13,15 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-LRESULT FASTCALL
-IntDefWinHandleSysCommand( PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam )
-{
-   DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
 
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam))
-      return 1;
-   return 0;
-}
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -33,7 +25,6 @@ IntDefWindowProc(
    LPARAM lParam)
 {
    PWINDOW Wnd;
-   LRESULT lResult = 0;
 
    if (Msg > WM_USER) return 0;
 
@@ -42,11 +33,6 @@ IntDefWindowProc(
 
    switch (Msg)
    {
-      case WM_SYSCOMMAND:
-      {
-          lResult = IntDefWinHandleSysCommand( Window, wParam, lParam );
-          break;
-      }
       case WM_SHOWWINDOW:
       {
          if ((Wnd->Style & WS_VISIBLE) && wParam) break;
@@ -68,7 +54,7 @@ IntDefWindowProc(
       break;
    }
 
-   return lResult;
+   return 0;
 }
 
 
