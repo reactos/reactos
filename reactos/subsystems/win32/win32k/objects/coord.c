@@ -122,10 +122,14 @@ CoordDPtoLP(PDC Dc, LPPOINT Point)
 FLOAT x, y;
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
-  Point->x = x * Dc->DcLevel.xformVport2World.eM11 +
-    y * Dc->DcLevel.xformVport2World.eM21 + Dc->DcLevel.xformVport2World.eDx;
-  Point->y = x * Dc->DcLevel.xformVport2World.eM12 +
-    y * Dc->DcLevel.xformVport2World.eM22 + Dc->DcLevel.xformVport2World.eDy;
+  XFORM xformVport2World;
+
+  MatrixS2XForm(&xformVport2World, &Dc->DcLevel.mxDeviceToWorld);
+
+  Point->x = x * xformVport2World.eM11 +
+    y * xformVport2World.eM21 + xformVport2World.eDx;
+  Point->y = x * xformVport2World.eM12 +
+    y * xformVport2World.eM22 + xformVport2World.eDy;
 }
 
 VOID
@@ -158,28 +162,34 @@ IntGdiModifyWorldTransform(PDC pDc,
                            DWORD Mode)
 {
    ASSERT(pDc);
+   XFORM xformWorld2Wnd;
 
    switch(Mode)
    {
      case MWT_IDENTITY:
-       pDc->DcLevel.xformWorld2Wnd.eM11 = 1.0f;
-       pDc->DcLevel.xformWorld2Wnd.eM12 = 0.0f;
-       pDc->DcLevel.xformWorld2Wnd.eM21 = 0.0f;
-       pDc->DcLevel.xformWorld2Wnd.eM22 = 1.0f;
-       pDc->DcLevel.xformWorld2Wnd.eDx  = 0.0f;
-       pDc->DcLevel.xformWorld2Wnd.eDy  = 0.0f;
+       xformWorld2Wnd.eM11 = 1.0f;
+       xformWorld2Wnd.eM12 = 0.0f;
+       xformWorld2Wnd.eM21 = 0.0f;
+       xformWorld2Wnd.eM22 = 1.0f;
+       xformWorld2Wnd.eDx  = 0.0f;
+       xformWorld2Wnd.eDy  = 0.0f;
+       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
        break;
 
      case MWT_LEFTMULTIPLY:
-       IntGdiCombineTransform(&pDc->DcLevel.xformWorld2Wnd, lpXForm, &pDc->DcLevel.xformWorld2Wnd );
+       MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+       IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
+       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
        break;
 
      case MWT_RIGHTMULTIPLY:
-       IntGdiCombineTransform(&pDc->DcLevel.xformWorld2Wnd, &pDc->DcLevel.xformWorld2Wnd, lpXForm);
+       MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+       IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
+       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
        break;
 
      case MWT_MAX+1: // Must be MWT_SET????
-       pDc->DcLevel.xformWorld2Wnd = *lpXForm; // Do it like Wine.
+       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, lpXForm); // Do it like Wine.
        break;
 
      default:
@@ -219,7 +229,7 @@ NtGdiGetTransform(HDC  hDC,
    switch(iXform)
    {
      case GdiWorldSpaceToPageSpace:
-        *XForm = dc->DcLevel.xformWorld2Wnd;
+        MatrixS2XForm(XForm, &dc->DcLevel.mxWorldToPage);
      break;
      default:
      break;
@@ -240,16 +250,20 @@ FASTCALL
 CoordLPtoDP ( PDC Dc, LPPOINT Point )
 {
   FLOAT x, y;
+  XFORM xformWorld2Vport;
 
-  ASSERT ( Dc );
-  ASSERT ( Point );
+  ASSERT(Dc);
+  ASSERT(Point);
 
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
-  Point->x = x * Dc->DcLevel.xformWorld2Vport.eM11 +
-    y * Dc->DcLevel.xformWorld2Vport.eM21 + Dc->DcLevel.xformWorld2Vport.eDx;
-  Point->y = x * Dc->DcLevel.xformWorld2Vport.eM12 +
-    y * Dc->DcLevel.xformWorld2Vport.eM22 + Dc->DcLevel.xformWorld2Vport.eDy;
+  
+  MatrixS2XForm(&xformWorld2Vport, &Dc->DcLevel.mxWorldToDevice);
+  
+  Point->x = x * xformWorld2Vport.eM11 +
+    y * xformWorld2Vport.eM21 + xformWorld2Vport.eDx;
+  Point->y = x * xformWorld2Vport.eM12 +
+    y * xformWorld2Vport.eM22 + xformWorld2Vport.eDy;
 }
 
 VOID

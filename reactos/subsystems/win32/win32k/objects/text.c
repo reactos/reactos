@@ -2611,6 +2611,7 @@ NtGdiGetGlyphOutline(
   PVOID pvBuf = NULL;
   int n = 0;
   FT_CharMap found = 0, charmap;
+  XFORM xForm;
 
   DPRINT("%p, %d, %08x, %p, %08lx, %p, %p\n", hdc, wch, iFormat, pgm,
               cjBuf, UnsafeBuf, pmat2);
@@ -2623,7 +2624,10 @@ NtGdiGetGlyphOutline(
    }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  eM11 = dc->DcLevel.xformWorld2Vport.eM11;
+  
+  MatrixS2XForm(&xForm, &dc->DcLevel.mxWorldToDevice);
+  eM11 = xForm.eM11;
+  
   hFont = Dc_Attr->hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc(dc);

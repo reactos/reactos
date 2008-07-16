@@ -540,8 +540,7 @@ IntRectangle(PDC dc,
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
     /* Do we rotate or shear? */
-//    if (!(dc->DcLevel.mxWorldToDevice.flAccel & MXACC_DIAGONAL))
-    if (dc->DcLevel.xformWorld2Vport.eM12 != 0. || dc->DcLevel.xformWorld2Vport.eM21 != 0.)
+    if (!(dc->DcLevel.mxWorldToDevice.flAccel & MX_SCALE))
     {
         POINTL DestCoords[4];
         DestCoords[0].x = DestCoords[3].x = LeftRect;

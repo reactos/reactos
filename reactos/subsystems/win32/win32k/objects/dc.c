@@ -1359,9 +1359,9 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 #endif
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
   nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
-  newdc->DcLevel.xformWorld2Wnd   = dc->DcLevel.xformWorld2Wnd;
-  newdc->DcLevel.xformWorld2Vport = dc->DcLevel.xformWorld2Vport;
-  newdc->DcLevel.xformVport2World = dc->DcLevel.xformVport2World;
+  newdc->DcLevel.mxWorldToDevice = dc->DcLevel.mxWorldToDevice;
+  newdc->DcLevel.mxDeviceToWorld = dc->DcLevel.mxDeviceToWorld;
+  newdc->DcLevel.mxWorldToPage   = dc->DcLevel.mxWorldToPage;
   nDc_Attr->flXform         = Dc_Attr->flXform;
   nDc_Attr->ptlWindowOrg    = Dc_Attr->ptlWindowOrg;
   nDc_Attr->szlWindowExt    = Dc_Attr->szlWindowExt;
@@ -1425,9 +1425,9 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 #endif
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
   Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;
-  dc->DcLevel.xformWorld2Wnd     = dcs->DcLevel.xformWorld2Wnd;
-  dc->DcLevel.xformWorld2Vport   = dcs->DcLevel.xformWorld2Vport;
-  dc->DcLevel.xformVport2World   = dcs->DcLevel.xformVport2World;
+  dc->DcLevel.mxWorldToDevice = dcs->DcLevel.mxWorldToDevice;
+  dc->DcLevel.mxDeviceToWorld = dcs->DcLevel.mxDeviceToWorld;
+  dc->DcLevel.mxWorldToPage   = dcs->DcLevel.mxWorldToPage;
   Dc_Attr->flXform         = sDc_Attr->flXform;
   Dc_Attr->ptlWindowOrg    = sDc_Attr->ptlWindowOrg;
   Dc_Attr->szlWindowExt    = sDc_Attr->szlWindowExt;
@@ -2435,6 +2435,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   PDC_ATTR Dc_Attr;
   HDC  hDC;
   PWSTR Buf = NULL;
+  XFORM xformTemplate;
 
   if (Driver != NULL)
   {
@@ -2471,14 +2472,17 @@ DC_AllocDC(PUNICODE_STRING Driver)
   if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
 
   NewDC->BaseObject.hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
-  NewDC->DcLevel.xformWorld2Wnd.eM11 = 1.0f;
-  NewDC->DcLevel.xformWorld2Wnd.eM12 = 0.0f;
-  NewDC->DcLevel.xformWorld2Wnd.eM21 = 0.0f;
-  NewDC->DcLevel.xformWorld2Wnd.eM22 = 1.0f;
-  NewDC->DcLevel.xformWorld2Wnd.eDx = 0.0f;
-  NewDC->DcLevel.xformWorld2Wnd.eDy = 0.0f;
-  NewDC->DcLevel.xformWorld2Vport = NewDC->DcLevel.xformWorld2Wnd;
-  NewDC->DcLevel.xformVport2World = NewDC->DcLevel.xformWorld2Wnd;
+  
+  xformTemplate.eM11 = 1.0f;
+  xformTemplate.eM12 = 0.0f;
+  xformTemplate.eM21 = 0.0f;
+  xformTemplate.eM22 = 1.0f;
+  xformTemplate.eDx = 0.0f;
+  xformTemplate.eDy = 0.0f;
+  XForm2MatrixS(&NewDC->DcLevel.mxWorldToDevice, &xformTemplate);
+  XForm2MatrixS(&NewDC->DcLevel.mxDeviceToWorld, &xformTemplate);
+  XForm2MatrixS(&NewDC->DcLevel.mxWorldToPage, &xformTemplate);
+
 // Setup syncing bits for the dcattr data packets.
   Dc_Attr->flXform = DEVICE_TO_PAGE_INVALID;
 
@@ -2663,6 +2667,7 @@ DC_UpdateXforms(PDC  dc)
   FLOAT  scaleX, scaleY;
   PDC_ATTR Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
   /* Construct a transformation to do the window-to-viewport conversion */
   scaleX = (Dc_Attr->szlWindowExt.cx ? (FLOAT)Dc_Attr->szlViewportExt.cx / (FLOAT)Dc_Attr->szlWindowExt.cx : 0.0f);
@@ -2675,13 +2680,23 @@ DC_UpdateXforms(PDC  dc)
   xformWnd2Vport.eDy  = (FLOAT)Dc_Attr->ptlViewportOrg.y - scaleY * (FLOAT)Dc_Attr->ptlWindowOrg.y;
 
   /* Combine with the world transformation */
-  IntGdiCombineTransform(&dc->DcLevel.xformWorld2Vport, &dc->DcLevel.xformWorld2Wnd, &xformWnd2Vport);
+  MatrixS2XForm(&xformWorld2Vport, &dc->DcLevel.mxWorldToDevice);
+  MatrixS2XForm(&xformWorld2Wnd, &dc->DcLevel.mxWorldToPage);
+  IntGdiCombineTransform(&xformWorld2Vport, &xformWorld2Wnd, &xformWnd2Vport);
 
   /* Create inverse of world-to-viewport transformation */
-  if (DC_InvertXform(&dc->DcLevel.xformWorld2Vport, &dc->DcLevel.xformVport2World))
-     Dc_Attr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+  MatrixS2XForm(&xformVport2World, &dc->DcLevel.mxDeviceToWorld);
+  if (DC_InvertXform(&xformWorld2Vport, &xformVport2World))
+  {
+      Dc_Attr->flXform &= ~DEVICE_TO_WORLD_INVALID;
+  }
   else
-     Dc_Attr->flXform |= DEVICE_TO_WORLD_INVALID;
+  {
+      Dc_Attr->flXform |= DEVICE_TO_WORLD_INVALID;
+  }
+  
+  XForm2MatrixS(&dc->DcLevel.mxWorldToDevice, &xformWorld2Vport);
+
 }
 
 BOOL FASTCALL

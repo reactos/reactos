@@ -120,7 +120,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
      * tests show that resetting the graphics mode to GM_COMPATIBLE does
      * not reset the world transform.
      */
-    xform = dc->DcLevel.xformWorld2Wnd;
+    MatrixS2XForm(&xform, &dc->DcLevel.mxWorldToPage);
 
     /* Set MM_TEXT */
 //    IntGdiSetMapMode( dc, MM_TEXT );
@@ -1337,7 +1337,8 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     IntGetViewportOrgEx(dc, &ptViewportOrg);
     IntGetWindowExtEx(dc, &szWindowExt);
     IntGetWindowOrgEx(dc, &ptWindowOrg);
-    xform = dc->DcLevel.xformWorld2Wnd;
+    
+    MatrixS2XForm(&xform, &dc->DcLevel.mxWorldToPage);
 
     /* Set MM_TEXT */
     Dc_Attr->iMapMode = MM_TEXT;
@@ -1464,7 +1465,7 @@ end:
     Dc_Attr->ptlViewportOrg.y = ptViewportOrg.y;
 
     /* Restore the world transform */
-    dc->DcLevel.xformWorld2Wnd = xform;
+    XForm2MatrixS(&dc->DcLevel.mxWorldToPage, &xform);
 
     /* If we've moved the current point then get its new position
        which will be in device (MM_TEXT) co-ords, convert it to

@@ -113,9 +113,10 @@ VOID
 CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-  XForm2MatrixS( &dc->Dc_Attr.mxWorldToDevice, &dc->DcLevel.xformWorld2Vport);
-  XForm2MatrixS( &dc->Dc_Attr.mxDevicetoWorld, &dc->DcLevel.xformVport2World);
-  XForm2MatrixS( &dc->Dc_Attr.mxWorldToPage, &dc->DcLevel.xformWorld2Wnd);
+  dc->Dc_Attr.mxWorldToDevice = dc->DcLevel.mxWorldToDevice;
+  dc->Dc_Attr.mxDevicetoWorld = dc->DcLevel.mxDeviceToWorld;
+  dc->Dc_Attr.mxWorldToPage = dc->DcLevel.mxWorldToPage;
+
   _SEH_TRY
   {
       ProbeForWrite( Dc_Attr,

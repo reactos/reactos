@@ -32,10 +32,7 @@
 typedef struct _WIN_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hrgnMeta;     /* Meta region (may be 0) */
-  HRGN     hMetaClipRgn; /* Intersection of meta and clip regions (may be 0) */
   HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
-
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
   HBITMAP  hBitmap;
 
@@ -80,18 +77,9 @@ typedef struct _DCLEVEL
   BOOL              ufiSet;
   FLONG             fl;
   FLONG             flBrush;
-  union{
   MATRIX_S          mxWorldToDevice;
-  XFORM             xformWorld2Vport; /* World-to-viewport transformation */
-  };
-  union{
   MATRIX_S          mxDeviceToWorld;
-  XFORM             xformVport2World; /* Inverse of the above transformation */
-  };
-  union{  
   MATRIX_S          mxWorldToPage;
-  XFORM             xformWorld2Wnd;   /* World-to-window transformation */
-  };
   EFLOAT_S          efM11PtoD;
   EFLOAT_S          efM22PtoD;
   EFLOAT_S          efDxPtoD;
@@ -102,7 +90,7 @@ typedef struct _DCLEVEL
   EFLOAT_S          efPr22;
   PBITMAPOBJ        pSurface; // SURFACE*
   SIZE              sizl;
-} DCLEVEL, PDCLEVEL;
+} DCLEVEL, *PDCLEVEL;
 
 /* The DC object structure */
 typedef struct _DC
@@ -150,8 +138,6 @@ typedef struct _DC
 
   /* Reactos specific members */
   WIN_DC_INFO w;
-  HRGN        hprgnAPI; // should use prgnAPI
-  HRGN        hprgnVis; // should use prgnVis
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;
