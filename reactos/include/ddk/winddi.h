@@ -544,11 +544,15 @@ typedef struct _FD_KERNINGPAIR {
   FWORD  fwdKern;
 } FD_KERNINGPAIR;
 
+#if defined(_X86_) && !defined(USERMODE_DRIVER)
 typedef struct _FLOATOBJ
 {
   ULONG  ul1;
   ULONG  ul2;
 } FLOATOBJ, *PFLOATOBJ;
+#else
+typedef FLOAT FLOATOBJ, *PFLOATOBJ;
+#endif
 
 typedef struct _FLOATOBJ_XFORM {
   FLOATOBJ  eM11;
@@ -2287,6 +2291,7 @@ EngWritePrinter(
   IN DWORD  cbBuf,
   OUT LPDWORD  pcWritten);
 
+#if defined(_X86_) && !defined(USERMODE_DRIVER)
 WIN32KAPI
 VOID
 APIENTRY
@@ -2444,6 +2449,34 @@ APIENTRY
 FLOATOBJ_SubLong(
   IN OUT PFLOATOBJ  pf,
   IN LONG  l);
+
+#else
+
+#define FLOATOBJ_SetFloat(pf, f)        {*(pf) = (f);}
+#define FLOATOBJ_SetLong(pf, l)         {*(pf) = (FLOAT)(l);}
+#define FLOATOBJ_GetFloat(pf)           (*(PULONG)(pf))
+#define FLOATOBJ_GetLong(pf)            ((LONG)*(pf))
+#define FLOATOBJ_Add(pf, pf1)           {*(pf) += *(pf1);}
+#define FLOATOBJ_AddFloat(pf, f)        {*(pf) += (f);}
+#define FLOATOBJ_AddLong(pf, l)         {*(pf) += (l);}
+#define FLOATOBJ_Sub(pf, pf1)           {*(pf) -= *(pf1);}
+#define FLOATOBJ_SubFloat(pf, f)        {*(pf) -= (f);}
+#define FLOATOBJ_SubLong(pf, l)         {*(pf) -= (l);}
+#define FLOATOBJ_Mul(pf, pf1)           {*(pf) *= *(pf1);}
+#define FLOATOBJ_MulFloat(pf, f)        {*(pf) *= (f);}
+#define FLOATOBJ_MulLong(pf, l)         {*(pf) *= (l);}
+#define FLOATOBJ_Div(pf, pf1)           {*(pf) /= *(pf1);}
+#define FLOATOBJ_DivFloat(pf, f)        {*(pf) /= (f);}
+#define FLOATOBJ_DivLong(pf, l)         {*(pf) /= (l);}
+#define FLOATOBJ_Neg(pf)                {*(pf) = -(*(pf));}
+#define FLOATOBJ_Equal(pf, pf1)         (*(pf) == *(pf1))
+#define FLOATOBJ_GreaterThan(pf, pf1)   (*(pf) > *(pf1))
+#define FLOATOBJ_LessThan(pf, pf1)      (*(pf) < *(pf1))
+#define FLOATOBJ_EqualLong(pf, 1)       (*(pf) == (FLOAT)(1))
+#define FLOATOBJ_GreaterThanLong(pf, 1) (*(pf) > (FLOAT)(1))
+#define FLOATOBJ_LessThanLong(pf, 1)    (*(pf) < (FLOAT)(1))
+
+#endif
 
 WIN32KAPI
 ULONG
