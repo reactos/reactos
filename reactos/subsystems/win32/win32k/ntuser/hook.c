@@ -107,11 +107,14 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
    Hook->Thread = Thread;
    Hook->HookId = HookId;
 
-   W32Thread = ((PW32THREAD)Thread->Tcb.Win32Thread);
-   ASSERT(W32Thread != NULL);
-   W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
-   if (W32Thread->ThreadInfo != NULL)
-       W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
+   if (Thread)
+   {
+      W32Thread = ((PW32THREAD)Thread->Tcb.Win32Thread);
+      ASSERT(W32Thread != NULL);
+      W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
+      if (W32Thread->ThreadInfo != NULL)
+          W32Thread->ThreadInfo->Hooks = W32Thread->Hooks;
+   }
 
    RtlInitUnicodeString(&Hook->ModuleName, NULL);
 
@@ -318,7 +321,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       return IntCallLowLevelHook(HookId, Code, wParam, lParam, Hook);
    }
 
-   if (Hook->Thread != PsGetCurrentThread())
+   if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
    {
       DPRINT1("Calling hooks in other threads not implemented yet");
       return 0;
@@ -570,7 +573,7 @@ NtUserSetWindowsHookEx(
    /* We only (partially) support local WH_CBT hooks and
     * WH_KEYBOARD_LL/WH_MOUSE_LL hooks for now */
    if ((WH_CBT != HookId || Global)
-         && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId) // && WH_GETMESSAGE != HookId)
+         && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId && WH_GETMESSAGE != HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED

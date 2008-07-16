@@ -869,6 +869,8 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
   ASSERT ( counts );
   ASSERT ( polygons );
 
+  if (polygons == 1) return PATH_Polygon ( dc, pts, *counts );
+
   pPath = PATH_LockPath( dc->DcLevel.hPath );
   if (!pPath) return FALSE;
 
@@ -879,6 +881,9 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
     return FALSE;
   }
 
+  startpt.x = 0;
+  startpt.y = 0;
+
   for(i = 0, poly = 0; poly < polygons; poly++)
   {
     for(point = 0; point < (ULONG) counts[poly]; point++, i++)
@@ -886,7 +891,7 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
       pt = pts[i];
       CoordLPtoDP ( dc, &pt );
       if(point == 0) startpt = pt;
-        PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
+      PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
     /* win98 adds an extra line to close the figure for some reason */
     PATH_AddEntry(pPath, &startpt, PT_LINETO | PT_CLOSEFIGURE);

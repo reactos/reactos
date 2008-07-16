@@ -3333,6 +3333,7 @@ UserGetWindow(HWND hWnd, UINT Relationship)
          break;
 
       case GW_HWNDNEXT:
+         DPRINT1("GW_HWNDNEXT\n");
          if (Window->NextSibling)
             hWndResult = Window->NextSibling->hSelf;
          break;
@@ -3374,13 +3375,13 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
 {
    DECLARE_RETURN(HWND);
 
-   DPRINT("Enter NtUserGetWindow\n");
+   DPRINT1("Enter NtUserGetWindow\n");
    UserEnterShared();
 
    RETURN(UserGetWindow(hWnd, Relationship));
 
 CLEANUP:
-   DPRINT("Leave NtUserGetWindow, ret=%i\n",_ret_);
+   DPRINT1("Leave NtUserGetWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -4244,7 +4245,7 @@ NtUserSetWindowPos(
    BOOL ret;
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserSetWindowPos\n");
+   DPRINT1("Enter NtUserSetWindowPos\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -4259,7 +4260,7 @@ NtUserSetWindowPos(
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserSetWindowPos, ret=%i\n",_ret_);
+   DPRINT1("Leave NtUserSetWindowPos, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -4407,7 +4408,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
 
-   DPRINT("Enter NtUserShowWindow\n");
+   DPRINT1("Enter NtUserShowWindow\n");
    UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -4422,7 +4423,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    RETURN(ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserShowWindow, ret=%i\n",_ret_);
+   DPRINT1("Leave NtUserShowWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

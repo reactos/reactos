@@ -34,6 +34,7 @@
 #include <freetype/ftglyph.h>
 #include <freetype/ftoutln.h>
 #include <freetype/ftwinfnt.h>
+#include <freetype/ftmodapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -135,6 +136,35 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { DEFAULT_CHARSET, 0, FS(0)},
   { SYMBOL_CHARSET, 42 /* CP_SYMBOL */, FS(31)},
 };
+
+static FT_TrueTypeEngineType (*pFT_Get_TrueType_Engine_Type)(FT_Library);
+
+static
+BOOL
+is_hinting_enabled(void)
+{
+    /* Use the >= 2.2.0 function if available */
+    if(pFT_Get_TrueType_Engine_Type)
+    {
+        FT_TrueTypeEngineType type = pFT_Get_TrueType_Engine_Type(library);
+        return type == FT_TRUETYPE_ENGINE_TYPE_PATENTED;
+    }
+#ifdef FT_DRIVER_HAS_HINTER
+    else
+    {
+        FT_Module mod;
+
+        /* otherwise if we've been compiled with < 2.2.0 headers 
+           use the internal macro */
+        mod = pFT_Get_Module(library, "truetype");
+        if(mod && FT_DRIVER_HAS_HINTER(mod))
+            return TRUE;
+    }
+#endif
+
+    return FALSE;
+}
+
 
 BOOL FASTCALL
 InitFontSupport(VOID)
@@ -3295,7 +3325,12 @@ NtGdiGetRasterizerCaps(
     OUT LPRASTERIZER_STATUS praststat,
     IN ULONG cjBytes)
 {
-  UNIMPLEMENTED;
+  static int hinting = -1;
+  
+  if(hinting == -1)
+  {
+     hinting = is_hinting_enabled();
+  }
   return FALSE;
 }
 
@@ -3902,11 +3937,23 @@ NtGdiGetTextMetricsW(
 BOOL
 STDCALL
 NtGdiSetTextJustification(HDC  hDC,
-                               int  BreakExtra,
-                               int  BreakCount)
+                          int  BreakExtra,
+                          int  BreakCount)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  PDC Dc;
+  PDC_ATTR Dc_Attr;
+  Dc = DC_LockDc(hDC);
+  if (!Dc)
+  {
+     return FALSE;
+  }
+  Dc_Attr = Dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+
+  Dc_Attr->cBreak = BreakCount;
+  Dc_Attr->lBreakExtra = BreakExtra;
+  DC_UnlockDc(Dc);
+  return TRUE;
 }
 
 DWORD STDCALL
