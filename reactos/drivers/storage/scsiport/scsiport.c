@@ -2894,8 +2894,12 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+    else
+    {
+        /* Release the spinlock only */
+        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+    }
 
-    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
     DPRINT("ScsiPortStartIo() done\n");
 }
