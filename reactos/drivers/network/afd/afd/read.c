@@ -154,6 +154,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                 FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
+            UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
             FCB->Overread = TRUE;
             //FCB->PollState |= AFD_EVENT_DISCONNECT;
@@ -197,6 +198,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 		NextIrp->IoStatus.Status = Status;
 		NextIrp->IoStatus.Information = TotalBytesCopied;
                 if( NextIrp == Irp ) RetStatus = Status;
+		UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	    }
 	}
@@ -224,6 +226,11 @@ NTSTATUS NTAPI ReceiveComplete
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     ASSERT_IRQL(APC_LEVEL);
+
+    if (Irp->Cancel) {
+        FCB->ReceiveIrp.InFlightRequest = NULL;
+        return STATUS_SUCCESS;
+    }
 
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
@@ -299,7 +306,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !RecvReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                       Irp, 0, NULL, FALSE );
+                                       Irp, 0, NULL, TRUE );
     }
 
     Irp->IoStatus.Status = STATUS_PENDING;
@@ -440,6 +447,11 @@ PacketSocketRecvComplete(
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+
+    if (Irp->Cancel) {
+        FCB->ReceiveIrp.InFlightRequest = NULL;
+        return STATUS_SUCCESS;
+    }
 
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_UNSUCCESSFUL;
 

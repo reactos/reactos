@@ -82,6 +82,7 @@ static NTSTATUS NTAPI ListenComplete
 
     if ( Irp->Cancel ) {
 	/* FIXME: is this anything else we need to do? */
+	FCB->ListenIrp.InFlightRequest = NULL;
 	return STATUS_SUCCESS;
     }
 

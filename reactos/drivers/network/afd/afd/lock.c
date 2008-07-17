@@ -243,7 +243,9 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
 	   otherwise it may be completed by StreamSocketConnectComplete()
 	   before we return from SocketStateUnlock(). */
 	IoMarkIrpPending( Irp );
-    SocketStateUnlock( FCB );
+	SocketStateUnlock( FCB );
+	if( ShouldUnlock )
+	    UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     } else {
 	SocketStateUnlock( FCB );
 	Irp->IoStatus.Status = Status;
