@@ -780,21 +780,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 }
 
 static VOID FASTCALL
-GuiConsoleGetLogicalCursorPos(PCSRSS_SCREEN_BUFFER Buff, ULONG *CursorX, ULONG *CursorY)
-{
-  *CursorX = Buff->CurrentX;
-  if (Buff->CurrentY < Buff->ShowY)
-    {
-      *CursorY = Buff->MaxY - Buff->ShowY + Buff->CurrentY;
-    }
-  else
-    {
-      *CursorY = Buff->CurrentY - Buff->ShowY;
-    }
-}
-
-
-static VOID FASTCALL
 GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
 {
   RECT oldRect = GuiData->Selection;
@@ -895,15 +880,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
-        if (Line + Buff->ShowY < Buff->MaxY)
-        {
-            From = Buff->Buffer + ((Line + Buff->ShowY) * Buff->MaxX + LeftChar) * 2;
-        }
-        else
-        {
-            From = Buff->Buffer +
-                   ((Line - (Buff->MaxY - Buff->ShowY)) * Buff->MaxX + LeftChar) * 2;
-        }
+        From = Buff->Buffer + ConioGetBufferOffset(Buff, LeftChar, Line);
         Start = LeftChar;
         To = GuiData->LineBuffer;
 
@@ -947,9 +924,8 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
     if (Buff->CursorInfo.bVisible && GuiData->CursorBlinkOn &&
         !GuiData->ForceCursorOff)
     {
-        GuiConsoleGetLogicalCursorPos(Buff,
-                                      &CursorX,
-                                      &CursorY);
+        CursorX = Buff->CurrentX;
+        CursorY = Buff->CurrentY;
         if (LeftChar <= CursorX && CursorX <= RightChar &&
             TopLine <= CursorY && CursorY <= BottomLine)
         {
@@ -958,7 +934,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
             {
                 CursorHeight = 1;
             }
-            From = Buff->Buffer + (Buff->CurrentY * Buff->MaxX + Buff->CurrentX) * 2 + 1;
+            From = Buff->Buffer + ConioGetBufferOffset(Buff, Buff->CurrentX, Buff->CurrentY) + 1;
 
             if (*From != DEFAULT_ATTRIB)
             {
@@ -1165,8 +1141,8 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
       GuiInvalidateCell(GuiData, Console->hWindow, CursorStartX, CursorStartY);
     }
 
-  ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
-                         &CursorEndX, &CursorEndY);
+  CursorEndX = Buff->CurrentX;
+  CursorEndY = Buff->CurrentY;
   if ((CursorEndX < Region->left || Region->right < CursorEndX
        || CursorEndY < Region->top || Region->bottom < CursorEndY)
       && (CursorEndX != CursorStartX || CursorEndY != CursorStartY))
@@ -1182,8 +1158,8 @@ GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 
   if (Console->ActiveBuffer == Buff)
     {
-      ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
-                             &UpdateRect.left, &UpdateRect.top);
+      UpdateRect.left = Buff->CurrentX;
+      UpdateRect.top = Buff->CurrentY;
       UpdateRect.right = UpdateRect.left;
       UpdateRect.bottom = UpdateRect.top;
       ConioDrawRegion(Console, &UpdateRect);
@@ -1206,8 +1182,8 @@ GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
       UpdateRect.bottom = OldCursorY;
       ConioDrawRegion(Console, &UpdateRect);
       /* Redraw char at new position (shows cursor) */
-      ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
-                             &(UpdateRect.left), &(UpdateRect.top));
+      UpdateRect.left = Buff->CurrentX;
+      UpdateRect.top = Buff->CurrentY;
       UpdateRect.right = UpdateRect.left;
       UpdateRect.bottom = UpdateRect.top;
       ConioDrawRegion(Console, &UpdateRect);
@@ -1236,16 +1212,14 @@ GuiConsoleHandleTimer(HWND hWnd)
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
   RECT CursorRect;
-  ULONG CursorX, CursorY;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   GuiData->CursorBlinkOn = ! GuiData->CursorBlinkOn;
 
-  GuiConsoleGetLogicalCursorPos(Console->ActiveBuffer, &CursorX, &CursorY);
-  CursorRect.left = CursorX;
-  CursorRect.top = CursorY;
-  CursorRect.right = CursorX;
-  CursorRect.bottom = CursorY;
+  CursorRect.left = Console->ActiveBuffer->CurrentX;
+  CursorRect.top = Console->ActiveBuffer->CurrentY;
+  CursorRect.right = CursorRect.left;
+  CursorRect.bottom = CursorRect.top;
   GuiDrawRegion(Console, &CursorRect);
 }
 
@@ -1575,21 +1549,16 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 {
   DWORD windx, windy;
   RECT rect;
-  PCSRSS_SCREEN_BUFFER ActiveBuffer;
-  PCSRSS_PROCESS_DATA ProcessData = NULL;
+  PCSRSS_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
 
-  if (Console->ProcessList.Flink != &Console->ProcessList)
-    {
-      ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
-      ConioLockScreenBuffer(ProcessData, Console->hActiveBuffer, (Object_t **)&ActiveBuffer);
-    }
+  EnterCriticalSection(&ActiveBuffer->Header.Lock);
 
   /* apply text / background color */
   GuiData->ScreenText = pConInfo->ScreenText;
   GuiData->ScreenBackground = pConInfo->ScreenBackground;
 
   /* apply cursor size */
-  Console->ActiveBuffer->CursorInfo.dwSize = max(min(pConInfo->CursorSize, 1), 100);
+  ActiveBuffer->CursorInfo.dwSize = max(min(pConInfo->CursorSize, 1), 100);
 
   windx = LOWORD(pConInfo->ScreenBuffer);
   windy = HIWORD(pConInfo->ScreenBuffer);
@@ -1640,13 +1609,13 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
                 }
 #endif
                 Offset += (diff * 2);
-                BufferOffset += (Console->ActiveBuffer->MaxX * 2);
+                BufferOffset += (ActiveBuffer->MaxX * 2);
             }
         }
 
-        if (windy > Console->ActiveBuffer->MaxY)
+        if (windy > ActiveBuffer->MaxY)
         {
-            diff = windy - Console->ActiveBuffer->MaxX;
+            diff = windy - ActiveBuffer->MaxX;
 #if HAVE_WMEMSET
                 wmemset((WCHAR*)&Buffer[Offset], value, diff * windx);
 #else
@@ -1658,18 +1627,15 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 #endif
         }
 
-        (void)InterlockedExchangePointer((PVOID volatile  *)&Console->ActiveBuffer->Buffer, Buffer);
+        (void)InterlockedExchangePointer((PVOID volatile  *)&ActiveBuffer->Buffer, Buffer);
         HeapFree(Win32CsrApiHeap, 0, OldBuffer);
-        Console->ActiveBuffer->MaxX = windx;
-        Console->ActiveBuffer->MaxY = windy;
+        ActiveBuffer->MaxX = windx;
+        ActiveBuffer->MaxY = windy;
         InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
      }
      else
      {
-        if (ProcessData)
-        {
-            ConioUnlockScreenBuffer(ActiveBuffer);
-        }
+        LeaveCriticalSection(&ActiveBuffer->Header.Lock);
         return;
      }
   }
@@ -1687,10 +1653,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
       }
       else
       {
-          if (ProcessData)
-          {
-              ConioUnlockScreenBuffer(ActiveBuffer);
-          }
+          LeaveCriticalSection(&ActiveBuffer->Header.Lock);
           return;
       }
   }
@@ -1709,7 +1672,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 
       MoveWindow(pConInfo->hConsoleWindow, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE);
 
-      if (Console->Size.X < Console->ActiveBuffer->MaxX)
+      if (Console->Size.X < ActiveBuffer->MaxX)
       {
           /* show scrollbar when window becomes smaller than active screen buffer */
           ShowScrollBar(pConInfo->hConsoleWindow, SB_CTL, TRUE);
@@ -1720,10 +1683,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
           ShowScrollBar(pConInfo->hConsoleWindow, SB_CTL, FALSE);
       }
   }
-  if (ProcessData)
-  {
-      ConioUnlockScreenBuffer(ActiveBuffer);
-  }
+  LeaveCriticalSection(&ActiveBuffer->Header.Lock);
   InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
 
@@ -2087,10 +2047,10 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
 }
 
 static BOOL STDCALL
-GuiChangeIcon(PCSRSS_CONSOLE Console)
+GuiChangeIcon(PCSRSS_CONSOLE Console, HICON hWindowIcon)
 {
-  SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)Console->hWindowIcon);
-  SendMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)Console->hWindowIcon);
+  SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)hWindowIcon);
+  SendMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)hWindowIcon);
 
   return TRUE;
 }

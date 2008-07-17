@@ -3285,13 +3285,6 @@ GetConsoleTitleW(
 {
    PCSR_API_MESSAGE Request; ULONG CsrRequest;
    NTSTATUS Status;
-   HANDLE hConsole;
-
-   hConsole = CreateFileW(L"CONIN$", GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-   if (hConsole == INVALID_HANDLE_VALUE)
-   {
-      return 0;
-   }
 
    Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_TITLE) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
@@ -3302,13 +3295,11 @@ GetConsoleTitleW(
    }
 
    CsrRequest = MAKE_CSR_API(GET_TITLE, CSR_CONSOLE);
-   Request->Data.GetTitleRequest.ConsoleHandle = hConsole;
 
    Status = CsrClientCallServer(Request, 
                                 NULL, 
                                 CsrRequest, 
                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_TITLE) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
-   CloseHandle(hConsole);
    if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request->Status)))
    {
       RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
@@ -3388,13 +3379,6 @@ SetConsoleTitleW(
   PCSR_API_MESSAGE Request; ULONG CsrRequest;
   NTSTATUS Status;
   unsigned int c;
-  HANDLE hConsole;
-
-  hConsole = CreateFileW(L"CONIN$", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (hConsole == INVALID_HANDLE_VALUE)
-  {
-     return FALSE;
-  }
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max (sizeof(CSR_API_MESSAGE),
@@ -3407,7 +3391,6 @@ SetConsoleTitleW(
   }
 
   CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
-  Request->Data.SetTitleRequest.Console = hConsole;
 
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -3416,7 +3399,6 @@ SetConsoleTitleW(
 			       NULL,
                                CsrRequest,
 			       max (sizeof(CSR_API_MESSAGE), CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + c * sizeof(WCHAR)));
-  CloseHandle(hConsole);
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Request->Status ) )
     {
       RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
@@ -3446,13 +3428,6 @@ SetConsoleTitleA(
   PCSR_API_MESSAGE Request; ULONG CsrRequest;
   NTSTATUS Status;
   unsigned int c;
-  HANDLE hConsole;
-
-  hConsole = CreateFileW(L"CONIN$", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (hConsole == INVALID_HANDLE_VALUE)
-  {
-     return FALSE;
-  }
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max (sizeof(CSR_API_MESSAGE),
@@ -3465,7 +3440,6 @@ SetConsoleTitleA(
   }
 
   CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
-  Request->Data.SetTitleRequest.Console = hConsole;
 
   for( c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++ )
     Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -3474,7 +3448,6 @@ SetConsoleTitleA(
 			       NULL,
                                CsrRequest,
 			       max (sizeof(CSR_API_MESSAGE), CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + c * sizeof(WCHAR)));
-  CloseHandle(hConsole);
   if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Request->Status ) )
     {
       RtlFreeHeap(RtlGetProcessHeap(), 0, Request);

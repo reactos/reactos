@@ -25,7 +25,7 @@
  * do a massive memcpy() to scroll the contents of the buffer up to     *
  * scroll the screen on output, instead I just shift down the position  *
  * to be displayed, and let it wrap around to the top again.            *
- * The VirtualX member keeps track of the top X coord that win32        *
+ * The VirtualY member keeps track of the top Y coord that win32        *
  * clients THINK is currently being displayed, because they think that  *
  * when the display reaches the bottom of the buffer and another line   *
  * being printed causes another line to scroll down, that the buffer IS *
@@ -42,7 +42,7 @@ typedef struct tagCSRSS_SCREEN_BUFFER
   ULONG CurrentX;                  /* Current X cursor position */
   ULONG CurrentY;                  /* Current Y cursor position */
   BYTE DefaultAttrib;              /* default char attribute */
-  USHORT VirtualX;                 /* top row of buffer being displayed, reported to callers */
+  USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
   CONSOLE_CURSOR_INFO CursorInfo;
   USHORT Mode;
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
@@ -59,7 +59,7 @@ typedef struct tagCSRSS_CONSOLE_VTBL
   BOOL (STDCALL *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
   BOOL (STDCALL *ChangeTitle)(PCSRSS_CONSOLE Console);
   VOID (STDCALL *CleanupConsole)(PCSRSS_CONSOLE Console);
-  BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console);
+  BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
 } CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
@@ -71,19 +71,12 @@ typedef struct tagCSRSS_CONSOLE
   WORD WaitingChars;
   WORD WaitingLines;                    /* number of chars and lines in input queue */
   PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
-  HANDLE hActiveBuffer;
   WORD Mode;                            /* Console mode flags */
   WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
   UNICODE_STRING Title;                 /* Title of console */
-  struct				/* active code pages */
-    {
-      UINT Input;
-      UINT Output;
-    } CodePageId;
   BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
   DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
   HWND hWindow;
-  HICON hWindowIcon;
   COORD Size;
   PVOID PrivateData;
   UINT CodePage;
@@ -95,11 +88,7 @@ typedef struct tagCSRSS_CONSOLE
 VOID STDCALL ConioDeleteConsole(Object_t *Object);
 VOID STDCALL ConioDeleteScreenBuffer(Object_t *Buffer);
 void STDCALL ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
-void FASTCALL ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
-                                     ULONG PhysicalX,
-                                     ULONG PhysicalY,
-                                     LONG *LogicalX,
-                                     LONG *LogicalY);
+DWORD FASTCALL ConioGetBufferOffset(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,
@@ -171,7 +160,7 @@ CSR_API(CsrGetProcessList);
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
-#define ConioChangeIcon(Console) (Console)->Vtbl->ChangeIcon(Console)
+#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
 
 #endif /* CONIO_H_INCLUDED */
 

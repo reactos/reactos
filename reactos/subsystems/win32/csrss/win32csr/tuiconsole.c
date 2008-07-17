@@ -86,8 +86,7 @@ TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
   LONG i;
   PBYTE Src, SrcEnd;
 
-  Src = Buff->Buffer + (((Region->top + Buff->ShowY) % Buff->MaxY) * Buff->MaxX
-                        + Region->left + Buff->ShowX) * 2;
+  Src = Buff->Buffer + ConioGetBufferOffset(Buff, Region->left, Region->top);
   SrcDelta = Buff->MaxX * 2;
   SrcEnd = Buff->Buffer + Buff->MaxY * Buff->MaxX * 2;
   DestDelta = ConioRectWidth(Region) * 2;
@@ -108,7 +107,6 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 {
   DWORD BytesReturned;
   PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
-  LONG CursorX, CursorY;
   PCONSOLE_DRAW ConsoleDraw;
   UINT ConsoleDrawSize;
 
@@ -125,13 +123,12 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
       DPRINT1("HeapAlloc failed\n");
       return;
     }
-  ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY, &CursorX, &CursorY);
   ConsoleDraw->X = Region->left;
   ConsoleDraw->Y = Region->top;
   ConsoleDraw->SizeX = ConioRectWidth(Region);
   ConsoleDraw->SizeY = ConioRectHeight(Region);
-  ConsoleDraw->CursorX = CursorX;
-  ConsoleDraw->CursorY = CursorY;
+  ConsoleDraw->CursorX = Buff->CurrentX;
+  ConsoleDraw->CursorY = Buff->CurrentY;
 
   TuiCopyRect((char *) (ConsoleDraw + 1), Buff, Region);
 
@@ -189,7 +186,6 @@ static BOOL STDCALL
 TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
 {
   CONSOLE_SCREEN_BUFFER_INFO Info;
-  LONG CursorX, CursorY;
   DWORD BytesReturned;
 
   if (ActiveConsole->ActiveBuffer != Buff)
@@ -197,9 +193,8 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
       return TRUE;
     }
 
-  ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY, &CursorX, &CursorY);
-  Info.dwCursorPosition.X = CursorX;
-  Info.dwCursorPosition.Y = CursorY;
+  Info.dwCursorPosition.X = Buff->CurrentX;
+  Info.dwCursorPosition.Y = Buff->CurrentY;
   Info.wAttributes = Buff->DefaultAttrib;
 
   if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
