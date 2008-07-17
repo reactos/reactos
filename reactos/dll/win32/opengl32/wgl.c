@@ -8,21 +8,6 @@
  *                       Feb 2, 2004: Created
  */
 
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#include <windows.h>
-
-#define NTOS_MODE_USER
-#include <ddraw.h>
-#include <ddrawi.h>
-#include <winddi.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "teb.h"
-
 #define OPENGL32_GL_FUNC_PROTOTYPES
 #include "opengl32.h"
 

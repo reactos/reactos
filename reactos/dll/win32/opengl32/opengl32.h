@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/opengl32/opengl32.h
@@ -28,6 +27,22 @@ extern "C" {
 
 #define OPENGL_DRIVERS_SUBKEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers"
 #define OPENGL_DRIVERS_SUBKEY2 L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
+#include <windows.h>
+
+#include <winreg.h>
+
+#define NTOS_MODE_USER
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <winddi.h>
+#include <ndk/ntndk.h>
 
 /* gl function list */
 #include "glfuncs.h"

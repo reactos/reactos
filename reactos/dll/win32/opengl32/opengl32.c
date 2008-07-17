@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/opengl32/opengl32.c
@@ -9,15 +8,7 @@
  *                       Feb 1, 2004: Created
  */
 
-#define WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <winreg.h>
-#include "teb.h"
-
-#include <string.h>
 #include "opengl32.h"
-
 
 /* function prototypes */
 static void OPENGL32_AppendICD( GLDRIVERDATA *icd );

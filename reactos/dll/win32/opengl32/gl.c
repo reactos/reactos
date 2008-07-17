@@ -19,15 +19,10 @@
  *
  * On other machines we use C to forward the calls (slow...)
  */
-
-#define WIN32_LEANER_AND_MEANER
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include "teb.h"
+ 
+#include "opengl32.h"
 
 C_ASSERT(FIELD_OFFSET(TEB, glTable) == 0xbe8);
-
-#include "opengl32.h"
 
 int STDCALL glEmptyFunc0() { return 0; }
 int STDCALL glEmptyFunc4( long l1 ) { return 0; }

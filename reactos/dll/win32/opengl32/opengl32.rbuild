@@ -6,6 +6,7 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>advapi32</library>
+	<pch>opengl32.h</pch>
 	<file>gl.c</file>
 	<file>opengl32.c</file>
 	<file>wgl.c</file>
