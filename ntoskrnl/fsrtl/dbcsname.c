@@ -217,10 +217,10 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         return FALSE;
 
     /* Now, only work on filename */
-    if (LastSlash)
+    if (LastSlash || FirstSlash)
     {
         FileName.Buffer = DbcsName.Buffer + LastSlash + 1;
-        FileName.Length = (DbcsName.Length - LastSlash) * sizeof(CHAR);
+        FileName.Length = (DbcsName.Length - LastSlash - 1) * sizeof(CHAR);
         FileName.MaximumLength = DbcsName.MaximumLength - FileName.Length;
         
     }
