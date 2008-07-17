@@ -110,7 +110,7 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
   else
   {
     for ( i = 0; i < Count; i++ )
-      CoordCnvP ( &Dc_Attr->mxDevicetoWorld, &Points[i] );
+      CoordCnvP ( &Dc_Attr->mxDeviceToWorld, &Points[i] );
   }
   return TRUE;
 #endif

@@ -114,7 +114,7 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   dc->Dc_Attr.mxWorldToDevice = dc->DcLevel.mxWorldToDevice;
-  dc->Dc_Attr.mxDevicetoWorld = dc->DcLevel.mxDeviceToWorld;
+  dc->Dc_Attr.mxDeviceToWorld = dc->DcLevel.mxDeviceToWorld;
   dc->Dc_Attr.mxWorldToPage = dc->DcLevel.mxWorldToPage;
 
   _SEH_TRY

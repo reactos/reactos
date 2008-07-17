@@ -291,7 +291,7 @@ typedef struct _DC_ATTR
     LONG cBreak;
     HANDLE hlfntNew;
     MATRIX_S mxWorldToDevice;
-    MATRIX_S mxDevicetoWorld;
+    MATRIX_S mxDeviceToWorld;
     MATRIX_S mxWorldToPage;
     EFLOAT_S efM11PtoD;
     EFLOAT_S efM22PtoD;
