@@ -156,6 +156,8 @@ EnumerateNt4ServiceSoundDevices(
     VALIDATE_MMSYS_PARAMETER( VALID_SOUND_DEVICE_TYPE(DeviceType) ||
                               DeviceType == 0 );
 
+    MessageBox(0, ServiceName, L"Looking for devices", MB_OK | MB_TASKMODAL);
+
     while ( OpenSoundDeviceRegKey(ServiceName, KeyIndex, &Key) == MMSYSERR_NOERROR )
     {
         HKEY DevicesKey;

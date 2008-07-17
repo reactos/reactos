@@ -18,8 +18,8 @@
 #include <mmebuddy.h>
 //#include <debug.h>
 
-PWSTR SBWaveOutDeviceName = L"Sound Blaster Playback";
-PWSTR SBWaveInDeviceName  = L"Sound Blaster Recording";
+PWSTR SBWaveOutDeviceName = L"Sound Blaster Playback (silverblade)";
+PWSTR SBWaveInDeviceName  = L"Sound Blaster Recording (silverblade)";
 /* TODO: Mixer etc */
 
 
@@ -86,29 +86,41 @@ DriverProc(
     LONG parameter1,
     LONG parameter2)
 {
+    MMRESULT Result;
+/*
+    WCHAR msg[1024];
+    wsprintf(msg, L"DriverProc msg %d", message);
+    MessageBox(0, msg, L"DriverProc", MB_OK | MB_TASKMODAL);
+*/
+
     switch ( message )
     {
         case DRV_LOAD :
             TRACE_("DRV_LOAD");
 
-            EnumerateNt4ServiceSoundDevices(L"sndblst",
-                                            0,
-                                            FoundDevice);
+            InitMmeBuddyLib();
+
+            Result = EnumerateNt4ServiceSoundDevices(L"sndblst",
+                                                     0,
+                                                     FoundDevice);
 
             /* TODO: Check return value */
-            StartSoundThread();
+            //Result = StartSoundThread();
+            //ASSERT(Result == MMSYSERR_NOERROR);
 
             return 1L;
 
         case DRV_FREE :
             TRACE_("DRV_FREE");
 
-            StopSoundThread();
+            //StopSoundThread();
 
             RemoveAllSoundDevices();
 
 //            SOUND_DEBUG_HEX(GetMemoryAllocations());
             TRACE_("Leaving driver with %d memory allocations present\n", (int) GetMemoryAllocations());
+
+            CleanupMmeBuddyLib();
 
             return 1L;
 
@@ -121,7 +133,7 @@ DriverProc(
     }
 }
 
-
+#if 0
 #include <stdio.h>
 
 WORD Buffer[5347700 / 2];
@@ -252,4 +264,29 @@ int APIENTRY wWinMain(
     DriverProc(0, 0, DRV_FREE, 0, 0);
 
     return 0;
+}
+#endif
+
+BOOL WINAPI DllMain(
+    HINSTANCE hinstDLL,
+    DWORD fdwReason,
+    LPVOID lpvReserved)
+{
+    switch ( fdwReason )
+    {
+        case DLL_PROCESS_ATTACH :
+            MessageBox(0, L"DLL_PROCESS_ATTACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            break;
+        case DLL_PROCESS_DETACH :
+            MessageBox(0, L"DLL_PROCESS_DETACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            break;
+        case DLL_THREAD_ATTACH :
+            MessageBox(0, L"DLL_THREAD_ATTACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            break;
+        case DLL_THREAD_DETACH :
+            MessageBox(0, L"DLL_THREAD_DETACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            break;
+    }
+
+    return TRUE;
 }

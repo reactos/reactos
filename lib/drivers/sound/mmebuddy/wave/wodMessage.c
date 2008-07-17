@@ -29,31 +29,40 @@ wodMessage(
     PSOUND_DEVICE_INSTANCE Instance =
         (PSOUND_DEVICE_INSTANCE)private_handle;
 
+    AcquireEntrypointMutex();
+
     TRACE_("wodMessageStub called\n");
+//    MessageBox(0, L"wodMessage", L"wodMessage", MB_OK | MB_TASKMODAL);
 
     switch ( message )
     {
         case WODM_GETNUMDEVS :
-            return GetSoundDeviceCount(WAVE_OUT_DEVICE_TYPE);
+        {
+            Result = GetSoundDeviceCount(WAVE_OUT_DEVICE_TYPE);
+            break;
+        }
 
         case WODM_GETDEVCAPS :
         {
             UNIVERSAL_CAPS Capabilities;
 
             if ( parameter2 < sizeof(WAVEOUTCAPS) )
-                return MMSYSERR_INVALPARAM;
+            {
+                Result = MMSYSERR_INVALPARAM;
+                break;
+            }
 
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             if ( Result != MMSYSERR_NOERROR )
-                return Result;
+                break;
 
             Result = GetSoundDeviceCapabilities(Device, &Capabilities);
             if ( Result != MMSYSERR_NOERROR )
-                return Result;
+                break;
 
             CopyMemory((LPWAVEOUTCAPS)parameter1, &Capabilities.WaveOut, parameter2);
 
-            return Result;
+            break;
         }
 
         case WODM_OPEN :
@@ -64,9 +73,8 @@ wodMessage(
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, device_id, &Device);
             TRACE_("GetSoundDevice == %d\n", (int) Result);
 
-
             if ( Result != MMSYSERR_NOERROR )
-                return Result;
+                break;
 
             if ( parameter2 & WAVE_FORMAT_QUERY )
             {
@@ -74,16 +82,19 @@ wodMessage(
                                                OpenParameters->lpFormat,
                                                sizeof(WAVEFORMATEX));
 
-                return Result;
+                break;
             }
 
             ASSERT(private_handle != 0);
+
+            // HACK
+            StartSoundThread();
 
             Result = CreateSoundDeviceInstance(Device, &Instance);
             TRACE_("CreateSoundDeviceInstance == %d\n", (int) Result);
 
             if ( Result != MMSYSERR_NOERROR )
-                return Result;
+                break;
 
             Result = SetWaveDeviceFormat(Instance,
                                          OpenParameters->lpFormat,
@@ -92,7 +103,7 @@ wodMessage(
             if ( Result != MMSYSERR_NOERROR )
             {
                 DestroySoundDeviceInstance(Instance);
-                return Result;
+                break;
             }
 
             /* Set up the callback - TODO: Put this somewhere else? */
@@ -108,7 +119,8 @@ wodMessage(
             /* Notify the client */
             NotifySoundClient(Instance, WOM_OPEN, 0);
 
-            return MMSYSERR_NOERROR;
+            Result = MMSYSERR_NOERROR;
+            break;
         }
 
         case WODM_CLOSE :
@@ -124,13 +136,19 @@ wodMessage(
 
             /* Must not be playing or paused */
             if ( State != WAVE_DD_IDLE )
-                return WAVERR_STILLPLAYING;
+            {
+                Result = WAVERR_STILLPLAYING;
+                break;
+            }
 
             /* Notify the client */
             NotifySoundClient(Instance, WOM_CLOSE, 0);
 
             Result = DestroySoundDeviceInstance(Instance);
             ASSERT(Result == MMSYSERR_NOERROR);
+
+            // HACK
+            StopSoundThread();
 
             return Result;
         }
@@ -140,52 +158,65 @@ wodMessage(
             ASSERT(Instance != NULL);
 
             if ( ! parameter1 )
-                return MMSYSERR_INVALPARAM;
+                Result = MMSYSERR_INVALPARAM;
+            else
+                Result = QueueWaveDeviceBuffer(Instance, (PWAVEHDR) parameter1);
 
-            return QueueWaveDeviceBuffer(Instance, (PWAVEHDR) parameter1);
+            break;
         }
 
         case WODM_PAUSE :
         {
             ASSERT(Instance != NULL);
 
-            return PauseWaveDevice(Instance);
+            Result = PauseWaveDevice(Instance);
+            break;
         }
 
         case WODM_RESTART :
         {
             ASSERT(Instance != NULL);
 
-            return RestartWaveDevice(Instance);
+            Result = RestartWaveDevice(Instance);
+            break;
         }
 
         case WODM_RESET :
         {
             ASSERT(Instance != NULL);
 
-            return ResetWaveDevice(Instance);
+            Result = ResetWaveDevice(Instance);
+            break;
         }
 
         case WODM_BREAKLOOP :
         {
             ASSERT(Instance != NULL);
 
-            return BreakWaveDeviceLoop(Instance);
+            Result = BreakWaveDeviceLoop(Instance);
+            break;
         }
 
         /* Let WINMM take care of these */
         case WODM_PREPARE :
         case WODM_UNPREPARE :
-            return MMSYSERR_NOTSUPPORTED;
+            Result = MMSYSERR_NOTSUPPORTED;
+            break;
 
         /* TODO */
         case WODM_SETVOLUME :
         case WODM_GETVOLUME :
         case WODM_SETPITCH :
         case WODM_GETPITCH :
-            return MMSYSERR_NOTSUPPORTED;
+            Result = MMSYSERR_NOTSUPPORTED;
+            break;
 
         default :
-            return MMSYSERR_NOTSUPPORTED;
+            Result = MMSYSERR_NOTSUPPORTED;
+            break;
     }
+
+    ReleaseEntrypointMutex();
+
+    return Result;
 }

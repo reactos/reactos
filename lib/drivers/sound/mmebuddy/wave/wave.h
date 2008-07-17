@@ -22,24 +22,4 @@ GetWaveDeviceState_Request(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PVOID Parameter);
 
-MMRESULT
-PauseWaveDevice_Request(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID Parameter);
-
-MMRESULT
-RestartWaveDevice_Request(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID Parameter);
-
-MMRESULT
-ResetWaveDevice_Request(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID Parameter);
-
-MMRESULT
-BreakWaveDeviceLoop_Request(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID Parameter);
-
 #endif

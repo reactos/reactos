@@ -1,7 +1,7 @@
 <!-- Temporarily compiling as a CUI app for testing purposes */
 <!--module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes"-->
-<module name="sndblst" type="win32cui" installbase="system32" installname="sndblst.exe" unicode="yes">
-	<!--importlibrary definition="mmdrv.def" /-->
+<module name="sndblst" type="win32dll" installbase="system32" installname="sndblst2.dll" unicode="yes">
+	<importlibrary definition="sndblst.def" />
     <include base="ReactOS">include/reactos/libs/sound</include>
 	<include base="sndblst">.</include>
 	<!--define name="NDEBUG" /-->

@@ -150,6 +150,8 @@ SoundThreadProc(
     /* We're ready to do work */
     SetEvent(ReadyEvent);
 
+    TRACE_("SoundThreadProc entered\n");
+
     while ( ThreadRunning )
     {
         DWORD WaitResult;
@@ -313,7 +315,14 @@ StartSoundThread()
     TRACE_("Starting sound thread\n");
 
     /* We're all set to go, so let's start the thread up */
-    ResumeThread(SoundThread);
+    if ( ResumeThread(SoundThread) == -1 )
+    {
+        CloseHandle(SoundThread);
+        SoundThread = INVALID_HANDLE_VALUE;
+        CleanupThreadEvents();
+        ERR_("Error %d\n", (int) GetLastError());
+        return Win32ErrorToMmResult(GetLastError());
+    }
 
     return MMSYSERR_NOERROR;
 }
@@ -332,6 +341,7 @@ CallUsingSoundThread(
         return MMSYSERR_ERROR;
     }
 
+    TRACE_("Waiting for ready event\n");
     /* Wait for the sound thread to be ready for a request */
     WaitForSingleObject(ReadyEvent, INFINITE);
 
@@ -344,6 +354,7 @@ CallUsingSoundThread(
     /* Tell the sound thread there is a request waiting */
     SetEvent(RequestEvent);
 
+    TRACE_("Waiting for done event\n");
     /* Wait for our request to be dealt with */
     WaitForSingleObject(DoneEvent, INFINITE);
 

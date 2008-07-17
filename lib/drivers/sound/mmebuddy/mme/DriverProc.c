@@ -14,7 +14,8 @@
 #include <windows.h>
 #include <mmddk.h>
 #include <ntddsnd.h>
-#include <debug.h>
+
+#include <mmebuddy.h>
 
 LONG
 DefaultDriverProc(
@@ -27,27 +28,27 @@ DefaultDriverProc(
     switch ( message )
     {
         case DRV_LOAD :
-            DPRINT("DRV_LOAD\n");
+            TRACE_("DRV_LOAD\n");
             return 1L;
 
         case DRV_FREE :
-            DPRINT("DRV_FREE\n");
+            TRACE_("DRV_FREE\n");
             return 1L;
 
         case DRV_OPEN :
-            DPRINT("DRV_OPEN\n");
+            TRACE_("DRV_OPEN\n");
             return 1L;
 
         case DRV_CLOSE :
-            DPRINT("DRV_CLOSE\n");
+            TRACE_("DRV_CLOSE\n");
             return 1L;
 
         case DRV_ENABLE :
-            DPRINT("DRV_ENABLE\n");
+            TRACE_("DRV_ENABLE\n");
             return 1L;
 
         case DRV_DISABLE :
-            DPRINT("DRV_DISABLE\n");
+            TRACE_("DRV_DISABLE\n");
             return 1L;
 
         /*
@@ -56,15 +57,15 @@ DefaultDriverProc(
         */
 
         case DRV_QUERYCONFIGURE :
-            DPRINT("DRV_QUERYCONFIGURE\n");
+            TRACE_("DRV_QUERYCONFIGURE\n");
             return 0L;
 
         case DRV_CONFIGURE :
-            DPRINT("DRV_CONFIGURE\n");
+            TRACE_("DRV_CONFIGURE\n");
             return 0L;
 
         case DRV_INSTALL :
-            DPRINT("DRV_INSTALL\n");
+            TRACE_("DRV_INSTALL\n");
             return DRVCNF_RESTART;
     };
 

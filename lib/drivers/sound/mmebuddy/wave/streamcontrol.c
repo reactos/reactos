@@ -74,12 +74,26 @@ GetWaveDeviceState(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PULONG State)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
     VALIDATE_MMSYS_PARAMETER( State );
 
-    return CallUsingSoundThread(SoundDeviceInstance,
-                                GetWaveDeviceState_Request,
-                                State);
+    // *State = SoundDeviceInstance->Streaming.Wave.State;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->GetWaveDeviceState(SoundDeviceInstance,
+                                         State);
+
 }
 
 MMRESULT
@@ -113,16 +127,20 @@ PauseWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
     MMRESULT Result;
-    TRACE_ENTRY();
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
 
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    Result = CallUsingSoundThread(SoundDeviceInstance,
-                                  PauseWaveDevice_Request,
-                                  NULL);
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
 
-    TRACE_EXIT(Result);
-    return Result;
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->PauseWaveDevice(SoundDeviceInstance);
 }
 
 MMRESULT
@@ -143,6 +161,7 @@ DefaultPauseWaveDevice(
     ASSERT( Result == MMSYSERR_NOERROR );
 
     Result = TranslateInternalMmResult(Result);
+
     TRACE_EXIT(Result);
     return Result;
 }
@@ -151,11 +170,21 @@ MMRESULT
 RestartWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    return CallUsingSoundThread(SoundDeviceInstance,
-                                RestartWaveDevice_Request,
-                                NULL);
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->RestartWaveDevice(SoundDeviceInstance);
 }
 
 MMRESULT
@@ -180,15 +209,31 @@ DefaultRestartWaveDevice(
     return Result;
 }
 
+/* FIXME - This needs to be done a better way */
 MMRESULT
 ResetWaveDevice(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    return CallUsingSoundThread(SoundDeviceInstance,
-                                ResetWaveDevice_Request,
-                                NULL);
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    /* ugly HACK to stop sound playback... FIXME */
+    SoundDeviceInstance->Streaming.Wave.CurrentBuffer = NULL;
+
+    /* TODO: Return all audio buffers to the client, marking as DONE */
+
+    return Functions->ResetWaveDevice(SoundDeviceInstance);
 }
 
 MMRESULT
@@ -217,11 +262,21 @@ MMRESULT
 BreakWaveDeviceLoop(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE Functions;
+
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
-    return CallUsingSoundThread(SoundDeviceInstance,
-                                BreakWaveDeviceLoop_Request,
-                                NULL);
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance,
+                                        &SoundDevice);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice,
+                                         &Functions);
+    ASSERT(Result == MMSYSERR_NOERROR);
+
+    return Functions->BreakWaveDeviceLoop(SoundDeviceInstance);
 }
 
 MMRESULT

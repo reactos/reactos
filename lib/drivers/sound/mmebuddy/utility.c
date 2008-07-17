@@ -20,6 +20,9 @@
 static HANDLE ProcessHeapHandle = INVALID_HANDLE_VALUE;
 static DWORD CurrentAllocations = 0;
 
+/* Makes the entry-points safe */
+static HANDLE BigMmLock = NULL;
+
 #if 0
 typedef struct _ALLOCATION
 {
@@ -197,4 +200,67 @@ TranslateInternalMmResult(MMRESULT Result)
     }
 
     return Result;
+}
+
+
+
+/*
+    Entrypoint mutex management
+*/
+
+MMRESULT
+InitEntrypointMutex()
+{
+    BigMmLock = CreateMutex(NULL, FALSE, NULL);
+
+    if ( BigMmLock == NULL )
+    {
+        return Win32ErrorToMmResult(GetLastError());
+    }
+
+    return MMSYSERR_NOERROR;
+}
+
+VOID
+CleanupEntrypointMutex()
+{
+    if ( BigMmLock )
+    {
+        CloseHandle(BigMmLock);
+    }
+}
+
+VOID
+AcquireEntrypointMutex()
+{
+    ASSERT(BigMmLock);
+    WaitForSingleObject(BigMmLock, INFINITE);
+}
+
+VOID
+ReleaseEntrypointMutex()
+{
+    ASSERT(BigMmLock);
+    ReleaseMutex(BigMmLock);
+}
+
+
+/*
+    MME Buddy init/cleanup
+    NOTE: We don't do thread start/stop here...
+*/
+
+BOOLEAN
+InitMmeBuddyLib()
+{
+    if ( InitEntrypointMutex() != MMSYSERR_NOERROR )
+        return FALSE;
+
+    return TRUE;
+}
+
+VOID
+CleanupMmeBuddyLib()
+{
+    ReleaseEntrypointMutex();
 }

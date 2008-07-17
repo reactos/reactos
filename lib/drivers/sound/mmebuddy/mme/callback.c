@@ -11,7 +11,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include <digitalv.h>
+#include <mmddk.h>
 
 #include <mmebuddy.h>
 

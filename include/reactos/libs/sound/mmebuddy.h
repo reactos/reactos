@@ -26,11 +26,14 @@
     MessageBoxA(0, msg, __FUNCTION__, MB_OK | MB_TASKMODAL)
 
 
-#ifndef NDEBUG
+//#define NDEBUG
+#define NTRACE
 
 #ifdef ASSERT
     #undef ASSERT
 #endif
+
+#ifndef NDEBUG
 
 /* HACK for testing */
 #include <stdio.h>
@@ -62,12 +65,30 @@
         } \
     }
 
+#ifndef NTRACE
+
 #define TRACE_ENTRY() \
     TRACE_("entered function\n")
 
 #define TRACE_EXIT(retval) \
     TRACE_("returning %d (0x%x)\n", (int)retval, (int)retval)
 
+#endif
+
+#else
+
+#define TRACE_(...) do { } while ( 0 )
+#define WARN_(...) do { } while ( 0 )
+#define ERR_(...) do { } while ( 0 )
+#define ASSERT(x) do { } while ( 0 )
+
+#define NTRACE
+
+#endif
+
+#ifdef NTRACE
+    #define TRACE_ENTRY() do { } while ( 0 )
+    #define TRACE_EXIT(retval) do { } while ( 0 )
 #endif
 
 
@@ -530,6 +551,24 @@ Win32ErrorToMmResult(IN UINT error_code);
 
 MMRESULT
 TranslateInternalMmResult(MMRESULT Result);
+
+MMRESULT
+InitEntrypointMutex();
+
+VOID
+CleanupEntrypointMutex();
+
+VOID
+AcquireEntrypointMutex();
+
+VOID
+ReleaseEntrypointMutex();
+
+BOOLEAN
+InitMmeBuddyLib();
+
+VOID
+CleanupMmeBuddyLib();
 
 
 /*
