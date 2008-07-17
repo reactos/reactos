@@ -1427,7 +1427,9 @@ getaddrinfo(const char FAR * nodename,
             return WSAHOST_NOT_FOUND;
         port = se->s_port;
     }
-        
+    else
+        port = htons(port);
+
     if (nodename)
     {
         /* Is it an IPv6 address? */
