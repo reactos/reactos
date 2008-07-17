@@ -2482,6 +2482,36 @@ ExWaitForRundownProtectionRelease (
 #define FlagOn(x, f) ((x) & (f))
 
 NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddBaseMcbEntry (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   Lbn,
+    IN LONGLONG   SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Lbn,
+    IN LONGLONG    SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddMcbEntry (
+    IN PMCB   Mcb,
+    IN VBN    Vbn,
+    IN LBN    Lbn,
+    IN ULONG  SectorCount
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 FsRtlAddToTunnelCache (
@@ -2545,8 +2575,8 @@ NTAPI
 FsRtlAreNamesEqual (
     IN PCUNICODE_STRING  Name1,
     IN PCUNICODE_STRING  Name2,
-    IN BOOLEAN          IgnoreCase,
-    IN PCWCH           UpcaseTable OPTIONAL
+    IN BOOLEAN           IgnoreCase,
+    IN PCWCH             UpcaseTable OPTIONAL
 );
 
 #define FsRtlAreThereCurrentFileLocks(FL) ( \
@@ -2688,18 +2718,18 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlDissectDbcs (
-    IN ANSI_STRING Name,
-    OUT PANSI_STRING FirstPart,
-    OUT PANSI_STRING RemainingPart
+    IN ANSI_STRING    Name,
+    OUT PANSI_STRING  FirstPart,
+    OUT PANSI_STRING  RemainingPart
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 FsRtlDissectName (
-    IN UNICODE_STRING Name,
-    OUT PUNICODE_STRING FirstPart,
-    OUT PUNICODE_STRING RemainingPart
+    IN UNICODE_STRING    Name,
+    OUT PUNICODE_STRING  FirstPart,
+    OUT PUNICODE_STRING  RemainingPart
 );
 
 NTKERNELAPI
@@ -2823,6 +2853,17 @@ FsRtlGetFileSize (
     IN OUT PLARGE_INTEGER   FileSize
 );
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    IN ULONG       RunIndex,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn,
+    OUT PLONGLONG  SectorCount
+);
+
 /*
   FsRtlGetNextFileLock:
 
@@ -2844,12 +2885,58 @@ FsRtlGetNextFileLock (
 );
 
 NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN ULONG       RunIndex,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn,
+    OUT PLONGLONG  SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextMcbEntry (
+    IN PMCB     Mcb,
+    IN ULONG    RunIndex,
+    OUT PVBN    Vbn,
+    OUT PLBN    Lbn,
+    OUT PULONG  SectorCount
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeBaseMcb (
+    IN PBASE_MCB  Mcb,
+    IN POOL_TYPE  PoolType
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 FsRtlInitializeFileLock (
     IN PFILE_LOCK                   FileLock,
     IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
     IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN POOL_TYPE   PoolType
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeMcb (
+    IN PMCB       Mcb,
+    IN POOL_TYPE  PoolType
 );
 
 NTKERNELAPI
@@ -2864,6 +2951,16 @@ VOID
 NTAPI
 FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsFatDbcsLegal (
+    IN ANSI_STRING  DbcsName,
+    IN BOOLEAN      WildCardsPermissible,
+    IN BOOLEAN      PathNamePermissible,
+    IN BOOLEAN      LeadingBackslashPermissible
 );
 
 NTKERNELAPI
@@ -2902,6 +2999,90 @@ extern PUSHORT NlsOemLeadByteInfo;
     FALSE :                                                                 \
     FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
 )
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    IN LONGLONG    Vbn,
+    OUT PLONGLONG  Lbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
+    OUT PLONGLONG  StartingLbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
+    OUT PULONG     Index OPTIONAL
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    OUT PLONGLONG  Lbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
+    OUT PLONGLONG  StartingLbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
+    OUT PULONG     Index OPTIONAL
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastMcbEntry (
+    IN PMCB   Mcb,
+    OUT PVBN  Vbn,
+    OUT PLBN  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntryAndIndex (
+    IN PBASE_MCB      OpaqueMcb,
+    IN OUT PLONGLONG  LargeVbn,
+    IN OUT PLONGLONG  LargeLbn,
+    IN OUT PULONG     Index
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntryAndIndex (
+    IN PLARGE_MCB  OpaqueMcb,
+    OUT PLONGLONG  LargeVbn,
+    OUT PLONGLONG  LargeLbn,
+    OUT PULONG     Index
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupMcbEntry (
+    IN PMCB     Mcb,
+    IN VBN      Vbn,
+    OUT PLBN    Lbn,
+    OUT PULONG  SectorCount OPTIONAL,
+    OUT PULONG  Index
+);
 
 NTKERNELAPI
 BOOLEAN
@@ -3070,6 +3251,27 @@ FsRtlNotifyVolumeEvent (
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInBaseMcb (
+    IN PBASE_MCB Mcb
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInLargeMcb (
+    IN PLARGE_MCB Mcb
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInMcb (
+    IN PMCB Mcb
+);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
 FsRtlOplockFsctrl (
@@ -3083,6 +3285,30 @@ BOOLEAN
 NTAPI
 FsRtlOplockIsFastIoPossible (
     IN POPLOCK Oplock
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID    Context,
+    IN PKEVENT  Event
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
 );
 
 /*
@@ -3151,166 +3377,31 @@ FsRtlRegisterUncProvider (
     IN BOOLEAN          MailslotsSupported
 );
 
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-    IN PVOID    Context,
-    IN PKEVENT  Event
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostPagingFileStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeFileLock (
-    IN PFILE_LOCK FileLock
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeOplock (
-    IN OUT POPLOCK Oplock
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeLargeMcb (
-    IN PLARGE_MCB Mcb,
-    IN POOL_TYPE PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeLargeMcb (
-    IN PLARGE_MCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlResetLargeMcb (
-    IN PLARGE_MCB Mcb,
-    IN BOOLEAN SelfSynchronized
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlTruncateLargeMcb (
-    IN PLARGE_MCB Mcb,
-    IN LONGLONG Vbn
-);
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
-FsRtlAddLargeMcbEntry (
-    IN PLARGE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG Lbn,
-    IN LONGLONG SectorCount
+FsRtlRemoveBaseMcbEntry (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   SectorCount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 FsRtlRemoveLargeMcbEntry (
-    IN PLARGE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLargeMcbEntry (
-    IN PLARGE_MCB Mcb,
-    IN LONGLONG Vbn,
-    OUT PLONGLONG Lbn OPTIONAL,
-    OUT PLONGLONG SectorCountFromLbn OPTIONAL,
-    OUT PLONGLONG StartingLbn OPTIONAL,
-    OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
-    OUT PULONG Index OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastLargeMcbEntry (
-    IN PLARGE_MCB Mcb,
-    OUT PLONGLONG Vbn,
-    OUT PLONGLONG Lbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastLargeMcbEntryAndIndex (
-    IN PLARGE_MCB OpaqueMcb,
-    OUT PLONGLONG LargeVbn,
-    OUT PLONGLONG LargeLbn,
-    OUT PULONG Index
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInLargeMcb (
-    IN PLARGE_MCB Mcb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextLargeMcbEntry (
-    IN PLARGE_MCB Mcb,
-    IN ULONG RunIndex,
-    OUT PLONGLONG Vbn,
-    OUT PLONGLONG Lbn,
-    OUT PLONGLONG SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlSplitLargeMcb (
-    IN PLARGE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG Amount
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    SectorCount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlInitializeBaseMcb (
-    IN PBASE_MCB Mcb,
-    IN POOL_TYPE PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeBaseMcb (
-    IN PBASE_MCB Mcb
+FsRtlRemoveMcbEntry (
+    IN PMCB   Mcb,
+    IN VBN    Vbn,
+    IN ULONG  SectorCount
 );
 
 NTKERNELAPI
@@ -3323,95 +3414,72 @@ FsRtlResetBaseMcb (
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlTruncateBaseMcb (
-    IN PBASE_MCB Mcb,
-    IN LONGLONG Vbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAddBaseMcbEntry (
-    IN PBASE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG Lbn,
-    IN LONGLONG SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlRemoveBaseMcbEntry (
-    IN PBASE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupBaseMcbEntry (
-    IN PBASE_MCB Mcb,
-    IN LONGLONG Vbn,
-    OUT PLONGLONG Lbn OPTIONAL,
-    OUT PLONGLONG SectorCountFromLbn OPTIONAL,
-    OUT PLONGLONG StartingLbn OPTIONAL,
-    OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
-    OUT PULONG Index OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastBaseMcbEntry (
-    IN PBASE_MCB Mcb,
-    OUT PLONGLONG Vbn,
-    OUT PLONGLONG Lbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastBaseMcbEntryAndIndex (
-    IN PBASE_MCB OpaqueMcb,
-    IN OUT PLONGLONG LargeVbn,
-    IN OUT PLONGLONG LargeLbn,
-    IN OUT PULONG Index
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInBaseMcb (
-    IN PBASE_MCB Mcb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextBaseMcbEntry (
-    IN PBASE_MCB Mcb,
-    IN ULONG RunIndex,
-    OUT PLONGLONG Vbn,
-    OUT PLONGLONG Lbn,
-    OUT PLONGLONG SectorCount
+FsRtlResetLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN BOOLEAN     SelfSynchronized
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlSplitBaseMcb (
-    IN PBASE_MCB Mcb,
-    IN LONGLONG Vbn,
-    IN LONGLONG Amount
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   Amount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlSplitLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Amount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlInitializeMcb (
-    IN PMCB Mcb,
-    IN POOL_TYPE PoolType
+FsRtlTruncateBaseMcb (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateMcb (
+    IN PMCB  Mcb,
+    IN VBN   Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeBaseMcb (
+    IN PBASE_MCB Mcb
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeFileLock (
+    IN PFILE_LOCK FileLock
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeLargeMcb (
+    IN PLARGE_MCB Mcb
 );
 
 NTKERNELAPI
@@ -3424,66 +3492,8 @@ FsRtlUninitializeMcb (
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlTruncateMcb (
-    IN PMCB Mcb,
-    IN VBN Vbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAddMcbEntry (
-    IN PMCB Mcb,
-    IN VBN Vbn,
-    IN LBN Lbn,
-    IN ULONG SectorCount
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlRemoveMcbEntry (
-    IN PMCB Mcb,
-    IN VBN Vbn,
-    IN ULONG SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupMcbEntry (
-    IN PMCB Mcb,
-    IN VBN Vbn,
-    OUT PLBN Lbn,
-    OUT PULONG SectorCount OPTIONAL,
-    OUT PULONG Index
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastMcbEntry (
-    IN PMCB Mcb,
-    OUT PVBN Vbn,
-    OUT PLBN Lbn
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInMcb (
-    IN PMCB Mcb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextMcbEntry (
-    IN PMCB Mcb,
-    IN ULONG RunIndex,
-    OUT PVBN Vbn,
-    OUT PLBN Lbn,
-    OUT PULONG SectorCount
+FsRtlUninitializeOplock (
+    IN OUT POPLOCK Oplock
 );
 
 NTHALAPI
