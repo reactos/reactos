@@ -737,7 +737,7 @@ static int pf_vsnprintf( pf_output *out, const WCHAR *format, va_list valist )
 /*********************************************************************
  *		_vsnprintf (MSVCRT.@)
  */
-int CDECL _vsnprintf( char *str, unsigned int len,
+int CDECL _vsnprintf( char *str, size_t len,
                             const char *format, va_list valist )
 {
     DWORD sz;
@@ -775,7 +775,7 @@ int CDECL vsprintf( char *str, const char *format, va_list valist)
 /*********************************************************************
  *		_snprintf (MSVCRT.@)
  */
-int CDECL _snprintf(char *str, unsigned int len, const char *format, ...)
+int CDECL _snprintf(char *str, size_t len, const char *format, ...)
 {
     int retval;
     va_list valist;
@@ -788,7 +788,7 @@ int CDECL _snprintf(char *str, unsigned int len, const char *format, ...)
 /*********************************************************************
  *		_vsnwsprintf (MSVCRT.@)
  */
-int CDECL _vsnwprintf( wchar_t *str, unsigned int len,
+int CDECL _vsnwprintf( wchar_t *str, size_t len,
                              const wchar_t *format, va_list valist )
 {
     pf_output out;
@@ -804,7 +804,7 @@ int CDECL _vsnwprintf( wchar_t *str, unsigned int len,
 /*********************************************************************
  *		_snwprintf (MSVCRT.@)
  */
-int CDECL _snwprintf( wchar_t *str, unsigned int len, const wchar_t *format, ...)
+int CDECL _snwprintf( wchar_t *str, size_t len, const wchar_t *format, ...)
 {
     int retval;
     va_list valist;
