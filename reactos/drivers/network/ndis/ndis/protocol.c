@@ -161,14 +161,10 @@ ProRequest(
 
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
-  /* MiniportQueryInformation (called by MiniDoRequest) runs at DISPATCH_LEVEL */
-  /* TODO (?): move the irql raise into MiniDoRequest */
-  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    {
       NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, NdisRequest);
 
       NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-      KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+      KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
         {
           NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to free\n"));
           Adapter->MiniportBusy = FALSE;
@@ -176,9 +172,7 @@ ProRequest(
           if (Adapter->WorkQueueHead)
             KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
         }
-      KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    }
-  KeLowerIrql(OldIrql);
+      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   return NdisStatus;
 }

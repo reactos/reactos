@@ -156,7 +156,7 @@ MiniIndicateData(
  *     PacketSize          = Total size of received packet
  */
 {
-  /* KIRQL OldIrql; */
+  KIRQL OldIrql;
   PLIST_ENTRY CurrentEntry;
   PADAPTER_BINDING AdapterBinding;
 
@@ -166,27 +166,8 @@ MiniIndicateData(
 
   MiniDisplayPacket2(HeaderBuffer, HeaderBufferSize, LookaheadBuffer, LookaheadBufferSize);
 
-  /*
-   * XXX Think about this.  This is probably broken.  Spinlocks are
-   * taken out for now until i comprehend the Right Way to do this.
-   *
-   * This used to acquire the MiniportBlock spinlock and hold it until
-   * just before the call to ReceiveHandler.  It would then release and
-   * subsequently re-acquire the lock.
-   *
-   * I don't see how this does any good, as it would seem he's just
-   * trying to protect the packet list.  If somebody else dequeues
-   * a packet, we are in fact in bad shape, but we don't want to
-   * necessarily call the receive handler at elevated irql either.
-   *
-   * therefore: We *are* going to call the receive handler at high irql
-   * (due to holding the lock) for now, and eventually we have to
-   * figure out another way to protect this packet list.
-   *
-   * UPDATE: this is busted; this results in a recursive lock acquisition.
-   */
-  //NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-  //KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
       CurrentEntry = Adapter->ProtocolListHead.Flink;
       NDIS_DbgPrint(DEBUG_MINIPORT, ("CurrentEntry = %x\n", CurrentEntry));
@@ -201,8 +182,7 @@ MiniIndicateData(
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
 
-          /* see above */
-          /* KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql); */
+          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
 #ifdef DBG
           if(!AdapterBinding)
@@ -246,13 +226,12 @@ MiniIndicateData(
               LookaheadBufferSize,
               PacketSize);
 
-          /* see above */
-          /* KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql); */
+          KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
           CurrentEntry = CurrentEntry->Flink;
         }
     }
-  //KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
