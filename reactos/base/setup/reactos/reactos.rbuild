@@ -9,6 +9,7 @@
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>setupapi</library>
 	<file>reactos.c</file>
 	<file>reactos.rc</file>
 </module>
