@@ -3287,6 +3287,12 @@ FsRtlOplockIsFastIoPossible (
     IN POPLOCK Oplock
 );
 
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID    Context,
+    IN PKEVENT  Event
+);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -3294,12 +3300,6 @@ FsRtlPostPagingFileStackOverflow (
     IN PVOID                          Context,
     IN PKEVENT                        Event,
     IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-    IN PVOID    Context,
-    IN PKEVENT  Event
 );
 
 NTKERNELAPI

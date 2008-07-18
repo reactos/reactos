@@ -216,7 +216,7 @@ FsRtlInitializeTunnelCache
 FsRtlInsertPerFileObjectContext
 FsRtlInsertPerStreamContext
 FsRtlIsDbcsInExpression
-FsRtlIsFatDbcsLegal
+FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal
 FsRtlIsNameInExpression
 FsRtlIsNtstatusExpected
