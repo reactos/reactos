@@ -49,6 +49,10 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
     ULONG FirstPosition, i;
     ULONG SkipFirstSlash = 0;
 
+    /* Zero the strings before continuing */
+    RtlZeroMemory(FirstPart, sizeof(*FirstPart));
+    RtlZeroMemory(RemainingPart, sizeof(*RemainingPart));
+
     /* Just quit if the string is empty */
     if (!Name.Length) return;
 
@@ -209,10 +213,6 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         DbcsName.MaximumLength = DbcsName.MaximumLength - 1;
     }
 
-    /* Zero strings for further use */
-    RtlZeroMemory(&FirstPart, sizeof(FirstPart));
-    RtlZeroMemory(&RemainingPart, sizeof(RemainingPart));
-
     /* Extract first part of the DbcsName to work on */
     FsRtlDissectDbcs(DbcsName, &FirstPart, &RemainingPart);
     while (FirstPart.Length > 0)
@@ -283,8 +283,6 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         Name.Buffer = RemainingPart.Buffer;
         Name.Length = RemainingPart.Length;
         Name.MaximumLength = RemainingPart.MaximumLength;
-        RtlZeroMemory(&FirstPart, sizeof(FirstPart));
-        RtlZeroMemory(&RemainingPart, sizeof(RemainingPart));
 
         /* Call once again our dissect function */
         FsRtlDissectDbcs(Name, &FirstPart, &RemainingPart);
