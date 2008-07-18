@@ -1,12 +1,19 @@
-// Slovak translation by Kario  2007 <kario@szm.sk>
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  xx-xx-2007
+ * LAST UPDATE:  06-07-2008
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-/* String Tables */
-STRINGTABLE DISCARDABLE
+IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    IDS_CAPTION  "Inötal·cia systÈmu ReactOS"
-    IDS_TEXT     "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ!\n\n\Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte\nvloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù."
+    LTEXT "VÌta V·s sprievodca inötal·ciou systÈmu ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ! "\
+          "Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte "\
+	  "vloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Inötal·ciu ukonËÌte kliknutÌm na tlaËidlo DokonËiù.", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* EOF */

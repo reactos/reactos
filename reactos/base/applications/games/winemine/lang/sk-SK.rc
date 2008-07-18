@@ -28,7 +28,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Najlepöie Ëasy...", IDM_TIMES
 		MENUITEM SEPARATOR
-		MENUITEM "Sk&onËiù",           IDM_EXIT
+		MENUITEM "S&konËiù",           IDM_EXIT
 	END
 	POPUP "&Info" //windows = &PomocnÌk
         BEGIN

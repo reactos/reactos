@@ -3,7 +3,7 @@
  * PURPOSE:     Slovak Language File for desk
  * TRANSLATOR:  Kario <kario@szm.sk>
  * DATE OF TR.: 15-09-2007
- * LAST CHANGE: 29-02-2008
+ * LAST CHANGE: 11-07-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -49,7 +49,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "Nap·jani&e monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Ak chcete upraviù nastavenie nap·jania monitora a uöetriù energiu, kliknite na tlaËidlo Nap·janie.",
-                    IDC_STATIC, 14, 166, 146 ,20
+                    IDC_STATIC, 14, 166, 146 ,27
     PUSHBUTTON      "N&ap·janie...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
@@ -109,14 +109,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavenie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "çahanÌm zoraÔte ikony monitorov podæa fyzickÈho rozmiestnenia monitorov.",-1,3,3,240,10
+    LTEXT           "çahanÌm zoraÔte ikony podæa fyzickÈho rozmiestnenia monitorov.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Monitor:",1820,3,100,30,8
     LTEXT           "<Nie je>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&RozlÌöenie obrazovky",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "niûöie",1815,9,130,15,8,NOT WS_GROUP
+    LTEXT           "niûöie",1815,9,130,20,8,NOT WS_GROUP
     LTEXT           "vyööie",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Farby",1817,125,120,115,43

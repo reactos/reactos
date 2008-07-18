@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  28-06-2008
+ * LAST CHANGE:  07-07-2008
  */   
 
 /*
@@ -551,13 +551,13 @@ END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Icon"
+CAPTION "Zmena ikony"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    LTEXT "N·zov s˙boru:", -1, 7, 14, 208, 10
+    PUSHBUTTON      "&Prehæad·vaù...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LTEXT "Ikony:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
     PUSHBUTTON      "Zruöiù",IDCANCEL, 167, 181, 50, 14
@@ -659,9 +659,9 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autori"
 	IDS_SHELL_ABOUT_BACK        "< &Sp‰ù"
-	FCIDM_SHVIEW_NEW 	    "&Nov˝"
+	FCIDM_SHVIEW_NEW      	    "&Nov˝"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&PrieËinok"
-	FCIDM_SHVIEW_NEWLINK 	    "&Odkaz"
+	FCIDM_SHVIEW_NEWLINK  	    "&Odkaz"
 	IDS_FOLDER_OPTIONS          "Moûnosti prieËinka"
 	IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koöa" //Recycle Bin Location
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
@@ -686,11 +686,11 @@ BEGIN
 	IDS_LNK_FILE                "Odkaz"
 	IDS_SYS_FILE                "SystÈmov˝ s˙bor"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Otvoriù"
+	IDS_RUNAS_VERB              "Spustiù ako "
+	IDS_EDIT_VERB               "Upraviù"
+	IDS_FIND_VERB               "Find" //N·jsù, Hæadaù, Vyhæadaù ???
+	IDS_PRINT_VERB              "TlaËiù"
+	IDS_PLAY_VERB               "Prehraù"
+	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 END

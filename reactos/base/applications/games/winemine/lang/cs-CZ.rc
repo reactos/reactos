@@ -2,7 +2,7 @@
  * PURPOSE:     Czech Language File
  * TRANSLATOR:  Stepan Gabriel - SGABA (sgaba@centrum.cz)
  * TRANSLATED FROM: Slovak translation by Kario (kario@szm.sk)
- * UPDATED:     2008-04-07
+ * UPDATED:     2008-07-06
  *
  * Czech translation
  * Copyleft 2007 Kario (kario@szm.sk),2008 SGABA (sgaba@centrum.cz) 
@@ -34,7 +34,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Nejlepší èasy...", IDM_TIMES
 		MENUITEM SEPARATOR
-		MENUITEM "Sk&onèit",           IDM_EXIT
+		MENUITEM "&Konec",           IDM_EXIT
 	END
 	POPUP "&Info" //windows = &Pomocník
         BEGIN
