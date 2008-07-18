@@ -3,7 +3,8 @@
 #define RESOURCE_H
 
 #define IDB_WATERMARK			100
-#define IDB_HEADER				101
+#define IDB_HEADER			101
+#define IDB_ROSLOGO			102
 
 #define IDC_STATIC -1
 
@@ -48,6 +49,8 @@
 #define IDS_ABORTSETUP		2038
 #define IDS_ABORTSETUP2		2039
 #define IDC_ACTION		2040
+#define IDC_PARTMOREOPTS	2041
+
 
 #define IDI_MAIN      3000
 
