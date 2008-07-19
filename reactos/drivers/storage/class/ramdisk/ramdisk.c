@@ -21,6 +21,7 @@
 #include <rtlfuncs.h>
 #include <arc/arc.h>
 #include <reactos/drivers/ntddrdsk.h>
+#include <stdio.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -71,6 +72,7 @@ typedef struct _RAMDISK_BUS_EXTENSION
 typedef struct _RAMDISK_DRIVE_EXTENSION
 {
     RAMDISK_EXTENSION;
+    WCHAR DriveLetter;
 } RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
 ULONG MaximumViewLength;
@@ -250,7 +252,13 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 						IN BOOLEAN ValidateOnly,
 						OUT PDEVICE_OBJECT *DeviceObject)
 {
-	ULONG BasePage, ViewCount, DiskType;
+	ULONG BasePage, ViewCount, DiskType, Length;
+    NTSTATUS Status;
+    PDEVICE_OBJECT DriveObject;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+    PVOID Buffer;
+    WCHAR LocalBuffer[16];
+    UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
 	
 	//
 	// Check if we're a CDROM-type RAM disk
@@ -308,10 +316,143 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 		if (ValidateOnly) return STATUS_SUCCESS;
         
         //
+        // Build the GUID string
+        //
+        Status = RtlStringFromGUID(&Input->DiskGuid, &GuidString);
+        if (!(NT_SUCCESS(Status)) || !(GuidString.Buffer))
+        {
+            //
+            // Fail
+            //
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto FailCreate;
+        }
+        
+        //
+        // Allocate our device name
+        //
+        Length = GuidString.Length + 32;
+        Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                       Length,
+                                       TAG('R', 'a', 'm', 'd'));
+        if (!Buffer)
+        {
+            //
+            // Fail
+            //
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto FailCreate;
+        }
+        
+        // 
+        // Build the device name string
+        //
+        DeviceName.Buffer = Buffer;
+        DeviceName.Length = Length - 2;
+        DeviceName.MaximumLength = Length;
+        wcsncpy(Buffer, L"\\Device\\Ramdisk", Length / sizeof(WCHAR));
+        wcsncat(Buffer, GuidString.Buffer, Length / sizeof(WCHAR));
+        DPRINT1("Creating device: %wZ\n", &DeviceName);
+        
+        //
+        // Create the drive device
+        //
+        Status = IoCreateDevice(DeviceExtension->DeviceObject->DriverObject,
+                                sizeof(RAMDISK_DRIVE_EXTENSION),
+                                &DeviceName,
+                                FILE_DEVICE_DISK_FILE_SYSTEM, // FIXME: Could be DISK
+                                FILE_READ_ONLY_DEVICE, // FIXME: Not always
+                                0,
+                                &DriveObject);
+        if (!NT_SUCCESS(Status)) goto FailCreate;
+        
+        //
+        // Grab the drive extension
+        //
+        DriveExtension = DriveObject->DeviceExtension;
+       
+        //
+        // Check if we need a DOS device
+        //
+        if (!Input->Options.NoDosDevice)
+        {
+            //
+            // Build the symbolic link name
+            //
+            SymbolicLinkName.MaximumLength = GuidString.Length + 36;
+            SymbolicLinkName.Length = GuidString.Length + 34;
+            Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                           SymbolicLinkName.MaximumLength,
+                                           TAG('R', 'a', 'm', 'd'));
+            SymbolicLinkName.Buffer = Buffer;
+            if (Buffer)
+            {
+                //
+                // Create it
+                //
+                wcsncpy(Buffer,
+                        L"\\GLOBAL??\\Ramdisk",
+                        SymbolicLinkName.MaximumLength / sizeof(WCHAR));
+                wcsncat(Buffer,
+                        GuidString.Buffer,
+                        SymbolicLinkName.MaximumLength / sizeof(WCHAR));
+                DPRINT1("Creating symbolic link: %wZ to %wZ \n", &SymbolicLinkName, &DeviceName);
+                Status = IoCreateSymbolicLink(&SymbolicLinkName, &DeviceName);
+                if (!NT_SUCCESS(Status))
+                {
+                    //
+                    // Nevermind...
+                    //
+                    Input->Options.NoDosDevice = TRUE;
+                    ExFreePool(Buffer);
+                    SymbolicLinkName.Buffer = NULL;
+                }
+            }
+            else
+            {
+                //
+                // No DOS device
+                //
+                Input->Options.NoDosDevice = TRUE;
+            }
+            
+            //
+            // It this an ISO boot ramdisk?
+            //
+            if (Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+            {
+                //
+                // Does it need a drive letter?
+                //
+                if (!Input->Options.NoDriveLetter)
+                {
+                    //
+                    // Build it and take over the existing symbolic link
+                    //
+                    _snwprintf(LocalBuffer,
+                               30,
+                               L"\\DosDevices\\%wc:",
+                               Input->DriveLetter);
+                    RtlInitUnicodeString(&DriveString, LocalBuffer);
+                    DPRINT1("Creating symbolic link: %wZ to %wZ\n", &DriveString, &DeviceName);
+                    IoDeleteSymbolicLink(&DriveString);
+                    IoCreateSymbolicLink(&DriveString, &DeviceName);
+                    
+                    //
+                    // Save the drive letter
+                    //
+                    DriveExtension->DriveLetter = Input->DriveLetter;
+                }
+            }
+            
+        }
+        
+        //
         // FIXME-TODO: Implement the rest of the code
         //
 	}
     
+FailCreate:
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_SUCCESS;
