@@ -243,73 +243,6 @@ QueryParameters(IN PUNICODE_STRING RegistryPath)
     }
 }
 
-VOID
-NTAPI
-RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
-                    IN PVOID Context)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
-NTSTATUS
-NTAPI
-SendIrpToThread(IN PDEVICE_OBJECT DeviceObject,
-                IN PIRP Irp)
-{
-    PIO_WORKITEM WorkItem;
-    
-    //
-    // Mark the IRP pending
-    //
-    IoMarkIrpPending(Irp);
-    
-    //
-    // Allocate a work item
-    //
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (WorkItem)
-    {
-        //
-        // Queue it up
-        //
-        Irp->Tail.Overlay.DriverContext[0] = WorkItem;
-        IoQueueWorkItem(WorkItem, RamdiskWorkerThread, DelayedWorkQueue, Irp);
-        return STATUS_PENDING;
-    }
-    else
-    {
-        //
-        // Fail
-        //
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-}
-
-NTSTATUS
-NTAPI
-RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
-{
-    //
-    // Complete the IRP
-    //
-    Irp->IoStatus.Information = 1;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS
 NTAPI
 RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
@@ -486,6 +419,210 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	// We're done
 	//
 	return Status;
+}
+
+VOID
+NTAPI
+RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
+                    IN PVOID Context)
+{
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PIRP Irp = Context;
+    
+    //
+    // Get the stack location
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    
+    //
+    // Free the work item
+    //
+    IoFreeWorkItem(Irp->Tail.Overlay.DriverContext[0]);
+    
+    //
+    // Grab the device extension and lock it
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (NT_SUCCESS(Status))
+    {
+        //
+        // Discriminate by major code
+        //
+        switch (IoStackLocation->MajorFunction)
+        {
+            //
+            // Device control
+            //
+            case IRP_MJ_DEVICE_CONTROL:
+                               
+                //
+                // Let's take a look at the IOCTL
+                //
+                switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+                {
+                    //
+                    // Ramdisk create request
+                    //
+                    case FSCTL_CREATE_RAM_DISK:
+                        
+                        //
+                        // This time we'll do it for real
+                        //
+                        Status = RamdiskCreateRamdisk(DeviceObject, Irp, FALSE);
+                        break;
+                        
+                    case IOCTL_DISK_SET_PARTITION_INFO:
+                        
+                        DPRINT1("Set partition info request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    case IOCTL_DISK_GET_DRIVE_LAYOUT:
+                        
+                        DPRINT1("Get drive layout request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    case IOCTL_DISK_GET_PARTITION_INFO:
+                        
+                        DPRINT1("Get partitinon info request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                        
+                    default:
+                        
+                        DPRINT1("Invalid request\n");
+                        UNIMPLEMENTED;
+                        while (TRUE);
+                        break;
+                }
+                
+                //
+                // We're  here
+                //
+                break;
+                
+            //
+            // Read or write request
+            //
+            case IRP_MJ_READ:
+            case IRP_MJ_WRITE:
+                
+                DPRINT1("Read/Write request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            //
+            // Internal request (SCSI?)
+            //
+            case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+
+                DPRINT1("SCSI request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            //
+            // Flush request
+            //
+            case IRP_MJ_FLUSH_BUFFERS:
+                
+                DPRINT1("Flush request\n");
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+
+            //
+            // Anything else
+            //
+            default:
+                
+                DPRINT1("Invalid request: %lx\n", IoStackLocation->MajorFunction);
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+        }
+        
+        //
+        // Complete the I/O
+        //
+        IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    }
+    
+    //
+    // Fail the I/O
+    //
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    return IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+
+NTSTATUS
+NTAPI
+SendIrpToThread(IN PDEVICE_OBJECT DeviceObject,
+                IN PIRP Irp)
+{
+    PIO_WORKITEM WorkItem;
+    
+    //
+    // Mark the IRP pending
+    //
+    IoMarkIrpPending(Irp);
+    
+    //
+    // Allocate a work item
+    //
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (WorkItem)
+    {
+        //
+        // Queue it up
+        //
+        Irp->Tail.Overlay.DriverContext[0] = WorkItem;
+        IoQueueWorkItem(WorkItem, RamdiskWorkerThread, DelayedWorkQueue, Irp);
+        return STATUS_PENDING;
+    }
+    else
+    {
+        //
+        // Fail
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+}
+
+NTSTATUS
+NTAPI
+RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
+{
+    //
+    // Complete the IRP
+    //
+    Irp->IoStatus.Information = 1;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
