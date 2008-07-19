@@ -51,7 +51,15 @@ struct
 	BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
 } SetupData;
 
+typedef struct _IMGINFO
+{
+    HBITMAP hBitmap;
+    INT cxSource;
+    INT cySource;
+} IMGINFO, *PIMGINFO;
+
 TCHAR abort_msg[512],abort_title[64];
+HINSTANCE hInstance;
 BOOL isUnattend;
 
 /* FUNCTIONS ****************************************************************/
@@ -102,6 +110,29 @@ CreateTitleFont(VOID)
   ReleaseDC(NULL, hdc);
 
   return hFont;
+}
+
+static VOID
+InitImageInfo(PIMGINFO ImgInfo)
+{
+    BITMAP bitmap;
+
+    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
+
+    ImgInfo->hBitmap = LoadImage(hInstance,
+                                 MAKEINTRESOURCE(IDB_ROSLOGO),
+                                 IMAGE_BITMAP,
+                                 0,
+                                 0,
+                                 LR_DEFAULTCOLOR);
+
+    if (ImgInfo->hBitmap != NULL)
+    {
+        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+
+        ImgInfo->cxSource = bitmap.bmWidth;
+        ImgInfo->cySource = bitmap.bmHeight;
+    }
 }
 
 static INT_PTR CALLBACK
@@ -169,6 +200,8 @@ LangSelDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+  PIMGINFO pImgInfo;
+  pImgInfo = (PIMGINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
   switch (uMsg)
   {
 	  case WM_INITDIALOG:
@@ -188,14 +221,55 @@ LangSelDlgProc(HWND hwndDlg,
 		ShowWindow (hwndControl, SW_SHOW);
 		EnableWindow (hwndControl, TRUE);
 
+                pImgInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMGINFO));
+                if (pImgInfo == NULL)
+                {
+                   EndDialog(hwndDlg, 0);
+                   return FALSE;
+                }
+
+                SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pImgInfo);
+
+                InitImageInfo(pImgInfo);
+
 		/* Set title font */
 		/*SendDlgItemMessage(hwndDlg,
                              IDC_STARTTITLE,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
-}
+          }
 	  break;
+          case WM_DRAWITEM:
+          {
+            LPDRAWITEMSTRUCT lpDrawItem;
+            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            if (lpDrawItem->CtlID == IDB_ROSLOGO)
+            {
+                HDC hdcMem;
+                LONG left;
+
+                /* position image in centre of dialog */
+                left = (lpDrawItem->rcItem.right - pImgInfo->cxSource) / 2;
+
+                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
+                if (hdcMem != NULL)
+                {
+                    SelectObject(hdcMem, pImgInfo->hBitmap);
+                    BitBlt(lpDrawItem->hDC,
+                           left,
+                           lpDrawItem->rcItem.top,
+                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
+                           hdcMem,
+                           0,
+                           0,
+                           SRCCOPY);
+                    DeleteDC(hdcMem);
+                }
+            }
+            return TRUE;
+          }
 	  case WM_NOTIFY:
 	  {
           LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -551,6 +625,7 @@ WinMain(HINSTANCE hInst,
   HPROPSHEETPAGE ahpsp[7];
   PROPSHEETPAGE psp = {0};
   UINT nPages = 0;
+  hInstance = hInst;
   isUnattend = isUnattendSetup();
 
   if (!isUnattend)
