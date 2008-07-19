@@ -17,7 +17,7 @@
         ldr pc, _KiSoftwareInterruptJump        // Software Interrupt
         ldr pc, _KiPrefetchAbortJump            // Prefetch Abort
         ldr pc, _KiDataAbortJump                // Data Abort
-        ldr pc, _KiReservedJump                 // Reserved
+        b .                                     // Reserved
         ldr pc, _KiInterruptJump                // Interrupt
         ldr pc, _KiFastInterruptJump            // Fast Interrupt
         
@@ -25,7 +25,6 @@
     _KiSoftwareInterruptJump:       .word KiSoftwareInterruptException
     _KiPrefetchAbortJump:           .word KiPrefetchAbortException
     _KiDataAbortJump:               .word KiDataAbortException
-    _KiReservedJump:                .word KiReservedException
     _KiInterruptJump:               .word KiInterruptException
     _KiFastInterruptJump:           .word KiFastInterruptException
     
@@ -34,9 +33,22 @@
     PROLOG_END KiUndefinedInstructionException
     
     //
-    // FIXME: TODO
+    // Handle trap entry
     //
-    b .
+    TRAP_PROLOG 0 // NotFromAbort
+    
+    //
+    // Call the C handler
+    //
+    adr lr, 1f
+    mov r0, sp
+    ldr pc, =KiUndefinedExceptionHandler
+    
+1:
+    //
+    // Handle trap exit
+    // 
+    TRAP_EPILOG 0 // NotFromSystemCall
     
     ENTRY_END KiUndefinedInstructionException
     
@@ -137,19 +149,8 @@
     PROLOG_END KiFastInterruptException
     
     //
-    // FIXME: TODO
+    // FIXME-PERF: Implement FIQ exception
     //
     b .
     
     ENTRY_END KiFastInterruptException
-    
-
-    NESTED_ENTRY KiReservedException
-    PROLOG_END KiReservedException
-    
-    //
-    // FIXME: TODO
-    //
-    b .
-    
-    ENTRY_END KiReservedException

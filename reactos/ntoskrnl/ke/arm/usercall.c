@@ -200,6 +200,11 @@ KiSystemService(IN PKTHREAD Thread,
     }
     
     //
+    // We can safely enable interrupts here
+    //
+    _enable();
+    
+    //
     // Do the system call and save result in EAX
     //
     TrapFrame->R0 = KiSyscallHandlers[ArgumentCount]((PVOID)SystemCall,

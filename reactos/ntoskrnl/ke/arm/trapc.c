@@ -80,8 +80,9 @@ KiIdleLoop(VOID)
         else
         {
             //
-            // FIXME-TODO: Wait-For-Interrupt ARM Opcode
+            // Go into WFI (sleep more)
             //
+            KeArmWaitForInterrupt();
         }
     }
 }
@@ -155,10 +156,13 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     if (Prcb->DpcRoutineActive)
     {
         //
-        // FIXME-TODO: Implement bugcheck code
+        // Crash the machine
         //
-        DPRINT1("DPCS ACTIVE!!!\n");
-        ASSERT(FALSE);
+        KeBugCheckEx(ATTEMPTED_SWITCH_FROM_DPC,
+                     (ULONG_PTR)OldThread,
+                     (ULONG_PTR)NewThread,
+                     (ULONG_PTR)OldThread->InitialStack,
+                     0);
     }
     
     //
@@ -167,10 +171,16 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     if (NewThread->ApcState.KernelApcPending)
     {
         //
-        // FIXME-TODO: Implement bugcheck code
+        // Are APCs enabled?
         //
-        DPRINT1("APCs pending!\n");
-        ASSERT(FALSE);
+        if (NewThread->SpecialApcDisable == 0)
+        {
+            //
+            // Request APC delivery
+            //
+            HalRequestSoftwareInterrupt(APC_LEVEL);
+            return TRUE;
+        }
     }
     
     //
@@ -517,13 +527,23 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     // Read the opcode
     //
     Instruction = *(PULONG)(TrapFrame->Pc - sizeof(ULONG));
-    
-    //
-    // FIXME-TODO: Enable interrupts?
-    //
-    
+
     //
     // Call the service call dispatcher
     //
     KiSystemService(Thread, TrapFrame, Instruction);
+}
+
+NTSTATUS
+KiUndefinedExceptionHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    
+    //
+    // This should never happen
+    //
+    DPRINT1("[UNDEF] @ %p/%p\n", TrapFrame->SvcLr, TrapFrame->Pc);
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+    return STATUS_SUCCESS;
 }

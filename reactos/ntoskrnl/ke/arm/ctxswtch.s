@@ -25,7 +25,7 @@
     
     //
     // Build exception frame
-    // FIXME: Change to stmdb later
+    // FIXME-PERF: Change to stmdb later
     //
     str r4, [sp, #ExR4]
     str r5, [sp, #ExR5]
@@ -58,7 +58,7 @@
     
     //
     // Restore the registers
-    // FIXME: Use LDMIA later
+    // FIXME-PERF: Use LDMIA later
     //
     ldr r4, [sp, #ExR4]
     ldr r5, [sp, #ExR5]
@@ -84,11 +84,7 @@
 
     NESTED_ENTRY KiThreadStartup
     PROLOG_END KiThreadStartup
-    
-    //
-    // FIXME: Make space on stack and clean it up?
-    //
-    
+        
     //
     // Lower to APC_LEVEL
     //

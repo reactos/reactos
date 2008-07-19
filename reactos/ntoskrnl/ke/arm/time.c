@@ -224,8 +224,31 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             Prcb->DpcTime++;
             
             //
-            // FIXME-TODO: Handle DPC checks
+            // Update Debug DPC time 
             //
+            Prcb->DebugDpcTime++;
+            
+            //
+            // Check if we've timed out
+            //
+            if (Prcb->DebugDpcTime >= KiDPCTimeout)
+            {
+                //
+                // Print a message
+                //
+                DbgPrint("\n*** DPC routine > 1 sec --- This is not a break in "
+                         "KeUpdateSystemTime\n");
+                
+                //
+                // Break if a debugger is attached
+                //
+                if (KdDebuggerEnabled) DbgBreakPoint();
+                
+                //
+                // Restore the debug DPC time
+                //
+                Prcb->DebugDpcTime = 0;
+            }
         }
     }
     

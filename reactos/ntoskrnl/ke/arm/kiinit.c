@@ -24,17 +24,6 @@ extern PVOID KiArmVectorTable;
 /* FUNCTIONS ******************************************************************/
 
 VOID
-DebugService2(IN ULONG Arg1,
-              IN ULONG Arg2,
-              IN ULONG Service)
-{
-    //
-    // FIXME-TODO: Implement this for symbol load and such
-    //
-    return;
-}
-
-VOID
 NTAPI
 KiInitMachineDependent(VOID)
 {
