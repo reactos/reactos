@@ -689,10 +689,7 @@ PdoQueryDeviceRelations(
             if (IoGetAttachedDevice(DeviceObject) != DeviceObject)
             {
                 /* We're not alone in the stack */
-                PDEVICE_NODE DeviceNode;
-                DeviceNode = IopGetDeviceNode(IopGetDeviceNode(DeviceObject)->PhysicalDeviceObject);
-                DPRINT1("Device stack for '%wZ' (%wZ) is misbehaving ; shouldn't receive IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n",
-                    &DeviceNode->InstancePath, &DeviceNode->ServiceName);
+                DPRINT1("PnP is misbehaving ; don't know how to handle IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
             }
             break;
         }
