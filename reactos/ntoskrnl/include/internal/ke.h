@@ -984,6 +984,30 @@ KiSaveProcessorControlState(
     OUT PKPROCESSOR_STATE ProcessorState
 );
 
+VOID
+FASTCALL
+KiRetireDpcList(
+    IN PKPRCB Prcb
+);
+
+VOID
+FASTCALL
+KiQuantumEnd(
+    VOID
+);
+
+VOID
+KiSystemService(
+    IN PKTHREAD Thread,
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Instruction
+);
+
+VOID
+KiIdleLoop(
+    VOID
+);
+
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

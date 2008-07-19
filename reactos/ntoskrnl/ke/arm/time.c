@@ -224,7 +224,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
             Prcb->DpcTime++;
             
             //
-            // FIXME: Handle DPC checks
+            // FIXME-TODO: Handle DPC checks
             //
         }
     }

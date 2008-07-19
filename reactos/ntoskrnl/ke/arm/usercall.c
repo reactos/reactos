@@ -173,7 +173,7 @@ KiSystemService(IN PKTHREAD Thread,
         if (Thread->PreviousMode == UserMode)
         {
             //
-            // FIXME: Validate the user stack
+            // FIXME-USER: Validate the user stack
             //
             ASSERT(FALSE);
             Argument = (PVOID*)TrapFrame->UserSp;

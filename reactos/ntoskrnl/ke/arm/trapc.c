@@ -13,30 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ********************************************************************/
-
-#define KiGetPreviousMode(tf) \
-    ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
-
-VOID
-FASTCALL
-KiRetireDpcList(
-    IN PKPRCB Prcb
-);
-
-VOID
-FASTCALL
-KiQuantumEnd(
-    VOID
-);
-
-VOID
-KiSystemService(
-    IN PKTHREAD Thread,
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Instruction
-);
-
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -104,7 +80,7 @@ KiIdleLoop(VOID)
         else
         {
             //
-            // FIXME: Wait-For-Interrupt ARM Opcode
+            // FIXME-TODO: Wait-For-Interrupt ARM Opcode
             //
         }
     }
@@ -129,7 +105,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     if (Pcr->PerfGlobalGroupMask)
     {
         //
-        // FIXME: TODO
+        // We don't support this yet on x86 either
         //
         DPRINT1("WMI Tracing not supported\n");
         ASSERT(FALSE);
@@ -149,7 +125,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             NewProcess->DirectoryTableBase.LowPart)
         {
             //
-            // FIXME: TODO
+            // FIXME-USER: Support address space switch
             //
             DPRINT1("Address space switch not implemented\n");
             ASSERT(FALSE);
@@ -179,7 +155,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     if (Prcb->DpcRoutineActive)
     {
         //
-        // FIXME: FAIL
+        // FIXME-TODO: Implement bugcheck code
         //
         DPRINT1("DPCS ACTIVE!!!\n");
         ASSERT(FALSE);
@@ -191,7 +167,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     if (NewThread->ApcState.KernelApcPending)
     {
         //
-        // FIXME: TODO
+        // FIXME-TODO: Implement bugcheck code
         //
         DPRINT1("APCs pending!\n");
         ASSERT(FALSE);
@@ -217,7 +193,7 @@ KiApcInterrupt(VOID)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
-    // FIXME No use-mode support
+    // FIXME-USER: Handle APC interrupt while in user-mode
     //
     if (PreviousMode == UserMode) ASSERT(FALSE);
     
@@ -372,7 +348,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     if (Irql > DISPATCH_LEVEL)
     {   
         //
-        // FIXME: Switch to interrupt stack
+        // FIXME-TODO: Switch to interrupt stack
         //
         //DPRINT1("[ISR]\n");
     }
@@ -543,7 +519,7 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     Instruction = *(PULONG)(TrapFrame->Pc - sizeof(ULONG));
     
     //
-    // FIXME: Enable interrupts?
+    // FIXME-TODO: Enable interrupts?
     //
     
     //

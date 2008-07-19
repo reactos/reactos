@@ -52,4 +52,7 @@ KeFlushTb(
 #define KeArchInitThreadWithContext KeArmInitThreadWithContext
 #define KiSystemStartupReal KiSystemStartup
 
+#define KiGetPreviousMode(tf) \
+    ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
+
 #endif

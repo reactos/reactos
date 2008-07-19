@@ -23,21 +23,13 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
-//
-// FIXME: Header cleanup
-//
-VOID
-KiIdleLoop(
-    VOID
-);
-
 VOID
 DebugService2(IN ULONG Arg1,
               IN ULONG Arg2,
               IN ULONG Service)
 {
     //
-    // FIXME: TODO
+    // FIXME-TODO: Implement this for symbol load and such
     //
     return;
 }
@@ -230,7 +222,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     else
     {
         //
-        // FIXME: No MP Support
+        // FIXME-V6: See if we want to support MP
         //
         DPRINT1("ARM MPCore not supported\n");
     }

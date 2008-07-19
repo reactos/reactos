@@ -9,15 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS ********************************************************************/
-
-#include <internal/arm/ksarm.h>
-#define KiGetPreviousMode(tf) \
-((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
-
 
 /* FUNCTIONS ******************************************************************/
 
@@ -194,7 +188,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     Context.ContextFlags = CONTEXT_FULL;
     
     //
-    // FIXME: Fuck floating point
+    // FIXME-V6: VFP Support
     //
     
     //
@@ -290,7 +284,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     else
     {
         //
-        // FIXME: User mode
+        // FIXME-USER: Do user-mode exception handling
         //
         ASSERT(FALSE);
     }
