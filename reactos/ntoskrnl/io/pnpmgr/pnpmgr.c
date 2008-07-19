@@ -260,7 +260,7 @@ IopAsynchronousInvalidateDeviceRelations(
         Data->DeviceObject,
         Data->Type);
 
-    ObDereferenceObject(Data->WorkItem);
+    ObDereferenceObject(Data->DeviceObject);
     IoFreeWorkItem(Data->WorkItem);
     ExFreePool(Data);
 }
