@@ -992,7 +992,7 @@ KiRetireDpcList(
 );
 
 VOID
-FASTCALL
+NTAPI
 KiQuantumEnd(
     VOID
 );
