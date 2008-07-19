@@ -1851,7 +1851,7 @@ SendMessageCallbackA(
                          wParam,
                          lParam,
          (ULONG_PTR)&lpCallBack,
-       NUMC_SENDMESSAGECALLBACK,
+       FNID_SENDMESSAGECALLBACK,
                            TRUE);
 }
 
@@ -1873,7 +1873,7 @@ SendMessageCallbackW(
                          wParam,
                          lParam,
          (ULONG_PTR)&lpCallBack,
-       NUMC_SENDMESSAGECALLBACK,
+       FNID_SENDMESSAGECALLBACK,
                           FALSE);
 }
 
@@ -2636,7 +2636,7 @@ IntBroadcastSystemMessage(
                                             wParam,
                                             lParam,
                                   (ULONG_PTR)&parm,
-                       NUMC_BROADCASTSYSTEMMESSAGE,
+                       FNID_BROADCASTSYSTEMMESSAGE,
                                               Ansi);
     }
 

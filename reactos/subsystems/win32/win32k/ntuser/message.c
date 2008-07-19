@@ -1861,7 +1861,7 @@ NtUserMessageCall(
    UserRefObjectCo(Window, &Ref);
    switch(dwType)
    {
-      case NUMC_DEFWINDOWPROC:
+      case FNID_DEFWINDOWPROC:
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam);
       break;
    }

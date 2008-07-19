@@ -1410,7 +1410,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SHOWWINDOW:
         {
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, NUMC_DEFWINDOWPROC, FALSE);
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE);
             break;
         }
 

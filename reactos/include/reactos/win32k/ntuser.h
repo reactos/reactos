@@ -204,23 +204,34 @@ typedef struct _PFNCLIENTWORKER
 } PFNCLIENTWORKER, *PPFNCLIENTWORKER;
 
 
-// FNID's for NtUserSetWindowFNID
-#define FNID_SCROLLBAR   0x029A
-#define FNID_ICONTITLE   0x029B
-#define FNID_MENU        0x029C
-#define FNID_DESKTOP     0x029D
-#define FNID_SWITCH      0x02A0
-#define FNID_BUTTON      0x02A1
-#define FNID_COMBOBOX    0x02A2
-#define FNID_COMBOLBOX   0x02A3
-#define FNID_DIALOG      0x02A4
-#define FNID_EDIT        0x02A5
-#define FNID_LISTBOX     0x02A6
-#define FNID_MDICLIENT   0x02A7
-#define FNID_STATIC      0x02A8
-#define FNID_IME         0x02A9
-#define FNID_TOOLTIPS    0x02B5
-#define FNID_UNKNOWN     0x02B6
+// FNID's for NtUserSetWindowFNID, NtUserMessageCall
+#define FNID_SCROLLBAR              0x029A
+#define FNID_ICONTITLE              0x029B
+#define FNID_MENU                   0x029C
+#define FNID_DESKTOP                0x029D
+#define FNID_DEFWINDOWPROC          0x029E
+#define FNID_SWITCH                 0x02A0
+#define FNID_BUTTON                 0x02A1
+#define FNID_COMBOBOX               0x02A2
+#define FNID_COMBOLBOX              0x02A3
+#define FNID_DIALOG                 0x02A4
+#define FNID_EDIT                   0x02A5
+#define FNID_LISTBOX                0x02A6
+#define FNID_MDICLIENT              0x02A7
+#define FNID_STATIC                 0x02A8
+#define FNID_IME                    0x02A9
+#define FNID_CALLWNDPROC            0x02AA
+#define FNID_CALLWNDPROCRET         0x02AB
+#define FNID_SENDMESSAGE            0x02B0
+// Kernel has option to use TimeOut or normal msg send, based on type of msg.
+#define FNID_SENDMESSAGEWTOOPTION   0x02B1
+#define FNID_SENDMESSAGETIMEOUT     0x02B2
+#define FNID_BROADCASTSYSTEMMESSAGE 0x02B4
+#define FNID_TOOLTIPS               0x02B5
+#define FNID_UNKNOWN                0x02B6
+#define FNID_SENDNOTIFYMESSAGE      0x02B7
+#define FNID_SENDMESSAGECALLBACK    0x02B8
+
  
 #define FNID_DDEML       0x2000 // Registers DDEML
 #define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
@@ -1725,15 +1736,6 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
-// Look like fnID's
-#define NUMC_DEFWINDOWPROC          0x029E
-#define NUMC_SENDMESSAGE            0x02B0
-// Kernel has option to use TO or normal msg send, based on type of msg.
-#define NUMC_SENDMESSAGEWTOOPTION   0x02B1
-#define NUMC_SENDMESSAGETIMEOUT     0x02B2
-#define NUMC_BROADCASTSYSTEMMESSAGE 0x02B4
-#define NUMC_SENDNOTIFYMESSAGE      0x02B7
-#define NUMC_SENDMESSAGECALLBACK    0x02B8
 LRESULT
 NTAPI
 NtUserMessageCall(
@@ -1742,7 +1744,7 @@ NtUserMessageCall(
   WPARAM wParam,
   LPARAM lParam,
   ULONG_PTR ResultInfo,
-  DWORD dwType, // NUMC_XX types
+  DWORD dwType, // FNID_XX types
   BOOL Ansi);
 
 DWORD
