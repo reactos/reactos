@@ -697,6 +697,11 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
     }
     
     //
+    // Save the count
+    //
+    OurDeviceRelations->Count = FinalCount;
+    
+    //
     // Now loop our drives again
     //
     ListHead = &DeviceExtension->DiskList;
