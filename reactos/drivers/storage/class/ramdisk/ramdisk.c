@@ -60,7 +60,8 @@ DEFINE_GUID(RamdiskBusInterface,
     PDEVICE_OBJECT PhysicalDeviceObject;     \
     PDEVICE_OBJECT AttachedDevice;           \
     IO_REMOVE_LOCK RemoveLock;               \
-    UNICODE_STRING SymbolicLinkName;         \
+    UNICODE_STRING DriveDeviceName;          \
+    UNICODE_STRING BusDeviceName;            \
     FAST_MUTEX DiskListLock;                 \
     LIST_ENTRY DiskList;
 
@@ -72,6 +73,13 @@ typedef struct _RAMDISK_BUS_EXTENSION
 typedef struct _RAMDISK_DRIVE_EXTENSION
 {
     RAMDISK_EXTENSION;
+    GUID DiskGuid;
+    UNICODE_STRING GuidString;
+    UNICODE_STRING SymbolicLinkName;
+    ULONG DiskType;
+    RAMDISK_CREATE_OPTIONS DiskOptions;
+    LONGLONG DiskLength;
+    LONG DiskOffset;
     WCHAR DriveLetter;
 } RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
@@ -250,11 +258,11 @@ NTAPI
 RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 						IN PRAMDISK_CREATE_INPUT Input,
 						IN BOOLEAN ValidateOnly,
-						OUT PDEVICE_OBJECT *DeviceObject)
+						OUT PRAMDISK_DRIVE_EXTENSION *NewDriveExtension)
 {
 	ULONG BasePage, ViewCount, DiskType, Length;
     NTSTATUS Status;
-    PDEVICE_OBJECT DriveObject;
+    PDEVICE_OBJECT DeviceObject;
     PRAMDISK_DRIVE_EXTENSION DriveExtension;
     PVOID Buffer;
     WCHAR LocalBuffer[16];
@@ -360,16 +368,16 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         Status = IoCreateDevice(DeviceExtension->DeviceObject->DriverObject,
                                 sizeof(RAMDISK_DRIVE_EXTENSION),
                                 &DeviceName,
-                                FILE_DEVICE_DISK_FILE_SYSTEM, // FIXME: Could be DISK
+                                FILE_DEVICE_DISK_FILE_SYSTEM, // FIXME: DISK
                                 FILE_READ_ONLY_DEVICE, // FIXME: Not always
                                 0,
-                                &DriveObject);
+                                &DeviceObject);
         if (!NT_SUCCESS(Status)) goto FailCreate;
         
         //
         // Grab the drive extension
         //
-        DriveExtension = DriveObject->DeviceExtension;
+        DriveExtension = DeviceObject->DeviceExtension;
        
         //
         // Check if we need a DOS device
@@ -396,7 +404,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 wcsncat(Buffer,
                         GuidString.Buffer,
                         SymbolicLinkName.MaximumLength / sizeof(WCHAR));
-                DPRINT1("Creating symbolic link: %wZ to %wZ \n", &SymbolicLinkName, &DeviceName);
+                DPRINT1("Creating symbolic link: %wZ to %wZ \n",
+                        &SymbolicLinkName, &DeviceName);
                 Status = IoCreateSymbolicLink(&SymbolicLinkName, &DeviceName);
                 if (!NT_SUCCESS(Status))
                 {
@@ -434,7 +443,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                                L"\\DosDevices\\%wc:",
                                Input->DriveLetter);
                     RtlInitUnicodeString(&DriveString, LocalBuffer);
-                    DPRINT1("Creating symbolic link: %wZ to %wZ\n", &DriveString, &DeviceName);
+                    DPRINT1("Creating symbolic link: %wZ to %wZ\n",
+                            &DriveString, &DeviceName);
                     IoDeleteSymbolicLink(&DriveString);
                     IoCreateSymbolicLink(&DriveString, &DeviceName);
                     
@@ -448,8 +458,39 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         }
         
         //
-        // FIXME-TODO: Implement the rest of the code
+        // Setup the device object flags
         //
+        DeviceObject->Flags |= (DO_XIP | DO_POWER_PAGABLE | DO_DIRECT_IO);
+        DeviceObject->AlignmentRequirement = 1;
+        
+        //
+        // Build the drive FDO
+        //
+        *NewDriveExtension = DriveExtension;
+        DriveExtension->Type = RamdiskDrive;
+		ExInitializeFastMutex(&DriveExtension->DiskListLock);
+	    IoInitializeRemoveLock(&DriveExtension->RemoveLock,
+                               TAG('R', 'a', 'm', 'd'),
+                               0,
+                               1);
+        DriveExtension->DriveDeviceName = DeviceName;
+        DriveExtension->SymbolicLinkName = SymbolicLinkName;
+        DriveExtension->GuidString = GuidString;
+        DriveExtension->DiskGuid = Input->DiskGuid;
+	    DriveExtension->PhysicalDeviceObject = DeviceObject;
+	    DriveExtension->DeviceObject = RamdiskBusFdo;
+        DriveExtension->AttachedDevice = RamdiskBusFdo;
+        DriveExtension->DiskType = Input->DiskType;
+        DriveExtension->DiskOptions = Input->Options;
+        DriveExtension->DiskLength = Input->DiskLength;
+        DriveExtension->DiskOffset = Input->DiskOffset;
+
+        //
+        // Make sure we don't free it later
+        //
+        DeviceName.Buffer = NULL;
+        SymbolicLinkName.Buffer = NULL;
+        GuidString.Buffer = NULL;
 	}
     
 FailCreate:
@@ -466,7 +507,8 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 {
 	PRAMDISK_CREATE_INPUT Input;
 	ULONG Length;
-	PRAMDISK_BUS_EXTENSION DeviceExtension; 
+	PRAMDISK_BUS_EXTENSION DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension; 
 	ULONG DiskType;
 	PWCHAR FileNameStart, FileNameEnd;
 	NTSTATUS Status;
@@ -546,7 +588,7 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	Status = RamdiskCreateDiskDevice(DeviceExtension,
 									 Input, 
 									 ValidateOnly,
-									 &DeviceObject);
+									 &DriveExtension);
 	if (NT_SUCCESS(Status))
 	{
 		//
@@ -1381,7 +1423,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 	    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
 										   &RamdiskBusInterface,
 										   NULL,
-										   &DeviceExtension->SymbolicLinkName);
+										   &DeviceExtension->BusDeviceName);
 	    if (!NT_SUCCESS(Status))
 	    {
 			//
@@ -1402,8 +1444,8 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 			//
 			// Fail
 			//
-			IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, 0);
-			RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
+			IoSetDeviceInterfaceState(&DeviceExtension->BusDeviceName, 0);
+			RtlFreeUnicodeString(&DeviceExtension->BusDeviceName);
 			IoDeleteDevice(DeviceObject);
 			return STATUS_NO_SUCH_DEVICE;
 	    }

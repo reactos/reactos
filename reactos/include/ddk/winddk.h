@@ -2230,6 +2230,7 @@ typedef struct _VPB {
 #define DO_POWER_PAGABLE                  0x00002000
 #define DO_POWER_INRUSH                   0x00004000
 #define DO_LOW_PRIORITY_FILESYSTEM        0x00010000
+#define DO_XIP                            0x00020000
 
 /* DEVICE_OBJECT.Characteristics */
 
