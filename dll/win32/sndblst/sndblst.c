@@ -18,11 +18,99 @@
 #include <mmebuddy.h>
 //#include <debug.h>
 
-PWSTR SBWaveOutDeviceName = L"Sound Blaster Playback (silverblade)";
-PWSTR SBWaveInDeviceName  = L"Sound Blaster Recording (silverblade)";
+PWSTR SBWaveOutDeviceName = L"ROS Sound Blaster Playback";
+PWSTR SBWaveInDeviceName  = L"ROS Sound Blaster Recording";
 /* TODO: Mixer etc */
 
+BOOLEAN FoundDevice(
+    UCHAR DeviceType,
+    PWSTR DevicePath)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice = NULL;
 
+    POPUP(DevicePath);
+
+/*
+    MMFUNCTION_TABLE FuncTable;
+
+    ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
+
+    FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
+*/
+
+    Result = ListSoundDevice(DeviceType, DevicePath, &SoundDevice);
+
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        return FALSE;
+    }
+
+    /* TODO: Set up function table */
+
+    return TRUE;
+}
+
+APIENTRY LONG
+DriverProc(
+    DWORD DriverId,
+    HANDLE DriverHandle,
+    UINT Message,
+    LONG Parameter1,
+    LONG Parameter2)
+{
+    MMRESULT Result;
+
+    switch ( Message )
+    {
+        case DRV_LOAD :
+        {
+            POPUP(L"DRV_LOAD");
+
+            Result = InitEntrypointMutexes();
+
+            if ( Result != MMSYSERR_NOERROR )
+                return 0L;
+
+            Result = EnumerateNt4ServiceSoundDevices(L"sndblst",
+                                                     0,
+                                                     FoundDevice);
+
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                CleanupEntrypointMutexes();
+
+                Result = UnlistAllSoundDevices();
+                SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+                return 0L;
+            }
+
+            return 1L;
+        }
+
+        case DRV_FREE :
+        {
+            POPUP(L"DRV_FREE");
+
+            CleanupEntrypointMutexes();
+
+            POPUP(L"Unfreed memory blocks: %d", GetMemoryAllocationCount());
+
+            return 1L;
+        }
+
+        case DRV_QUERYCONFIGURE :
+            return 0L;
+        case DRV_CONFIGURE :
+            return DRVCNF_OK;
+
+        default :
+            return 1L;
+    }
+}
+
+#if 0
 MMRESULT
 GetSoundBlasterDeviceCapabilities(
     IN  PSOUND_DEVICE Device,
@@ -61,12 +149,12 @@ GetSoundBlasterDeviceCapabilities(
     return MMSYSERR_NOERROR;
 }
 
-
 BOOLEAN FoundDevice(
     UCHAR DeviceType,
     PWSTR DevicePath,
     HANDLE Handle)
 {
+    PSOUND_DEVICE SoundDevice;
     MMFUNCTION_TABLE FuncTable;
 
     ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
@@ -74,9 +162,9 @@ BOOLEAN FoundDevice(
     FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
 
     /* Nothing particularly special required... */
-    return ( AddSoundDevice(DeviceType, DevicePath, &FuncTable) == MMSYSERR_NOERROR );
+    return ( ListSoundDevice(DeviceType, DevicePath, &SoundDevice)
+             == MMSYSERR_NOERROR );
 }
-
 
 APIENTRY LONG
 DriverProc(
@@ -265,6 +353,7 @@ int APIENTRY wWinMain(
 
     return 0;
 }
+#endif
 #endif
 
 BOOL WINAPI DllMain(

@@ -133,9 +133,9 @@
 <directory name="mlang">
 	<xi:include href="mlang/mlang.rbuild" />
 </directory>
-<directory name="mmdrv">
+<!--directory name="mmdrv">
 	<xi:include href="mmdrv/mmdrv.rbuild" />
-</directory>
+</directory-->
 <directory name="mpr">
 	<xi:include href="mpr/mpr.rbuild" />
 </directory>

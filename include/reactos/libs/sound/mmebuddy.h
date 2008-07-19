@@ -22,90 +22,50 @@
     Hacky debug macro
 */
 
-#define POPUP(msg) \
-    MessageBoxA(0, msg, __FUNCTION__, MB_OK | MB_TASKMODAL)
-
-
-//#define NDEBUG
-#define NTRACE
-
-#ifdef ASSERT
-    #undef ASSERT
-#endif
-
-#ifndef NDEBUG
-
-/* HACK for testing */
-#include <stdio.h>
-
-#define TRACE_(...) \
+#define POPUP(...) \
     { \
-        printf("  %s: ", __FUNCTION__); \
-        printf(__VA_ARGS__); \
+        WCHAR dbg_popup_msg[1024], dbg_popup_title[256]; \
+        wsprintf(dbg_popup_title, L"%hS(%d)", __FILE__, __LINE__); \
+        wsprintf(dbg_popup_msg, __VA_ARGS__); \
+        MessageBox(0, dbg_popup_msg, dbg_popup_title, MB_OK | MB_TASKMODAL); \
     }
 
-#define WARN_(...) \
-    { \
-        printf("o %s: ", __FUNCTION__); \
-        printf(__VA_ARGS__); \
-    }
-
-#define ERR_(...) \
-    { \
-        printf("X %s: ", __FUNCTION__); \
-        printf(__VA_ARGS__); \
-    }
-
-#define ASSERT(x) \
-    { \
-        if ( ! (x) ) \
+#ifdef DEBUG_NT4
+    #define SND_ERR(...) \
         { \
-            ERR_("ASSERT failed! %s\n", #x); \
-            exit(1); \
-        } \
-    }
+            WCHAR dbg_popup_msg[1024]; \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            OutputDebugString(dbg_popup_msg); \
+        }
+    #define SND_WARN(...) \
+        { \
+            WCHAR dbg_popup_msg[1024]; \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            OutputDebugString(dbg_popup_msg); \
+        }
+    #define SND_TRACE(...) \
+        { \
+            WCHAR dbg_popup_msg[1024]; \
+            wsprintf(dbg_popup_msg, __VA_ARGS__); \
+            OutputDebugString(dbg_popup_msg); \
+        }
 
-#ifndef NTRACE
-
-#define TRACE_ENTRY() \
-    TRACE_("entered function\n")
-
-#define TRACE_EXIT(retval) \
-    TRACE_("returning %d (0x%x)\n", (int)retval, (int)retval)
-
-#endif
-
+    #define SND_ASSERT(condition) \
+        { \
+            if ( ! ( condition ) ) \
+            { \
+                SND_ERR(L"ASSERT FAILED: %wS\n", #condition); \
+            } \
+        }
 #else
-
-#define TRACE_(...) do { } while ( 0 )
-#define WARN_(...) do { } while ( 0 )
-#define ERR_(...) do { } while ( 0 )
-#define ASSERT(x) do { } while ( 0 )
-
-#define NTRACE
-
+    /* TODO */
 #endif
-
-#ifdef NTRACE
-    #define TRACE_ENTRY() do { } while ( 0 )
-    #define TRACE_EXIT(retval) do { } while ( 0 )
-#endif
-
 
 /*
     Some memory allocation helper macros
 */
 
-#define AllocateMemory(amount) \
-    AllocateTaggedMemory(0x00000000, amount)
-
-#define FreeMemory(ptr) \
-    FreeTaggedMemory(0x00000000, ptr)
-
-#define AllocateTaggedMemoryFor(tag, thing) \
-    (thing*) AllocateTaggedMemory(tag, sizeof(thing))
-
-#define AllocateMemoryFor(thing) \
+#define AllocateStruct(thing) \
     (thing*) AllocateMemory(sizeof(thing))
 
 #define StringLengthToBytes(chartype, string_length) \
@@ -133,19 +93,219 @@
 
 
 /*
+    Convert a device type into a zero-based array index
+*/
+
+#define SOUND_DEVICE_TYPE_TO_INDEX(x) \
+    ( x - MIN_SOUND_DEVICE_TYPE )
+
+#define INDEX_TO_SOUND_DEVICE_TYPE(x) \
+    ( x + MIN_SOUND_DEVICE_TYPE )
+
+
+/*
     Validation
 */
+
+#define IsValidSoundDeviceType IS_VALID_SOUND_DEVICE_TYPE
 
 #define VALIDATE_MMSYS_PARAMETER(parameter_condition) \
     { \
         if ( ! (parameter_condition) ) \
         { \
-            ERR_("Parameter check: %s\n", #parameter_condition); \
-            TRACE_EXIT(MMSYSERR_INVALPARAM); \
+            SND_ERR(L"Parameter check: %s\n", #parameter_condition); \
             return MMSYSERR_INVALPARAM; \
         } \
     }
 
+
+/*
+    Types and Structures
+*/
+
+typedef UCHAR MMDEVICE_TYPE, *PMMDEVICE_TYPE;
+
+typedef struct _SOUND_DEVICE
+{
+} SOUND_DEVICE, *PSOUND_DEVICE;
+
+typedef struct _SOUND_DEVICE_INSTANCE
+{
+    HANDLE KernelDeviceHandle;
+} SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
+
+
+/*
+    reentrancy.c
+*/
+
+MMRESULT
+InitEntrypointMutexes();
+
+VOID
+CleanupEntrypointMutexes();
+
+VOID
+AcquireEntrypointMutex(
+    IN  MMDEVICE_TYPE DeviceType);
+
+VOID
+ReleaseEntrypointMutex(
+    IN  MMDEVICE_TYPE DeviceType);
+
+
+/*
+    devicelist.c
+*/
+
+ULONG
+GetSoundDeviceCount(
+    IN  MMDEVICE_TYPE DeviceType);
+
+BOOLEAN
+IsValidSoundDevice(
+    IN  PSOUND_DEVICE SoundDevice);
+
+MMRESULT
+ListSoundDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  LPWSTR DevicePath,
+    OUT PSOUND_DEVICE* SoundDevice OPTIONAL);
+
+MMRESULT
+UnlistSoundDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  PSOUND_DEVICE SoundDevice);
+
+MMRESULT
+UnlistSoundDevices(
+    IN  MMDEVICE_TYPE DeviceType);
+
+MMRESULT
+UnlistAllSoundDevices();
+
+MMRESULT
+GetSoundDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceIndex,
+    OUT PSOUND_DEVICE* Device);
+
+
+/*
+    deviceinstance.c
+*/
+
+BOOLEAN
+IsValidSoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+
+/*
+    nt4.c
+*/
+
+typedef BOOLEAN (*SOUND_DEVICE_DETECTED_PROC)(
+    UCHAR DeviceType,
+    PWSTR DevicePath);
+
+MMRESULT
+OpenSoundDriverParametersRegKey(
+    IN  LPWSTR ServiceName,
+    OUT PHKEY KeyHandle);
+
+MMRESULT
+OpenSoundDeviceRegKey(
+    IN  LPWSTR ServiceName,
+    IN  DWORD DeviceIndex,
+    OUT PHKEY KeyHandle);
+
+MMRESULT
+EnumerateNt4ServiceSoundDevices(
+    IN  LPWSTR ServiceName,
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
+
+MMRESULT
+DetectNt4SoundDevices(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  PWSTR BaseDeviceName,
+    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
+
+
+/*
+    utility.c
+*/
+
+PVOID
+AllocateMemory(
+    IN  UINT Size);
+
+VOID
+FreeMemory(
+    IN  PVOID Pointer);
+
+UINT
+GetMemoryAllocationCount();
+
+UINT
+GetDigitCount(
+    IN  UINT Number);
+
+MMRESULT
+Win32ErrorToMmResult(
+    IN  UINT ErrorCode);
+
+MMRESULT
+TranslateInternalMmResult(
+    IN  MMRESULT Result);
+
+
+/*
+    kernel.c
+*/
+
+#define QueryDevice(h, ctl, o, o_size, xfer, ovl) \
+    Win32ErrorToMmResult( \
+        DeviceIoControl(h, ctl, NULL, 0, o, o_size, xfer, ovl) != 0 \
+        ? ERROR_SUCCESS : GetLastError() \
+    )
+
+#define ControlDevice(h, ctl, i, i_size, xfer, ovl) \
+    Win32ErrorToMmResult( \
+        DeviceIoControl(h, ctl, i, i_size, NULL, 0, xfer, ovl) != 0 \
+        ? ERROR_SUCCESS : GetLastError() \
+    )
+
+#define QuerySoundDevice(sd, ctl, o, o_size, xfer) \
+    SoundDeviceIoControl(sd, ctl, NULL, 0, o, o_size, xfer)
+
+#define ControlSoundDevice(sd, ctl, i, i_size, xfer) \
+    SoundDeviceIoControl(sd, ctl, i, i_size, NULL, 0, xfer)
+
+MMRESULT
+OpenKernelSoundDeviceByName(
+    IN  PWSTR DeviceName,
+    IN  BOOLEAN ReadOnly,
+    OUT PHANDLE Handle);
+
+MMRESULT
+CloseKernelSoundDevice(
+    IN  HANDLE Handle);
+
+MMRESULT
+SoundDeviceIoControl(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD IoControlCode,
+    IN  LPVOID InBuffer,
+    IN  DWORD InBufferSize,
+    OUT LPVOID OutBuffer,
+    IN  DWORD OutBufferSize,
+    OUT LPDWORD BytesTransferred OPTIONAL);
+
+
+#if 0
+
+typedef UCHAR MMDEVICE_TYPE, *PMMDEVICE_TYPE;
 
 struct _SOUND_DEVICE;
 struct _SOUND_DEVICE_INSTANCE;
@@ -553,16 +713,19 @@ MMRESULT
 TranslateInternalMmResult(MMRESULT Result);
 
 MMRESULT
-InitEntrypointMutex();
+InitEntrypointMutexes();
 
 VOID
-CleanupEntrypointMutex();
+CleanupEntrypointMutexes();
 
 VOID
-AcquireEntrypointMutex();
+AcquireEntrypointMutex(
+    IN  MMDEVICE_TYPE DeviceType);
 
 VOID
-ReleaseEntrypointMutex();
+ReleaseEntrypointMutex(
+    IN  MMDEVICE_TYPE DeviceType);
+
 
 BOOLEAN
 InitMmeBuddyLib();
@@ -750,6 +913,6 @@ NotifySoundClient(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     DWORD Message,
     DWORD Parameter);
-
+#endif
 
 #endif

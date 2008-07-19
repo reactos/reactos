@@ -4,7 +4,7 @@
 	<importlibrary definition="sndblst.def" />
     <include base="ReactOS">include/reactos/libs/sound</include>
 	<include base="sndblst">.</include>
-	<!--define name="NDEBUG" /-->
+	<define name="DEBUG_NT4" />
     <library>mmebuddy</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
