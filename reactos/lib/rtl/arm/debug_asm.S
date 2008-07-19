@@ -27,15 +27,25 @@
     //
     // Do a breakpoint and return
     //
-    bkpt BREAKPOINT_PRINT // Could also be PROMPT -- we check later in a1
+    bkpt BREAKPOINT_PRINT // Could be prompt too, we check this later
     bx lr
     ENTRY_END DebugService
+    
+    NESTED_ENTRY DebugService2
+    PROLOG_END DebugService2
+    
+    //
+    // FIXME-TODO: Do a breakpoint and return
+    //
+    //bkpt BREAKPOINT_LOAD_SYMBOLS // Could be unload too, we check this later
+    bx lr
+    ENTRY_END DebugService2
 
     NESTED_ENTRY RtlCaptureContext
     PROLOG_END RtlCaptureContext
 
     //
-    // FIXME: Change to stmdb later
+    // FIXME-PERF: Change to stmdb later
     //
     str r0, [a1, #CsR0]
     str r1, [a1, #CsR1]

@@ -1170,6 +1170,14 @@ Language=English
 Boot Logging Enabled
 .
 
+MessageId=0xB8
+Severity=Success
+Facility=System
+SymbolicName=ATTEMPTED_SWITCH_FROM_DPC
+Language=English
+ATTEMPTED_SWITCH_FROM_DPC
+.
+
 MessageId=0xBE
 Severity=Success
 Facility=System
