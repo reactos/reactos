@@ -1213,6 +1213,7 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 
    KeAcquireGuardedMutex(&ViewLock);
 
+   ASSERT(FileObject->SectionObjectPointer);
    Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    if (Bcb == NULL)
    {
