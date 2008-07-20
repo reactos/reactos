@@ -157,7 +157,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     if( !(ListenReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
@@ -209,7 +209,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
 	PLIST_ENTRY PendingConn = FCB->PendingConnections.Flink;
@@ -246,7 +246,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     FCB->EventsFired &= ~AFD_EVENT_ACCEPT;
 

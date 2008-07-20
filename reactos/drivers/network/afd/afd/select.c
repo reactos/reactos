@@ -274,13 +274,17 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	(PAFD_EVENT_SELECT_INFO)LockRequest( Irp, IrpSp );
     PAFD_FCB FCB = FileObject->FsContext;
 
+    if ( !EventSelectInfo ) {
+         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
+				   0, NULL, FALSE );
+    }
     AFD_DbgPrint(MID_TRACE,("Called (Event %x Triggers %x)\n",
 			    EventSelectInfo->EventObject,
 			    EventSelectInfo->Events));
 
     if( !SocketAcquireStateLock( FCB ) ) {
 	UnlockRequest( Irp, IrpSp );
-	return LostSocket( Irp, FALSE );
+	return LostSocket( Irp, TRUE );
     }
 
     FCB->EventSelectTriggers = FCB->EventsFired = 0;
@@ -319,9 +323,14 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called (FCB %x)\n", FCB));
 
+    if ( !EnumReq ) {
+         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
+				   0, NULL, FALSE );
+    }
+
     if( !SocketAcquireStateLock( FCB ) ) {
 	UnlockRequest( Irp, IrpSp );
-	return LostSocket( Irp, FALSE );
+	return LostSocket( Irp, TRUE );
     }
 
     EnumReq->PollEvents = FCB->PollState;

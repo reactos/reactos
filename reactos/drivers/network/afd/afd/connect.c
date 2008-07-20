@@ -140,7 +140,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
     if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL, TRUE );
+				       0, NULL, FALSE );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
 #if 0

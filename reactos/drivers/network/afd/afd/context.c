@@ -20,7 +20,7 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     UINT ContextSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     if( FCB->ContextSize < ContextSize ) ContextSize = FCB->ContextSize;
 
@@ -43,7 +43,7 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     if( FCB->ContextSize <
 	IrpSp->Parameters.DeviceIoControl.InputBufferLength ) {

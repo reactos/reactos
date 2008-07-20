@@ -154,7 +154,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                 FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
-            UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+            if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
             FCB->Overread = TRUE;
             //FCB->PollState |= AFD_EVENT_DISCONNECT;
@@ -198,7 +198,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 		NextIrp->IoStatus.Status = Status;
 		NextIrp->IoStatus.Information = TotalBytesCopied;
                 if( NextIrp == Irp ) RetStatus = Status;
-		UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+		if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	    }
 	}

@@ -26,7 +26,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     _SEH_TRY {
 	if( !SocketAcquireStateLock( FCB ) ) {
-	    Status = LostSocket( Irp, TRUE );
+	    Status = LostSocket( Irp, FALSE );
 	    _SEH_YIELD(return Status);
 	}
 
