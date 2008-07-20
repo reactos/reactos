@@ -52,20 +52,19 @@ DEFINE_GUID(RamdiskBusInterface,
 			0x410F,
 			0x80, 0xE4, 0x05, 0xF8, 0x10, 0xE7, 0xA8, 0x8A);
 
-//
-// GCC does not seem to support anonymous structures
-//
-#define RAMDISK_EXTENSION                    \
-    RAMDISK_DEVICE_TYPE Type;                \
-    RAMDISK_DEVICE_STATE State;              \
-    PDEVICE_OBJECT DeviceObject;             \
-    PDEVICE_OBJECT PhysicalDeviceObject;     \
-    PDEVICE_OBJECT AttachedDevice;           \
-    IO_REMOVE_LOCK RemoveLock;               \
-    UNICODE_STRING DriveDeviceName;          \
-    UNICODE_STRING BusDeviceName;            \
-    FAST_MUTEX DiskListLock;                 \
+typedef struct _RAMDISK_EXTENSION
+{
+    RAMDISK_DEVICE_TYPE Type;
+    RAMDISK_DEVICE_STATE State;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT AttachedDevice;
+    IO_REMOVE_LOCK RemoveLock;
+    UNICODE_STRING DriveDeviceName;
+    UNICODE_STRING BusDeviceName;
+    FAST_MUTEX DiskListLock;
     LIST_ENTRY DiskList;
+} RAMDISK_EXTENSION, *PRAMDISK_EXTENSION;
 
 typedef struct _RAMDISK_BUS_EXTENSION
 {
