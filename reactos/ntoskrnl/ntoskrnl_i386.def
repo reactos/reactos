@@ -186,21 +186,21 @@ FsRtlAcquireFileExclusive
 FsRtlAddLargeMcbEntry
 FsRtlAddMcbEntry
 FsRtlAddToTunnelCache
-FsRtlAllocateFileLock
+FsRtlAllocateFileLock@8
 FsRtlAllocatePool
 FsRtlAllocatePoolWithQuota
 FsRtlAllocatePoolWithQuotaTag
-FsRtlAllocatePoolWithTag
+FsRtlAllocatePoolWithTag@12
 FsRtlAllocateResource
 FsRtlAreNamesEqual@16
 FsRtlBalanceReads
 FsRtlCheckLockForReadAccess@8
 FsRtlCheckLockForWriteAccess@8
-FsRtlCheckOplock
-FsRtlCopyRead
+FsRtlCheckOplock@20
+FsRtlCopyRead@32
 FsRtlCopyWrite
 FsRtlCreateSectionForDataScan@40
-FsRtlCurrentBatchOplock
+FsRtlCurrentBatchOplock@4
 FsRtlDeleteKeyFromTunnelCache
 FsRtlDeleteTunnelCache
 FsRtlDeregisterUncProvider
@@ -208,13 +208,13 @@ FsRtlDissectDbcs
 FsRtlDissectName@16
 FsRtlDoesDbcsContainWildCards
 FsRtlDoesNameContainWildCards@4
-FsRtlFastCheckLockForRead
+FsRtlFastCheckLockForRead@24
 FsRtlFastCheckLockForWrite
 FsRtlFastUnlockAll@16
-FsRtlFastUnlockAllByKey
-FsRtlFastUnlockSingle
+FsRtlFastUnlockAllByKey@20
+FsRtlFastUnlockSingle@32
 FsRtlFindInTunnelCache
-FsRtlFreeFileLock
+FsRtlFreeFileLock@4
 FsRtlGetFileSize
 ;FsRtlGetNextBaseMcbEntry
 FsRtlGetNextFileLock
@@ -233,7 +233,7 @@ FsRtlInitializeTunnelCache
 FsRtlInsertPerFileObjectContext
 FsRtlInsertPerStreamContext
 FsRtlIsDbcsInExpression
-FsRtlIsFatDbcsLegal
+FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal
 FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
@@ -252,31 +252,31 @@ FsRtlLookupPerFileObjectContext
 FsRtlLookupPerStreamContextInternal
 FsRtlMdlRead
 FsRtlMdlReadComplete
-FsRtlMdlReadCompleteDev
-FsRtlMdlReadDev
+FsRtlMdlReadCompleteDev@12
+FsRtlMdlReadDev@28
 FsRtlMdlWriteComplete
-FsRtlMdlWriteCompleteDev
-FsRtlNormalizeNtstatus
+FsRtlMdlWriteCompleteDev@16
+FsRtlNormalizeNtstatus@8
 FsRtlNotifyChangeDirectory
-FsRtlNotifyCleanup
+FsRtlNotifyCleanup@12
 FsRtlNotifyFilterChangeDirectory
 FsRtlNotifyFilterReportChange
 FsRtlNotifyFullChangeDirectory@40
 FsRtlNotifyFullReportChange
-FsRtlNotifyInitializeSync
+FsRtlNotifyInitializeSync@4
 FsRtlNotifyReportChange
-FsRtlNotifyUninitializeSync
-FsRtlNotifyVolumeEvent
+FsRtlNotifyUninitializeSync@4
+FsRtlNotifyVolumeEvent@8
 ;FsRtlNumberOfRunsInBaseMcb
 FsRtlNumberOfRunsInLargeMcb
 FsRtlNumberOfRunsInMcb
-FsRtlOplockFsctrl
-FsRtlOplockIsFastIoPossible
+FsRtlOplockFsctrl@12
+FsRtlOplockIsFastIoPossible@4
 FsRtlPostPagingFileStackOverflow
 FsRtlPostStackOverflow
 FsRtlPrepareMdlWrite
-FsRtlPrepareMdlWriteDev
-FsRtlPrivateLock
+FsRtlPrepareMdlWriteDev@28
+FsRtlPrivateLock@48
 FsRtlProcessFileLock@12
 FsRtlRegisterFileSystemFilterCallbacks
 FsRtlRegisterUncProvider
@@ -291,7 +291,7 @@ FsRtlResetLargeMcb
 ;FsRtlSplitBaseMcb
 FsRtlSplitLargeMcb
 FsRtlSyncVolumes
-FsRtlTeardownPerStreamContexts
+FsRtlTeardownPerStreamContexts@4
 ;FsRtlTruncateBaseMcb
 FsRtlTruncateLargeMcb
 FsRtlTruncateMcb
@@ -299,7 +299,7 @@ FsRtlTruncateMcb
 FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb
 FsRtlUninitializeMcb
-FsRtlUninitializeOplock
+FsRtlUninitializeOplock@4
 HalDispatchTable=_HalDispatchTable
 @HalExamineMBR@16
 HalPrivateDispatchTable DATA
@@ -802,7 +802,7 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemCodePage DATA
-NlsOemLeadByteInfo DATA
+NlsOemLeadByteInfo=_NlsOemLeadByteInfo
 NtAddAtom@12
 NtAdjustPrivilegesToken@24
 NtAlertThread@4
@@ -1549,6 +1549,7 @@ mbstowcs
 mbtowc
 memchr
 memcpy
+memcmp
 memmove
 memset
 qsort

@@ -114,7 +114,7 @@ VfatFastIoUnlockAll(IN PFILE_OBJECT FileObject,
 
 static BOOLEAN NTAPI
 VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
-						 PEPROCESS ProcessId,
+						 PVOID ProcessId,
 						 ULONG Key,
 						 OUT PIO_STATUS_BLOCK IoStatus,
 						 IN PDEVICE_OBJECT DeviceObject)

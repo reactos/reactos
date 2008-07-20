@@ -84,13 +84,15 @@
 #define ExSemaphoreObjectType           _ExSemaphoreObjectType
 #define KdDebuggerEnabled               _KdDebuggerEnabled
 #define KdDebuggerNotPresent            _KdDebuggerNotPresent
+#define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
+extern PUSHORT _NlsOemLeadByteInfo;
 #define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
 #undef LEGAL_ANSI_CHARACTER_ARRAY
 #undef NLS_MB_CODE_PAGE_TAG
 #undef NLS_OEM_LEAD_BYTE_INFO
 #define LEGAL_ANSI_CHARACTER_ARRAY      FsRtlLegalAnsiCharacterArray
 #define NLS_MB_CODE_PAGE_TAG            NlsMbOemCodePageTag
-#define NLS_OEM_LEAD_BYTE_INFO          NlsOemLeadByteInfo
+#define NLS_OEM_LEAD_BYTE_INFO          _NlsOemLeadByteInfo
 #undef KD_DEBUGGER_ENABLED
 #undef KD_DEBUGGER_NOT_PRESENT
 #define KD_DEBUGGER_ENABLED             KdDebuggerEnabled

@@ -2602,6 +2602,7 @@ DbgUnLoadImageSymbols(
 // Generic Table Functions
 //
 #if defined(NTOS_MODE_USER) || defined(_NTIFS_)
+NTSYSAPI
 PVOID
 NTAPI
 RtlInsertElementGenericTable(
@@ -2611,6 +2612,7 @@ RtlInsertElementGenericTable(
     OUT PBOOLEAN NewElement OPTIONAL
 );
 
+NTSYSAPI
 PVOID
 NTAPI
 RtlInsertElementGenericTableFull(
@@ -2622,12 +2624,14 @@ RtlInsertElementGenericTableFull(
     IN TABLE_SEARCH_RESULT SearchResult
 );
 
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsGenericTableEmpty(
     IN PRTL_GENERIC_TABLE Table
 );
 
+NTSYSAPI
 PVOID
 NTAPI
 RtlLookupElementGenericTableFull(

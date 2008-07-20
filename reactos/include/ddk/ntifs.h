@@ -55,6 +55,23 @@ extern "C" {
 #define EX_PUSH_LOCK ULONG_PTR
 #define PEX_PUSH_LOCK PULONG_PTR
 
+    
+#ifndef FlagOn
+#define FlagOn(_F,_SF)        ((_F) & (_SF))
+#endif
+    
+#ifndef BooleanFlagOn
+#define BooleanFlagOn(F,SF)   ((BOOLEAN)(((F) & (SF)) != 0))
+#endif
+    
+#ifndef SetFlag
+#define SetFlag(_F,_SF)       ((_F) |= (_SF))
+#endif
+    
+#ifndef ClearFlag
+#define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
+#endif
+    
 #include "csq.h"
 
 typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
@@ -204,7 +221,10 @@ typedef enum _SECURITY_LOGON_TYPE
 #define FILE_SUPPORTS_OBJECT_IDS        0x00010000
 #define FILE_SUPPORTS_ENCRYPTION        0x00020000
 #define FILE_NAMED_STREAMS              0x00040000
-
+#define FILE_READ_ONLY_VOLUME           0x00080000
+#define FILE_SEQUENTIAL_WRITE_ONCE      0x00100000
+#define FILE_SUPPORTS_TRANSACTIONS      0x00200000
+    
 #define FILE_PIPE_BYTE_STREAM_TYPE      0x00000000
 #define FILE_PIPE_MESSAGE_TYPE          0x00000001
 
@@ -268,9 +288,13 @@ typedef enum _SECURITY_LOGON_TYPE
 #define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX (0x08)
 #define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH (0x10)
 #define FSRTL_FLAG_USER_MAPPED_FILE     (0x20)
+#define FSRTL_FLAG_ADVANCED_HEADER      (0x40)
 #define FSRTL_FLAG_EOF_ADVANCE_ACTIVE   (0x80)
 
 #define FSRTL_FLAG2_DO_MODIFIED_WRITE   (0x01)
+#define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS  (0x02)
+#define FSRTL_FLAG2_PURGE_WHEN_MAPPED (0x04)
+#define FSRTL_FLAG2_IS_PAGING_FILE (0x08)
 
 #define FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
 #define FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
@@ -880,6 +904,22 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
     ULONG           EaSize;
     WCHAR           FileName[0];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
+    
+typedef struct _FILE_ID_FULL_DIR_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    LARGE_INTEGER FileId;
+    WCHAR FileName[1];
+} FILE_ID_FULL_DIR_INFORMATION, *PFILE_ID_FULL_DIR_INFORMATION;
 
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     ULONG         NextEntryOffset;
@@ -897,6 +937,24 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     WCHAR         ShortName[12];
     WCHAR         FileName[0];
 } FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIR_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    CCHAR ShortNameLength;
+    WCHAR ShortName[12];
+    LARGE_INTEGER FileId;
+    WCHAR FileName[1];
+} FILE_ID_BOTH_DIR_INFORMATION, *PFILE_ID_BOTH_DIR_INFORMATION;
 
 typedef struct _FILE_EA_INFORMATION {
     ULONG EaSize;
@@ -1284,6 +1342,10 @@ typedef struct FILE_ALLOCATED_RANGE_BUFFER {
 } FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
+#define FSRTL_FCB_HEADER_V0             (0x00)
+#define FSRTL_FCB_HEADER_V1             (0x01)
+
+
 typedef struct _FSRTL_COMMON_FCB_HEADER {
     CSHORT          NodeTypeCode;
     CSHORT          NodeByteSize;
@@ -1300,6 +1362,13 @@ typedef struct _FSRTL_COMMON_FCB_HEADER {
     LARGE_INTEGER   ValidDataLength;
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
+typedef enum _FSRTL_COMPARISON_RESULT
+{
+    LessThan = -1,
+    EqualTo = 0,
+    GreaterThan = 1
+} FSRTL_COMPARISON_RESULT;
+    
 #if (VER_PRODUCTBUILD >= 2600)
 
 typedef struct _FSRTL_ADVANCED_FCB_HEADER {
@@ -1570,6 +1639,30 @@ typedef struct _RTL_GENERIC_TABLE
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
 
+#undef PRTL_GENERIC_COMPARE_ROUTINE
+#undef PRTL_GENERIC_ALLOCATE_ROUTINE
+#undef PRTL_GENERIC_FREE_ROUTINE
+#undef RTL_GENERIC_TABLE
+#undef PRTL_GENERIC_TABLE
+
+#define PRTL_GENERIC_COMPARE_ROUTINE PRTL_AVL_COMPARE_ROUTINE
+#define PRTL_GENERIC_ALLOCATE_ROUTINE PRTL_AVL_ALLOCATE_ROUTINE
+#define PRTL_GENERIC_FREE_ROUTINE PRTL_AVL_FREE_ROUTINE
+#define RTL_GENERIC_TABLE RTL_AVL_TABLE
+#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
 typedef struct _RTL_AVL_TABLE
 {
     RTL_BALANCED_LINKS BalancedRoot;
@@ -1595,6 +1688,40 @@ RtlInitializeGenericTableAvl(
     PRTL_AVL_FREE_ROUTINE FreeRoutine,
     PVOID TableContext
 );
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableAvl (
+    PRTL_AVL_TABLE Table,
+    PVOID Buffer,
+    CLONG BufferSize,
+    PBOOLEAN NewElement OPTIONAL
+    );
+    
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTableAvl (
+    PRTL_AVL_TABLE Table,
+    PVOID Buffer
+    );
+    
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableAvl (
+    PRTL_AVL_TABLE Table,
+    PVOID Buffer
+    );
+    
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplayingAvl (
+    PRTL_AVL_TABLE Table,
+    PVOID *RestartKey
+    );
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
@@ -2443,6 +2570,21 @@ ExWaitForRundownProtectionRelease (
 #endif
 #endif /* (VER_PRODUCTBUILD >= 2600) */
 
+
+#define FsRtlSetupAdvancedHeader( _advhdr, _fmutx )                         \
+{                                                                           \
+    SetFlag( (_advhdr)->Flags, FSRTL_FLAG_ADVANCED_HEADER );                \
+    SetFlag( (_advhdr)->Flags2, FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS );     \
+    (_advhdr)->Version = FSRTL_FCB_HEADER_V1;                               \
+    InitializeListHead( &(_advhdr)->FilterContexts );                       \
+    if ((_fmutx) != NULL) {                                                 \
+        (_advhdr)->FastMutex = (_fmutx);                                    \
+    }                                                                       \
+    *((PULONG_PTR)(&(_advhdr)->PushLock)) = 0;                              \
+    /*ExInitializePushLock( &(_advhdr)->PushLock ); API Not avaliable downlevel*/\
+    (_advhdr)->FileContextSupportPointer = NULL;                            \
+}
+
 #define FlagOn(x, f) ((x) & (f))
 
 NTKERNELAPI
@@ -2679,6 +2821,17 @@ NTAPI
 FsRtlDoesNameContainWildCards (
     IN PUNICODE_STRING Name
 );
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsFatDbcsLegal (
+    IN ANSI_STRING DbcsName,
+    IN BOOLEAN WildCardsPermissible,
+    IN BOOLEAN PathNamePermissible,
+    IN BOOLEAN LeadingBackslashPermissible
+    );
+
 
 #define FsRtlCompleteRequest(IRP,STATUS) {         \
     (IRP)->IoStatus.Status = (STATUS);             \
@@ -3137,6 +3290,13 @@ FsRtlPostPagingFileStackOverflow (
     IN PVOID                          Context,
     IN PKEVENT                        Event,
     IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTeardownPerStreamContexts (
+    IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
 );
 
 NTKERNELAPI
@@ -4072,6 +4232,13 @@ RtlFreeHeap (
 NTSYSAPI
 VOID
 NTAPI
+RtlFreeOemString(
+    IN OUT POEM_STRING OemString
+    );
+
+NTSYSAPI
+VOID
+NTAPI
 RtlGenerate8dot3Name (
     IN PUNICODE_STRING              Name,
     IN BOOLEAN                      AllowExtendedCharacters,
@@ -4176,6 +4343,24 @@ RtlUnicodeStringToOemString(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlOemStringToCountedUnicodeString(
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PCOEM_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToCountedOemString(
+    IN OUT POEM_STRING DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN AllocateDestinationString
+);
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlReserveChunk (
     IN USHORT       CompressionFormat,
     IN OUT PUCHAR   *CompressedBuffer,
@@ -4244,6 +4429,17 @@ RtlUnicodeToMultiByteN(
     OUT PULONG BytesInMultiByteString OPTIONAL,
     IN PWCH UnicodeString,
     IN ULONG BytesInUnicodeString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlOemToUnicodeN(
+    OUT PWSTR UnicodeString,
+    IN ULONG MaxBytesInUnicodeString,
+    OUT PULONG BytesInUnicodeString OPTIONAL,
+    IN PCH OemString,
+    IN ULONG BytesInOemString
 );
 
 /* RTL Splay Tree Functions */
