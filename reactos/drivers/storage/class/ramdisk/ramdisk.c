@@ -11,6 +11,7 @@
 #include <initguid.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
+#include <ntddcdrm.h>
 #include <scsi.h>
 #include <ntddscsi.h>
 #include <mountdev.h>
@@ -371,8 +372,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         Status = IoCreateDevice(DeviceExtension->DeviceObject->DriverObject,
                                 sizeof(RAMDISK_DRIVE_EXTENSION),
                                 &DeviceName,
-                                FILE_DEVICE_DISK_FILE_SYSTEM, // FIXME: DISK
-                                FILE_READ_ONLY_DEVICE, // FIXME: Not always
+                                FILE_DEVICE_CD_ROM,
+                                0,
                                 0,
                                 &DeviceObject);
         if (!NT_SUCCESS(Status)) goto FailCreate;
@@ -906,9 +907,44 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         //
-        // Drive code not yet done
+        // Check what the request is
         //
-        ASSERT(FALSE);
+        switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+        {
+            case IOCTL_CDROM_CHECK_VERIFY:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_CDROM_READ_TOC:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            default:
+         
+                //
+                // Drive code not yet done
+                //
+                DPRINT1("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+        }
+
+        //
+        // Cleanup/complete
+        //
+        UNIMPLEMENTED;
+        while (TRUE);
     }
     
     //
