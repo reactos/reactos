@@ -1241,6 +1241,9 @@ GuiConsoleHandleClose(HWND hWnd)
       current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
       current_entry = current_entry->Flink;
 
+      /* FIXME: Windows will wait up to 5 seconds for the thread to exit.
+       * We shouldn't wait here, though, since the console lock is entered.
+       * A copy of the thread list probably needs to be made. */
       ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 

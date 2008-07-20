@@ -79,7 +79,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD
 VOID FASTCALL
 ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 {
-  ConioConsoleCtrlEventTimeout(Event, ProcessData, INFINITE);
+  ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
 
 DWORD FASTCALL
