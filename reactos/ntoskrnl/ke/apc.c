@@ -519,8 +519,8 @@ KiMoveApcState(PKAPC_STATE OldState,
     RtlCopyMemory(NewState, OldState, KAPC_STATE_ACTUAL_LENGTH);
 
     /* Repair Lists */
-    RepairList(NewState->ApcListHead, OldState->ApcListHead, KernelMode);
-    RepairList(NewState->ApcListHead, OldState->ApcListHead, UserMode);
+    RepairList(OldState->ApcListHead, NewState->ApcListHead, KernelMode);
+    RepairList(OldState->ApcListHead, NewState->ApcListHead, UserMode);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
