@@ -50,6 +50,8 @@ OpenSoundDriverParametersRegKey(
              ServiceName,
              REG_PARAMETERS_KEY_NAME_U);
 
+    SND_TRACE(L"Opening reg key: %wS\n", ParametersKeyName);
+
     /* Perform the open */
     if ( RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                       ParametersKeyName,
@@ -58,6 +60,7 @@ OpenSoundDriverParametersRegKey(
                       KeyHandle) != ERROR_SUCCESS )
     {
         /* Couldn't open the key */
+        SND_ERR(L"Failed to open reg key: %wS\n", ParametersKeyName);
         FreeMemory(ParametersKeyName);
         return MMSYSERR_ERROR;
     }
@@ -114,6 +117,8 @@ OpenSoundDeviceRegKey(
              REG_DEVICE_KEY_NAME_U,
              DeviceIndex);
 
+    SND_TRACE(L"Opening reg key: %wS\n", RegPath);
+
     /* Perform the open */
     if ( RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                       RegPath,
@@ -122,6 +127,7 @@ OpenSoundDeviceRegKey(
                       KeyHandle) != ERROR_SUCCESS )
     {
         /* Couldn't open the key */
+        SND_ERR(L"Failed to open reg key: %wS\n", RegPath);
         FreeMemory(RegPath);
         return MMSYSERR_ERROR;
     }
@@ -173,6 +179,7 @@ EnumerateNt4ServiceSoundDevices(
                                  &MaxNameLength,
                                  NULL, NULL, NULL) != ERROR_SUCCESS )
             {
+                SND_ERR(L"Failed to query registry key information\n");
                 RegCloseKey(DevicesKey);
                 RegCloseKey(Key);
 
@@ -217,6 +224,7 @@ EnumerateNt4ServiceSoundDevices(
                     if ( ( DeviceType == 0 ) ||
                          ( DeviceType == ValueData ) )
                     {
+                        SND_TRACE(L"Found device: %wS\n", DevicePath);
                         SoundDeviceDetectedProc(ValueData, DevicePath);
                     }
                 }
@@ -262,7 +270,7 @@ DetectNt4SoundDevices(
 {
     ULONG DeviceNameLength = 0;
     PWSTR DeviceName = NULL;
-    ULONG Index = 0, Count = 0;
+    ULONG Index = 0;
     HANDLE DeviceHandle;
     BOOLEAN DoSearch = TRUE;
 
@@ -290,10 +298,8 @@ DetectNt4SoundDevices(
                                          &DeviceHandle) == MMSYSERR_NOERROR )
         {
             /* Notify the callback function */
-            if ( SoundDeviceDetectedProc(DeviceType, DeviceName) )
-            {
-                ++ Count;
-            }
+            SND_TRACE(L"Found device: %wS\n", DeviceName);
+            SoundDeviceDetectedProc(DeviceType, DeviceName);
 
             CloseHandle(DeviceHandle);
 

@@ -29,7 +29,7 @@ BOOLEAN FoundDevice(
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice = NULL;
 
-    POPUP(DevicePath);
+    SND_TRACE(L"Callback received: %wS\n", DevicePath);
 
 /*
     MMFUNCTION_TABLE FuncTable;
@@ -65,7 +65,7 @@ DriverProc(
     {
         case DRV_LOAD :
         {
-            POPUP(L"DRV_LOAD");
+            SND_TRACE(L"DRV_LOAD\n");
 
             Result = InitEntrypointMutexes();
 
@@ -80,8 +80,7 @@ DriverProc(
             {
                 CleanupEntrypointMutexes();
 
-                Result = UnlistAllSoundDevices();
-                SND_ASSERT( Result == MMSYSERR_NOERROR );
+                UnlistAllSoundDevices();
 
                 return 0L;
             }
@@ -91,22 +90,32 @@ DriverProc(
 
         case DRV_FREE :
         {
-            POPUP(L"DRV_FREE");
+            SND_TRACE(L"DRV_FREE\n");
+
+            UnlistAllSoundDevices();
 
             CleanupEntrypointMutexes();
 
-            POPUP(L"Unfreed memory blocks: %d", GetMemoryAllocationCount());
+            SND_TRACE(L"Unfreed memory blocks: %d\n",
+                      GetMemoryAllocationCount());
 
             return 1L;
         }
 
         case DRV_QUERYCONFIGURE :
+        {
+            SND_TRACE(L"DRV_QUERYCONFIGURE");
             return 0L;
+        }
         case DRV_CONFIGURE :
             return DRVCNF_OK;
 
         default :
-            return 1L;
+            return DefDriverProc(DriverId,
+                                 DriverHandle,
+                                 Message,
+                                 Parameter1,
+                                 Parameter2);
     }
 }
 
@@ -364,16 +373,16 @@ BOOL WINAPI DllMain(
     switch ( fdwReason )
     {
         case DLL_PROCESS_ATTACH :
-            MessageBox(0, L"DLL_PROCESS_ATTACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            SND_TRACE(L"DLL_PROCESS_ATTACH\n");
             break;
         case DLL_PROCESS_DETACH :
-            MessageBox(0, L"DLL_PROCESS_DETACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            SND_TRACE(L"DLL_PROCESS_DETACH\n");
             break;
         case DLL_THREAD_ATTACH :
-            MessageBox(0, L"DLL_THREAD_ATTACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            SND_TRACE(L"DLL_THREAD_ATTACH\n");
             break;
         case DLL_THREAD_DETACH :
-            MessageBox(0, L"DLL_THREAD_DETACH", L"DllMain", MB_OK | MB_TASKMODAL);
+            SND_TRACE(L"DLL_THREAD_DETACH\n");
             break;
     }
 

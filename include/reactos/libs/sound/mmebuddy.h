@@ -54,7 +54,9 @@
         { \
             if ( ! ( condition ) ) \
             { \
-                SND_ERR(L"ASSERT FAILED: %wS\n", #condition); \
+                SND_ERR(L"ASSERT FAILED: %hS\n", #condition); \
+                POPUP(L"ASSERT FAILED: %hS\n", #condition); \
+                ExitProcess(1); \
             } \
         }
 #else
@@ -113,7 +115,7 @@
     { \
         if ( ! (parameter_condition) ) \
         { \
-            SND_ERR(L"Parameter check: %s\n", #parameter_condition); \
+            SND_ERR(L"FAILED parameter check: %hS\n", #parameter_condition); \
             return MMSYSERR_INVALPARAM; \
         } \
     }
@@ -127,6 +129,9 @@ typedef UCHAR MMDEVICE_TYPE, *PMMDEVICE_TYPE;
 
 typedef struct _SOUND_DEVICE
 {
+    struct _SOUND_DEVICE* Next;
+    MMDEVICE_TYPE Type;
+    PWSTR Path;
 } SOUND_DEVICE, *PSOUND_DEVICE;
 
 typedef struct _SOUND_DEVICE_INSTANCE
@@ -169,7 +174,7 @@ IsValidSoundDevice(
 MMRESULT
 ListSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  LPWSTR DevicePath,
+    IN  LPWSTR DevicePath OPTIONAL,
     OUT PSOUND_DEVICE* SoundDevice OPTIONAL);
 
 MMRESULT
@@ -181,7 +186,7 @@ MMRESULT
 UnlistSoundDevices(
     IN  MMDEVICE_TYPE DeviceType);
 
-MMRESULT
+VOID
 UnlistAllSoundDevices();
 
 MMRESULT
