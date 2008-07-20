@@ -323,6 +323,8 @@ BuildLeftPopupMenu()
             AppendMenu(hMenu, MF_STRING, _ttoi(szLayoutNum), szName);
         }
 
+        (void)CheckMenuItem(hMenu, ulCurrentLayoutNum, MF_CHECKED);
+
         RegCloseKey(hKey);
     }
 
