@@ -126,12 +126,58 @@
 */
 
 typedef UCHAR MMDEVICE_TYPE, *PMMDEVICE_TYPE;
+struct _SOUND_DEVICE;
+
+
+#define DEFINE_GETCAPS_FUNCTYPE(func_typename, caps_type) \
+    typedef MMRESULT (*func_typename)( \
+        IN  struct _SOUND_DEVICE* SoundDevice, \
+        OUT caps_type Capabilities, \
+        IN  DWORD CapabilitiesSize);
+
+/* This one is for those of us who don't care */
+DEFINE_GETCAPS_FUNCTYPE(MMGETCAPS_FUNC, PVOID);
+
+/* These are for those of us that do */
+DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEOUTCAPS_FUNC, LPWAVEOUTCAPS);
+DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEINCAPS_FUNC,  LPWAVEINCAPS );
+DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIOUTCAPS_FUNC, LPMIDIOUTCAPS);
+DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIINCAPS_FUNC,  LPMIDIINCAPS );
+
+typedef struct _MMFUNCTION_TABLE
+{
+    union
+    {
+        MMGETCAPS_FUNC          GetCapabilities;
+        MMGETWAVEOUTCAPS_FUNC   GetWaveOutCapabilities;
+        MMGETWAVEINCAPS_FUNC    GetWaveInCapabilities;
+        MMGETMIDIOUTCAPS_FUNC   GetMidiOutCapabilities;
+        MMGETMIDIINCAPS_FUNC    GetMidiInCapabilities;
+    };
+
+/*
+    MMCREATEINSTANCE_FUNC   Constructor;
+    MMDESTROYINSTANCE_FUNC  Destructor;
+    MMGETCAPS_FUNC          GetCapabilities;
+
+    MMWAVEQUERYFORMAT_FUNC  QueryWaveFormat;
+    MMWAVESETFORMAT_FUNC    SetWaveFormat;
+    MMWAVEQUEUEBUFFER_FUNC  QueueWaveBuffer;
+
+    MMGETWAVESTATE_FUNC     GetWaveDeviceState;
+    MMSETWAVESTATE_FUNC     PauseWaveDevice;
+    MMSETWAVESTATE_FUNC     RestartWaveDevice;
+    MMSETWAVESTATE_FUNC     ResetWaveDevice;
+    MMSETWAVESTATE_FUNC     BreakWaveDeviceLoop;
+*/
+} MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 typedef struct _SOUND_DEVICE
 {
     struct _SOUND_DEVICE* Next;
     MMDEVICE_TYPE Type;
     PWSTR Path;
+    MMFUNCTION_TABLE FunctionTable;
 } SOUND_DEVICE, *PSOUND_DEVICE;
 
 typedef struct _SOUND_DEVICE_INSTANCE
@@ -157,6 +203,30 @@ AcquireEntrypointMutex(
 VOID
 ReleaseEntrypointMutex(
     IN  MMDEVICE_TYPE DeviceType);
+
+
+/*
+    capabilities.c
+*/
+
+MMRESULT
+MmeGetSoundDeviceCapabilities(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  PVOID Capabilities,
+    IN  DWORD CapabilitiesSize);
+
+MMRESULT
+GetSoundDeviceCapabilities(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PVOID Capabilities,
+    IN  DWORD CapabilitiesSize);
+
+MMRESULT
+DefaultGetSoundDeviceCapabilities(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PVOID Capabilities,
+    IN  DWORD CapabilitiesSize);
 
 
 /*
@@ -194,6 +264,31 @@ GetSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceIndex,
     OUT PSOUND_DEVICE* Device);
+
+MMRESULT
+GetSoundDevicePath(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT LPWSTR* DevicePath);
+
+MMRESULT
+GetSoundDeviceType(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PMMDEVICE_TYPE DeviceType);
+
+
+/*
+    functiontable.c
+*/
+
+MMRESULT
+SetSoundDeviceFunctionTable(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL);
+
+MMRESULT
+GetSoundDeviceFunctionTable(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PMMFUNCTION_TABLE* FunctionTable);
 
 
 /*
@@ -289,7 +384,7 @@ TranslateInternalMmResult(
 
 MMRESULT
 OpenKernelSoundDeviceByName(
-    IN  PWSTR DeviceName,
+    IN  PWSTR DevicePath,
     IN  BOOLEAN ReadOnly,
     OUT PHANDLE Handle);
 
@@ -492,432 +587,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
     } Streaming;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
-
-/*
-    Thread requests
-*/
-
-#define THREADREQUEST_EXIT              0
-#define WAVEREQUEST_QUEUE_BUFFER        1
-
-
-/*
-    entry.c
-*/
-
-LONG
-DefaultDriverProc(
-    DWORD driver_id,
-    HANDLE driver_handle,
-    UINT message,
-    LONG parameter1,
-    LONG parameter2);
-
-
-/*
-    devices.c
-*/
-
-ULONG
-GetSoundDeviceCount(
-    IN  UCHAR DeviceType);
-
-MMRESULT
-GetSoundDevice(
-    IN  UCHAR DeviceType,
-    IN  ULONG DeviceIndex,
-    OUT PSOUND_DEVICE* Device);
-
-MMRESULT
-GetSoundDevicePath(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT LPWSTR* DevicePath);
-
-BOOLEAN
-AddSoundDevice(
-    IN  UCHAR DeviceType,
-    IN  PWSTR DevicePath,
-    IN  PMMFUNCTION_TABLE FunctionTable);
-
-MMRESULT
-RemoveSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice);
-
-MMRESULT
-RemoveSoundDevices(
-    IN  UCHAR DeviceType);
-
-VOID
-RemoveAllSoundDevices();
-
-BOOLEAN
-IsValidSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice);
-
-MMRESULT
-GetSoundDeviceType(
-    IN  PSOUND_DEVICE Device,
-    OUT PUCHAR DeviceType);
-
-MMRESULT
-GetSoundDeviceFunctionTable(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PMMFUNCTION_TABLE* FunctionTable);
-
-MMRESULT
-DefaultInstanceConstructor(
-    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
-
-VOID
-DefaultInstanceDestructor(
-    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance);
-
-
-/*
-    nt4.c
-*/
-
-typedef BOOLEAN (*SOUND_DEVICE_DETECTED_PROC)(
-    UCHAR DeviceType,
-    PWSTR DevicePath,
-    HANDLE Handle);
-
-MMRESULT
-OpenSoundDriverParametersRegKey(
-    IN  LPWSTR ServiceName,
-    OUT PHKEY KeyHandle);
-
-MMRESULT
-OpenSoundDeviceRegKey(
-    IN  LPWSTR ServiceName,
-    IN  DWORD DeviceIndex,
-    OUT PHKEY KeyHandle);
-
-MMRESULT
-EnumerateNt4ServiceSoundDevices(
-    IN  LPWSTR ServiceName,
-    IN  UCHAR DeviceType,
-    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
-
-MMRESULT
-DetectNt4SoundDevices(
-    IN  UCHAR DeviceType,
-    IN  PWSTR BaseDevicePath,
-    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
-
-
-/*
-    kernel.c
-*/
-
-MMRESULT
-OpenKernelSoundDeviceByName(
-    IN  PWSTR DeviceName,
-    IN  DWORD AccessRights,
-    IN  PHANDLE Handle);
-
-MMRESULT
-OpenKernelSoundDevice(
-    PSOUND_DEVICE SoundDevice,
-    DWORD AccessRights,
-    PHANDLE Handle);
-
-MMRESULT
-CloseKernelSoundDevice(
-    IN  HANDLE Handle);
-
-MMRESULT
-PerformDeviceIo(
-    IN  HANDLE Handle,
-    IN  DWORD IoControlCode,
-    IN  LPVOID InBuffer,
-    IN  DWORD InBufferSize,
-    OUT LPVOID OutBuffer,
-    IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
-
-MMRESULT
-RetrieveFromDeviceHandle(
-    IN  HANDLE Handle,
-    IN  DWORD IoControlCode,
-    OUT LPVOID OutBuffer,
-    IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
-
-MMRESULT
-SendToDeviceHandle(
-    IN  HANDLE Handle,
-    IN  DWORD IoControlCode,
-    IN  LPVOID InBuffer,
-    IN  DWORD InBufferSize,
-    OUT LPDWORD BytesReturned,
-    IN  LPOVERLAPPED Overlapped);
-
-MMRESULT
-PerformSoundDeviceIo(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD IoControlCode,
-    IN  LPVOID InBuffer,
-    IN  DWORD InBufferSize,
-    OUT LPVOID OutBuffer,
-    IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned);
-
-MMRESULT
-RetrieveFromSoundDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD IoControlCode,
-    OUT LPVOID OutBuffer,
-    IN  DWORD OutBufferSize,
-    OUT LPDWORD BytesReturned);
-
-MMRESULT
-SendToSoundDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD IoControlCode,
-    IN  LPVOID InBuffer,
-    IN  DWORD InBufferSize,
-    OUT LPDWORD BytesReturned);
-
-MMRESULT
-WriteSoundDeviceBuffer(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  LPVOID Buffer,
-    IN  DWORD BufferSize,
-    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
-    LPOVERLAPPED Overlapped);
-
-
-/*
-    utility.c
-*/
-
-PVOID
-AllocateTaggedMemory(
-    IN  DWORD Tag,
-    IN  DWORD Size);
-
-VOID
-FreeTaggedMemory(
-    IN  DWORD Tag,
-    IN  PVOID Pointer);
-
-DWORD
-GetMemoryAllocations();
-
-ULONG
-GetDigitCount(
-    IN  ULONG Number);
-
-MMRESULT
-Win32ErrorToMmResult(IN UINT error_code);
-
-MMRESULT
-TranslateInternalMmResult(MMRESULT Result);
-
-MMRESULT
-InitEntrypointMutexes();
-
-VOID
-CleanupEntrypointMutexes();
-
-VOID
-AcquireEntrypointMutex(
-    IN  MMDEVICE_TYPE DeviceType);
-
-VOID
-ReleaseEntrypointMutex(
-    IN  MMDEVICE_TYPE DeviceType);
-
-
-BOOLEAN
-InitMmeBuddyLib();
-
-VOID
-CleanupMmeBuddyLib();
-
-
-/*
-    instances.c
-*/
-
-MMRESULT
-CreateSoundDeviceInstance(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PSOUND_DEVICE_INSTANCE* Instance);
-
-MMRESULT
-DestroySoundDeviceInstance(
-    IN  PSOUND_DEVICE_INSTANCE Instance);
-
-MMRESULT
-DestroyAllInstancesOfSoundDevice(
-    IN  PSOUND_DEVICE SoundDevice);
-
-MMRESULT
-GetSoundDeviceFromInstance(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PSOUND_DEVICE* SoundDevice);
-
-BOOLEAN
-IsValidSoundDeviceInstance(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-GetSoundDeviceTypeFromInstance(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PUCHAR DeviceType);
-
-
-/*
-    capabilities.c
-*/
-
-MMRESULT
-GetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PUNIVERSAL_CAPS Capabilities);
-
-MMRESULT
-DefaultGetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE Device,
-    OUT PUNIVERSAL_CAPS Capabilities);
-
-
-/*
-    wave/format.c
-*/
-
-MMRESULT
-QueryWaveDeviceFormatSupport(
-    IN  PSOUND_DEVICE SoundDevice,
-    IN  PWAVEFORMATEX WaveFormat,
-    IN  DWORD WaveFormatSize);
-
-MMRESULT
-DefaultQueryWaveDeviceFormatSupport(
-    IN  PSOUND_DEVICE SoundDevice,
-    IN  PWAVEFORMATEX WaveFormat,
-    IN  DWORD WaveFormatSize);
-
-MMRESULT
-SetWaveDeviceFormat(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVEFORMATEX WaveFormat,
-    IN  DWORD WaveFormatSize);
-
-MMRESULT
-DefaultSetWaveDeviceFormat(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PWAVEFORMATEX WaveFormat,
-    IN  DWORD WaveFormatSize);
-
-
-/*
-    thread.c
-*/
-
-MMRESULT
-OverlappedSoundDeviceIo(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  PVOID Buffer,
-    IN  DWORD BufferSize,
-    IN  SOUND_THREAD_IO_COMPLETION_HANDLER IoCompletionHandler,
-    IN  PVOID CompletionParameter OPTIONAL);
-
-MMRESULT
-StartSoundThread();
-
-MMRESULT
-StopSoundThread();
-
-MMRESULT
-CallUsingSoundThread(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
-    IN  PVOID Parameter);
-
-
-/*
-    wave/streamcontrol.c
-*/
-
-MMRESULT
-InitWaveStreamData(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-QueueWaveDeviceBuffer(
-    IN  PSOUND_DEVICE_INSTANCE Instance,
-    IN  PWAVEHDR BufferHeader);
-
-MMRESULT
-GetWaveDeviceState(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PULONG State);
-
-MMRESULT
-DefaultGetWaveDeviceState(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    OUT PULONG State);
-
-MMRESULT
-PauseWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-DefaultPauseWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-RestartWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-DefaultRestartWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-ResetWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-DefaultResetWaveDevice(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-BreakWaveDeviceLoop(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-MMRESULT
-DefaultBreakWaveDeviceLoop(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
-
-
-/*
-    wave/wodMessage.c
-*/
-
-APIENTRY DWORD
-wodMessage(
-    DWORD device_id,
-    DWORD message,
-    DWORD private_handle,
-    DWORD parameter1,
-    DWORD parameter2);
-
-
-/*
-    mme/callback.c
-*/
-
-VOID
-NotifySoundClient(
-    PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    DWORD Message,
-    DWORD Parameter);
 #endif
 
 #endif

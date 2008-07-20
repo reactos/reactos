@@ -17,7 +17,7 @@ static HANDLE ProcessHeapHandle = NULL;
 static UINT   CurrentAllocations = 0;
 
 /*
-    Memory allocation helper
+    Allocates memory, zeroes it, and increases the allocation count.
 */
 PVOID
 AllocateMemory(
@@ -38,6 +38,9 @@ AllocateMemory(
     return Pointer;
 }
 
+/*
+    Frees memory and reduces the allocation count.
+*/
 VOID
 FreeMemory(
     IN  PVOID Pointer)
@@ -50,6 +53,10 @@ FreeMemory(
     -- CurrentAllocations;
 }
 
+/*
+    Returns the current number of memory allocations outstanding. Useful for
+    detecting/tracing memory leaks.
+*/
 UINT
 GetMemoryAllocationCount()
 {

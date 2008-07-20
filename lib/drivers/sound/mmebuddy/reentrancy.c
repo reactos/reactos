@@ -15,6 +15,11 @@
 
 HANDLE EntrypointMutexes[SOUND_DEVICE_TYPES];
 
+/*
+    Creates a set of mutexes which are used for the purpose of guarding the
+    device-type specific module entry-points. If any of these fail creation,
+    all of them will be destroyed and the failure reported.
+*/
 MMRESULT
 InitEntrypointMutexes()
 {
@@ -45,6 +50,11 @@ InitEntrypointMutexes()
     return Result;
 }
 
+/*
+    Cleans up any of the entry-point guard mutexes. This will only close the
+    handles of mutexes which have been created, making it safe for use as a
+    cleanup routine even within the InitEntrypointMutexes routine above.
+*/
 VOID
 CleanupEntrypointMutexes()
 {
@@ -61,6 +71,9 @@ CleanupEntrypointMutexes()
     }
 }
 
+/*
+    Grabs an entry-point mutex.
+*/
 VOID
 AcquireEntrypointMutex(
     IN  MMDEVICE_TYPE DeviceType)
@@ -75,6 +88,9 @@ AcquireEntrypointMutex(
     WaitForSingleObject(EntrypointMutexes[i], INFINITE);
 }
 
+/*
+    Releases an entry-point mutex.
+*/
 VOID
 ReleaseEntrypointMutex(
     IN  MMDEVICE_TYPE DeviceType)

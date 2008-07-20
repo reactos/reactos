@@ -3,8 +3,10 @@
 <module name="mmebuddy" type="staticlibrary" allowwarnings="false" unicode="yes">
 	<include base="ReactOS">include/reactos/libs/sound</include>
 	<define name="DEBUG_NT4">1</define>
+	<file>capabilities.c</file>
 	<file>devicelist.c</file>
 	<file>deviceinstance.c</file>
+	<file>functiontable.c</file>
 	<file>reentrancy.c</file>
 	<file>utility.c</file>
 	<file>nt4.c</file>

@@ -10,6 +10,8 @@
 
     History:
         6 July 2008 - Created
+
+    TODO: Adhere to maximum device name length!
 */
 
 #include <windows.h>
@@ -18,9 +20,55 @@
 #include <mmebuddy.h>
 //#include <debug.h>
 
-PWSTR SBWaveOutDeviceName = L"ROS Sound Blaster Playback";
-PWSTR SBWaveInDeviceName  = L"ROS Sound Blaster Recording";
+PWSTR SBWaveOutDeviceName = L"ROS Sound Blaster Out";
+PWSTR SBWaveInDeviceName  = L"ROS Sound Blaster In";
 /* TODO: Mixer etc */
+
+MMRESULT
+GetSoundBlasterDeviceCapabilities(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PVOID Capabilities,
+    IN  DWORD CapabilitiesSize)
+{
+    MMRESULT Result;
+    MMDEVICE_TYPE DeviceType;
+
+    SND_ASSERT( SoundDevice );
+    SND_ASSERT( Capabilities );
+
+    SND_TRACE(L"Sndblst - GetSoundBlasterDeviceCapabilities\n");
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    /* Use the default method of obtaining device capabilities */
+    Result = DefaultGetSoundDeviceCapabilities(SoundDevice,
+                                               Capabilities,
+                                               CapabilitiesSize);
+
+    if ( Result != MMSYSERR_NOERROR )
+        return Result;
+
+    /* Inject the appropriate device name */
+    switch ( DeviceType )
+    {
+        case WAVE_OUT_DEVICE_TYPE :
+        {
+            LPWAVEOUTCAPS WaveOutCaps = (LPWAVEOUTCAPS) Capabilities;
+            CopyWideString(WaveOutCaps->szPname, SBWaveOutDeviceName);
+            break;
+        }
+        case WAVE_IN_DEVICE_TYPE :
+        {
+            LPWAVEINCAPS WaveInCaps = (LPWAVEINCAPS) Capabilities;
+            CopyWideString(WaveInCaps->szPname, SBWaveInDeviceName);
+            break;
+        }
+    }
+
+    return MMSYSERR_NOERROR;
+}
+
 
 BOOLEAN FoundDevice(
     UCHAR DeviceType,
@@ -28,11 +76,13 @@ BOOLEAN FoundDevice(
 {
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice = NULL;
+    MMFUNCTION_TABLE FuncTable;
 
     SND_TRACE(L"Callback received: %wS\n", DevicePath);
 
+    FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
+
 /*
-    MMFUNCTION_TABLE FuncTable;
 
     ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
 
@@ -47,6 +97,7 @@ BOOLEAN FoundDevice(
     }
 
     /* TODO: Set up function table */
+    SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
 
     return TRUE;
 }
@@ -85,6 +136,16 @@ DriverProc(
                 return 0L;
             }
 
+/*
+            PSOUND_DEVICE snd;
+            GetSoundDevice(WAVE_OUT_DEVICE_TYPE, 0, &snd);
+            GetSoundDevice(AUX_DEVICE_TYPE, 0, &snd);
+            GetSoundDevice(AUX_DEVICE_TYPE, 1, &snd);
+            GetSoundDevice(AUX_DEVICE_TYPE, 2, &snd);
+*/
+
+            SND_TRACE(L"Initialisation complete\n");
+
             return 1L;
         }
 
@@ -102,6 +163,20 @@ DriverProc(
             return 1L;
         }
 
+        case DRV_ENABLE :
+        case DRV_DISABLE :
+        {
+            SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
+            return 1L;
+        }
+
+        case DRV_OPEN :
+        case DRV_CLOSE :
+        {
+            SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
+            return 1L;
+        }
+
         case DRV_QUERYCONFIGURE :
         {
             SND_TRACE(L"DRV_QUERYCONFIGURE");
@@ -111,6 +186,7 @@ DriverProc(
             return DRVCNF_OK;
 
         default :
+            SND_TRACE(L"Unhandled message %d\n", Message);
             return DefDriverProc(DriverId,
                                  DriverHandle,
                                  Message,

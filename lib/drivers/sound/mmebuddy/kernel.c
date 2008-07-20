@@ -14,20 +14,28 @@
 #include <ntddsnd.h>
 #include <mmebuddy.h>
 
+/*
+    Wraps around CreateFile in order to provide a simpler interface tailored
+    towards sound driver support code. This simply takes a device path and
+    opens the device in either read-only mode, or read/write mode (depending on
+    the ReadOnly parameter).
+
+    If the device is opened in read/write mode, it is opened for overlapped I/O.
+*/
 MMRESULT
 OpenKernelSoundDeviceByName(
-    IN  PWSTR DeviceName,
+    IN  PWSTR DevicePath,
     IN  BOOLEAN ReadOnly,
     OUT PHANDLE Handle)
 {
     DWORD AccessRights;
 
-    VALIDATE_MMSYS_PARAMETER( DeviceName );
+    VALIDATE_MMSYS_PARAMETER( DevicePath );
     VALIDATE_MMSYS_PARAMETER( Handle );
 
     AccessRights = ReadOnly ? GENERIC_READ : GENERIC_WRITE;
 
-    *Handle = CreateFile(DeviceName,
+    *Handle = CreateFile(DevicePath,
                          AccessRights,
                          FILE_SHARE_WRITE,  /* FIXME? Should be read also? */
                          NULL,
@@ -43,6 +51,9 @@ OpenKernelSoundDeviceByName(
     return MMSYSERR_NOERROR;
 }
 
+/*
+    Just a wrapped around CloseHandle.
+*/
 MMRESULT
 CloseKernelSoundDevice(
     IN  HANDLE Handle)
@@ -54,6 +65,12 @@ CloseKernelSoundDevice(
     return MMSYSERR_NOERROR;
 }
 
+/*
+    This is a wrapper around DeviceIoControl which provides control over
+    instantiated sound devices. It takes a sound device instance rather than
+    a handle, and waits for I/O to complete (since an instantiated sound
+    device is opened in overlapped mode, this is necessary).
+*/
 MMRESULT
 SoundDeviceIoControl(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,

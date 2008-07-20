@@ -17,6 +17,9 @@
 
 #include <mmebuddy.h>
 
+/*
+    Standard MME driver entry-point for messages relating to MIDI input.
+*/
 APIENTRY DWORD
 midMessage(
     DWORD DeviceId,
@@ -25,9 +28,11 @@ midMessage(
     DWORD Parameter1,
     DWORD Parameter2)
 {
-    MMRESULT Result = MMSYSERR_NOERROR;
+    MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
     AcquireEntrypointMutex(MIDI_IN_DEVICE_TYPE);
+
+    SND_TRACE(L"midMessage - Message type %d\n", Message);
 
     switch ( Message )
     {

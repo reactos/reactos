@@ -54,8 +54,6 @@ AllocateSoundDevice(
         CopyWideString(NewDevice->Path, DevicePath);
     }
 
-    /* TODO: Initialise function table */
-
     /* Return the new structure to the caller and report success */
     *SoundDevice = NewDevice;
 
@@ -78,6 +76,8 @@ FreeSoundDevice(
         FreeMemory(SoundDevice->Path);
     }
 
+    /* For safety the whole struct gets zeroed */
+    ZeroMemory(SoundDevice, sizeof(SOUND_DEVICE));
     FreeMemory(SoundDevice);
 }
 
@@ -97,6 +97,7 @@ GetSoundDeviceCount(
         return 0;
     }
 
+    SND_TRACE(L"Returning a count of %d devices\n", SoundDeviceCounts[Index]);
     return SoundDeviceCounts[Index];
 }
 
@@ -109,11 +110,31 @@ BOOLEAN
 IsValidSoundDevice(
     IN  PSOUND_DEVICE SoundDevice)
 {
+    UCHAR TypeIndex;
+    PSOUND_DEVICE CurrentDevice;
+
     if ( ! SoundDevice )
         return FALSE;
 
-    /* TODO */
-    return TRUE;
+    /* Go through all the device lists */
+    for ( TypeIndex = 0; TypeIndex < SOUND_DEVICE_TYPES; ++ TypeIndex )
+    {
+        CurrentDevice = SoundDeviceListHeads[TypeIndex];
+
+        while ( CurrentDevice )
+        {
+            if ( CurrentDevice == SoundDevice )
+            {
+                /* Found the device */
+                return TRUE;
+            }
+
+            CurrentDevice = CurrentDevice->Next;
+        }
+    }
+
+    /* If we get here, nothing was found */
+    return FALSE;
 }
 
 /*
@@ -164,6 +185,9 @@ ListSoundDevice(
 
     /* Add to the count */
     ++ SoundDeviceCounts[TypeIndex];
+
+    /* Set up the default function table */
+    SetSoundDeviceFunctionTable(NewDevice, NULL);
 
     /* Fill in the caller's PSOUND_DEVICE */
     if ( SoundDevice )
@@ -232,6 +256,9 @@ UnlistSoundDevice(
     return MMSYSERR_NOERROR;
 }
 
+/*
+    Removes all devices from one of the device lists.
+*/
 MMRESULT
 UnlistSoundDevices(
     IN  MMDEVICE_TYPE DeviceType)
@@ -254,6 +281,9 @@ UnlistSoundDevices(
     return MMSYSERR_NOERROR;
 }
 
+/*
+    Removes all devices from all lists.
+*/
 VOID
 UnlistAllSoundDevices()
 {
@@ -269,11 +299,76 @@ UnlistAllSoundDevices()
     }
 }
 
+/*
+    Provides the caller with a pointer to its desired sound device, based on
+    the device type and index.
+*/
 MMRESULT
 GetSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceIndex,
-    OUT PSOUND_DEVICE* Device OPTIONAL)
+    OUT PSOUND_DEVICE* SoundDevice)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    UCHAR TypeIndex = SOUND_DEVICE_TYPE_TO_INDEX(DeviceType);
+    DWORD CurrentIndex = 0;
+    PSOUND_DEVICE CurrentDevice;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceType(DeviceType) );
+
+    if ( DeviceIndex >= SoundDeviceCounts[TypeIndex] )
+    {
+        SND_ERR(L"Invalid device ID %d for type %d\n", DeviceIndex, DeviceType);
+        return MMSYSERR_BADDEVICEID;
+    }
+
+    CurrentDevice = SoundDeviceListHeads[TypeIndex];
+
+    /* Following the earlier checks, the index should be valid here. */
+    for ( CurrentIndex = 0; CurrentIndex != DeviceIndex; ++ CurrentIndex )
+    {
+        SND_ASSERT( CurrentDevice );
+        CurrentDevice = CurrentDevice->Next;
+    }
+
+    SND_TRACE(L"Returning sound device %x\n", CurrentDevice);
+
+    *SoundDevice = CurrentDevice;
+
+    return MMSYSERR_NOERROR;
+}
+
+/*
+    Provides the caller with the device path of the specified sound device.
+    This will normally be the path to a device provided by a kernel-mode
+    driver.
+*/
+MMRESULT
+GetSoundDevicePath(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT LPWSTR* DevicePath)
+{
+    VALIDATE_MMSYS_PARAMETER( SoundDevice );
+    VALIDATE_MMSYS_PARAMETER( DevicePath );
+
+    /* The caller should not modify this! */
+    *DevicePath = SoundDevice->Path;
+
+    return MMSYSERR_NOERROR;
+}
+
+/*
+    Provides the caller with the device type of the specified sound device.
+    This will be, for example, WAVE_OUT_DEVICE_TYPE, WAVE_IN_DEVICE_TYPE ...
+*/
+MMRESULT
+GetSoundDeviceType(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PMMDEVICE_TYPE DeviceType)
+{
+    VALIDATE_MMSYS_PARAMETER( SoundDevice );
+    VALIDATE_MMSYS_PARAMETER( DeviceType );
+
+    *DeviceType = SoundDevice->Type;
+
+    return MMSYSERR_NOERROR;
 }

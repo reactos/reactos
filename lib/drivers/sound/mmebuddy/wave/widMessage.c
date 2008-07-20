@@ -17,6 +17,10 @@
 
 #include <mmebuddy.h>
 
+/*
+    Standard MME driver entry-point for messages relating to wave audio
+    input.
+*/
 APIENTRY DWORD
 widMessage(
     DWORD DeviceId,
@@ -25,15 +29,26 @@ widMessage(
     DWORD Parameter1,
     DWORD Parameter2)
 {
-    MMRESULT Result = MMSYSERR_NOERROR;
+    MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
     AcquireEntrypointMutex(WAVE_IN_DEVICE_TYPE);
+
+    SND_TRACE(L"widMessage - Message type %d\n", Message);
 
     switch ( Message )
     {
         case WIDM_GETNUMDEVS :
         {
             Result = GetSoundDeviceCount(WAVE_IN_DEVICE_TYPE);
+            break;
+        }
+
+        case WIDM_GETDEVCAPS :
+        {
+            Result = MmeGetSoundDeviceCapabilities(WAVE_IN_DEVICE_TYPE,
+                                                   DeviceId,
+                                                   (PVOID) Parameter1,
+                                                   Parameter2);
             break;
         }
     }

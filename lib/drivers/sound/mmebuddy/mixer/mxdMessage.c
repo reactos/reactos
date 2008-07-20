@@ -17,6 +17,9 @@
 
 #include <mmebuddy.h>
 
+/*
+    Standard MME driver entry-point for messages relating to mixers.
+*/
 APIENTRY DWORD
 mxdMessage(
     DWORD DeviceId,
@@ -25,9 +28,11 @@ mxdMessage(
     DWORD Parameter1,
     DWORD Parameter2)
 {
-    MMRESULT Result = MMSYSERR_NOERROR;
+    MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
     AcquireEntrypointMutex(MIXER_DEVICE_TYPE);
+
+    SND_TRACE(L"mxdMessage - Message type %d\n", Message);
 
     switch ( Message )
     {

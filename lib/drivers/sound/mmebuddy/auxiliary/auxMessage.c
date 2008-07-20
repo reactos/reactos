@@ -17,6 +17,9 @@
 
 #include <mmebuddy.h>
 
+/*
+    Standard MME driver entry-point for messages relating to auxiliary devices.
+*/
 APIENTRY DWORD
 auxMessage(
     DWORD DeviceId,
@@ -25,9 +28,11 @@ auxMessage(
     DWORD Parameter1,
     DWORD Parameter2)
 {
-    MMRESULT Result = MMSYSERR_NOERROR;
+    MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
     AcquireEntrypointMutex(AUX_DEVICE_TYPE);
+
+    SND_TRACE(L"auxMessage - Message type %d\n", Message);
 
     switch ( Message )
     {
