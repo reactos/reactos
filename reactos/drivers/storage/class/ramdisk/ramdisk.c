@@ -14,6 +14,7 @@
 #include <ntddcdrm.h>
 #include <scsi.h>
 #include <ntddscsi.h>
+#include <ntddvol.h>
 #include <mountdev.h>
 #include <mountmgr.h>
 #include <helper.h>
@@ -856,7 +857,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     PRAMDISK_BUS_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    ULONG Information = 0;
+    ULONG Information;
     
     //
     // Grab the remove lock
@@ -872,6 +873,12 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
+    
+    //
+    // Setup some defaults
+    //
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+    Information = 0;
     
     //
     // Check if this is an bus device or the drive
@@ -911,12 +918,18 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
         //
         switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
         {
+            case IOCTL_DISK_CHECK_VERIFY:
+            case IOCTL_STORAGE_CHECK_VERIFY:
+            case IOCTL_STORAGE_CHECK_VERIFY2:
             case IOCTL_CDROM_CHECK_VERIFY:
                 
                 UNIMPLEMENTED;
                 while (TRUE);
                 break;
-                
+
+            case IOCTL_STORAGE_GET_MEDIA_TYPES:
+            case IOCTL_DISK_GET_MEDIA_TYPES:
+            case IOCTL_DISK_GET_DRIVE_GEOMETRY:
             case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
                 
                 UNIMPLEMENTED;
@@ -929,22 +942,97 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 while (TRUE);
                 break;
                 
+            case IOCTL_DISK_SET_PARTITION_INFO:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_GET_PARTITION_INFO:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_GET_DRIVE_LAYOUT:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_GET_LENGTH_INFO:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_DISK_IS_WRITABLE:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_SCSI_MINIPORT:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_STORAGE_QUERY_PROPERTY:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_SET_GPT_ATTRIBUTES:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
+            case IOCTL_VOLUME_OFFLINE:
+                
+                UNIMPLEMENTED;
+                while (TRUE);
+                break;
+                
             default:
          
                 //
-                // Drive code not yet done
+                // Drive code not emulated
                 //
                 DPRINT1("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);                
-                UNIMPLEMENTED;
-                while (TRUE);
                 break;
         }
 
         //
-        // Cleanup/complete
+        // If requests drop down here, we just return them complete them
         //
-        UNIMPLEMENTED;
-        while (TRUE);
+        goto CompleteRequest;
     }
     
     //
