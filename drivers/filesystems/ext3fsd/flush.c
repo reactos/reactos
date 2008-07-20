@@ -4,7 +4,8 @@
  * FILE:             flush.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   15 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,12 +18,25 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+VOID
+Ext2FlushFinal (
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PNTSTATUS pStatus,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IrpSp,
+    IN PEXT2_VCB Vcb,
+    IN PEXT2_FCBVCB FcbOrVcb,
+    IN BOOLEAN MainResourceAcquired    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Ext2FlushFile)
 #pragma alloc_text(PAGE, Ext2FlushFiles)
 #pragma alloc_text(PAGE, Ext2FlushVolume)
 #pragma alloc_text(PAGE, Ext2Flush)
 #endif
+
+
+/* FUNCTIONS ***************************************************************/
 
 
 NTSTATUS
@@ -138,6 +152,71 @@ Ext2FlushFile (
     return IoStatus.Status;
 }
 
+_SEH_DEFINE_LOCALS(Ext2FlushFinal)
+{
+    PEXT2_IRP_CONTEXT IrpContext;
+    PNTSTATUS pStatus;
+    PIRP Irp;
+    PIO_STACK_LOCATION IrpSp;
+    PEXT2_VCB Vcb;
+    PEXT2_FCBVCB FcbOrVcb;
+    BOOLEAN MainResourceAcquired;
+};
+
+_SEH_FINALLYFUNC(Ext2FlushFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2FlushFinal);
+    Ext2FlushFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus), _SEH_VAR(Irp),
+                   _SEH_VAR(IrpSp), _SEH_VAR(Vcb), _SEH_VAR(FcbOrVcb),
+                   _SEH_VAR(MainResourceAcquired));
+}
+
+VOID
+Ext2FlushFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN PIRP                 Irp,
+    IN PIO_STACK_LOCATION   IrpSp,
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_FCBVCB         FcbOrVcb,
+    IN BOOLEAN              MainResourceAcquired
+    )
+{
+    if (MainResourceAcquired) {
+        ExReleaseResourceLite(&FcbOrVcb->MainResource);
+    }
+
+    if (!IrpContext->ExceptionInProgress) {
+
+        if (Vcb && Irp && IrpSp && (!IsFlagOn(Vcb->Flags, VCB_READ_ONLY))) {
+
+            // Call the disk driver to flush the physial media.
+            NTSTATUS DriverStatus;
+            PIO_STACK_LOCATION NextIrpSp;
+
+            NextIrpSp = IoGetNextIrpStackLocation(Irp);
+
+            *NextIrpSp = *IrpSp;
+
+            IoSetCompletionRoutine( Irp,
+                                    Ext2FlushCompletionRoutine,
+                                    NULL,
+                                    TRUE,
+                                    TRUE,
+                                    TRUE );
+
+            DriverStatus = IoCallDriver(Vcb->TargetDeviceObject, Irp);
+
+            *pStatus = (DriverStatus == STATUS_INVALID_DEVICE_REQUEST) ?
+                      *pStatus : DriverStatus;
+
+            IrpContext->Irp = Irp = NULL;
+        }
+
+        Ext2CompleteIrpContext(IrpContext, *pStatus);
+    }
+}
+
 NTSTATUS
 Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
 {
@@ -154,9 +233,16 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
 
     PDEVICE_OBJECT          DeviceObject = NULL;
 
-    BOOLEAN                 MainResourceAcquired = FALSE;
+    _SEH_TRY {
 
-    __try {
+        _SEH_DECLARE_LOCALS(Ext2FlushFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(Irp) = NULL;
+        _SEH_VAR(IrpSp) = NULL;
+        _SEH_VAR(Vcb) = NULL;
+        _SEH_VAR(FcbOrVcb) = NULL;
+        _SEH_VAR(MainResourceAcquired) = FALSE;
 
         ASSERT(IrpContext);
     
@@ -170,10 +256,11 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH_LEAVE;
         }
         
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        _SEH_VAR(Vcb) = Vcb;
         ASSERT(Vcb != NULL);
         ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
             (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
@@ -182,27 +269,30 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
         if ( IsFlagOn(Vcb->Flags, VCB_READ_ONLY) ||
              IsFlagOn(Vcb->Flags, VCB_WRITE_PROTECTED)) {
             Status =  STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
         Irp = IrpContext->Irp;
+        _SEH_VAR(Irp) = Irp;
         IrpSp = IoGetCurrentIrpStackLocation(Irp);
+        _SEH_VAR(IrpSp) = IrpSp;
 
         FileObject = IrpContext->FileObject;
         FcbOrVcb = (PEXT2_FCBVCB) FileObject->FsContext;
+        _SEH_VAR(FcbOrVcb) = FcbOrVcb;
         ASSERT(FcbOrVcb != NULL);
 
         Ccb = (PEXT2_CCB) FileObject->FsContext2;
         if (Ccb == NULL) {
             Status =  STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
 
-        MainResourceAcquired = 
+        _SEH_VAR(MainResourceAcquired) = 
         ExAcquireResourceExclusiveLite(&FcbOrVcb->MainResource,
                 IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT));
 
-        ASSERT(MainResourceAcquired);
+        ASSERT(_SEH_VAR(MainResourceAcquired));
         DEBUG(DL_USR, ("Ext2Flush-pre:  total mcb records=%u\n",
                            FsRtlNumberOfRunsInLargeMcb(&Vcb->Extents)));
 
@@ -211,7 +301,7 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
             Ext2VerifyVcb(IrpContext, Vcb);
             Status = Ext2FlushFiles(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
             if (NT_SUCCESS(Status)) {
-                __leave;
+                _SEH_LEAVE;
             }
 
             Status = Ext2FlushVolume(IrpContext, (PEXT2_VCB)(FcbOrVcb), FALSE);
@@ -237,42 +327,9 @@ Ext2Flush (IN PEXT2_IRP_CONTEXT IrpContext)
                         FsRtlNumberOfRunsInLargeMcb(&Vcb->Extents)));
 
 
-    } __finally {
-
-        if (MainResourceAcquired) {
-            ExReleaseResourceLite(&FcbOrVcb->MainResource);
-        }
-
-        if (!IrpContext->ExceptionInProgress) {
-
-            if (Vcb && Irp && IrpSp && (!IsFlagOn(Vcb->Flags, VCB_READ_ONLY))) {
-
-                // Call the disk driver to flush the physial media.
-                NTSTATUS DriverStatus;
-                PIO_STACK_LOCATION NextIrpSp;
-
-                NextIrpSp = IoGetNextIrpStackLocation(Irp);
-
-                *NextIrpSp = *IrpSp;
-
-                IoSetCompletionRoutine( Irp,
-                                        Ext2FlushCompletionRoutine,
-                                        NULL,
-                                        TRUE,
-                                        TRUE,
-                                        TRUE );
-
-                DriverStatus = IoCallDriver(Vcb->TargetDeviceObject, Irp);
-
-                Status = (DriverStatus == STATUS_INVALID_DEVICE_REQUEST) ?
-                         Status : DriverStatus;
-
-                IrpContext->Irp = Irp = NULL;
-            }
-
-            Ext2CompleteIrpContext(IrpContext, Status);
-        }
     }
+    _SEH_FINALLY(Ext2FlushFinal_PSEH)
+    _SEH_END;
 
     return Status;
 }

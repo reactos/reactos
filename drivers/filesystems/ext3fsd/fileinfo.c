@@ -4,7 +4,8 @@
  * FILE:             fileinfo.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:   15 Jul 2008 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *                     Replaced SEH support with PSEH support
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,6 +18,38 @@ extern PEXT2_GLOBAL Ext2Global;
 
 /* DEFINITIONS *************************************************************/
 
+VOID
+Ext2QueryFileInformationFinal (
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PNTSTATUS pStatus,
+    IN PEXT2_FCB Fcb,
+    IN BOOLEAN FcbResourceAcquired    );
+
+VOID
+Ext2SetFileInformationFinal (
+    IN PEXT2_IRP_CONTEXT IrpContext,
+    IN PNTSTATUS pStatus,
+    IN PEXT2_VCB Vcb,
+    IN PFILE_OBJECT FileObject,
+    IN PEXT2_FCB Fcb,
+    IN ULONG NotifyFilter,
+    IN BOOLEAN VcbMainResourceAcquired,
+    IN BOOLEAN FcbMainResourceAcquired,
+    IN BOOLEAN FcbPagingIoResourceAcquired,
+    IN BOOLEAN CacheInitialized    );
+
+VOID
+Ext2DeleteFileFinal (
+    IN PEXT2_VCB Vcb,
+    IN PEXT2_MCB Mcb,
+    IN PEXT2_FCB Dcb,
+    IN PEXT2_FCB Fcb,
+    IN BOOLEAN VcbResourceAcquired,
+    IN BOOLEAN FcbPagingIoAcquired,
+    IN BOOLEAN FcbResourceAcquired,
+    IN BOOLEAN DcbResourceAcquired,
+    IN BOOLEAN bNewDcb    );
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, Ext2QueryFileInformation)
 #pragma alloc_text(PAGE, Ext2SetFileInformation)
@@ -27,6 +60,46 @@ extern PEXT2_GLOBAL Ext2Global;
 #pragma alloc_text(PAGE, Ext2DeleteFile)
 #endif
 
+
+/* FUNCTIONS ***************************************************************/
+
+
+_SEH_DEFINE_LOCALS(Ext2QueryFileInformationFinal)
+{
+    PEXT2_IRP_CONTEXT IrpContext;
+    PNTSTATUS pStatus;
+    PEXT2_FCB Fcb;
+    BOOLEAN FcbResourceAcquired;
+};
+
+_SEH_FINALLYFUNC(Ext2QueryFileInformationFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2QueryFileInformationFinal);
+    Ext2QueryFileInformationFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus),
+                                  _SEH_VAR(Fcb), _SEH_VAR(FcbResourceAcquired));
+}
+
+VOID
+Ext2QueryFileInformationFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN PEXT2_FCB            Fcb,
+    IN BOOLEAN              FcbResourceAcquired
+    )
+{
+    if (FcbResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
+
+    if (!IrpContext->ExceptionInProgress) {
+        if (*pStatus == STATUS_PENDING ||
+            *pStatus == STATUS_CANT_WAIT) {
+            *pStatus = Ext2QueueRequest(IrpContext);
+        } else {
+            Ext2CompleteIrpContext(IrpContext,  *pStatus);
+        }
+    }
+}
 
 NTSTATUS
 Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
@@ -42,9 +115,13 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
     FILE_INFORMATION_CLASS  FileInformationClass;
     ULONG                   Length;
     PVOID                   Buffer;
-    BOOLEAN                 FcbResourceAcquired = FALSE;
     
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ext2QueryFileInformationFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(FcbResourceAcquired) = FALSE;
 
         ASSERT(IrpContext != NULL);
         
@@ -58,15 +135,16 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH_LEAVE;
         }
         
         FileObject = IrpContext->FileObject;
         Fcb = (PEXT2_FCB) FileObject->FsContext;
+        _SEH_VAR(Fcb) = Fcb;
         
         if (Fcb == NULL) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         //
@@ -74,13 +152,13 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (Fcb->Identifier.Type == EXT2VCB) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
         
         if(!((Fcb->Identifier.Type == EXT2FCB) &&
              (Fcb->Identifier.Size == sizeof(EXT2_FCB)))) {
             Status = STATUS_INVALID_PARAMETER;
-            __leave;
+            _SEH_LEAVE;
         }
 
         Vcb = Fcb->Vcb;
@@ -92,10 +170,10 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 )) {
 
                 Status = STATUS_PENDING;
-                __leave;
+                _SEH_LEAVE;
             }
             
-            FcbResourceAcquired = TRUE;
+            _SEH_VAR(FcbResourceAcquired) = TRUE;
         }
         
         Ccb = (PEXT2_CCB) FileObject->FsContext2;
@@ -122,7 +200,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (Length < sizeof(FILE_BASIC_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
 
                 FileBasicInformation = (PFILE_BASIC_INFORMATION) Buffer;
@@ -148,7 +226,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_STANDARD_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FSI = (PFILE_STANDARD_INFORMATION) Buffer;
@@ -182,7 +260,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_INTERNAL_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileInternalInformation = (PFILE_INTERNAL_INFORMATION) Buffer;
@@ -202,7 +280,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_EA_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileEaInformation = (PFILE_EA_INFORMATION) Buffer;
@@ -222,7 +300,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 if (Length < sizeof(FILE_NAME_INFORMATION) +
                     Fcb->Mcb->ShortName.Length - sizeof(WCHAR)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileNameInformation = (PFILE_NAME_INFORMATION) Buffer;
@@ -246,7 +324,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_POSITION_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FilePositionInformation = (PFILE_POSITION_INFORMATION) Buffer;
@@ -272,7 +350,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_ALL_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileAllInformation = (PFILE_ALL_INFORMATION) Buffer;
@@ -335,7 +413,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                     Fcb->Mcb->ShortName.Length - sizeof(WCHAR)) {
                     Irp->IoStatus.Information = sizeof(FILE_ALL_INFORMATION);
                     Status = STATUS_BUFFER_OVERFLOW;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileNameInformation->FileNameLength = Fcb->Mcb->ShortName.Length;
@@ -368,7 +446,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             
                 if (Length < sizeof(FILE_NETWORK_OPEN_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
 
                 PFNOI = (PFILE_NETWORK_OPEN_INFORMATION) Buffer;
@@ -405,7 +483,7 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 
                 if (Length < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION)) {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FATI = (PFILE_ATTRIBUTE_TAG_INFORMATION) Buffer;
@@ -430,25 +508,88 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             break;
         }
 
-    } __finally {
-
-        if (FcbResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->MainResource);
-        }
-
-        if (!IrpContext->ExceptionInProgress) {
-            if (Status == STATUS_PENDING ||
-                Status == STATUS_CANT_WAIT) {
-                Status = Ext2QueueRequest(IrpContext);
-            } else {
-                Ext2CompleteIrpContext(IrpContext,  Status);
-            }
-        }
     }
-    
+    _SEH_FINALLY(Ext2QueryFileInformationFinal_PSEH)
+    _SEH_END;
+
     return Status;
 }
 
+_SEH_DEFINE_LOCALS(Ext2SetFileInformationFinal)
+{
+    PEXT2_IRP_CONTEXT IrpContext;
+    PNTSTATUS pStatus;
+    PEXT2_VCB Vcb;
+    PFILE_OBJECT FileObject;
+    PEXT2_FCB Fcb;
+    ULONG NotifyFilter;
+    BOOLEAN VcbMainResourceAcquired;
+    BOOLEAN FcbMainResourceAcquired;
+    BOOLEAN FcbPagingIoResourceAcquired;
+    BOOLEAN CacheInitialized;
+};
+
+_SEH_FINALLYFUNC(Ext2SetFileInformationFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2SetFileInformationFinal);
+    Ext2SetFileInformationFinal(_SEH_VAR(IrpContext), _SEH_VAR(pStatus),
+                                _SEH_VAR(Vcb), _SEH_VAR(FileObject), _SEH_VAR(Fcb),
+                                _SEH_VAR(NotifyFilter), _SEH_VAR(VcbMainResourceAcquired),
+                                _SEH_VAR(FcbMainResourceAcquired),
+                                _SEH_VAR(FcbPagingIoResourceAcquired),
+                                _SEH_VAR(CacheInitialized));
+}
+
+VOID
+Ext2SetFileInformationFinal (
+    IN PEXT2_IRP_CONTEXT    IrpContext,
+    IN PNTSTATUS            pStatus,
+    IN PEXT2_VCB            Vcb,
+    IN PFILE_OBJECT         FileObject,
+    IN PEXT2_FCB            Fcb,
+    IN ULONG                NotifyFilter,
+    IN BOOLEAN              VcbMainResourceAcquired,
+    IN BOOLEAN              FcbMainResourceAcquired,
+    IN BOOLEAN              FcbPagingIoResourceAcquired,
+    IN BOOLEAN              CacheInitialized
+    )
+{
+    if (FcbPagingIoResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->PagingIoResource);
+    }
+        
+    if (NT_SUCCESS(*pStatus) && (NotifyFilter != 0)) {
+        Ext2NotifyReportChange(
+                    IrpContext,
+                    Vcb,
+                    Fcb->Mcb,
+                    NotifyFilter,
+                    FILE_ACTION_MODIFIED );
+
+    }
+
+    if (FcbMainResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
+
+    if (CacheInitialized) {
+        CcUninitializeCacheMap(FileObject, NULL, NULL);
+    }
+
+    if (VcbMainResourceAcquired) {
+        ExReleaseResourceLite(&Vcb->MainResource);
+    }
+
+    if (!IrpContext->ExceptionInProgress) {
+        if (*pStatus == STATUS_PENDING || 
+            *pStatus == STATUS_CANT_WAIT ) {
+            DbgBreak();
+            *pStatus = Ext2QueueRequest(IrpContext);
+        } else {
+            Ext2CompleteIrpContext(IrpContext,  *pStatus);
+        }
+    }
+}
 
 NTSTATUS
 Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
@@ -463,17 +604,19 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
     PIO_STACK_LOCATION      IoStackLocation;
     FILE_INFORMATION_CLASS  FileInformationClass;
 
-    ULONG                   NotifyFilter = 0;
-
     ULONG                   Length;
     PVOID                   Buffer;
 
-    BOOLEAN                 VcbMainResourceAcquired = FALSE;
-    BOOLEAN                 FcbMainResourceAcquired = FALSE;
-    BOOLEAN                 FcbPagingIoResourceAcquired = FALSE;
-    BOOLEAN                 CacheInitialized = FALSE;
+    _SEH_TRY {
 
-    __try {
+        _SEH_DECLARE_LOCALS(Ext2SetFileInformationFinal);
+        _SEH_VAR(IrpContext) = IrpContext;
+        _SEH_VAR(pStatus) = &Status;
+        _SEH_VAR(NotifyFilter) = 0;
+        _SEH_VAR(VcbMainResourceAcquired) = FALSE;
+        _SEH_VAR(FcbMainResourceAcquired) = FALSE;
+        _SEH_VAR(FcbPagingIoResourceAcquired) = FALSE;
+        _SEH_VAR(CacheInitialized) = FALSE;
 
         ASSERT(IrpContext != NULL);
         
@@ -486,7 +629,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
         //
         if (IsExt2FsDevice(DeviceObject)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH_LEAVE;
         }
         
         /* check io stack location of irp stack */
@@ -499,12 +642,13 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
         /* check Vcb */
         Vcb = (PEXT2_VCB) DeviceObject->DeviceExtension;
+        _SEH_VAR(Vcb) = Vcb;
         ASSERT(Vcb != NULL);
         ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
             (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
         if (!IsMounted(Vcb)) {
             Status = STATUS_INVALID_DEVICE_REQUEST;
-            __leave;
+            _SEH_LEAVE;
         }
 
         /* we need grab Vcb in case it's a rename operation */
@@ -513,18 +657,20 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                     &Vcb->MainResource,
                     IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
                     Status = STATUS_PENDING;
-                    __leave;
+                    _SEH_LEAVE;
             }
-            VcbMainResourceAcquired = TRUE;
+            _SEH_VAR(VcbMainResourceAcquired) = TRUE;
         }
 
         FileObject = IrpContext->FileObject;
+        _SEH_VAR(FileObject) = FileObject;
         Fcb = (PEXT2_FCB) FileObject->FsContext;
+        _SEH_VAR(Fcb) = Fcb;
 
         // This request is issued to volumes, just return success
         if (Fcb == NULL || Fcb->Identifier.Type == EXT2VCB) {
             Status = STATUS_SUCCESS;
-            __leave;
+            _SEH_LEAVE;
         }
         
         ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
@@ -532,7 +678,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
         if (IsFlagOn(Fcb->Flags, FCB_FILE_DELETED)) {
             Status = STATUS_FILE_DELETED;
-            __leave;
+            _SEH_LEAVE;
         }
 
         Ccb = (PEXT2_CCB) FileObject->FsContext2;
@@ -551,7 +697,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                                        NULL );
 
             if (Status != STATUS_SUCCESS) {
-                __leave;
+                _SEH_LEAVE;
             }
 
             //
@@ -570,17 +716,17 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 &Fcb->MainResource,
                 IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
                 Status = STATUS_PENDING;
-                __leave;
+                _SEH_LEAVE;
             }
             
-            FcbMainResourceAcquired = TRUE;
+            _SEH_VAR(FcbMainResourceAcquired) = TRUE;
         }
         
         if (IsFlagOn(Vcb->Flags, VCB_READ_ONLY)) {
 
             if (FileInformationClass != FilePositionInformation) {
                 Status = STATUS_MEDIA_WRITE_PROTECTED;
-                __leave;
+                _SEH_LEAVE;
             }
         }
 
@@ -592,10 +738,10 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT) )) {
                 Status = STATUS_PENDING;
                 DbgBreak();
-                __leave;
+                _SEH_LEAVE;
             }
             
-            FcbPagingIoResourceAcquired = TRUE;
+            _SEH_VAR(FcbPagingIoResourceAcquired) = TRUE;
         }
        
 /*        
@@ -616,19 +762,19 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 if (FBI->CreationTime.QuadPart != 0 && FBI->CreationTime.QuadPart != -1) {
                     Ext2Inode->i_ctime = Ext2LinuxTime(FBI->CreationTime);
                     Fcb->Mcb->CreationTime = Ext2NtTime(Ext2Inode->i_ctime);
-                    NotifyFilter |= FILE_NOTIFY_CHANGE_CREATION;
+                    _SEH_VAR(NotifyFilter) |= FILE_NOTIFY_CHANGE_CREATION;
                 }
 
                 if (FBI->LastAccessTime.QuadPart != 0 && FBI->LastAccessTime.QuadPart != -1) {
                     Ext2Inode->i_atime = Ext2LinuxTime(FBI->LastAccessTime);
                     Fcb->Mcb->LastAccessTime = Ext2NtTime(Ext2Inode->i_atime);
-                    NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_ACCESS;
+                    _SEH_VAR(NotifyFilter) |= FILE_NOTIFY_CHANGE_LAST_ACCESS;
                 }
 
                 if (FBI->LastWriteTime.QuadPart != 0 && FBI->LastWriteTime.QuadPart != -1) {
                     Ext2Inode->i_mtime = Ext2LinuxTime(FBI->LastWriteTime);
                     Fcb->Mcb->LastWriteTime = Ext2NtTime(Ext2Inode->i_mtime);
-                    NotifyFilter |= FILE_NOTIFY_CHANGE_LAST_WRITE;
+                    _SEH_VAR(NotifyFilter) |= FILE_NOTIFY_CHANGE_LAST_WRITE;
                     SetFlag(Ccb->Flags, CCB_LAST_WRITE_UPDATED);
                 }
 
@@ -639,7 +785,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 if (FBI->FileAttributes != 0) {
 
                     BOOLEAN bIsDirectory = IsDirectory(Fcb);
-                    NotifyFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+                    _SEH_VAR(NotifyFilter) |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
 
                     if (IsFlagOn(FBI->FileAttributes, FILE_ATTRIBUTE_READONLY)) {
                         Ext2SetReadOnly(Fcb->Inode->i_mode);
@@ -659,14 +805,14 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                     }
                 }
 
-                if (NotifyFilter != 0) {
+                if (_SEH_VAR(NotifyFilter) != 0) {
                     if ( Ext2SaveInode( IrpContext, Vcb, 
                             Fcb->Mcb->iNo, Ext2Inode)) {
                         Status = STATUS_SUCCESS;
                     }
                 }
 
-                ClearFlag(NotifyFilter, FILE_NOTIFY_CHANGE_LAST_ACCESS);
+                ClearFlag(_SEH_VAR(NotifyFilter), FILE_NOTIFY_CHANGE_LAST_ACCESS);
                 Status = STATUS_SUCCESS;
             }
 
@@ -679,7 +825,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (IsDirectory(Fcb)) {
                     Status = STATUS_INVALID_DEVICE_REQUEST;
-                    __leave;
+                    _SEH_LEAVE;
                 } else {
                     Status = STATUS_SUCCESS;
                 }
@@ -698,7 +844,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                             &(Ext2Global->CacheManagerNoOpCallbacks),
                             Fcb );
 
-                    CacheInitialized = TRUE;
+                    _SEH_VAR(CacheInitialized) = TRUE;
                 }
 
                 /* get user specified allocationsize aligned with BLOCK_SIZE */
@@ -721,7 +867,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                     Status = Ext2ExpandFile(IrpContext, Vcb, Fcb->Mcb, &AllocationSize);
                     Fcb->Header.AllocationSize = AllocationSize;
-                    NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                    _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
 
                 } else if (AllocationSize.QuadPart < Fcb->Header.AllocationSize.QuadPart) {
 
@@ -743,7 +889,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                             }
                         }
 
-                        NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                        _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
                         Fcb->Header.AllocationSize.QuadPart = AllocationSize.QuadPart;
                         if (Fcb->Header.FileSize.QuadPart > AllocationSize.QuadPart) {
                             Fcb->Header.FileSize.QuadPart = AllocationSize.QuadPart;
@@ -764,11 +910,11 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                         Status = STATUS_USER_MAPPED_FILE;
                         DbgBreak();
-                        __leave;
+                        _SEH_LEAVE;
                     }
                 }
 
-                if (NotifyFilter) {
+                if (_SEH_VAR(NotifyFilter)) {
 
                     SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
                     SetLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
@@ -795,7 +941,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                 if (IsDirectory(Fcb)) {
                     Status = STATUS_INVALID_DEVICE_REQUEST;
-                    __leave;
+                    _SEH_LEAVE;
                 } else {
                     Status = STATUS_SUCCESS;
                 }
@@ -814,7 +960,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                             &(Ext2Global->CacheManagerNoOpCallbacks),
                             Fcb );
 
-                    CacheInitialized = TRUE;
+                    _SEH_VAR(CacheInitialized) = TRUE;
                 }
 
                 AllocationSize = Fcb->Header.AllocationSize;
@@ -826,7 +972,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                 if (IoStackLocation->Parameters.SetFile.AdvanceOnly) {
 
                     if (IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING)) {
-                        __leave;
+                        _SEH_LEAVE;
                     }
 
                     if (EndOfFile.QuadPart > Fcb->Header.FileSize.QuadPart) {
@@ -840,11 +986,11 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                         if (S_ISREG(Fcb->Inode->i_mode)) {
                             Fcb->Inode->i_size_high = (__u32)(EndOfFile.HighPart);
                         }
-                        NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                        _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
                         goto FileEndChanged;
                     }
 
-                    __leave;
+                    _SEH_LEAVE;
                 }
 
                 /* check if file blocks are allocated in Ext2Create */
@@ -862,7 +1008,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                                     Fcb->Mcb,
                                     &(Fcb->Header.AllocationSize)
                                     );
-                    NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                    _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
 
                 } else if (FileSize.QuadPart == AllocationSize.QuadPart) {
 
@@ -913,7 +1059,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
                         }
                     }
 
-                    NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                    _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
                 }
 
                 if (NT_SUCCESS(Status)) {
@@ -935,7 +1081,7 @@ Ext2SetFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
 
                     SetFlag(FileObject->Flags, FO_FILE_MODIFIED);
                     SetLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
-                    NotifyFilter = FILE_NOTIFY_CHANGE_SIZE;
+                    _SEH_VAR(NotifyFilter) = FILE_NOTIFY_CHANGE_SIZE;
                 }
 
 FileEndChanged:
@@ -981,7 +1127,7 @@ FileEndChanged:
                 
                 if (Length < sizeof(FILE_POSITION_INFORMATION)) {
                     Status = STATUS_INVALID_PARAMETER;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FilePositionInformation = (PFILE_POSITION_INFORMATION) Buffer;
@@ -990,14 +1136,14 @@ FileEndChanged:
                     (FilePositionInformation->CurrentByteOffset.LowPart &
                     DeviceObject->AlignmentRequirement) ) {
                     Status = STATUS_INVALID_PARAMETER;
-                    __leave;
+                    _SEH_LEAVE;
                 }
                 
                 FileObject->CurrentByteOffset =
                     FilePositionInformation->CurrentByteOffset;
                 
                 Status = STATUS_SUCCESS;
-                __leave;
+                _SEH_LEAVE;
             }
 
             break;
@@ -1013,44 +1159,9 @@ FileEndChanged:
             Status = STATUS_INVALID_PARAMETER;/* STATUS_INVALID_INFO_CLASS; */
         }
 
-    } __finally {
-        
-        if (FcbPagingIoResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->PagingIoResource);
-        }
-        
-        if (NT_SUCCESS(Status) && (NotifyFilter != 0)) {
-            Ext2NotifyReportChange(
-                        IrpContext,
-                        Vcb,
-                        Fcb->Mcb,
-                        NotifyFilter,
-                        FILE_ACTION_MODIFIED );
-
-        }
-
-        if (FcbMainResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->MainResource);
-        }
-
-        if (CacheInitialized) {
-            CcUninitializeCacheMap(FileObject, NULL, NULL);
-        }
-
-        if (VcbMainResourceAcquired) {
-            ExReleaseResourceLite(&Vcb->MainResource);
-        }
-
-        if (!IrpContext->ExceptionInProgress) {
-            if (Status == STATUS_PENDING || 
-                Status == STATUS_CANT_WAIT ) {
-                DbgBreak();
-                Status = Ext2QueueRequest(IrpContext);
-            } else {
-                Ext2CompleteIrpContext(IrpContext,  Status);
-            }
-        }
     }
+    _SEH_FINALLY(Ext2SetFileInformationFinal_PSEH)
+    _SEH_END;
     
     return Status;
 }
@@ -1780,6 +1891,69 @@ Ext2InodeType(PEXT2_MCB Mcb)
     return EXT2_FT_REG_FILE;
 }
 
+_SEH_DEFINE_LOCALS(Ext2DeleteFileFinal)
+{
+    PEXT2_VCB Vcb;
+    PEXT2_MCB Mcb;
+    PEXT2_FCB Dcb;
+    PEXT2_FCB Fcb;
+    BOOLEAN VcbResourceAcquired;
+    BOOLEAN FcbPagingIoAcquired;
+    BOOLEAN FcbResourceAcquired;
+    BOOLEAN DcbResourceAcquired;
+    BOOLEAN bNewDcb;
+};
+
+_SEH_FINALLYFUNC(Ext2DeleteFileFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(Ext2DeleteFileFinal);
+    Ext2DeleteFileFinal(_SEH_VAR(Vcb), _SEH_VAR(Mcb), _SEH_VAR(Dcb),
+                        _SEH_VAR(Fcb), _SEH_VAR(VcbResourceAcquired),
+                        _SEH_VAR(FcbPagingIoAcquired), _SEH_VAR(FcbResourceAcquired),
+                        _SEH_VAR(DcbResourceAcquired), _SEH_VAR(bNewDcb));
+}
+
+VOID
+Ext2DeleteFileFinal (
+    IN PEXT2_VCB            Vcb,
+    IN PEXT2_MCB            Mcb,
+    IN PEXT2_FCB            Dcb,
+    IN PEXT2_FCB            Fcb,
+    IN BOOLEAN              VcbResourceAcquired,
+    IN BOOLEAN              FcbPagingIoAcquired,
+    IN BOOLEAN              FcbResourceAcquired,
+    IN BOOLEAN              DcbResourceAcquired,
+    IN BOOLEAN              bNewDcb
+    )
+{
+    if (FcbPagingIoAcquired) {
+        ExReleaseResourceLite(&Fcb->PagingIoResource);
+    }
+
+    if (FcbResourceAcquired) {
+        ExReleaseResourceLite(&Fcb->MainResource);
+    }
+
+    if (DcbResourceAcquired) {
+        ExReleaseResourceLite(&Dcb->MainResource);
+    }
+
+    if (Dcb) {
+        ClearLongFlag(Dcb->Flags, FCB_STATE_BUSY);
+        if (bNewDcb) {
+            if (Ext2DerefXcb(&Dcb->ReferenceCount) == 0) {
+                Ext2FreeFcb(Dcb);
+            } else {
+                DEBUG(DL_ERR, ( "Ext2DeleteFile: Dcb %wZ used by other threads.\n",
+                                      &Mcb->FullName ));
+            }
+        }
+    }
+    if (VcbResourceAcquired) {
+        ExReleaseResourceLite(&Vcb->MainResource);
+    }
+}
+
 NTSTATUS
 Ext2DeleteFile(
         PEXT2_IRP_CONTEXT IrpContext,
@@ -1792,13 +1966,6 @@ Ext2DeleteFile(
     PEXT2_FCB       Fcb = Mcb->Fcb;
 
     NTSTATUS        Status = STATUS_UNSUCCESSFUL;
-
-    BOOLEAN         VcbResourceAcquired = FALSE;
-    BOOLEAN         FcbPagingIoAcquired = FALSE;
-    BOOLEAN         FcbResourceAcquired = FALSE;
-    BOOLEAN         DcbResourceAcquired = FALSE;
-
-    BOOLEAN         bNewDcb = FALSE;
 
     LARGE_INTEGER   SysTime;
 
@@ -1818,22 +1985,33 @@ Ext2DeleteFile(
         }
     }
 
-    __try {
+    _SEH_TRY {
+
+        _SEH_DECLARE_LOCALS(Ext2DeleteFileFinal);
+        _SEH_VAR(Vcb) = Vcb;
+        _SEH_VAR(Mcb) = Mcb;
+        _SEH_VAR(Dcb) = Dcb;
+        _SEH_VAR(Fcb) = Fcb;
+        _SEH_VAR(VcbResourceAcquired) = FALSE;
+        _SEH_VAR(FcbPagingIoAcquired) = FALSE;
+        _SEH_VAR(FcbResourceAcquired) = FALSE;
+        _SEH_VAR(DcbResourceAcquired) = FALSE;
+        _SEH_VAR(bNewDcb) = FALSE;
 
         ExAcquireResourceExclusiveLite(&Vcb->MainResource, TRUE);
-        VcbResourceAcquired = TRUE;
+        _SEH_VAR(VcbResourceAcquired) = TRUE;
 
         if (!(Dcb = Mcb->Parent->Fcb)) {
             Dcb = Ext2AllocateFcb(Vcb, Mcb->Parent);
             if (Dcb) {
                 Ext2ReferXcb(&Dcb->ReferenceCount);
-                bNewDcb = TRUE;
+                _SEH_VAR(bNewDcb) = TRUE;
             }
         }
 
         if (Dcb) {
             SetLongFlag(Dcb->Flags, FCB_STATE_BUSY);
-            DcbResourceAcquired = 
+            _SEH_VAR(DcbResourceAcquired) = 
                 ExAcquireResourceExclusiveLite(&Dcb->MainResource, TRUE);
 
             /* remove it's entry form it's parent */
@@ -1848,10 +2026,10 @@ Ext2DeleteFile(
         if (NT_SUCCESS(Status)) {
 
             if (Fcb) {
-                FcbResourceAcquired = 
+                _SEH_VAR(FcbResourceAcquired) = 
                     ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
 
-                FcbPagingIoAcquired = 
+                _SEH_VAR(FcbPagingIoAcquired) = 
                     ExAcquireResourceExclusiveLite(&Fcb->PagingIoResource, TRUE);
             }
 
@@ -1873,7 +2051,7 @@ Ext2DeleteFile(
             }
 
             if (!NT_SUCCESS(Status)) {
-                __leave;
+                _SEH_LEAVE;
             }
 
             if (IsMcbSymlink(Mcb)) {
@@ -1941,35 +2119,9 @@ SkipTruncate:
             Ext2RemoveMcb(Vcb, Mcb);
         }
 
-    } __finally {
-
-        if (FcbPagingIoAcquired) {
-            ExReleaseResourceLite(&Fcb->PagingIoResource);
-        }
-
-        if (FcbResourceAcquired) {
-            ExReleaseResourceLite(&Fcb->MainResource);
-        }
-
-        if (DcbResourceAcquired) {
-            ExReleaseResourceLite(&Dcb->MainResource);
-        }
-
-        if (Dcb) {
-            ClearLongFlag(Dcb->Flags, FCB_STATE_BUSY);
-            if (bNewDcb) {
-                if (Ext2DerefXcb(&Dcb->ReferenceCount) == 0) {
-                    Ext2FreeFcb(Dcb);
-                } else {
-                    DEBUG(DL_ERR, ( "Ext2DeleteFile: Dcb %wZ used by other threads.\n",
-                                          &Mcb->FullName ));
-                }
-            }
-        }
-        if (VcbResourceAcquired) {
-            ExReleaseResourceLite(&Vcb->MainResource);
-        }
     }
+    _SEH_FINALLY(Ext2DeleteFileFinal_PSEH)
+    _SEH_END;
 
     DEBUG(DL_INF, ( "Ext2DeleteFile: %wZ Succeed... EXT2SB->S_FREE_BLOCKS = %xh .\n",
                          &Mcb->FullName, Vcb->SuperBlock->s_free_blocks_count));
