@@ -724,7 +724,7 @@ KeInsertQueueApc(IN PKAPC Apc,
     KiAcquireApcLock(Thread, &ApcLock);
 
     /* Make sure we can Queue APCs and that this one isn't already inserted */
-    if (!(Thread->ApcQueueable) && (Apc->Inserted))
+    if (!(Thread->ApcQueueable) || (Apc->Inserted))
     {
         /* Fail */
         State = FALSE;
