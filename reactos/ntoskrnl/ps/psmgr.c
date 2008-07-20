@@ -278,7 +278,7 @@ PsLocateSystemDll(VOID)
         KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 2, 0, 0);
     }
 
-    /* FIXME: Check if the image is valid */
+    /* Check if the image is valid */
     Status = MmCheckSystemImage(FileHandle, TRUE);
     if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
     {
