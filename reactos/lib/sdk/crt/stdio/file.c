@@ -3144,18 +3144,18 @@ int CDECL vfwprintf(FILE* file, const wchar_t *format, va_list valist)
       /* Convert each character and stop at the first invalid character. Behavior verified by tests under WinXP SP2 */
       char chMultiByte[MB_LEN_MAX];
       int nReturn;
+      wchar_t *p;
 
       retval = 0;
 
-      while(*mem)
+      for (p = mem; *p; p++)
       {
-          nReturn = wctomb(chMultiByte, *mem);
+          nReturn = wctomb(chMultiByte, *p);
 
           if(nReturn == -1)
               break;
 
           retval += fwrite(chMultiByte, 1, nReturn, file);
-          mem++;
       }
   }
   else
