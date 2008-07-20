@@ -159,7 +159,7 @@ Return Value:
     //  Use a try-finally to facilitate cleanup.
     //
 
-    try {
+    //try { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
     
         //
         //  Case on the type of open that we are trying to cleanup.
@@ -279,7 +279,7 @@ Return Value:
 
         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
 
-    } finally {
+    //} finally { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
 
         CdReleaseFcb( IrpContext, Fcb );
         
@@ -287,7 +287,7 @@ Return Value:
             
             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
         }
-    }
+    //} /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
 
     //
     //  If appropriate, try to spark teardown by purging the volume.  Should

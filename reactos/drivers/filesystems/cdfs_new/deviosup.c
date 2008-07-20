@@ -165,6 +165,7 @@ CdWaitSync (
     );
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -172,6 +173,7 @@ CdMultiSyncCompletionRoutine (
     );
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -179,6 +181,7 @@ CdMultiAsyncCompletionRoutine (
     );
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -186,6 +189,7 @@ CdSingleSyncCompletionRoutine (
     );
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2943,6 +2947,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3029,6 +3034,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdMultiAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3066,7 +3072,8 @@ Return Value:
 
 {
     PCD_IO_CONTEXT IoContext = Context;
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
+    /* ReactOS Change: GCC Unused Variable */
+    //PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
 
     AssertVerifyDeviceIrp( Irp );
     
@@ -3148,6 +3155,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleSyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3207,6 +3215,7 @@ Return Value:
 //
 
 NTSTATUS
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdSingleAsyncCompletionRoutine (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3267,7 +3276,7 @@ Return Value:
     //  and finally, free the context record.
     //
 
-    CdFreeIoContext( (PCD_IO_CONTEXT) Context );
+    CdFreeIoContext(  Context ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
     return STATUS_SUCCESS;
 
     UNREFERENCED_PARAMETER( DeviceObject );

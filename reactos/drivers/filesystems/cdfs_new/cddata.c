@@ -417,7 +417,6 @@ Return Value:
     return Status;
 }
 
-
 #ifdef CD_SANITY
 
 VOID
@@ -480,7 +479,6 @@ CdRaiseStatusEx(
 }
 
 #endif
-
 
 LONG
 CdExceptionFilter (
@@ -1006,6 +1004,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastIoCheckIfPossible (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,

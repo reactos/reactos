@@ -764,7 +764,7 @@ Return Value:
 
     PathEntry->PathEntryLength = WordAlign( PathEntry->PathEntryLength );
 
-    PathEntry->DirName = RawPathEntry->DirId;
+    PathEntry->DirName = (PCHAR)RawPathEntry->DirId; /* ReactOS Change: GCC "assignment makes pointer from integer without a cast" */
 
     return TRUE;
 }

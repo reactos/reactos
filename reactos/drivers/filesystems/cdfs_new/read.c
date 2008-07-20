@@ -79,7 +79,7 @@ Return Value:
 --*/
 
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Uninit var */
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
 
     TYPE_OF_OPEN TypeOfOpen;
@@ -225,8 +225,8 @@ Return Value:
             Status = FsRtlCheckOplock( &Fcb->Oplock,
                                        Irp,
                                        IrpContext,
-                                       CdOplockComplete,
-                                       CdPrePostIrp );
+                                       (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                       (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
             //
             //  If the result is not STATUS_SUCCESS then the Irp was completed

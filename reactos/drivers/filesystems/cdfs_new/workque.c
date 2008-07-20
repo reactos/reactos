@@ -97,6 +97,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -209,6 +210,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -386,7 +388,7 @@ Return Value:
     //
 
     ExInitializeWorkItem( &IrpContext->WorkQueueItem,
-                          CdFspDispatch,
+                          (PVOID)CdFspDispatch,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
                           IrpContext );
 
     ExQueueWorkItem( &IrpContext->WorkQueueItem, CriticalWorkQueue );

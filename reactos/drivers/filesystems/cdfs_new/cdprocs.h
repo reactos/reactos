@@ -44,28 +44,30 @@ Abstract:
 //  Here are the different pool tags.
 //
 
-#define TAG_CCB                 'ccdC'      //  Ccb
-#define TAG_CDROM_TOC           'ctdC'      //  TOC
-#define TAG_DIRENT_NAME         'nddC'      //  CdName in dirent
-#define TAG_ENUM_EXPRESSION     'eedC'      //  Search expression for enumeration
-#define TAG_FCB_DATA            'dfdC'      //  Data Fcb
-#define TAG_FCB_INDEX           'ifdC'      //  Index Fcb
-#define TAG_FCB_NONPAGED        'nfdC'      //  Nonpaged Fcb
-#define TAG_FCB_TABLE           'tfdC'      //  Fcb Table entry
-#define TAG_FILE_NAME           'nFdC'      //  Filename buffer
-#define TAG_GEN_SHORT_NAME      'sgdC'      //  Generated short name
-#define TAG_IO_BUFFER           'fbdC'      //  Temporary IO buffer
-#define TAG_IO_CONTEXT          'oidC'      //  Io context for async reads
-#define TAG_IRP_CONTEXT         'cidC'      //  Irp Context
-#define TAG_IRP_CONTEXT_LITE    'lidC'      //  Irp Context lite
-#define TAG_MCB_ARRAY           'amdC'      //  Mcb array
-#define TAG_PATH_ENTRY_NAME     'nPdC'      //  CdName in path entry
-#define TAG_PREFIX_ENTRY        'epdC'      //  Prefix Entry
-#define TAG_PREFIX_NAME         'npdC'      //  Prefix Entry name
-#define TAG_SPANNING_PATH_TABLE 'psdC'      //  Buffer for spanning path table
-#define TAG_UPCASE_NAME         'nudC'      //  Buffer for upcased name
-#define TAG_VOL_DESC            'dvdC'      //  Buffer for volume descriptor
-#define TAG_VPB                 'pvdC'      //  Vpb allocated in filesystem
+/* ReactOS Change: GCC doesn't understand this, use TAG macro */
+#include <reactos/helper.h>
+#define TAG_CCB                 TAG('c','c','d','C')      //  Ccb
+#define TAG_CDROM_TOC           TAG('c','t','d','C')      //  TOC
+#define TAG_DIRENT_NAME         TAG('n','d','d','C')      //  CdName in dirent
+#define TAG_ENUM_EXPRESSION     TAG('e','e','d','C')      //  Search expression for enumeration
+#define TAG_FCB_DATA            TAG('d','f','d','C')      //  Data Fcb
+#define TAG_FCB_INDEX           TAG('i','f','d','C')      //  Index Fcb
+#define TAG_FCB_NONPAGED        TAG('n','f','d','C')      //  Nonpaged Fcb
+#define TAG_FCB_TABLE           TAG('t','f','d','C')      //  Fcb Table entry
+#define TAG_FILE_NAME           TAG('n','F','d','C')      //  Filename buffer
+#define TAG_GEN_SHORT_NAME      TAG('s','g','d','C')      //  Generated short name
+#define TAG_IO_BUFFER           TAG('f','b','d','C')      //  Temporary IO buffer
+#define TAG_IO_CONTEXT          TAG('o','i','d','C')      //  Io context for async reads
+#define TAG_IRP_CONTEXT         TAG('c','i','d','C')      //  Irp Context
+#define TAG_IRP_CONTEXT_LITE    TAG('l','i','d','C')      //  Irp Context lite
+#define TAG_MCB_ARRAY           TAG('a','m','d','C')      //  Mcb array
+#define TAG_PATH_ENTRY_NAME     TAG('n','P','d','C')      //  CdName in path entry
+#define TAG_PREFIX_ENTRY        TAG('e','p','d','C')      //  Prefix Entry
+#define TAG_PREFIX_NAME         TAG('n','p','d','C')      //  Prefix Entry name
+#define TAG_SPANNING_PATH_TABLE TAG('p','s','d','C')      //  Buffer for spanning path table
+#define TAG_UPCASE_NAME         TAG('n','u','d','C')      //  Buffer for upcased name
+#define TAG_VOL_DESC            TAG('d','v','d','C')      //  Buffer for volume descriptor
+#define TAG_VPB                 TAG('p','v','d','C')      //  Vpb allocated in filesystem
 
 //
 //  Tag all of our allocations if tagging is turned on
@@ -902,33 +904,39 @@ CdAcquireResource (
 }
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
     IN PVOID Fcb,
     IN BOOLEAN Wait
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
     IN PVOID Fcb
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
     IN PFCB Fcb,
     IN BOOLEAN Wait
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
     IN PFCB Fcb
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCreateSection (
     IN PFILE_OBJECT FileObject
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
     IN PFILE_OBJECT FileObject
     );
@@ -1184,8 +1192,8 @@ CdProcessToc (
 //  Verification support routines.  Contained in verfysup.c
 //
 
-
-INLINE
+/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
+static inline
 BOOLEAN
 CdOperationIsDasdOpen(
     IN PIRP_CONTEXT IrpContext
@@ -1272,12 +1280,14 @@ CdFsdPostRequest(
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -1293,7 +1303,9 @@ CdOplockComplete (
 //  otherwise
 //
 
-//#ifndef BooleanFlagOn
+/* ReactOS Change: GCC doesn't understand the comment style */
+/*
+ //#ifndef BooleanFlagOn
 //#define BooleanFlagOn(F,SF) (    \
 //    (BOOLEAN)(((F) & (SF)) != 0) \
 //)
@@ -1310,6 +1322,7 @@ CdOplockComplete (
 //    (Flags) &= ~(SingleFlag);         \
 //}
 //#endif
+*/
 
 //
 //      CAST
@@ -1598,6 +1611,7 @@ CdRaiseStatusEx(
 //
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryBasicInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
@@ -1607,6 +1621,7 @@ CdFastQueryBasicInfo (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryStdInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
@@ -1616,6 +1631,7 @@ CdFastQueryStdInfo (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
@@ -1629,6 +1645,7 @@ CdFastLock (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
@@ -1640,6 +1657,7 @@ CdFastUnlockSingle (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
     IN PFILE_OBJECT FileObject,
     PEPROCESS ProcessId,
@@ -1648,6 +1666,7 @@ CdFastUnlockAll (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
     IN PFILE_OBJECT FileObject,
     PVOID ProcessId,
@@ -1657,6 +1676,7 @@ CdFastUnlockAllByKey (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastIoCheckIfPossible (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
@@ -1669,6 +1689,7 @@ CdFastIoCheckIfPossible (
     );
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryNetworkInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
@@ -1862,17 +1883,26 @@ CdCommonPnp (                               //  Implemented in Pnp.c
 //
 //      #define try_return(S)  { S; goto try_exit; }
 //
+/* ReactOS Change: Remove SEH */
+#define try
+#define leave goto exitLabel;
+#define finally  if (0) goto exitLabel; exitLabel:
+#define except(x) while (0)
+#define GetExceptionCode() 0
+#define AbnormalTermination() 0
 
-#define try_return(S) { S; goto try_exit; }
-#define try_leave(S) { S; leave; }
+#define try_return(S) { goto try_exit; }
+#define try_leave(S) { leave; }
+
 
 //
 //  Encapsulate safe pool freeing
 //
+/* ReactOS Change: GCC "passing argument 1 of CdFreePool from incompatible pointer type" */
+#define CdFreePool(x) _CdFreePool((PVOID*)(x))
 
-INLINE
-VOID
-CdFreePool(
+/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
+static inline void _CdFreePool(
     IN PVOID *Pool
     )
 {

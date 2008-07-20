@@ -64,7 +64,7 @@ Return Value:
     PIO_STACK_LOCATION IrpSp;
     PIO_STACK_LOCATION NextIrpSp;
 
-    PVOID TargetBuffer = NULL;
+//    PVOID TargetBuffer = NULL; /* ReactOS Change: GCC unused variable */
 
     PAGED_CODE();
 

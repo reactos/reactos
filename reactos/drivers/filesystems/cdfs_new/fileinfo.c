@@ -460,6 +460,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryBasicInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
@@ -577,6 +578,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryStdInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,
@@ -704,6 +706,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastQueryNetworkInfo (
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Wait,

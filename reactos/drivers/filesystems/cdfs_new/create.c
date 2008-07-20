@@ -2106,7 +2106,7 @@ Return Value:
     PFCB NextFcb;
     PFCB ParentFcb = NULL;
 
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC uninitialized variable */
 
     PAGED_CODE();
 
@@ -2757,8 +2757,8 @@ Return Value:
                 OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
                                                  IrpContext->Irp,
                                                  IrpContext,
-                                                 CdOplockComplete,
-                                                 CdPrePostIrp );
+                                                 (PVOID)CdOplockComplete,   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                                 (PVOID)CdPrePostIrp );   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
                 if (OplockStatus == STATUS_PENDING) {
 
@@ -2789,8 +2789,8 @@ Return Value:
             OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
                                              IrpContext->Irp,
                                              IrpContext,
-                                             CdOplockComplete,
-                                             CdPrePostIrp );
+                                             (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                             (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
             if (OplockStatus == STATUS_PENDING) {
 

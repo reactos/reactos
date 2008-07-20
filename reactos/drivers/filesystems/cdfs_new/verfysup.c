@@ -431,7 +431,7 @@ Return Value:
     ULONG MediaChangeCount = 0;
     BOOLEAN ForceVerify = FALSE;
     BOOLEAN DevMarkedForVerify;
-    KIRQL SavedIrql;
+    //KIRQL SavedIrql; /* ReactOS Change: GCC Unused variable */
 
     PAGED_CODE();
 
@@ -581,6 +581,9 @@ Return Value:
 
         CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
         break;
+        
+    /* ReactOS Change: GCC "enumeration value not handled in switch" */
+    default: break;
     }
 }
 
@@ -613,7 +616,7 @@ Return Value:
 --*/
 
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    //NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Unused variable */
     PVCB Vcb = Fcb->Vcb;
     PDEVICE_OBJECT RealDevice = Vcb->Vpb->RealDevice;
     PIRP Irp;

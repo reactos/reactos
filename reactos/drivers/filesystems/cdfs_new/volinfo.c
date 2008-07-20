@@ -166,8 +166,11 @@ Return Value:
 
             Status = CdQueryFsAttributeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
             break;
+                
+        /* ReactOS Change: GCC "enumeration value not handled in switch" */
+        default: break;
         }
-
+        
         //
         //  Set the information field to the number of bytes actually filled in
         //

@@ -206,7 +206,7 @@ Return Value:
 
 {
     NTSTATUS Status;
-    PVOID NewBuffer;
+    //PVOID NewBuffer; /* ReactOS Change: GCC Uninitialized variable */
 
     PAGED_CODE();
 

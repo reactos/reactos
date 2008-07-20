@@ -209,7 +209,7 @@ Return Value:
 
     ULONG BaseLength;
 
-    PFILE_BOTH_DIR_INFORMATION DirInfo;
+    PFILE_BOTH_DIR_INFORMATION DirInfo = NULL; /* ReactOS Change: GCC Uninit var */
     PFILE_NAMES_INFORMATION NamesInfo;
     PFILE_ID_FULL_DIR_INFORMATION IdFullDirInfo;
     PFILE_ID_BOTH_DIR_INFORMATION IdBothDirInfo;
@@ -579,6 +579,9 @@ Return Value:
                     NamesInfo->FileNameLength = FileNameBytes + SeparatorBytes + VersionStringBytes;
     
                     break;
+
+                /* ReactOS Change: GCC "enumeration value not handled in switch" */
+                default: break;
                 }
 
                 //

@@ -89,7 +89,7 @@ Return Value:
     Status = FsRtlCheckOplock( &Fcb->Oplock,
                                Irp,
                                IrpContext,
-                               CdOplockComplete,
+                               (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
                                NULL );
 
     //
@@ -138,6 +138,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
@@ -246,8 +247,8 @@ Return Value:
         //
         //  Now call the FsRtl routine to perform the lock request.
         //
-
-        if (Results = FsRtlFastLock( Fcb->FileLock,
+        /* ReactOS Change: GCC "suggest parentheses around assignment used as truth value" */
+        if ((Results = FsRtlFastLock( Fcb->FileLock,
                                      FileObject,
                                      FileOffset,
                                      Length,
@@ -257,7 +258,7 @@ Return Value:
                                      ExclusiveLock,
                                      IoStatus,
                                      NULL,
-                                     FALSE )) {
+                                     FALSE ))) {
 
             //
             //  Set the flag indicating if Fast I/O is questionable.  We
@@ -284,6 +285,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
@@ -424,6 +426,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
     IN PFILE_OBJECT FileObject,
     PEPROCESS ProcessId,
@@ -546,6 +549,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
     IN PFILE_OBJECT FileObject,
     PVOID ProcessId,

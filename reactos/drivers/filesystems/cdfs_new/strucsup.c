@@ -438,7 +438,7 @@ Return Value:
 --*/
 
 {
-    ULONG Shift;
+    //ULONG Shift; /* ReactOS Change: GCC Unused variable */
     ULONG StartingBlock;
     ULONG ByteCount;
 

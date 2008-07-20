@@ -504,8 +504,8 @@ typedef struct _VCB {
     //
 
     ULONG VcbCleanup;
-    ULONG VcbReference;
-    ULONG VcbUserReference;
+    LONG VcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+    LONG VcbUserReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
 
     //
     //  Fcb for the Volume Dasd file, root directory and the Path Table.
@@ -655,7 +655,7 @@ typedef struct _VOLUME_DEVICE_OBJECT {
     //  executed later.
     //
 
-    ULONG PostedRequestCount;
+    LONG PostedRequestCount; /* ReactOS Change: GCC "pointer targets in passing argument 1 of 'InterlockedDecrement' differ in signedness" */
 
     //
     //  The following field indicates the number of IRP's waiting
@@ -878,7 +878,7 @@ typedef struct _FCB {
     //
 
     ULONG FcbCleanup;
-    ULONG FcbReference;
+    LONG FcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
     ULONG FcbUserReference;
 
     //

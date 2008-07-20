@@ -128,7 +128,7 @@ Return Value:
 {
     BOOLEAN FirstPass = TRUE;
     ULONG McbEntryOffset;
-    PFCB ParentFcb;
+    PFCB ParentFcb = NULL; /* ReactOS Change: GCC uninitialized variable bug */
     BOOLEAN CleanupParent = FALSE;
 
     BOOLEAN UnlockFcb = FALSE;

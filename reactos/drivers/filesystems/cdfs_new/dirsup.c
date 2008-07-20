@@ -465,7 +465,7 @@ Return Value:
     //  Save a pointer to the time stamps.
     //
 
-    Dirent->CdTime = RawDirent->RecordTime;
+    Dirent->CdTime = (PCHAR)RawDirent->RecordTime; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
 
     //
     //  Copy the dirent flags.
@@ -501,7 +501,7 @@ Return Value:
     }
 
     Dirent->FileNameLen = RawDirent->FileIdLen;
-    Dirent->FileName = RawDirent->FileId;
+    Dirent->FileName = (PCHAR)RawDirent->FileId; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
 
     //
     //  If there are any remaining bytes at the end of the dirent then
@@ -1457,7 +1457,7 @@ Return Value:
 --*/
 
 {
-    XA_EXTENT_TYPE ExtentType;
+    XA_EXTENT_TYPE ExtentType = 0; /* ReactOS Change: GCC Uninit var */
     PCOMPOUND_DIRENT CurrentCompoundDirent;
     PDIRENT CurrentDirent;
 

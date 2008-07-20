@@ -1,0 +1,1073 @@
+Index: drivers/filesystems/cdfs_new/deviosup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/deviosup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/deviosup.c	(working copy)
+@@ -165,6 +165,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdMultiSyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -172,6 +173,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdMultiAsyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -179,6 +181,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdSingleSyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -186,6 +189,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdSingleAsyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -2943,6 +2947,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdMultiSyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -3029,6 +3034,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdMultiAsyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -3066,7 +3072,8 @@
+ 
+ {
+     PCD_IO_CONTEXT IoContext = Context;
+-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
++    /* ReactOS Change: GCC Unused Variable */
++    //PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
+ 
+     AssertVerifyDeviceIrp( Irp );
+     
+@@ -3148,6 +3155,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdSingleSyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -3207,6 +3215,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdSingleAsyncCompletionRoutine (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp,
+@@ -3267,7 +3276,7 @@
+     //  and finally, free the context record.
+     //
+ 
+-    CdFreeIoContext( (PCD_IO_CONTEXT) Context );
++    CdFreeIoContext(  Context ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
+     return STATUS_SUCCESS;
+ 
+     UNREFERENCED_PARAMETER( DeviceObject );
+Index: drivers/filesystems/cdfs_new/dirctrl.c
+===================================================================
+--- drivers/filesystems/cdfs_new/dirctrl.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/dirctrl.c	(working copy)
+@@ -209,7 +209,7 @@
+ 
+     ULONG BaseLength;
+ 
+-    PFILE_BOTH_DIR_INFORMATION DirInfo;
++    PFILE_BOTH_DIR_INFORMATION DirInfo = NULL; /* ReactOS Change: GCC Uninit var */
+     PFILE_NAMES_INFORMATION NamesInfo;
+     PFILE_ID_FULL_DIR_INFORMATION IdFullDirInfo;
+     PFILE_ID_BOTH_DIR_INFORMATION IdBothDirInfo;
+@@ -579,6 +579,9 @@
+                     NamesInfo->FileNameLength = FileNameBytes + SeparatorBytes + VersionStringBytes;
+     
+                     break;
++
++                /* ReactOS Change: GCC "enumeration value not handled in switch" */
++                default: break;
+                 }
+ 
+                 //
+Index: drivers/filesystems/cdfs_new/create.c
+===================================================================
+--- drivers/filesystems/cdfs_new/create.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/create.c	(working copy)
+@@ -2106,7 +2106,7 @@
+     PFCB NextFcb;
+     PFCB ParentFcb = NULL;
+ 
+-    NTSTATUS Status;
++    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC uninitialized variable */
+ 
+     PAGED_CODE();
+ 
+@@ -2757,8 +2757,8 @@
+                 OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
+                                                  IrpContext->Irp,
+                                                  IrpContext,
+-                                                 CdOplockComplete,
+-                                                 CdPrePostIrp );
++                                                 (PVOID)CdOplockComplete,   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
++                                                 (PVOID)CdPrePostIrp );   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
+ 
+                 if (OplockStatus == STATUS_PENDING) {
+ 
+@@ -2789,8 +2789,8 @@
+             OplockStatus = FsRtlCheckOplock( &Fcb->Oplock,
+                                              IrpContext->Irp,
+                                              IrpContext,
+-                                             CdOplockComplete,
+-                                             CdPrePostIrp );
++                                             (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
++                                             (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+ 
+             if (OplockStatus == STATUS_PENDING) {
+ 
+Index: drivers/filesystems/cdfs_new/devctrl.c
+===================================================================
+--- drivers/filesystems/cdfs_new/devctrl.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/devctrl.c	(working copy)
+@@ -64,7 +64,7 @@
+     PIO_STACK_LOCATION IrpSp;
+     PIO_STACK_LOCATION NextIrpSp;
+ 
+-    PVOID TargetBuffer = NULL;
++//    PVOID TargetBuffer = NULL; /* ReactOS Change: GCC unused variable */
+ 
+     PAGED_CODE();
+ 
+Index: drivers/filesystems/cdfs_new/close.c
+===================================================================
+--- drivers/filesystems/cdfs_new/close.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/close.c	(working copy)
+@@ -77,6 +77,7 @@
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdCloseWorker (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PVOID Context
+@@ -136,9 +137,9 @@
+     //
+     //  Continue processing until there are no more closes to process.
+     //
++    /* ReactOS Change: "GCC suggest parentheses around assignment used as truth value" */
++    while ((IrpContext = CdRemoveClose( Vcb ))) {
+ 
+-    while (IrpContext = CdRemoveClose( Vcb )) {
+-
+         //
+         //  If we don't have an IrpContext then use the one on the stack.
+         //  Initialize it for this request.
+@@ -165,7 +166,7 @@
+             //  Free the IrpContextLite.
+             //
+ 
+-            CdFreeIrpContextLite( (PIRP_CONTEXT_LITE) IrpContext );
++            CdFreeIrpContextLite( IrpContext ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
+ 
+             //
+             //  Remember we have the IrpContext from the stack.
+@@ -662,6 +663,7 @@
+ }
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdCloseWorker (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PVOID Context
+Index: drivers/filesystems/cdfs_new/dirsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/dirsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/dirsup.c	(working copy)
+@@ -465,7 +465,7 @@
+     //  Save a pointer to the time stamps.
+     //
+ 
+-    Dirent->CdTime = RawDirent->RecordTime;
++    Dirent->CdTime = (PCHAR)RawDirent->RecordTime; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
+ 
+     //
+     //  Copy the dirent flags.
+@@ -501,7 +501,7 @@
+     }
+ 
+     Dirent->FileNameLen = RawDirent->FileIdLen;
+-    Dirent->FileName = RawDirent->FileId;
++    Dirent->FileName = (PCHAR)RawDirent->FileId; /* ReactOS change: GCC "pointer targets in assignment differ in signedness" */
+ 
+     //
+     //  If there are any remaining bytes at the end of the dirent then
+@@ -1457,7 +1457,7 @@
+ --*/
+ 
+ {
+-    XA_EXTENT_TYPE ExtentType;
++    XA_EXTENT_TYPE ExtentType = 0; /* ReactOS Change: GCC Uninit var */
+     PCOMPOUND_DIRENT CurrentCompoundDirent;
+     PDIRENT CurrentDirent;
+ 
+Index: drivers/filesystems/cdfs_new/read.c
+===================================================================
+--- drivers/filesystems/cdfs_new/read.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/read.c	(working copy)
+@@ -79,7 +79,7 @@
+ --*/
+ 
+ {
+-    NTSTATUS Status;
++    NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Uninit var */
+     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
+ 
+     TYPE_OF_OPEN TypeOfOpen;
+@@ -225,8 +225,8 @@
+             Status = FsRtlCheckOplock( &Fcb->Oplock,
+                                        Irp,
+                                        IrpContext,
+-                                       CdOplockComplete,
+-                                       CdPrePostIrp );
++                                       (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
++                                       (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+ 
+             //
+             //  If the result is not STATUS_SUCCESS then the Irp was completed
+Index: drivers/filesystems/cdfs_new/volinfo.c
+===================================================================
+--- drivers/filesystems/cdfs_new/volinfo.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/volinfo.c	(working copy)
+@@ -166,8 +166,11 @@
+ 
+             Status = CdQueryFsAttributeInfo( IrpContext, Fcb->Vcb, Irp->AssociatedIrp.SystemBuffer, &Length );
+             break;
++                
++        /* ReactOS Change: GCC "enumeration value not handled in switch" */
++        default: break;
+         }
+-
++        
+         //
+         //  Set the information field to the number of bytes actually filled in
+         //
+Index: drivers/filesystems/cdfs_new/cdfs.rbuild
+===================================================================
+--- drivers/filesystems/cdfs_new/cdfs.rbuild	(revision 34615)
++++ drivers/filesystems/cdfs_new/cdfs.rbuild	(working copy)
+@@ -1,8 +1,8 @@
+ <?xml version="1.0"?>
+ <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+-<module name="cdfs_new" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs_new.sys">
++<module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
+ 	<bootstrap installbase="$(CDOUTPUT)" />
+-	<include base="cdfs_new">.</include>
++	<include base="cdfs">.</include>
+ 	<library>ntoskrnl</library>
+ 	<library>hal</library>
+     <file>allocsup.c</file>
+@@ -32,6 +32,5 @@
+     <file>volinfo.c</file>
+     <file>workque.c</file>
+ 	<file>cdfs.rc</file>
+-    <compilerflag>-fms-extensions</compilerflag>
+ 	<pch>cdprocs.h</pch>
+ </module>
+Index: drivers/filesystems/cdfs_new/cddata.c
+===================================================================
+--- drivers/filesystems/cdfs_new/cddata.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/cddata.c	(working copy)
+@@ -417,7 +417,6 @@
+     return Status;
+ }
+ 
+-
+ #ifdef CD_SANITY
+ 
+ VOID
+@@ -481,7 +480,6 @@
+ 
+ #endif
+ 
+-
+ LONG
+ CdExceptionFilter (
+     IN PIRP_CONTEXT IrpContext,
+@@ -1006,6 +1004,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastIoCheckIfPossible (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+Index: drivers/filesystems/cdfs_new/allocsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/allocsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/allocsup.c	(working copy)
+@@ -128,7 +128,7 @@
+ {
+     BOOLEAN FirstPass = TRUE;
+     ULONG McbEntryOffset;
+-    PFCB ParentFcb;
++    PFCB ParentFcb = NULL; /* ReactOS Change: GCC uninitialized variable bug */
+     BOOLEAN CleanupParent = FALSE;
+ 
+     BOOLEAN UnlockFcb = FALSE;
+Index: drivers/filesystems/cdfs_new/verfysup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/verfysup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/verfysup.c	(working copy)
+@@ -431,7 +431,7 @@
+     ULONG MediaChangeCount = 0;
+     BOOLEAN ForceVerify = FALSE;
+     BOOLEAN DevMarkedForVerify;
+-    KIRQL SavedIrql;
++    //KIRQL SavedIrql; /* ReactOS Change: GCC Unused variable */
+ 
+     PAGED_CODE();
+ 
+@@ -581,6 +581,9 @@
+ 
+         CdRaiseStatus( IrpContext, STATUS_FILE_INVALID );
+         break;
++        
++    /* ReactOS Change: GCC "enumeration value not handled in switch" */
++    default: break;
+     }
+ }
+ 
+@@ -613,7 +616,7 @@
+ --*/
+ 
+ {
+-    NTSTATUS Status = STATUS_SUCCESS;
++    //NTSTATUS Status = STATUS_SUCCESS; /* ReactOS Change: GCC Unused variable */
+     PVCB Vcb = Fcb->Vcb;
+     PDEVICE_OBJECT RealDevice = Vcb->Vpb->RealDevice;
+     PIRP Irp;
+Index: drivers/filesystems/cdfs_new/filobsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/filobsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/filobsup.c	(working copy)
+@@ -105,7 +105,7 @@
+     FileObject->FsContext = Fcb;
+     FileObject->FsContext2 = Ccb;
+ 
+-    SetFlag( ((ULONG_PTR) FileObject->FsContext2), TypeOfOpen );
++    SetFlag( (*(PULONG_PTR)&FileObject->FsContext2), TypeOfOpen ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
+ 
+     //
+     //  Set the Vpb field in the file object.
+@@ -176,7 +176,7 @@
+         *Fcb = FileObject->FsContext;
+         *Ccb = FileObject->FsContext2;
+ 
+-        ClearFlag( (ULONG_PTR) *Ccb, TYPE_OF_OPEN_MASK );
++        ClearFlag( (*(PULONG_PTR)Ccb), TYPE_OF_OPEN_MASK ); /* ReactOS Change: GCC "invalid lvalue in assignment" */
+     }
+ 
+     //
+Index: drivers/filesystems/cdfs_new/pathsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/pathsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/pathsup.c	(working copy)
+@@ -764,7 +764,7 @@
+ 
+     PathEntry->PathEntryLength = WordAlign( PathEntry->PathEntryLength );
+ 
+-    PathEntry->DirName = RawPathEntry->DirId;
++    PathEntry->DirName = (PCHAR)RawPathEntry->DirId; /* ReactOS Change: GCC "assignment makes pointer from integer without a cast" */
+ 
+     return TRUE;
+ }
+Index: drivers/filesystems/cdfs_new/cdprocs.h
+===================================================================
+--- drivers/filesystems/cdfs_new/cdprocs.h	(revision 34615)
++++ drivers/filesystems/cdfs_new/cdprocs.h	(working copy)
+@@ -44,28 +44,30 @@
+ //  Here are the different pool tags.
+ //
+ 
+-#define TAG_CCB                 'ccdC'      //  Ccb
+-#define TAG_CDROM_TOC           'ctdC'      //  TOC
+-#define TAG_DIRENT_NAME         'nddC'      //  CdName in dirent
+-#define TAG_ENUM_EXPRESSION     'eedC'      //  Search expression for enumeration
+-#define TAG_FCB_DATA            'dfdC'      //  Data Fcb
+-#define TAG_FCB_INDEX           'ifdC'      //  Index Fcb
+-#define TAG_FCB_NONPAGED        'nfdC'      //  Nonpaged Fcb
+-#define TAG_FCB_TABLE           'tfdC'      //  Fcb Table entry
+-#define TAG_FILE_NAME           'nFdC'      //  Filename buffer
+-#define TAG_GEN_SHORT_NAME      'sgdC'      //  Generated short name
+-#define TAG_IO_BUFFER           'fbdC'      //  Temporary IO buffer
+-#define TAG_IO_CONTEXT          'oidC'      //  Io context for async reads
+-#define TAG_IRP_CONTEXT         'cidC'      //  Irp Context
+-#define TAG_IRP_CONTEXT_LITE    'lidC'      //  Irp Context lite
+-#define TAG_MCB_ARRAY           'amdC'      //  Mcb array
+-#define TAG_PATH_ENTRY_NAME     'nPdC'      //  CdName in path entry
+-#define TAG_PREFIX_ENTRY        'epdC'      //  Prefix Entry
+-#define TAG_PREFIX_NAME         'npdC'      //  Prefix Entry name
+-#define TAG_SPANNING_PATH_TABLE 'psdC'      //  Buffer for spanning path table
+-#define TAG_UPCASE_NAME         'nudC'      //  Buffer for upcased name
+-#define TAG_VOL_DESC            'dvdC'      //  Buffer for volume descriptor
+-#define TAG_VPB                 'pvdC'      //  Vpb allocated in filesystem
++/* ReactOS Change: GCC doesn't understand this, use TAG macro */
++#include <reactos/helper.h>
++#define TAG_CCB                 TAG('c','c','d','C')      //  Ccb
++#define TAG_CDROM_TOC           TAG('c','t','d','C')      //  TOC
++#define TAG_DIRENT_NAME         TAG('n','d','d','C')      //  CdName in dirent
++#define TAG_ENUM_EXPRESSION     TAG('e','e','d','C')      //  Search expression for enumeration
++#define TAG_FCB_DATA            TAG('d','f','d','C')      //  Data Fcb
++#define TAG_FCB_INDEX           TAG('i','f','d','C')      //  Index Fcb
++#define TAG_FCB_NONPAGED        TAG('n','f','d','C')      //  Nonpaged Fcb
++#define TAG_FCB_TABLE           TAG('t','f','d','C')      //  Fcb Table entry
++#define TAG_FILE_NAME           TAG('n','F','d','C')      //  Filename buffer
++#define TAG_GEN_SHORT_NAME      TAG('s','g','d','C')      //  Generated short name
++#define TAG_IO_BUFFER           TAG('f','b','d','C')      //  Temporary IO buffer
++#define TAG_IO_CONTEXT          TAG('o','i','d','C')      //  Io context for async reads
++#define TAG_IRP_CONTEXT         TAG('c','i','d','C')      //  Irp Context
++#define TAG_IRP_CONTEXT_LITE    TAG('l','i','d','C')      //  Irp Context lite
++#define TAG_MCB_ARRAY           TAG('a','m','d','C')      //  Mcb array
++#define TAG_PATH_ENTRY_NAME     TAG('n','P','d','C')      //  CdName in path entry
++#define TAG_PREFIX_ENTRY        TAG('e','p','d','C')      //  Prefix Entry
++#define TAG_PREFIX_NAME         TAG('n','p','d','C')      //  Prefix Entry name
++#define TAG_SPANNING_PATH_TABLE TAG('p','s','d','C')      //  Buffer for spanning path table
++#define TAG_UPCASE_NAME         TAG('n','u','d','C')      //  Buffer for upcased name
++#define TAG_VOL_DESC            TAG('d','v','d','C')      //  Buffer for volume descriptor
++#define TAG_VPB                 TAG('p','v','d','C')      //  Vpb allocated in filesystem
+ 
+ //
+ //  Tag all of our allocations if tagging is turned on
+@@ -902,33 +904,39 @@
+ }
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdNoopAcquire (
+     IN PVOID Fcb,
+     IN BOOLEAN Wait
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdNoopRelease (
+     IN PVOID Fcb
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdAcquireForCache (
+     IN PFCB Fcb,
+     IN BOOLEAN Wait
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdReleaseFromCache (
+     IN PFCB Fcb
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdAcquireForCreateSection (
+     IN PFILE_OBJECT FileObject
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdReleaseForCreateSection (
+     IN PFILE_OBJECT FileObject
+     );
+@@ -1184,8 +1192,8 @@
+ //  Verification support routines.  Contained in verfysup.c
+ //
+ 
+-
+-INLINE
++/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
++static inline
+ BOOLEAN
+ CdOperationIsDasdOpen(
+     IN PIRP_CONTEXT IrpContext
+@@ -1272,12 +1280,14 @@
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPrePostIrp (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdOplockComplete (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+@@ -1293,7 +1303,9 @@
+ //  otherwise
+ //
+ 
+-//#ifndef BooleanFlagOn
++/* ReactOS Change: GCC doesn't understand the comment style */
++/*
++ //#ifndef BooleanFlagOn
+ //#define BooleanFlagOn(F,SF) (    \
+ //    (BOOLEAN)(((F) & (SF)) != 0) \
+ //)
+@@ -1310,6 +1322,7 @@
+ //    (Flags) &= ~(SingleFlag);         \
+ //}
+ //#endif
++*/
+ 
+ //
+ //      CAST
+@@ -1598,6 +1611,7 @@
+ //
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryBasicInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+@@ -1607,6 +1621,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryStdInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+@@ -1616,6 +1631,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastLock (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+@@ -1629,6 +1645,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockSingle (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+@@ -1640,6 +1657,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockAll (
+     IN PFILE_OBJECT FileObject,
+     PEPROCESS ProcessId,
+@@ -1648,6 +1666,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockAllByKey (
+     IN PFILE_OBJECT FileObject,
+     PVOID ProcessId,
+@@ -1657,6 +1676,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastIoCheckIfPossible (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+@@ -1669,6 +1689,7 @@
+     );
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryNetworkInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+@@ -1862,17 +1883,26 @@
+ //
+ //      #define try_return(S)  { S; goto try_exit; }
+ //
++/* ReactOS Change: Remove SEH */
++#define try
++#define leave goto exitLabel;
++#define finally  if (0) goto exitLabel; exitLabel:
++#define except(x) while (0)
++#define GetExceptionCode() 0
++#define AbnormalTermination() 0
+ 
+-#define try_return(S) { S; goto try_exit; }
+-#define try_leave(S) { S; leave; }
++#define try_return(S) { goto try_exit; }
++#define try_leave(S) { leave; }
+ 
++
+ //
+ //  Encapsulate safe pool freeing
+ //
++/* ReactOS Change: GCC "passing argument 1 of CdFreePool from incompatible pointer type" */
++#define CdFreePool(x) _CdFreePool((PVOID*)(x))
+ 
+-INLINE
+-VOID
+-CdFreePool(
++/* ReactOS Change: "LD multiple definition of `_CdOperationIsDasdOpen'" */
++static inline void _CdFreePool(
+     IN PVOID *Pool
+     )
+ {
+Index: drivers/filesystems/cdfs_new/resrcsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/resrcsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/resrcsup.c	(working copy)
+@@ -123,6 +123,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdAcquireForCache (
+     IN PFCB Fcb,
+     IN BOOLEAN Wait
+@@ -159,6 +160,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdReleaseFromCache (
+     IN PFCB Fcb
+     )
+@@ -193,6 +195,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdNoopAcquire (
+     IN PVOID Fcb,
+     IN BOOLEAN Wait
+@@ -224,6 +227,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdNoopRelease (
+     IN PVOID Fcb
+     )
+@@ -251,6 +255,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdAcquireForCreateSection (
+     IN PFILE_OBJECT FileObject
+     )
+@@ -298,6 +303,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdReleaseForCreateSection (
+     IN PFILE_OBJECT FileObject
+     )
+Index: drivers/filesystems/cdfs_new/namesup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/namesup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/namesup.c	(working copy)
+@@ -206,7 +206,7 @@
+ 
+ {
+     NTSTATUS Status;
+-    PVOID NewBuffer;
++    //PVOID NewBuffer; /* ReactOS Change: GCC Uninitialized variable */
+ 
+     PAGED_CODE();
+ 
+Index: drivers/filesystems/cdfs_new/cdinit.c
+===================================================================
+--- drivers/filesystems/cdfs_new/cdinit.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/cdinit.c	(working copy)
+@@ -22,12 +22,14 @@
+ #define BugCheckFileId                   (CDFS_BUG_CHECK_CDINIT)
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ DriverEntry(
+     IN PDRIVER_OBJECT DriverObject,
+     IN PUNICODE_STRING RegistryPath
+     );
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdUnload(
+     IN PDRIVER_OBJECT DriverObject
+     );
+@@ -39,6 +41,7 @@
+     );
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdShutdown (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp
+@@ -57,6 +60,7 @@
+ //
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ DriverEntry(
+     IN PDRIVER_OBJECT DriverObject,
+     IN PUNICODE_STRING RegistryPath
+@@ -169,6 +173,7 @@
+ }
+ 
+ NTSTATUS
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdShutdown (
+     IN PDEVICE_OBJECT DeviceObject,
+     IN PIRP Irp
+@@ -200,6 +205,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdUnload(
+     IN PDRIVER_OBJECT DriverObject
+     )
+@@ -310,10 +316,10 @@
+     //  Initialize the cache manager callback routines
+     //
+ 
+-    CdData.CacheManagerCallbacks.AcquireForLazyWrite  = &CdAcquireForCache;
+-    CdData.CacheManagerCallbacks.ReleaseFromLazyWrite = &CdReleaseFromCache;
+-    CdData.CacheManagerCallbacks.AcquireForReadAhead  = &CdAcquireForCache;
+-    CdData.CacheManagerCallbacks.ReleaseFromReadAhead = &CdReleaseFromCache;
++    CdData.CacheManagerCallbacks.AcquireForLazyWrite  = (PVOID)&CdAcquireForCache;/* ReactOS Change: GCC "assignment from incompatible pointer type" */
++    CdData.CacheManagerCallbacks.ReleaseFromLazyWrite = (PVOID)&CdReleaseFromCache;/* ReactOS Change: GCC "assignment from incompatible pointer type" */
++    CdData.CacheManagerCallbacks.AcquireForReadAhead  = (PVOID)&CdAcquireForCache;/* ReactOS Change: GCC "assignment from incompatible pointer type" */
++    CdData.CacheManagerCallbacks.ReleaseFromReadAhead = (PVOID)&CdReleaseFromCache;/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+ 
+     CdData.CacheManagerVolumeCallbacks.AcquireForLazyWrite  = &CdNoopAcquire;
+     CdData.CacheManagerVolumeCallbacks.ReleaseFromLazyWrite = &CdNoopRelease;
+Index: drivers/filesystems/cdfs_new/cdstruc.h
+===================================================================
+--- drivers/filesystems/cdfs_new/cdstruc.h	(revision 34615)
++++ drivers/filesystems/cdfs_new/cdstruc.h	(working copy)
+@@ -504,8 +504,8 @@
+     //
+ 
+     ULONG VcbCleanup;
+-    ULONG VcbReference;
+-    ULONG VcbUserReference;
++    LONG VcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
++    LONG VcbUserReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+ 
+     //
+     //  Fcb for the Volume Dasd file, root directory and the Path Table.
+@@ -655,7 +655,7 @@
+     //  executed later.
+     //
+ 
+-    ULONG PostedRequestCount;
++    LONG PostedRequestCount; /* ReactOS Change: GCC "pointer targets in passing argument 1 of 'InterlockedDecrement' differ in signedness" */
+ 
+     //
+     //  The following field indicates the number of IRP's waiting
+@@ -878,7 +878,7 @@
+     //
+ 
+     ULONG FcbCleanup;
+-    ULONG FcbReference;
++    LONG FcbReference; /* ReactOS Change: GCC 'pointer targets in passing argument 1 of 'InterlockedXxx' differ in signedness */
+     ULONG FcbUserReference;
+ 
+     //
+Index: drivers/filesystems/cdfs_new/lockctrl.c
+===================================================================
+--- drivers/filesystems/cdfs_new/lockctrl.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/lockctrl.c	(working copy)
+@@ -89,7 +89,7 @@
+     Status = FsRtlCheckOplock( &Fcb->Oplock,
+                                Irp,
+                                IrpContext,
+-                               CdOplockComplete,
++                               (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                NULL );
+ 
+     //
+@@ -138,6 +138,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastLock (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+@@ -246,8 +247,8 @@
+         //
+         //  Now call the FsRtl routine to perform the lock request.
+         //
+-
+-        if (Results = FsRtlFastLock( Fcb->FileLock,
++        /* ReactOS Change: GCC "suggest parentheses around assignment used as truth value" */
++        if ((Results = FsRtlFastLock( Fcb->FileLock,
+                                      FileObject,
+                                      FileOffset,
+                                      Length,
+@@ -257,7 +258,7 @@
+                                      ExclusiveLock,
+                                      IoStatus,
+                                      NULL,
+-                                     FALSE )) {
++                                     FALSE ))) {
+ 
+             //
+             //  Set the flag indicating if Fast I/O is questionable.  We
+@@ -284,6 +285,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockSingle (
+     IN PFILE_OBJECT FileObject,
+     IN PLARGE_INTEGER FileOffset,
+@@ -424,6 +426,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockAll (
+     IN PFILE_OBJECT FileObject,
+     PEPROCESS ProcessId,
+@@ -546,6 +549,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastUnlockAllByKey (
+     IN PFILE_OBJECT FileObject,
+     PVOID ProcessId,
+Index: drivers/filesystems/cdfs_new/cleanup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/cleanup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/cleanup.c	(working copy)
+@@ -159,7 +159,7 @@
+     //  Use a try-finally to facilitate cleanup.
+     //
+ 
+-    try {
++    //try { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+     
+         //
+         //  Case on the type of open that we are trying to cleanup.
+@@ -279,7 +279,7 @@
+ 
+         IoRemoveShareAccess( FileObject, &Fcb->ShareAccess );
+ 
+-    } finally {
++    //} finally { /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+ 
+         CdReleaseFcb( IrpContext, Fcb );
+         
+@@ -287,7 +287,7 @@
+             
+             FsRtlNotifyVolumeEvent( FileObject, FSRTL_VOLUME_UNLOCK );
+         }
+-    }
++    //} /* ReactOS Change: Manual removal of SEH since macros to hack around it don't allow multiple SEH usage within one function */
+ 
+     //
+     //  If appropriate, try to spark teardown by purging the volume.  Should
+Index: drivers/filesystems/cdfs_new/strucsup.c
+===================================================================
+--- drivers/filesystems/cdfs_new/strucsup.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/strucsup.c	(working copy)
+@@ -438,7 +438,7 @@
+ --*/
+ 
+ {
+-    ULONG Shift;
++    //ULONG Shift; /* ReactOS Change: GCC Unused variable */
+     ULONG StartingBlock;
+     ULONG ByteCount;
+ 
+Index: drivers/filesystems/cdfs_new/fileinfo.c
+===================================================================
+--- drivers/filesystems/cdfs_new/fileinfo.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/fileinfo.c	(working copy)
+@@ -460,6 +460,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryBasicInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+@@ -577,6 +578,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryStdInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+@@ -704,6 +706,7 @@
+ 
+ 
+ BOOLEAN
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdFastQueryNetworkInfo (
+     IN PFILE_OBJECT FileObject,
+     IN BOOLEAN Wait,
+Index: drivers/filesystems/cdfs_new/nodetype.h
+===================================================================
+--- drivers/filesystems/cdfs_new/nodetype.h	(revision 34615)
++++ drivers/filesystems/cdfs_new/nodetype.h	(working copy)
+@@ -97,6 +97,8 @@
+ #define CDFS_BUG_CHECK_VOLINFO           (0x001b0000)
+ #define CDFS_BUG_CHECK_WORKQUE           (0x001c0000)
+ 
++/* ReactOS Change: Need to add to reactos.mc */
++#define CDFS_FILE_SYSTEM                 ((ULONG)0x00000026L)
+ #define CdBugCheck(A,B,C) { KeBugCheckEx(CDFS_FILE_SYSTEM, BugCheckFileId | __LINE__, A, B, C ); }
+ 
+ #endif // _NODETYPE_
+Index: drivers/filesystems/cdfs_new/fsctrl.c
+===================================================================
+--- drivers/filesystems/cdfs_new/fsctrl.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/fsctrl.c	(working copy)
+@@ -82,7 +82,8 @@
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+     );
+-
++    
++NTSTATUS /* ReactOS Change: Function did not have a type??? */
+ CdIsVolumeDirty (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+@@ -918,7 +919,7 @@
+ 
+         if (CdIsRemount( IrpContext, Vcb, &OldVcb )) {
+ 
+-            KIRQL SavedIrql;
++            //KIRQL SavedIrql; /* ReactOS Change: GCC Unused variable */
+ 
+             ASSERT( NULL != OldVcb->SwapVpb );
+ 
+@@ -1374,7 +1375,7 @@
+                         //  Compute the length of the volume name
+                         //
+ 
+-                        AnsiLabel.Buffer = CdRvdVolId( RawIsoVd, Vcb->VcbState );
++                        AnsiLabel.Buffer = (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ); /* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+                         AnsiLabel.MaximumLength = AnsiLabel.Length = VOLUME_ID_LENGTH;
+ 
+                         UnicodeLabel.MaximumLength = VOLUME_ID_LENGTH * sizeof( WCHAR );
+@@ -1401,7 +1402,7 @@
+                     } else {
+ 
+                         CdConvertBigToLittleEndian( IrpContext,
+-                                                    CdRvdVolId( RawIsoVd, Vcb->VcbState ),
++                                                    (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+                                                     VOLUME_ID_LENGTH,
+                                                     (PCHAR) VolumeLabel );
+ 
+@@ -2005,7 +2006,7 @@
+ //
+ //  Local support routine
+ //
+-
++NTSTATUS /* ReactOS Change: Function did not have a type??? */
+ CdIsVolumeDirty (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+@@ -2294,9 +2295,9 @@
+ 
+     Status = ObReferenceObjectByHandle( Handle,
+                                         0,
+-                                        *IoFileObjectType,
++                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibily with exported kernel data */
+                                         KernelMode,
+-                                        &FileToMarkBad,
++                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
+                                         NULL );
+ 
+     if (!NT_SUCCESS(Status)) {
+@@ -2642,8 +2643,8 @@
+                     //  The track address is BigEndian, we need to flip the bytes.
+                     //
+ 
+-                    Source = (PUCHAR) &CdromToc->TrackData[0].Address[3];
+-                    Dest = (PUCHAR) &BaseSector;
++                    Source = (PCHAR) &CdromToc->TrackData[0].Address[3];/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
++                    Dest = (PCHAR) &BaseSector; /* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+ 
+                     do {
+ 
+@@ -3118,7 +3119,7 @@
+         if (NT_SUCCESS( RtlOemToUnicodeN( &Vcb->Vpb->VolumeLabel[0],
+                                           MAXIMUM_VOLUME_LABEL_LENGTH,
+                                           &Length,
+-                                          CdRvdVolId( RawIsoVd, Vcb->VcbState ),
++                                          (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+                                           VOLUME_ID_LENGTH ))) {
+ 
+             Vcb->Vpb->VolumeLabelLength = (USHORT) Length;
+@@ -3131,7 +3132,7 @@
+     } else {
+ 
+         CdConvertBigToLittleEndian( IrpContext,
+-                                    CdRvdVolId( RawIsoVd, Vcb->VcbState ),
++                                    (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+                                     VOLUME_ID_LENGTH,
+                                     (PCHAR) Vcb->Vpb->VolumeLabel );
+ 
+Index: drivers/filesystems/cdfs_new/workque.c
+===================================================================
+--- drivers/filesystems/cdfs_new/workque.c	(revision 34615)
++++ drivers/filesystems/cdfs_new/workque.c	(working copy)
+@@ -97,6 +97,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdPrePostIrp (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+@@ -209,6 +210,7 @@
+ 
+ 
+ VOID
++NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ CdOplockComplete (
+     IN PIRP_CONTEXT IrpContext,
+     IN PIRP Irp
+@@ -386,7 +388,7 @@
+     //
+ 
+     ExInitializeWorkItem( &IrpContext->WorkQueueItem,
+-                          CdFspDispatch,
++                          (PVOID)CdFspDispatch,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                           IrpContext );
+ 
+     ExQueueWorkItem( &IrpContext->WorkQueueItem, CriticalWorkQueue );

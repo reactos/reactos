@@ -123,6 +123,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
     IN PFCB Fcb,
     IN BOOLEAN Wait
@@ -159,6 +160,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
     IN PFCB Fcb
     )
@@ -193,6 +195,7 @@ Return Value:
 
 
 BOOLEAN
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
     IN PVOID Fcb,
     IN BOOLEAN Wait
@@ -224,6 +227,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
     IN PVOID Fcb
     )
@@ -251,6 +255,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCreateSection (
     IN PFILE_OBJECT FileObject
     )
@@ -298,6 +303,7 @@ Return Value:
 
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
     IN PFILE_OBJECT FileObject
     )

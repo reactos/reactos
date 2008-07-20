@@ -77,6 +77,7 @@ CdRemoveClose (
     );
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID Context
@@ -136,8 +137,8 @@ Return Value:
     //
     //  Continue processing until there are no more closes to process.
     //
-
-    while (IrpContext = CdRemoveClose( Vcb )) {
+    /* ReactOS Change: "GCC suggest parentheses around assignment used as truth value" */
+    while ((IrpContext = CdRemoveClose( Vcb ))) {
 
         //
         //  If we don't have an IrpContext then use the one on the stack.
@@ -165,7 +166,7 @@ Return Value:
             //  Free the IrpContextLite.
             //
 
-            CdFreeIrpContextLite( (PIRP_CONTEXT_LITE) IrpContext );
+            CdFreeIrpContextLite( IrpContext ); /* ReactOS Change: GCC "error: invalid lvalue in unary '&'" */
 
             //
             //  Remember we have the IrpContext from the stack.
@@ -662,6 +663,7 @@ Return Value:
 }
 
 VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdCloseWorker (
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID Context

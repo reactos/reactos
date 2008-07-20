@@ -82,7 +82,8 @@ CdDismountVolume (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
     );
-
+    
+NTSTATUS /* ReactOS Change: Function did not have a type??? */
 CdIsVolumeDirty (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -918,7 +919,7 @@ Return Value:
 
         if (CdIsRemount( IrpContext, Vcb, &OldVcb )) {
 
-            KIRQL SavedIrql;
+            //KIRQL SavedIrql; /* ReactOS Change: GCC Unused variable */
 
             ASSERT( NULL != OldVcb->SwapVpb );
 
@@ -1374,7 +1375,7 @@ Return Value:
                         //  Compute the length of the volume name
                         //
 
-                        AnsiLabel.Buffer = CdRvdVolId( RawIsoVd, Vcb->VcbState );
+                        AnsiLabel.Buffer = (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ); /* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
                         AnsiLabel.MaximumLength = AnsiLabel.Length = VOLUME_ID_LENGTH;
 
                         UnicodeLabel.MaximumLength = VOLUME_ID_LENGTH * sizeof( WCHAR );
@@ -1401,7 +1402,7 @@ Return Value:
                     } else {
 
                         CdConvertBigToLittleEndian( IrpContext,
-                                                    CdRvdVolId( RawIsoVd, Vcb->VcbState ),
+                                                    (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
                                                     VOLUME_ID_LENGTH,
                                                     (PCHAR) VolumeLabel );
 
@@ -2005,7 +2006,7 @@ Return Value:
 //
 //  Local support routine
 //
-
+NTSTATUS /* ReactOS Change: Function did not have a type??? */
 CdIsVolumeDirty (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp
@@ -2294,9 +2295,9 @@ Return Value:
 
     Status = ObReferenceObjectByHandle( Handle,
                                         0,
-                                        *IoFileObjectType,
+                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibily with exported kernel data */
                                         KernelMode,
-                                        &FileToMarkBad,
+                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
                                         NULL );
 
     if (!NT_SUCCESS(Status)) {
@@ -2642,8 +2643,8 @@ Return Value:
                     //  The track address is BigEndian, we need to flip the bytes.
                     //
 
-                    Source = (PUCHAR) &CdromToc->TrackData[0].Address[3];
-                    Dest = (PUCHAR) &BaseSector;
+                    Source = (PCHAR) &CdromToc->TrackData[0].Address[3];/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
+                    Dest = (PCHAR) &BaseSector; /* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
 
                     do {
 
@@ -3118,7 +3119,7 @@ Return Value:
         if (NT_SUCCESS( RtlOemToUnicodeN( &Vcb->Vpb->VolumeLabel[0],
                                           MAXIMUM_VOLUME_LABEL_LENGTH,
                                           &Length,
-                                          CdRvdVolId( RawIsoVd, Vcb->VcbState ),
+                                          (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
                                           VOLUME_ID_LENGTH ))) {
 
             Vcb->Vpb->VolumeLabelLength = (USHORT) Length;
@@ -3131,7 +3132,7 @@ Return Value:
     } else {
 
         CdConvertBigToLittleEndian( IrpContext,
-                                    CdRvdVolId( RawIsoVd, Vcb->VcbState ),
+                                    (PCHAR)CdRvdVolId( RawIsoVd, Vcb->VcbState ),/* ReactOS Change: GCC "pointer targets in assignment differ in signedness" */
                                     VOLUME_ID_LENGTH,
                                     (PCHAR) Vcb->Vpb->VolumeLabel );
 

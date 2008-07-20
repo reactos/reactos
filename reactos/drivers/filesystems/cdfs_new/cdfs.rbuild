@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="cdfs_new" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs_new.sys">
+<module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<include base="cdfs_new">.</include>
+	<include base="cdfs">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
     <file>allocsup.c</file>
@@ -32,6 +32,5 @@
     <file>volinfo.c</file>
     <file>workque.c</file>
 	<file>cdfs.rc</file>
-    <compilerflag>-fms-extensions</compilerflag>
 	<pch>cdprocs.h</pch>
 </module>
