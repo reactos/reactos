@@ -81,6 +81,9 @@ typedef struct _RAMDISK_DRIVE_EXTENSION
     LONGLONG DiskLength;
     LONG DiskOffset;
     WCHAR DriveLetter;
+    ULONG BytesPerSector;
+    ULONG SectorsPerTrack;
+    ULONG NumberOfHeads;
 } RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
 ULONG MaximumViewLength;
@@ -491,7 +494,43 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DeviceName.Buffer = NULL;
         SymbolicLinkName.Buffer = NULL;
         GuidString.Buffer = NULL;
-	}
+        
+        //
+        // Only support ISO stuff for now
+        //
+        ASSERT(Input->Options.ExportAsCd == TRUE);
+        ASSERT(Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+        
+        //
+        // Setup partition parameters
+        //
+        DriveExtension->BytesPerSector = 2048; // 512 for Disk
+        DriveExtension->SectorsPerTrack = 32; // 128 for disk
+        DriveExtension->NumberOfHeads = 64; // 16 for disk
+        
+        //
+        // Acquire the disk lock
+        //
+        KeEnterCriticalRegion();
+        ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+        
+        //
+        // Insert us
+        //
+        InsertTailList(&DeviceExtension->DiskList, &DriveExtension->DiskList);
+        
+        //
+        // Release the lock
+        //
+        ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+        KeLeaveCriticalRegion();
+        
+        //
+        // Clear init flag
+        //
+        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+        return STATUS_SUCCESS;
+    }
     
 FailCreate:
     UNIMPLEMENTED;
