@@ -3,7 +3,7 @@
 /*
  * @unimplemented
  */
-unsigned long CDECL _beginthreadex(
+uintptr_t CDECL _beginthreadex(
     void* security,
     unsigned stack_size,
     unsigned (__stdcall *start_address)(void*),
@@ -25,7 +25,7 @@ unsigned long CDECL _beginthreadex(
     _dosmaperr( GetLastError() );
     }
 
-  return (unsigned long) NewThread;
+  return (uintptr_t) NewThread;
 }
 
 

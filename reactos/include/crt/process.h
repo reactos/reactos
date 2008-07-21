@@ -17,6 +17,8 @@
 /* Includes a definition of _pid_t and pid_t */
 #include <sys/types.h>
 
+#include <stdint.h>
+
 /*
  * Constants for cwait actions.
  * Obsolete for Win32.
@@ -92,12 +94,12 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _spawnvpe	(int, const char*, const char* con
  *
  * NOTE: No old names for these functions. Use the underscore.
  */
-_CRTIMP unsigned long __cdecl __MINGW_NOTHROW
+_CRTIMP uintptr_t __cdecl __MINGW_NOTHROW
 	_beginthread	(void (*)(void *), unsigned, void*);
 _CRTIMP void __cdecl __MINGW_NOTHROW _endthread	(void);
 
 #ifdef	__MSVCRT__
-_CRTIMP unsigned long __cdecl __MINGW_NOTHROW
+_CRTIMP uintptr_t __cdecl __MINGW_NOTHROW
 	_beginthreadex	(void *, unsigned, unsigned (__stdcall *) (void *),
 			 void*, unsigned, unsigned*);
 _CRTIMP void __cdecl __MINGW_NOTHROW _endthreadex (unsigned);

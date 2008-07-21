@@ -80,7 +80,7 @@ static DWORD CALLBACK _beginthread_trampoline(LPVOID arg)
 /*********************************************************************
  *		_beginthread (MSVCRT.@)
  */
-unsigned long _beginthread(
+uintptr_t _beginthread(
   _beginthread_start_routine_t start_address, /* [in] Start address of routine that begins execution of new thread */
   unsigned int stack_size, /* [in] Stack size for new thread or 0 */
   void *arglist)           /* [in] Argument list to be passed to new thread or NULL */
@@ -98,7 +98,7 @@ unsigned long _beginthread(
   trampoline->arglist = arglist;
 
   /* FIXME */
-  return (unsigned long)CreateThread(NULL, stack_size, _beginthread_trampoline,
+  return (uintptr_t)CreateThread(NULL, stack_size, _beginthread_trampoline,
 				     trampoline, 0, NULL);
 }
 
