@@ -112,13 +112,13 @@ RtlImageRvaToSection (
 	ULONG Count;
 
 	Count = SWAPW(NtHeader->FileHeader.NumberOfSections);
-	Section = (PIMAGE_SECTION_HEADER)((ULONG)&NtHeader->OptionalHeader +
-	                                  SWAPW(NtHeader->FileHeader.SizeOfOptionalHeader));
-	while (Count)
+	Section = IMAGE_FIRST_SECTION(NtHeader);
+
+	while (Count--)
 	{
 		Va = SWAPD(Section->VirtualAddress);
 		if ((Va <= Rva) &&
-		    (Rva < Va + SWAPD(Section->SizeOfRawData)))
+		    (Rva < Va + SWAPD(Section->Misc.VirtualSize)))
 			return Section;
 		Section++;
 	}
@@ -145,7 +145,7 @@ RtlImageRvaToVa (
 
 	if (Section == NULL ||
 	    Rva < SWAPD(Section->VirtualAddress) ||
-	    Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData))
+	    Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize))
 	{
 		Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
 		if (Section == NULL)
