@@ -565,7 +565,7 @@ QSI_DEF(SystemPerformanceInformation)
 
 	Spi->AvailablePages = MmStats.NrFreePages;
 /*
-        Add up all the used "Commitied" memory + pagefile.
+        Add up all the used "Committed" memory + pagefile.
         Not sure this is right. 8^\
  */
 	Spi->CommittedPages = MiMemoryConsumers[MC_PPOOL].PagesUsed +
@@ -800,7 +800,7 @@ QSI_DEF(SystemProcessInformation)
 
 				ThreadInfo->KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
 				ThreadInfo->UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
-//				SpiCur->TH[i].CreateTime = current->CreateTime;
+				ThreadInfo->CreateTime.QuadPart = current->CreateTime.QuadPart;
 				ThreadInfo->WaitTime = current->Tcb.WaitTime;
 				ThreadInfo->StartAddress = (PVOID) current->StartAddress;
 				ThreadInfo->ClientId = current->Cid;
@@ -902,12 +902,12 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	Prcb = KeGetPcr()->Prcb;
 	for (i = 0; i < KeNumberProcessors; i++)
 	{
-	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL; // IdleTime
-           Spi->KernelTime.QuadPart =  Prcb->KernelTime * 100000LL; // KernelTime
+	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL;
+           Spi->KernelTime.QuadPart =  Prcb->KernelTime * 100000LL;
            Spi->UserTime.QuadPart = Prcb->UserTime * 100000LL;
            Spi->DpcTime.QuadPart = Prcb->DpcTime * 100000LL;
            Spi->InterruptTime.QuadPart = Prcb->InterruptTime * 100000LL;
-           Spi->InterruptCount = Prcb->InterruptCount; // Interrupt Count
+           Spi->InterruptCount = Prcb->InterruptCount;
 	   Spi++;
 	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
 	}
@@ -1180,6 +1180,7 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
   PKPRCB Prcb;
+  PKIPCR Pcr;
   LONG i;
   ULONG ti;
   PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
@@ -1194,12 +1195,13 @@ QSI_DEF(SystemInterruptInformation)
   Prcb = KeGetPcr()->Prcb;
   for (i = 0; i < KeNumberProcessors; i++)
   {
-    //sii->ContextSwitches = Prcb->KeContextSwitches;
-    sii->DpcCount = 0; /* FIXME */
-    sii->DpcRate = 0; /* FIXME */
+    Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+    sii->ContextSwitches = Pcr->ContextSwitches;
+    sii->DpcCount = Prcb->DpcData[0].DpcCount;
+    sii->DpcRate = Prcb->DpcRequestRate;
     sii->TimeIncrement = ti;
-    sii->DpcBypassCount = 0; /* FIXME */
-    sii->ApcBypassCount = 0; /* FIXME */
+    sii->DpcBypassCount = 0;
+    sii->ApcBypassCount = 0;
     sii++;
     Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
   }
