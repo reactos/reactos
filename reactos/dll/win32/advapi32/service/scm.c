@@ -608,6 +608,8 @@ CreateServiceW(SC_HANDLE hSCManager,
             lpStr = lpStr + dwLength;
         }
         dwDependenciesLength++;
+
+        dwDependenciesLength *= sizeof(WCHAR);
     }
 
     /* FIXME: Encrypt the password */
