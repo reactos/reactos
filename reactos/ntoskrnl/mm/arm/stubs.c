@@ -642,10 +642,9 @@ MmGetPageProtect(IN PEPROCESS Process,
                  IN PVOID Address)
 {
     //
-    // TODO
+    // We don't enforce any protection on the pages -- they are all RWX
     //
-    UNIMPLEMENTED;
-    return 0;
+    return PAGE_READWRITE;
 }
 
 VOID

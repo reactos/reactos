@@ -746,7 +746,7 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemCodePage DATA
-NlsOemLeadByteInfo DATA
+NlsOemLeadByteInfo=_NlsOemLeadByteInfo
 NtAddAtom
 NtAdjustPrivilegesToken
 NtAlertThread
