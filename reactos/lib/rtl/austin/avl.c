@@ -45,7 +45,7 @@ void print_node(udict_t *ud, udict_node_t *node, int indent)
 		sprintf(buf+i, "Nil\n");
 		DbgPrint("%s", buf);
 	} else {
-		sprintf(buf+i, "Node %x (parent %x: balance %d)\n", (int)node, (int)node->parent, node->Balance);
+		sprintf(buf+i, "Node %p (parent %p: balance %d)\n", node, node->parent, node->Balance);
 		DbgPrint("%s", buf);
 		if( node->LeftChild != nil ) {
 			sprintf(buf+i, "--> Left\n");
