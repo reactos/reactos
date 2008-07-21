@@ -1,5 +1,4 @@
-; ReactOS win32k.sys exports
-; Currently all exports from Windows XP/2003 are listed, sorted by ordinal.
+; Win32 Kernel Driver Exports
 LIBRARY win32k
 EXPORTS
 FLOATOBJ_AddFloatObj@8
@@ -104,10 +103,11 @@ EngMarkBandingSurface@4
 EngModifySurface@32
 EngMovePointer@16
 EngMulDiv@12
-EngMultiByteToUnicodeN@20=NTOSKRNL.RtlMultiByteToUnicodeN
+EngMultiByteToUnicodeN@20
 EngMultiByteToWideChar@20
 EngNineGrid@36
 EngPaint@20
+EngPlgBlt@44
 EngProbeForRead@12=NTOSKRNL.ProbeForRead
 EngProbeForReadAndWrite@12=NTOSKRNL.ProbeForWrite
 EngQueryDeviceAttribute@24
@@ -133,7 +133,7 @@ EngStrokeAndFillPath@40
 EngStrokePath@32
 EngTextOut@40
 EngTransparentBlt@32
-EngUnicodeToMultiByteN@20=NTOSKRNL.RtlUnicodeToMultiByteN
+EngUnicodeToMultiByteN@20
 EngUnloadImage@4
 EngUnlockDirectDrawSurface@4
 EngUnlockDriverObj@4
@@ -225,4 +225,3 @@ _global_unwind2=NTOSKRNL._global_unwind2
 _itoa@12=NTOSKRNL._itoa
 _itow@12=NTOSKRNL._itow
 _local_unwind2=NTOSKRNL._local_unwind2
-;EOF

@@ -1,7 +1,3 @@
-# NAME                                      ARG_COUNT
-#
-# Funcs order should match Windows XP 5.1.2600 SP2
-#
 NtGdiAbortDoc                                    1
 NtGdiAbortPath                                   1
 NtGdiAddFontResourceW                            6
@@ -152,7 +148,6 @@ NtGdiExtTextOutW                                 9
 NtGdiFillPath                                    1
 NtGdiFillRgn                                     3
 NtGdiFlattenPath                                 1
-NtGdiFlushUserBatch                              0
 NtGdiFlush                                       0
 NtGdiForceUFIMapping                             2
 NtGdiFrameRgn                                    5
@@ -671,35 +666,5 @@ NtGdiSetPUMPDOBJ                                 4
 NtGdiBRUSHOBJ_DeleteRbrush                       2
 NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
-#
-#
-#ReactOS specific syscalls
-NtGdiSetDIBits                          7
-NtGdiSetViewportExtEx                   4
-NtGdiSetViewportOrgEx                   4
-NtGdiSetWindowExtEx                     4
-NtGdiSetWindowOrgEx                     4
-NtGdiGetFontFamilyInfo                  4
-NtGdiOffsetViewportOrgEx                4
-NtGdiOffsetWindowOrgEx                  4
-#
-NtUserBuildMenuItemList                 4
-NtUserCreateCursorIconHandle            2
-NtUserGetClassLong                      3
-NtUserGetMenuDefaultItem                3
-NtUserGetLastInputInfo                  1
-NtUserGetMinMaxInfo                     3
-NtUserGetMonitorInfo                    2
-NtUserGetScrollInfo                     3
-NtUserGetWindow                         2
-NtUserGetWindowLong                     3
-NtUserMenuInfo                          3
-NtUserMenuItemInfo                      5
-NtUserMonitorFromPoint                  3
-NtUserMonitorFromRect                   2
-NtUserRegisterClassEx                   6
-NtUserMonitorFromWindow                 2
-NtUserSendMessage                       5
-NtUserSendMessageTimeout                8
-NtUserSendNotifyMessage                 4
-NtUserSetScrollBarInfo                  3
+NtGdiMakeObjectXferable                          2
+NtGdiMakeObjectUnXferable                        1
