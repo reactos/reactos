@@ -832,6 +832,165 @@ SendIrpToThread(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
+PVOID
+NTAPI
+RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                IN LARGE_INTEGER Offset,
+                IN ULONG Length,
+                OUT PULONG OutputLength)
+{
+    DPRINT1("Mapping %lx bytes at %I64x\n", Length, Offset.QuadPart);
+    UNIMPLEMENTED;
+    while (TRUE);
+    return NULL;
+}
+
+PVOID
+NTAPI
+RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                  IN PVOID BaseAddress,
+                  IN LARGE_INTEGER Offset,
+                  IN ULONG Length)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return NULL;
+}
+
+NTSTATUS
+NTAPI
+RamdiskReadWriteReal(IN PIRP Irp,
+                     IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    PMDL Mdl;
+    PVOID CurrentBase, SystemVa, BaseAddress;
+    PIO_STACK_LOCATION IoStackLocation;
+    LARGE_INTEGER CurrentOffset;
+    ULONG BytesRead, BytesLeft, CopyLength;
+    PVOID Source, Destination;
+    NTSTATUS Status;
+    
+    //
+    // Get the MDL and check if it's mapped
+    //
+    Mdl = Irp->MdlAddress;
+    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+    {
+        //
+        // Use the mapped address
+        //
+        SystemVa = Mdl->MappedSystemVa;
+    }
+    else
+    {
+        //
+        // Map it ourselves
+        //
+        SystemVa = MmMapLockedPagesSpecifyCache(Mdl,
+                                                0,
+                                                MmCached,
+                                                NULL,
+                                                0, 
+                                                NormalPagePriority);
+    }
+    
+    //
+    // Make sure we were able to map it
+    //
+    CurrentBase = SystemVa;
+    if (!SystemVa) return STATUS_INSUFFICIENT_RESOURCES;
+    
+    //
+    // Initialize default
+    //
+    Irp->IoStatus.Information = 0;
+    
+    //
+    // Get the I/O Stack Location and capture the data
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    CurrentOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    BytesLeft = IoStackLocation->Parameters.Read.Length;
+    if (!BytesLeft) return STATUS_INVALID_PARAMETER;
+    
+    //
+    // Do the copy loop
+    //
+    DPRINT1("Initiating copy loop for %lx bytes at %p\n", BytesLeft, SystemVa);
+    while (TRUE)
+    {
+        //
+        // Map the pages
+        //
+        BaseAddress = RamdiskMapPages(DeviceExtension,
+                                      CurrentOffset,
+                                      BytesLeft,
+                                      &BytesRead);
+        if (!BaseAddress) return STATUS_INSUFFICIENT_RESOURCES;
+        
+        //
+        // Update our lengths
+        //
+        Irp->IoStatus.Information += BytesRead;
+        CopyLength = BytesRead;
+        
+        //
+        // Check if this was a read or write
+        //
+        Status = STATUS_SUCCESS;
+        if (IoStackLocation->MajorFunction == IRP_MJ_READ)
+        {
+            //
+            // Set our copy parameters
+            //
+            Destination = CurrentBase;
+            Source = BaseAddress;
+            goto DoCopy;
+        }
+        else if (IoStackLocation->MajorFunction == IRP_MJ_WRITE)
+        {
+            //
+            // Set our copy parameters
+            //
+            Destination = BaseAddress;
+            Source = CurrentBase;
+DoCopy:
+            //
+            // Copy the data
+            //
+            RtlCopyMemory(Destination, Source, CopyLength);
+        }
+        else
+        {
+            //
+            // Prepare us for failure
+            //
+            BytesLeft = CopyLength;
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        
+        //
+        // Unmap the pages
+        //
+        RamdiskUnmapPages(DeviceExtension,
+                          BaseAddress,
+                          CurrentOffset,
+                          BytesRead);
+        
+        //
+        // Update offset and bytes left
+        //
+        BytesLeft -= BytesRead;
+        CurrentOffset.QuadPart += BytesRead;
+        CurrentBase = (PVOID)((ULONG_PTR)CurrentBase + BytesRead);
+        
+        //
+        // Check if we're done
+        //
+        if (!BytesLeft) return Status;
+    }
+}
+
 NTSTATUS
 NTAPI
 RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
@@ -851,9 +1010,89 @@ NTAPI
 RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    PRAMDISK_DRIVE_EXTENSION DeviceExtension;
+    ULONG Length;
+    LARGE_INTEGER ByteOffset;
+    PIO_STACK_LOCATION IoStackLocation;
+    NTSTATUS Status, ReturnStatus;
+    
+    //
+    // Get the device extension and make sure this isn't a bus
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    if (DeviceExtension->Type == RamdiskBus)
+    {
+        //
+        // Fail
+        //
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        goto Complete;
+    }
+    
+    //
+    // Capture parameters
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    Length = IoStackLocation->Parameters.Read.Length;
+    ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    
+    //
+    // FIXME: Validate offset
+    //
+    
+    //
+    // FIXME: Validate sector
+    //
+    
+    //
+    // Validate write
+    //
+    if ((IoStackLocation->MajorFunction == IRP_MJ_WRITE) &&
+        (DeviceExtension->DiskOptions.Readonly))
+    {
+        //
+        // Fail, this is read-only
+        //
+        Status = STATUS_MEDIA_WRITE_PROTECTED;
+        goto Complete;
+    }
+    
+    //
+    // See if we want to do this sync or async
+    //
+    if (DeviceExtension->DiskType > FILE_DEVICE_CD_ROM)
+    {
+        //
+        // Do it sync
+        //
+        Status = RamdiskReadWriteReal(Irp, DeviceExtension);
+        goto Complete;
+    }
+    
+    //
+    // Queue it to the worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    ReturnStatus = STATUS_PENDING;
+    
+    //
+    // Check if we're pending or not
+    //
+    if (Status != STATUS_PENDING)
+    {
+Complete:
+        //
+        // Complete the IRP
+        //
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        ReturnStatus = Status;
+    }
+    
+    //
+    // Return to caller
+    //
+    return ReturnStatus;
 }
 
 NTSTATUS
