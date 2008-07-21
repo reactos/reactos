@@ -1813,6 +1813,7 @@ ProcessPageDlgProc(HWND hwndDlg,
 {
   PSETUPDATA SetupData;
   PREGISTRATIONNOTIFY RegistrationNotify;
+  static UINT oldActivityID = -1;
   WCHAR Title[64];
 
   /* Retrieve pointer to the global setup data */
@@ -1864,13 +1865,18 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
           WCHAR Activity[64];
           RegistrationNotify = (PREGISTRATIONNOTIFY) lParam;
-          if (0 != LoadStringW(hDllInstance, RegistrationNotify->ActivityID,
+	  // update if necessary only
+	  if (oldActivityID != RegistrationNotify->ActivityID)
+          {
+            if (0 != LoadStringW(hDllInstance, RegistrationNotify->ActivityID,
                                Activity,
                                sizeof(Activity) / sizeof(Activity[0])))
             {
               SendDlgItemMessageW(hwndDlg, IDC_ACTIVITY, WM_SETTEXT,
                                   0, (LPARAM) Activity);
             }
+	    oldActivityID = RegistrationNotify->ActivityID; 
+	  }
           SendDlgItemMessageW(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
                               (LPARAM)(NULL == RegistrationNotify->CurrentItem ?
                                        L"" : RegistrationNotify->CurrentItem));
