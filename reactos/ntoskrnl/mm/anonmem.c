@@ -656,7 +656,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
     * Yes, MmCreateMemoryArea does similar checks, but they don't return
     * the right status codes that a caller of this routine would expect.
     */
-   if (BaseAddress >= MM_HIGHEST_USER_ADDRESS)
+   if ((ULONG_PTR)BaseAddress >= USER_SHARED_DATA)
    {
       DPRINT1("Virtual allocation base above User Space\n");
       return STATUS_INVALID_PARAMETER_2;
@@ -666,7 +666,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       DPRINT1("Region size is invalid (zero)\n");
       return STATUS_INVALID_PARAMETER_4;
    }
-   if (((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (ULONG_PTR)BaseAddress) < RegionSize)
+   if ((USER_SHARED_DATA - (ULONG_PTR)BaseAddress) < RegionSize)
    {
       DPRINT1("Region size would overflow into kernel-memory\n");
       return STATUS_INVALID_PARAMETER_4;
@@ -726,12 +726,21 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
          }
          else if (MemoryAreaLength >= RegionSize)
          {
-            Status =
-               MmAlterRegion(AddressSpace,
-                             MemoryArea->StartingAddress,
-                             &MemoryArea->Data.SectionData.RegionListHead,
-                             BaseAddress, RegionSize,
-                             Type, Protect, MmModifyAttributes);
+            /* Region list initialized? */
+            if (MemoryArea->Data.SectionData.RegionListHead.Flink)
+            {
+               Status =
+                  MmAlterRegion(AddressSpace,
+                                MemoryArea->StartingAddress,
+                                &MemoryArea->Data.SectionData.RegionListHead,
+                                BaseAddress, RegionSize,
+                                Type, Protect, MmModifyAttributes);
+            }
+            else
+            {
+               Status = STATUS_ACCESS_VIOLATION;
+            }
+
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
             DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
