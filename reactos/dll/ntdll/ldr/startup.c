@@ -489,10 +489,10 @@ LdrpInit(PCONTEXT Context,
            DPRINT1("Failed to initialize image\n");
            ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
          }
-     }
 
-   /* Break into debugger */
-   if (Peb->BeingDebugged) DbgBreakPoint();
+       /* Break into debugger */
+       if (Peb->BeingDebugged) DbgBreakPoint();
+     }
 
    /* attach the thread */
    RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);

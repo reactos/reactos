@@ -342,6 +342,8 @@ NtGetContextThread(IN HANDLE ThreadHandle,
                                        (PVOID*)&Thread,
                                        NULL);
 
+    if (!NT_SUCCESS(Status)) return Status;
+
     /* Make sure it's not a system thread */
     if (Thread->SystemThread)
     {
@@ -376,6 +378,8 @@ NtSetContextThread(IN HANDLE ThreadHandle,
                                        PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
+
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Make sure it's not a system thread */
     if (Thread->SystemThread)
