@@ -573,16 +573,15 @@ modules\rosapps\applications\cmdutils\tee\tee.exe                               
 modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
 modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
 modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
-modules\rosapps\applications\devutils\cputointel\cputointel.exe                         1   optional
 modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
 modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
 modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
+modules\rosapps\applications\devutils\gettype\gettype.exe                               1   optional
 modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
 modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
 modules\rosapps\applications\downloader\downloader.exe                                  1   optional
 modules\rosapps\applications\downloader\downloader.xml                                  1   optional
 modules\rosapps\applications\fontview\fontview.exe                                      1   optional
-modules\rosapps\applications\gettype\gettype.exe                                        1   optional
 modules\rosapps\applications\imagesoft\imagesoft.exe                                    1   optional
 modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
 modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
