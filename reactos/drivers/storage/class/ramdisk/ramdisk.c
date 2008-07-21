@@ -29,6 +29,14 @@
 
 /* GLOBALS ********************************************************************/
 
+#define RAMDISK_SESSION_SIZE \
+    FIELD_OFFSET(CDROM_TOC, TrackData) + sizeof(TRACK_DATA)
+    
+#define RAMDISK_TOC_SIZE \
+    FIELD_OFFSET(CDROM_TOC, TrackData) + 2 * sizeof(TRACK_DATA)
+                                    
+#define TOC_DATA_TRACK              (0x04)
+
 typedef enum _RAMDISK_DEVICE_TYPE
 {
     RamdiskBus,
@@ -857,6 +865,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     PRAMDISK_BUS_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     ULONG Information;
+    PCDROM_TOC Toc;
     
     //
     // Grab the remove lock
@@ -934,11 +943,87 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 UNIMPLEMENTED;
                 while (TRUE);
                 break;
+            
+            //
+            // Hack to support ReactOS's broken CDFS
+            //
+            case IOCTL_CDROM_GET_LAST_SESSION:
+            
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < RAMDISK_SESSION_SIZE)
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
                 
+                //
+                // Fill out the TOC
+                //
+                Toc = Irp->AssociatedIrp.SystemBuffer;
+                Toc->Length[0] = 0;
+                Toc->Length[1] = RAMDISK_SESSION_SIZE - sizeof(Toc->Length);
+                Toc->FirstTrack = 1;
+                Toc->LastTrack = 1;
+                Toc->TrackData[0].Adr = 1;
+                Toc->TrackData[0].Control = TOC_DATA_TRACK;
+                Toc->TrackData[0].TrackNumber = 1;
+                Toc->TrackData[0].Address[0] =
+                Toc->TrackData[0].Address[1] =
+                Toc->TrackData[0].Address[2] =
+                Toc->TrackData[0].Address[3] = 0;
+                                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = RAMDISK_SESSION_SIZE;
+                break;
+                                
             case IOCTL_CDROM_READ_TOC:
                 
-                UNIMPLEMENTED;
-                while (TRUE);
+                //
+                // Validate the length
+                //
+                DPRINT1("Output: %lx\n", IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(CDROM_TOC))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Clear the TOC
+                //
+                Toc = Irp->AssociatedIrp.SystemBuffer;
+                RtlZeroMemory(Toc, sizeof(CDROM_TOC));
+                
+                //
+                // Fill it out
+                //
+                DPRINT1("TOC: %d\n", RAMDISK_TOC_SIZE);
+                Toc->Length[0] = 0;
+                Toc->Length[1] = RAMDISK_TOC_SIZE - sizeof(Toc->Length);
+                Toc->FirstTrack = 1;
+                Toc->LastTrack = 1;
+                Toc->TrackData[0].Adr = 1;
+                Toc->TrackData[0].Control = TOC_DATA_TRACK;
+                Toc->TrackData[0].TrackNumber = 1;
+                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = RAMDISK_TOC_SIZE;
                 break;
                 
             case IOCTL_DISK_SET_PARTITION_INFO:
