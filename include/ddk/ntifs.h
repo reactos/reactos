@@ -2966,6 +2966,16 @@ FsRtlIsFatDbcsLegal (
 NTKERNELAPI
 BOOLEAN
 NTAPI
+FsRtlIsHpfsDbcsLegal (
+    IN ANSI_STRING  DbcsName,
+    IN BOOLEAN      WildCardsPermissible,
+    IN BOOLEAN      PathNamePermissible,
+    IN BOOLEAN      LeadingBackslashPermissible)
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
 FsRtlIsNameInExpression (
     IN PUNICODE_STRING  Expression,
     IN PUNICODE_STRING  Name,

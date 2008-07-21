@@ -234,7 +234,7 @@ FsRtlInsertPerFileObjectContext
 FsRtlInsertPerStreamContext
 FsRtlIsDbcsInExpression
 FsRtlIsFatDbcsLegal@20
-FsRtlIsHpfsDbcsLegal
+FsRtlIsHpfsDbcsLegal@20
 FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
 FsRtlIsPagingFile
