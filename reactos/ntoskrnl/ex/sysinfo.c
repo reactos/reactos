@@ -717,7 +717,7 @@ QSI_DEF(SystemProcessInformation)
 		}
 		RtlZeroMemory(Spi, Size);
 
-		syspr = PsGetNextProcess(NULL);
+		syspr = PsIdleProcess;
 		pr = syspr;
 		pCur = (unsigned char *)Spi;
 
@@ -812,6 +812,9 @@ QSI_DEF(SystemProcessInformation)
 				ThreadInfo++;
 				current_entry = current_entry->Flink;
 			}
+
+			/* Handle idle process entry */
+			if (pr == PsIdleProcess) pr = NULL;
 
 			pr = PsGetNextProcess(pr);
 			nThreads = 0;
