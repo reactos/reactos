@@ -1268,8 +1268,23 @@ GetDllDirectoryA(
 BOOL STDCALL
 NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 {
-  return (wcschr(ExeName,
-                 L'\\') != NULL);
+    static const WCHAR env_name[] = {'N','o','D','e','f','a','u','l','t',
+                                     'C','u','r','r','e','n','t',
+                                     'D','i','r','e','c','t','o','r','y',
+                                     'I','n','E','x','e','P','a','t','h',0};
+    WCHAR env_val;
+
+    /* MSDN mentions some 'registry location'. We do not use registry. */
+    FIXME("(%s): partial stub\n", debugstr_w(ExeName));
+
+    if (wcschr(ExeName, L'\\'))
+        return TRUE;
+
+    /* Check the existence of the variable, not value */
+    if (!GetEnvironmentVariableW( env_name, &env_val, 1 ))
+        return TRUE;
+
+    return FALSE;
 }
 
 
@@ -1279,8 +1294,12 @@ NeedCurrentDirectoryForExePathW(LPCWSTR ExeName)
 BOOL STDCALL
 NeedCurrentDirectoryForExePathA(LPCSTR ExeName)
 {
-  return (strchr(ExeName,
-                 '\\') != NULL);
+    WCHAR *ExeNameW;
+
+    if (!(ExeNameW = FilenameA2W(ExeName, FALSE)))
+        return TRUE;
+
+    return NeedCurrentDirectoryForExePathW(ExeNameW);
 }
 
 
