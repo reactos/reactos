@@ -1,18 +1,16 @@
 <?xml version="1.0"?>
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<directory name="lib">
-		<xi:include href="lib/lib.rbuild" />
-	</directory>
-
 	<directory name="ctm">
 		<xi:include href="ctm/ctm.rbuild" />
 	</directory>
 
-	<!--
 	<directory name="chkdsk">
 		<xi:include href="chkdsk/chkdsk.rbuild" />
 	</directory>
-	-->
+
+	<directory name="chklib">
+		<xi:include href="chklib/chklib.rbuild" />
+	</directory>
 
 	<directory name="gettype">
 		<xi:include href="gettype/gettype.rbuild" />

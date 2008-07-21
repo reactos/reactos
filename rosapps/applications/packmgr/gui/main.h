@@ -38,8 +38,6 @@ int Ask (const WCHAR* message);
 
 /* Toolbar Releated */
 
-#define TBSTYLE_FLAT 2048
-
 // This is the struct where the toolbar is defined
 extern const TBBUTTON Buttons [];
 

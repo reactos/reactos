@@ -1,6 +1,5 @@
 <module name="regexpl" type="win32cui" installbase="system32" installname="regexpl.exe" stdlib="host">
 	<include base="regexpl">.</include>
-	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>

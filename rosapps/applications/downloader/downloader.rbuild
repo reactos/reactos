@@ -5,7 +5,6 @@
 		<include base="downloader">.</include>
 		<include base="expat">.</include>
 
-		<define name="__USE_W32API" />
 		<define name="WINVER">0x0501</define>
 		<define name="_WIN32_IE">0x0600</define>
 

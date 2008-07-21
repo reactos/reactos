@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="old_wordpad" type="win32gui" installbase="system32" installname="old_wordpad.exe" unicode="yes">
 	<include base="old_wordpad">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>kernel32</library>

@@ -36,11 +36,17 @@
 // 1999 April (Emanuele Aliberti)
 // 	Adapted for ReactOS and egcs.
 //
+// 2008 July (Aleksey Bragin)
+// 	Cleanup, use ReactOS's fmifs.h
+//
 //======================================================================
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
 #define UNICODE
 #include <windows.h>
 #include <stdio.h>
-#include <fmifs.h>
+#include <ndk/ntndk.h>
+#include <fmifs/fmifs.h>
 #define _UNICODE 1
 #include <tchar.h>
 #include "config.h"
@@ -233,12 +239,12 @@ ChkdskCallback(
 		wprintf(L"UNKNOWN5\r");
 		break;
 
-	case UNKNOWN7:
-		wprintf(L"UNKNOWN7\r");
+	case FSNOTSUPPORTED:
+		wprintf(L"FSNOTSUPPORTED\r");
 		break;
 
-	case UNKNOWN8:
-		wprintf(L"UNKNOWN8\r");
+	case VOLUMEINUSE:
+		wprintf(L"VOLUMEINUSE\r");
 		break;
 
 	case UNKNOWN9:
@@ -267,6 +273,10 @@ ChkdskCallback(
 
 	case DONEWITHSTRUCTURE:
 		wprintf(L"DONEWITHSTRUCTURE\r");
+		break;
+
+	case CLUSTERSIZETOOSMALL:
+		wprintf(L"CLUSTERSIZETOOSMALL\r");
 		break;
 
 	case PROGRESS:

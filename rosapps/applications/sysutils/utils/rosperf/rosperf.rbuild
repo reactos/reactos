@@ -1,6 +1,5 @@
 <module name="rosperf" type="win32cui" installbase="system32" installname="rosperf.exe">
     <include base="rosperf">.</include>
-    <define name="__USE_W32API" />
     <define name="UNICODE" />
     <define name="WINVER">0x0501</define>
     <library>version</library>

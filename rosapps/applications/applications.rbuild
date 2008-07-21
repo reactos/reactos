@@ -25,6 +25,11 @@
 		<xi:include href="fraginator/fraginator.rbuild" />
 	</directory>
 -->
+
+	<directory name="imagesoft">
+		<xi:include href="imagesoft/imagesoft.rbuild" />
+	</directory>
+
 	<directory name="magnify">
 		<xi:include href="magnify/magnify.rbuild" />
 	</directory>
@@ -37,11 +42,9 @@
 		<xi:include href="notevil/notevil.rbuild" />
 	</directory>
 
-	<!--
 	<directory name="packmgr">
 		<xi:include href="packmgr/directory.rbuild" />
 	</directory>
-	-->
 
 	<directory name="sysutils">
 		<xi:include href="sysutils/sysutils.rbuild" />

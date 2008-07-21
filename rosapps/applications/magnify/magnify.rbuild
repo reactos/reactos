@@ -2,7 +2,6 @@
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="magnify" type="win32gui" installbase="system32" installname="magnify.exe">
 	<include base="magnify">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>user32</library>

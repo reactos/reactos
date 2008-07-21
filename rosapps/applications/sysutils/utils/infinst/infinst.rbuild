@@ -1,5 +1,4 @@
 <module name="infinst" type="win32cui" installbase="bin" installname="infinst.exe" >
-	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>user32</library>

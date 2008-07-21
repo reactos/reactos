@@ -2,7 +2,6 @@
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="imagesoft" type="win32gui" installbase="system32" installname="imagesoft.exe" unicode="yes">
 		<include base="imagesoft">.</include>
-		<define name="__USE_W32API" />
 		<define name="_WIN32_IE">0x0600</define>
 		<define name="_WIN32_WINNT">0x0501</define>
 		<library>kernel32</library>
