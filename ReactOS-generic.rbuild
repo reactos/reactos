@@ -34,9 +34,6 @@
 	<directory name="base">
 		<xi:include href="base/base.rbuild" />
 	</directory>
-	<directory name="boot">
-		<xi:include href="boot/boot.rbuild" />
-	</directory>
 	<directory name="dll">
 		<xi:include href="dll/dll.rbuild" />
 	</directory>

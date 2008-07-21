@@ -1,6 +1,0 @@
-; File generated automatically from twain/twain_32.spec; do not edit!
-
-LIBRARY twain_32.dll
-
-EXPORTS
-DSM_Entry@24

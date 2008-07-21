@@ -1,8 +1,0 @@
-# Note: only listing sources needed for X server renderer
-MESA_DRIVER_X11_SOURCES = \
-xm_api.c \
-xm_buffer.c \
-xm_dd.c \
-xm_line.c \
-xm_span.c \
-xm_tri.c

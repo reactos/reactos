@@ -1,7 +1,0 @@
-LIBRARY kbsdll.dll
-
-EXPORTS
-KbSwitchSetHooks
-KbSwitchDeleteHooks
-
-; EOF

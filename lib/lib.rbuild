@@ -28,20 +28,11 @@
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>
-	<directory name="nls">
-		<xi:include href="nls/nls.rbuild" />
-	</directory>
 	<directory name="ntdllsys">
 		<xi:include href="ntdllsys/ntdllsys.rbuild" />
 	</directory>
-	<directory name="ppcmmu">
-		<xi:include href="ppcmmu/ppcmmu.rbuild" />
-	</directory>
 	<directory name="pseh">
 		<xi:include href="pseh/pseh.rbuild" />
-	</directory>
-	<directory name="recyclebin">
-		<xi:include href="recyclebin/recyclebin.rbuild" />
 	</directory>
 	<directory name="rossym">
 		<xi:include href="rossym/rossym.rbuild" />

@@ -1,7 +1,0 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Salvaschermo Logon"
-    IDS_TEXT        "Nessuna impostazione necessaria."
-END

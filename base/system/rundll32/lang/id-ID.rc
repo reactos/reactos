@@ -1,9 +1,0 @@
-#include "resource.h"
-
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DllNotLoaded, "LoadLibrary gagal untuk mengambil '%s'"
-    IDS_MissingEntry, "entry point hilang:%s\nDalam %s"
-END

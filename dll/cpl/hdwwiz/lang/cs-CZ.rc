@@ -1,7 +1,0 @@
-LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Pøidat hardware"
-	IDS_CPLDESCRIPTION "Pøidat hardware do tohoto poèítaèe."
-END

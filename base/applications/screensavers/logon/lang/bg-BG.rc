@@ -1,7 +1,0 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Входен екранен предпазител"
-    IDS_TEXT        "Няма възможност за настройки."
-END

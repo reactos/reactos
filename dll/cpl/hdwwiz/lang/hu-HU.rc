@@ -1,8 +1,0 @@
-// Hungarian resource file by Peter Lukacs
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Hardver hozzáadása"
-	IDS_CPLDESCRIPTION "Hardver hozzáadása."
-END

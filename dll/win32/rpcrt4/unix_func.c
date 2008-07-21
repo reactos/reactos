@@ -4,6 +4,7 @@
 #include <io.h>
 #include "unix_func.h"
 
+#if 0
 
 int
 poll(struct pollfd *fds,
@@ -167,3 +168,4 @@ inet_ntop (int af,
 
     return 0;
 }
+#endif

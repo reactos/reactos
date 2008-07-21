@@ -1,7 +1,0 @@
-LIBRARY devcpux.dll
-
-EXPORTS
-
-PropSheetExtProc@12
-
-; EOF

@@ -322,6 +322,7 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
     ULONG buflen = sizeof(IP_ADAPTER_INFO);
     PIP_ADAPTER_INFO adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
 
+#if 0
     if (GetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
         HeapFree(GetProcessHeap(), 0, adapter);
         adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
@@ -334,7 +335,9 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
     }
     /* We can't get a hardware address, just use random numbers.
        Set the multicast bit to prevent conflicts with real cards. */
-    else {
+    else
+#endif
+ {
         for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
             address[i] = rand() & 0xff;
         }
