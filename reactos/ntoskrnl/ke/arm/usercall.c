@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <internal/arm/ksarm.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -90,6 +91,7 @@ KiSystemService(IN PKTHREAD Thread,
     PVOID SystemCall;
     PVOID* Argument;
     PVOID Arguments[0x11]; // Maximum 17 arguments
+    KIRQL OldIrql;
     ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
     
     //
@@ -209,4 +211,53 @@ KiSystemService(IN PKTHREAD Thread,
     //
     TrapFrame->R0 = KiSyscallHandlers[ArgumentCount]((PVOID)SystemCall,
                                                      (PVOID)Arguments);
+                                                     
+    //
+    // Check if this was a user call
+    //
+    if (KiGetPreviousMode(TrapFrame) == UserMode)
+    {
+        //
+        // Make sure we didn't return at elevated IRQL
+        //
+        OldIrql = KeGetCurrentIrql();
+        if (OldIrql != PASSIVE_LEVEL)
+        {
+            //
+            // Forcibly put us in a sane state
+            //
+            KeGetPcr()->CurrentIrql = 0;
+            _disable();
+            
+            //
+            // Fail
+            //
+            KeBugCheckEx(IRQL_GT_ZERO_AT_SYSTEM_SERVICE,
+                         (ULONG_PTR)SystemCall,
+                         OldIrql,
+                         0,
+                         0);
+        }
+        
+        //
+        // Make sure we're not attached and that APCs are not disabled
+        //
+        if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
+            (KeGetCurrentThread()->CombinedApcDisable != 0))
+        {
+            //
+            // Fail
+            //
+            KeBugCheckEx(APC_INDEX_MISMATCH,
+                         (ULONG_PTR)SystemCall,
+                         KeGetCurrentThread()->ApcStateIndex,
+                         KeGetCurrentThread()->CombinedApcDisable,
+                         0);
+        }
+    }
+    
+    //
+    // Restore the old trap frame
+    //
+    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->PreviousTrapFrame;
 }

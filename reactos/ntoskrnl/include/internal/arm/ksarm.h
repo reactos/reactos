@@ -62,7 +62,7 @@
 .equ TrSvcLr,              0x44
 .equ TrPc,                 0x48
 .equ TrSpsr,               0x4C
-.equ TrapFrameLength,      (22 * 0x04)
+.equ TrapFrameLength,      (23 * 0x04)
 
 /*
  * Exception Frame offsets

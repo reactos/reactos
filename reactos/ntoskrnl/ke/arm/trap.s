@@ -31,7 +31,6 @@
     TEXTAREA
     NESTED_ENTRY KiUndefinedInstructionException
     PROLOG_END KiUndefinedInstructionException
-    
     //
     // Handle trap entry
     //
@@ -40,21 +39,14 @@
     //
     // Call the C handler
     //
-    adr lr, 1f
+    ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiUndefinedExceptionHandler
-    
-1:
-    //
-    // Handle trap exit
-    // 
-    TRAP_EPILOG 0 // NotFromSystemCall
-    
     ENTRY_END KiUndefinedInstructionException
+    
     
     NESTED_ENTRY KiSoftwareInterruptException
     PROLOG_END KiSoftwareInterruptException
-
     //
     // Handle trap entry
     //
@@ -63,21 +55,14 @@
     //
     // Call the C handler
     //
-    adr lr, 1f
+    ldr lr, =KiServiceExit
     mov r0, sp
     ldr pc, =KiSoftwareInterruptHandler
-    
-1:
-    //
-    // Handle trap exit
-    // 
-    TRAP_EPILOG 1 // FromSystemCall
-    
     ENTRY_END KiSoftwareInterruptException
+
 
     NESTED_ENTRY KiPrefetchAbortException
     PROLOG_END KiPrefetchAbortException
-    
     //
     // Handle trap entry
     //
@@ -86,21 +71,14 @@
     //
     // Call the C handler
     //
-    adr lr, 1f
+    ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiPrefetchAbortHandler
-    
-1:
-    //
-    // Handle trap exit
-    // 
-    TRAP_EPILOG 0 // NotFromSystemCall
-    
     ENTRY_END KiPrefetchAbortException
+
 
     NESTED_ENTRY KiDataAbortException
     PROLOG_END KiDataAbortException
-    
     //
     // Handle trap entry
     //
@@ -109,21 +87,14 @@
     //
     // Call the C handler
     //
-    adr lr, 1f
+    ldr lr, =KiExceptionExit
     mov r0, sp
     ldr pc, =KiDataAbortHandler
-
-1:
-    //
-    // Handle trap exit
-    // 
-    TRAP_EPILOG 0 // NotFromSystemCall
-    
     ENTRY_END KiDataAbortException
+
 
     NESTED_ENTRY KiInterruptException
     PROLOG_END KiInterruptException
-        
     //
     // Handle trap entry
     //
@@ -132,25 +103,35 @@
     //
     // Call the C handler
     //
-    adr lr, 1f
+    ldr lr, =KiExceptionExit
     mov r0, sp
     mov r1, #0
     ldr pc, =KiInterruptHandler
-    
-1:
-    //
-    // Handle trap exit
-    // 
-    TRAP_EPILOG 0 // NotFromSystemCall
-    
     ENTRY_END KiInterruptException
+
 
     NESTED_ENTRY KiFastInterruptException
     PROLOG_END KiFastInterruptException
-    
     //
     // FIXME-PERF: Implement FIQ exception
     //
     b .
-    
     ENTRY_END KiFastInterruptException
+    
+    
+    NESTED_ENTRY KiExceptionExit
+    PROLOG_END KiExceptionExit
+    //
+    // Handle trap exit
+    // 
+    TRAP_EPILOG 0 // NotFromSystemCall
+    ENTRY_END KiExceptionExit
+
+
+    NESTED_ENTRY KiServiceExit
+    PROLOG_END KiServiceExit
+    //
+    // Handle trap exit
+    // 
+    TRAP_EPILOG 1 // FromSystemCall
+    ENTRY_END KiServiceExit

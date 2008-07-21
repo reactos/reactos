@@ -457,7 +457,6 @@ KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
     //
     // Unhandled
     //
-    while (TRUE);
     DPRINT1("[PREFETCH ABORT] (%x) @ %p/%p/%p\n",
             KeArmInstructionFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     UNIMPLEMENTED;
@@ -516,6 +515,7 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     // Save old previous mode
     //
     TrapFrame->PreviousMode = PreviousMode;
+    TrapFrame->PreviousTrapFrame = (ULONG_PTR)Thread->TrapFrame;
     
     //
     // Save previous mode and trap frame
