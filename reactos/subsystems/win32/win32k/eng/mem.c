@@ -105,6 +105,69 @@ EngFreeUserMem(PVOID pv)
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
 }
 
+
+
+PVOID
+NTAPI
+HackSecureVirtualMemory(
+	IN PVOID Address,
+	IN SIZE_T Size,
+	IN ULONG ProbeMode,
+	OUT PVOID *SafeAddress)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+	PMDL mdl;
+	LOCK_OPERATION Operation;
+
+	if (ProbeMode == PAGE_READONLY) Operation = IoReadAccess;
+	else if (ProbeMode == PAGE_READWRITE) Operation = IoModifyAccess;
+	else return NULL;
+
+	mdl = IoAllocateMdl(Address, Size, FALSE, TRUE, NULL);
+	if (mdl == NULL)
+	{
+		return NULL;
+	}
+
+	_SEH_TRY
+	{
+		MmProbeAndLockPages(mdl, UserMode, Operation);
+	}
+	_SEH_HANDLE
+	{
+		Status = _SEH_GetExceptionCode();
+	}
+	_SEH_END
+
+	if (!NT_SUCCESS(Status))
+	{
+		IoFreeMdl(mdl);
+		return NULL;
+	}
+
+	*SafeAddress = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority);
+
+	if(!*SafeAddress)
+	{
+		MmUnlockPages(mdl);
+		IoFreeMdl(mdl);
+		return NULL;           
+	}
+
+	return mdl;
+}
+
+VOID
+NTAPI
+HackUnsecureVirtualMemory(
+	IN PVOID  SecureHandle)
+{
+	PMDL mdl = (PMDL)SecureHandle;
+
+	MmUnlockPages(mdl);
+	IoFreeMdl(mdl);  
+}
+
 /*
  * @implemented
  */
