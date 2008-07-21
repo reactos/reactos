@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32k", "win32k_vc9.vcproj", "{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug - ReactOS headers|Win32 = Debug - ReactOS headers|Win32
+		Debug|Win32 = Debug|Win32
+		Release - ReactOS headers|Win32 = Release - ReactOS headers|Win32
+		Release|Win32 = Release|Win32
+		Speed - ReactOS headers|Win32 = Speed - ReactOS headers|Win32
+		Speed|Win32 = Speed|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Debug - ReactOS headers|Win32.ActiveCfg = Debug - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Debug - ReactOS headers|Win32.Build.0 = Debug - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Debug|Win32.Build.0 = Debug|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Release - ReactOS headers|Win32.ActiveCfg = Release - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Release - ReactOS headers|Win32.Build.0 = Release - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Release|Win32.ActiveCfg = Release|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Release|Win32.Build.0 = Release|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Speed - ReactOS headers|Win32.ActiveCfg = Speed - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Speed - ReactOS headers|Win32.Build.0 = Speed - ReactOS headers|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Speed|Win32.ActiveCfg = Speed|Win32
+		{DD15D0E7-FE29-453E-8EF3-FD8AA6744045}.Speed|Win32.Build.0 = Speed|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
