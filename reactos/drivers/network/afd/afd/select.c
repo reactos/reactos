@@ -283,7 +283,6 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    EventSelectInfo->Events));
 
     if( !SocketAcquireStateLock( FCB ) ) {
-	UnlockRequest( Irp, IrpSp );
 	return LostSocket( Irp, TRUE );
     }
 
@@ -329,7 +328,6 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( !SocketAcquireStateLock( FCB ) ) {
-	UnlockRequest( Irp, IrpSp );
 	return LostSocket( Irp, TRUE );
     }
 
