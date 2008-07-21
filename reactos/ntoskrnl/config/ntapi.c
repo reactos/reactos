@@ -32,7 +32,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
     PAGED_CODE();
-    DPRINT("NtCreateKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
+    DPRINT("NtCreateKey(OB name %wZ)\n", ObjectAttributes->ObjectName);
 
     /* Check for user-mode caller */
     if (PreviousMode == UserMode)
