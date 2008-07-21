@@ -115,6 +115,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
          Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
          KeReleaseSpinLock(&AllocationListLock, oldIrql);
          if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
+         MiZeroPage(Page);
          Request->Page = Page;
          KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
       }
