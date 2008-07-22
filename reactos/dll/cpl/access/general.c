@@ -170,7 +170,7 @@ WriteGlobalData(PGLOBAL_DATA pGlobalData)
                   _T("Sound On Activation"),
                   0,
                   REG_DWORD,
-                  (LPBYTE)pGlobalData->bSoundOnActivation,
+                  (LPBYTE)&pGlobalData->bSoundOnActivation,
                   sizeof(BOOL));
 
     RegCloseKey(hKey);
