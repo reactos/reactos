@@ -757,6 +757,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="ntgdi"
+				>
+				<File
+					RelativePath=".\ntgdi\gdistubs.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="ntuser"
+				>
+				<File
+					RelativePath=".\ntuser\usrstubs.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

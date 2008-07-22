@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
 	<importlibrary definition="win32k.def" />
 	<define name="_WIN32K_" />
 	<include base="win32k">include</include>
@@ -48,6 +48,12 @@
 	</directory>
 	<directory name="ntddraw">
 		<file>ddeng.c</file>
+	</directory>
+	<directory name="ntgdi">
+		<file>gdistubs.c</file>
+	</directory>
+	<directory name="ntuser">
+		<file>usrstubs.c</file>
 	</directory>
 	<file>win32k.rc</file>
 </module>
