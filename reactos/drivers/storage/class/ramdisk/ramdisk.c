@@ -296,8 +296,8 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     //
     // Convert to pages
     //
-    ActualPages.QuadPart = BYTES_TO_PAGES(ActualOffset.QuadPart);
-    DPRINT1("Offset in pages is: %d\n", ActualOffset);
+    ActualPages.QuadPart = ActualOffset.QuadPart >> PAGE_SHIFT;
+    DPRINT1("Offset in pages is: %I64x\n", ActualPages);
     
     //
     // Now add the base page
