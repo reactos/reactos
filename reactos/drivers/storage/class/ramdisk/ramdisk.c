@@ -289,7 +289,7 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     // Calculate the actual offset in the drive
     //
     ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
-    DPRINT1("Disk offset is: %I64d and Offset is: %I64d. Total: %I64d\n",
+    DPRINT1("Disk offset is: %d and Offset is: %I64d. Total: %I64d\n",
             DeviceExtension->DiskOffset, Offset, ActualOffset);
     
     //
@@ -328,10 +328,7 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     //
     MappedBase = MmMapIoSpace(PhysicalAddress, ActualLength, MmCached);
     DPRINT1("Mapped at: %p\n", MappedBase);
-    
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
+    return MappedBase;
 }
 
 PVOID
@@ -360,7 +357,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     PVOID Buffer;
     WCHAR LocalBuffer[16];
     UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
-    PPACKED_BIOS_PARAMETER_BLOCK Parameters;
+    PPACKED_BOOT_SECTOR BootSector;
     ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;
     PVOID BaseAddress;
     LARGE_INTEGER CurrentOffset;
@@ -616,10 +613,10 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 //
                 // Get the data
                 //
-                Parameters = (PPACKED_BIOS_PARAMETER_BLOCK)BaseAddress;
-                BytesPerSector = Parameters->BytesPerSector[0];
-                SectorsPerTrack = Parameters->SectorsPerTrack[0];
-                Heads = Parameters->Heads[0];
+                BootSector = (PPACKED_BOOT_SECTOR)BaseAddress;
+                BytesPerSector = BootSector->PackedBpb.BytesPerSector[0];
+                SectorsPerTrack = BootSector->PackedBpb.SectorsPerTrack[0];
+                Heads = BootSector->PackedBpb.Heads[0];
                 
                 //
                 // Save it
@@ -646,6 +643,17 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 goto FailCreate;
             }
         }
+        
+        //
+        // Sanity check for debugging
+        //
+        DPRINT1("[RAMDISK] Loaded...\n"
+                "Bytes per Sector: %d\n"
+                "Sectors per Track: %d\n"
+                "Number of Heads: %d\n",
+                DriveExtension->BytesPerSector,
+                DriveExtension->SectorsPerTrack,
+                DriveExtension->NumberOfHeads);
         
         //
         // Check if the drive settings haven't been set yet
@@ -676,7 +684,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 DriveExtension->NumberOfHeads = 16;
             }
         }
-                
+                       
         //
         // Acquire the disk lock
         //
