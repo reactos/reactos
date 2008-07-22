@@ -1,0 +1,4700 @@
+/*
+ * PROJECT:         ReactOS Win32K
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/
+ * PURPOSE:         Syscall stubs
+ * PROGRAMMERS:     Olaf Siejka
+ */
+
+/* INCLUDES ******************************************************************/
+
+#include <win32k.h>
+#define NDEBUG
+#include <debug.h>
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+VOID
+APIENTRY
+NtGdiAbortDoc(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAbortPath(ULONG Param1)
+{ 
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAddFontResourceW(ULONG Param1, ULONG Param2,
+                                  ULONG Param3, ULONG Param4,
+                                  ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAddRemoteFontToDC(ULONG Param1, ULONG Param2,
+                                    ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+
+VOID
+APIENTRY
+NtGdiAddFontMemResourceEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRemoveMergeFont(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAddRemoteMMInstanceToDC(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAlphaBlend(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAngleArc(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAnyLinkedFonts
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFontIsLinked(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiArcInternal(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBeginPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBitBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCancelDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCheckBitmapBits(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCloseFigure(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiClearBitmapAttributes(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiClearBrushAttributes(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiColorCorrectPalette(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCombineRgn(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCombineTransform(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiComputeXformCoefficients(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiConsoleTextOut(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiConvertMetafileRect(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateBitmap(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateClientObj(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateColorSpace(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateColorTransform(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateCompatibleBitmap(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateCompatibleDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateDIBBrush(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateDIBitmapInternal(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateDIBSection(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateEllipticRgn(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateHalftonePalette(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateHatchBrushInternal(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateMetafileDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreatePaletteInternal(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreatePatternBrushInternal(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreatePen(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateRectRgn(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateRoundRectRgn(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateServerMetaFile(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCreateSolidBrush(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiD3dContextCreate(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiD3dContextDestroy(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiD3dContextDestroyAll(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiD3dValidateTextureStageState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiD3dDrawPrimitives2(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetDriverState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdAddAttachedSurface(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdAlphaBlt(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdAttachSurface(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdBeginMoCompFrame(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdBlt(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCanCreateSurface(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCanCreateD3DBuffer(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdColorControl(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateDirectDrawObject(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateSurface(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateD3DBuffer(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateMoComp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateSurfaceObject(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdDeleteDirectDrawObject(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdDeleteSurfaceObject(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdDestroyMoComp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdDestroySurface(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdDestroyD3DBuffer(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdEndMoCompFrame(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdFlip(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdFlipToGDISurface(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetAvailDriverMemory(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetBltStatus(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetDC(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetDriverInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetDxHandle(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetFlipStatus(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetInternalMoCompInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetMoCompBuffInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetMoCompGuids(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetMoCompFormats(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdGetScanLine(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdLock(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdLockD3D(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdQueryDirectDrawObject(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdQueryMoCompStatus(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdReenableDirectDrawObject(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdReleaseDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdRenderMoComp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdResetVisrgn(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdSetColorKey(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdSetExclusiveMode(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdSetGammaRamp(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdCreateSurfaceEx(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdSetOverlayPosition(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdUnattachSurface(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdUnlock(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdUnlockD3D(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdUpdateOverlay(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDdWaitForVerticalBlank(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpCanCreateVideoPort(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpColorControl(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpCreateVideoPort(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpDestroyVideoPort(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpFlipVideoPort(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortBandwidth(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortField(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortFlipStatus(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortInputFormats(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortLine(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortOutputFormats(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoPortConnectInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpGetVideoSignalStatus(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpUpdateVideoPort(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpWaitForVideoPortSync(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpAcquireNotification(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDvpReleaseNotification(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDxgGenericThunk(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDeleteClientObj(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDeleteColorSpace(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDeleteColorTransform(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDeleteObjectApp(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDescribePixelFormat(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetPerBandInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDoBanding(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDoPalette(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDrawEscape(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEllipse(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEnableEudc(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEndDoc(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEndPage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEndPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEnumFontChunk(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEnumFontClose(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEnumFontOpen(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEnumObjects(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEqualRgn(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEudcLoadUnloadLink(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExcludeClipRect(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtCreatePen(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtCreateRegion(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtEscape(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtFloodFill(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtGetObjectW(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtSelectClipRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiExtTextOutW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFillPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFillRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFlattenPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFlush
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiForceUFIMapping(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFrameRgn(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFullscreenControl(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetAndSetDCDword(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetAppClipBox(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetBitmapBits(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetBitmapDimension(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetBoundsRect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetCharABCWidthsW(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetCharacterPlacementW(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetCharSet(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetCharWidthW(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetCharWidthInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetColorAdjustment(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetColorSpaceforBitmap(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDCDword(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDCforBitmap(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDCObject(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDCPoint(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDeviceCaps(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDeviceGammaRamp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDeviceCapsAll(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDIBitsInternal(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetETM(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetEudcTimeStampEx(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetFontData(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetFontResourceInfoInternalW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetGlyphIndicesW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetGlyphIndicesWInternal(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetGlyphOutline(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetKerningPairs(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetLinkedUFIs(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetMiterLimit(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetMonitorID(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetNearestColor(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetNearestPaletteIndex(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetObjectBitmapHandle(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetOutlineTextMetricsInternalW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetPath(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetPixel(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetRandomRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetRasterizerCaps(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetRealizationInfo(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetRegionData(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetRgnBox(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetServerMetaFileBits(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetSpoolMessage(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetStats(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetStockObject(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetStringBitmapW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetSystemPaletteUse(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTextCharsetInfo(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTextExtent(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTextExtentExW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTextFaceW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTextMetricsW(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetTransform(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetUFI(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetEmbUFI(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetUFIPathname(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetEmbedFonts
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiChangeGhostFont(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiAddEmbFontToDC(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetFontUnicodeRanges(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetWidthTable(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGradientFill(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiHfontCreate(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiIcmBrushInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiInit
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiInitSpool
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiIntersectClipRect(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiInvertRgn(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiLineTo(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMakeFontDir(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMakeInfoDC(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMaskBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12, ULONG Param13)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiModifyWorldTransform(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMonoBitmap(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMoveTo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiOffsetClipRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiOffsetRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiOpenDCW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPatBlt(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPolyPatBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPathToRegion(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPlgBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPolyDraw(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPolyPolyDraw(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPolyTextOutW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPtInRegion(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPtVisible(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiQueryFonts(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiQueryFontAssocInfo(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRectangle(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRectInRegion(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRectVisible(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRemoveFontResourceW(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRemoveFontMemResourceEx(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiResetDC(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiResizePalette(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRestoreDC(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiRoundRect(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSaveDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiScaleViewportExtEx(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiScaleWindowExtEx(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSelectBitmap(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSelectBrush(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSelectClipPath(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSelectFont(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSelectPen(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBitmapAttributes(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBitmapBits(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBitmapDimension(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBoundsRect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBrushAttributes(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetBrushOrg(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetColorAdjustment(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetColorSpace(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetDeviceGammaRamp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetDIBitsToDeviceInternal(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetFontEnumeration(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetFontXform(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetIcmMode(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetLinkedUFIs(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetMagicColors(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetMetaRgn(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetMiterLimit(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDeviceWidth(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMirrorWindowOrg(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetLayout(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetPixel(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetPixelFormat(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetRectRgn(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetSystemPaletteUse(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetTextJustification(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetupPublicCFONT(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetVirtualResolution(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetSizeDevice(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStartDoc(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStartPage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStretchBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStretchDIBitsInternal(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStrokeAndFillPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiStrokePath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSwapBuffers(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiTransformPoints(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiTransparentBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUnloadPrinterDriver(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUnmapMemFont(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUnrealizeObject(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUpdateColors(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiWidenPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserActivateKeyboardLayout(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserAlterWindowStyle(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserAssociateInputContext(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserAttachThreadInput(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBeginPaint(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBitBltSysBmp(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBlockInput(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBuildHimcList(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBuildHwndList(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBuildNameList(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserBuildPropList(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallHwnd(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallHwndLock(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallHwndOpt(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallHwndParam(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallHwndParamLock(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallMsgFilter(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallNextHookEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallNoParam(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallOneParam(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCallTwoParam(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserChangeClipboardChain(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserChangeDisplaySettings(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCheckImeHotKey(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCheckMenuItem(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserChildWindowFromPointEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserClipCursor(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCloseClipboard
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCloseDesktop(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCloseWindowStation(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserConsoleControl(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserConvertMemHandle(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCopyAcceleratorTable(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCountClipboardFormats
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateAcceleratorTable(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateCaret(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateDesktop(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateInputContext(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateLocalMemHandle(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateWindowEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12, ULONG Param13, ULONG Param14, ULONG Param15)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCreateWindowStation(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDdeGetQualityOfService(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDdeInitialize(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDdeSetQualityOfService(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDeferWindowPos(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDefSetText(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDeleteMenu(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDestroyAcceleratorTable(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDestroyCursor(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDestroyInputContext(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDestroyMenu(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDestroyWindow(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDisableThreadIme(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDispatchMessage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDragDetect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDragObject(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDrawAnimatedRects(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDrawCaption(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDrawCaptionTemp(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDrawIconEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserDrawMenuBarTemp(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEmptyClipboard
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEnableMenuItem(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEnableScrollBar(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEndDeferWindowPosEx(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEndMenu
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEndPaint(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEnumDisplayDevices(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+# NtUserEnumDisplayMonitors 		4  Wrong number of param ?
+
+VOID
+APIENTRY
+NtUserEnumDisplayMonitors(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEnumDisplaySettings(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserEvent(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserExcludeUpdateRgn(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserFillWindow(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+# NtUserFindExistingCursorIcon(ULONG Param1, ULONG Param2, ULONG Param3)  Wrong number of param ?
+
+VOID
+APIENTRY
+NtUserFindExistingCursorIcon(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserFindWindowEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserFlashWindowEx(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetAltTabInfo(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetAncestor(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetAppImeLevel(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetAsyncKeyState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetAtomName(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetCaretBlinkTime
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetCaretPos(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClassInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClassName(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipboardData(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipboardFormatName(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipboardOwner
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipboardSequenceNumber
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipboardViewer
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetClipCursor(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetComboBoxInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetControlBrush(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetControlColor(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetCPD(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetCursorFrameInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetCursorInfo(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetDCEx(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetDoubleClickTime
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetForegroundWindow
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetGuiResources(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetGUIThreadInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetIconInfo(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetIconSize(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetImeHotKey(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetImeInfoEx(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetInternalWindowPos(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetKeyboardLayoutList(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetKeyboardLayoutName(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetKeyboardState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetKeyNameText(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetKeyState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetListBoxInfo(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetMenuBarInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetMenuIndex(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetMenuItemRect(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetMessage(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetMouseMovePointsEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetObjectInformation(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetOpenClipboardWindow
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetPriorityClipboardFormat(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetProcessWindowStation
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetRawInputBuffer(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetRawInputData(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetRawInputDeviceInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetRawInputDeviceList(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetRegisteredRawInputDevices(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetScrollBarInfo(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetSystemMenu(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetThreadDesktop(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetThreadState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetTitleBarInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetUpdateRect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetUpdateRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetWindowDC(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetWindowPlacement(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetWOWClass(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserHardErrorControl(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserHideCaret(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserHiliteMenuItem(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserImpersonateDdeClientWindow(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInitialize(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInitializeClientPfnArrays(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInitTask(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInternalGetWindowText(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInvalidateRect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserInvalidateRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserIsClipboardFormatAvailable(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserKillTimer(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserLoadKeyboardLayoutEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserLockWindowStation(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserLockWindowUpdate(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserLockWorkStation
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMapVirtualKeyEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMenuItemFromPoint(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMessageCall(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMinMaximize(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMNDragLeave
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMNDragOver(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserModifyUserStartupInfoFlags(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserMoveWindow(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserNotifyIMEStatus(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserNotifyProcessCreate(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserNotifyWinEvent(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserOpenClipboard(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserOpenDesktop(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserOpenInputDesktop(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserOpenWindowStation(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPaintDesktop(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPeekMessage(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPostMessage(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPostThreadMessage(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPrintWindow(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserProcessConnect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserQueryInformationThread(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserQueryInputContext(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserQuerySendMessage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserQueryUserCounters(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserQueryWindow(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRealChildWindowFromPoint(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRealInternalGetMessage(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRealWaitMessageEx(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRedrawWindow(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterClassExWOW(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterUserApiHook(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterHotKey(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterRawInputDevices(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterTasklist(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRegisterWindowMessage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoveMenu(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoveProp(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserResolveDesktop(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserResolveDesktopForWOW(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSBGetParms(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserScrollDC(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserScrollWindowEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSelectPalette(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSendInput(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetActiveWindow(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetAppImeLevel(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetCapture(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetClassLong(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetClassWord(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetClipboardData(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetClipboardViewer(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetConsoleReserveKeys(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetCursor(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetCursorContents(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetCursorIconData(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6) #4
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetDbgTag(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetFocus(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetImeHotKey(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetImeInfoEx(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetImeOwnerWindow(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetInformationProcess(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetInformationThread(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetInternalWindowPos(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetKeyboardState(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetLogonNotifyWindow(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetMenu(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetMenuContextHelpId(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetMenuDefaultItem(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetMenuFlagRtoL(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetObjectInformation(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetParent(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetProcessWindowStation(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetProp(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetRipFlags(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetScrollInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetShellWindowEx(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetSysColors(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetSystemCursor(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetSystemMenu(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetSystemTimer(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetThreadDesktop(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetThreadLayoutHandles(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetThreadState(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetTimer(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowFNID(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowLong(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowPlacement(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowPos(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowRgn(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowsHookAW(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowsHookEx(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowStationUser(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWindowWord(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetWinEventHook(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserShowCaret(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserShowScrollBar(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserShowWindow(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserShowWindowAsync(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSoundSentry
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSwitchDesktop(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSystemParametersInfo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserTestForInteractiveUser(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserThunkedMenuInfo(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserThunkedMenuItemInfo(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserToUnicodeEx(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserTrackMouseEvent(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserTrackPopupMenuEx(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCalcMenuBar(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserPaintMenuBar(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserTranslateAccelerator(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserTranslateMessage(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnhookWindowsHookEx(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnhookWinEvent(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnloadKeyboardLayout(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnlockWindowStation(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnregisterClass(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnregisterUserApiHook
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUnregisterHotKey(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUpdateInputContext(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUpdateInstance(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUpdateLayeredWindow(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserGetLayeredWindowAttributes(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserSetLayeredWindowAttributes(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUpdatePerUserSystemParameters(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserUserHandleGrantAccess(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserValidateHandleSecure(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserValidateRect(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserValidateTimerCallback(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserVkKeyScanEx(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserWaitForInputIdle(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserWaitForMsgAndEvent(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserWaitMessage
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserWin32PoolAllocationStats(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserWindowFromPoint(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserYieldTask
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoteConnect(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoteRedrawRectangle(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoteRedrawScreen
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserRemoteStopScreenUpdates
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtUserCtxDisplayIOCtl(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngAssociateSurface(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCreateBitmap(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCreateDeviceSurface(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCreateDeviceBitmap(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCreatePalette(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngComputeGlyphSet(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCopyBits(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngDeletePalette(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngDeleteSurface(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngEraseSurface(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngUnlockSurface(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngLockSurface(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngBitBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngStretchBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngPlgBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngMarkBandingSurface(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngStrokePath(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngFillPath(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngStrokeAndFillPath(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngPaint(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngLineTo(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngAlphaBlend(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngGradientFill(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngTransparentBlt(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngTextOut(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngStretchBltROP(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6, ULONG Param7, ULONG Param8, ULONG Param9, ULONG Param10, ULONG Param11, ULONG Param12, ULONG Param13)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiXLATEOBJ_cGetPalette(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiXLATEOBJ_iXlate(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiXLATEOBJ_hGetColorTransform(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCLIPOBJ_bEnum(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCLIPOBJ_cEnumStart(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiCLIPOBJ_ppoGetPath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngDeletePath(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCreateClip
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngDeleteClip(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBRUSHOBJ_ulGetBrushColor(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBRUSHOBJ_pvAllocRbrush(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBRUSHOBJ_pvGetRbrush(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBRUSHOBJ_hGetColorTransform(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiXFORMOBJ_bApplyXform(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiXFORMOBJ_iGetXform(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_vGetInfo(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_pxoGetXform(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_cGetGlyphs(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_pifi(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_pfdg(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_pQueryGlyphAttrs(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_pvTrueTypeFontFile(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiFONTOBJ_cGetAllGlyphHandles(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSTROBJ_bEnum(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSTROBJ_bEnumPositionsOnly(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSTROBJ_bGetAdvanceWidths(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSTROBJ_vEnumStart(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSTROBJ_dwGetCodePage(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPATHOBJ_vGetBounds(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPATHOBJ_bEnum(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPATHOBJ_vEnumStart(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPATHOBJ_vEnumStartClipLines(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiPATHOBJ_bEnumClipLines(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiGetDhpdev(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiEngCheckAbort(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiHT_Get8BPPFormatPalette(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiHT_Get8BPPMaskPalette(ULONG Param1, ULONG Param2,ULONG Param3, ULONG Param4,ULONG Param5, ULONG Param6)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUpdateTransform(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiSetPUMPDOBJ(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiBRUSHOBJ_DeleteRbrush(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiUMPDEngFreeUserMem(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiDrawStream(ULONG Param1, ULONG Param2, ULONG Param3)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMakeObjectXferable(ULONG Param1, ULONG Param2)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+APIENTRY
+NtGdiMakeObjectUnXferable(ULONG Param1)
+{
+    UNIMPLEMENTED;
+}
+
