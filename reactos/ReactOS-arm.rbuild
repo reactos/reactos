@@ -118,6 +118,9 @@
 				<xi:include href="lib/sdk/wdmguid/wdmguid.rbuild" />
 			</directory>
 		</directory>
+		<directory name="ntdllsys">
+			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
+		</directory>
 	</directory>
 	<directory name="include">
 		<xi:include href="include/directory.rbuild" />
@@ -165,5 +168,10 @@
 				<xi:include href="drivers/base/bootvid/bootvid.rbuild" />
 			</directory>
 		</directory>
-	</directory>	
+	</directory>
+	<directory name="dll">
+		<directory name="ntdll">
+			<xi:include href="dll/ntdll/ntdll.rbuild" />
+		</directory>	
+	</directory>
 </project>
