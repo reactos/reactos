@@ -1196,7 +1196,11 @@ QSI_DEF(SystemInterruptInformation)
   {
     Prcb = KiProcessorBlock[i];
     Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
+#ifdef _M_ARM // This code should probably be done differently
     sii->ContextSwitches = Pcr->ContextSwitches;
+#else
+    sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;      
+#endif
     sii->DpcCount = Prcb->DpcData[0].DpcCount;
     sii->DpcRate = Prcb->DpcRequestRate;
     sii->TimeIncrement = ti;
