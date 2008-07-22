@@ -81,6 +81,7 @@ typedef struct _KTRAP_FRAME
     ULONG Spsr;
     ULONG OldIrql;
     ULONG PreviousMode;
+    ULONG PreviousTrapFrame;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 #ifndef NTOS_MODE_USER
