@@ -66,8 +66,8 @@ typedef struct _RAMDISK_CREATE_INPUT
     GUID DiskGuid;
     ULONG DiskType;
     RAMDISK_CREATE_OPTIONS Options;
-    ULONGLONG DiskLength;
-    ULONG DiskOffset;
+    LARGE_INTEGER DiskLength;
+    LONG DiskOffset;
     union
     {
         struct

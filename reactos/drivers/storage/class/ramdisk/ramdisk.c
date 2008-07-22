@@ -82,19 +82,32 @@ typedef struct _RAMDISK_BUS_EXTENSION
 
 typedef struct _RAMDISK_DRIVE_EXTENSION
 {
+    //
+    // Inherited base class
+    //
     RAMDISK_EXTENSION;
+    
+    //
+    // Data we get from the creator
+    //
     GUID DiskGuid;
     UNICODE_STRING GuidString;
     UNICODE_STRING SymbolicLinkName;
     ULONG DiskType;
     RAMDISK_CREATE_OPTIONS DiskOptions;
-    LONGLONG DiskLength;
+    LARGE_INTEGER DiskLength;
     LONG DiskOffset;
     WCHAR DriveLetter;
+    ULONG BasePage;
+    
+    //
+    // Data we get from the disk
+    //
     ULONG BytesPerSector;
     ULONG SectorsPerTrack;
     ULONG NumberOfHeads;
-    ULONG BasePage;
+    ULONG Cylinders;
+    ULONG HiddenSectors;
 } RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
 ULONG MaximumViewLength;
@@ -415,7 +428,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     BIOS_PARAMETER_BLOCK BiosBlock;
     ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;
     PVOID BaseAddress;
-    LARGE_INTEGER CurrentOffset;
+    LARGE_INTEGER CurrentOffset, CylinderSize, DiskLength;
+    ULONG CylinderCount, SizeByCylinders;
 	
 	//
 	// Check if we're a boot RAM disk
@@ -623,6 +637,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         //
         *NewDriveExtension = DriveExtension;
         DriveExtension->Type = RamdiskDrive;
+        DiskLength = Input->DiskLength;
 		ExInitializeFastMutex(&DriveExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DriveExtension->RemoveLock,
                                TAG('R', 'a', 'm', 'd'),
@@ -637,10 +652,13 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DriveExtension->AttachedDevice = RamdiskBusFdo;
         DriveExtension->DiskType = Input->DiskType;
         DriveExtension->DiskOptions = Input->Options;
-        DriveExtension->DiskLength = Input->DiskLength;
+        DriveExtension->DiskLength = DiskLength;
         DriveExtension->DiskOffset = Input->DiskOffset;
         DriveExtension->BasePage = Input->BasePage;
-
+        DriveExtension->BytesPerSector = 0;
+        DriveExtension->SectorsPerTrack = 0;
+        DriveExtension->NumberOfHeads = 0;
+        
         //
         // Make sure we don't free it later
         //
@@ -699,18 +717,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 goto FailCreate;
             }
         }
-        
-        //
-        // Sanity check for debugging
-        //
-        DPRINT1("[RAMDISK] Loaded...\n"
-                "Bytes per Sector: %d\n"
-                "Sectors per Track: %d\n"
-                "Number of Heads: %d\n",
-                DriveExtension->BytesPerSector,
-                DriveExtension->SectorsPerTrack,
-                DriveExtension->NumberOfHeads);
-        
+                
         //
         // Check if the drive settings haven't been set yet
         //
@@ -740,7 +747,37 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 DriveExtension->NumberOfHeads = 16;
             }
         }
-                       
+        
+        //
+        // Calculate the cylinder size
+        //
+        CylinderSize.QuadPart = DriveExtension->BytesPerSector *
+                                DriveExtension->SectorsPerTrack *
+                                DriveExtension->NumberOfHeads;
+        CylinderCount = DiskLength.QuadPart / CylinderSize.QuadPart;
+        SizeByCylinders = CylinderSize.QuadPart * CylinderCount;
+        DriveExtension->Cylinders = CylinderCount;
+        if ((DiskLength.HighPart > 0) || (SizeByCylinders < DiskLength.LowPart))
+        {
+            //
+            // Align cylinder size up
+            //
+            DriveExtension->Cylinders++;
+        }
+        
+        //
+        // Sanity check for debugging
+        //
+        DPRINT1("[RAMDISK] Loaded...\n"
+                "Bytes per Sector: %d\n"
+                "Sectors per Track: %d\n"
+                "Number of Heads: %d\n"
+                "Number of Cylinders: %d\n",
+                DriveExtension->BytesPerSector,
+                DriveExtension->SectorsPerTrack,
+                DriveExtension->NumberOfHeads,
+                DriveExtension->Cylinders);
+        
         //
         // Acquire the disk lock
         //
@@ -1191,6 +1228,84 @@ DoCopy:
 
 NTSTATUS
 NTAPI
+RamdiskGetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    PPARTITION_INFORMATION PartitionInfo;
+    PVOID BaseAddress;
+    LARGE_INTEGER Zero = {{0}};
+    ULONG Length;
+    PIO_STACK_LOCATION IoStackLocation;
+    
+    //
+    // Validate the length
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStackLocation->Parameters.DeviceIoControl.
+        OutputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        //
+        // Invalid length
+        //
+        Status = STATUS_BUFFER_TOO_SMALL;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Map the partition table
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
+    if (!BaseAddress)
+    {
+        //
+        // No memory
+        //
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Fill out the information
+    //
+    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
+    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
+    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
+                                              DeviceExtension->SectorsPerTrack *
+                                              DeviceExtension->NumberOfHeads *
+                                              DeviceExtension->Cylinders;
+    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
+    PartitionInfo->PartitionNumber = 0;
+    PartitionInfo->PartitionType = *((PCHAR)BaseAddress + 450);
+    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
+                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
+    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
+                                                               PartitionType);
+    PartitionInfo->RewritePartition = FALSE;
+    
+    DPRINT1("Partition length: %I64d\n", PartitionInfo->PartitionLength);
+    DPRINT1("Type: %lx. Recognized: %d\n",
+            PartitionInfo->PartitionType, PartitionInfo->RecognizedPartition);
+    
+    //
+    // Unmap the partition table
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
+    
+    //
+    // Done
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp)
 {
@@ -1301,8 +1416,10 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     PRAMDISK_BUS_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension = (PVOID)DeviceExtension;
     ULONG Information;
     PCDROM_TOC Toc;
+    PDISK_GEOMETRY DiskGeometry;
     
     //
     // Grab the remove lock
@@ -1377,8 +1494,35 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_DISK_GET_DRIVE_GEOMETRY:
             case IOCTL_CDROM_GET_DRIVE_GEOMETRY:
                 
-                UNIMPLEMENTED;
-                while (TRUE);
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(DISK_GEOMETRY))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Fill it out
+                //
+                DiskGeometry = Irp->AssociatedIrp.SystemBuffer;
+                DiskGeometry->Cylinders.QuadPart = DriveExtension->Cylinders;
+                DiskGeometry->BytesPerSector = DriveExtension->BytesPerSector;
+                DiskGeometry->SectorsPerTrack = DriveExtension->SectorsPerTrack;
+                DiskGeometry->TracksPerCylinder = DriveExtension->NumberOfHeads;
+                DiskGeometry->MediaType = DriveExtension->DiskOptions.Fixed ?
+                                          FixedMedia : RemovableMedia;
+                
+                //
+                // We're done
+                //
+                Status = STATUS_SUCCESS;
+                Information = sizeof(DISK_GEOMETRY);
                 break;
             
             //
@@ -1427,7 +1571,6 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 //
                 // Validate the length
                 //
-                DPRINT1("Output: %lx\n", IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength);
                 if (IoStackLocation->Parameters.DeviceIoControl.
                     OutputBufferLength < sizeof(CDROM_TOC))
                 {
@@ -1447,7 +1590,6 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 //
                 // Fill it out
                 //
-                DPRINT1("TOC: %d\n", RAMDISK_TOC_SIZE);
                 Toc->Length[0] = 0;
                 Toc->Length[1] = RAMDISK_TOC_SIZE - sizeof(Toc->Length);
                 Toc->FirstTrack = 1;
@@ -1471,8 +1613,41 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 
             case IOCTL_DISK_GET_PARTITION_INFO:
                 
-                UNIMPLEMENTED;
-                while (TRUE);
+                //
+                // Validate the length
+                //
+                if (IoStackLocation->Parameters.DeviceIoControl.
+                    OutputBufferLength < sizeof(PARTITION_INFORMATION))
+                {
+                    //
+                    // Invalid length
+                    //
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+                
+                //
+                // Check if we need to do this sync or async
+                //
+                if (DriveExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
+                {
+                    //
+                    // Call the helper function
+                    //
+                    Status = RamdiskGetPartitionInfo(Irp, DriveExtension);
+                }
+                else
+                {
+                    //
+                    // Do it asynchronously later
+                    //
+                    goto CallWorker;
+                }
+                
+                //
+                // We're done
+                //
+                Information = Irp->IoStatus.Information;
                 break;
                 
             case IOCTL_DISK_GET_DRIVE_LAYOUT:
@@ -1559,6 +1734,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
     //
     // Queue the request to our worker thread
     //
+CallWorker:
     Status = SendIrpToThread(DeviceObject, Irp);
     
 CompleteRequest:
