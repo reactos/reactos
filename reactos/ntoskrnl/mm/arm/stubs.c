@@ -480,10 +480,11 @@ MmIsPageSwapEntry(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingForKernel(IN PVOID Address,
-                                IN ULONG Protection,
-                                IN PPFN_NUMBER Pages,
-                                IN ULONG PageCount)
+MmCreateVirtualMappingInternal(IN PVOID Address,
+                               IN ULONG Protection,
+                               IN PPFN_NUMBER Pages,
+                               IN ULONG PageCount,
+                               IN BOOLEAN MarkAsMapped)
 {
     PMMPTE PointerPte, LastPte, PointerPde, LastPde;
     MMPTE TempPte, TempPde;
@@ -560,6 +561,11 @@ MmCreateVirtualMappingForKernel(IN PVOID Address,
     while (PointerPte <= LastPte)
     {
         //
+        // Mark it as mapped
+        //
+        if (MarkAsMapped) MmMarkPageMapped(*Pages);
+
+        //
         // Set the PFN
         //
         TempPte.u.Hard.L2.Small.BaseAddress = *Pages++;
@@ -596,6 +602,24 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
     return 0;
 }
 
+
+NTSTATUS
+NTAPI
+MmCreateVirtualMappingForKernel(IN PVOID Address,
+                                IN ULONG Protection,
+                                IN PPFN_NUMBER Pages,
+                                IN ULONG PageCount)
+{
+    //
+    // Call the internal version
+    //
+    return MmCreateVirtualMappingInternal(Address,
+                                          Protection,
+                                          Pages,
+                                          PageCount,
+                                          FALSE);
+}
+
 NTSTATUS
 NTAPI
 MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
@@ -610,12 +634,13 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
     if (!(Process) || (Process == PsGetCurrentProcess()))
     {
         //
-        // Call the kernel version
+        // Call the internal version
         //
-        return MmCreateVirtualMappingForKernel(Address,
-                                               Protection,
-                                               Pages,
-                                               PageCount);
+        return MmCreateVirtualMappingInternal(Address,
+                                              Protection,
+                                              Pages,
+                                              PageCount,
+                                              TRUE);
     }
     
     //
