@@ -23,6 +23,7 @@
 #include <rtlfuncs.h>
 #include <arc/arc.h>
 #include <reactos/drivers/ntddrdsk.h>
+#include "../../../filesystems/fs_rec/fs_rec.h"
 #include <stdio.h>
 #define NDEBUG
 #include <debug.h>
@@ -265,6 +266,31 @@ QueryParameters(IN PUNICODE_STRING RegistryPath)
     }
 }
 
+PVOID
+NTAPI
+RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                IN LARGE_INTEGER Offset,
+                IN ULONG Length,
+                OUT PULONG OutputLength)
+{
+    DPRINT1("Mapping %lx bytes at %I64x\n", Length, Offset.QuadPart);
+    UNIMPLEMENTED;
+    while (TRUE);
+    return NULL;
+}
+
+PVOID
+NTAPI
+RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
+                  IN PVOID BaseAddress,
+                  IN LARGE_INTEGER Offset,
+                  IN ULONG Length)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return NULL;
+}
+
 NTSTATUS
 NTAPI
 RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
@@ -279,6 +305,10 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     PVOID Buffer;
     WCHAR LocalBuffer[16];
     UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
+    PPACKED_BIOS_PARAMETER_BLOCK Parameters;
+    ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;
+    PVOID BaseAddress;
+    LARGE_INTEGER CurrentOffset;
 	
 	//
 	// Check if we're a CDROM-type RAM disk
@@ -380,7 +410,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         Status = IoCreateDevice(DeviceExtension->DeviceObject->DriverObject,
                                 sizeof(RAMDISK_DRIVE_EXTENSION),
                                 &DeviceName,
-                                FILE_DEVICE_CD_ROM,
+                                (Input->Options.ExportAsCd) ?
+                                FILE_DEVICE_CD_ROM : FILE_DEVICE_DISK,
                                 0,
                                 0,
                                 &DeviceObject);
@@ -505,18 +536,86 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         GuidString.Buffer = NULL;
         
         //
-        // Only support ISO stuff for now
+        // Check if this is an ISO boot, or a registry ram drive
         //
-        ASSERT(Input->Options.ExportAsCd == TRUE);
-        ASSERT(Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM);
+        if (!(Input->Options.ExportAsCd) &&
+            (Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+        {
+            //
+            // Not an ISO boot, but it's a boot FS -- map it to figure out the
+            // drive settings
+            //
+            CurrentOffset.QuadPart = 0;
+            BaseAddress = RamdiskMapPages(DriveExtension,
+                                          CurrentOffset,
+                                          PAGE_SIZE,
+                                          &BytesRead);
+            if (BaseAddress)
+            {
+                //
+                // Get the data
+                //
+                Parameters = (PPACKED_BIOS_PARAMETER_BLOCK)BaseAddress;
+                BytesPerSector = Parameters->BytesPerSector[0];
+                SectorsPerTrack = Parameters->SectorsPerTrack[0];
+                Heads = Parameters->Heads[0];
+                
+                //
+                // Save it
+                //
+                DriveExtension->BytesPerSector = BytesPerSector;
+                DriveExtension->SectorsPerTrack = SectorsPerTrack;
+                DriveExtension->NumberOfHeads = Heads;
+                
+                //
+                // Unmap now
+                //
+                CurrentOffset.QuadPart = 0;
+                RamdiskUnmapPages(DriveExtension,
+                                  BaseAddress,
+                                  CurrentOffset,
+                                  BytesRead);
+            }
+            else
+            {
+                //
+                // Fail
+                //
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto FailCreate;
+            }
+        }
         
         //
-        // Setup partition parameters
+        // Check if the drive settings haven't been set yet
         //
-        DriveExtension->BytesPerSector = 2048; // 512 for Disk
-        DriveExtension->SectorsPerTrack = 32; // 128 for disk
-        DriveExtension->NumberOfHeads = 64; // 16 for disk
-        
+        if ((DriveExtension->BytesPerSector == 0) ||
+            (DriveExtension->SectorsPerTrack == 0) ||
+            (DriveExtension->NumberOfHeads == 0))
+        {
+            //
+            // Check if this is a CD
+            //
+            if (Input->Options.ExportAsCd)
+            {
+                //
+                // Setup partition parameters default for ISO 9660
+                //
+                DriveExtension->BytesPerSector = 2048;
+                DriveExtension->SectorsPerTrack = 32;
+                DriveExtension->NumberOfHeads = 64;
+            }
+            else
+            {
+                //
+                // Setup partition parameters default for FAT
+                //
+                DriveExtension->BytesPerSector = 512;
+                DriveExtension->SectorsPerTrack = 128;
+                DriveExtension->NumberOfHeads = 16;
+            }
+        }
+                
         //
         // Acquire the disk lock
         //
@@ -830,31 +929,6 @@ SendIrpToThread(IN PDEVICE_OBJECT DeviceObject,
         //
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-}
-
-PVOID
-NTAPI
-RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
-                IN LARGE_INTEGER Offset,
-                IN ULONG Length,
-                OUT PULONG OutputLength)
-{
-    DPRINT1("Mapping %lx bytes at %I64x\n", Length, Offset.QuadPart);
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
-}
-
-PVOID
-NTAPI
-RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
-                  IN PVOID BaseAddress,
-                  IN LARGE_INTEGER Offset,
-                  IN ULONG Length)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
 }
 
 NTSTATUS

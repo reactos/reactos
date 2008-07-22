@@ -153,8 +153,8 @@
 			</directory>
 		</directory>
 		<directory name="filesystems">
-			<directory name="cdfs">
-				<xi:include href="drivers/filesystems/cdfs/cdfs.rbuild" />
+			<directory name="fastfat">
+				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
 			</directory>
 		</directory>
 		<directory name="base">

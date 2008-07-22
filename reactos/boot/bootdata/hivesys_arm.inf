@@ -762,12 +762,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
 ; PNP Root device
 HKLM,"SYSTEM\CurrentControlSet\Enum\HTREE\ROOT\0","",0x00000000,""
 
-; Cdfs (ISO96660) filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Type",0x00010001,0x00000002
+; Virtual FAT filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
