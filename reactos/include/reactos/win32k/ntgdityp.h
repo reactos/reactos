@@ -568,7 +568,13 @@ typedef BOOL (NTAPI *PGD_GRADIENTFILL)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*
 typedef VOID (NTAPI *PGD_SYNCHRONIZESURFACE)(SURFOBJ*, RECTL *, FLONG);
 
 //
-// Most of these are definded in ddk/winddi.h
+// Declarations missing in ddk/winddi.h
+//
+typedef VOID (APIENTRY *PFN_DrvMovePanning)(LONG, LONG, FLONG);
+
+
+//
+// Most of these are defined in ddk/winddi.h
 //
 typedef struct _DRIVER_FUNCTIONS
 {
