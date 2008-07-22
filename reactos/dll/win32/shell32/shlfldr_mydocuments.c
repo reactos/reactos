@@ -235,17 +235,17 @@ WINAPI ISF_MyDocuments_fnParseDisplayName (IShellFolder2 * iface,
 }
 
 /**************************************************************************
- *  CreateDesktopEnumList()
+ *  CreateMyDocumentsEnumList()
  */
-static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
+static BOOL CreateMyDocumentsEnumList(IEnumIDList *list, DWORD dwFlags)
 {
     BOOL ret = TRUE;
-    WCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH] = {0};
 
     TRACE("(%p)->(flags=0x%08x)\n", list, dwFlags);
 
    /* enumerate the elements in %windir%\desktop */
-    SHGetSpecialFolderPathW(0, szPath, CSIDL_MYDOCUMENTS, FALSE);
+    ret = SHGetSpecialFolderPathW(0, szPath, CSIDL_PERSONAL, FALSE);
     ret = ret && CreateFolderEnumList(list, szPath, dwFlags);
 
     return ret;
@@ -264,7 +264,7 @@ static HRESULT WINAPI ISF_MyDocuments_fnEnumObjects (IShellFolder2 * iface,
 
     *ppEnumIDList = IEnumIDList_Constructor();
     if (*ppEnumIDList)
-        CreateDesktopEnumList(*ppEnumIDList, dwFlags);
+        CreateMyDocumentsEnumList(*ppEnumIDList, dwFlags);
 
     TRACE ("-- (%p)->(new ID List: %p)\n", This, *ppEnumIDList);
 
@@ -499,6 +499,8 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
     pszPath = CoTaskMemAlloc((MAX_PATH +1) * sizeof(WCHAR));
     if (!pszPath)
         return E_OUTOFMEMORY;
+
+    ZeroMemory(pszPath, (MAX_PATH +1) * sizeof(WCHAR));
 
     if (_ILIsMyDocuments (pidl))
     {
