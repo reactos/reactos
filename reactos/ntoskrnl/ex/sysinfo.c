@@ -1180,7 +1180,7 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
   PKPRCB Prcb;
-  PKIPCR Pcr;
+  PKPCR Pcr;
   LONG i;
   ULONG ti;
   PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
@@ -1192,10 +1192,10 @@ QSI_DEF(SystemInterruptInformation)
 
   ti = KeQueryTimeIncrement();
 
-  Prcb = KeGetPcr()->Prcb;
   for (i = 0; i < KeNumberProcessors; i++)
   {
-    Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+    Prcb = KiProcessorBlock[i];
+    Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
     sii->ContextSwitches = Pcr->ContextSwitches;
     sii->DpcCount = Prcb->DpcData[0].DpcCount;
     sii->DpcRate = Prcb->DpcRequestRate;
@@ -1203,7 +1203,6 @@ QSI_DEF(SystemInterruptInformation)
     sii->DpcBypassCount = 0;
     sii->ApcBypassCount = 0;
     sii++;
-    Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
   }
 
   return STATUS_SUCCESS;
