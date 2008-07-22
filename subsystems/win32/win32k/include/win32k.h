@@ -69,9 +69,6 @@ typedef LPVOID LPSURFACEALIGNMENT;
 #include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
 #include <win32k/ntuser.h>
-
-/* FIXME */
-#if 0
 #include <win32k/ntgdityp.h>
-#include <ntgdi.h>
-#endif
+#define LANGPACK
+#include <psdk/ntgdi.h>
