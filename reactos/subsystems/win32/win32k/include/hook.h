@@ -2,7 +2,7 @@
 #define _WIN32K_HOOK_H
 
 #define HOOK_THREAD_REFERENCED	(0x1)
-
+#if 0
 typedef struct tagHOOK
 {
   LIST_ENTRY Chain;          /* Hook chain entry */
@@ -14,8 +14,11 @@ typedef struct tagHOOK
   ULONG      Flags;          /* Some internal flags */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
-
+#endif
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
+#define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
+#define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
+#define ISITHOOKED(HookId) (PsGetCurrentThreadWin32Thread()->Hooks & HOOKID_TO_FLAG(HookId))
 
 typedef struct tagHOOKTABLE
 {
@@ -46,6 +49,7 @@ LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM l
 LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, LONG, LONG);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
+LRESULT FASTCALL UserCallNextHookEx( int HookId, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 
 #endif /* _WIN32K_HOOK_H */
 

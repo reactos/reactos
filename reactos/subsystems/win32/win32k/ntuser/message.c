@@ -694,7 +694,7 @@ CheckMessages:
       {
          ThreadQueue->QuitPosted = FALSE;
       }
-      return TRUE;
+      goto MsgExit;
    }
 
    /* Now check for normal messages. */
@@ -741,7 +741,7 @@ CheckMessages:
    if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetCurrentThreadWin32Thread(), &Msg->Msg, RemoveMessages))
    {
       Msg->FreeLParam = FALSE;
-      return TRUE;
+      goto MsgExit;
    }
 
    /* Check for WM_(SYS)TIMER messages */
@@ -802,7 +802,7 @@ MessageFound:
 //            UserDereferenceObject(MsgWindow);
 //         }
 
-         return TRUE;
+         goto MsgExit;
       }
 
       if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
@@ -813,7 +813,14 @@ MessageFound:
          /* eat the message, search again */
          goto CheckMessages;
       }
-
+MsgExit:
+      // The WH_GETMESSAGE hook enables an application to monitor messages about to
+      // be returned by the GetMessage or PeekMessage function.
+      if(ISITHOOKED(WH_GETMESSAGE))
+      {
+         DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
+         co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
+      }
       return TRUE;
    }
 
@@ -856,12 +863,10 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
-   // The WH_GETMESSAGE hook enables an application to monitor messages about to
-   // be returned by the GetMessage or PeekMessage function.
-   co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
 
    if (Present)
    {
+
       Info.Msg = Msg.Msg;
       /* See if this message type is present in the table */
       MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
@@ -1862,7 +1867,7 @@ NtUserMessageCall(
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
-         lResult = IntDefWindowProc(Window, Msg, wParam, lParam);
+         lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
       break;
    }
    UserDerefObjectCo(Window);

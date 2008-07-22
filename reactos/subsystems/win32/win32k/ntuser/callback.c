@@ -379,6 +379,13 @@ co_IntCallHookProc(INT HookId,
       case WH_MOUSE_LL:
          ArgumentLength += sizeof(MSLLHOOKSTRUCT);
          break;
+      case WH_MSGFILTER:
+      case WH_SYSMSGFILTER:
+      case WH_GETMESSAGE:
+         ArgumentLength += sizeof(MSG);
+         break;
+//      case WH_SHELL:
+//         break;
       default:
          DPRINT1("Trying to call unsupported window hook %d\n", HookId);
          return 0;
@@ -437,6 +444,16 @@ co_IntCallHookProc(INT HookId,
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSLLHOOKSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
          break;
+      case WH_MSGFILTER:
+      case WH_SYSMSGFILTER:
+      case WH_GETMESSAGE:
+         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSG));
+         Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+         DPRINT1("KHOOK Memory: %x\n",Common);
+         break;
+//      case WH_SHELL:
+//         Extra = lParam;
+//        break;         
    }
 
    ResultPointer = NULL;

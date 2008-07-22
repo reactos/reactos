@@ -317,12 +317,28 @@ typedef struct _W32THREADINFO
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
+struct  _ETHREAD;
+
+
+typedef struct tagHOOK
+{
+  LIST_ENTRY     Chain;      /* Hook chain entry */
+  HHOOK          Self;       /* user handle for this hook */
+  struct _ETHREAD* Thread;   /* Thread owning the hook */
+  int            HookId;     /* Hook table index */
+  HOOKPROC       Proc;       /* Hook function */
+  BOOLEAN        Ansi;       /* Is it an Ansi hook? */
+  ULONG          Flags;      /* Some internal flags */
+  UNICODE_STRING ModuleName; /* Module name for global hooks */
+} HOOK, *PHOOK;
 
 typedef struct _CALLBACKWND
 {
      HWND hWnd;
      PVOID pvWnd;
 } CALLBACKWND, *PCALLBACKWND;
+
+#define CI_CURTHPRHOOK    0x00000010
 
 typedef struct _W32CLIENTINFO
 {
@@ -334,7 +350,7 @@ typedef struct _W32CLIENTINFO
     DWORD dwTIFlags;
     PVOID pDeskInfo;
     ULONG_PTR ulClientDelta;
-    PVOID phkCurrent;
+    PHOOK phkCurrent;
     ULONG fsHooks;
     HWND  hWND;  // Will be replaced with CALLBACKWND.
     PVOID pvWND; // " "
@@ -848,10 +864,10 @@ NtUserCallMsgFilter(
 LRESULT
 NTAPI
 NtUserCallNextHookEx(
-  HHOOK Hook,
   int Code,
   WPARAM wParam,
-  LPARAM lParam);
+  LPARAM lParam,
+  BOOL Ansi);
 
 DWORD
 NTAPI

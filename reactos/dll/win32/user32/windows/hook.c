@@ -193,8 +193,65 @@ CallNextHookEx(
   WPARAM wParam,
   LPARAM lParam)
 {
-  return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
+  PW32CLIENTINFO ClientInfo;
+  PHOOK pHook;
+  DWORD Flags, Save;
+  LRESULT lResult = 0;
+
+  GetConnected();
+
+  ClientInfo = GetWin32ClientInfo();
+
+  pHook = ValidateHandle(Hook, VALIDATE_TYPE_HOOK);
+
+  if (!pHook) return 0;
+
+  ClientInfo->phkCurrent = (PHOOK)pHook->Self; // Pass this over to the kernel.  
+
+  if (pHook->HookId == WH_CALLWNDPROC || pHook->HookId == WH_CALLWNDPROCRET)
+  {
+     Save = ClientInfo->dwHookData;
+     Flags = ClientInfo->CI_flags & CI_CURTHPRHOOK;
+// wParam: If the message was sent by the current thread/process, it is
+// nonzero; otherwise, it is zero.
+     if (wParam) ClientInfo->CI_flags |= CI_CURTHPRHOOK;
+     else        ClientInfo->CI_flags &= ~CI_CURTHPRHOOK;
+
+     if (pHook->HookId == WH_CALLWNDPROC)
+     {
+        PCWPSTRUCT pCWP = (PCWPSTRUCT)lParam;
+
+        lResult = NtUserMessageCall( pCWP->hwnd,
+                                  pCWP->message,
+                                   pCWP->wParam,
+                                   pCWP->lParam, 
+                                              0,
+                               FNID_CALLWNDPROC,
+                                    pHook->Ansi);
+     }
+     else
+     {
+        PCWPRETSTRUCT pCWPR = (PCWPRETSTRUCT)lParam;
+
+        ClientInfo->dwHookData = pCWPR->lResult;
+
+        lResult = NtUserMessageCall( pCWPR->hwnd,
+                                  pCWPR->message,
+                                   pCWPR->wParam,
+                                   pCWPR->lParam, 
+                                               0,
+                             FNID_CALLWNDPROCRET,
+                                     pHook->Ansi);
+     }
+     ClientInfo->CI_flags ^= ((ClientInfo->CI_flags ^ Flags) & CI_CURTHPRHOOK);
+     ClientInfo->dwHookData = Save;
+  }
+  else
+     lResult = NtUserCallNextHookEx(Code, wParam, lParam, pHook->Ansi);
+
+  return lResult;
 }
+
 
 /*
  * @unimplemented
@@ -366,6 +423,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   LPARAM lParam;
   PKBDLLHOOKSTRUCT KeyboardLlData;
   PMSLLHOOKSTRUCT MouseLlData;
+  PMSG Msg;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -445,6 +503,13 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     case WH_MOUSE_LL:
       MouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) MouseLlData);
+      break;
+    case WH_MSGFILTER:
+    case WH_SYSMSGFILTER:
+    case WH_GETMESSAGE:
+      Msg = (PMSG)((PCHAR) Common + Common->lParam);
+      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) Msg);
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);

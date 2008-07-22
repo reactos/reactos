@@ -4,8 +4,7 @@
  * PURPOSE:          Misc User funcs
  * FILE:             subsystem/win32/win32k/ntuser/defwnd.c
  * PROGRAMER:
- * REVISION HISTORY:
- *       2003/05/22  Created
+ *
  */
 
 #include <w32k.h>
@@ -22,7 +21,8 @@ IntDefWindowProc(
    PWINDOW_OBJECT Window,
    UINT Msg,
    WPARAM wParam,
-   LPARAM lParam)
+   LPARAM lParam,
+   BOOL Ansi)
 {
    PWINDOW Wnd;
 
