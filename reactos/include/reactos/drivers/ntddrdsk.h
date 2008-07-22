@@ -37,6 +37,14 @@ DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xd9b257fc, 0x684e, 0x4dcb, 0x79, 0xab, 0xf6,
 #define FSCTL_CREATE_RAM_DISK             CTL_CODE(FILE_DEVICE_VIRTUAL_DISK, 0x0000, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //
+// Disk Types
+//
+#define RAMDISK_REGISTRY_DISK             1 // Loaded from the registry
+#define RAMDISK_MEMORY_MAPPED_DISK        2 // Loaded from the registry
+#define RAMDISK_BOOT_DISK                 3 // Used as a boot device
+#define RAMDISK_WIM_DISK                  4 // Used as an installation device
+    
+//
 // Options when creating a ramdisk
 //
 typedef struct _RAMDISK_CREATE_OPTIONS

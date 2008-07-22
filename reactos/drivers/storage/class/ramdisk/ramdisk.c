@@ -311,15 +311,15 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     LARGE_INTEGER CurrentOffset;
 	
 	//
-	// Check if we're a CDROM-type RAM disk
+	// Check if we're a boot RAM disk
 	//
 	DiskType = Input->DiskType;
-	if (DiskType > FILE_DEVICE_CD_ROM)
+	if (DiskType >= RAMDISK_BOOT_DISK)
 	{
 		//
 		// Check if we're an ISO
 		// 
-		if (DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+		if (DiskType == RAMDISK_BOOT_DISK)
 		{
 			//
 			// NTLDR mounted us somewhere
@@ -340,10 +340,15 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
 		else
 		{
 			//
-			// The only other possibility is a controller
+			// The only other possibility is a WIM disk
 			//
-			if (DiskType != FILE_DEVICE_CONTROLLER)
+			if (DiskType != RAMDISK_WIM_DISK)
+            {
+                //
+                // Fail
+                //
                 return STATUS_INVALID_PARAMETER;
+            }
 			
 			//
 			// Read the view count instead
@@ -471,7 +476,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             //
             // It this an ISO boot ramdisk?
             //
-            if (Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+            if (Input->DiskType == RAMDISK_BOOT_DISK)
             {
                 //
                 // Does it need a drive letter?
@@ -536,10 +541,10 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         GuidString.Buffer = NULL;
         
         //
-        // Check if this is an ISO boot, or a registry ram drive
+        // Check if this is an boot disk, or a registry ram drive
         //
         if (!(Input->Options.ExportAsCd) &&
-            (Input->DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+            (Input->DiskType == RAMDISK_BOOT_DISK))
         {
             //
             // Not an ISO boot, but it's a boot FS -- map it to figure out the
@@ -684,12 +689,12 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	// Validate the disk type
 	//
 	DiskType = Input->DiskType;
-	if (DiskType == FILE_DEVICE_CONTROLLER) return STATUS_INVALID_PARAMETER;
+	if (DiskType == RAMDISK_WIM_DISK) return STATUS_INVALID_PARAMETER;
 	
 	//
 	// Look at the disk type
 	//
-	if (DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+	if (DiskType == RAMDISK_BOOT_DISK)
 	{
 		//
 		// We only allow this as an early-init boot
@@ -706,19 +711,18 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	//
 	// Validate the disk type
 	//
-	if ((Input->Options.ExportAsCd) &&
-        (DiskType != FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+	if ((Input->Options.ExportAsCd) && (DiskType != RAMDISK_BOOT_DISK))
 	{
 		//
 		// If the type isn't CDFS, it has to at least be raw CD
 		//
-		if (DiskType != FILE_DEVICE_CD_ROM) return STATUS_INVALID_PARAMETER;
+		if (DiskType != RAMDISK_MEMORY_MAPPED_DISK) return STATUS_INVALID_PARAMETER;
 	}
 	
 	//
 	// Check if this is an actual file
 	//
-	if (DiskType <= FILE_DEVICE_CD_ROM)
+	if (DiskType <= RAMDISK_MEMORY_MAPPED_DISK)
 	{
 		//
 		// Validate the file name
@@ -1134,7 +1138,7 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
     //
     // See if we want to do this sync or async
     //
-    if (DeviceExtension->DiskType > FILE_DEVICE_CD_ROM)
+    if (DeviceExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
     {
         //
         // Do it sync

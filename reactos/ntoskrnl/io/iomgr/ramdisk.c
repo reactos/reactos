@@ -83,7 +83,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     RtlZeroMemory(&RamdiskCreate, sizeof(RamdiskCreate));
     RamdiskCreate.Version = sizeof(RamdiskCreate);
-    RamdiskCreate.DiskType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+    RamdiskCreate.DiskType = RAMDISK_BOOT_DISK;
     RamdiskCreate.BasePage = MemoryDescriptor->BasePage;
     RamdiskCreate.DiskOffset = 0;
     RamdiskCreate.DiskLength = MemoryDescriptor->PageCount << PAGE_SHIFT;
