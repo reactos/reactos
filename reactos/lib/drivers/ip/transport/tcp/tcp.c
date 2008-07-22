@@ -559,6 +559,7 @@ NTSTATUS TCPConnect
 
     if (!NT_SUCCESS(Status)) {
 	TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));
+	TcpipRecursiveMutexLeave( &TCPLock );
 	return Status;
     }
 
