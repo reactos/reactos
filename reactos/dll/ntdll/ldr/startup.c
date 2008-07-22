@@ -22,8 +22,6 @@ VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 /* GLOBALS *******************************************************************/
 
 
-extern unsigned int _image_base__;
-
 static RTL_CRITICAL_SECTION PebLock;
 static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
@@ -256,6 +254,7 @@ LdrpInit(PCONTEXT Context,
    WCHAR FullNtDllPath[MAX_PATH];
    SYSTEM_BASIC_INFORMATION SystemInformation;
    NTSTATUS Status;
+   PVOID BaseAddress = SystemArgument1;
 
    DPRINT("LdrpInit()\n");
    DPRINT("Peb %p\n", Peb);
@@ -398,7 +397,7 @@ LdrpInit(PCONTEXT Context,
 	 }
        memset(NtModule, 0, sizeof(LDR_DATA_TABLE_ENTRY));
 
-       NtModule->DllBase = (PVOID)&_image_base__;
+       NtModule->DllBase = BaseAddress;
        NtModule->EntryPoint = 0; /* no entry point */
        RtlCreateUnicodeString (&NtModule->FullDllName,
                                FullNtDllPath);
