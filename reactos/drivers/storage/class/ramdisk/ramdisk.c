@@ -412,6 +412,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     WCHAR LocalBuffer[16];
     UNICODE_STRING SymbolicLinkName, DriveString, GuidString, DeviceName;
     PPACKED_BOOT_SECTOR BootSector;
+    BIOS_PARAMETER_BLOCK BiosBlock;
     ULONG BytesPerSector, SectorsPerTrack, Heads, BytesRead;
     PVOID BaseAddress;
     LARGE_INTEGER CurrentOffset;
@@ -668,9 +669,10 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 // Get the data
                 //
                 BootSector = (PPACKED_BOOT_SECTOR)BaseAddress;
-                BytesPerSector = BootSector->PackedBpb.BytesPerSector[0];
-                SectorsPerTrack = BootSector->PackedBpb.SectorsPerTrack[0];
-                Heads = BootSector->PackedBpb.Heads[0];
+                FatUnpackBios(&BiosBlock, &BootSector->PackedBpb);
+                BytesPerSector = BiosBlock.BytesPerSector;
+                SectorsPerTrack = BiosBlock.SectorsPerTrack;
+                Heads = BiosBlock.Heads;
                 
                 //
                 // Save it
