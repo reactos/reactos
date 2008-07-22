@@ -276,6 +276,7 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
 {
     PHYSICAL_ADDRESS PhysicalAddress;
     PVOID MappedBase;
+    ULONG PageOffset;
     SIZE_T ActualLength;
     LARGE_INTEGER ActualOffset;
     LARGE_INTEGER ActualPages;
@@ -295,13 +296,13 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     //
     // Convert to pages
     //
-    ActualOffset.QuadPart = BYTES_TO_PAGES(ActualOffset.QuadPart);
+    ActualPages.QuadPart = BYTES_TO_PAGES(ActualOffset.QuadPart);
     DPRINT1("Offset in pages is: %d\n", ActualOffset);
     
     //
     // Now add the base page
     //
-    ActualPages.QuadPart = DeviceExtension->BasePage + ActualOffset.QuadPart;
+    ActualPages.QuadPart = DeviceExtension->BasePage + ActualPages.QuadPart;
     DPRINT1("Ramdisk mapped at page: %d, actual page is: %I64d\n",
             DeviceExtension->BasePage, ActualPages);
     
@@ -324,9 +325,21 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     DPRINT1("Length in bytes: %d\n", ActualLength);
     
     //
+    // Get the offset within the page
+    //
+    PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
+    DPRINT1("Page offset: %lx\n", PageOffset);
+    
+    //
     // Map the I/O Space from the loader
     //
     MappedBase = MmMapIoSpace(PhysicalAddress, ActualLength, MmCached);
+    
+    //
+    // Return actual offset within the page as well as the length
+    //
+    if (MappedBase) MappedBase = (PVOID)((ULONG_PTR)MappedBase + PageOffset);
+    *OutputLength = Length;
     DPRINT1("Mapped at: %p\n", MappedBase);
     return MappedBase;
 }
