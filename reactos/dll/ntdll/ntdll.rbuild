@@ -3,7 +3,7 @@
 <group>
 	<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
-		<importlibrary definition="def/ntdll.def" />
+		<importlibrary definition="def/ntdll_$(ARCH).def" />
 		<include base="ntdll">inc</include>
 		<include base="ntdll" root="intermediate">def</include>
 		<include base="ReactOS">include/reactos/subsys</include>
@@ -33,6 +33,11 @@
 			<if property="ARCH" value="i386">
 				<directory name="i386">
 					<file>dispatch.S</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>stubs_asm.S</file>
 				</directory>
 			</if>
 			<ifnot property="ARCH" value="i386">
