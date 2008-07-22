@@ -18,7 +18,9 @@ extern HINSTANCE Win32CsrDllHandle;
 
 NTSTATUS FASTCALL Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
                                        PHANDLE Handle,
-                                       Object_t *Object);
+                                       Object_t *Object,
+                                       DWORD Access,
+                                       BOOL Inheritable);
 NTSTATUS FASTCALL Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                                      HANDLE Handle,
                                      Object_t **Object,

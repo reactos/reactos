@@ -180,7 +180,9 @@ typedef struct
 
 typedef struct
 {
-  /* may want to add some parameters here someday */
+   DWORD Access;
+   DWORD ShareMode;
+   BOOL Inheritable;
    HANDLE OutputHandle;  /* handle to newly created screen buffer */
 } CSRSS_CREATE_SCREEN_BUFFER, *PCSRSS_CREATE_SCREEN_BUFFER;
 
@@ -197,14 +199,12 @@ typedef struct
 
 typedef struct
 {
-  HANDLE Console;
   DWORD Length;
   WCHAR Title[0];
 } CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
   DWORD Length;
   WCHAR Title[0];
 } CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
@@ -312,11 +312,15 @@ typedef struct
 
 typedef struct
 {
+  DWORD Access;
+  BOOL Inheritable;
   HANDLE InputHandle;
 } CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE;
 
 typedef struct
 {
+  DWORD Access;
+  BOOL Inheritable;
   HANDLE OutputHandle;
 } CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
 
@@ -333,7 +337,9 @@ typedef struct
 typedef struct
 {
   HANDLE Handle;
-  HANDLE ProcessId;
+  DWORD Access;
+  BOOL Inheritable;
+  DWORD Options;
 } CSRSS_DUPLICATE_HANDLE, *PCSRSS_DUPLICATE_HANDLE;
 
 #define CONSOLE_HARDWARE_STATE_GET 0

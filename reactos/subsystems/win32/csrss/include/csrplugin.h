@@ -24,10 +24,13 @@
 
 typedef NTSTATUS (STDCALL *CSRSS_INSERT_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                      PHANDLE Handle,
-                                                     Object_t *Object);
+                                                     Object_t *Object,
+                                                     DWORD Access,
+                                                     BOOL Inheritable);
 typedef NTSTATUS (STDCALL *CSRSS_GET_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                   HANDLE Handle,
-                                                  Object_t **Object);
+                                                  Object_t **Object,
+                                                  DWORD Access);
 typedef NTSTATUS (STDCALL *CSRSS_RELEASE_OBJECT_BY_POINTER_PROC)(Object_t *Object);
 typedef NTSTATUS (STDCALL *CSRSS_RELEASE_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                       HANDLE Object );

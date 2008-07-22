@@ -264,7 +264,9 @@ DuplicateConsoleHandle (HANDLE	hConsole,
   ULONG CsrRequest;
   NTSTATUS Status;
 
-  if (IsConsoleHandle (hConsole) == FALSE)
+  if (dwOptions & ~(DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)
+      || (!(dwOptions & DUPLICATE_SAME_ACCESS)
+          && dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE)))
     {
       SetLastError (ERROR_INVALID_PARAMETER);
       return INVALID_HANDLE_VALUE;
@@ -272,7 +274,9 @@ DuplicateConsoleHandle (HANDLE	hConsole,
 
   CsrRequest = MAKE_CSR_API(DUPLICATE_HANDLE, CSR_NATIVE);
   Request.Data.DuplicateHandleRequest.Handle = hConsole;
-  Request.Data.DuplicateHandleRequest.ProcessId = GetTeb()->Cid.UniqueProcess;
+  Request.Data.DuplicateHandleRequest.Access = dwDesiredAccess;
+  Request.Data.DuplicateHandleRequest.Inheritable = bInheritHandle;
+  Request.Data.DuplicateHandleRequest.Options = dwOptions;
   Status = CsrClientCallServer(&Request,
 			       NULL,
 			       CsrRequest,
@@ -899,7 +903,7 @@ InvalidateConsoleDIBits (DWORD	Unknown0,
  * @unimplemented
  */
 HANDLE STDCALL
-OpenConsoleW (LPWSTR  wsName,
+OpenConsoleW (LPCWSTR  wsName,
 	      DWORD   dwDesiredAccess,
 	      BOOL    bInheritHandle,
 	      DWORD   dwCreationDistribution)
@@ -909,25 +913,22 @@ OpenConsoleW (LPWSTR  wsName,
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   
-  PHANDLE           phConsole = NULL;
   NTSTATUS          Status = STATUS_SUCCESS;
 
   if(0 == _wcsicmp(wsName, L"CONIN$"))
   {
     CsrRequest = MAKE_CSR_API(GET_INPUT_HANDLE, CSR_NATIVE);
-    phConsole = & Request.Data.GetInputHandleRequest.InputHandle;
   }
   else if (0 == _wcsicmp(wsName, L"CONOUT$"))
   {
     CsrRequest = MAKE_CSR_API(GET_OUTPUT_HANDLE, CSR_NATIVE);
-    phConsole = & Request.Data.GetOutputHandleRequest.OutputHandle;
   }
   else
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return(INVALID_HANDLE_VALUE);
   }
-  if ((GENERIC_READ|GENERIC_WRITE) != dwDesiredAccess)
+  if (dwDesiredAccess & ~(GENERIC_READ|GENERIC_WRITE))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return(INVALID_HANDLE_VALUE);
@@ -937,6 +938,9 @@ OpenConsoleW (LPWSTR  wsName,
     SetLastError(ERROR_INVALID_PARAMETER);
     return(INVALID_HANDLE_VALUE);
   }
+  /* Structures for GET_INPUT_HANDLE and GET_OUTPUT_HANDLE requests are identical */
+  Request.Data.GetInputHandleRequest.Access = dwDesiredAccess;
+  Request.Data.GetInputHandleRequest.Inheritable = bInheritHandle;
   Status = CsrClientCallServer(& Request,
 			       NULL,
 			       CsrRequest,
@@ -946,7 +950,7 @@ OpenConsoleW (LPWSTR  wsName,
     SetLastErrorByStatus(Status);
     return INVALID_HANDLE_VALUE;
   }
-  return(*phConsole);
+  return Request.Data.GetInputHandleRequest.InputHandle;
 }
 
 
@@ -3476,17 +3480,29 @@ CreateConsoleScreenBuffer(
 	LPVOID				 lpScreenBufferData
 	)
 {
-   // FIXME: don't ignore access, share mode, and security
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
+
+   if (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE)
+       || dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE)
+       || dwFlags != CONSOLE_TEXTMODE_BUFFER)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return INVALID_HANDLE_VALUE;
+   }
+
+   Request.Data.CreateScreenBufferRequest.Access = dwDesiredAccess;
+   Request.Data.CreateScreenBufferRequest.ShareMode = dwShareMode;
+   Request.Data.CreateScreenBufferRequest.Inheritable =
+      lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE;
 
    CsrRequest = MAKE_CSR_API(CREATE_SCREEN_BUFFER, CSR_CONSOLE);
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Request.Status ) )
       {
 	 SetLastErrorByStatus ( Status );
-	 return FALSE;
+	 return INVALID_HANDLE_VALUE;
       }
    return Request.Data.CreateScreenBufferRequest.OutputHandle;
 }

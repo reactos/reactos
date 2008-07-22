@@ -320,7 +320,9 @@ CSR_API(CsrAllocConsole)
         /* Insert the Objects */
         Status = Win32CsrInsertObject(ProcessData,
                                       &Request->Data.AllocConsoleRequest.InputHandle,
-                                      &Console->Header);
+                                      &Console->Header,
+                                      GENERIC_READ | GENERIC_WRITE,
+                                      TRUE);
         if (! NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -331,7 +333,9 @@ CSR_API(CsrAllocConsole)
 
         Status = Win32CsrInsertObject(ProcessData,
                                       &Request->Data.AllocConsoleRequest.OutputHandle,
-                                      &Console->ActiveBuffer->Header);
+                                      &Console->ActiveBuffer->Header,
+                                      GENERIC_READ | GENERIC_WRITE,
+                                      TRUE);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -2048,7 +2052,11 @@ CSR_API(CsrCreateScreenBuffer)
         }
       else
         {
-          Request->Status = Win32CsrInsertObject(ProcessData, &Request->Data.CreateScreenBufferRequest.OutputHandle, &Buff->Header);
+          Request->Status = Win32CsrInsertObject(ProcessData,
+            &Request->Data.CreateScreenBufferRequest.OutputHandle,
+            &Buff->Header,
+            Request->Data.CreateScreenBufferRequest.Access,
+            Request->Data.CreateScreenBufferRequest.Inheritable);
         }
     }
   else
@@ -2182,7 +2190,6 @@ CSR_API(CsrGetTitle)
 
   /* Copy title of the console to the user title buffer */
   RtlZeroMemory(&Request->Data.GetTitleRequest, sizeof(CSRSS_GET_TITLE));
-  Request->Data.GetTitleRequest.ConsoleHandle = Request->Data.GetTitleRequest.ConsoleHandle;
   Request->Data.GetTitleRequest.Length = Console->Title.Length;
   memcpy (Request->Data.GetTitleRequest.Title, Console->Title.Buffer,
           Console->Title.Length);

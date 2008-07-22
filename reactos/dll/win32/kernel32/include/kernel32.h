@@ -66,7 +66,7 @@ BOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 HANDLE STDCALL
 GetConsoleInputWaitHandle (VOID);
 
-HANDLE STDCALL OpenConsoleW (LPWSTR wsName,
+HANDLE STDCALL OpenConsoleW (LPCWSTR wsName,
 			     DWORD  dwDesiredAccess,
 			     BOOL   bInheritHandle,
 			     DWORD  dwCreationDistribution);

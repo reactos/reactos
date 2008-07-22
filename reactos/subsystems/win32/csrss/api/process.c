@@ -158,9 +158,9 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
         {
           for (c = 0; c < pProcessData->HandleTableSize; c++)
             {
-              if (pProcessData->HandleTable[c])
+              if (pProcessData->HandleTable[c].Object)
                 {
-                  CsrReleaseObjectByPointer(pProcessData->HandleTable[c]);
+                  CsrReleaseObjectByPointer(pProcessData->HandleTable[c].Object);
                 }
             }
           RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
@@ -337,7 +337,9 @@ CSR_API(CsrGetInputHandle)
    {
       Request->Status = CsrInsertObject(ProcessData,
 		                      &Request->Data.GetInputHandleRequest.InputHandle,
-		                      (Object_t *)ProcessData->Console);
+		                      (Object_t *)ProcessData->Console,
+		                      Request->Data.GetInputHandleRequest.Access,
+		                      Request->Data.GetInputHandleRequest.Inheritable);
    }
    else
    {
@@ -363,7 +365,9 @@ CSR_API(CsrGetOutputHandle)
       RtlEnterCriticalSection(&ProcessDataLock);
       Request->Status = CsrInsertObject(ProcessData,
                                       &Request->Data.GetOutputHandleRequest.OutputHandle,
-                                      &(ProcessData->Console->ActiveBuffer->Header));
+                                      &ProcessData->Console->ActiveBuffer->Header,
+                                      Request->Data.GetOutputHandleRequest.Access,
+                                      Request->Data.GetOutputHandleRequest.Inheritable);
       RtlLeaveCriticalSection(&ProcessDataLock);
    }
    else
@@ -407,32 +411,64 @@ CSR_API(CsrVerifyHandle)
 
 CSR_API(CsrDuplicateHandle)
 {
-  Object_t *Object;
+    ULONG Index;
+    PCSRSS_HANDLE Entry;
+    DWORD DesiredAccess;
 
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
-  if (NULL == ProcessData || ProcessData->Terminated)
+    if (NULL == ProcessData)
     {
-      DPRINT1("Invalid source process %d\n", Request->Data.DuplicateHandleRequest.ProcessId);
-      Request->Status = STATUS_INVALID_PARAMETER;
-      return Request->Status;
+        DPRINT1("Invalid source process\n");
+        Request->Status = STATUS_INVALID_PARAMETER;
+        return Request->Status;
     }
 
-  Request->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
-  if (! NT_SUCCESS(Request->Status))
+    Index = (ULONG)Request->Data.DuplicateHandleRequest.Handle >> 2;
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    if (Index >= ProcessData->HandleTableSize
+        || (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
-      DPRINT("CsrGetObject failed, status=%x\n", Request->Status);
+        DPRINT1("Couldn't dup invalid handle %p\n", Request->Data.DuplicateHandleRequest.Handle);
+        Request->Status = STATUS_INVALID_HANDLE;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return Request->Status;
     }
-  else
+
+    if (Request->Data.DuplicateHandleRequest.Options & DUPLICATE_SAME_ACCESS)
     {
-      Request->Status = CsrInsertObject(ProcessData,
+        DesiredAccess = Entry->Access;
+    }
+    else
+    {
+        DesiredAccess = Request->Data.DuplicateHandleRequest.Access;
+        /* Make sure the source handle has all the desired flags */
+        if (~Entry->Access & DesiredAccess)
+        {
+            DPRINT1("Handle %p only has access %X; requested %X\n",
+                Request->Data.DuplicateHandleRequest.Handle, Entry->Access, DesiredAccess);
+            Request->Status = STATUS_INVALID_PARAMETER;
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            return Request->Status;
+        }
+    }
+    
+    Request->Status = CsrInsertObject(ProcessData,
                                       &Request->Data.DuplicateHandleRequest.Handle,
-                                      Object);
-      CsrReleaseObjectByPointer(Object);
+                                      Entry->Object,
+                                      DesiredAccess,
+                                      Request->Data.DuplicateHandleRequest.Inheritable);
+    if (NT_SUCCESS(Request->Status)
+        && Request->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
+    {
+        /* Close the original handle. This cannot drop the count to 0, since a new handle now exists */
+        _InterlockedDecrement(&Entry->Object->ReferenceCount);
+        Entry->Object = NULL;
     }
-  return Request->Status;
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return Request->Status;
 }
 
 CSR_API(CsrGetInputWaitHandle)

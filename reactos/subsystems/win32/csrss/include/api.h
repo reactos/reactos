@@ -32,6 +32,13 @@ typedef struct ConsoleInput_t
 
 typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
 
+typedef struct _CSRSS_HANDLE
+{
+  Object_t *Object;
+  DWORD Access;
+  BOOL Inheritable;
+} CSRSS_HANDLE, *PCSRSS_HANDLE;
+
 typedef struct _CSRSS_PROCESS_DATA
 {
   PCSRSS_CONSOLE Console;
@@ -39,7 +46,7 @@ typedef struct _CSRSS_PROCESS_DATA
   BOOL bInheritHandles;
   RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;
-  Object_t ** HandleTable;
+  PCSRSS_HANDLE HandleTable;
   HANDLE ProcessId;
   HANDLE Process;
   ULONG ShutdownLevel;
@@ -125,9 +132,9 @@ NTSTATUS STDCALL CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Contex
 
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
-NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
+NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
 NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
-NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
+NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access );
 BOOL STDCALL CsrServerInitialization (int,char**,char**);
 NTSTATUS STDCALL CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );

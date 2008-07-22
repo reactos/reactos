@@ -96,9 +96,11 @@ DllMain(HANDLE hDll,
 NTSTATUS FASTCALL
 Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
                       PHANDLE Handle,
-                      Object_t *Object)
+                      Object_t *Object,
+                      DWORD Access,
+                      BOOL Inheritable)
 {
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
+  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object, Access, Inheritable);
 }
 
 NTSTATUS FASTCALL
@@ -106,7 +108,7 @@ Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle,
                  Object_t **Object)
 {
-  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, 0);
 }
 
 NTSTATUS FASTCALL
@@ -117,7 +119,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 {
   NTSTATUS Status;
 
-  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, 0);
   if (! NT_SUCCESS(Status))
     {
       return Status;
