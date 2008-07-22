@@ -18,6 +18,9 @@ VOID IRPRemember( PIRP Irp, PCHAR File, UINT Line ) {
 }
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
+    KIRQL Irql;
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
     //DbgPrint("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent);
 
 #ifdef MEMTRACK
@@ -30,7 +33,14 @@ NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
 	IoMarkIrpPending( Irp );
     else {
 	Irp->IoStatus.Status = Status;
+	Irql = KeGetCurrentIrql();
+
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+	if (KeGetCurrentIrql() != Irql) {
+	    DbgPrint("WARNING: IO COMPLETION RETURNED AT WRONG IRQL:\n");
+	    DbgPrint("WARNING: IRP TYPE WAS %d\n", IrpSp->MajorFunction);
+	}
+	ASSERT(KeGetCurrentIrql() == Irql);
     }
 
     return Status;

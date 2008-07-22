@@ -345,14 +345,22 @@ NTSTATUS TiCleanupFileObject(
     Context->CancelIrps = FALSE;
     IoReleaseCancelSpinLock(OldIrql);
 
-    return STATUS_INVALID_PARAMETER;
+    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+
+    return Irp->IoStatus.Status;
   }
 
   if (Status != STATUS_PENDING)
-    TiCleanupFileObjectComplete(Irp, Status);
+  {
+     IoAcquireCancelSpinLock(&OldIrql);
+     KeSetEvent(&Context->CleanupEvent, 0, FALSE);
+     IoReleaseCancelSpinLock(OldIrql);
 
-  KeWaitForSingleObject(&Context->CleanupEvent,
-    UserRequest, KernelMode, FALSE, NULL);
+     KeWaitForSingleObject(&Context->CleanupEvent,
+        UserRequest, KernelMode, FALSE, NULL);
+  }
+
+  Irp->IoStatus.Status = Status;
 
   return Irp->IoStatus.Status;
 }

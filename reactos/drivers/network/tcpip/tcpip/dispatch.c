@@ -33,7 +33,6 @@ NTSTATUS DispPrepareIrpForCancel(
     IoAcquireCancelSpinLock(&OldIrql);
 
     if (!Irp->Cancel) {
-        IoMarkIrpPending(Irp);
         (void)IoSetCancelRoutine(Irp, CancelRoutine);
         IoReleaseCancelSpinLock(OldIrql);
 
@@ -187,7 +186,8 @@ VOID NTAPI DispCancelRequest(
 
     TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
 
-    Irp->IoStatus.Status = STATUS_PENDING;
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
 
 #ifdef DBG
     if (!Irp->Cancel)
@@ -212,7 +212,6 @@ VOID NTAPI DispCancelRequest(
         break;
 
     case TDI_SEND_DATAGRAM:
-	Irp->IoStatus.Status = STATUS_CANCELLED;
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
             break;
@@ -222,7 +221,6 @@ VOID NTAPI DispCancelRequest(
         break;
 
     case TDI_RECEIVE_DATAGRAM:
-	Irp->IoStatus.Status = STATUS_CANCELLED;
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
             break;
@@ -235,9 +233,6 @@ VOID NTAPI DispCancelRequest(
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
         break;
     }
-
-    if( Irp->IoStatus.Status == STATUS_PENDING )
-	IoMarkIrpPending(Irp);
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -1453,7 +1448,6 @@ NTSTATUS DispTdiSetInformationEx(
     PTCP_REQUEST_SET_INFORMATION_EX Info;
     TDI_REQUEST Request;
     TDI_STATUS Status;
-    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -1489,12 +1483,6 @@ NTSTATUS DispTdiSetInformationEx(
 
         Status = InfoTdiSetInformationEx(&Request, &Info->ID,
             &Info->Buffer, Info->BufferSize);
-
-        if (Status != STATUS_PENDING) {
-            IoAcquireCancelSpinLock(&OldIrql);
-            (void)IoSetCancelRoutine(Irp, NULL);
-            IoReleaseCancelSpinLock(OldIrql);
-        }
     }
 
     return Status;
