@@ -160,7 +160,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
             {
               if (pProcessData->HandleTable[c])
                 {
-                  CsrReleaseObject(pProcessData, (HANDLE)(((c + 1) << 2)|0x3));
+                  CsrReleaseObjectByPointer(pProcessData->HandleTable[c]);
                 }
             }
           RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
@@ -430,6 +430,7 @@ CSR_API(CsrDuplicateHandle)
       Request->Status = CsrInsertObject(ProcessData,
                                       &Request->Data.DuplicateHandleRequest.Handle,
                                       Object);
+      CsrReleaseObjectByPointer(Object);
     }
   return Request->Status;
 }

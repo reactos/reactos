@@ -63,21 +63,25 @@ CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions)
 
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
 {
-  ULONG h = (((ULONG)Handle) >> 2) - 1;
+  ULONG h = (ULONG)Handle >> 2;
   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
   if (ProcessData == NULL)
     {
       return STATUS_INVALID_PARAMETER;
     }
-  if (!CsrIsConsoleHandle(Handle) || ProcessData->HandleTableSize <= h)
+  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
+      || (*Object = ProcessData->HandleTable[h]) == NULL)
     {
       DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
+      RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
       return STATUS_INVALID_HANDLE;
     }
-  *Object = ProcessData->HandleTable[h];
+  _InterlockedIncrement(&(*Object)->ReferenceCount);
+  RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
   //   DbgPrint( "CsrGetObject returning\n" );
-  return *Object ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
+  return STATUS_SUCCESS;
 }
 
 
@@ -114,7 +118,7 @@ NTSTATUS STDCALL
 CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle)
 {
-  ULONG h = (((ULONG)Handle) >> 2) - 1;
+  ULONG h = (ULONG)Handle >> 2;
   Object_t *Object;
 
   if (ProcessData == NULL)
@@ -171,7 +175,7 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
        ProcessData->HandleTableSize += 64;
      }
    ProcessData->HandleTable[i] = Object;
-   *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
+   *Handle = (HANDLE)((i << 2) | 0x3);
    _InterlockedIncrement( &Object->ReferenceCount );
    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
@@ -216,7 +220,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
 
 NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle )
 {
-  ULONG h = (((ULONG)Handle) >> 2) - 1;
+  ULONG h = (ULONG)Handle >> 2;
 
   if (ProcessData == NULL)
     {

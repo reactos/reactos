@@ -47,6 +47,7 @@ ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Con
       return STATUS_INVALID_HANDLE;
     }
 
+  InterlockedIncrement(&ProcessConsole->Header.ReferenceCount);
   EnterCriticalSection(&(ProcessConsole->Header.Lock));
   *Console = ProcessConsole;
 
@@ -1948,12 +1949,12 @@ CSR_API(CsrSetConsoleMode)
     }
   else
     {
-      return Request->Status = STATUS_INVALID_HANDLE;
+      Status = STATUS_INVALID_HANDLE;
     }
 
-  Request->Status = STATUS_SUCCESS;
+  Win32CsrReleaseObjectByPointer((Object_t *)Console);
 
-  return Request->Status;
+  return Request->Status = Status;
 }
 
 CSR_API(CsrGetConsoleMode)
@@ -1987,6 +1988,7 @@ CSR_API(CsrGetConsoleMode)
       Request->Status = STATUS_INVALID_HANDLE;
     }
 
+  Win32CsrReleaseObjectByPointer((Object_t *)Console);
   return Request->Status;
 }
 

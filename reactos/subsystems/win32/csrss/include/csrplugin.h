@@ -28,6 +28,7 @@ typedef NTSTATUS (STDCALL *CSRSS_INSERT_OBJECT_PROC)(PCSRSS_PROCESS_DATA Process
 typedef NTSTATUS (STDCALL *CSRSS_GET_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                   HANDLE Handle,
                                                   Object_t **Object);
+typedef NTSTATUS (STDCALL *CSRSS_RELEASE_OBJECT_BY_POINTER_PROC)(Object_t *Object);
 typedef NTSTATUS (STDCALL *CSRSS_RELEASE_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                       HANDLE Object );
 typedef NTSTATUS (STDCALL *CSRSS_ENUM_PROCESSES_PROC)(CSRSS_ENUM_PROCESS_PROC EnumProc,
@@ -37,6 +38,7 @@ typedef struct tagCSRSS_EXPORTED_FUNCS
 {
   CSRSS_INSERT_OBJECT_PROC CsrInsertObjectProc;
   CSRSS_GET_OBJECT_PROC CsrGetObjectProc;
+  CSRSS_RELEASE_OBJECT_BY_POINTER_PROC CsrReleaseObjectByPointerProc;
   CSRSS_RELEASE_OBJECT_PROC CsrReleaseObjectProc;
   CSRSS_ENUM_PROCESSES_PROC CsrEnumProcessesProc;
 } CSRSS_EXPORTED_FUNCS, *PCSRSS_EXPORTED_FUNCS;

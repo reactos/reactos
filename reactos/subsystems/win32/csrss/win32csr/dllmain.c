@@ -125,6 +125,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 
   if ((*Object)->Type != Type)
     {
+      (CsrExports.CsrReleaseObjectByPointerProc)(*Object);
       return STATUS_INVALID_HANDLE;
     }
 
@@ -137,6 +138,13 @@ VOID FASTCALL
 Win32CsrUnlockObject(Object_t *Object)
 {
   LeaveCriticalSection(&(Object->Lock));
+  (CsrExports.CsrReleaseObjectByPointerProc)(Object);
+}
+
+NTSTATUS FASTCALL
+Win32CsrReleaseObjectByPointer(Object_t *Object)
+{
+  return (CsrExports.CsrReleaseObjectByPointerProc)(Object);
 }
 
 NTSTATUS FASTCALL
