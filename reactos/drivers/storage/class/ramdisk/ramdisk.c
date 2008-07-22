@@ -315,7 +315,7 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     //
     // Calculate pages spanned for the mapping
     //
-    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Offset.QuadPart, Length);
+    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
     DPRINT1("Length in pages: %d\n", ActualLength);
     
     //
@@ -344,16 +344,57 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     return MappedBase;
 }
 
-PVOID
+VOID
 NTAPI
 RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
                   IN PVOID BaseAddress,
                   IN LARGE_INTEGER Offset,
                   IN ULONG Length)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
+    LARGE_INTEGER ActualOffset;
+    SIZE_T ActualLength;
+    ULONG PageOffset;
+    
+    //
+    // We only support boot disks for now
+    //
+    ASSERT(DeviceExtension->DiskType == RAMDISK_BOOT_DISK);
+    
+    //
+    // Calculate the actual offset in the drive
+    //
+    ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
+    DPRINT1("Disk offset is: %d and Offset is: %I64d. Total: %I64d\n",
+            DeviceExtension->DiskOffset, Offset, ActualOffset);
+    
+    //
+    // Calculate pages spanned for the mapping
+    //
+    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
+    DPRINT1("Length in pages: %d\n", ActualLength);
+    
+    //
+    // And convert this back to bytes
+    //
+    ActualLength <<= PAGE_SHIFT;
+    DPRINT1("Length in bytes: %d\n", ActualLength);
+    
+    //
+    // Get the offset within the page
+    //
+    PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
+    DPRINT1("Page offset: %lx\n", PageOffset);
+    
+    //
+    // Calculate actual base address where we mapped this
+    //
+    BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - PageOffset);
+    DPRINT1("Unmapping at: %p\n", BaseAddress);
+    
+    //
+    // Unmap the I/O space we got from the loader
+    //
+    MmUnmapIoSpace(BaseAddress, ActualLength);
 }
 
 NTSTATUS
