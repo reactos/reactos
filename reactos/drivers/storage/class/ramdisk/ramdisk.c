@@ -94,6 +94,7 @@ typedef struct _RAMDISK_DRIVE_EXTENSION
     ULONG BytesPerSector;
     ULONG SectorsPerTrack;
     ULONG NumberOfHeads;
+    ULONG BasePage;
 } RAMDISK_DRIVE_EXTENSION, *PRAMDISK_DRIVE_EXTENSION;
 
 ULONG MaximumViewLength;
@@ -273,7 +274,61 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
                 IN ULONG Length,
                 OUT PULONG OutputLength)
 {
-    DPRINT1("Mapping %lx bytes at %I64x\n", Length, Offset.QuadPart);
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PVOID MappedBase;
+    SIZE_T ActualLength;
+    LARGE_INTEGER ActualOffset;
+    LARGE_INTEGER ActualPages;
+    
+    //
+    // We only support boot disks for now
+    //
+    ASSERT(DeviceExtension->DiskType == RAMDISK_BOOT_DISK);
+    
+    //
+    // Calculate the actual offset in the drive
+    //
+    ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
+    DPRINT1("Disk offset is: %I64d and Offset is: %I64d. Total: %I64d\n",
+            DeviceExtension->DiskOffset, Offset, ActualOffset);
+    
+    //
+    // Convert to pages
+    //
+    ActualOffset.QuadPart = BYTES_TO_PAGES(ActualOffset.QuadPart);
+    DPRINT1("Offset in pages is: %d\n", ActualOffset);
+    
+    //
+    // Now add the base page
+    //
+    ActualPages.QuadPart = DeviceExtension->BasePage + ActualOffset.QuadPart;
+    DPRINT1("Ramdisk mapped at page: %d, actual page is: %I64d\n",
+            DeviceExtension->BasePage, ActualPages);
+    
+    //
+    // Calculate final amount of bytes
+    //
+    PhysicalAddress.QuadPart = ActualPages.QuadPart << PAGE_SHIFT;
+    DPRINT1("Physical Address is: %I64x\n", PhysicalAddress);
+    
+    //
+    // Calculate pages spanned for the mapping
+    //
+    ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Offset.QuadPart, Length);
+    DPRINT1("Length in pages: %d\n", ActualLength);
+    
+    //
+    // And convert this back to bytes
+    //
+    ActualLength <<= PAGE_SHIFT;
+    DPRINT1("Length in bytes: %d\n", ActualLength);
+    
+    //
+    // Map the I/O Space from the loader
+    //
+    MappedBase = MmMapIoSpace(PhysicalAddress, ActualLength, MmCached);
+    DPRINT1("Mapped at: %p\n", MappedBase);
+    
     UNIMPLEMENTED;
     while (TRUE);
     return NULL;
@@ -532,6 +587,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DriveExtension->DiskOptions = Input->Options;
         DriveExtension->DiskLength = Input->DiskLength;
         DriveExtension->DiskOffset = Input->DiskOffset;
+        DriveExtension->BasePage = Input->BasePage;
 
         //
         // Make sure we don't free it later
