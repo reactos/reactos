@@ -226,10 +226,30 @@ VOID
 NTAPI
 MmRawDeleteVirtualMapping(IN PVOID Address)
 {
+    PMMPTE PointerPte, PointerPde;
+    
     //
-    // TODO
+    // Get the PDE
     //
-    UNIMPLEMENTED;
+    PointerPde = MiGetPdeAddress(Address);
+    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte) return;
+
+    //
+    // Get the PTE
+    //
+    PointerPte = MiGetPteAddress(Address);
+    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
+    
+    //
+    // Destroy the PTE
+    //
+    PointerPte->u.Hard.AsUlong = 0;
+    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
+    
+    //
+    // Flush the TLB
+    //
+    KiFlushSingleTb(TRUE, Address);
 }
 
 VOID
