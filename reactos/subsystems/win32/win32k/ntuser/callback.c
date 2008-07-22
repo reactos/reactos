@@ -449,7 +449,7 @@ co_IntCallHookProc(INT HookId,
       case WH_GETMESSAGE:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSG));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
-         DPRINT1("KHOOK Memory: %x\n",Common);
+//         DPRINT1("KHOOK Memory: %x\n",Common);
          break;
 //      case WH_SHELL:
 //         Extra = lParam;

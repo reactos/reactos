@@ -183,30 +183,28 @@ CallMsgFilterW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LRESULT
 STDCALL
 CallNextHookEx(
-  HHOOK Hook,
+  HHOOK Hook,  // Windows NT/XP/2003: Ignored.
   int Code,
   WPARAM wParam,
   LPARAM lParam)
 {
   PW32CLIENTINFO ClientInfo;
-  PHOOK pHook;
   DWORD Flags, Save;
+  PHOOK pHook;
   LRESULT lResult = 0;
 
   GetConnected();
 
   ClientInfo = GetWin32ClientInfo();
 
-  pHook = ValidateHandle(Hook, VALIDATE_TYPE_HOOK);
-
-  if (!pHook) return 0;
-
-  ClientInfo->phkCurrent = (PHOOK)pHook->Self; // Pass this over to the kernel.  
+  if (!ClientInfo->phkCurrent) return 0;
+  
+  pHook = SharedPtrToUser(ClientInfo->phkCurrent);
 
   if (pHook->HookId == WH_CALLWNDPROC || pHook->HookId == WH_CALLWNDPROCRET)
   {
@@ -508,7 +506,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     case WH_SYSMSGFILTER:
     case WH_GETMESSAGE:
       Msg = (PMSG)((PCHAR) Common + Common->lParam);
-      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
+//      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) Msg);
       break;
     default:

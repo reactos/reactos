@@ -731,7 +731,6 @@ NtUserCallNextHookEx(
    LPARAM lParam,
    BOOL Ansi)
 {
-   HHOOK Hook;
    PHOOK HookObj, NextObj;
    PW32CLIENTINFO ClientInfo;
    PWINSTATION_OBJECT WinStaObj;
@@ -758,14 +757,7 @@ NtUserCallNextHookEx(
 
    ClientInfo = GetWin32ClientInfo();
 
-   Hook = (HHOOK)ClientInfo->phkCurrent;
-
-   if (!(HookObj = IntGetHookObject(Hook)))
-   {
-      RETURN(0);
-   }
-
-   ASSERT(Hook == HookObj->Self);
+   HookObj = ClientInfo->phkCurrent; // Use this one set from SetWindowHook.
 
    HookId = HookObj->HookId;
    Ansi = HookObj->Ansi;
@@ -784,9 +776,12 @@ NtUserCallNextHookEx(
    {
       lResult = UserCallNextHookEx( HookId, Code, wParam, lParam, Ansi);
 
+      ClientInfo->phkCurrent = NextObj;
+
       if (lResult == 0) RETURN( 0);
       RETURN( (LRESULT)NextObj);
    }
+   ClientInfo->phkCurrent = NextObj;
 
    RETURN( 0);
 
@@ -819,6 +814,7 @@ NtUserSetWindowsHookEx(
    BOOL Ansi)
 {
    PWINSTATION_OBJECT WinStaObj;
+   PW32CLIENTINFO ClientInfo;
    BOOLEAN Global;
    PETHREAD Thread;
    PHOOK Hook;
@@ -835,6 +831,8 @@ NtUserSetWindowsHookEx(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       RETURN( NULL);
    }
+
+   ClientInfo = GetWin32ClientInfo();
 
    if (ThreadId)  /* thread-local hook */
    {
@@ -894,9 +892,19 @@ NtUserSetWindowsHookEx(
    }
 
    /* We only (partially) support local WH_CBT hooks and
-    * WH_KEYBOARD_LL/WH_MOUSE_LL hooks for now */
-   if ((WH_CBT != HookId || Global)
-         && WH_KEYBOARD_LL != HookId && WH_MOUSE_LL != HookId && WH_GETMESSAGE != HookId)
+    * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
+    */
+   if  (WH_CALLWNDPROC == HookId &&
+        WH_CALLWNDPROCRET == HookId &&
+        WH_DEBUG == HookId &&
+        WH_JOURNALPLAYBACK == HookId &&
+        WH_JOURNALRECORD == HookId &&
+        WH_FOREGROUNDIDLE == HookId &&
+        WH_KEYBOARD == HookId &&
+        WH_MOUSE == HookId &&
+        WH_MSGFILTER == HookId &&
+        WH_SYSMSGFILTER == HookId &&
+        WH_SHELL == HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED
@@ -997,6 +1005,9 @@ NtUserSetWindowsHookEx(
    Hook->Ansi = Ansi;
    Handle = Hook->Self;
 
+// Set the client threads next hook based on the hooks type.
+   ClientInfo->phkCurrent    = IntGetNextHook( Hook); 
+   
    UserDereferenceObject(Hook);
    ObDereferenceObject(WinStaObj);
 

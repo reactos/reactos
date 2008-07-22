@@ -818,8 +818,8 @@ MsgExit:
       // be returned by the GetMessage or PeekMessage function.
       if(ISITHOOKED(WH_GETMESSAGE))
       {
-         DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
-         co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
+         //DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
+         co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
       }
       return TRUE;
    }
