@@ -512,6 +512,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
                        _T("Help is not yet implemented\n"),
                        _T("Note!"),
                        MB_OK | MB_ICONINFORMATION);
+            SetFocus(Info->hListView);
         break;
 
         case ID_EXIT:
@@ -569,6 +570,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
                       MAKEINTRESOURCE(IDD_ABOUTBOX),
                       Info->hMainWnd,
                       (DLGPROC)AboutDialogProc);
+            SetFocus(Info->hListView);
         break;
 
     }
