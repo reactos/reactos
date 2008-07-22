@@ -1109,7 +1109,7 @@ RamdiskReadWriteReal(IN PIRP Irp,
     // Get the MDL and check if it's mapped
     //
     Mdl = Irp->MdlAddress;
-    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+    if (Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | MDL_SOURCE_IS_NONPAGED_POOL))
     {
         //
         // Use the mapped address
@@ -1280,7 +1280,7 @@ RamdiskGetPartitionInfo(IN PIRP Irp,
                                               DeviceExtension->Cylinders;
     PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
     PartitionInfo->PartitionNumber = 0;
-    PartitionInfo->PartitionType = *((PCHAR)BaseAddress + 450);
+    PartitionInfo->PartitionType = PARTITION_FAT32; //*((PCHAR)BaseAddress + 450);
     PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
                                     RAMDISK_BOOT_DISK) ? TRUE: FALSE;
     PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
