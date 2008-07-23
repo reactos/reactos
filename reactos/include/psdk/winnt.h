@@ -4153,7 +4153,7 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 #elif defined (_M_AMD64)
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
-    return __readgsqword(FIELD_OFFSET(NT_TIB, Self));
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 }
 #else
 static __inline__ struct _TEB * NtCurrentTeb(void)
