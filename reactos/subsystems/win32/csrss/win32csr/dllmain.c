@@ -106,20 +106,22 @@ Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 NTSTATUS FASTCALL
 Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle,
-                 Object_t **Object)
+                 Object_t **Object,
+                 DWORD Access)
 {
-  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, 0);
+  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
 }
 
 NTSTATUS FASTCALL
 Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
+                   DWORD Access,
                    LONG Type)
 {
   NTSTATUS Status;
 
-  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, 0);
+  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
   if (! NT_SUCCESS(Status))
     {
       return Status;

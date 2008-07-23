@@ -104,16 +104,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
    TRACE("CreateFileW(lpFileName %S)\n",lpFileName);
 
-   /* check for console input/output */
-   if (0 == _wcsicmp(L"CONOUT$", lpFileName)
-       || 0 == _wcsicmp(L"CONIN$", lpFileName))
-   {
-      return OpenConsoleW(lpFileName,
-                          dwDesiredAccess, 
-                          lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
-                          dwCreationDisposition);
-   }
-
    /* validate & translate the creation disposition */
    switch (dwCreationDisposition)
      {
@@ -141,6 +131,16 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
         SetLastError(ERROR_INVALID_PARAMETER);
         return (INVALID_HANDLE_VALUE);
      }
+
+   /* check for console input/output */
+   if (0 == _wcsicmp(L"CONOUT$", lpFileName)
+       || 0 == _wcsicmp(L"CONIN$", lpFileName))
+   {
+      return OpenConsoleW(lpFileName,
+                          dwDesiredAccess, 
+                          lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE);
+   }
 
   /* validate & translate the flags */
 

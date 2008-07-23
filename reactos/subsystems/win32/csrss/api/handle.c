@@ -19,10 +19,10 @@
 static unsigned ObjectDefinitionsCount = 0;
 static PCSRSS_OBJECT_DEFINITION ObjectDefinitions = NULL;
 
-BOOL
+static BOOL
 CsrIsConsoleHandle(HANDLE Handle)
 {
-  return ((((ULONG)Handle) & 0x10000003) == 0x3) ? TRUE : FALSE;
+  return ((ULONG)Handle & 0x10000003) == 0x3;
 }
 
 
@@ -89,26 +89,21 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
 NTSTATUS STDCALL
 CsrReleaseObjectByPointer(Object_t *Object)
 {
-  BOOL Found;
   unsigned DefIndex;
 
   /* dec ref count */
   if (_InterlockedDecrement(&Object->ReferenceCount) == 0)
     {
-      Found = FALSE;
-      for (DefIndex = 0; ! Found && DefIndex < ObjectDefinitionsCount; DefIndex++)
+      for (DefIndex = 0; DefIndex < ObjectDefinitionsCount; DefIndex++)
         {
           if (Object->Type == ObjectDefinitions[DefIndex].Type)
             {
               (ObjectDefinitions[DefIndex].CsrCleanupObjectProc)(Object);
-              Found = TRUE;
+              return STATUS_SUCCESS;
             }
         }
 
-      if (! Found)
-        {
-	  DPRINT1("CSR: Error: releaseing unknown object type 0x%x", Object->Type);
-        }
+      DPRINT1("CSR: Error: releasing unknown object type 0x%x", Object->Type);
     }
 
   return STATUS_SUCCESS;
@@ -127,7 +122,7 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
       return STATUS_INVALID_PARAMETER;
     }
   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
+  if (h >= ProcessData->HandleTableSize
       || (Object = ProcessData->HandleTable[h].Object) == NULL)
     {
       RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -234,7 +229,7 @@ NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle
     {
       return STATUS_INVALID_PARAMETER;
     }
-  if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
+  if (h >= ProcessData->HandleTableSize
       || ProcessData->HandleTable[h].Object == NULL)
     {
       return STATUS_INVALID_HANDLE;

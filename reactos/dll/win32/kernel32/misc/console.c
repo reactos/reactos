@@ -906,7 +906,7 @@ HANDLE STDCALL
 OpenConsoleW (LPCWSTR  wsName,
 	      DWORD   dwDesiredAccess,
 	      BOOL    bInheritHandle,
-	      DWORD   dwCreationDistribution)
+	      DWORD   dwShareMode)
      /*
       * Undocumented
       */
@@ -933,7 +933,7 @@ OpenConsoleW (LPCWSTR  wsName,
     SetLastError(ERROR_INVALID_PARAMETER);
     return(INVALID_HANDLE_VALUE);
   }
-  if (OPEN_EXISTING != dwCreationDistribution)
+  if (dwShareMode & ~(FILE_SHARE_READ|FILE_SHARE_WRITE))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return(INVALID_HANDLE_VALUE);
@@ -1260,12 +1260,6 @@ CloseConsoleHandle(HANDLE Handle)
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   
   NTSTATUS Status;
-
-  if (IsConsoleHandle (Handle) == FALSE)
-    {
-      SetLastError (ERROR_INVALID_PARAMETER);
-      return FALSE;
-    }
 
   CsrRequest = MAKE_CSR_API(CLOSE_HANDLE, CSR_NATIVE);
   Request.Data.CloseHandleRequest.Handle = Handle;
@@ -2906,14 +2900,6 @@ SetConsoleMode(
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   
   NTSTATUS Status;
-
-  if (!IsConsoleHandle (hConsoleHandle))
-  {
-    DPRINT("SetConsoleMode was called with a non console handle\n");
-    SetLastError (ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
 
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_MODE, CSR_CONSOLE);
   Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;

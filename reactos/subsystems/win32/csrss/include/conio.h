@@ -152,12 +152,12 @@ CSR_API(CsrGetProcessList);
 #define ConioRectWidth(Rect) \
     (((Rect)->left) > ((Rect)->right) ? 0 : ((Rect)->right) - ((Rect)->left) + 1)
 
-#define ConioLockConsole(ProcessData, Handle, Ptr) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), CONIO_CONSOLE_MAGIC)
+#define ConioLockConsole(ProcessData, Handle, Ptr, Access) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_CONSOLE_MAGIC)
 #define ConioUnlockConsole(Console) \
     Win32CsrUnlockObject((Object_t *) Console)
-#define ConioLockScreenBuffer(ProcessData, Handle, Ptr) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), CONIO_SCREEN_BUFFER_MAGIC)
+#define ConioLockScreenBuffer(ProcessData, Handle, Ptr, Access) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
 #define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
