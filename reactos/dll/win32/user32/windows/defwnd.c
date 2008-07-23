@@ -666,6 +666,13 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
+#if 0
+  if (ISITHOOKED(WH_CBT))
+  {
+      if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, (LPARAM)&sizingRect, 0, FNID_DEFWINDOWPROC, FALSE))
+         moved = FALSE;
+  }
+#endif
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
@@ -745,6 +752,13 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
   WINDOWPLACEMENT wp;
   POINT Pt;
 
+#if 0
+  if (ISITHOOKED(WH_CBT))
+  {
+     if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE))
+        return 0;
+  }
+#endif
   switch (wParam & 0xfff0)
     {
       case SC_MOVE:
@@ -1410,7 +1424,8 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SHOWWINDOW:
         {
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE);
+            if (lParam) // Call when it is necessary.
+               NtUserMessageCall( hWnd, Msg, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE);
             break;
         }
 
