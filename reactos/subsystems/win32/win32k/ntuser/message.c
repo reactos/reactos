@@ -306,9 +306,9 @@ NtUserCallMsgFilter(
    DPRINT("Enter NtUserCallMsgFilter\n");
    UserEnterExclusive();
 
-   if (co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)msg))
+   if ( UserCallNextHookEx( WH_SYSMSGFILTER, code, 0, (LPARAM)msg, FALSE))
       RETURN( TRUE);
-   RETURN( co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)msg));
+   RETURN( UserCallNextHookEx( WH_MSGFILTER, code, 0, (LPARAM)msg, FALSE));
 
 CLEANUP:
    DPRINT("Leave NtUserCallMsgFilter. ret=%i\n", _ret_);
