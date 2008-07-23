@@ -404,8 +404,119 @@ IntCallDebugHook(
    WPARAM wParam,
    LPARAM lParam)
 {
-   UNIMPLEMENTED
-   return 0;
+   LRESULT lResult = 0;
+   ULONG Size;
+   DEBUGHOOKINFO Debug;
+   PVOID HooklParam = NULL;
+   BOOL BadChk = FALSE;
+
+   if (lParam)
+   {
+      _SEH_TRY
+      {
+          ProbeForRead((PVOID)lParam,
+                       sizeof(DEBUGHOOKINFO),
+                                   1);
+          RtlCopyMemory( &Debug,
+                  (PVOID)lParam,
+                  sizeof(DEBUGHOOKINFO));
+      }
+      _SEH_HANDLE
+      {
+          BadChk = TRUE;
+      }
+      _SEH_END;
+      if (BadChk)
+      {
+          DPRINT1("HOOK WH_DEBUG read from lParam ERROR!\n");
+          return lResult;
+      }
+   }
+   else
+      return lResult; // Need lParam!
+
+   switch (wParam)
+   {
+      case WH_CBT:
+      {
+         switch (Debug.code)
+         {
+            case HCBT_CLICKSKIPPED:
+               Size = sizeof(MOUSEHOOKSTRUCTEX);
+               break;
+            case HCBT_MOVESIZE:
+               Size = sizeof(RECT);
+               break;
+            case HCBT_ACTIVATE:
+               Size = sizeof(CBTACTIVATESTRUCT); 
+               break;
+            case HCBT_CREATEWND: // Handle Ansi?
+               Size = sizeof(CBT_CREATEWND);
+               // What shall we do? Size += sizeof(CREATESTRUCTEX);
+               break;
+            default:
+               Size = sizeof(LPARAM);
+         }
+      }
+      break;
+
+      case WH_MOUSE_LL:
+         Size = sizeof(MSLLHOOKSTRUCT);
+      break;
+
+      case WH_KEYBOARD_LL:
+         Size = sizeof(KBDLLHOOKSTRUCT);
+      break;
+
+      case WH_MSGFILTER:
+      case WH_SYSMSGFILTER:
+      case WH_GETMESSAGE:
+         Size = sizeof(MSG);
+      break;
+
+      case WH_JOURNALPLAYBACK:
+      case WH_JOURNALRECORD:
+         Size = sizeof(EVENTMSG);
+      break;
+
+      case WH_FOREGROUNDIDLE:
+      case WH_KEYBOARD:
+      case WH_SHELL:
+      default:
+         Size = sizeof(LPARAM);
+   }
+
+   if (Size > sizeof(LPARAM))
+      HooklParam = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_HOOK);
+
+   if (HooklParam)
+   {
+      _SEH_TRY
+      {
+          ProbeForRead((PVOID)Debug.lParam,
+                                      Size,
+                                         1);
+          RtlCopyMemory( HooklParam,
+                (PVOID)Debug.lParam,
+                               Size);
+      }
+      _SEH_HANDLE
+      {
+          BadChk = TRUE;
+      }
+      _SEH_END;
+      if (BadChk)
+      {
+          DPRINT1("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
+          ExFreePool(HooklParam);
+          return lResult;
+      }
+   }
+
+   if (HooklParam) Debug.lParam = (LPARAM)HooklParam;
+   lResult = co_HOOK_CallHooks(WH_DEBUG, Code, wParam, (LPARAM)&Debug);
+   if (HooklParam) ExFreePool(HooklParam);
+   return lResult;
 }
 
 LRESULT
@@ -445,8 +556,8 @@ UserCallNextHookEx(
             DPRINT1("HOOK WH_MOUSE read from lParam ERROR!\n");
         }
      }
-     if (!BadChk) 
-     {               
+     if (!BadChk)
+     {
         lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Mouse);
      }
      return lResult;
@@ -478,8 +589,8 @@ UserCallNextHookEx(
                 DPRINT1("HOOK WH_MOUSE_LL read from lParam ERROR!\n");
             }
          }
-         if (!BadChk) 
-         {               
+         if (!BadChk)
+         {
             lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Mouse);
          }
          break;
@@ -509,13 +620,12 @@ UserCallNextHookEx(
                 DPRINT1("HOOK WH_KEYBORD_LL read from lParam ERROR!\n");
             }
          }
-         if (!BadChk) 
-         {               
+         if (!BadChk)
+         {
             lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Keyboard);
          }
          break;
       }
-
 
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
@@ -543,8 +653,8 @@ UserCallNextHookEx(
                DPRINT1("HOOK WH_XMESSAGEX read from lParam ERROR!\n");
             }
          }
-         if (!BadChk) 
-         { 
+         if (!BadChk)
+         {
             lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Msg);
             if (lParam && (HookId == WH_GETMESSAGE))
             {
@@ -574,7 +684,7 @@ UserCallNextHookEx(
       case WH_CBT:
          switch (Code)
          {
-            case HCBT_CREATEWND:
+            case HCBT_CREATEWND: // Use Ansi.
                lResult = co_HOOK_CallHooks(HookId, Code, wParam, lParam);
                break;
 
@@ -603,8 +713,8 @@ UserCallNextHookEx(
                       DPRINT1("HOOK HCBT_MOVESIZE read from lParam ERROR!\n");
                    }
                }
-               if (!BadChk) 
-               {               
+               if (!BadChk)
+               {
                    lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&rt);
                }
                break;
@@ -635,8 +745,8 @@ UserCallNextHookEx(
                       DPRINT1("HOOK HCBT_ACTIVATE read from lParam ERROR!\n");
                    }
                }
-               if (!BadChk) 
-               {               
+               if (!BadChk)
+               {
                    lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&CbAs);
                }
                break;
@@ -649,7 +759,6 @@ UserCallNextHookEx(
                break;
          }
          break;
-
 
       case WH_JOURNALPLAYBACK:
       case WH_JOURNALRECORD:
@@ -902,8 +1011,6 @@ NtUserSetWindowsHookEx(
         WH_FOREGROUNDIDLE == HookId &&
         WH_KEYBOARD == HookId &&
         WH_MOUSE == HookId &&
-        WH_MSGFILTER == HookId &&
-        WH_SYSMSGFILTER == HookId &&
         WH_SHELL == HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
