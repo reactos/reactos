@@ -296,7 +296,7 @@ FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
 {
-    return (struct _KPRCB *)(ULONG_PTR)__readfsdword(FIELD_OFFSET(KPCR, Prcb));
+    return (struct _KPRCB *)(ULONG_PTR)__readgsqword(FIELD_OFFSET(KPCR, Prcb));
 }
 
 //
