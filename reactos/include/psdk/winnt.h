@@ -1358,7 +1358,7 @@ typedef enum
 #define IMAGE_DLLCHARACTERISTICS_NO_BIND 0x0800
 #define IMAGE_DLLCHARACTERISTICS_WDM_DRIVER 0x2000
 #define IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE 0x8000
-#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
+#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD_PTR)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
 #define IMAGE_DIRECTORY_ENTRY_EXPORT	0
 #define IMAGE_DIRECTORY_ENTRY_IMPORT	1
 #define IMAGE_DIRECTORY_ENTRY_RESOURCE	2
@@ -2910,7 +2910,7 @@ typedef struct _RTL_CRITICAL_SECTION {
 #endif
 
 NTSYSAPI
-WORD  
+WORD
 NTAPI
 RtlCaptureStackBackTrace(
     IN DWORD FramesToSkip,
@@ -4098,6 +4098,11 @@ static __inline__ PVOID GetCurrentFiber(void)
     );
     return ret;
 }
+#elif defined (_M_AMD64)
+FORCEINLINE PVOID GetCurrentFiber(VOID)
+{
+    return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
+}
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
 #else
@@ -4138,13 +4143,18 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
     return ret;
 }
 #elif _M_ARM
-    
+
 //
 // NT-ARM is not documented
 //
 #define KIRQL ULONG // Hack!
 #include <armddk.h>
-    
+
+#elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
+{
+    return __readgsqword(FIELD_OFFSET(NT_TIB, Self));
+}
 #else
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
@@ -4275,6 +4285,8 @@ BitScanReverse(OUT ULONG *Index,
 
 #if defined(_M_IX86)
 #define YieldProcessor() __asm__ __volatile__("pause");
+#elif defined (_M_AMD64)
+#define YieldProcessor() __asm__ __volatile__("pause");
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)
@@ -4289,6 +4301,19 @@ BitScanReverse(OUT ULONG *Index,
 #if defined(_M_AMD64)
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG64 *)a, b)
+
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedOr _InterlockedOr
+
+#define InterlockedAnd64 _InterlockedAnd64
+#define InterlockedOr64 _InterlockedOr64
+
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset _interlockedbittestandreset
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
+
 
 #endif
 
