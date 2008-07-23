@@ -488,7 +488,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 {
   /*
    * This function doesn't do any real work now and there's plenty
-   * of bugd in it (calling SetPalette for high/true-color modes,
+   * of bugs in it (calling SetPalette for high/true-color modes,
    * using DEFAULT_PALETTE instead of the device palette, ...).
    */
 
@@ -497,12 +497,11 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
-  BOOLEAN success;
+  //BOOLEAN success;
   USHORT sysMode, palMode;
 
   dc = DC_LockDc(hDC);
-  if (!dc)
-  	return 0;
+  if (!dc) return 0;
 
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
@@ -510,12 +509,9 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 
   if (palGDI == NULL)
   {
-	 /* FIXME - Handle palGDI == NULL!!!!
-	    we should not unlock dc and return 0 ??
-		shall we create the pallete ??
-	 */
-     DC_UnlockDc(dc);
-	 return 0;
+    DPRINT1("IntGdiRealizePalette(): palGDI is NULL, exiting\n");
+    DC_UnlockDc(dc);
+    return 0;
   }
 
   sysGDI = PALETTE_LockPalette(systemPalette);
@@ -523,13 +519,10 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 
   if (sysGDI == NULL)
   {
-	 /* FIXME - Handle sysGDI == NULL!!!!!
-	    we should not unlock dc and return 0 ??
-		shall we create the pallete ??
-	 */
-     PALETTE_UnlockPalette(palGDI);
-     DC_UnlockDc(dc);
-	 return 0;
+    DPRINT1("IntGdiRealizePalette(): sysGDI is NULL, exiting\n");
+    PALETTE_UnlockPalette(palGDI);
+    DC_UnlockDc(dc);
+    return 0;
   }
 
 
@@ -551,12 +544,10 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   if(dc->DC_Type == DC_TYPE_MEMORY)
   {
     // Memory managed DC
-	ASSERT(sysGDI->NumColors <= 256);
-	success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
-		dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
-
-/* See bug 733, keep the code for now.
-   } else {
+    DPRINT1("win32k: realizepalette unimplemented step 2 for DC_MEMORY\n");
+  } else {
+    DPRINT1("win32k: realizepalette commented out step 2\n");
+   /* See bug 733, keep the code for now.
     if( ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette)
     {
       ASSERT(palGDI->NumColors <= 256);
