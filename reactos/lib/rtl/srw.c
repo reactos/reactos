@@ -21,6 +21,7 @@
 /* FIXME *********************************************************************/
 
 /* FIXME: Interlocked functions that need to be made into a public header */
+#if 0
 FORCEINLINE
 LONG
 InterlockedAnd(IN OUT volatile LONG *Target,
@@ -60,6 +61,7 @@ InterlockedOr(IN OUT volatile LONG *Target,
 
     return j;
 }
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -87,7 +89,7 @@ InterlockedOr(IN OUT volatile LONG *Target,
                              RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENTION_LOCK)
 #define RTL_SRWLOCK_BITS    4
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(_M_AMD64)
 /* This macro will cause the code to assert if compiled with a buggy
    version of GCC that doesn't align the wait blocks properly on the stack! */
 #define ASSERT_SRW_WAITBLOCK(ptr) \

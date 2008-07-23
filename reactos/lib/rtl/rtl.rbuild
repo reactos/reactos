@@ -33,8 +33,13 @@
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
-        <file>mem.c</file>
-        <file>memgen.c</file>
+		<file>mem.c</file>
+		<file>memgen.c</file>
+	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
+			<file>debug_asm.S</file>
+		</directory>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>

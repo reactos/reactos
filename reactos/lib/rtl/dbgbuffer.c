@@ -234,7 +234,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN OUT PRTL_DEBUG_INFORMATION Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Pid = (ULONG) NtCurrentTeb()->Cid.UniqueProcess;
+   ULONG Pid = (ULONG_PTR) NtCurrentTeb()->Cid.UniqueProcess;
 
    Buf->Flags = DebugInfoMask;
    Buf->OffsetFree = sizeof(RTL_DEBUG_INFORMATION);
@@ -319,7 +319,7 @@ else
        Buf->TargetProcessHandle = NtCurrentProcess();
 
        ClientId.UniqueThread = 0;
-       ClientId.UniqueProcess = (HANDLE)ProcessId;
+       ClientId.UniqueProcess = (HANDLE)(ULONG_PTR)ProcessId;
        InitializeObjectAttributes(&ObjectAttributes,
                                   NULL,
                                   0,
