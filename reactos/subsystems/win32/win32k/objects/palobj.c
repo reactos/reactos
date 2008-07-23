@@ -248,6 +248,12 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   ExFreePool(palPtr->mapping);
   mapping = ExAllocatePoolWithTag(PagedPool, sizeof(int)*palGDI->NumColors, TAG_PALETTEMAP);
 
+  if (!mapping)
+  {
+      DPRINT1("Failed allocating memory for palette mapping!\n");
+      return 0;
+  }
+
   palPtr->mapping = mapping;
 
   for(uNum += uStart; uStart < uNum; uStart++)
@@ -326,11 +332,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
         }
 
         if( !prevMapping || palPtr->mapping[uStart] != index ) iRemapped++;
-        if (palPtr->mapping != NULL)
-        {
-            palPtr->mapping[uStart] = index;
-        }
-
+        palPtr->mapping[uStart] = index;
   }
   return iRemapped;
 }
