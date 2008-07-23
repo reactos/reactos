@@ -228,7 +228,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
-    
+
 #if (_M_IX86)
 #define KIP0PCRADDRESS                      0xffdff000
 #endif
@@ -5390,7 +5390,7 @@ typedef VOID
 */
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
-    
+
 #ifdef _X86_
 
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5479,19 +5479,19 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown compiler
 #endif
 }
-    
+
 NTHALAPI
 KIRQL
 DDKAPI
 KeGetCurrentIrql(
     VOID);
-    
+
 NTKERNELAPI
 PRKTHREAD
 NTAPI
 KeGetCurrentThread(
     VOID);
-    
+
 #define KI_USER_SHARED_DATA               0xffdf0000
 
 #elif defined(__x86_64__)
@@ -5572,7 +5572,7 @@ KeGetCurrentProcessorNumber(VOID)
 #elif defined(_MIPS_)
 
 #error MIPS Headers are totally incorrect
-    
+
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
@@ -5606,16 +5606,16 @@ KeGetCurrentProcessorNumber(VOID)
 // NT-ARM is not documented, need DDK-ARM
 //
 #include <armddk.h>
-        
+
 #else
 #error Unknown architecture
 #endif
-    
+
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
 #define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-    
+
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
@@ -5730,8 +5730,12 @@ InterlockedExchangeAdd(
  *   IN OUT PVOID VOLATILE  *Target,
  *   IN PVOID  Value)
  */
+#if defined (_M_AMD64)
+#define InterlockedExchangePointer _InterlockedExchangePointer
+#else
 #define InterlockedExchangePointer(Target, Value) \
   ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
+#endif
 
 /*
  * PVOID
@@ -5740,8 +5744,12 @@ InterlockedExchangeAdd(
  *   IN PVOID  Exchange,
  *   IN PVOID  Comparand)
  */
+#if defined (_M_AMD64)
+#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
+#else
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
+#endif
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 #define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
@@ -7555,6 +7563,9 @@ IoAllocateAdapterChannel(
     IN PVOID Context
 );
 
+/** Io access routines **/
+
+#if !defined(_M_AMD64)
 NTHALAPI
 VOID
 NTAPI
@@ -7728,6 +7739,244 @@ NTAPI
 WRITE_REGISTER_USHORT(
   IN PUSHORT  Register,
   IN USHORT  Value);
+
+#else
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __inbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __indwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __inwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_PORT_UCHAR(
+  IN PUCHAR  Port)
+{
+    return __inbyte((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+ULONG
+READ_PORT_ULONG(
+  IN PULONG  Port)
+{
+    return __indword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+USHORT
+READ_PORT_USHORT(
+  IN PUSHORT  Port)
+{
+    return __inword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __movsb(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __movsd(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __movsw(Register, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_REGISTER_UCHAR(
+  IN PUCHAR Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+ULONG
+READ_REGISTER_ULONG(
+  IN PULONG Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+USHORT
+READ_REGISTER_USHORT(
+  IN PUSHORT Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __outbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __outdwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __outwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value)
+{
+    __outbyte((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value)
+{
+    __outdword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value)
+{
+    __outword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsb(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsd(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsw(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value)
+{
+	LONG Sync;
+	*Register = Value;
+	InterlockedOr(&Sync, 1);
+}
+
+#endif
 
 /** I/O manager routines **/
 
@@ -9585,9 +9834,9 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToSynchLevel(
     VOID);
-    
+
 #elif defined(_M_ARM)
-    
+
 #include <armddk.h>
 
 #else
