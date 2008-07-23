@@ -153,6 +153,13 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile l
 	return __sync_fetch_and_and(value, mask);
 }
 
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) long _InterlockedAnd64(volatile long long * const value, const long long mask)
+{
+	return __sync_fetch_and_and(value, mask);
+}
+#endif
+
 static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
 {
 	return __sync_fetch_and_or(value, mask);
@@ -167,6 +174,13 @@ static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile lo
 {
 	return __sync_fetch_and_or(value, mask);
 }
+
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) long _InterlockedOr64(volatile long long * const value, const long long mask)
+{
+	return __sync_fetch_and_or(value, mask);
+}
+#endif
 
 static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
 {
@@ -455,6 +469,15 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 	return retval;
 }
 
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset64(volatile long long * a, const long long b)
+{
+	unsigned char retval;
+	__asm__("lock; btrq %[b], %[a]; setb %b[retval]" : [retval] "=r" (retval), [a] "=m" (a) : [b] "Ir" (b) : "memory");
+	return retval;
+}
+#endif
+
 static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset(volatile long * a, const long b)
 {
 	unsigned char retval;
@@ -462,6 +485,14 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 	return retval;
 }
 
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset64(volatile long long * a, const long long b)
+{
+	unsigned char retval;
+	__asm__("lock; btsq %[b], %[a]; setc %b[retval]" : [retval] "=r" (retval), [a] "=m" (a) : [b] "Ir" (b) : "memory");
+	return retval;
+}
+#endif
 
 /*** String operations ***/
 /* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
@@ -525,7 +556,98 @@ static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * De
 	);
 }
 
+#if defined(_M_AMD64)
+/*** GS segment addressing ***/
 
+static __inline__ __attribute__((always_inline)) void __writegsbyte(const unsigned long Offset, const unsigned char Data)
+{
+	__asm__("movb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) void __writegsword(const unsigned long Offset, const unsigned short Data)
+{
+	__asm__("movw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) void __writegsdword(const unsigned long Offset, const unsigned long Data)
+{
+	__asm__("movl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) void __writegsqword(const unsigned long Offset, const unsigned __int64 Data)
+{
+	__asm__("movq %q[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) unsigned char __readgsbyte(const unsigned long Offset)
+{
+	unsigned char value;
+	__asm__("movb %%gs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	return value;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned short __readgsword(const unsigned long Offset)
+{
+	unsigned short value;
+	__asm__("movw %%gs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	return value;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned long __readgsdword(const unsigned long Offset)
+{
+	unsigned long value;
+	__asm__("movl %%gs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	return value;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned __int64 __readgsqword(const unsigned long Offset)
+{
+	unsigned long value;
+	__asm__("movq %%gs:%a[Offset], %q[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	return value;
+}
+
+static __inline__ __attribute__((always_inline)) void __incgsbyte(const unsigned long Offset)
+{
+	__asm__("incb %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+}
+
+static __inline__ __attribute__((always_inline)) void __incgsword(const unsigned long Offset)
+{
+	__asm__("incw %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+}
+
+static __inline__ __attribute__((always_inline)) void __incgsdword(const unsigned long Offset)
+{
+	__asm__("incl %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+}
+
+/* NOTE: the bizarre implementation of __addgsxxx mimics the broken Visual C++ behavior */
+static __inline__ __attribute__((always_inline)) void __addgsbyte(const unsigned long Offset, const unsigned char Data)
+{
+	if(!__builtin_constant_p(Offset))
+		__asm__("addb %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+	else
+		__asm__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) void __addgsword(const unsigned long Offset, const unsigned short Data)
+{
+	if(!__builtin_constant_p(Offset))
+		__asm__("addw %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+	else
+		__asm__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+static __inline__ __attribute__((always_inline)) void __addgsdword(const unsigned long Offset, const unsigned int Data)
+{
+	if(!__builtin_constant_p(Offset))
+		__asm__("addl %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+	else
+		__asm__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+}
+
+#else
 /*** FS segment addressing ***/
 static __inline__ __attribute__((always_inline)) void __writefsbyte(const unsigned long Offset, const unsigned char Data)
 {
@@ -602,6 +724,7 @@ static __inline__ __attribute__((always_inline)) void __addfsdword(const unsigne
 	else
 		__asm__("addl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
 }
+#endif
 
 
 /*** Bit manipulation ***/
