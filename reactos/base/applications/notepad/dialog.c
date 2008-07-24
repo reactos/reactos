@@ -475,7 +475,7 @@ VOID DIALOG_FileSaveAs(VOID)
         OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     saveas.lpstrDefExt       = szDefaultExt;
     saveas.lpTemplateName    = MAKEINTRESOURCE(DIALOG_ENCODING);
-    saveas.lpfnHook          = DIALOG_FileSaveAs_Hook;
+    saveas.lpfnHook          = (LPOFNHOOKPROC)DIALOG_FileSaveAs_Hook;
 
     if (GetSaveFileName(&saveas)) {
         SetFileName(szPath);
@@ -851,7 +851,7 @@ VOID DIALOG_GoTo(VOID)
     }
 
     nLine = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(DIALOG_GOTO),
-        Globals.hMainWnd, DIALOG_GoTo_DialogProc, nLine);
+        Globals.hMainWnd, (DLGPROC)DIALOG_GoTo_DialogProc, nLine);
 
     if (nLine >= 1)
 	{
@@ -981,7 +981,7 @@ VOID DIALOG_HelpAboutWine(VOID)
 VOID DIALOG_FilePageSetup(void)
 {
   DialogBox(Globals.hInstance, MAKEINTRESOURCE(DIALOG_PAGESETUP),
-            Globals.hMainWnd, DIALOG_PAGESETUP_DlgProc);
+            Globals.hMainWnd, (DLGPROC)DIALOG_PAGESETUP_DlgProc);
 }
 
 
