@@ -77,6 +77,9 @@
 #include <arch/arm/hardware.h>
 #elif defined(_M_MIPS)
 #include <arch/mips/arcbios.h>
+#elif defined(_M_AMD64)
+#include <arch/amd64/hardware.h>
+#include <arch/amd64/machpc.h>
 #endif
 /* misc files */
 #include <keycodes.h>

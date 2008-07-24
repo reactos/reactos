@@ -72,5 +72,25 @@
 				<file>versuart.c</file>
 			</if>
 		</directory>
+
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>_alloca.S</file>
+				<file>mach.c</file>
+				<file>hardware.c</file>
+				<file>hwacpi.c</file>
+				<file>hwapm.c</file>
+				<file>hwpci.c</file>
+				<file>i386disk.c</file>
+				<file>i386rtl.c</file>
+				<file>i386vid.c</file>
+				<file>pccons.c</file>
+				<file>pcdisk.c</file>
+				<file>pcmem.c</file>
+				<file>pcrtc.c</file>
+				<file>pcvideo.c</file>
+			</directory>
+		</if>
+
 	</directory>
 </module>

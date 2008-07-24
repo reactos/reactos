@@ -12,5 +12,11 @@
 				<file>arch.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file first="true">fathelp.S</file>
+				<file>arch.S</file>
+			</directory>
+		</if>
 	</directory>
 </module>

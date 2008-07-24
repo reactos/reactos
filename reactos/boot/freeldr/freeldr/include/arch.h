@@ -34,7 +34,7 @@
 #define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
 #define STACK32ADDR	0x78000	/* The 32-bit stack top will be at 7000:8000, or 0x78000 */
 
-#ifdef _M_IX86
+#if defined (_M_IX86) || defined (_M_AMD64)
 #define BIOSCALLBUFFER		0x78000	/* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSEGMENT	0x7800	/* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET	0x0000	/* Buffer to store temporary data for any Int386() call */
@@ -55,6 +55,35 @@ extern PVOID FsStaticBufferDisk, FsStaticBufferData;
 #ifndef ASM
 
 #include <pshpack1.h>
+#ifdef _M_AMD64
+typedef struct
+{
+	unsigned long	rax;
+	unsigned long	rbx;
+	unsigned long	rcx;
+	unsigned long	rdx;
+
+	unsigned long	rsi;
+	unsigned long	rdi;
+
+	unsigned long	r8;
+	unsigned long	r9;
+	unsigned long	r10;
+	unsigned long	r11;
+	unsigned long	r12;
+	unsigned long	r13;
+	unsigned long	r14;
+	unsigned long	r15;
+
+	unsigned short	ds;
+	unsigned short	es;
+	unsigned short	fs;
+	unsigned short	gs;
+
+	unsigned long	rflags;
+
+} QWORDREGS;
+#endif
 typedef struct
 {
 	unsigned long	eax;
