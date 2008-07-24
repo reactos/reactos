@@ -27,6 +27,8 @@
 #include "../mips/intrin_i.h"
 #elif defined(_M_ARM)
 #include "../arm/intrin_i.h"
+#elif defined(_M_AMD64)
+#include "../amd64/intrin_i.h"
 #else
 #error "Unknown processor"
 #endif

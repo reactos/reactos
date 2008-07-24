@@ -17,7 +17,7 @@
 
 #ifdef _NTOSKRNL_
 
-#ifndef _ARM_
+#if !defined (_ARM_) && !defined (_M_AMD64)
 #define KeGetCurrentThread  _KeGetCurrentThread
 #define KeGetPreviousMode   _KeGetPreviousMode
 #endif
@@ -34,7 +34,7 @@
 #define InterlockedExchange         _InterlockedExchange
 #define InterlockedExchangeAdd      _InterlockedExchangeAdd
 
-#include "ke.h"
+//#include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
 #include "i386/v86m.h"
@@ -101,49 +101,6 @@ RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                  IN PCONTEXT ContextRecord,
                  IN PVOID ContextData,
                  IN ULONG Size);
-
-/* FIXME: Interlocked functions that need to be made into a public header */
-#ifdef __GNUC__
-FORCEINLINE
-LONG
-InterlockedAnd(IN OUT LONG volatile *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i & Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-
-FORCEINLINE
-LONG
-InterlockedOr(IN OUT LONG volatile *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i | Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
 
 /*
  * generic information class probing code
@@ -309,6 +266,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
 
 #endif
 
+#ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 C_ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
@@ -322,6 +280,8 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
 //C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
 //C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+#endif
+
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);

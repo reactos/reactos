@@ -27,6 +27,8 @@
 #include "../mips/ke.h"
 #elif defined(_M_ARM)
 #include "../arm/ke.h"
+#elif defined(_M_AMD64)
+#include "../amd64/ke.h"
 #else
 #error "Unknown processor"
 #endif
