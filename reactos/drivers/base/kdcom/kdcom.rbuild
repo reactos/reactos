@@ -12,7 +12,12 @@
 		</directory>
 	</if>
 	<if property="ARCH" value="arm">
-        <directory name="arm">
+		<directory name="arm">
+				<file>kdbg.c</file>
+		</directory>
+	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
 				<file>kdbg.c</file>
 		</directory>
 	</if>
