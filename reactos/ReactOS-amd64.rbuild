@@ -17,7 +17,7 @@
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+	<property name="NTOSKRNL_SHARED" value="-nostartfiles -shared"/>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 
 	<if property="OPTIMIZE" value="1">
