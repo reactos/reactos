@@ -466,7 +466,7 @@ HalReportResourceUsage(VOID)
 VOID
 NTAPI
 HalRequestIpi(
-  ULONG Unknown)
+    KAFFINITY TargetSet)
 {
   UNIMPLEMENTED;
 }
@@ -932,7 +932,7 @@ KfReleaseSpinLock(
   UNIMPLEMENTED;
 }
 
-
+#if !defined(_M_AMD64)
 VOID
 NTAPI
 READ_PORT_BUFFER_UCHAR(
@@ -1058,6 +1058,7 @@ WRITE_PORT_USHORT(
 {
   UNIMPLEMENTED;
 }
+#endif
 
 KIRQL
 FASTCALL
