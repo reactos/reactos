@@ -87,7 +87,13 @@
 				<file>ctxhelp.S</file>
 			</directory>
 		</if>
-		<!-- file>apc.c</file -->
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file first="true">boot.S</file>
+				<file>kiinit.c</file>
+			</directory>
+		</if>
+		<file>apc.c</file>
 		<!-- file>balmgr.c</file -->
 		<!-- file>bug.c</file -->
 		<!-- file>clock.c</file -->
@@ -95,14 +101,14 @@
 		<file>devqueue.c</file>
 		<!-- file>dpc.c</file -->
 		<file>eventobj.c</file>
-		<!-- file>except.c</file -->
-		<!-- file>freeldr.c</file -->
-		<!-- file>gate.c</file -->
-		<!-- file>gmutex.c</file -->
+		<file>except.c</file>
+		<file>freeldr.c</file>
+		<file>gate.c</file>
+		<file>gmutex.c</file>
 		<file>ipi.c</file>
 		<!-- file>krnlinit.c</file -->
-		<!-- file>mutex.c</file -->
-		<!-- file>procobj.c</file -->
+		<file>mutex.c</file>
+		<file>procobj.c</file>
 		<!-- file>profobj.c</file -->
 		<!-- file>queue.c</file -->
 		<!-- file>semphobj.c</file -->
@@ -145,9 +151,9 @@
 		<file>cmdata.c</file>
 		<file>cmdelay.c</file>
 		<file>cmindex.c</file>
-		<!-- file>cminit.c</file -->
+		<file>cminit.c</file>
 		<file>cmhook.c</file>
-		<!-- file>cmkcbncb.c</file -->
+		<file>cmkcbncb.c</file>
 		<file>cmkeydel.c</file>
 		<file>cmlazy.c</file>
 		<file>cmmapvw.c</file>
@@ -155,14 +161,14 @@
 		<file>cmparse.c</file>
 		<file>cmse.c</file>
 		<file>cmsecach.c</file>
-		<!-- file>cmsysini.c</file -->
+		<file>cmsysini.c</file>
 		<file>cmvalue.c</file>
 		<file>cmvalche.c</file>
 		<file>cmwraprs.c</file>
-		<!-- file>ntapi.c</file -->
+		<file>ntapi.c</file>
 	</directory>
 	<directory name="dbgk">
-		<!-- file>dbgkutil.c</file -->
+		<file>dbgkutil.c</file>
 		<!-- file>dbgkobj.c</file -->
 	</directory>
 	<directory name="ex" root="intermediate">
@@ -181,30 +187,30 @@
 		<file>dbgctrl.c</file>
 		<file>efi.c</file>
 		<!-- file>event.c</file -->
-		<!-- file>evtpair.c</file -->
+		<file>evtpair.c</file>
 		<file>exintrin.c</file>
 		<file>fastinterlck.c</file>
 		<file>fmutex.c</file>
-		<!-- file>handle.c</file -->
-		<!-- file>harderr.c</file -->
+		<file>handle.c</file>
+		<file>harderr.c</file>
 		<file>hdlsterm.c</file>
 		<!-- file>init.c</file -->
 		<file>keyedevt.c</file>
-		<!-- file>locale.c</file -->
+		<file>locale.c</file>
 		<!-- file>lookas.c</file -->
 		<!-- file>mutant.c</file -->
-		<!-- file>pushlock.c</file -->
-		<!-- file>profile.c</file -->
-		<!-- file>resource.c</file -->
+		<file>pushlock.c</file>
+		<file>profile.c</file>
+		<file>resource.c</file>
 		<file>rundown.c</file>
 		<!-- file>sem.c</file -->
 		<file>shutdown.c</file>
 		<!-- file>sysinfo.c</file -->
 		<!-- file>time.c</file -->
 		<!-- file>timer.c</file -->
-		<!-- file>uuid.c</file -->
+		<file>uuid.c</file>
 		<file>win32k.c</file>
-		<!-- file>work.c</file -->
+		<file>work.c</file>
 		<file>xipdisp.c</file>
 		<file>zone.c</file>
 	</directory>
@@ -244,11 +250,11 @@
 			<file>deviface.c</file>
 			<file>driver.c</file>
 			<file>drvrlist.c</file>
-			<!-- file>error.c</file -->
+			<file>error.c</file>
 			<!-- file>file.c</file -->
 			<!-- file>iocomp.c</file -->
 			<file>ioevent.c</file>
-			<!-- file>iofunc.c</file -->
+			<file>iofunc.c</file>
 			<file>iomdl.c</file>
 			<!-- file>iomgr.c</file -->
 			<file>iorsrce.c</file>
@@ -261,10 +267,10 @@
 			<file>remlock.c</file>
 			<!-- file>util.c</file -->
 			<file>symlink.c</file>
-			<!-- file>volume.c</file -->
+			<file>volume.c</file>
 		</directory>
 		<directory name="pnpmgr">
-			<!-- file>plugplay.c</file -->
+			<file>plugplay.c</file>
 			<file>pnpdma.c</file>
 			<file>pnpmgr.c</file>
 			<file>pnpnotify.c</file>
@@ -289,17 +295,17 @@
 			<if property="KDBG" value="1">
 				<!-- file>kdb.c</file -->
 				<!-- file>kdb_cli.c</file -->
-				<!-- file>kdb_expr.c</file -->
+				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
-				<!-- file>kdb_serial.c</file -->
+				<file>kdb_serial.c</file>
 			</if>
 			<if property="DBG_OR_KDBG" value="true">
-				<!-- file>kdb_symbols.c</file -->
+				<file>kdb_symbols.c</file>
 			</if>
 		</directory>
 		<directory name="kd">
 			<directory name="wrappers">
-				<!-- file>bochs.c</file -->
+				<file>bochs.c</file>
 				<if property="ARCH" value="i386">
 					<file>gdbstub.c</file>
 				</if>
@@ -326,13 +332,13 @@
 	</if>
 	<directory name="lpc">
 		<file>close.c</file>
-		<!-- file>complete.c</file -->
-		<!-- file>connect.c</file -->
-		<!-- file>create.c</file -->
+		<file>complete.c</file>
+		<file>connect.c</file>
+		<file>create.c</file>
 		<file>listen.c</file>
 		<file>port.c</file>
-		<!-- file>reply.c</file -->
-		<!-- file>send.c</file -->
+		<file>reply.c</file>
+		<file>send.c</file>
 	</directory>
 	<directory name="mm">
 		<if property="ARCH" value="i386">
@@ -365,8 +371,8 @@
 		<!-- file>mminit.c</file -->
 		<!-- file>mpw.c</file -->
 		<!-- file>ncache.c</file -->
-		<!-- file>npool.c</file -->
-		<!-- file>pagefile.c</file -->
+		<file>npool.c</file>
+		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pager.c</file>
 		<file>pagfault.c</file>
@@ -374,12 +380,12 @@
 		<file>pe.c</file>
 		<file>physical.c</file>
 		<!-- file>pool.c</file -->
-		<!-- file>ppool.c</file -->
+		<file>ppool.c</file>
 		<!-- file>procsup.c</file -->
 		<!-- file>region.c</file -->
 		<file>rmap.c</file>
 		<!-- file>section.c</file -->
-		<!-- file>sysldr.c</file -->
+		<file>sysldr.c</file>
 		<file>verifier.c</file>
 		<!-- file>virtual.c</file -->
 		<file>wset.c</file>
@@ -391,18 +397,18 @@
 	<directory name="ob">
 		<!-- file>obdir.c</file -->
 		<!-- file>obinit.c</file -->
-		<!-- file>obhandle.c</file -->
+		<file>obhandle.c</file>
 		<file>obname.c</file>
 		<file>oblife.c</file>
 		<file>obref.c</file>
-		<!-- file>obsdcach.c</file -->
+		<file>obsdcach.c</file>
 		<file>obsecure.c</file>
-		<!-- file>oblink.c</file -->
-		<!-- file>obwait.c</file -->
+		<file>oblink.c</file>
+		<file>obwait.c</file>
 	</directory>
 	<directory name="po">
 		<file>power.c</file>
-		<!-- file>events.c</file -->
+		<file>events.c</file>
 	</directory>
 	<directory name="ps">
 		<if property="ARCH" value="i386">
@@ -415,16 +421,16 @@
 				<file>psctx.c</file>
 			</directory>
 		</if>
-		<!-- file>debug.c</file -->
-		<!-- file>job.c</file -->
-		<!-- file>kill.c</file -->
+		<file>debug.c</file>
+		<file>job.c</file>
+		<file>kill.c</file>
 		<file>psnotify.c</file>
-		<!-- file>process.c</file -->
+		<file>process.c</file>
 		<!-- file>psmgr.c</file -->
-		<!-- file>query.c</file -->
+		<file>query.c</file>
 		<file>quota.c</file>
-		<!-- file>security.c</file -->
-		<!-- file>state.c</file -->
+		<file>security.c</file>
+		<file>state.c</file>
 		<!-- file>thread.c</file -->
 		<!-- file>win32.c</file -->
 	</directory>
@@ -441,10 +447,10 @@
 	<directory name="se">
 		<file>access.c</file>
 		<file>acl.c</file>
-		<!-- file>audit.c</file -->
-		<!-- file>lsa.c</file -->
+		<file>audit.c</file>
+		<file>lsa.c</file>
 		<file>priv.c</file>
-		<!-- file>sd.c</file -->
+		<file>sd.c</file>
 		<file>semgr.c</file>
 		<file>sid.c</file>
 		<!-- file>token.c</file -->
