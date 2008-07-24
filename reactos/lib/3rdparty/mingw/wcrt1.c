@@ -45,14 +45,6 @@ extern int wmain (int, wchar_t **, wchar_t **);
 __MINGW_IMPORT void __set_app_type(int);
 #endif /* __MSVCRT__ */
 
-/*  Global _fmode for this .exe, not the one in msvcrt.dll,
-    The default is set in txtmode.o in libmingw32.a */
-/* Override the dllimport'd declarations in stdlib.h */
-#undef _fmode
-extern int _fmode;
-#ifdef __MSVCRT__
-extern int* __p__fmode(void); /* To access the dll _fmode */
-#endif
 
 /*
  * Setup the default file handles to have the _CRT_fmode mode, as well as
@@ -66,7 +58,7 @@ _mingw32_init_fmode (void)
   /* Don't set the std file mode if the user hasn't set any value for it. */
   if (_CRT_fmode)
     {
-      _fmode = _CRT_fmode;
+      *_imp___fmode = _CRT_fmode;
 
       /*
        * This overrides the default file mode settings for stdin,
@@ -91,7 +83,7 @@ _mingw32_init_fmode (void)
 
     /*  Now sync  the dll _fmode to the  one for this .exe.  */
 #ifdef __MSVCRT__
-    *__p__fmode() = _fmode;
+    *_imp___fmode = _fmode;
 #else
     *_imp___fmode_dll = _fmode;
 #endif
@@ -222,6 +214,9 @@ __mingw_wCRTStartup (void)
   /* Align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
   asm  __volatile__  ("andl $-16, %%esp" : : : "%esp");
+#elif defined(__x86_64__)
+  /* Align the stack to 16 bytes */
+  asm  __volatile__  ("andq $-16, %%rsp" : : : "%rsp");
 #elif defined(__mips__)
   /* Align the stack to 16 bytes */
   asm  __volatile__  ("andi %sp,%sp,-16" : : : "%sp");
@@ -238,7 +233,7 @@ __mingw_wCRTStartup (void)
    * that one calls WinMain. See main.c in the 'lib' dir
    * for more details.
    */
-  nRet = wmain (_argc, _wargv, _wenviron);
+  nRet = wmain (_argc, _wargv, NULL);
 
   /*
    * Perform exit processing for the C library. This means

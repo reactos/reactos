@@ -5,7 +5,6 @@
 	<define name="BZ_NO_STDIO" />
 	<define name="BZ_DECOMPRESS_ONLY" />
 	<library>ntoskrnl</library>
-	<library>hal</library>
 	<file>bzlib.c</file>
 	<file>randtable.c</file>
 	<file>crctable.c</file>

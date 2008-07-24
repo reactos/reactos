@@ -56,7 +56,6 @@
 #include <sys/cdefs.h>
 #endif
 
-#ifdef _MSC_VER
 static inline unsigned long __byte_swap_long ( unsigned long i )
 {
 	char dst[4];
@@ -76,41 +75,6 @@ static inline unsigned short __byte_swap_word ( unsigned short i )
 	dst[1] = src[0];
 	return *(unsigned short*)&dst[0];
 }
-#else/*_MSC_VER*/
-#define __word_swap_long(x) \
-({ register u_long __X = (x); \
-   __asm ("rorl $16, %1" \
-	: "=r" (__X) \
-	: "0" (__X)); \
-   __X; })
-#if __GNUC__ >= 2
-#define __byte_swap_long(x) \
-__extension__ ({ register u_long __X = (x); \
-   __asm ("xchgb %h1, %b1\n\trorl $16, %1\n\txchgb %h1, %b1" \
-	: "=q" (__X) \
-	: "0" (__X)); \
-   __X; })
-#define __byte_swap_word(x) \
-__extension__ ({ register u_short __X = (x); \
-   __asm ("xchgb %h1, %b1" \
-	: "=q" (__X) \
-	: "0" (__X)); \
-   __X; })
-#else /* __GNUC__ >= 2 */
-#define __byte_swap_long(x) \
-({ register u_long __X = (x); \
-   __asm ("rorw $8, %w1\n\trorl $16, %1\n\trorw $8, %w1" \
-	: "=r" (__X) \
-	: "0" (__X)); \
-   __X; })
-#define __byte_swap_word(x) \
-({ register u_short __X = (x); \
-   __asm ("rorw $8, %w1" \
-	: "=r" (__X) \
-	: "0" (__X)); \
-   __X; })
-#endif /* __GNUC__ >= 2 */
-#endif /* _MSC_VER */
 
 /*
  * Macros for network/external number representation conversion.
