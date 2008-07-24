@@ -252,6 +252,8 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
             /* First make sure the character it's not the Lead DBCS */
             if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
             {
+                if (i == (FirstPart.Length / sizeof(CHAR)) - 1)
+                    return FALSE;
                 i++;
             }
             else if ((FirstPart.Buffer[i] < 0x1F) || (FirstPart.Buffer[i] == 0x22) ||
@@ -392,6 +394,8 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
             /* First make sure the character it's not the Lead DBCS */
             if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
             {
+                if (i == (FirstPart.Length / sizeof(CHAR)) - 1)
+                    return FALSE;
                 i++;
             }
             else if ((FirstPart.Buffer[i] < 0x1F) || (FirstPart.Buffer[i] == 0x22) ||
