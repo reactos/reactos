@@ -137,9 +137,9 @@ BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
 
                 if (ComPort == 0)
                 {
-                        if (Rs232DoesComPortExist ((PUCHAR)BaseArray[2]))
+                        if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[2]))
                         {
-                                Rs232PortBase = (PUCHAR)BaseArray[2];
+                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[2];
                                 Rs232ComPort = 2;
 /*#ifndef NDEBUG
                                 sprintf (buffer,
@@ -149,9 +149,9 @@ BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
                                 HalDisplayString (buffer);
 #endif*/ /* NDEBUG */
                         }
-                        else if (Rs232DoesComPortExist ((PUCHAR)BaseArray[1]))
+                        else if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[1]))
                         {
-                                Rs232PortBase = (PUCHAR)BaseArray[1];
+                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[1];
                                 Rs232ComPort = 1;
 /*#ifndef NDEBUG
                                 sprintf (buffer,
@@ -171,9 +171,9 @@ BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
                 }
                 else
                 {
-                        if (Rs232DoesComPortExist ((PUCHAR)BaseArray[ComPort]))
+                        if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[ComPort]))
                         {
-                                Rs232PortBase = (PUCHAR)BaseArray[ComPort];
+                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[ComPort];
                                 Rs232ComPort = ComPort;
 /*#ifndef NDEBUG
                                 sprintf (buffer,
@@ -280,7 +280,7 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 BOOLEAN Rs232PortInUse(ULONG Base)
 {
 #ifdef DBG
-    return PortInitialized && Rs232PortBase == (PUCHAR)Base ? TRUE : FALSE;
+    return PortInitialized && Rs232PortBase == (PUCHAR)(ULONG_PTR)Base ? TRUE : FALSE;
 #else
     return FALSE;
 #endif
