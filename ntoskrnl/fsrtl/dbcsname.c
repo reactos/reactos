@@ -85,14 +85,14 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
     /* Set up the first result string */
     FirstPart->Buffer = Name.Buffer + SkipFirstSlash;
     FirstPart->Length = (FirstPosition - SkipFirstSlash) * sizeof(CHAR);
-    FirstPart->MaximumLength = Name.MaximumLength - FirstPart->Length;
+    FirstPart->MaximumLength = FirstPart->Length;
 
     /* And second one, if necessary */
     if (FirstPosition < (Name.Length / sizeof(CHAR)))
     {
         RemainingPart->Buffer = Name.Buffer + FirstPosition + 1;
         RemainingPart->Length = Name.Length - (FirstPosition + 1) * sizeof(CHAR);
-        RemainingPart->MaximumLength = Name.MaximumLength - RemainingPart->Length;
+        RemainingPart->MaximumLength = RemainingPart->Length;
     }
 }
 
