@@ -22,6 +22,8 @@ namespace System_
         size_t i;
 #if 0
 //        gettimeofday(&tm, 0);
+#else
+        memset(&tm, 0, sizeof(tm));
 #endif
         for (i = 0; i < s_Entries.size(); i++)
         {
