@@ -5500,6 +5500,12 @@ typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+NTKERNELAPI
+PRKTHREAD
+NTAPI
+KeGetCurrentThread(
+    VOID);
+
 #elif defined(__PowerPC__)
 
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
