@@ -379,6 +379,9 @@ co_IntCallHookProc(INT HookId,
       case WH_MOUSE_LL:
          ArgumentLength += sizeof(MSLLHOOKSTRUCT);
          break;
+      case WH_MOUSE:
+         ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
+         break;
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:
@@ -444,6 +447,10 @@ co_IntCallHookProc(INT HookId,
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSLLHOOKSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
          break;
+      case WH_MOUSE:
+         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
+         Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+         break;         
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:

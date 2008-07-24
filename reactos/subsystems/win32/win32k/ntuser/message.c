@@ -658,6 +658,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
    USHORT HitTest;
+   MOUSEHOOKSTRUCT MHook;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -814,9 +815,51 @@ MessageFound:
          goto CheckMessages;
       }
 MsgExit:
+      if ( ISITHOOKED(WH_MOUSE) &&
+           Msg->Msg.message >= WM_MOUSEFIRST &&
+           Msg->Msg.message <= WM_MOUSELAST )
+      {
+         MHook.pt           = Msg->Msg.pt;
+         MHook.hwnd         = Msg->Msg.hwnd;
+         MHook.wHitTestCode = HitTest;
+         MHook.dwExtraInfo  = 0;
+         if (co_HOOK_CallHooks( WH_MOUSE,
+                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                                Msg->Msg.message,
+                                (LPARAM)&MHook ))
+         {
+            if (ISITHOOKED(WH_CBT))
+            {
+                MHook.pt           = Msg->Msg.pt;
+                MHook.hwnd         = Msg->Msg.hwnd;
+                MHook.wHitTestCode = HitTest;
+                MHook.dwExtraInfo  = 0;
+                co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, 
+                                   Msg->Msg.message, (LPARAM)&MHook);
+            }
+            return FALSE;
+         }
+      }
+      if ( ISITHOOKED(WH_KEYBOARD) &&
+          (Msg->Msg.message == WM_KEYDOWN || Msg->Msg.message == WM_KEYUP) )
+      {
+         if (co_HOOK_CallHooks( WH_KEYBOARD,
+                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                                LOWORD(Msg->Msg.wParam),
+                                Msg->Msg.lParam))
+         {
+            if (ISITHOOKED(WH_CBT))
+            {
+               /* skip this message */
+               co_HOOK_CallHooks( WH_CBT, HCBT_KEYSKIPPED,
+                                  LOWORD(Msg->Msg.wParam), Msg->Msg.lParam );
+            }
+            return FALSE;
+         }
+      }
       // The WH_GETMESSAGE hook enables an application to monitor messages about to
       // be returned by the GetMessage or PeekMessage function.
-      if(ISITHOOKED(WH_GETMESSAGE))
+      if (ISITHOOKED(WH_GETMESSAGE))
       {
          //DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
          co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
@@ -863,7 +906,6 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
-
    if (Present)
    {
 
@@ -1506,8 +1548,7 @@ co_IntPostOrSendMessage(HWND hWnd,
    }
    else
    {
-      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
-      {
+      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))      {
          Result = 0;
       }
    }
@@ -1863,14 +1904,93 @@ NtUserMessageCall(
    {
       return 0;
    }   
-   UserRefObjectCo(Window, &Ref);
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
+         UserRefObjectCo(Window, &Ref);
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
+         UserDerefObjectCo(Window);
+      break;
+      case FNID_BROADCASTSYSTEMMESSAGE:
+      {
+         PBROADCASTPARM parm;
+         BOOL BadChk = FALSE;
+         DWORD_PTR RetVal = 0;
+         lResult = -1;
+
+         if (ResultInfo)
+         {
+            _SEH_TRY
+            {
+               ProbeForWrite((PVOID)ResultInfo,
+                         sizeof(BROADCASTPARM),
+                                             1);               
+               parm = (PBROADCASTPARM)ResultInfo;
+            }
+            _SEH_HANDLE
+            {
+               BadChk = TRUE;
+            }
+            _SEH_END;
+            if (BadChk) break;
+         }
+         else
+           break;
+
+         if ( parm->recipients & BSM_ALLDESKTOPS ||
+              parm->recipients == BSM_ALLCOMPONENTS )
+         {
+         }
+         else if (parm->recipients & BSM_APPLICATIONS)
+         {
+            if (parm->flags & BSF_QUERY)
+            {
+               if (parm->flags & BSF_FORCEIFHUNG || parm->flags & BSF_NOHANG)
+               {
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_ABORTIFHUNG,
+                                            2000,
+                                            &RetVal);
+               }
+               else if (parm->flags & BSF_NOTIMEOUTIFNOTHUNG)
+               {
+#define SMTO_NOTIMEOUTIFNOTHUNG  0x0008
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_NOTIMEOUTIFNOTHUNG,
+                                            2000,
+                                            &RetVal);
+               }
+               else
+               {
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_NORMAL,
+                                            2000,
+                                            &RetVal);
+               }
+            }
+            else if (parm->flags & BSF_POSTMESSAGE)
+            {
+               lResult = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
+            }
+            else if ( parm->flags & BSF_SENDNOTIFYMESSAGE)
+            {
+               lResult = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
+            }
+         }
+      }
+      break;
+      case FNID_SENDMESSAGECALLBACK:
       break;
    }
-   UserDerefObjectCo(Window);
    UserLeave();
    return lResult;
 }

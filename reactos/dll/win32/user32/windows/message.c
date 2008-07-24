@@ -2560,15 +2560,6 @@ IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
     return IsDialogMessageW( hwndDlg, &msg );
 }
 
-typedef struct _BROADCASTPARM
-{
-    DWORD flags;
-    DWORD recipients;
-    HDESK hDesk;
-    HWND  hWnd;
-    LUID  luid;
-} BROADCASTPARM, *PBROADCASTPARM;
-
 LONG
 STDCALL
 IntBroadcastSystemMessage(
