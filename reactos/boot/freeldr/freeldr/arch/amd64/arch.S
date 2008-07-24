@@ -92,8 +92,8 @@ x86_16_EnableA20:
 
 
 /*
- * We defines one 2MB page at the start of memory, so we can access the first 
- * 2MBs as if paging was disabled
+ * We define 512 2MB pages at the start of memory, so we can access the first 
+ * 1 GB as if paging was disabled
  */
 
 #define PML4_PAGENUM 60 // Put it high enough so it doesn't interfere with freeldr
@@ -115,29 +115,33 @@ x86_16_BuildPageTables:
 	xor di, di
 
 	/* One entry in the PML4 pointing to PDP */
-	mov ax, ((PDP_PAGENUM << 12) & 0xffff) | 0x00f
-	stosw
-	mov ax, (PDP_PAGENUM >> 4)
-	stosw
+	mov eax, (PDP_PAGENUM << 12) | 0x00f
+	stosd
 	xor ax,ax
 	mov cx, 0x07fe
 	rep stosw
 
 	/* One entry in the PDP pointing to PD */
-	mov ax, ((PD_PAGENUM << 12) & 0xffff) | 0x00f
-	stosw
-	mov ax, (PD_PAGENUM >> 4)
-	stosw
-	xor ax,ax
-	mov cx, 0x07fe
-	rep stosw
+	mov eax, (PD_PAGENUM << 12) | 0x00f
+	stosd
 
-	/* One entry in the PD defining a 2MB page */
-	mov ax, 0x018f
-	stosw
-	xor ax,ax
-	mov cx,0x07ff
-	rep stosw
+	xor eax, eax
+	mov ecx, 0x03ff
+	rep stosd
+
+	/* 512 entries in the PD defining a 2MB page each */
+	mov ecx, 512
+	mov eax, 0x008f
+
+Bpt2:
+	mov es: [di], eax
+	mov dword ptr es: [di + 4], 0
+	add eax, 512 << 12 // add 512 4k pages
+	add di, 8
+
+	/* Loop it */
+	dec cx
+	jnz Bpt2
 
 	/* Return */
 	pop es
@@ -256,6 +260,7 @@ BeReal:
 
 	/* Now return in real mode! */
 	ret
+
 
 
 /** Some data *****************************************************************/
