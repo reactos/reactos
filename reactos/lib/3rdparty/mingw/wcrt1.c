@@ -45,6 +45,10 @@ extern int wmain (int, wchar_t **, wchar_t **);
 __MINGW_IMPORT void __set_app_type(int);
 #endif /* __MSVCRT__ */
 
+#ifndef __winitenv
+extern wchar_t ***_imp____winitenv;
+#define __winitenv (*_imp____winitenv)
+#endif
 
 /*
  * Setup the default file handles to have the _CRT_fmode mode, as well as
@@ -233,7 +237,7 @@ __mingw_wCRTStartup (void)
    * that one calls WinMain. See main.c in the 'lib' dir
    * for more details.
    */
-  nRet = wmain (_argc, _wargv, NULL);
+  nRet = wmain (_argc, _wargv, __winitenv);
 
   /*
    * Perform exit processing for the C library. This means
