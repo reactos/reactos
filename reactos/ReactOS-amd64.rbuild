@@ -113,9 +113,9 @@
 		<xi:include href="lib/lib.rbuild" />
 	</directory>
 
-	<!-- directory name="media">
+	<directory name="media">
 		<xi:include href="media/media.rbuild" />
-	</directory -->
+	</directory>
 
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
