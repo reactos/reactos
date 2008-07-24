@@ -253,11 +253,11 @@ typedef struct _HWPROFILEINFO {
 interface pnp
 {
     /* Function 0 */
-    DWORD PNP_Function0(
+    DWORD PNP_Disconnect(
         [in] handle_t hBinding); /* FIXME */
 
     /* Function 1 */
-    DWORD PNP_Function1(
+    DWORD PNP_Connect(
         [in] handle_t hBinding); /* FIXME */
 
     /* Function 2 */
@@ -716,15 +716,15 @@ interface pnp
         [in] DWORD ulFlags);
 
     /* Function 55 */
-    DWORD PNP_Function55(
+    DWORD PNP_SetHwProf(
         [in] handle_t hBinding);
 
     /* Function 56 */
-    DWORD PNP_Function56(
+    DWORD PNP_QueryArbitratorFreeData(
         [in] handle_t hBinding);
 
     /* Function 57 */
-    DWORD PNP_Function57(
+    DWORD PNP_QueryArbitratorFreeSize(
         [in] handle_t hBinding);
 
     /* Function 58 */
@@ -733,12 +733,14 @@ interface pnp
         [in] DWORD ulFlags);
 
     /* Function 59 */
-    DWORD PNP_Function59(
+    DWORD PNP_RegisterNotification(
         [in] handle_t hBinding);
 
     /* Function 60 */
-    DWORD PNP_Function60(
+    DWORD PNP_UnregisterNotification(
         [in] handle_t hBinding);
+
+cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 61 */
     DWORD PNP_GetCustomDevProp(
@@ -769,6 +771,8 @@ interface pnp
         [in] handle_t hBinding,
         [out] DWORD *pulSSDIFlags,
         [in] DWORD ulFlags);
+
+cpp_quote("#if _WIN32_WINNT >= 0x0600")
 
     /* Function 65 */
     DWORD PNP_GetObjectPropKeys(
@@ -805,4 +809,36 @@ interface pnp
         [in] PNP_PROP_SIZE PropertySize,
         [in, unique, size_is(PropertySize)] BYTE *PropertyBuffer,
         [in] DWORD Flags);
+
+    /* Function 68 */
+    DWORD PNP_InstallDevInst(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 69 */
+    DWORD PNP_ApplyPowerSettings(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 70 */
+    DWORD PNP_DriverStoreAddDriverPackage(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 71 */
+    DWORD PNP_DriverStoreDeleteDriverPackage(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 72 */
+    DWORD PNP_RegisterServiceNotification(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 73 */
+    DWORD PNP_SetActiveService(
+        [in] handle_t hBinding); /* FIXME */
+
+    /* Function 74 */
+    DWORD PNP_DeleteServiceDevices(
+        [in] handle_t hBinding); /* FIXME */
+
+cpp_quote("#endif /* WIN32_WINNT >= 0x0600 */")
+cpp_quote("#endif /* WIN32_WINNT >= 0x0501 */")
+
 }
