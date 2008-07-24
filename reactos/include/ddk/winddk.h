@@ -5730,9 +5730,7 @@ InterlockedExchangeAdd(
  *   IN OUT PVOID VOLATILE  *Target,
  *   IN PVOID  Value)
  */
-#if defined (_M_AMD64)
-#define InterlockedExchangePointer _InterlockedExchangePointer
-#else
+#if !defined (_M_AMD64)
 #define InterlockedExchangePointer(Target, Value) \
   ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
 #endif
@@ -5744,16 +5742,48 @@ InterlockedExchangeAdd(
  *   IN PVOID  Exchange,
  *   IN PVOID  Comparand)
  */
-#if defined (_M_AMD64)
-#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
-#else
+#if !defined (_M_AMD64)
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
 #endif
 
+#if defined (_M_AMD64)
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 #define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
 #define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedOr _InterlockedOr
+#define InterlockedXor _InterlockedXor
+#define InterlockedIncrement _InterlockedIncrement
+#define InterlockedDecrement _InterlockedDecrement
+#define InterlockedAdd _InterlockedAdd
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedExchangeAdd _InterlockedExchangeAdd
+#define InterlockedCompareExchange _InterlockedCompareExchange
+#define InterlockedAnd64 _InterlockedAnd64
+#define InterlockedOr64 _InterlockedOr64
+#define InterlockedXor64 _InterlockedXor64
+#define InterlockedIncrement64 _InterlockedIncrement64
+#define InterlockedDecrement64 _InterlockedDecrement64
+#define InterlockedAdd64 _InterlockedAdd64
+#define InterlockedExchange64 _InterlockedExchange64
+#define InterlockedExchangeAdd64 _InterlockedExchangeAdd64
+#define InterlockedCompareExchange64 _InterlockedCompareExchange64
+#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
+#define InterlockedExchangePointer _InterlockedExchangePointer
+
+#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
+#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
+#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+
+#if !defined(_WINBASE_)
+#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
+#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
+#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+#define QueryDepthSList(Head) ExQueryDepthSList(Head)
+#endif // !defined(_WINBASE_
+
+#endif // defined (_WIN64)
 
 #endif /* !__INTERLOCKED_DECLARED */
 
