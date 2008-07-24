@@ -90,7 +90,7 @@
 	<!-- directory name="dll">
 		<xi:include href="dll/dll.rbuild" />
 	</directory -->
-<!--
+
 	<directory name="drivers">
 		<directory name="base">
 			<directory name="bootvid">
@@ -100,12 +100,17 @@
 				<xi:include href="drivers/base/kdcom/kdcom.rbuild" />
 			</directory>
 		</directory>
+		<directory name="filesystems">
+			<directory name="fastfat">
+				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
+			</directory>
+		</directory>
 	</directory>
 
 	<directory name="hal">
 		<xi:include href="hal/hal.rbuild" />
 	</directory>
--->
+
 	<directory name="include">
 		<xi:include href="include/directory.rbuild" />
 	</directory>

@@ -23,10 +23,10 @@
 
 #ifdef DBG
 
-#define DEBUG_ALL
+//#define DEBUG_ALL
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
-//#define DEBUG_CUSTOM
+#define DEBUG_CUSTOM
 //#define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
@@ -38,8 +38,9 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY |
-		                 DPRINT_REACTOS | DPRINT_WINDOWS | DPRINT_HWDETECT;
+ULONG		DebugPrintMask = DPRINT_WARNING |
+		                 DPRINT_UI | DPRINT_CACHE | DPRINT_REACTOS |
+		                 DPRINT_LINUX;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;
 #endif
