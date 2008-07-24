@@ -1291,7 +1291,7 @@ long CDECL _get_osfhandle(int fd)
   HANDLE hand = fdtoh(fd);
   TRACE(":fd (%d) handle (%p)\n",fd,hand);
 
-  return (long)hand;
+  return (long)(LONG_PTR)hand;
 }
 
 /*********************************************************************
@@ -1654,7 +1654,7 @@ int CDECL _open_osfhandle(long handle, int oflags)
   if (!(oflags & (_O_BINARY | _O_TEXT)))
       oflags |= _O_BINARY;
 
-  fd = alloc_fd((HANDLE)handle, split_oflags(oflags));
+  fd = alloc_fd((HANDLE)(LONG_PTR)handle, split_oflags(oflags));
   TRACE(":handle (%ld) fd (%d) flags 0x%08x\n", handle, fd, oflags);
   return fd;
 }

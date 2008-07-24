@@ -31,7 +31,7 @@ int _getch(void)
          * ENABLE_ECHO_INPUT and ENABLE_LINE_INPUT if they're currently
          * switched on.
          */
-        ConsoleHandle = (HANDLE) _get_osfhandle(stdin->_file);
+        ConsoleHandle = (HANDLE)(ULONG_PTR) _get_osfhandle(stdin->_file);
         RestoreMode = GetConsoleMode(ConsoleHandle, &ConsoleMode) &&
                       (0 != (ConsoleMode &
                              (ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
@@ -39,7 +39,7 @@ int _getch(void)
             SetConsoleMode(ConsoleHandle,
                            ConsoleMode & (~ (ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
         }
-        ReadConsoleA((HANDLE)_get_osfhandle(stdin->_file),
+        ReadConsoleA((HANDLE)(ULONG_PTR)_get_osfhandle(stdin->_file),
 		             &c,
 		             1,
 		             &NumberOfCharsRead,
