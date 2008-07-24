@@ -465,6 +465,7 @@ ExDoCallBack(IN OUT PEX_CALLBACK Callback,
 
 #ifdef _WIN64
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange64((PLONGLONG)x, y, z)
+#define ExpChangePushlock(lock, new, old) InterlockedCompareExchangePointer((PVOID*)lock, (PVOID)new, (PVOID)old)
 #define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
 #else
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z))
