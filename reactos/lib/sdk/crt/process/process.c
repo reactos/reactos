@@ -182,7 +182,7 @@ valisttosT(const _TCHAR* arg0, va_list alist, _TCHAR delim)
    return str;
 }
 
-static int
+static intptr_t
 do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* envp)
 {
    STARTUPINFO StartupInfo = {0};
@@ -304,7 +304,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    {
       case _P_NOWAIT:
       case _P_NOWAITO:
-         return((int)ProcessInformation.hProcess);
+         return((intptr_t)ProcessInformation.hProcess);
       case _P_OVERLAY:
          CloseHandle(ProcessInformation.hProcess);
          _exit(0);
@@ -317,7 +317,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
          CloseHandle(ProcessInformation.hProcess);
          return( 0);
    }
-   return( (int)ProcessInformation.hProcess);
+   return( (intptr_t)ProcessInformation.hProcess);
 }
 
 /*

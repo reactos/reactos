@@ -761,7 +761,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 				flags |= ZEROPAD;
 			}
 			result = number(f,
-				        (unsigned long) va_arg(args, void *), 16,
+				        (uintptr_t) va_arg(args, void *), 16,
 					field_width, precision, flags);
 			if (result < 0)
 				return -1;
