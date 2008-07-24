@@ -50,6 +50,17 @@ typedef struct
 
 #endif // defined __i386__ or _PPC_ or _MIPS_
 
+#if defined (_AMD64_)
+
+#define MM_PAGE_SIZE	4096
+#define MM_PAGE_MASK	0xFFF
+#define MM_PAGE_SHIFT	12
+
+#define MM_SIZE_TO_PAGES(a)  \
+	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
+
+#endif
+
 // HEAP and STACK size
 #define HEAP_PAGES	0x400
 #define STACK_PAGES	0x00

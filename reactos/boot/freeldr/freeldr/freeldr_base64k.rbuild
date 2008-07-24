@@ -26,7 +26,6 @@
 				<file>i386cpu.S</file>
 				<file>i386idt.S</file>
 				<file>i386trap.S</file>
-				<!-- file>linux.S</file -->
 				<file>mb.S</file>
 			</directory>
 		</if>

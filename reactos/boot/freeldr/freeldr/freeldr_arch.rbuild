@@ -84,6 +84,7 @@
 				<file>i386disk.c</file>
 				<file>i386rtl.c</file>
 				<file>i386vid.c</file>
+				<file>loader.c</file>
 				<file>pccons.c</file>
 				<file>pcdisk.c</file>
 				<file>pcmem.c</file>

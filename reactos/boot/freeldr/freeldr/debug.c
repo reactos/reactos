@@ -23,11 +23,11 @@
 
 #ifdef DBG
 
-//#define DEBUG_ALL
+#define DEBUG_ALL
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
-#define DEBUG_NONE
+//#define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
 ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
@@ -243,7 +243,7 @@ VOID DebugPrintHeader(ULONG Mask)
 VOID DebugPrint(ULONG Mask, char *format, ...)
 {
 	va_list ap;
-	char Buffer[4096];
+	char Buffer[2096];
 	char *ptr = Buffer;
 
 	// Mask out unwanted debug messages
@@ -271,7 +271,7 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 VOID DebugPrint1(char *format, ...)
 {
 	va_list ap;
-	char Buffer[4096];
+	char Buffer[2096];
 	char *ptr = Buffer;
 
 	va_start(ap, format);
