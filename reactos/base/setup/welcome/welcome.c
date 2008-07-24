@@ -179,7 +179,7 @@ _tWinMain(HINSTANCE hInst,
   rcRightPanel.left = rcLeftPanel.right;
   rcRightPanel.right = ulInnerWidth - 1;
 
-  if (!LoadString(hInstance, (UINT)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
+  if (!LoadString(hInstance, (UINT_PTR)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
     _tcscpy(szAppTitle, TEXT("ReactOS Welcome"));
 
   /* Create main window */
