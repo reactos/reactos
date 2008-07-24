@@ -514,6 +514,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 //      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) Msg);
       break;
+    case WH_KEYBOARD:
+      Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);
+      break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
     }

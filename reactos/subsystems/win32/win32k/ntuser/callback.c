@@ -458,9 +458,11 @@ co_IntCallHookProc(INT HookId,
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
 //         DPRINT1("KHOOK Memory: %x\n",Common);
          break;
+      case WH_KEYBOARD:
+         break;
 //      case WH_SHELL:
 //         Extra = lParam;
-//        break;         
+         break;         
    }
 
    ResultPointer = NULL;
