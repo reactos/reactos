@@ -50,6 +50,7 @@
 		<file>ddeng.c</file>
 	</directory>
 	<directory name="ntgdi">
+		<file>gdifuncs.c</file>
 		<file>gdistubs.c</file>
 	</directory>
 	<directory name="ntuser">
