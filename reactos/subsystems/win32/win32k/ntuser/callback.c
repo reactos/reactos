@@ -387,8 +387,9 @@ co_IntCallHookProc(INT HookId,
       case WH_GETMESSAGE:
          ArgumentLength += sizeof(MSG);
          break;
+      case WH_KEYBOARD:
 //      case WH_SHELL:
-//         break;
+         break;
       default:
          DPRINT1("Trying to call unsupported window hook %d\n", HookId);
          return 0;
