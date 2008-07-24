@@ -1,11 +1,11 @@
-#include <search.h>
 #include <stdlib.h>
 #include <string.h>
+#include <search.h>
 
 /*
  * @implemented
  */
-void *_lsearch(const void *key, void *base, size_t *nelp, size_t width,
+void *_lsearch(const void *key, void *base, unsigned int *nelp, unsigned int width,
          int (*compar)(const void *, const void *))
 {
   void *ret_find = _lfind(key,base,nelp,width,compar);
@@ -18,4 +18,5 @@ void *_lsearch(const void *key, void *base, size_t *nelp, size_t width,
   (*nelp)++;
   return base;
 }
+
 
