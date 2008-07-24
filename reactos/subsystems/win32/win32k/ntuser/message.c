@@ -1990,6 +1990,35 @@ NtUserMessageCall(
       break;
       case FNID_SENDMESSAGECALLBACK:
       break;
+      case FNID_CALLWNDPROC:
+      {
+         CWPSTRUCT CWP;
+         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+         CWP.hwnd    = hWnd;
+         CWP.message = Msg;
+         CWP.wParam  = wParam;
+         CWP.lParam  = lParam;
+         lResult = co_HOOK_CallHooks( WH_CALLWNDPROC,
+                                      HC_ACTION,
+                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                      (LPARAM)&CWP );
+      }
+      break;
+      case FNID_CALLWNDPROCRET:
+      {
+         CWPRETSTRUCT CWPR;
+         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+         CWPR.hwnd    = hWnd;
+         CWPR.message = Msg;
+         CWPR.wParam  = wParam;
+         CWPR.lParam  = lParam;
+         CWPR.lResult = ClientInfo->dwHookData;
+         lResult = co_HOOK_CallHooks( WH_CALLWNDPROCRET,
+                                      HC_ACTION,
+                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                      (LPARAM)&CWPR );
+      }
+      break;
    }
    UserLeave();
    return lResult;
