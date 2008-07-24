@@ -183,20 +183,20 @@ VOID RunLoader(VOID)
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
-  LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
-  LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
+  LoaderBlock.PageDirectoryStart = (ULONG_PTR)&PageDirectoryStart;
+  LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
   LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {
-#ifdef _M_IX86
+#if defined (_M_IX86) || defined (_M_AMD64)
       ULONG i;
 #endif
       LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
-      LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
+      LoaderBlock.MmapAddr = (ULONG_PTR)&reactos_memory_map;
       reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
-#ifdef _M_IX86
+#if defined (_M_IX86) || defined (_M_AMD64)
       for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
       {
           if (BiosMemoryUsable == reactos_memory_map[i].type &&
@@ -231,7 +231,7 @@ VOID RunLoader(VOID)
 
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");
-  LoaderBlock.ArchExtra = (ULONG)MachHwDetect();
+  LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
   UiDrawStatusText("");
 
   /* set boot device */

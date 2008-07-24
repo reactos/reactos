@@ -80,7 +80,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
 	BOOLEAN	UiMinimal = FALSE; // Tells us if we should use a minimal console-like UI
-	ULONG	SectionId;
+	ULONG_PTR SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
 	ULONG	Depth;
@@ -408,7 +408,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 	CHAR	SettingValue[80];
 	PCHAR	MessageBoxText;
 	ULONG		MessageBoxTextSize;
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 
 	if (!IniOpenSection(SectionName, &SectionId))
 	{

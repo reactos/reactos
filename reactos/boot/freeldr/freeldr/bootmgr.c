@@ -23,7 +23,7 @@ VOID RunLoader(VOID)
 {
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 	ULONG		OperatingSystemCount;
 	PCSTR	*OperatingSystemSectionNames;
 	PCSTR	*OperatingSystemDisplayNames;
@@ -169,7 +169,7 @@ ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSy
 {
 	CHAR	DefaultOSText[80];
 	PCSTR	DefaultOSName;
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
 	ULONG	DefaultOS = 0;
 	ULONG	Idx;
 
@@ -206,7 +206,7 @@ LONG GetTimeOut(VOID)
 {
 	CHAR	TimeOutText[20];
 	LONG		TimeOut;
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 
 	TimeOut = CmdLineGetTimeOut();
 	if (0 <= TimeOut)

@@ -571,7 +571,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	CHAR szKernelName[255];
 	CHAR szFileName[255];
 	CHAR  MsgBuffer[256];
-	ULONG SectionId;
+	ULONG_PTR SectionId;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
 	ULONG_PTR Base;
@@ -596,19 +596,19 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Setup multiboot information structure
 	 */
 	LoaderBlock.CommandLine = reactos_kernel_cmdline;
-	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
-	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
+	LoaderBlock.PageDirectoryStart = (ULONG_PTR)&PageDirectoryStart;
+	LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
 	LoaderBlock.ModsCount = 0;
 	LoaderBlock.ModsAddr = reactos_modules;
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
-    LoaderBlock.RdAddr = (ULONG)gRamDiskBase;
+    LoaderBlock.RdAddr = (ULONG_PTR)gRamDiskBase;
     LoaderBlock.RdLength = gRamDiskSize;
-    LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+    LoaderBlock.MmapLength = (SIZE_T)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {
         ULONG i;
         LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
-        LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
+        LoaderBlock.MmapAddr = (ULONG_PTR)&reactos_memory_map;
         reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
         for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
         {
@@ -698,7 +698,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Detect hardware
 	 */
-	LoaderBlock.ArchExtra = (ULONG)MachHwDetect();
+	LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
     UiDrawProgressBarCenter(5, 100, szLoadingMsg);
 
     LoaderBlock.DrivesCount = reactos_disk_count;

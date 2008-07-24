@@ -26,8 +26,8 @@ BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayName
 	CHAR	SettingName[260];
 	CHAR	SettingValue[260];
 	ULONG		OperatingSystemCount;
-	ULONG		SectionId;
-	ULONG		OperatingSystemSectionId;
+	ULONG_PTR	SectionId;
+	ULONG_PTR	OperatingSystemSectionId;
 	ULONG		SectionSettingCount;
 	PCHAR	*OperatingSystemSectionNames;
 	PCHAR	*OperatingSystemDisplayNames;
