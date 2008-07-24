@@ -874,6 +874,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 }
 
 #undef DbgPrint
+#if 0
 ULONG
 DbgPrint(const char *Format, ...)
 {
@@ -903,5 +904,39 @@ DbgPrint(const char *Format, ...)
 	va_end(ap);
 	return 0;
 }
+#else
+VOID DebugPrintChar(UCHAR Character);
 
+ULONG
+DbgPrint(const char *Format, ...)
+{
+	va_list ap;
+	CHAR Buffer[512];
+	ULONG Length;
+	char *ptr = Buffer;
+
+	va_start(ap, Format);
+
+	/* Construct a string */
+	Length = _vsnprintf(Buffer, 512, Format, ap);
+
+	/* Check if we went past the buffer */
+	if (Length == -1)
+	{
+		/* Terminate it if we went over-board */
+		Buffer[sizeof(Buffer) - 1] = '\n';
+
+		/* Put maximum */
+		Length = sizeof(Buffer);
+	}
+
+	while (*ptr)
+	{
+		DebugPrintChar(*ptr++);
+	}
+
+	va_end(ap);
+	return 0;
+}
+#endif
 /* EOF */
