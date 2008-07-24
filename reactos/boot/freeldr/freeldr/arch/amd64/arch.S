@@ -2,10 +2,10 @@
 .text
 .code16
 
-//.org 0x8000
+#define ASM
+#include <arch.h>
 
-#define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
-#define STACK64ADDR	0x74000	/* The 64-bit stack top will be at 0x74000 */
+//.org 0x8000
 
 .global RealEntryPoint
 RealEntryPoint:
@@ -95,16 +95,6 @@ x86_16_EnableA20:
  * We define 512 2MB pages at the start of memory, so we can access the first 
  * 1 GB as if paging was disabled
  */
-
-#define PML4_PAGENUM 60 // Put it high enough so it doesn't interfere with freeldr
-
-#define PAGESIZE 4096
-#define PDP_PAGENUM (PML4_PAGENUM + 1)
-#define PD_PAGENUM (PDP_PAGENUM + 1)
-#define PML4_ADDRESS (PML4_PAGENUM * PAGESIZE)
-#define PDP_ADDRESS (PDP_PAGENUM * PAGESIZE)
-#define PML4_SEG (PML4_ADDRESS / 16)
-
 x86_16_BuildPageTables:
 	pusha
 	push es
@@ -117,9 +107,9 @@ x86_16_BuildPageTables:
 	/* One entry in the PML4 pointing to PDP */
 	mov eax, (PDP_PAGENUM << 12) | 0x00f
 	stosd
-	xor ax,ax
-	mov cx, 0x07fe
-	rep stosw
+	xor eax, eax
+	mov cx, 0x03ff
+	rep stosd
 
 	/* One entry in the PDP pointing to PD */
 	mov eax, (PD_PAGENUM << 12) | 0x00f
@@ -148,11 +138,6 @@ Bpt2:
 	popa
 	ret
 
-
-#define LMODE_CS	0x08
-#define LMODE_DS	0x10
-#define RMODE_CS	0x18	/* RMode code selector, base 0 limit 64k */
-#define RMODE_DS	0x20	/* RMode data selector, base 0 limit 64k */
 
 //.global x86_16_SwitchToLong
 x86_16_SwitchToLong:

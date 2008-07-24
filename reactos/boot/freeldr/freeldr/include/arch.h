@@ -21,6 +21,10 @@
 #ifndef __ARCH_H
 #define __ARCH_H
 
+#ifdef _M_AMD64
+#include <arch/amd64/amd64.h>
+#endif
+
 /* Defines needed for switching between real and protected mode */
 #define NULL_DESC	0x00	/* NULL descriptor */
 #define PMODE_CS	0x08	/* PMode code selector, base 0 limit 4g */
@@ -55,35 +59,6 @@ extern PVOID FsStaticBufferDisk, FsStaticBufferData;
 #ifndef ASM
 
 #include <pshpack1.h>
-#ifdef _M_AMD64
-typedef struct
-{
-	unsigned long	rax;
-	unsigned long	rbx;
-	unsigned long	rcx;
-	unsigned long	rdx;
-
-	unsigned long	rsi;
-	unsigned long	rdi;
-
-	unsigned long	r8;
-	unsigned long	r9;
-	unsigned long	r10;
-	unsigned long	r11;
-	unsigned long	r12;
-	unsigned long	r13;
-	unsigned long	r14;
-	unsigned long	r15;
-
-	unsigned short	ds;
-	unsigned short	es;
-	unsigned short	fs;
-	unsigned short	gs;
-
-	unsigned long	rflags;
-
-} QWORDREGS;
-#endif
 typedef struct
 {
 	unsigned long	eax;
