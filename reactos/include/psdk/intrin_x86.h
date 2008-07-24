@@ -121,6 +121,15 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volat
 	return __sync_lock_test_and_set(Target, Value);
 }
 
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) long long _InterlockedExchange64(volatile long long * const Target, const long long Value)
+{
+	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
+	__sync_synchronize();
+	return __sync_lock_test_and_set(Target, Value);
+}
+#endif
+
 static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
 	/* NOTE: ditto */
