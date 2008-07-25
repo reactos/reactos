@@ -1003,14 +1003,10 @@ NtUserSetWindowsHookEx(
    /* We only (partially) support local WH_CBT hooks and
     * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
     */
-   if  (WH_CALLWNDPROC == HookId &&
-        WH_CALLWNDPROCRET == HookId &&
-        WH_DEBUG == HookId &&
-        WH_JOURNALPLAYBACK == HookId &&
-        WH_JOURNALRECORD == HookId &&
-        WH_FOREGROUNDIDLE == HookId &&
-        WH_KEYBOARD == HookId &&
-        WH_MOUSE == HookId &&
+   if  (WH_DEBUG == HookId ||
+        WH_JOURNALPLAYBACK == HookId ||
+        WH_JOURNALRECORD == HookId ||
+        WH_FOREGROUNDIDLE == HookId ||
         WH_SHELL == HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
