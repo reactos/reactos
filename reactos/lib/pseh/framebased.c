@@ -94,7 +94,7 @@ extern unsigned long __cdecl DbgPrint(const char * format, ...);
 	} \
 }
 
-#ifdef _X86_
+#ifdef __i386__
 #define _SEH_TRACE_CONTEXT(FRAME_, CONTEXT_) \
 { \
 	if((FRAME_)->SPF_Tracing & _SEH_DO_TRACE_CONTEXT) \

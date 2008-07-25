@@ -11,5 +11,10 @@
 			<file>framebased.S</file>
 		</directory>
 	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
+			<file>framebased.S</file>
+		</directory>
+	</if>
 	<file>framebased.c</file>
 </module>
