@@ -668,20 +668,16 @@ void BuildPedllFile( DLLSPEC *spec )
         return;
     }
 
-    output( "#include <stdarg.h>\n");
-    output( "#include \"windef.h\"\n");
-    output( "#include \"winbase.h\"\n");
-    output( "#include \"wine/config.h\"\n");
-    output( "#include \"wine/exception.h\"\n\n");
+    output( "#include <windows.h>\n");
+    output( "#include <reactos/debug.h>\n");
 
-    output( "void __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
+    output( "DWORD __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
     output( "{\n");
-    output( "    ULONG_PTR args[2];\n");
+    output( "    DPRINT1(\"%%s hit stub for %%s\\n\",module,function);");
     output( "\n");
-    output( "    args[0] = (ULONG_PTR)module;\n");
-    output( "    args[1] = (ULONG_PTR)function;\n");
-    output( "    RaiseException( EXCEPTION_WINE_STUB, EH_NONCONTINUABLE, 2, args );\n");
-    output( "}\n\n");
+    output( "    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);\n");
+    output( "    return -1;\n");
+    output( "}\n");
 
     output( "static const char __wine_spec_file_name[] = \"%s\";\n\n", spec->file_name );
 
