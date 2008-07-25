@@ -11,6 +11,8 @@
 #include <k32.h>
 #ifdef _M_IX86
 #include "i386/ketypes.h"
+#elif defined _M_AMD64
+#include "amd64/ketypes.h"
 #endif
 
 #define NDEBUG
@@ -336,7 +338,7 @@ BasepInitializeContext(IN PCONTEXT Context,
                        IN PVOID StackAddress,
                        IN ULONG ContextType)
 {
-#ifdef _M_IX86
+#ifdef __i386__
     DPRINT("BasepInitializeContext: %p\n", Context);
     
     /* Setup the Initial Win32 Thread Context */
@@ -362,7 +364,7 @@ BasepInitializeContext(IN PCONTEXT Context,
     }
     else if (ContextType == 2) /* For Fibers */
     {
-        //Context->Eip = (ULONG)BaseFiberStartup;
+        Context->Eip = (ULONG)BaseFiberStartup;
     }
     else                       /* For first thread in a Process */
     {
@@ -374,6 +376,44 @@ BasepInitializeContext(IN PCONTEXT Context,
     
     /* Give it some room for the Parameter */
     Context->Esp -= sizeof(PVOID);
+#elif defined(__x86_64__)
+    DPRINT("BasepInitializeContext: %p\n", Context);
+    
+    /* Setup the Initial Win32 Thread Context */
+    Context->Rax = (ULONG_PTR)StartAddress;
+    Context->Rbx = (ULONG_PTR)Parameter;
+    Context->Rsp = (ULONG_PTR)StackAddress;
+    /* The other registers are undefined */
+
+    /* Setup the Segments */
+    Context->SegFs = KGDT_R3_TEB | RPL_MASK;
+    Context->SegEs = KGDT_R3_DATA | RPL_MASK;
+    Context->SegDs = KGDT_R3_DATA | RPL_MASK;
+    Context->SegCs = KGDT_R3_CODE | RPL_MASK;
+    Context->SegSs = KGDT_R3_DATA | RPL_MASK;
+    Context->SegGs = 0;
+
+    /* Set the EFLAGS */
+    Context->EFlags = 0x3000; /* IOPL 3 */
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Rip = (ULONG_PTR)BaseThreadStartupThunk;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Rip = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Rip = (ULONG_PTR)BaseProcessStartThunk;
+    }
+    
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
+    
+    /* Give it some room for the Parameter */
+    Context->Rsp -= sizeof(PVOID);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;

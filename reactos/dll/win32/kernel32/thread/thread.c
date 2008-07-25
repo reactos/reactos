@@ -658,6 +658,7 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
 		       OUT LPLDT_ENTRY lpSelectorEntry)
 {
+#ifdef _M_IX86
   DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
   NTSTATUS Status;
 
@@ -675,6 +676,10 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 
   *lpSelectorEntry = DescriptionTableEntry.Descriptor;
   return TRUE;
+#else
+    DPRINT1("Calling GetThreadSelectorEntry!\n");
+    return FALSE;
+#endif
 }
 
 /*

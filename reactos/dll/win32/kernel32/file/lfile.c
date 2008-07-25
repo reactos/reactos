@@ -28,7 +28,7 @@ _hread(
 	DWORD	NumberOfBytesRead;
 
 	if ( !ReadFile(
-		(HANDLE) hFile,
+		(HANDLE)(ULONG_PTR) hFile,
 		(LPVOID) lpBuffer,
 		(DWORD) lBytes,
 		& NumberOfBytesRead,

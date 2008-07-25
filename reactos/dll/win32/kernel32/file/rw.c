@@ -37,7 +37,7 @@ WriteFile(IN HANDLE hFile,
         *lpNumberOfBytesWritten = 0;
      }
 
-   if (IsConsoleHandle(hFile))
+   if (IsConsoleHandle((ULONG_PTR)hFile))
      {
 	return WriteConsoleA(hFile,
                              lpBuffer,

@@ -40,7 +40,7 @@ GetHandleInformation (HANDLE hObject,
   DWORD Flags;
 
   Ppb = NtCurrentPeb()->ProcessParameters;
-  switch ((ULONG)hObject)
+  switch ((ULONG_PTR)hObject)
   {
     case STD_INPUT_HANDLE:
       hObject = Ppb->StandardInput;

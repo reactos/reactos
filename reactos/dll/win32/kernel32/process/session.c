@@ -60,7 +60,7 @@ BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
     return FALSE;
   }
 
-  ClientId.UniqueProcess = (HANDLE)dwProcessId;
+  ClientId.UniqueProcess = (HANDLE)(ULONG_PTR)dwProcessId;
   ClientId.UniqueThread = 0;
 
   InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);

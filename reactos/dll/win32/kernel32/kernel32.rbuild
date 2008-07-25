@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-	<module name="kernel32_base" type="objectlibrary">
+	<module name="kernel32_base" type="objectlibrary" allowwarnings="true">
 		<include base="kernel32_base">.</include>
 		<include base="kernel32_base">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
@@ -118,10 +118,16 @@
 					<file>thread.S</file>
 				</directory>
 			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>fiber.S</file>
+					<file>thread.S</file>
+				</directory>
+			</if>
 		</directory>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
-		<importlibrary definition="kernel32.def" />
+		<importlibrary definition="kernel32.spec.def" />
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>
@@ -132,5 +138,6 @@
 		<library>pseh</library>
 		<library>ntdll</library>
 		<file>kernel32.rc</file>
+		<file>kernel32.spec</file>
 	</module>
 </group>

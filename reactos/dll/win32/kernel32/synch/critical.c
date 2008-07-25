@@ -55,4 +55,14 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL WINAPI InitializeCriticalSectionEx( CRITICAL_SECTION *crit, DWORD spincount, DWORD flags )
+{
+    NTSTATUS ret = RtlInitializeCriticalSectionEx( crit, spincount, flags );
+    if (ret) RtlRaiseStatus( ret );
+    return !ret;
+}
+
 /* EOF */

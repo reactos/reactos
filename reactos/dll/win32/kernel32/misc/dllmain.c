@@ -407,6 +407,7 @@ InterlockedDecrement(IN OUT LONG volatile *lpAddend)
     return _InterlockedDecrement(lpAddend);
 }
 
+#undef InterlockedExchange
 LONG
 WINAPI
 InterlockedExchange(IN OUT LONG volatile *Target,
