@@ -17,11 +17,11 @@
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD_PTR STDCALL
 NtUserGetThreadState(
    DWORD Routine)
 {
-   DECLARE_RETURN(DWORD);
+   DECLARE_RETURN(DWORD_PTR);
 
    DPRINT("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -40,16 +40,16 @@ NtUserGetThreadState(
          RETURN(0);
 
       case THREADSTATE_FOCUSWINDOW:
-         RETURN( (DWORD)IntGetThreadFocusWindow());
+         RETURN( (DWORD_PTR)IntGetThreadFocusWindow());
       case THREADSTATE_CAPTUREWINDOW:
          /* FIXME should use UserEnterShared */
-         RETURN( (DWORD)IntGetCapture());
+         RETURN( (DWORD_PTR)IntGetCapture());
       case THREADSTATE_PROGMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hProgmanWindow);
+         RETURN( (DWORD_PTR)GetW32ThreadInfo()->Desktop->hProgmanWindow);
       case THREADSTATE_TASKMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hTaskManWindow);
+         RETURN( (DWORD_PTR)GetW32ThreadInfo()->Desktop->hTaskManWindow);
       case THREADSTATE_ACTIVEWINDOW:
-         RETURN ( (DWORD)UserGetActiveWindow());
+         RETURN ( (DWORD_PTR)UserGetActiveWindow());
    }
    RETURN( 0);
 

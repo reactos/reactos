@@ -876,18 +876,18 @@ NtUserCallNextHookEx(
   LPARAM lParam,
   BOOL Ansi);
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserCallNoParam(
   DWORD Routine);
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserCallOneParam(
   DWORD Param,
   DWORD Routine);
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserCallTwoParam(
   DWORD Param1,
@@ -1612,7 +1612,7 @@ enum ThreadStateRoutines
     THREADSTATE_TASKMANWINDOW
 };
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserGetThreadState(
   DWORD Routine);
