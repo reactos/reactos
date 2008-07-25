@@ -303,15 +303,17 @@ ObpAllocateObjectNameBuffer(IN ULONG Length,
     if (!(UseLookaside) || (MaximumLength > OBP_NAME_LOOKASIDE_MAX_SIZE))
     {
         /* Nope, allocate directly from pool */
-	/* Since we later use MaximumLength to detect that we're not allocating
-	 * from a list, we need at least MaximumLength + sizeof(UNICODE_NULL)
-	 * here.
-	 *
-	 * People do call this with UseLookasideList FALSE so the distinction
-	 * is critical.
-	 */
-	if (MaximumLength <= OBP_NAME_LOOKASIDE_MAX_SIZE)
-	    MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE + sizeof(UNICODE_NULL);
+        /* Since we later use MaximumLength to detect that we're not allocating
+         * from a list, we need at least MaximumLength + sizeof(UNICODE_NULL)
+         * here.
+         *
+         * People do call this with UseLookasideList FALSE so the distinction
+         * is critical.
+         */
+        if (MaximumLength <= OBP_NAME_LOOKASIDE_MAX_SIZE)
+        {
+            MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE + sizeof(UNICODE_NULL);
+        }
         Buffer = ExAllocatePoolWithTag(PagedPool,
                                        MaximumLength,
                                        OB_NAME_TAG);
@@ -319,7 +321,7 @@ ObpAllocateObjectNameBuffer(IN ULONG Length,
     else
     {
         /* Allocate from the lookaside */
-	MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE;
+        MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE;
         Buffer = ObpAllocateObjectCreateInfoBuffer(LookasideNameBufferList);
     }
 
@@ -417,7 +419,10 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
     {
         /* Handle exception and free the string buffer */
         Status = _SEH_GetExceptionCode();
-        if (StringBuffer) ObpFreeObjectNameBuffer(CapturedName);
+        if (StringBuffer)
+        {
+            ObpFreeObjectNameBuffer(CapturedName);
+        }
     }
     _SEH_END;
 
@@ -486,7 +491,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 if(!NT_SUCCESS(Status))
                 {
                     /* Capture failed, quit */
-		    ObjectCreateInfo->SecurityDescriptor = NULL;
+                    ObjectCreateInfo->SecurityDescriptor = NULL;
                     _SEH_LEAVE;
                 }
 
