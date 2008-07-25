@@ -38,7 +38,7 @@
 #        This can require several minutes to complete. If you only need to check
 #        dependencies for a single or few modules then you can use the
 #        module_depends targets instead. This target can also repair a damaged or
-#        missing makefile-{ROS_ARCH}.auto if needed.
+#        missing makefile-${ROS_ARCH}.auto if needed.
 #
 #    module_depends
 #        These targets do a dependency check of individual modules. Replace module
@@ -125,7 +125,7 @@
 #            -r           Input XML
 #
 #    ROS_AUTOMAKE
-#        Alternate name of makefile.auto
+#        Alternate name of makefile-${ROS_ARCH}.auto
 #
 #    ROS_BUILDENGINE
 #        The Build engine to be used. The variable defaults to rbuild (RBUILD_TARGET)
@@ -158,7 +158,11 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-ROS_AUTOMAKE=makefile.auto
+  ifeq ($(ARCH),i386)
+    ROS_AUTOMAKE=makefile.auto
+  else
+    ROS_AUTOMAKE=makefile-$(ARCH).auto
+  endif
 endif
 
 all: $(ROS_AUTOMAKE)
