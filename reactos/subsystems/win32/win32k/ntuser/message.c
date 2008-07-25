@@ -298,17 +298,57 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 BOOL
 STDCALL
 NtUserCallMsgFilter(
-   LPMSG msg,
+   LPMSG lpmsg,
    INT code)
 {
+   BOOL BadChk = FALSE;
+   MSG Msg;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserCallMsgFilter\n");
    UserEnterExclusive();
+   if (lpmsg)
+   {
+      _SEH_TRY
+      {
+         ProbeForRead((PVOID)lpmsg,
+                       sizeof(MSG),
+                                1);
+         RtlCopyMemory( &Msg,
+                (PVOID)lpmsg,
+                 sizeof(MSG));
+      }
+      _SEH_HANDLE
+      {
+         BadChk = TRUE;
+      }
+      _SEH_END;
+   }
+   else
+     RETURN( FALSE);
 
-   if ( UserCallNextHookEx( WH_SYSMSGFILTER, code, 0, (LPARAM)msg, FALSE))
-      RETURN( TRUE);
-   RETURN( UserCallNextHookEx( WH_MSGFILTER, code, 0, (LPARAM)msg, FALSE));
+   if (BadChk) RETURN( FALSE);
+
+   if (!co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
+   {
+      co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
+   }
+
+   _SEH_TRY
+   {
+      ProbeForWrite((PVOID)lpmsg,
+                     sizeof(MSG),
+                               1);
+      RtlCopyMemory((PVOID)lpmsg,
+                            &Msg,
+                     sizeof(MSG));
+   }
+   _SEH_HANDLE
+   {
+      BadChk = TRUE;
+   }
+   _SEH_END;
+   if (BadChk) RETURN( FALSE);
 
 CLEANUP:
    DPRINT("Leave NtUserCallMsgFilter. ret=%i\n", _ret_);
