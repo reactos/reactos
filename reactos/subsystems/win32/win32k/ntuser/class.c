@@ -486,7 +486,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                 Class->Clone = NULL;
                 Class->Base = BaseClass;
                 Class->Next = BaseClass->Clone;
-                (void)InterlockedExchangePointer(&BaseClass->Clone,
+                (void)InterlockedExchangePointer((VOID*)&BaseClass->Clone,
                                                  Class);
             }
         }
