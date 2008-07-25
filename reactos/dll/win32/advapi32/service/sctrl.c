@@ -277,7 +277,7 @@ ScStartService(PSCM_CONTROL_PACKET ControlPacket)
     TRACE("Size: %lu\n", ControlPacket->dwSize);
     TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
 
-    lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
+    lpService = (PACTIVE_SERVICE)(ULONG_PTR)ControlPacket->hClient;
     if (lpService == NULL)
     {
         TRACE("Service not found\n");
@@ -320,7 +320,7 @@ ScControlService(PSCM_CONTROL_PACKET ControlPacket)
     TRACE("Size: %lu\n", ControlPacket->dwSize);
     TRACE("Service: %S\n", &ControlPacket->szArguments[0]);
 
-    lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
+    lpService = (PACTIVE_SERVICE)(ULONG_PTR)ControlPacket->hClient;
     if (lpService == NULL)
     {
         TRACE("Service not found\n");

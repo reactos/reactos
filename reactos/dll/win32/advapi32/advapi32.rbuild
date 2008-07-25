@@ -1,6 +1,6 @@
 <module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll" unicode="yes">
 
-	<importlibrary definition="advapi32.def" />
+	<importlibrary definition="advapi32.spec.def" />
 	<include base="advapi32">.</include>
 	<include base="scm_client">.</include>
 	<include base="lsa_client">.</include>
@@ -17,6 +17,7 @@
 	<library>kernel32</library>
 	<library>pseh</library>
 	<pch>advapi32.h</pch>
+	<file>advapi32.spec</file>
 	<directory name="crypt">
 			<file>crypt.c</file>
 			<file>crypt_arc4.c</file>

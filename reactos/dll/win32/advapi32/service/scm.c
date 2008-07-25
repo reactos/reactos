@@ -117,7 +117,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     HandleBind();
 
     dwError = RChangeServiceConfig2A(BindingHandle,
-                                     (SC_RPC_HANDLE)hService,
+                                     (SC_RPC_HANDLE)(ULONG_PTR)hService,
                                      Info);
     if (dwError != ERROR_SUCCESS)
     {

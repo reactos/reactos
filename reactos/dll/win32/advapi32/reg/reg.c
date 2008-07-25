@@ -41,9 +41,9 @@ static VOID CloseDefaultKeys(VOID);
         NtClose(Handle);                                                       \
     }
 #define IsPredefKey(HKey)                                                      \
-    (((ULONG)(HKey) & 0xF0000000) == 0x80000000)
+    (((ULONG_PTR)(HKey) & 0xF0000000) == 0x80000000)
 #define GetPredefKeyIndex(HKey)                                                \
-    ((ULONG)(HKey) & 0x0FFFFFFF)
+    ((ULONG_PTR)(HKey) & 0x0FFFFFFF)
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
