@@ -183,12 +183,12 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                         SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                     }
 
-                    switch (PtrToLong(hRootKey))
+                    switch (((LONG_PTR)HKEY_LOCAL_MACHINE) & 0xff)
                     {
-                    case PtrToLong(HKEY_LOCAL_MACHINE):
+                    case (((LONG_PTR)HKEY_LOCAL_MACHINE) & 0xff):
                         _tcscpy(Path, _T("HKLM\\\0"));
                         break;
-                    case PtrToLong(HKEY_CURRENT_USER):
+                    case (((LONG_PTR)HKEY_CURRENT_USER) & 0xff):
                         _tcscpy(Path, _T("HKCU\\\0"));
                         break;
                     default:

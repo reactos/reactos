@@ -326,7 +326,7 @@ int CardButton::OnLButtonUp(HWND hwnd, int x, int y)
             else
             {
                 HWND hwnd = (HWND)parentWnd;
-                SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(id, BN_CLICKED), (LONG)hwnd);
+                SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(id, BN_CLICKED), (LONG_PTR)hwnd);
             }
         }
     }

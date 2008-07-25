@@ -23,7 +23,7 @@ OpenShellFolder(LPTSTR lpFolderCLSID)
     _tcscpy(szParameters, _T("/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
     _tcscat(szParameters, lpFolderCLSID);
 
-    return (int)ShellExecute(NULL, _T("open"), _T("explorer.exe"), szParameters, NULL, SW_SHOWDEFAULT) > 32;
+    return (INT)(INT_PTR)ShellExecute(NULL, _T("open"), _T("explorer.exe"), szParameters, NULL, SW_SHOWDEFAULT) > 32;
 }
 
 static INT

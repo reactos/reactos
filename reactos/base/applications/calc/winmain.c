@@ -1303,7 +1303,7 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             SetFocus(GetDlgItem(hWnd, IDC_BUTTON_FOCUS));
         switch (LOWORD(wp)) {
         case IDM_HELP_ABOUT:
-            DialogBox(calc.hInstance,MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hWnd, AboutDlgProc);
+            DialogBox(calc.hInstance,MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hWnd,(DLGPROC) AboutDlgProc);
             return TRUE;
         case IDM_HELP_HELP:
 #ifndef DISABLE_HTMLHELP_SUPPORT

@@ -173,7 +173,7 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NOTIFY:
-            idctrl = (int)wParam;
+            idctrl = wParam;
             pnmh = (LPNMHDR)lParam;
             if ((pnmh->hwndFrom == hTabWnd) &&
                 (pnmh->idFrom == IDC_TAB) &&
