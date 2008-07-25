@@ -181,7 +181,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     if (RemainingName->Length)
     {
         /* Copy the new path */
-        RtlCopyMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
+        RtlMoveMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
                       RemainingName->Buffer,
                       RemainingName->Length);
     }

@@ -300,9 +300,18 @@ ObpAllocateObjectNameBuffer(IN ULONG Length,
     MaximumLength = Length + sizeof(UNICODE_NULL);
 
     /* Check if we should use the lookaside buffer */
-    if (!(UseLookaside) || (MaximumLength > 248))
+    if (!(UseLookaside) || (MaximumLength > OBP_NAME_LOOKASIDE_MAX_SIZE))
     {
         /* Nope, allocate directly from pool */
+	/* Since we later use MaximumLength to detect that we're not allocating
+	 * from a list, we need at least MaximumLength + sizeof(UNICODE_NULL)
+	 * here.
+	 *
+	 * People do call this with UseLookasideList FALSE so the distinction
+	 * is critical.
+	 */
+	if (MaximumLength <= OBP_NAME_LOOKASIDE_MAX_SIZE)
+	    MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE + sizeof(UNICODE_NULL);
         Buffer = ExAllocatePoolWithTag(PagedPool,
                                        MaximumLength,
                                        OB_NAME_TAG);
@@ -310,13 +319,13 @@ ObpAllocateObjectNameBuffer(IN ULONG Length,
     else
     {
         /* Allocate from the lookaside */
-        //MaximumLength = 248; <= hack, we should actually set this...!
+	MaximumLength = OBP_NAME_LOOKASIDE_MAX_SIZE;
         Buffer = ObpAllocateObjectCreateInfoBuffer(LookasideNameBufferList);
     }
 
     /* Setup the string */
-    ObjectName->Length = (USHORT)Length;
     ObjectName->MaximumLength = (USHORT)MaximumLength;
+    ObjectName->Length = (USHORT)Length;
     ObjectName->Buffer = Buffer;
     return Buffer;
 }
@@ -328,7 +337,7 @@ ObpFreeObjectNameBuffer(IN PUNICODE_STRING Name)
     PVOID Buffer = Name->Buffer;
 
     /* We know this is a pool-allocation if the size doesn't match */
-    if (Name->MaximumLength != 248)
+    if (Name->MaximumLength != OBP_NAME_LOOKASIDE_MAX_SIZE)
     {
         /* Free it from the pool */
         ExFreePool(Buffer);
@@ -408,7 +417,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
     {
         /* Handle exception and free the string buffer */
         Status = _SEH_GetExceptionCode();
-        if (StringBuffer) ExFreePool(StringBuffer);
+        if (StringBuffer) ObpFreeObjectNameBuffer(CapturedName);
     }
     _SEH_END;
 
@@ -477,7 +486,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 if(!NT_SUCCESS(Status))
                 {
                     /* Capture failed, quit */
-                    ObjectCreateInfo->SecurityDescriptor = NULL;
+		    ObjectCreateInfo->SecurityDescriptor = NULL;
                     _SEH_LEAVE;
                 }
 
@@ -541,7 +550,10 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
     /* Cleanup if we failed */
-    if (!NT_SUCCESS(Status)) ObpFreeObjectCreateInformation(ObjectCreateInfo);
+    if (!NT_SUCCESS(Status))
+    {
+	ObpReleaseObjectCreateInformation(ObjectCreateInfo);
+    }
 
     /* Return status to caller */
     return Status;
