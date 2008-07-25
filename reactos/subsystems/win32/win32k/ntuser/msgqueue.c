@@ -70,7 +70,22 @@ static PAGED_LOOKASIDE_LIST TimerLookasideList;
 static VOID FASTCALL
 IdlePing(VOID)
 {
+  HWND hWnd;
+  PWINDOW_OBJECT Window;
   PW32PROCESS W32d = PsGetCurrentProcessWin32Process();
+
+  hWnd = UserGetForegroundWindow();
+
+  Window = UserGetWindowObject(hWnd);
+
+  if (Window && Window->ti)
+  {
+     if (Window->ti->Hooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
+     {
+        co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
+     }
+  }
+
   if (W32d && W32d->InputIdleEvent)
      KePulseEvent( W32d->InputIdleEvent, EVENT_INCREMENT, TRUE);
 }
@@ -159,6 +174,7 @@ MsqInsertSystemMessage(MSG* Msg)
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
    ULONG Prev;
+   EVENTMSG Event;
 
    IntLockSystemMessageQueue(OldIrql);
 
@@ -175,6 +191,13 @@ MsqInsertSystemMessage(MSG* Msg)
 
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
+
+   Event.message = Msg->message;
+   Event.time    = Msg->time;
+   Event.hwnd    = Msg->hwnd;
+   Event.paramL  = Msg->pt.x;
+   Event.paramH  = Msg->pt.y;
+   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
 
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
@@ -713,20 +736,36 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
-
-   // Condition may arise when calling MsqPostMessage and waiting for an event.
-   if (!UserIsEntered()) UserEnterExclusive(); // Fixme: Not sure ATM if this thread is locked.
+   EVENTMSG Event;
 
    DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
           uMsg, wParam, lParam);
 
+   // Condition may arise when calling MsqPostMessage and waiting for an event.
+   if (!UserIsEntered()) UserEnterExclusive(); // Fixme: Not sure ATM if this thread is locked.
+
+   FocusMessageQueue = IntGetFocusMessageQueue();
+
    Msg.hwnd = 0;
+
+   if (FocusMessageQueue && (FocusMessageQueue->FocusWindow != (HWND)0))
+       Msg.hwnd = FocusMessageQueue->FocusWindow;
+
    Msg.message = uMsg;
    Msg.wParam = wParam;
    Msg.lParam = lParam;
 
    KeQueryTickCount(&LargeTickCount);
    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+
+   Event.message = Msg.message;
+   Event.hwnd    = Msg.hwnd;
+   Event.time    = Msg.time;
+   Event.paramL  = (Msg.wParam & 0xFF) | (HIWORD(Msg.lParam) << 8);
+   Event.paramH  = Msg.lParam & 0x7FFF;
+   if (HIWORD(Msg.lParam) & 0x0100) Event.paramH |= 0x8000;
+   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
+
    /* We can't get the Msg.pt point here since we don't know thread
       (and thus the window station) the message will end up in yet. */
 
@@ -744,7 +783,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   FocusMessageQueue = IntGetFocusMessageQueue();
    if (FocusMessageQueue == NULL)
    {
          DPRINT("No focus message queue\n");

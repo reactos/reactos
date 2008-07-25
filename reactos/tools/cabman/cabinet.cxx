@@ -1694,8 +1694,7 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
                 return CAB_STATUS_INVALID_CAB;
             }
 
-            *(unsigned char**)&CurrentIBuffer += BytesRead;
-
+            CurrentIBuffer = (unsigned char*)CurrentIBuffer + BytesRead;
             CurrentIBufferSize += (USHORT)BytesRead;
 
             if (CurrentIBufferSize == CAB_BLOCKSIZE)
@@ -3573,8 +3572,8 @@ ULONG CCabinet::WriteDataBlock()
     CurrentFolderNode->TotalFolderSize += (BytesWritten + sizeof(CFDATA));
     CurrentFolderNode->Folder.DataBlockCount++;
 
-    *(unsigned char**)&CurrentOBuffer += DataNode->Data.CompSize;
-    CurrentOBufferSize     -= DataNode->Data.CompSize;
+    CurrentOBuffer = (unsigned char*)CurrentOBuffer + DataNode->Data.CompSize;
+    CurrentOBufferSize -= DataNode->Data.CompSize;
 
     LastBlockStart += DataNode->Data.UncompSize;
 

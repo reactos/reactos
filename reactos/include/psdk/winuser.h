@@ -1170,6 +1170,12 @@ extern "C" {
 #define SMTO_ABORTIFHUNG 2
 #define SMTO_BLOCK 1
 #define SMTO_NORMAL 0
+#if (WINVER >= 0x0500)
+#define SMTO_NOTIMEOUTIFNOTHUNG 8
+#endif
+#if (WINVER >= 0x0600)
+#define SMTO_ERRORONEXIT 32
+#endif
 #define SIF_ALL 23
 #define SIF_PAGE 2
 #define SIF_POS 4

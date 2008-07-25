@@ -502,7 +502,7 @@ CreateServiceA(SC_HANDLE hSCManager,
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
-        MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
+        MultiByteToWideChar(CP_ACP, 0, lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
     }
 
     if (lpServiceStartName)

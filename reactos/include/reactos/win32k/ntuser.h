@@ -392,7 +392,14 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY, *PPROPERTY;
 
-
+typedef struct _BROADCASTPARM
+{
+  DWORD flags;
+  DWORD recipients;
+  HDESK hDesk;
+  HWND  hWnd;
+  LUID  luid;  
+} BROADCASTPARM, *PBROADCASTPARM;
 
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);

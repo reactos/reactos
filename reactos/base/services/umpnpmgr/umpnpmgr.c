@@ -160,7 +160,7 @@ NtStatusToCrError(NTSTATUS Status)
 
 
 /* Function 0 */
-DWORD PNP_Function0(
+DWORD PNP_Disconnect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
@@ -170,7 +170,7 @@ DWORD PNP_Function0(
 
 
 /* Function 1 */
-DWORD PNP_Function1(
+DWORD PNP_Connect(
     handle_t hBinding)
 {
     UNREFERENCED_PARAMETER(hBinding);
@@ -1681,7 +1681,7 @@ DWORD PNP_QueryResConfList(
 
 
 /* Function 55 */
-DWORD PNP_Function55(
+DWORD PNP_SetHwProf(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1690,7 +1690,7 @@ DWORD PNP_Function55(
 
 
 /* Function 56 */
-DWORD PNP_Function56(
+DWORD PNP_QueryArbitratorFreeData(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1699,7 +1699,7 @@ DWORD PNP_Function56(
 
 
 /* Function 57 */
-DWORD PNP_Function57(
+DWORD PNP_QueryArbitratorFreeSize(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1710,7 +1710,7 @@ DWORD PNP_Function57(
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(
-    handle_t BindingHandle,
+    handle_t hBinding,
     DWORD ulFlags)
 {
     UNIMPLEMENTED;
@@ -1719,7 +1719,7 @@ PNP_RunDetection(
 
 
 /* Function 59 */
-DWORD PNP_Function59(
+DWORD PNP_RegisterNotification(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1728,7 +1728,7 @@ DWORD PNP_Function59(
 
 
 /* Function 60 */
-DWORD PNP_Function60(
+DWORD PNP_UnregisterNotification(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1831,6 +1831,69 @@ DWORD PNP_SetObjectProp(
     PNP_PROP_SIZE PropertySize,
     BYTE *PropertyBuffer,
     DWORD Flags)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 68 */
+DWORD PNP_InstallDevInst(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 69 */
+DWORD PNP_ApplyPowerSettings(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 70 */
+DWORD PNP_DriverStoreAddDriverPackage(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 71 */
+DWORD PNP_DriverStoreDeleteDriverPackage(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 72 */
+DWORD PNP_RegisterServiceNotification(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 73 */
+DWORD PNP_SetActiveService(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/* Function 74 */
+DWORD PNP_DeleteServiceDevices(
+    handle_t hBinding)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;

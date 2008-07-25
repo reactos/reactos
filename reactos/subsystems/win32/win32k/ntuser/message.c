@@ -658,6 +658,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
    USHORT HitTest;
+   MOUSEHOOKSTRUCT MHook;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -814,9 +815,51 @@ MessageFound:
          goto CheckMessages;
       }
 MsgExit:
+      if ( ISITHOOKED(WH_MOUSE) &&
+           Msg->Msg.message >= WM_MOUSEFIRST &&
+           Msg->Msg.message <= WM_MOUSELAST )
+      {
+         MHook.pt           = Msg->Msg.pt;
+         MHook.hwnd         = Msg->Msg.hwnd;
+         MHook.wHitTestCode = HitTest;
+         MHook.dwExtraInfo  = 0;
+         if (co_HOOK_CallHooks( WH_MOUSE,
+                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                                Msg->Msg.message,
+                                (LPARAM)&MHook ))
+         {
+            if (ISITHOOKED(WH_CBT))
+            {
+                MHook.pt           = Msg->Msg.pt;
+                MHook.hwnd         = Msg->Msg.hwnd;
+                MHook.wHitTestCode = HitTest;
+                MHook.dwExtraInfo  = 0;
+                co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, 
+                                   Msg->Msg.message, (LPARAM)&MHook);
+            }
+            return FALSE;
+         }
+      }
+      if ( ISITHOOKED(WH_KEYBOARD) &&
+          (Msg->Msg.message == WM_KEYDOWN || Msg->Msg.message == WM_KEYUP) )
+      {
+         if (co_HOOK_CallHooks( WH_KEYBOARD,
+                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                                LOWORD(Msg->Msg.wParam),
+                                Msg->Msg.lParam))
+         {
+            if (ISITHOOKED(WH_CBT))
+            {
+               /* skip this message */
+               co_HOOK_CallHooks( WH_CBT, HCBT_KEYSKIPPED,
+                                  LOWORD(Msg->Msg.wParam), Msg->Msg.lParam );
+            }
+            return FALSE;
+         }
+      }
       // The WH_GETMESSAGE hook enables an application to monitor messages about to
       // be returned by the GetMessage or PeekMessage function.
-      if(ISITHOOKED(WH_GETMESSAGE))
+      if (ISITHOOKED(WH_GETMESSAGE))
       {
          //DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
          co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
@@ -863,7 +906,6 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
-
    if (Present)
    {
 
@@ -1346,8 +1388,8 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    PW32THREAD Win32Thread;
    DECLARE_RETURN(LRESULT);
    USER_REFERENCE_ENTRY Ref;
+   BOOL SameThread = FALSE;
 
-   /* FIXME: Call hooks. */
    if (!(Window = UserGetWindowObject(hWnd)))
    {
        RETURN( FALSE);
@@ -1357,8 +1399,22 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
 
+   if (Window->ti == Win32Thread->ThreadInfo)
+      SameThread = TRUE;
+
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
+   {
+      CWPSTRUCT CWP;
+      CWP.hwnd    = hWnd;
+      CWP.message = Msg;
+      CWP.wParam  = wParam;
+      CWP.lParam  = lParam;
+      co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
+   }
+   
    if (NULL != Win32Thread &&
-         Window->MessageQueue == Win32Thread->MessageQueue)
+       Window->MessageQueue == Win32Thread->MessageQueue)
    {
       if (Win32Thread->IsExiting)
       {
@@ -1379,7 +1435,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
       if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
       {
-         DPRINT1("Failed to pack message parameters\n");
+          DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
       }
 
@@ -1391,42 +1447,85 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          *uResult = Result;
       }
 
+      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
+           (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
+      {
+         CWPRETSTRUCT CWPR;
+         CWPR.hwnd    = hWnd;
+         CWPR.message = Msg;
+         CWPR.wParam  = wParam;
+         CWPR.lParam  = lParam;
+         CWPR.lResult = Result;
+         co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+      }
+
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
       {
          DPRINT1("Failed to unpack message parameters\n");
-          RETURN( TRUE);
+         RETURN( TRUE);
       }
 
-       RETURN( TRUE);
+      RETURN( TRUE);
    }
 
-   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
+   if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
    {
       /* FIXME - Set a LastError? */
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   if(Window->Status & WINDOWSTATUS_DESTROYING)
+   if (Window->Status & WINDOWSTATUS_DESTROYING)
    {
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   Status = co_MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
-                              uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
+   do
+   {
+      Status = co_MsqSendMessage( Window->MessageQueue,
+                                                  hWnd,
+                                                   Msg,
+                                                wParam,
+                                                lParam,
+                                              uTimeout,
+                                 (uFlags & SMTO_BLOCK),
+                                                 FALSE,
+                                               uResult);
+   }
+   while ((STATUS_TIMEOUT == Status) &&
+          (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
+          !MsqIsHung(Window->MessageQueue));
 
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
+   {
+      CWPRETSTRUCT CWPR;
+      CWPR.hwnd    = hWnd;
+      CWPR.message = Msg;
+      CWPR.wParam  = wParam;
+      CWPR.lParam  = lParam;
+      CWPR.lResult = *uResult;
+      co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+   }
 
    if (STATUS_TIMEOUT == Status)
    {
-      /* MSDN says GetLastError() should return 0 after timeout */
-      SetLastWin32Error(0);
-       RETURN( FALSE);
+/* 
+   MSDN says:
+      Microsoft Windows 2000: If GetLastError returns zero, then the function
+      timed out.
+      XP+ : If the function fails or times out, the return value is zero.
+      To get extended error information, call GetLastError. If GetLastError
+      returns ERROR_TIMEOUT, then the function timed out.
+ */
+      SetLastWin32Error(ERROR_TIMEOUT);
+      RETURN( FALSE);
    }
    else if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
    RETURN( TRUE);
@@ -1506,8 +1605,7 @@ co_IntPostOrSendMessage(HWND hWnd,
    }
    else
    {
-      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
-      {
+      if(!co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))      {
          Result = 0;
       }
    }
@@ -1863,14 +1961,121 @@ NtUserMessageCall(
    {
       return 0;
    }   
-   UserRefObjectCo(Window, &Ref);
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
+         UserRefObjectCo(Window, &Ref);
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
+         UserDerefObjectCo(Window);
+      break;
+      case FNID_BROADCASTSYSTEMMESSAGE:
+      {
+         PBROADCASTPARM parm;
+         BOOL BadChk = FALSE;
+         DWORD_PTR RetVal = 0;
+         lResult = -1;
+
+         if (ResultInfo)
+         {
+            _SEH_TRY
+            {
+               ProbeForWrite((PVOID)ResultInfo,
+                         sizeof(BROADCASTPARM),
+                                             1);               
+               parm = (PBROADCASTPARM)ResultInfo;
+            }
+            _SEH_HANDLE
+            {
+               BadChk = TRUE;
+            }
+            _SEH_END;
+            if (BadChk) break;
+         }
+         else
+           break;
+
+         if ( parm->recipients & BSM_ALLDESKTOPS ||
+              parm->recipients == BSM_ALLCOMPONENTS )
+         {
+         }
+         else if (parm->recipients & BSM_APPLICATIONS)
+         {
+            if (parm->flags & BSF_QUERY)
+            {
+               if (parm->flags & BSF_FORCEIFHUNG || parm->flags & BSF_NOHANG)
+               {
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_ABORTIFHUNG,
+                                            2000,
+                                            &RetVal);
+               }
+               else if (parm->flags & BSF_NOTIMEOUTIFNOTHUNG)
+               {
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_NOTIMEOUTIFNOTHUNG,
+                                            2000,
+                                            &RetVal);
+               }
+               else
+               {
+                  co_IntSendMessageTimeout( HWND_BROADCAST,
+                                            Msg,
+                                            wParam,
+                                            lParam,
+                                            SMTO_NORMAL,
+                                            2000,
+                                            &RetVal);
+               }
+            }
+            else if (parm->flags & BSF_POSTMESSAGE)
+            {
+               lResult = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
+            }
+            else if ( parm->flags & BSF_SENDNOTIFYMESSAGE)
+            {
+               lResult = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
+            }
+         }
+      }
+      break;
+      case FNID_SENDMESSAGECALLBACK:
+      break;
+      case FNID_CALLWNDPROC:
+      {
+         CWPSTRUCT CWP;
+         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+         CWP.hwnd    = hWnd;
+         CWP.message = Msg;
+         CWP.wParam  = wParam;
+         CWP.lParam  = lParam;
+         lResult = co_HOOK_CallHooks( WH_CALLWNDPROC,
+                                      HC_ACTION,
+                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                      (LPARAM)&CWP );
+      }
+      break;
+      case FNID_CALLWNDPROCRET:
+      {
+         CWPRETSTRUCT CWPR;
+         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+         CWPR.hwnd    = hWnd;
+         CWPR.message = Msg;
+         CWPR.wParam  = wParam;
+         CWPR.lParam  = lParam;
+         CWPR.lResult = ClientInfo->dwHookData;
+         lResult = co_HOOK_CallHooks( WH_CALLWNDPROCRET,
+                                      HC_ACTION,
+                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                      (LPARAM)&CWPR );
+      }
       break;
    }
-   UserDerefObjectCo(Window);
    UserLeave();
    return lResult;
 }

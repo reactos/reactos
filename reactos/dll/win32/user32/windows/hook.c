@@ -422,6 +422,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PKBDLLHOOKSTRUCT KeyboardLlData;
   PMSLLHOOKSTRUCT MouseLlData;
   PMSG Msg;
+  PMOUSEHOOKSTRUCT MHook;
+  PCWPSTRUCT CWP;
+  PCWPRETSTRUCT CWPR;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -502,12 +505,27 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       MouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) MouseLlData);
       break;
+    case WH_MOUSE:
+      MHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) MHook);
+      break;
+    case WH_CALLWNDPROC:
+      CWP = (PCWPSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) CWP);
+      break;
+    case WH_CALLWNDPROCRET:
+      CWPR = (PCWPRETSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) CWPR);
+      break;
     case WH_MSGFILTER:
     case WH_SYSMSGFILTER:
     case WH_GETMESSAGE:
       Msg = (PMSG)((PCHAR) Common + Common->lParam);
 //      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) Msg);
+      break;
+    case WH_KEYBOARD:
+      Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);

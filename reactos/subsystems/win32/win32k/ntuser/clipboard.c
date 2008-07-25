@@ -922,7 +922,9 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     {
                         //TODO : sinthesize CF_UNICODETEXT & CF_OEMTEXT
                         // CF_TEXT -> CF_UNICODETEXT
-                        RtlAnsiStringToUnicodeString(&unicodeString, hCBData, TRUE);
+                        ansiString.Buffer = hCBData;
+                        ansiString.Length = size;
+                        RtlAnsiStringToUnicodeString(&unicodeString, &ansiString, TRUE);
                         intAddFormatedData(CF_UNICODETEXT, unicodeString.Buffer, unicodeString.Length * sizeof(WCHAR));
                         // CF_TEXT -> CF_OEMTEXT
                         RtlUnicodeStringToOemString(&oemString, &unicodeString, TRUE);
