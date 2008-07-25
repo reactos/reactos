@@ -164,7 +164,7 @@ FreeMemory(PCREATE_DATA Data)
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 CreateHelpDialogProc(HWND hDlg,
                      UINT message,
                      WPARAM wParam,
@@ -221,7 +221,7 @@ CreateHelpDialogProc(HWND hDlg,
 }
 
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 CreateDialogProc(HWND hDlg,
                  UINT message,
                  WPARAM wParam,

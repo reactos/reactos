@@ -1021,7 +1021,7 @@ OnMainCreate(HWND hwnd,
 }
 
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DlgProc(HWND hDlg,
         UINT Message,
         WPARAM wParam,

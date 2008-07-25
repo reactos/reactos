@@ -198,7 +198,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
 }
 
 
-BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -356,7 +356,7 @@ CardImageWndProc(HWND hwnd,
 }
 
 
-BOOL CALLBACK CardBackDlgProc(HWND hDlg,
+INT_PTR CALLBACK CardBackDlgProc(HWND hDlg,
                               UINT uMsg,
                               WPARAM wParam,
                               LPARAM lParam)

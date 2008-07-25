@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="ping" type="win32cui" installbase="system32" installname="ping.exe">
+<module name="ping" type="win32cui" installbase="system32" installname="ping.exe" allowwarnings="true">
 	<include base="ping">.</include>
 	<define name="__USE_W32_SOCKETS" />
 	<define name="_WIN32_IE">0x600</define>

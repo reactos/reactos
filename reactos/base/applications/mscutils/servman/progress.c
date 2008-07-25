@@ -56,7 +56,7 @@ IncrementProgressBar(HWND hProgDlg)
     }
 }
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 ProgressDialogProc(HWND hDlg,
                    UINT Message,
                    WPARAM wParam,
