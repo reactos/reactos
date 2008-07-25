@@ -1712,10 +1712,10 @@ LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
 #if defined(_WIN64)
  /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
  #define InterlockedExchangePointer(t,v) \
-    (PVOID)InterlockedExchange64((LONGLONG*)(t),(LONGLONG)(v))
+    (PVOID)_InterlockedExchange64((LONGLONG*)(t),(LONGLONG)(v))
  /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
  #define InterlockedCompareExchangePointer(d,e,c) \
-    (PVOID)InterlockedCompareExchange64((LONGLONG*)(d),(LONGLONG)(e),(LONGLONG)(c))
+    (PVOID)_InterlockedCompareExchange64((LONGLONG*)(d),(LONGLONG)(e),(LONGLONG)(c))
 #else
  /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
  #define InterlockedExchangePointer(t,v) \
@@ -1735,12 +1735,12 @@ PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
 #endif
 #endif /* __INTERLOCKED_DECLARED */
 BOOL WINAPI IsBadCodePtr(FARPROC);
-BOOL WINAPI IsBadHugeReadPtr(PCVOID,UINT);
-BOOL WINAPI IsBadHugeWritePtr(PVOID,UINT);
-BOOL WINAPI IsBadReadPtr(PCVOID,UINT);
-BOOL WINAPI IsBadStringPtrA(LPCSTR,UINT);
-BOOL WINAPI IsBadStringPtrW(LPCWSTR,UINT);
-BOOL WINAPI IsBadWritePtr(PVOID,UINT);
+BOOL WINAPI IsBadHugeReadPtr(PCVOID,UINT_PTR);
+BOOL WINAPI IsBadHugeWritePtr(PVOID,UINT_PTR);
+BOOL WINAPI IsBadReadPtr(PCVOID,UINT_PTR);
+BOOL WINAPI IsBadStringPtrA(LPCSTR,UINT_PTR);
+BOOL WINAPI IsBadStringPtrW(LPCWSTR,UINT_PTR);
+BOOL WINAPI IsBadWritePtr(PVOID,UINT_PTR);
 BOOL WINAPI IsDebuggerPresent(void);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI IsProcessInJob(HANDLE,HANDLE,PBOOL);
@@ -1994,7 +1994,7 @@ BOOL WINAPI SetPrivateObjectSecurity(SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,P
 BOOL WINAPI SetProcessAffinityMask(HANDLE,DWORD);
 BOOL WINAPI SetProcessPriorityBoost(HANDLE,BOOL);
 BOOL WINAPI SetProcessShutdownParameters(DWORD,DWORD);
-BOOL WINAPI SetProcessWorkingSetSize(HANDLE,DWORD,DWORD);
+BOOL WINAPI SetProcessWorkingSetSize(HANDLE,SIZE_T,SIZE_T);
 #if (_WIN32_WINNT >= 0x0600)
 VOID WINAPI SetSecurityAccessMask(SECURITY_INFORMATION,LPDWORD);
 #endif

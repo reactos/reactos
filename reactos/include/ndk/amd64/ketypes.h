@@ -16,8 +16,8 @@ Author:
 
 --*/
 
-#ifndef _I386_KETYPES_H
-#define _I386_KETYPES_H
+#ifndef _IAMD64_KETYPES_H
+#define _IAMD64_KETYPES_H
 
 //
 // Dependencies
