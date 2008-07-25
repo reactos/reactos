@@ -42,7 +42,7 @@ CsrProbeForRead(IN PVOID Address,
     /* Do the probe */
     Pointer = (PUCHAR)Address;
     Data = *Pointer;
-    Pointer = (PUCHAR)((ULONG)Address + Length -1);
+    Pointer = (PUCHAR)((ULONG_PTR)Address + Length -1);
     Data = *Pointer;
 }
 
@@ -72,7 +72,7 @@ CsrProbeForWrite(IN PVOID Address,
     Pointer = (PUCHAR)Address;
     Data = *Pointer;
     *Pointer = Data;
-    Pointer = (PUCHAR)((ULONG)Address + Length -1);
+    Pointer = (PUCHAR)((ULONG_PTR)Address + Length -1);
     Data = *Pointer;
     *Pointer = Data;
 }

@@ -65,9 +65,9 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     HANDLE ThreadHandle;
 
     /* Write common data */
-    DebugEvent->dwProcessId = (DWORD)WaitStateChange->
+    DebugEvent->dwProcessId = (ULONG_PTR)WaitStateChange->
                                      AppClientId.UniqueProcess;
-    DebugEvent->dwThreadId = (DWORD)WaitStateChange->AppClientId.UniqueThread;
+    DebugEvent->dwThreadId = (ULONG_PTR)WaitStateChange->AppClientId.UniqueThread;
 
     /* Check what kind of even this is */
     switch (WaitStateChange->NewState)

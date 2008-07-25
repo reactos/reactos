@@ -268,7 +268,7 @@ LdrpInitializeTlsForProccess(VOID)
                                                               &Size);
                ASSERT(Module->TlsIndex < LdrpTlsCount);
                TlsData = &LdrpTlsArray[Module->TlsIndex];
-               TlsData->StartAddressOfRawData = (PVOID)TlsDirectory->StartAddressOfRawData;
+               TlsData->StartAddressOfRawData = (PVOID)(ULONG_PTR)TlsDirectory->StartAddressOfRawData;
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
                if (TlsDirectory->AddressOfCallBacks)
@@ -471,7 +471,7 @@ LdrAddModuleEntry(PVOID ImageBase,
   ASSERT(Module);
   memset(Module, 0, sizeof(LDR_DATA_TABLE_ENTRY));
   Module->DllBase = (PVOID)ImageBase;
-  Module->EntryPoint = (PVOID)NTHeaders->OptionalHeader.AddressOfEntryPoint;
+  Module->EntryPoint = (PVOID)(ULONG_PTR)NTHeaders->OptionalHeader.AddressOfEntryPoint;
   if (Module->EntryPoint != 0)
     Module->EntryPoint = (PVOID)((ULONG_PTR)Module->EntryPoint + (ULONG_PTR)Module->DllBase);
   Module->SizeOfImage = LdrpGetResidentSize(NTHeaders);
@@ -1047,8 +1047,8 @@ LdrGetExportByOrdinal (
                     ? RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
                     : NULL);
 
-        if (((ULONG)Function >= (ULONG)ExportDir) &&
-            ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+        if (((ULONG_PTR)Function >= (ULONG_PTR)ExportDir) &&
+            ((ULONG_PTR)Function < (ULONG_PTR)ExportDir + (ULONG_PTR)ExportDirSize))
           {
              DPRINT("Forward: %s\n", (PCHAR)Function);
              Function = LdrFixupForward((PCHAR)Function);
@@ -1132,8 +1132,8 @@ LdrGetExportByName(PVOID BaseAddress,
           {
              Ordinal = ExOrdinals[Hint];
              Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-             if (((ULONG)Function >= (ULONG)ExportDir) &&
-                 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+             if (((ULONG_PTR)Function >= (ULONG_PTR)ExportDir) &&
+                 ((ULONG_PTR)Function < (ULONG_PTR)ExportDir + (ULONG_PTR)ExportDirSize))
                {
                   DPRINT("Forward: %s\n", (PCHAR)Function);
                   Function = LdrFixupForward((PCHAR)Function);
@@ -1166,8 +1166,8 @@ LdrGetExportByName(PVOID BaseAddress,
           {
              Ordinal = ExOrdinals[mid];
              Function = RVA(BaseAddress, ExFunctions[Ordinal]);
-             if (((ULONG)Function >= (ULONG)ExportDir) &&
-                 ((ULONG)Function < (ULONG)ExportDir + (ULONG)ExportDirSize))
+             if (((ULONG_PTR)Function >= (ULONG_PTR)ExportDir) &&
+                 ((ULONG_PTR)Function < (ULONG_PTR)ExportDir + (ULONG_PTR)ExportDirSize))
                {
                   DPRINT("Forward: %s\n", (PCHAR)Function);
                   Function = LdrFixupForward((PCHAR)Function);
