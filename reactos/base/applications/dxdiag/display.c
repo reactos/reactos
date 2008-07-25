@@ -338,7 +338,7 @@ void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
             break;
 
         pContext->hDisplayWnd = hDlgs;
-        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, (DLGPROC)DisplayPageWndProc, (LPARAM)pContext);
+        hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DISPLAY_DIALOG), pContext->hMainDialog, DisplayPageWndProc, (LPARAM)pContext);
         if (!hwndDlg)
            break;
 

@@ -432,7 +432,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             ret = DialogBoxParam(hInstance,
                                  MAKEINTRESOURCE(IDD_DLG_CREATE),
                                  Info->hMainWnd,
-                                 (DLGPROC)CreateDialogProc,
+                                 CreateDialogProc,
                                  (LPARAM)Info);
             if (ret == IDOK)
                 RefreshServiceList(Info);
@@ -448,7 +448,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 DialogBoxParam(hInstance,
                                MAKEINTRESOURCE(IDD_DLG_DELETE),
                                Info->hMainWnd,
-                               (DLGPROC)DeleteDialogProc,
+                               DeleteDialogProc,
                                (LPARAM)Info);
             }
             else
@@ -569,7 +569,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             DialogBox(hInstance,
                       MAKEINTRESOURCE(IDD_ABOUTBOX),
                       Info->hMainWnd,
-                      (DLGPROC)AboutDialogProc);
+                      AboutDialogProc);
             SetFocus(Info->hListView);
         break;
 

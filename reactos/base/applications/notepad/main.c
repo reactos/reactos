@@ -91,7 +91,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_ABOUT:            DialogBox(GetModuleHandle(NULL),
                                          MAKEINTRESOURCE(IDD_ABOUTBOX),
                                          Globals.hMainWnd,
-                                         (DLGPROC) AboutDialogProc);
+                                         AboutDialogProc);
                                break;
     case CMD_ABOUT_WINE:       DIALOG_HelpAboutWine(); break;
 

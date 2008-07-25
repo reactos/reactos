@@ -182,7 +182,7 @@ AddCharToSelection(HWND hText,
 }
 
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DlgProc(HWND hDlg,
         UINT Message,
         WPARAM wParam,
@@ -351,7 +351,7 @@ wWinMain(HINSTANCE hInst,
         Ret = DialogBoxW(hInstance,
                          MAKEINTRESOURCEW(IDD_CHARMAP),
                          NULL,
-                         (DLGPROC)DlgProc) >= 0;
+                         DlgProc) >= 0;
 
         UnregisterMapClasses(hInstance);
     }

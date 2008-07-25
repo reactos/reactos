@@ -851,7 +851,7 @@ VOID DIALOG_GoTo(VOID)
     }
 
     nLine = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(DIALOG_GOTO),
-        Globals.hMainWnd, (DLGPROC)DIALOG_GoTo_DialogProc, nLine);
+        Globals.hMainWnd, DIALOG_GoTo_DialogProc, nLine);
 
     if (nLine >= 1)
 	{
@@ -981,7 +981,7 @@ VOID DIALOG_HelpAboutWine(VOID)
 VOID DIALOG_FilePageSetup(void)
 {
   DialogBox(Globals.hInstance, MAKEINTRESOURCE(DIALOG_PAGESETUP),
-            Globals.hMainWnd, (DLGPROC)DIALOG_PAGESETUP_DlgProc);
+            Globals.hMainWnd, DIALOG_PAGESETUP_DlgProc);
 }
 
 

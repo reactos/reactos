@@ -302,7 +302,7 @@ CreateDialogProc(HWND hDlg,
                         hHelp = CreateDialog(hInstance,
                                              MAKEINTRESOURCE(IDD_DLG_HELP_OPTIONS),
                                              hDlg,
-                                             (DLGPROC)CreateHelpDialogProc);
+                                             CreateHelpDialogProc);
                         if(hHelp != NULL)
                         {
                             bHelpOpen = TRUE;

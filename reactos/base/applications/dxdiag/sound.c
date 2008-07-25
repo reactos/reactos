@@ -209,7 +209,7 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
         return FALSE;
 
     pContext->hSoundWnd = hDlgs;
-    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, (DLGPROC)SoundPageWndProc, (LPARAM)pContext);
+    hwndDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SOUND_DIALOG), pContext->hMainDialog, SoundPageWndProc, (LPARAM)pContext);
     if (!hwndDlg)
         return FALSE;
 

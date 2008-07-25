@@ -21,12 +21,12 @@ BOOL OnCreate(HWND hWnd)
     TCITEM  item;
 
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd, (DLGPROC) GeneralPageWndProc);
-    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd, (DLGPROC) SystemPageWndProc);
-    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd, (DLGPROC) FreeLdrPageWndProc);
-    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, (DLGPROC) ServicesPageWndProc);
-    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, (DLGPROC) StartupPageWndProc);
-    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, (DLGPROC) ToolsPageWndProc);
+    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd,  GeneralPageWndProc);
+    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd,  SystemPageWndProc);
+    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd,  FreeLdrPageWndProc);
+    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd,  ServicesPageWndProc);
+    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd,  StartupPageWndProc);
+    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd,  ToolsPageWndProc);
 
     LoadString(hInst, IDS_MSCONFIG, szTemp, 256);
     SetWindowText(hWnd, szTemp);
@@ -222,7 +222,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
  
-    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL, (DLGPROC) MsConfigWndProc);
+    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL,  MsConfigWndProc);
   
     return 0;
 }
