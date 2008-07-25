@@ -423,6 +423,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PMSLLHOOKSTRUCT MouseLlData;
   PMSG Msg;
   PMOUSEHOOKSTRUCT MHook;
+  PCWPSTRUCT CWP;
+  PCWPRETSTRUCT CWPR;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -506,6 +508,14 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     case WH_MOUSE:
       MHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) MHook);
+      break;
+    case WH_CALLWNDPROC:
+      CWP = (PCWPSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) CWP);
+      break;
+    case WH_CALLWNDPROCRET:
+      CWPR = (PCWPRETSTRUCT)((PCHAR) Common + Common->lParam);
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) CWPR);
       break;
     case WH_MSGFILTER:
     case WH_SYSMSGFILTER:

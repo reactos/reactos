@@ -1388,6 +1388,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    PW32THREAD Win32Thread;
    DECLARE_RETURN(LRESULT);
    USER_REFERENCE_ENTRY Ref;
+   BOOL SameThread = FALSE;
 
    /* FIXME: Call hooks. */
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1398,7 +1399,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    UserRefObjectCo(Window, &Ref);
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
-
+   
    if (NULL != Win32Thread &&
          Window->MessageQueue == Win32Thread->MessageQueue)
    {
@@ -1425,12 +1426,38 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
           RETURN( FALSE);
       }
 
+      if (Window->ti == Win32Thread->ThreadInfo)
+         SameThread = TRUE;
+
+      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+           (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
+      {
+         CWPSTRUCT CWP;
+         CWP.hwnd    = hWnd;
+         CWP.message = Msg;
+         CWP.wParam  = wParam;
+         CWP.lParam  = lParam;
+         co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
+      }
+
       Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
                lParamPacked,lParamBufferSize);
 
       if(uResult)
       {
          *uResult = Result;
+      }
+      
+      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+           (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
+      {
+         CWPRETSTRUCT CWPR;
+         CWPR.hwnd    = hWnd;
+         CWPR.message = Msg;
+         CWPR.wParam  = wParam;
+         CWPR.lParam  = lParam;
+         CWPR.lResult = Result;
+         co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
       }
 
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
@@ -1957,7 +1984,6 @@ NtUserMessageCall(
                }
                else if (parm->flags & BSF_NOTIMEOUTIFNOTHUNG)
                {
-#define SMTO_NOTIMEOUTIFNOTHUNG  0x0008
                   co_IntSendMessageTimeout( HWND_BROADCAST,
                                             Msg,
                                             wParam,
