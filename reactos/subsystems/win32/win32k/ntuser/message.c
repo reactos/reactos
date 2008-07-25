@@ -1448,7 +1448,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          *uResult = Result;
       }
       
-      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
            (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
       {
          CWPRETSTRUCT CWPR;
