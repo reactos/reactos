@@ -1390,7 +1390,6 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    USER_REFERENCE_ENTRY Ref;
    BOOL SameThread = FALSE;
 
-   /* FIXME: Call hooks. */
    if (!(Window = UserGetWindowObject(hWnd)))
    {
        RETURN( FALSE);
@@ -1399,9 +1398,23 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    UserRefObjectCo(Window, &Ref);
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
+
+   if (Window->ti == Win32Thread->ThreadInfo)
+      SameThread = TRUE;
+
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
+   {
+      CWPSTRUCT CWP;
+      CWP.hwnd    = hWnd;
+      CWP.message = Msg;
+      CWP.wParam  = wParam;
+      CWP.lParam  = lParam;
+      co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
+   }
    
    if (NULL != Win32Thread &&
-         Window->MessageQueue == Win32Thread->MessageQueue)
+       Window->MessageQueue == Win32Thread->MessageQueue)
    {
       if (Win32Thread->IsExiting)
       {
@@ -1422,22 +1435,8 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
       if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
       {
-         DPRINT1("Failed to pack message parameters\n");
+          DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
-      }
-
-      if (Window->ti == Win32Thread->ThreadInfo)
-         SameThread = TRUE;
-
-      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
-           (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
-      {
-         CWPSTRUCT CWP;
-         CWP.hwnd    = hWnd;
-         CWP.message = Msg;
-         CWP.wParam  = wParam;
-         CWP.lParam  = lParam;
-         co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
       }
 
       Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
@@ -1447,7 +1446,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
       {
          *uResult = Result;
       }
-      
+
       if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
            (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
       {
@@ -1463,39 +1462,70 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
       {
          DPRINT1("Failed to unpack message parameters\n");
-          RETURN( TRUE);
+         RETURN( TRUE);
       }
 
-       RETURN( TRUE);
+      RETURN( TRUE);
    }
 
-   if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
+   if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
    {
       /* FIXME - Set a LastError? */
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   if(Window->Status & WINDOWSTATUS_DESTROYING)
+   if (Window->Status & WINDOWSTATUS_DESTROYING)
    {
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
-   Status = co_MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
-                              uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
+   do
+   {
+      Status = co_MsqSendMessage( Window->MessageQueue,
+                                                  hWnd,
+                                                   Msg,
+                                                wParam,
+                                                lParam,
+                                              uTimeout,
+                                 (uFlags & SMTO_BLOCK),
+                                                 FALSE,
+                                               uResult);
+   }
+   while ((STATUS_TIMEOUT == Status) &&
+          (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
+          !MsqIsHung(Window->MessageQueue));
 
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
+   {
+      CWPRETSTRUCT CWPR;
+      CWPR.hwnd    = hWnd;
+      CWPR.message = Msg;
+      CWPR.wParam  = wParam;
+      CWPR.lParam  = lParam;
+      CWPR.lResult = *uResult;
+      co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+   }
 
    if (STATUS_TIMEOUT == Status)
    {
-      /* MSDN says GetLastError() should return 0 after timeout */
-      SetLastWin32Error(0);
-       RETURN( FALSE);
+/* 
+   MSDN says:
+      Microsoft Windows 2000: If GetLastError returns zero, then the function
+      timed out.
+      XP+ : If the function fails or times out, the return value is zero.
+      To get extended error information, call GetLastError. If GetLastError
+      returns ERROR_TIMEOUT, then the function timed out.
+ */
+      SetLastWin32Error(ERROR_TIMEOUT);
+      RETURN( FALSE);
    }
    else if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-       RETURN( FALSE);
+      RETURN( FALSE);
    }
 
    RETURN( TRUE);

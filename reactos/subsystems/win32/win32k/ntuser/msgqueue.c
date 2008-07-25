@@ -78,12 +78,12 @@ IdlePing(VOID)
 
   Window = UserGetWindowObject(hWnd);
 
-  if (Window && Window->Wnd && (Window->Wnd->ti == GetW32ThreadInfo()))
+  if (Window && Window->ti)
   {
-      if (ISITHOOKED(WH_FOREGROUNDIDLE))
-      {
-         co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
-      }
+     if (Window->ti->Hooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
+     {
+        co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
+     }
   }
 
   if (W32d && W32d->InputIdleEvent)
