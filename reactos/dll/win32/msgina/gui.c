@@ -51,11 +51,7 @@ StatusMessageWindowProc(
 			if (msg->pTitle)
 				SetWindowTextW(hwndDlg, msg->pTitle);
 			SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, msg->pMessage);
-			if (!msg->Context->SignaledStatusWindowCreated)
-			{
-				msg->Context->SignaledStatusWindowCreated = TRUE;
-				SetEvent(msg->StartupEvent);
-			}
+			SetEvent(msg->StartupEvent);
 			return TRUE;
 		}
 	}
@@ -140,7 +136,7 @@ GUIDisplayStatusMessage(
 		return FALSE;
 	}
 
-	if(pTitle)
+	if (pTitle)
 		SetWindowTextW(pgContext->hStatusWindow, pTitle);
 
 	SetDlgItemTextW(pgContext->hStatusWindow, IDC_STATUSLABEL, pMessage);
@@ -155,8 +151,7 @@ GUIRemoveStatusMessage(
 	if (pgContext->hStatusWindow)
 	{
 		EndDialog(pgContext->hStatusWindow, 0);
-		pgContext->hStatusWindow = 0;
-		pgContext->SignaledStatusWindowCreated = FALSE;
+		pgContext->hStatusWindow = NULL;
 	}
 
 	return TRUE;
