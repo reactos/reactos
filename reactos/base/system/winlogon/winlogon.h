@@ -32,6 +32,7 @@
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>
+#include <cmfuncs.h>
 #include <rtlfuncs.h>
 #include <exfuncs.h>
 #include <setypes.h>
