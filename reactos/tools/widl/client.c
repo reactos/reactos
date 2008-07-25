@@ -437,7 +437,7 @@ void write_client(ifref_list_t *ifaces)
             write_function_stubs(iface->iface, &proc_offset);
 
             print_client("#if !defined(__RPC_WIN32__)\n");
-            print_client("#error  Invalid build platform for this stub.\n");
+            print_client("//#error  Invalid build platform for this stub.\n");
             print_client("#endif\n");
 
             fprintf(client, "\n");

@@ -2667,8 +2667,8 @@ void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase,
     }
 
     if (phase == PHASE_MARSHAL)
-        print_file(file, indent, "MIDL_memset(_StubMsg.Buffer, 0, (0x%x - (long)_StubMsg.Buffer) & 0x%x);\n", alignment, alignment - 1);
-    print_file(file, indent, "_StubMsg.Buffer = (unsigned char *)(((long)_StubMsg.Buffer + %u) & ~0x%x);\n",
+        print_file(file, indent, "MIDL_memset(_StubMsg.Buffer, 0, (0x%x - (size_t)_StubMsg.Buffer) & 0x%x);\n", alignment, alignment - 1);
+    print_file(file, indent, "_StubMsg.Buffer = (unsigned char *)(((size_t)_StubMsg.Buffer + %u) & ~0x%x);\n",
                 alignment - 1, alignment - 1);
 
     if (phase == PHASE_MARSHAL)
