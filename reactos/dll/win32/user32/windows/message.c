@@ -1441,6 +1441,11 @@ GetMessageA(LPMSG lpMsg,
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.AnsiMsg;
   Conversion.Ansi = TRUE;
   Conversion.FinalMsg = lpMsg;
@@ -1481,6 +1486,11 @@ GetMessageW(LPMSG lpMsg,
     {
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.UnicodeMsg;
   Conversion.Ansi = FALSE;
   Conversion.FinalMsg = lpMsg;
@@ -1527,6 +1537,11 @@ PeekMessageA(LPMSG lpMsg,
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.AnsiMsg;
   Conversion.Ansi = TRUE;
   Conversion.FinalMsg = lpMsg;
@@ -1570,6 +1585,11 @@ PeekMessageW(
     {
       return (BOOL) -1;
     }
+  if (!lpMsg)
+  {
+     SetLastError( ERROR_NOACCESS );
+     return FALSE;
+  }
   *lpMsg = Conversion.UnicodeMsg;
   Conversion.Ansi = FALSE;
   Conversion.FinalMsg = lpMsg;
