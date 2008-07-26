@@ -980,74 +980,6 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
   BOOL bClientWake = FALSE;
   ConsoleInput *TempInput;
 
-  /* process Ctrl-C and Ctrl-Break */
-  if (Console->Mode & ENABLE_PROCESSED_INPUT &&
-      KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown &&
-      ((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) ||
-       (KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
-      (KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
-    {
-      PCSRSS_PROCESS_DATA current;
-      PLIST_ENTRY current_entry;
-      DPRINT1("Console_Api Ctrl-C\n");
-      current_entry = Console->ProcessList.Flink;
-      while (current_entry != &Console->ProcessList)
-      {
-        current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-        current_entry = current_entry->Flink;
-        ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
-      }
-      HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-      return;
-    }
-
-  if (0 != (KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState
-            & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED))
-      && (VK_UP == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode
-          || VK_DOWN == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode))
-    {
-      if (KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown)
-        {
-          /* scroll up or down */
-          if (NULL == Console)
-            {
-              DPRINT1("No Active Console!\n");
-              HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-              return;
-            }
-          if (VK_UP == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode)
-            {
-              /* only scroll up if there is room to scroll up into */
-              if (Console->ActiveBuffer->CurrentY != Console->ActiveBuffer->MaxY - 1)
-                {
-                  Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
-                                                     Console->ActiveBuffer->MaxY - 1) %
-                                                    Console->ActiveBuffer->MaxY;
-                  Console->ActiveBuffer->CurrentY++;
-                }
-            }
-          else
-            {
-              /* only scroll down if there is room to scroll down into */
-              if (Console->ActiveBuffer->CurrentY != 0)
-                {
-                  Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                    Console->ActiveBuffer->MaxY;
-                  Console->ActiveBuffer->CurrentY--;
-                }
-            }
-          ConioDrawConsole(Console);
-        }
-      HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-      return;
-    }
-  if (NULL == Console)
-    {
-      DPRINT1("No Active Console!\n");
-      HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-      return;
-    }
-
   if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT)))
     {
       switch(KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
@@ -1266,6 +1198,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
 
   if (NULL == Console)
     {
+      DPRINT1("No Active Console!\n");
       return;
     }
 
@@ -1296,15 +1229,69 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     (AsciiChar >= ' ') ? AsciiChar : '.',
     ShiftState);
 
-  if (! ConInRec->Fake || ! ConInRec->NotChar)
-    {
-      /* FIXME - convert to ascii */
-      ConioProcessChar(Console, ConInRec);
-    }
-  else
+  if (ConInRec->Fake && ConInRec->NotChar)
     {
       HeapFree(Win32CsrApiHeap, 0, ConInRec);
+      return;
     }
+
+  /* process Ctrl-C and Ctrl-Break */
+  if (Console->Mode & ENABLE_PROCESSED_INPUT &&
+      er.Event.KeyEvent.bKeyDown &&
+      ((er.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) ||
+       (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
+      (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+    {
+      PCSRSS_PROCESS_DATA current;
+      PLIST_ENTRY current_entry;
+      DPRINT1("Console_Api Ctrl-C\n");
+      current_entry = Console->ProcessList.Flink;
+      while (current_entry != &Console->ProcessList)
+      {
+        current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+        current_entry = current_entry->Flink;
+        ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+      }
+      HeapFree(Win32CsrApiHeap, 0, ConInRec);
+      return;
+    }
+
+  if (0 != (er.Event.KeyEvent.dwControlKeyState
+            & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED))
+      && (VK_UP == er.Event.KeyEvent.wVirtualKeyCode
+          || VK_DOWN == er.Event.KeyEvent.wVirtualKeyCode))
+    {
+      if (er.Event.KeyEvent.bKeyDown)
+        {
+          /* scroll up or down */
+          if (VK_UP == er.Event.KeyEvent.wVirtualKeyCode)
+            {
+              /* only scroll up if there is room to scroll up into */
+              if (Console->ActiveBuffer->CurrentY != Console->ActiveBuffer->MaxY - 1)
+                {
+                  Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
+                                                     Console->ActiveBuffer->MaxY - 1) %
+                                                    Console->ActiveBuffer->MaxY;
+                  Console->ActiveBuffer->CurrentY++;
+                }
+            }
+          else
+            {
+              /* only scroll down if there is room to scroll down into */
+              if (Console->ActiveBuffer->CurrentY != 0)
+                {
+                  Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
+                                                    Console->ActiveBuffer->MaxY;
+                  Console->ActiveBuffer->CurrentY--;
+                }
+            }
+          ConioDrawConsole(Console);
+        }
+      HeapFree(Win32CsrApiHeap, 0, ConInRec);
+      return;
+    }
+  /* FIXME - convert to ascii */
+  ConioProcessChar(Console, ConInRec);
 }
 
 CSR_API(CsrGetScreenBufferInfo)

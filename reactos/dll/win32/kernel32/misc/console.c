@@ -2046,7 +2046,7 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
 
   /* Allocate space in the Buffer */
   CsrCaptureMessageBuffer(CaptureBuffer,
-                          NULL,
+                          lpBuffer,
                           Size,
                           (PVOID*)&Request.Data.WriteConsoleInputRequest.InputRecord);
 
@@ -2069,12 +2069,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     /* Return the number of events read */
     DPRINT("Events read: %lx\n", Request.Data.WriteConsoleInputRequest.Length);
     *lpNumberOfEventsWritten = Request.Data.WriteConsoleInputRequest.Length;
-
-    /* Copy into the buffer */
-    DPRINT("Copying to buffer\n");
-    RtlCopyMemory(lpBuffer, 
-                  Request.Data.WriteConsoleInputRequest.InputRecord, 
-                  sizeof(INPUT_RECORD) * *lpNumberOfEventsWritten);
   }
   else
   {
