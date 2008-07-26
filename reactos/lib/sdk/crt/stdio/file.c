@@ -96,7 +96,7 @@ typedef struct {
 
 /*static */ioinfo fdesc[MAX_FILES];
 
-FILE _iob[3];
+FILE _iob[3] = { { 0 } };
 
 static int fdstart = 3; /* first unallocated fd */
 static int fdend = 3; /* highest allocated fd */
