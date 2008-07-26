@@ -532,7 +532,7 @@ SerenumDetectLegacyDevice(
 
 	/* Fill the read buffer */
 	TRACE_(SERENUM, "Fill the read buffer\n");
-	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), &Count);
+	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), (PVOID)&Count);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	RtlInitUnicodeString(&DeviceId, L"Serenum\\Mouse");

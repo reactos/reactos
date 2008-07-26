@@ -927,7 +927,7 @@ Return Value:
 {
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
     PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
-    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    //PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
     ULONG i;
     UCHAR errorByte;
     UCHAR srbStatus;
@@ -1435,7 +1435,7 @@ Return Value:
             // is clear and then just wait for an arbitrary amount of time!
             //
             if (deviceExtension->DeviceFlags[i] & DFLAGS_ATAPI_DEVICE) {
-                PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[i >> 1];
+                //PIDE_REGISTERS_1     baseIoAddress1 = deviceExtension->BaseIoAddress1[i >> 1];
                 PIDE_REGISTERS_2     baseIoAddress2 = deviceExtension->BaseIoAddress2[i >> 1];
                 ULONG waitCount;
 
@@ -2139,7 +2139,7 @@ Return Value:
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
     PULONG               adapterCount    = (PULONG)Context;
     PUCHAR               ioSpace;
-    ULONG                i,j;
+    ULONG                i;
     ULONG                irq;
     ULONG                portBase;
     ULONG                retryCount;
@@ -2600,12 +2600,12 @@ Return Value:
 
 --*/
 {
-    PHW_DEVICE_EXTENSION deviceExtension = DeviceExtension;
-    ULONG               rangeNumber = 0;
+    //PHW_DEVICE_EXTENSION deviceExtension = DeviceExtension;
+    //ULONG               rangeNumber = 0;
     ULONG               pciBuffer;
     ULONG               slotNumber;
     ULONG               functionNumber;
-    ULONG               status;
+    //ULONG               status;
     PCI_SLOT_NUMBER     slotData;
     PPCI_COMMON_CONFIG  pciData;
     UCHAR               vendorString[5];
@@ -2668,8 +2668,8 @@ Return Value:
 
             vendorStrPtr = vendorString;
             deviceStrPtr = deviceString;
-            AtapiHexToString(pciData->VendorID, &vendorStrPtr);
-            AtapiHexToString(pciData->DeviceID, &deviceStrPtr);
+            AtapiHexToString(pciData->VendorID, (PVOID)&vendorStrPtr);
+            AtapiHexToString(pciData->DeviceID, (PVOID)&deviceStrPtr);
 
             DebugPrint((2,
                        "FindBrokenController: Bus %x Slot %x Function %x Vendor %s Product %s\n",
@@ -2747,7 +2747,7 @@ Return Value:
 
 {
     PHW_DEVICE_EXTENSION  deviceExtension = HwDeviceExtension;
-    ULONG                 nativeModeAdapterTableIndex = (ULONG)Context;
+    ULONG                 nativeModeAdapterTableIndex = (ULONG_PTR)Context;
     ULONG                 channel;
     PUCHAR                ioSpace;
     BOOLEAN               atapiOnly,
@@ -2803,8 +2803,8 @@ Return Value:
 
         vendorStrPtr = vendorString;
         deviceStrPtr = deviceString;
-        AtapiHexToString(pciData.VendorID, &vendorStrPtr);
-        AtapiHexToString(pciData.DeviceID, &deviceStrPtr);
+        AtapiHexToString(pciData.VendorID, (PVOID)&vendorStrPtr);
+        AtapiHexToString(pciData.DeviceID, (PVOID)&deviceStrPtr);
 
         //
         // Compare strings.
@@ -3515,7 +3515,7 @@ Return Value:
     ULONG status;
     ULONG i;
     UCHAR statusByte,interruptReason;
-    BOOLEAN commandComplete = FALSE;
+    //BOOLEAN commandComplete = FALSE;
     BOOLEAN atapiDev = FALSE;
 
     if (srb) {
@@ -4771,7 +4771,7 @@ Return Value:
 {
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
     PIDE_REGISTERS_1     baseIoAddress1  = deviceExtension->BaseIoAddress1[Srb->TargetId >> 1];
-    PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
+    //PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
     ULONG                startingSector;
     ULONG                sectors;
     ULONG                endSector;
@@ -5759,7 +5759,7 @@ Return Value:
 
 {
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
-    ULONG status;
+    //ULONG status;
     PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->DataBuffer;
 
 
@@ -6258,7 +6258,7 @@ Return Value:
         newStatus = ScsiPortInitialize(DriverObject,
                                        Argument2,
                                        &hwInitializationData,
-                                       (PVOID) i);
+                                       (PVOID)(ULONG_PTR)i);
         if (newStatus < statusToReturn)
             statusToReturn = newStatus;
     }

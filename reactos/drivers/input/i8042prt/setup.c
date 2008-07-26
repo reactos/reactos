@@ -99,7 +99,7 @@ SendStartDevice(
 	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
 	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level = KEYBOARD_IRQ;
 	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Vector = 0;
-	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity = (KAFFINITY)-1;
+	AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity = (LONG_PTR)(KAFFINITY)-1;
 
 	/* Create default resource list translated */
 	AllocatedResourcesTranslated = ExAllocatePoolWithTag(PagedPool, ResourceListSize, I8042PRT_TAG);
@@ -115,7 +115,7 @@ SendStartDevice(
 			AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level,
 			AllocatedResources->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Vector,
 			(PKIRQL)&AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Level,
-			&AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity);
+			(PVOID)&AllocatedResourcesTranslated->List[0].PartialResourceList.PartialDescriptors[2].u.Interrupt.Affinity);
 
 	/* Send IRP_MN_START_DEVICE */
 	TopDeviceObject = IoGetAttachedDeviceReference(Pdo);
