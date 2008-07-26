@@ -2087,33 +2087,62 @@ NtUserMessageCall(
       break;
       case FNID_SENDMESSAGECALLBACK:
       break;
+      // CallNextHook bypass.
       case FNID_CALLWNDPROC:
-      {
-         CWPSTRUCT CWP;
-         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
-         CWP.hwnd    = hWnd;
-         CWP.message = Msg;
-         CWP.wParam  = wParam;
-         CWP.lParam  = lParam;
-         lResult = co_HOOK_CallHooks( WH_CALLWNDPROC,
-                                      HC_ACTION,
-                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
-                                      (LPARAM)&CWP );
-      }
-      break;
       case FNID_CALLWNDPROCRET:
       {
-         CWPRETSTRUCT CWPR;
          PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
-         CWPR.hwnd    = hWnd;
-         CWPR.message = Msg;
-         CWPR.wParam  = wParam;
-         CWPR.lParam  = lParam;
-         CWPR.lResult = ClientInfo->dwHookData;
-         lResult = co_HOOK_CallHooks( WH_CALLWNDPROCRET,
-                                      HC_ACTION,
-                                      ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
-                                      (LPARAM)&CWPR );
+         PHOOK NextObj, Hook = ClientInfo->phkCurrent;
+
+         if (!ClientInfo || !Hook) break;
+         
+         UserReferenceObject(Hook);
+
+         if (Hook->Thread && (Hook->Thread != PsGetCurrentThread()))
+         {
+            UserDereferenceObject(Hook);
+            break;
+         }
+
+         NextObj = IntGetNextHook(Hook);
+         ClientInfo->phkCurrent = NextObj;
+         
+         if ( Hook->HookId == WH_CALLWNDPROC)
+         {
+            CWPSTRUCT CWP;
+            CWP.hwnd    = hWnd;
+            CWP.message = Msg;
+            CWP.wParam  = wParam;
+            CWP.lParam  = lParam;
+            DPRINT1("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+     
+            lResult = co_IntCallHookProc( Hook->HookId,
+                                          HC_ACTION,
+                                        ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                         (LPARAM)&CWP, 
+                                          Hook->Proc,
+                                          Hook->Ansi,
+                                          &Hook->ModuleName);
+         }
+         else
+         {
+            CWPRETSTRUCT CWPR;
+            CWPR.hwnd    = hWnd;
+            CWPR.message = Msg;
+            CWPR.wParam  = wParam;
+            CWPR.lParam  = lParam;
+            CWPR.lResult = ClientInfo->dwHookData;
+
+            lResult = co_IntCallHookProc( Hook->HookId,
+                                          HC_ACTION,
+                                        ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
+                                         (LPARAM)&CWPR,
+                                          Hook->Proc,   
+                                          Hook->Ansi,
+                                          &Hook->ModuleName);
+         }
+         UserDereferenceObject(Hook);
+         lResult = (LRESULT) NextObj;
       }
       break;
    }

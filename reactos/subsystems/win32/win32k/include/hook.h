@@ -49,7 +49,8 @@ LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM l
 LRESULT FASTCALL co_EVENT_CallEvents(DWORD, HWND, LONG, LONG);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
-LRESULT FASTCALL UserCallNextHookEx( int HookId, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
+PHOOK FASTCALL IntGetNextHook(PHOOK Hook);
+LRESULT FASTCALL UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 
 #endif /* _WIN32K_HOOK_H */
 

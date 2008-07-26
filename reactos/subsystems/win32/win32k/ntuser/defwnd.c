@@ -19,14 +19,14 @@ IntDefWinHandleSysCommand( PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam ,
 
    if (!ISITHOOKED(WH_CBT)) return 0;
 
-   if (!UserCallNextHookEx(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam, Ansi))
+//   if (!UserCallNextHookEx(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam, Ansi))
       return 0;
 
    switch (wParam & 0xfff0)
    {
        case SC_MOVE:
        case SC_SIZE:
-        return UserCallNextHookEx(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam, Ansi);
+  //      return UserCallNextHookEx(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam, Ansi);
         break;
    }
    return 1;
