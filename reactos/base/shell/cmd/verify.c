@@ -29,8 +29,6 @@ static BOOL bVerify = FALSE;
 
 INT cmd_verify (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_VERIFY_HELP1);
@@ -41,8 +39,7 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 
 	if (!*param)
 	{
-		LoadString(CMD_ModuleHandle, STRING_VERIFY_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg, bVerify ? D_ON : D_OFF);
+		ConOutResPrintf(STRING_VERIFY_HELP2, bVerify ? D_ON : D_OFF);
 	}
 	else if (_tcsicmp (param, D_OFF) == 0)
 		bVerify = FALSE;

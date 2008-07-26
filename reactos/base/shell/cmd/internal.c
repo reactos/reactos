@@ -277,7 +277,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	TCHAR szFinalPath[MAX_PATH];
 	TCHAR * tmpPath;
 	TCHAR szCurrent[MAX_PATH];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT i;
 
 
@@ -301,8 +300,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		if(!tmpPath)
 		{
 			/* Didnt find an directories */
-			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 			nErrorLevel = 1;
 			return 1;
 		}
@@ -368,8 +366,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 			return 0;
 		}
 		/* Didnt find an directories */
-		LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 		nErrorLevel = 1;
 		return 1;
 
@@ -414,8 +411,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	}while(FindNextFile (hFile, &f));
 
 	/* Didnt find an directories */
-	LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg);
+	ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 	nErrorLevel = 1;
 	return 1;
 }
@@ -589,7 +585,6 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	HANDLE hFile;
 	WIN32_FIND_DATA f;
 	INT res;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullPath[MAX_PATH];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -658,8 +653,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		/* ask if they want to delete evrything in the folder */
 		if (!RD_QUIET)
 		{
-			LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
-			res = FilePromptYNA (szMsg);
+			res = FilePromptYNA (STRING_DEL_HELP2);
 			if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 			{
 				freep(arg);

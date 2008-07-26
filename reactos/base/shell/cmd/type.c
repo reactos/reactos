@@ -33,7 +33,6 @@
 
 INT cmd_type (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
 	BOOL   bRet;
@@ -71,8 +70,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		if (_T('/') == argv[i][0] && _totupper(argv[i][1]) != _T('P'))
 		{
-			LoadString(CMD_ModuleHandle, STRING_TYPE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, argv[i] + 1);
+			ConErrResPrintf(STRING_TYPE_ERROR1, argv[i] + 1);
 			continue;
 		}
 

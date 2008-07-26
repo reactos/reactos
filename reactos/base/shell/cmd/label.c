@@ -24,7 +24,6 @@
 
 INT cmd_label (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  szRootPath[] = _T("A:\\");
 	TCHAR  szLabel[80];
 	TCHAR  szOldLabel[80];
@@ -74,18 +73,15 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print drive info */
 	if (szOldLabel[0] != _T('\0'))
 	{
-		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg, _totupper(szRootPath[0]), szOldLabel);
+		ConOutResPrintf(STRING_LABEL_HELP2, _totupper(szRootPath[0]), szOldLabel);
 	}
 	else
 	{
-		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP3, szMsg, RC_STRING_MAX_SIZE);
-		ConOutPrintf(szMsg, _totupper(szRootPath[0]));
+		ConOutResPrintf(STRING_LABEL_HELP3, _totupper(szRootPath[0]));
 	}
 
 	/* print the volume serial number */
-	LoadString(CMD_ModuleHandle, STRING_LABEL_HELP4, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+	ConOutResPrintf(STRING_LABEL_HELP4, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
 
 	if (szLabel[0] == _T('\0'))
 	{

@@ -161,6 +161,8 @@ VOID SetCursorType (BOOL, BOOL);
 
 VOID ConOutResPuts (UINT resID);
 VOID ConErrResPuts (UINT resID);
+VOID ConOutResPrintf (UINT resID, ...);
+VOID ConErrResPrintf (UINT resID, ...);
 VOID ConOutResPaging(BOOL NewPage, UINT resID);
 
 /* Prototypes for COPY.C */
@@ -311,8 +313,8 @@ VOID   GetPathCase(TCHAR *, TCHAR *);
 #define PROMPT_BREAK 3
 
 INT PagePrompt (VOID);
-INT FilePromptYN (LPTSTR, ...);
-INT FilePromptYNA (LPTSTR, ...);
+INT FilePromptYN (UINT);
+INT FilePromptYNA (UINT);
 
 
 /* Prototypes for MOVE.C */

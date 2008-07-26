@@ -382,6 +382,17 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 }
 
+VOID ConOutResPrintf (UINT resID, ...)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	va_list arg_ptr;
+
+	va_start (arg_ptr, resID);
+	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
+	va_end (arg_ptr);
+}
+
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {
 	va_list arg_ptr;
@@ -420,6 +431,17 @@ VOID ConErrPuts (LPTSTR szText)
 	ConPuts(szText, STD_ERROR_HANDLE);
 }
 
+
+VOID ConErrResPrintf (UINT resID, ...)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	va_list arg_ptr;
+
+	va_start (arg_ptr, resID);
+	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
+	va_end (arg_ptr);
+}
 
 VOID ConErrPrintf (LPTSTR szFormat, ...)
 {

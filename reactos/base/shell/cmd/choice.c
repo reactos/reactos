@@ -102,7 +102,6 @@ IsKeyInString (LPTSTR lpString, TCHAR cKey, BOOL bCaseSensitive)
 INT
 CommandChoice (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR lpOptions;
 	TCHAR Options[6];
 	LPTSTR lpText    = NULL;
@@ -208,8 +207,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 			}
 			else if (arg[i][0] == _T('/'))
 			{
-				LoadString(CMD_ModuleHandle, STRING_CHOICE_ERROR_OPTION, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, arg[i]);
+				ConErrResPrintf(STRING_CHOICE_ERROR_OPTION, arg[i]);
 				freep (arg);
 				return 1;
 			}

@@ -31,7 +31,6 @@
 
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
         LPTSTR p1, p2;
 
 	TRACE ("CommandEcho '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
@@ -98,8 +97,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 		}
 		else
 		{
-			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP5, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg, bEcho ? D_ON : D_OFF);
+			ConOutResPrintf(STRING_ECHO_HELP5, bEcho ? D_ON : D_OFF);
 		}
 	}
 

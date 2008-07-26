@@ -124,8 +124,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	}
 
-	LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, param);
+	ConErrResPrintf(STRING_GOTO_ERROR2, param);
 	ExitBatch(NULL);
 	return 1;
 }

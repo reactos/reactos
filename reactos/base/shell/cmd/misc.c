@@ -519,22 +519,17 @@ INT PagePrompt (VOID)
 }
 
 
-INT FilePromptYN (LPTSTR szFormat, ...)
+INT FilePromptYN (UINT resID)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	TCHAR szOut[512];
-	va_list arg_ptr;
 //	TCHAR cKey = 0;
 //	LPTSTR szKeys = _T("yna");
 
 	TCHAR szIn[10];
 	LPTSTR p;
 
-	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
-	va_end (arg_ptr);
-
-	ConOutPrintf (szFormat);
+	if (resID != 0)
+		ConOutResPrintf (resID);
 
 	/* preliminary fix */
 	ConInString (szIn, 10);
@@ -589,22 +584,17 @@ INT FilePromptYN (LPTSTR szFormat, ...)
 }
 
 
-INT FilePromptYNA (LPTSTR szFormat, ...)
+INT FilePromptYNA (UINT resID)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	TCHAR szOut[512];
-	va_list arg_ptr;
 //	TCHAR cKey = 0;
 //	LPTSTR szKeys = _T("yna");
 
 	TCHAR szIn[10];
 	LPTSTR p;
 
-	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
-	va_end (arg_ptr);
-
-	ConOutPrintf (szFormat);
+	if (resID != 0)
+		ConOutResPrintf (resID);
 
 	/* preliminary fix */
 	ConInString (szIn, 10);

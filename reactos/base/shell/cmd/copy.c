@@ -54,7 +54,6 @@ copy (TCHAR source[MAX_PATH],
       DWORD lpdwFlags,
       BOOL bTouch)
 {
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
     FILETIME srctime,NewFileTime;
     HANDLE hFileSrc;
     HANDLE hFileDest;
@@ -80,8 +79,7 @@ copy (TCHAR source[MAX_PATH],
             NULL, OPEN_EXISTING, 0, NULL);
         if (hFileSrc == INVALID_HANDLE_VALUE)
         {
-            LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-            ConOutPrintf(szMsg, source);
+            ConOutResPrintf(STRING_COPY_ERROR1, source);
             nErrorLevel = 1;
             return 0;
         }
@@ -108,8 +106,7 @@ copy (TCHAR source[MAX_PATH],
         NULL, OPEN_EXISTING, 0, NULL);
     if (hFileSrc == INVALID_HANDLE_VALUE)
     {
-        LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-        ConOutPrintf(szMsg, source);
+        ConOutResPrintf(STRING_COPY_ERROR1, source);
         nErrorLevel = 1;
         return 0;
     }
@@ -286,18 +283,15 @@ copy (TCHAR source[MAX_PATH],
 static INT CopyOverwrite (LPTSTR fn)
 {
     /*ask the user if they want to override*/
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
     INT res;
-    LoadString(CMD_ModuleHandle, STRING_COPY_HELP1, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf(szMsg,fn);
-    res = FilePromptYNA (_T(""));
+    ConOutResPrintf(STRING_COPY_HELP1, fn);
+    res = FilePromptYNA (0);
     return res;
 }
 
 
 INT cmd_copy (LPTSTR cmd, LPTSTR param)
 {
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
     LPTSTR *arg;
     INT argc, i, nFiles, nOverwrite = 0, nSrc = -1, nDes = -1;
     /* this is the path up to the folder of the src and dest ie C:\windows\ */
@@ -462,8 +456,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 
                     default:
                         /* Invalid switch */
-                        LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
-                        ConOutPrintf(szMsg, _totupper(arg[i][1]));
+                        ConOutResPrintf(STRING_ERROR_INVALID_SWITCH, _totupper(arg[i][1]));
                         nErrorLevel = 1;
                         freep (arg);
                         return 1;
@@ -524,8 +517,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
     if(nFiles > 2)
     {
         /* There are too many file names in command */
-        LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
-        ConErrPrintf(szMsg,_T(""));
+        ConErrResPrintf(STRING_ERROR_TOO_MANY_PARAMETERS,_T(""));
         nErrorLevel = 1;
         freep (arg);
         return 1;
@@ -604,8 +596,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
                 szTouch = _tcsstr (arg[nSrc], _T("+"));
                 if(_tcsncmp (szTouch,_T("+,,\0"),4) || nDes != -1)
                 {
-                    LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
-                    ConErrPrintf(szMsg,arg[nSrc]);
+                    ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT,arg[nSrc]);
                     nErrorLevel = 1;
                     freep (arg);
                     return 1;
@@ -794,8 +785,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
             /* Check to see if the file is the same file */
             if(!bTouch && !_tcscmp (tmpSrcPath, tmpDestPath))
             {
-                LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-                ConOutPrintf(szMsg);
+                ConOutResPrintf(STRING_COPY_ERROR2);
 
                 nErrorLevel = 1;
                 break;
@@ -821,8 +811,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
             else
             {
                 /* print out the error message */
-                LoadString(CMD_ModuleHandle, STRING_COPY_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-                ConOutPrintf(szMsg);
+                ConOutResPrintf(STRING_COPY_ERROR3);
                 ConOutFormatMessage (GetLastError(), szSrcPath);
                 nErrorLevel = 1;
             }
@@ -834,8 +823,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
     } while(!bDone);
 
     /* print out the number of files copied */
-    LoadString(CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf(szMsg, nFiles);
+    ConOutResPrintf(STRING_COPY_FILE, nFiles);
 
     FindClose(hFile);
 

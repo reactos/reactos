@@ -77,12 +77,6 @@ enum
 };
 
 static TCHAR szDeleteWipe[RC_STRING_MAX_SIZE];
-static TCHAR szDelHelp2[RC_STRING_MAX_SIZE];
-static TCHAR szDelHelp3[RC_STRING_MAX_SIZE];
-static TCHAR szDelHelp4[RC_STRING_MAX_SIZE];
-static TCHAR szDelError5[RC_STRING_MAX_SIZE];
-static TCHAR szDelError6[RC_STRING_MAX_SIZE];
-static TCHAR szDelError7[RC_STRING_MAX_SIZE];
 static TCHAR CMDPath[MAX_PATH];
 
 static BOOLEAN StringsLoaded = FALSE;
@@ -90,12 +84,6 @@ static BOOLEAN StringsLoaded = FALSE;
 static VOID LoadStrings(VOID)
 {
         LoadString( CMD_ModuleHandle, STRING_DELETE_WIPE, szDeleteWipe, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szDelHelp2, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_HELP3, szDelHelp3, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_HELP4, szDelHelp4, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_ERROR5, szDelError5, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_ERROR6, szDelError6, RC_STRING_MAX_SIZE);
-        LoadString( CMD_ModuleHandle, STRING_DEL_ERROR7, szDelError7, RC_STRING_MAX_SIZE);
         GetModuleFileName(NULL, CMDPath, MAX_PATH);
         StringsLoaded = TRUE;
 }
@@ -193,7 +181,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
 		if (!((*dwFlags & DEL_YES) || (*dwFlags & DEL_QUIET) || (*dwFlags & DEL_PROMPT)))
 	        {
-        	        res = FilePromptYNA (szDelHelp2);
+        	        res = FilePromptYNA (STRING_DEL_HELP2);
 		        if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 			        return 0x80000000;
 		        if(res == PROMPT_ALL)
@@ -256,9 +244,9 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 		        /* ask for deleting */
 		        if (*dwFlags & DEL_PROMPT)
 		        {
-		                ConErrPrintf(szDelError5, szFullPath);
+		                ConErrResPrintf(STRING_DEL_ERROR5, szFullPath);
 
-		                res = FilePromptYN (szDelError6);
+		                res = FilePromptYN (STRING_DEL_ERROR6);
 
 		                if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 		                {
@@ -270,7 +258,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 	                /*user cant ask it to be quiet and tell you what it did*/
 	                if (!(*dwFlags & DEL_QUIET) && !(*dwFlags & DEL_TOTAL))
 	                {
-		                ConErrPrintf(szDelError7, szFullPath);
+		                ConErrResPrintf(STRING_DEL_ERROR7, szFullPath);
 	                }
 
 	                /* delete the file */
@@ -552,11 +540,11 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
                 dwFiles &= 0x7fffffff;
 		if (dwFiles < 2)
 		{
-                        ConOutPrintf(szDelHelp3, dwFiles);
+                        ConOutResPrintf(STRING_DEL_HELP3, dwFiles);
 		}
 		else
 		{
-			ConOutPrintf(szDelHelp4, dwFiles);
+			ConOutResPrintf(STRING_DEL_HELP4, dwFiles);
 		}
 	}
 
