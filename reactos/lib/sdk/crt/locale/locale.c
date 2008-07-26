@@ -875,3 +875,19 @@ int CDECL _getmbcp(void)
 {
     return MSVCRT___lc_codepage;
 }
+
+/*********************************************************************
+ *		___unguarded_readlc_active_add_func (MSVCRT.@)
+ */
+unsigned int * CDECL ___unguarded_readlc_active_add_func(void)
+{
+  return &__unguarded_readlc_active;
+}
+
+/*********************************************************************
+ *		___setlc_active_func (MSVCRT.@)
+ */
+unsigned int CDECL ___setlc_active_func(void)
+{
+  return __setlc_active;
+}
