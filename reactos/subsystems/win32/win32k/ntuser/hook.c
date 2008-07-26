@@ -1003,7 +1003,8 @@ NtUserSetWindowsHookEx(
    /* We only (partially) support local WH_CBT hooks and
     * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
     */
-   if  (WH_DEBUG == HookId ||
+   if  (Global ||
+        WH_DEBUG == HookId ||
         WH_JOURNALPLAYBACK == HookId ||
         WH_JOURNALRECORD == HookId ||
         WH_FOREGROUNDIDLE == HookId ||
