@@ -94,29 +94,29 @@
 			</directory>
 		</if>
 		<file>apc.c</file>
-		<!-- file>balmgr.c</file -->
+		<file>balmgr.c</file>
 		<!-- file>bug.c</file -->
-		<!-- file>clock.c</file -->
+		<file>clock.c</file>
 		<file>config.c</file>
 		<file>devqueue.c</file>
-		<!-- file>dpc.c</file -->
+		<file>dpc.c</file>
 		<file>eventobj.c</file>
 		<file>except.c</file>
 		<file>freeldr.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
-		<!-- file>krnlinit.c</file -->
+		<file>krnlinit.c</file>
 		<file>mutex.c</file>
 		<file>procobj.c</file>
-		<!-- file>profobj.c</file -->
-		<!-- file>queue.c</file -->
-		<!-- file>semphobj.c</file -->
+		<file>profobj.c</file>
+		<file>queue.c</file>
+		<file>semphobj.c</file>
 		<file>spinlock.c</file>
-		<!-- file>thrdschd.c</file -->
-		<!-- file>thrdobj.c</file -->
-		<!-- file>timerobj.c</file -->
-		<!-- file>wait.c</file -->
+		<file>thrdschd.c</file>
+		<file>thrdobj.c</file>
+		<file>timerobj.c</file>
+		<file>wait.c</file>
 	</directory>
 	<directory name="cc">
 		<file>cacheman.c</file>
@@ -182,7 +182,7 @@
 				<file>ioport.S</file>
 			</directory>
 		</if>
-		<!-- file>atom.c</file -->
+		<file>atom.c</file>
 		<file>callback.c</file>
 		<file>dbgctrl.c</file>
 		<file>efi.c</file>
@@ -194,7 +194,7 @@
 		<file>handle.c</file>
 		<file>harderr.c</file>
 		<file>hdlsterm.c</file>
-		<!-- file>init.c</file -->
+		<file>init.c</file>
 		<file>keyedevt.c</file>
 		<file>locale.c</file>
 		<!-- file>lookas.c</file -->
@@ -206,7 +206,7 @@
 		<!-- file>sem.c</file -->
 		<file>shutdown.c</file>
 		<!-- file>sysinfo.c</file -->
-		<!-- file>time.c</file -->
+		<file>time.c</file>
 		<!-- file>timer.c</file -->
 		<file>uuid.c</file>
 		<file>win32k.c</file>
@@ -251,12 +251,12 @@
 			<file>driver.c</file>
 			<file>drvrlist.c</file>
 			<file>error.c</file>
-			<!-- file>file.c</file -->
+			<file>file.c</file>
 			<!-- file>iocomp.c</file -->
 			<file>ioevent.c</file>
 			<file>iofunc.c</file>
 			<file>iomdl.c</file>
-			<!-- file>iomgr.c</file -->
+			<file>iomgr.c</file>
 			<file>iorsrce.c</file>
 			<file>iotimer.c</file>
 			<file>iowork.c</file>
@@ -316,7 +316,7 @@
 			</directory>
 			<file>kdinit.c</file>
 			<file>kdio.c</file>
-			<!-- file>kdmain.c</file -->
+			<file>kdmain.c</file>
 		</directory>
 	</if>
 	<if property="_WINKD_" value ="1">
@@ -369,7 +369,7 @@
 		<!-- file>mdlsup.c</file -->
 		<!-- file>mm.c</file -->
 		<!-- file>mminit.c</file -->
-		<!-- file>mpw.c</file -->
+		<file>mpw.c</file>
 		<!-- file>ncache.c</file -->
 		<file>npool.c</file>
 		<file>pagefile.c</file>
@@ -395,8 +395,8 @@
 		</if>
 	</directory>
 	<directory name="ob">
-		<!-- file>obdir.c</file -->
-		<!-- file>obinit.c</file -->
+		<file>obdir.c</file>
+		<file>obinit.c</file>
 		<file>obhandle.c</file>
 		<file>obname.c</file>
 		<file>oblife.c</file>
@@ -426,7 +426,7 @@
 		<file>kill.c</file>
 		<file>psnotify.c</file>
 		<file>process.c</file>
-		<!-- file>psmgr.c</file -->
+		<file>psmgr.c</file>
 		<file>query.c</file>
 		<file>quota.c</file>
 		<file>security.c</file>

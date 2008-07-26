@@ -17,7 +17,7 @@
 
 #ifdef _NTOSKRNL_
 
-#if !defined (_ARM_) && !defined (_M_AMD64)
+#ifndef _ARM_
 #define KeGetCurrentThread  _KeGetCurrentThread
 #define KeGetPreviousMode   _KeGetPreviousMode
 #endif
@@ -34,7 +34,7 @@
 #define InterlockedExchange         _InterlockedExchange
 #define InterlockedExchangeAdd      _InterlockedExchangeAdd
 
-//#include "ke.h"
+#include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
 #include "i386/v86m.h"

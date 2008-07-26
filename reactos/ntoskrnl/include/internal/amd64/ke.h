@@ -1,5 +1,5 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H
 
 #if __GNUC__ >=3
 #pragma GCC system_header
@@ -45,9 +45,10 @@
 
 #ifndef __ASM__
 
-//#include "intrin_i.h"
+#include "intrin_i.h"
 
-#define KeArchFnInit() Ke386FnInit()
+//#define KeArchFnInit() Ke386FnInit()
+#define KeArchFnInit() DbgPrint("KeArchFnInit is unimplemented!\n");
 #define KeArchHaltProcessor() Ke386HaltProcessor()
 
 extern ULONG Ke386CacheAlignment;
@@ -136,6 +137,6 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #endif
 
 #endif
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 
 /* EOF */
