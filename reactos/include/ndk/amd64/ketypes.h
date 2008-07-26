@@ -8,7 +8,7 @@ Header Name:
 
 Abstract:
 
-    i386 Type definitions for the Kernel services.
+    amd64 Type definitions for the Kernel services.
 
 Author:
 
@@ -16,8 +16,8 @@ Author:
 
 --*/
 
-#ifndef _IAMD64_KETYPES_H
-#define _IAMD64_KETYPES_H
+#ifndef _AMD64_KETYPES_H
+#define _AMD64_KETYPES_H
 
 //
 // Dependencies
@@ -26,12 +26,12 @@ Author:
 //
 // KPCR Access for non-IA64 builds
 //
-#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                     ((volatile KPCR * const)K0IPCR)
-#if defined(CONFIG_SMP) || defined(NT_BUILD)
-#undef  KeGetPcr
-#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
-#endif
+//#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
+//#define PCR                     ((volatile KPCR * const)K0IPCR)
+//#if defined(CONFIG_SMP) || defined(NT_BUILD)
+//#undef  KeGetPcr
+//#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
+//#endif
 
 //
 // Machine Types
@@ -296,7 +296,8 @@ FORCEINLINE
 struct _KPRCB *
 KeGetCurrentPrcb(VOID)
 {
-    return (struct _KPRCB *)(ULONG_PTR)__readgsqword(FIELD_OFFSET(KPCR, Prcb));
+//    return (struct _KPRCB *)(ULONG_PTR)__readgsqword(FIELD_OFFSET(KPCR, Prcb));
+  return 0;  
 }
 
 //
