@@ -74,7 +74,7 @@ HalSetProfileInterval(IN ULONG_PTR Interval)
     KEBUGCHECK(0);
     return Interval;
 }
-
+#if 0
 VOID
 FASTCALL
 ExAcquireFastMutex(
@@ -101,7 +101,7 @@ ExTryToAcquireFastMutex(
 
   return TRUE;
 }
-
+#endif
 
 VOID
 NTAPI
