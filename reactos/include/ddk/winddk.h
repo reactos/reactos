@@ -5506,9 +5506,17 @@ KeGetCurrentThread(
 #define PROFILE_LEVEL                     15
 #define HIGH_LEVEL                        15
 
+#define KI_USER_SHARED_DATA     0xFFFFF78000000000
+
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+NTKERNELAPI
+KIRQL
+KeGetCurrentIrql (
+    VOID
+    );
 
 #elif defined(__PowerPC__)
 
