@@ -5817,6 +5817,20 @@ FASTCALL
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
+#if defined(_M_AMD64)
+NTKERNELAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+#else
 NTHALAPI
 KIRQL
 FASTCALL
@@ -5829,6 +5843,7 @@ FASTCALL
 KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
+#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -9322,12 +9337,33 @@ IoWritePartitionTableEx(
 
 /** Kernel routines **/
 
+#if defined (_M_AMD64)
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock(
+  IN PKSPIN_LOCK  SpinLock,
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+#else
 NTHALAPI
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
   IN PKSPIN_LOCK  SpinLock,
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTHALAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+#endif
 
 NTKERNELAPI
 VOID
@@ -9585,12 +9621,6 @@ KeRegisterBugCheckCallback(
   IN PVOID  Buffer,
   IN ULONG  Length,
   IN PUCHAR  Component);
-
-NTHALAPI
-VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLock(
-  IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
 NTKERNELAPI
 VOID
