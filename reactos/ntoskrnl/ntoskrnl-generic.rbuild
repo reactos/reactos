@@ -36,6 +36,7 @@
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
+	<file>amd64stubs.c</file>
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -172,7 +173,7 @@
 		<!-- file>dbgkobj.c</file -->
 	</directory>
 	<directory name="ex" root="intermediate">
-		<!-- file>zw.S</file -->
+		<file>zw.S</file>
 	</directory>
 	<directory name="ex">
 		<if property="ARCH" value="i386">
