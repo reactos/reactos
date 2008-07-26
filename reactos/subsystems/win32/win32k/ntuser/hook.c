@@ -413,6 +413,7 @@ static LRESULT
 FASTCALL
 co_HOOK_CallHookNext(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
 {
+   DPRINT("CALLING HOOK %d\n",Hook->HookId);
    return co_IntCallHookProc(Hook->HookId, Code, wParam, lParam, Hook->Proc,
                                   Hook->Ansi, &Hook->ModuleName);
 }
@@ -708,16 +709,18 @@ UserCallNextHookEx(
       }
 
       case WH_CBT:
+         DPRINT1("HOOK WH_CBT!\n");
          switch (Code)
          {
             case HCBT_CREATEWND: // Use Ansi.
-               lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
+               DPRINT1("HOOK HCBT_CREATEWND\n");
+//               lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                break;
 
             case HCBT_MOVESIZE:
             {
                RECT rt;
-
+               DPRINT1("HOOK HCBT_MOVESIZE\n");
                if (lParam)
                {
                   _SEH_TRY
@@ -749,7 +752,7 @@ UserCallNextHookEx(
             case HCBT_ACTIVATE:
             {
                CBTACTIVATESTRUCT CbAs;
-
+               DPRINT1("HOOK HCBT_ACTIVATE\n");
                if (lParam)
                {
                   _SEH_TRY
@@ -781,6 +784,7 @@ UserCallNextHookEx(
                 The rest just use default.
              */
             default:
+               DPRINT1("HOOK HCBT_ %d\n",Code);
                lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                break;
          }
@@ -909,6 +913,10 @@ NtUserCallNextHookEx(
    
    NextObj = IntGetNextHook(HookObj);
    ClientInfo->phkCurrent = NextObj; // Preset next hook from list.
+   if (HookObj->HookId == WH_GETMESSAGE)
+   {
+     DPRINT1(" WH_GETMESSAGE, Hook %x NextHook %x \n", HookObj, NextObj);
+   }
    UserCallNextHookEx( HookObj, Code, wParam, lParam, Ansi);
    UserDereferenceObject(HookObj);
 
