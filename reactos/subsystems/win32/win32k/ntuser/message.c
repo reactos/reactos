@@ -301,7 +301,7 @@ NtUserCallMsgFilter(
    LPMSG lpmsg,
    INT code)
 {
-   BOOL BadChk = FALSE;
+   BOOL BadChk = FALSE, Ret = TRUE;
    MSG Msg;
    DECLARE_RETURN(BOOL);
 
@@ -331,7 +331,7 @@ NtUserCallMsgFilter(
 
    if (!co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
    {
-      co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
+      Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
    }
 
    _SEH_TRY
@@ -349,6 +349,7 @@ NtUserCallMsgFilter(
    }
    _SEH_END;
    if (BadChk) RETURN( FALSE);
+   RETURN( Ret)
 
 CLEANUP:
    DPRINT("Leave NtUserCallMsgFilter. ret=%i\n", _ret_);
