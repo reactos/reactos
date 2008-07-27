@@ -231,8 +231,8 @@ LdrPEGetExportByName(PVOID BaseAddress,
                      USHORT Hint)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDir;
-    PULONG * ExFunctions;
-    PULONG * ExNames;
+    ULONG * ExFunctions;
+    ULONG * ExNames;
     USHORT * ExOrdinals;
     PVOID ExName;
     ULONG Ordinal;
@@ -267,10 +267,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
     /*
      * Get header pointers
      */
-    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
+    ExNames = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
     ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
-    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
-    
+    ExFunctions = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
+
     /*
      * Check the hint first
      */
