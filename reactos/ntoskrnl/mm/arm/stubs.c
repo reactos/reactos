@@ -569,80 +569,42 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
 {
     PMMPTE PointerPte;
     MMPTE Pte;
+    PFN_NUMBER Pfn = 0;
     
     //
     // Get the PTE
     //
     PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
-    if (!PointerPte)
-    {
+    if (PointerPte)
+    {       
         //
-        // Invalid PDE
+        // Save and destroy the PTE
         //
-        if (WasDirty) *WasDirty = FALSE;
-        if (Page) *Page = 0;
-        return;
-    }
-            
-    //
-    // Save the PTE
-    //
-    Pte = *PointerPte;
-    if (PointerPte->u.Hard.L1.Fault.Type == FaultPte)
-    {
+        Pte = *PointerPte;
+        PointerPte->u.Hard.AsUlong = 0;
+        
         //
-        // Invalid PTE
+        // Flush the TLB
         //
-        if (WasDirty) *WasDirty = FALSE;
-        if (Page) *Page = 0;
-        return;
-    }
-    
-    //
-    // Destroy the PTE
-    //
-    PointerPte->u.Hard.AsUlong = 0;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-
-    //
-    // Flush the TLB
-    //
-    MiFlushTlb(PointerPte, Address);
-    
-    //
-    // Check if the PTE was valid
-    //
-    if (Pte.u.Hard.L2.Fault.Type != FaultPte)
-    {
+        MiFlushTlb(PointerPte, Address);
+        
         //
-        // Mark the page as unmapped
+        // Unmap the PFN
         //
-        MmMarkPageUnmapped(Pte.u.Hard.L2.Small.BaseAddress);
-    }
-    else
-    {
+        Pfn = Pte.u.Hard.L2.Small.BaseAddress;
+        if (Pfn) MmMarkPageUnmapped(Pfn);
+        
         //
-        // Make it sane
+        // Release the PFN if it was ours
         //
-        Pte.u.Hard.L2.Small.BaseAddress = 0;
-    }
-    
-    //
-    // Check if this was our page, and valid
-    //
-    if ((FreePage) && (Pte.u.Hard.L2.Fault.Type != FaultPte))
-    {
-        //
-        // Release it
-        //
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pte.u.Hard.L2.Small.BaseAddress);
+        if ((FreePage) && (Pfn)) MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
     }
     
     //
     // Return if the page was dirty
     //
-    if (WasDirty) *WasDirty = TRUE; // LIE!!!
-    if (Page) *Page = Pte.u.Hard.L2.Small.BaseAddress;
+    if (WasDirty) *WasDirty = FALSE; // LIE!!!
+    if (Page) *Page = Pfn;
 }
 
 PVOID
