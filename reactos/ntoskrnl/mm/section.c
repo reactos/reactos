@@ -724,17 +724,18 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
    BOOLEAN HasSwapEntry;
-
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+    
    /*
     * There is a window between taking the page fault and locking the
     * address space when another thread could load the page so we check
     * that.
     */
-   if (MmIsPagePresent(AddressSpace->Process, Address))
+   if (MmIsPagePresent(Process, Address))
    {
       if (Locked)
       {
-         MmLockPage(MmGetPfnForProcess(AddressSpace->Process, Address));
+         MmLockPage(MmGetPfnForProcess(Process, Address));
       }
       return(STATUS_SUCCESS);
    }
@@ -825,10 +826,10 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        * If the completed fault was for another address space then set the
        * page in this one.
        */
-      if (!MmIsPagePresent(AddressSpace->Process, Address))
+      if (!MmIsPagePresent(Process, Address))
       {
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-         HasSwapEntry = MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress);
+         HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
 
          if (PAGE_FROM_SSE(Entry) == 0 || HasSwapEntry)
          {
@@ -847,7 +848,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
           * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
           */
-         Status = MmCreateVirtualMapping(AddressSpace->Process,
+         Status = MmCreateVirtualMapping(Process,
                                          Address,
                                          Attributes,
                                          &Page,
@@ -857,7 +858,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
             DPRINT1("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
-         MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+         MmInsertRmap(Page, Process, (PVOID)PAddress);
       }
       if (Locked)
       {
@@ -870,7 +871,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       return(STATUS_SUCCESS);
    }
 
-   HasSwapEntry = MmIsPageSwapEntry(AddressSpace->Process, (PVOID)PAddress);
+   HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
    if (HasSwapEntry)
    {
       /*
@@ -888,7 +889,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
 
       MmUnlockSectionSegment(Segment);
-      MmDeletePageFileMapping(AddressSpace->Process, (PVOID)PAddress, &SwapEntry);
+      MmDeletePageFileMapping(Process, (PVOID)PAddress, &SwapEntry);
 
       MmUnlockAddressSpace(AddressSpace);
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
@@ -904,7 +905,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          KEBUGCHECK(0);
       }
       MmLockAddressSpace(AddressSpace);
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
+      Status = MmCreateVirtualMapping(Process,
                                       Address,
                                       Region->Protect,
                                       &Page,
@@ -924,7 +925,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       /*
        * Add the page to the process's working set
        */
-      MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+      MmInsertRmap(Page, Process, (PVOID)PAddress);
 
       /*
        * Finish the operation
@@ -949,7 +950,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        * Just map the desired physical page
        */
       Page = Offset >> PAGE_SHIFT;
-      Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
+      Status = MmCreateVirtualMappingUnsafe(Process,
                                             Address,
                                             Region->Protect,
                                             &Page,
@@ -995,7 +996,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       {
          KEBUGCHECK(0);
       }
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
+      Status = MmCreateVirtualMapping(Process,
                                       Address,
                                       Region->Protect,
                                       &Page,
@@ -1006,7 +1007,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          KEBUGCHECK(0);
          return(Status);
       }
-      MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+      MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
          MmLockPage(Page);
@@ -1095,7 +1096,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       MmSetPageEntrySectionSegment(Segment, Offset, Entry);
       MmUnlockSectionSegment(Segment);
 
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
+      Status = MmCreateVirtualMapping(Process,
                                       Address,
                                       Attributes,
                                       &Page,
@@ -1105,7 +1106,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
-      MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+      MmInsertRmap(Page, Process, (PVOID)PAddress);
 
       if (Locked)
       {
@@ -1170,7 +1171,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        * Save the swap entry.
        */
       MmSetSavedSwapEntryPage(Page, SwapEntry);
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
+      Status = MmCreateVirtualMapping(Process,
                                       Address,
                                       Region->Protect,
                                       &Page,
@@ -1180,7 +1181,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
-      MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+      MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
          MmLockPage(Page);
@@ -1202,7 +1203,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       MmSharePageEntrySectionSegment(Segment, Offset);
       MmUnlockSectionSegment(Segment);
 
-      Status = MmCreateVirtualMapping(AddressSpace->Process,
+      Status = MmCreateVirtualMapping(Process,
                                       Address,
                                       Attributes,
                                       &Page,
@@ -1212,7 +1213,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
-      MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
+      MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
       {
          MmLockPage(Page);
@@ -1241,14 +1242,15 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
    ULONG Entry;
-
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+    
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
    /*
     * Check if the page has been paged out or has already been set readwrite
     */
-   if (!MmIsPagePresent(AddressSpace->Process, Address) ||
-         MmGetPageProtect(AddressSpace->Process, Address) & PAGE_READWRITE)
+   if (!MmIsPagePresent(Process, Address) ||
+         MmGetPageProtect(Process, Address) & PAGE_READWRITE)
    {
       DPRINT("Address 0x%.8X\n", Address);
       return(STATUS_SUCCESS);
@@ -1291,7 +1293,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
        PFN_FROM_SSE(Entry) != OldPage)
    {
       /* This is a private page. We must only change the page protection. */
-      MmSetPageProtect(AddressSpace->Process, PAddress, Region->Protect);
+      MmSetPageProtect(Process, PAddress, Region->Protect);
       return(STATUS_SUCCESS);
    }
 
@@ -1358,12 +1360,12 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Delete the old entry.
     */
-   MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
 
    /*
     * Set the PTE to point to the new page
     */
-   Status = MmCreateVirtualMapping(AddressSpace->Process,
+   Status = MmCreateVirtualMapping(Process,
                                    Address,
                                    Region->Protect,
                                    &NewPage,
@@ -1388,8 +1390,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Unshare the old page.
     */
-   MmDeleteRmap(OldPage, AddressSpace->Process, PAddress);
-   MmInsertRmap(NewPage, AddressSpace->Process, PAddress);
+   MmDeleteRmap(OldPage, Process, PAddress);
+   MmInsertRmap(NewPage, Process, PAddress);
    MmLockSectionSegment(Segment);
    MmUnsharePageEntrySectionSegment(Section, Segment, Offset, FALSE, FALSE);
    MmUnlockSectionSegment(Segment);
@@ -1462,7 +1464,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    PBCB Bcb = NULL;
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
-
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+    
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    /*
@@ -1505,7 +1508,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    {
       DPRINT1("Trying to page out from physical memory section address 0x%X "
               "process %d\n", Address,
-              AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0);
+              Process ? Process->UniqueProcessId : 0);
       KEBUGCHECK(0);
    }
 
@@ -1513,13 +1516,13 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     * Get the section segment entry and the physical address.
     */
    Entry = MmGetPageEntrySectionSegment(Context.Segment, Context.Offset);
-   if (!MmIsPagePresent(AddressSpace->Process, Address))
+   if (!MmIsPagePresent(Process, Address))
    {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
-              AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0, Address);
+              Process ? Process->UniqueProcessId : 0, Address);
       KEBUGCHECK(0);
    }
-   Page = MmGetPfnForProcess(AddressSpace->Process, Address);
+   Page = MmGetPfnForProcess(Process, Address);
    SwapEntry = MmGetSavedSwapEntryPage(Page);
 
    /*
@@ -1650,7 +1653,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    {
       MmSetSavedSwapEntryPage(Page, 0);
       MmLockAddressSpace(AddressSpace);
-      Status = MmCreatePageFileMapping(AddressSpace->Process,
+      Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);
       MmUnlockAddressSpace(AddressSpace);
@@ -1679,14 +1682,14 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
           */
          if (Context.Private)
          {
-            Status = MmCreateVirtualMapping(AddressSpace->Process,
+            Status = MmCreateVirtualMapping(Process,
                                             Address,
                                             MemoryArea->Protect,
                                             &Page,
                                             1);
-            MmSetDirtyPage(AddressSpace->Process, Address);
+            MmSetDirtyPage(Process, Address);
             MmInsertRmap(Page,
-                         AddressSpace->Process,
+                         Process,
                          Address);
          }
          else
@@ -1696,14 +1699,14 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
              * set it back into the section segment entry so we don't loose
              * our copy. Otherwise it will be handled by the cache manager.
              */
-            Status = MmCreateVirtualMapping(AddressSpace->Process,
+            Status = MmCreateVirtualMapping(Process,
                                             Address,
                                             MemoryArea->Protect,
                                             &Page,
                                             1);
-            MmSetDirtyPage(AddressSpace->Process, Address);
+            MmSetDirtyPage(Process, Address);
             MmInsertRmap(Page,
-                         AddressSpace->Process,
+                         Process,
                          Address);
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
             MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
@@ -1730,26 +1733,26 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       MmLockAddressSpace(AddressSpace);
       if (Context.Private)
       {
-         Status = MmCreateVirtualMapping(AddressSpace->Process,
+         Status = MmCreateVirtualMapping(Process,
                                          Address,
                                          MemoryArea->Protect,
                                          &Page,
                                          1);
-         MmSetDirtyPage(AddressSpace->Process, Address);
+         MmSetDirtyPage(Process, Address);
          MmInsertRmap(Page,
-                      AddressSpace->Process,
+                      Process,
                       Address);
       }
       else
       {
-         Status = MmCreateVirtualMapping(AddressSpace->Process,
+         Status = MmCreateVirtualMapping(Process,
                                          Address,
                                          MemoryArea->Protect,
                                          &Page,
                                          1);
-         MmSetDirtyPage(AddressSpace->Process, Address);
+         MmSetDirtyPage(Process, Address);
          MmInsertRmap(Page,
-                      AddressSpace->Process,
+                      Process,
                       Address);
          Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
          MmSetPageEntrySectionSegment(Context.Segment, Context.Offset, Entry);
@@ -1778,7 +1781,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    if (Context.Private)
    {
       MmLockAddressSpace(AddressSpace);
-      Status = MmCreatePageFileMapping(AddressSpace->Process,
+      Status = MmCreatePageFileMapping(Process,
                                        Address,
                                        SwapEntry);
       MmUnlockAddressSpace(AddressSpace);
@@ -1817,6 +1820,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    PBCB Bcb = NULL;
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -1857,7 +1861,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
    {
       DPRINT1("Trying to write back page from physical memory mapped at %X "
               "process %d\n", Address,
-              AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0);
+              Process ? Process->UniqueProcessId : 0);
       KEBUGCHECK(0);
    }
 
@@ -1865,13 +1869,13 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
     * Get the section segment entry and the physical address.
     */
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-   if (!MmIsPagePresent(AddressSpace->Process, Address))
+   if (!MmIsPagePresent(Process, Address))
    {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
-              AddressSpace->Process ? AddressSpace->Process->UniqueProcessId : 0, Address);
+              Process ? Process->UniqueProcessId : 0, Address);
       KEBUGCHECK(0);
    }
-   Page = MmGetPfnForProcess(AddressSpace->Process, Address);
+   Page = MmGetPfnForProcess(Process, Address);
    SwapEntry = MmGetSavedSwapEntryPage(Page);
 
    /*
@@ -1958,6 +1962,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
    PMM_SECTION_SEGMENT Segment;
    BOOLEAN DoCOW = FALSE;
    ULONG i;
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -1979,7 +1984,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
           * If we doing COW for this segment then check if the page is
           * already private.
           */
-         if (DoCOW && MmIsPagePresent(AddressSpace->Process, Address))
+         if (DoCOW && MmIsPagePresent(Process, Address))
          {
             ULONG Offset;
             ULONG Entry;
@@ -1988,7 +1993,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                      + MemoryArea->Data.SectionData.ViewOffset;
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-            Page = MmGetPfnForProcess(AddressSpace->Process, Address);
+            Page = MmGetPfnForProcess(Process, Address);
 
             Protect = PAGE_READONLY;
             if (Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
@@ -1999,9 +2004,9 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             }
          }
 
-         if (MmIsPagePresent(AddressSpace->Process, Address))
+         if (MmIsPagePresent(Process, Address))
          {
-            MmSetPageProtect(AddressSpace->Process, Address,
+            MmSetPageProtect(Process, Address,
                              Protect);
          }
       }
@@ -3836,8 +3841,10 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    PMADDRESS_SPACE AddressSpace;
+   PEPROCESS Process;
 
    AddressSpace = (PMADDRESS_SPACE)Context;
+   Process = MmGetAddressSpaceOwner(AddressSpace);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -3918,12 +3925,12 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
             MmFreeSwapPage(SavedSwapEntry);
             MmSetSavedSwapEntryPage(Page, 0);
          }
-         MmDeleteRmap(Page, AddressSpace->Process, Address);
+         MmDeleteRmap(Page, Process, Address);
          MmReleasePageMemoryConsumer(MC_USER, Page);
       }
       else
       {
-         MmDeleteRmap(Page, AddressSpace->Process, Address);
+         MmDeleteRmap(Page, Process, Address);
          MmUnsharePageEntrySectionSegment(Section, Segment, Offset, Dirty, FALSE);
       }
    }

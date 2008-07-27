@@ -253,7 +253,6 @@ typedef struct _MEMORY_AREA
 typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
-    PEPROCESS Process;
     PEX_PUSH_LOCK Lock;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
@@ -1586,6 +1585,14 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
     ExReleasePushLock(AddressSpace->Lock);
     KeLeaveCriticalRegion();
+}
+
+FORCEINLINE
+PEPROCESS
+MmGetAddressSpaceOwner(IN PMADDRESS_SPACE AddressSpace)
+{
+    if (AddressSpace == &MmKernelAddressSpace) return NULL;
+    return CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot);
 }
 
 FORCEINLINE

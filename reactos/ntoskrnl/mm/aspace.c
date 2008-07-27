@@ -43,13 +43,11 @@ MmInitializeAddressSpace(PEPROCESS Process,
 
     if (Process != NULL)
     {
-        AddressSpace->Process = Process;
         AddressSpace->Lock = (PEX_PUSH_LOCK)&Process->AddressCreationLock;
         ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);        
     }
     else
     {
-        AddressSpace->Process = NULL;
         AddressSpace->Lock = (PEX_PUSH_LOCK)&PsGetCurrentProcess()->AddressCreationLock;
         ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
     }

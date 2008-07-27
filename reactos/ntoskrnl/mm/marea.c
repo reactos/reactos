@@ -470,8 +470,8 @@ MmFindGapBottomUp(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-   PVOID HighestAddress = AddressSpace->Process ?
+   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
@@ -548,8 +548,8 @@ MmFindGapTopDown(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-   PVOID HighestAddress = AddressSpace->Process ?
+   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
@@ -648,8 +648,8 @@ MmFindGapAtAddress(
 {
    PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
    PMEMORY_AREA RightNeighbour = NULL;
-   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
-   PVOID HighestAddress = AddressSpace->Process ?
+   PVOID LowestAddress  = MmGetAddressSpaceOwner(AddressSpace) ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = MmGetAddressSpaceOwner(AddressSpace) ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
 
    MmVerifyMemoryAreas(AddressSpace);
@@ -749,11 +749,12 @@ MmFreeMemoryArea(
    ULONG_PTR Address;
    PVOID EndAddress;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-
-   if (AddressSpace->Process != NULL &&
-       AddressSpace->Process != CurrentProcess)
+   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+    
+   if (Process != NULL &&
+       Process != CurrentProcess)
    {
-      KeAttachProcess(&AddressSpace->Process->Pcb);
+      KeAttachProcess(&Process->Pcb);
    }
 
    EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE);
@@ -771,13 +772,13 @@ MmFreeMemoryArea(
          SWAPENTRY SwapEntry = 0;
          PFN_TYPE Page = 0;
 
-         if (MmIsPageSwapEntry(AddressSpace->Process, (PVOID)Address))
+         if (MmIsPageSwapEntry(Process, (PVOID)Address))
          {
-            MmDeletePageFileMapping(AddressSpace->Process, (PVOID)Address, &SwapEntry);
+            MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
          }
          else
          {
-            MmDeleteVirtualMapping(AddressSpace->Process, (PVOID)Address, FALSE, &Dirty, &Page);
+            MmDeleteVirtualMapping(Process, (PVOID)Address, FALSE, &Dirty, &Page);
          }
          if (FreePage != NULL)
          {
@@ -787,8 +788,8 @@ MmFreeMemoryArea(
       }
    }
 
-   if (AddressSpace->Process != NULL &&
-       AddressSpace->Process != CurrentProcess)
+   if (Process != NULL &&
+       Process != CurrentProcess)
    {
       KeDetachProcess();
    }
@@ -975,13 +976,13 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
-      if (!AddressSpace->Process && *BaseAddress < MmSystemRangeStart)
+      if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
       {
          CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
-      if (AddressSpace->Process &&
+      if (MmGetAddressSpaceOwner(AddressSpace) &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
          CHECKPOINT;
