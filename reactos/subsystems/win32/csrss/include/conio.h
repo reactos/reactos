@@ -90,7 +90,7 @@ NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, P
 VOID STDCALL ConioDeleteConsole(Object_t *Object);
 VOID STDCALL ConioDeleteScreenBuffer(Object_t *Buffer);
 void STDCALL ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
-DWORD FASTCALL ConioGetBufferOffset(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
+PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,

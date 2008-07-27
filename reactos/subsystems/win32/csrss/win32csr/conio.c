@@ -83,29 +83,23 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
   ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
 
-DWORD FASTCALL
-ConioGetBufferOffset(PCSRSS_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
+PBYTE FASTCALL
+ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
 {
-  return 2 * (((Y + Buff->VirtualY) % Buff->MaxY) * Buff->MaxX + X);
+  return &Buff->Buffer[2 * (((Y + Buff->VirtualY) % Buff->MaxY) * Buff->MaxX + X)];
 }
-
-#define GET_CELL_BUFFER(b,o)\
-(b)->Buffer[(o)++]
-
-#define SET_CELL_BUFFER(b,o,c,a)\
-(b)->Buffer[(o)++]=(c),\
-(b)->Buffer[(o)++]=(a)
 
 static VOID FASTCALL
 ClearLineBuffer(PCSRSS_SCREEN_BUFFER Buff)
 {
-  DWORD Offset = ConioGetBufferOffset(Buff, 0, Buff->CurrentY);
+  PBYTE Ptr = ConioCoordToPointer(Buff, 0, Buff->CurrentY);
   UINT Pos;
 
   for (Pos = 0; Pos < Buff->MaxX; Pos++)
     {
-      /* Fill the cell: Offset is incremented by the macro */
-      SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
+      /* Fill the cell */
+      *Ptr++ = ' ';
+      *Ptr++ = Buff->DefaultAttrib;
     }
 }
 
@@ -433,7 +427,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                   CHAR *Buffer, DWORD Length, BOOL Attrib)
 {
   UINT i;
-  DWORD Offset;
+  PBYTE Ptr;
   RECT UpdateRect;
   LONG CursorStartX, CursorStartY;
   UINT ScrolledLines;
@@ -474,8 +468,9 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                     {
                       Buff->CurrentX--;
                     }
-                  Offset = ConioGetBufferOffset(Buff, Buff->CurrentX, Buff->CurrentY);
-                  SET_CELL_BUFFER(Buff, Offset, ' ', Buff->DefaultAttrib);
+                  Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
+                  Ptr[0] = ' ';
+                  Ptr[1] = Buff->DefaultAttrib;
                   UpdateRect.left = min(UpdateRect.left, (LONG) Buff->CurrentX);
                   UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
                 }
@@ -500,12 +495,11 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
                 {
                   EndX = Buff->MaxX;
                 }
-              Offset = ConioGetBufferOffset(Buff, Buff->CurrentX, Buff->CurrentY);
+              Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
               while (Buff->CurrentX < EndX)
                 {
-                  Buff->Buffer[Offset] = ' ';
-                  Buff->Buffer[Offset + 1] = Buff->DefaultAttrib;
-                  Offset += 2;
+                  *Ptr++ = ' ';
+                  *Ptr++ = Buff->DefaultAttrib;
                   Buff->CurrentX++;
                 }
               UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX - 1);
@@ -526,11 +520,11 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
         }
       UpdateRect.left = min(UpdateRect.left, (LONG)Buff->CurrentX);
       UpdateRect.right = max(UpdateRect.right, (LONG) Buff->CurrentX);
-      Offset = ConioGetBufferOffset(Buff, Buff->CurrentX, Buff->CurrentY);
-      Buff->Buffer[Offset++] = Buffer[i];
+      Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
+      Ptr[0] = Buffer[i];
       if (Attrib)
         {
-          Buff->Buffer[Offset] = Buff->DefaultAttrib;
+          Ptr[1] = Buff->DefaultAttrib;
         }
       Buff->CurrentX++;
       if (Buff->CurrentX == Buff->MaxX)
@@ -786,8 +780,8 @@ ConioMoveRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
     }
   for (i = 0; i < Height; i++)
     {
-      PWORD SRow = (PWORD)&ScreenBuffer->Buffer[ConioGetBufferOffset(ScreenBuffer, 0, SY)];
-      PWORD DRow = (PWORD)&ScreenBuffer->Buffer[ConioGetBufferOffset(ScreenBuffer, 0, DY)];
+      PWORD SRow = (PWORD)ConioCoordToPointer(ScreenBuffer, 0, SY);
+      PWORD DRow = (PWORD)ConioCoordToPointer(ScreenBuffer, 0, DY);
 
       SX = SrcRegion->left;
       DX = DstRegion->left;
@@ -2210,7 +2204,7 @@ CSR_API(CsrWriteConsoleOutput)
   COORD BufferCoord;
   COORD BufferSize;
   NTSTATUS Status;
-  DWORD Offset;
+  PBYTE Ptr;
   DWORD PSize;
 
   DPRINT("CsrWriteConsoleOutput\n");
@@ -2270,19 +2264,20 @@ CSR_API(CsrWriteConsoleOutput)
   for (i = 0, Y = WriteRegion.top; Y <= WriteRegion.bottom; i++, Y++)
     {
       CurCharInfo = CharInfo + (i + BufferCoord.Y) * BufferSize.X + BufferCoord.X;
-      Offset = ConioGetBufferOffset(Buff, WriteRegion.left, Y);
+      Ptr = ConioCoordToPointer(Buff, WriteRegion.left, Y);
       for (X = WriteRegion.left; X <= WriteRegion.right; X++)
         {
+          CHAR AsciiChar;
           if (Request->Data.WriteConsoleOutputRequest.Unicode)
             {
-              CHAR AsciiChar;
               ConsoleUnicodeCharToAnsiChar(Console, &AsciiChar, &CurCharInfo->Char.UnicodeChar);
-              SET_CELL_BUFFER(Buff, Offset, AsciiChar, CurCharInfo->Attributes);
             }
           else
             {
-              SET_CELL_BUFFER(Buff, Offset, CurCharInfo->Char.AsciiChar, CurCharInfo->Attributes);
+              AsciiChar = CurCharInfo->Char.AsciiChar;
             }
+          *Ptr++ = AsciiChar;
+          *Ptr++ = CurCharInfo->Attributes;
           CurCharInfo++;
         }
     }
@@ -2716,7 +2711,8 @@ CSR_API(CsrReadConsoleOutput)
   COORD BufferCoord;
   RECT ReadRegion;
   RECT ScreenRect;
-  DWORD i, Offset;
+  DWORD i;
+  PBYTE Ptr;
   LONG X, Y;
   UINT CodePage;
 
@@ -2769,20 +2765,20 @@ CSR_API(CsrReadConsoleOutput)
     {
       CurCharInfo = CharInfo + (i * BufferSize.X);
 
-      Offset = ConioGetBufferOffset(Buff, ReadRegion.left, Y);
+      Ptr = ConioCoordToPointer(Buff, ReadRegion.left, Y);
       for (X = ReadRegion.left; X < ReadRegion.right; ++X)
         {
           if (Request->Data.ReadConsoleOutputRequest.Unicode)
             {
               MultiByteToWideChar(CodePage, 0,
-                                  (PCHAR)&GET_CELL_BUFFER(Buff, Offset), 1,
+                                  (PCHAR)Ptr++, 1,
                                   &CurCharInfo->Char.UnicodeChar, 1);
             }
           else
             {
-              CurCharInfo->Char.AsciiChar = GET_CELL_BUFFER(Buff, Offset);
+              CurCharInfo->Char.AsciiChar = *Ptr++;
             }
-          CurCharInfo->Attributes = GET_CELL_BUFFER(Buff, Offset);
+          CurCharInfo->Attributes = *Ptr++;
           ++CurCharInfo;
         }
     }

@@ -86,7 +86,7 @@ TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
   LONG i;
   PBYTE Src, SrcEnd;
 
-  Src = Buff->Buffer + ConioGetBufferOffset(Buff, Region->left, Region->top);
+  Src = ConioCoordToPointer(Buff, Region->left, Region->top);
   SrcDelta = Buff->MaxX * 2;
   SrcEnd = Buff->Buffer + Buff->MaxY * Buff->MaxX * 2;
   DestDelta = ConioRectWidth(Region) * 2;

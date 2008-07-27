@@ -86,35 +86,20 @@ VOID
 IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
 {
   PALIAS_HEADER CurrentHeader;
-  PALIAS_HEADER LastHeader = NULL;
+  PALIAS_HEADER *LastLink = RootHeader;
 
-  if (*RootHeader == 0)
-  {
-    *RootHeader = NewHeader;
-     return;
-  }
-
-  CurrentHeader = *RootHeader;
-
-  while(CurrentHeader)
+  while ((CurrentHeader = *LastLink) != NULL)
   {
       INT Diff = _wcsicmp(NewHeader->lpExeName, CurrentHeader->lpExeName);
       if (Diff < 0)
       {
-        if (!LastHeader)
-            *RootHeader = NewHeader;
-        else
-            LastHeader->Next = NewHeader;
-
-        NewHeader->Next = CurrentHeader;
-        return;
+        break;
       }
-      LastHeader = CurrentHeader;
-      CurrentHeader = CurrentHeader->Next;
+      LastLink = &CurrentHeader->Next;
   }
 
-  LastHeader->Next = NewHeader;
-  NewHeader->Next = NULL;
+  *LastLink = NewHeader;
+  NewHeader->Next = CurrentHeader;
 }
 
 PALIAS_ENTRY
@@ -144,35 +129,20 @@ VOID
 IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
 {
   PALIAS_ENTRY CurrentEntry;
-  PALIAS_ENTRY LastEntry = NULL;
+  PALIAS_ENTRY *LastLink = &Header->Data;
 
-  CurrentEntry = Header->Data;
-
-  if (!CurrentEntry)
-  {
-    Header->Data = NewEntry;
-    NewEntry->Next = NULL;
-    return;
-  }
-
-  while(CurrentEntry)
+  while ((CurrentEntry = *LastLink) != NULL)
   {
     INT Diff = _wcsicmp(NewEntry->lpSource, CurrentEntry->lpSource);
     if (Diff < 0)
     {
-        if (!LastEntry)
-            Header->Data = NewEntry;
-        else
-            LastEntry->Next = NewEntry;
-        NewEntry->Next = CurrentEntry;
-        return;
+        break;
     }
-    LastEntry = CurrentEntry;
-    CurrentEntry = CurrentEntry->Next;
+    LastLink = &CurrentEntry->Next;
   }
 
-  LastEntry->Next = NewEntry;
-  NewEntry->Next = NULL;
+  *LastLink = NewEntry;
+  NewEntry->Next = CurrentEntry;
 }
 
 PALIAS_ENTRY
@@ -289,28 +259,18 @@ IntGetAllConsoleAliases(PALIAS_HEADER Header, LPWSTR TargetBuffer, UINT TargetBu
 VOID
 IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
 {
-    PALIAS_ENTRY LastEntry;
+    PALIAS_ENTRY *LastLink = &Header->Data;
     PALIAS_ENTRY CurEntry;
 
-    if (Header->Data == Entry)
-    {
-        Header->Data = Entry->Next;
-        RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
-        return;
-    }
-    LastEntry = Header->Data;
-    CurEntry = LastEntry->Next;
-
-    while(CurEntry)
+    while ((CurEntry = *LastLink) != NULL)
     {
         if (CurEntry == Entry)
         {
-            LastEntry->Next = Entry->Next;
+            *LastLink = Entry->Next;
             RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
             return;
         }
-        LastEntry = CurEntry;
-        CurEntry = CurEntry->Next;
+        LastLink = &CurEntry->Next;
     }
 }
 VOID
