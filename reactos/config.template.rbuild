@@ -79,4 +79,10 @@
 -->
 <property name="_WINKD_" value="0" />
 
+<!--
+	Whether to compile support for ELF files. Do not enable unless you know what
+	you're doing.
+-->
+<property name="_ELF_" value="0" />
+
 </group>
