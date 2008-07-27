@@ -177,8 +177,7 @@ static VOID MmVerifyMemoryAreas(PMADDRESS_SPACE AddressSpace)
    {
       /* FiN: The starting address can be NULL if someone explicitely asks
        * for NULL address. */
-      ASSERT(Node->StartingAddress >= AddressSpace->LowestAddress ||
-             Node->StartingAddress == NULL);
+      ASSERT(Node->StartingAddress == NULL);
       ASSERT(Node->EndingAddress >= Node->StartingAddress);
    }
 }
@@ -471,7 +470,8 @@ MmFindGapBottomUp(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = AddressSpace->Process ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
@@ -481,9 +481,9 @@ MmFindGapBottomUp(
    MmVerifyMemoryAreas(AddressSpace);
 
    DPRINT("LowestAddress: %p HighestAddress: %p\n",
-          AddressSpace->LowestAddress, HighestAddress);
+          LowestAddress, HighestAddress);
 
-   AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
+   AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
 
    /* Special case for empty tree. */
    if (AddressSpace->MemoryAreaRoot == NULL)
@@ -529,7 +529,7 @@ MmFindGapBottomUp(
    }
 
    /* Check if there is enough space before the first memory area. */
-   AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
+   AlignedAddress = MM_ROUND_UP(LowestAddress, Granularity);
    if (FirstNode->StartingAddress > AlignedAddress &&
        (ULONG_PTR)FirstNode->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
@@ -548,7 +548,8 @@ MmFindGapTopDown(
    ULONG_PTR Length,
    ULONG_PTR Granularity)
 {
-   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = AddressSpace->Process ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
    PVOID AlignedAddress;
    PMEMORY_AREA Node;
@@ -557,7 +558,7 @@ MmFindGapTopDown(
    MmVerifyMemoryAreas(AddressSpace);
 
    DPRINT("LowestAddress: %p HighestAddress: %p\n",
-          AddressSpace->LowestAddress, HighestAddress);
+          LowestAddress, HighestAddress);
 
    AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)HighestAddress - Length + 1, Granularity);
 
@@ -568,7 +569,7 @@ MmFindGapTopDown(
    /* Special case for empty tree. */
    if (AddressSpace->MemoryAreaRoot == NULL)
    {
-      if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
+      if (AlignedAddress >= LowestAddress)
       {
          DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
          return AlignedAddress;
@@ -616,7 +617,7 @@ MmFindGapTopDown(
    if (AlignedAddress > PreviousNode->StartingAddress)
       return NULL;
 
-   if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
+   if (AlignedAddress >= LowestAddress)
    {
       DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
       return AlignedAddress;
@@ -647,14 +648,15 @@ MmFindGapAtAddress(
 {
    PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
    PMEMORY_AREA RightNeighbour = NULL;
-   PVOID HighestAddress = AddressSpace->LowestAddress < MmSystemRangeStart ?
+   PVOID LowestAddress  = AddressSpace->Process ? MM_LOWEST_USER_ADDRESS : MmSystemRangeStart;
+   PVOID HighestAddress = AddressSpace->Process ?
                           (PVOID)((ULONG_PTR)MmSystemRangeStart - 1) : (PVOID)MAXULONG_PTR;
 
    MmVerifyMemoryAreas(AddressSpace);
 
    Address = MM_ROUND_DOWN(Address, PAGE_SIZE);
 
-   if (AddressSpace->LowestAddress < MmSystemRangeStart)
+   if (LowestAddress < MmSystemRangeStart)
    {
       if (Address >= MmSystemRangeStart)
       {
@@ -663,7 +665,7 @@ MmFindGapAtAddress(
    }
    else
    {
-      if (Address < AddressSpace->LowestAddress)
+      if (Address < LowestAddress)
       {
          return 0;
       }
@@ -973,14 +975,13 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
                          - (ULONG_PTR) MM_ROUND_DOWN(*BaseAddress, Granularity));
       *BaseAddress = MM_ROUND_DOWN(*BaseAddress, Granularity);
 
-      if (AddressSpace->LowestAddress == MmSystemRangeStart &&
-          *BaseAddress < MmSystemRangeStart)
+      if (!AddressSpace->Process && *BaseAddress < MmSystemRangeStart)
       {
          CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
-      if (AddressSpace->LowestAddress < MmSystemRangeStart &&
+      if (AddressSpace->Process &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
          CHECKPOINT;

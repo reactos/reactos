@@ -253,7 +253,6 @@ typedef struct _MEMORY_AREA
 typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
-    PVOID LowestAddress;
     PEPROCESS Process;
     PEX_PUSH_LOCK Lock;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
