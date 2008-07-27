@@ -334,13 +334,6 @@ MingwModuleHandler::GetModuleArchiveFilename () const
 	                          ReplaceExtension ( module.name, ".temp.a" ) );
 }
 
-bool
-MingwModuleHandler::IsGeneratedFile ( const File& file ) const
-{
-	string extension = GetExtension ( file.file );
-	return ( extension == ".spec" || extension == ".SPEC" );
-}
-
 /*static*/ bool
 MingwModuleHandler::ReferenceObjects (
 	const Module& module )
@@ -1201,6 +1194,20 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildKMRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                       "\t$(ECHO_WINEBLD)\n"
+                       "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
+                       "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c:\n"
+                       "\t${cp} $(NUL) $@ 1>$(NUL)\n"
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                       "\t$(ECHO_CC)\n"
+                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source)\n"
@@ -1384,6 +1391,8 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, TypeDontCare, ".asm", &nasmRule },
 		{ HostDontCare, TypeDontCare, ".rc", &windresRule },
 		{ HostDontCare, TypeDontCare, ".mc", &wmcRule },
+		{ HostFalse, Kernel, ".spec", &winebuildKMRule },
+		{ HostFalse, KernelModeDLL, ".spec", &winebuildKMRule },
 		{ HostDontCare, TypeDontCare, ".spec", &winebuildRule },
 		{ HostDontCare, RpcServer, ".idl", &widlServerRule },
 		{ HostDontCare, RpcClient, ".idl", &widlClientRule },
