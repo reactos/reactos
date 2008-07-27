@@ -662,7 +662,7 @@ NTSTATUS DispTdiQueryInformation(
 
         AddressInfo = (PTDI_ADDRESS_INFO)MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-        switch ((ULONG)IrpSp->FileObject->FsContext2) {
+        switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
             break;
@@ -713,7 +713,7 @@ NTSTATUS DispTdiQueryInformation(
         AddressInfo = (PTDI_CONNECTION_INFORMATION)
           MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-        switch ((ULONG)IrpSp->FileObject->FsContext2) {
+        switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
             break;
@@ -1007,12 +1007,16 @@ NTSTATUS DispTdiSendDatagram(
 		     (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)));
 
         if( (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send) )
+        {
+	        ULONG DataUsed = 0;
             Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
                 Request.Handle.AddressHandle,
                 DgramInfo->SendDatagramInformation,
                 DataBuffer,
                 BufferSize,
-                &Irp->IoStatus.Information);
+                &DataUsed);
+            Irp->IoStatus.Information = DataUsed;
+        }
         else
             Status = STATUS_UNSUCCESSFUL;
 
@@ -1279,7 +1283,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
     TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
 
-    switch ((ULONG)IrpSp->FileObject->FsContext2) {
+    switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
     case TDI_TRANSPORT_ADDRESS_FILE:
         Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
         break;
@@ -1454,7 +1458,7 @@ NTSTATUS DispTdiSetInformationEx(
     TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
     Info        = (PTCP_REQUEST_SET_INFORMATION_EX)Irp->AssociatedIrp.SystemBuffer;
 
-    switch ((ULONG)IrpSp->FileObject->FsContext2) {
+    switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
     case TDI_TRANSPORT_ADDRESS_FILE:
         Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
         break;
