@@ -740,16 +740,6 @@ MmGetPfnForProcess(IN PEPROCESS Process,
     return Pte.u.Hard.L2.Small.BaseAddress;
 }
 
-ULONG
-NTAPI
-MiGetUserPageDirectoryCount(VOID)
-{
-    //
-    // Return the index
-    //
-    return MiGetPdeOffset(MmSystemRangeStart);
-}
-
 BOOLEAN
 NTAPI
 MmIsDirtyPage(IN PEPROCESS Process,
