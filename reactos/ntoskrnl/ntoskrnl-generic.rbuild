@@ -358,7 +358,7 @@
 				<file>page.c</file>
 			</directory>
 		</if>
-		<!-- file>anonmem.c</file -->
+		<file>anonmem.c</file>
 		<file>aspace.c</file>
 		<file>balance.c</file>
 		<!-- file>cont.c</file -->
