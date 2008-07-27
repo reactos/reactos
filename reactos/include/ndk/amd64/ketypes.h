@@ -131,7 +131,7 @@ Author:
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
-#define KSEG0_BASE              0x80000000
+#define KSEG0_BASE              0xffff080000000000ULL
 
 //
 // Synchronization-level IRQL
