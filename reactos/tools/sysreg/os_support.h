@@ -10,7 +10,7 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#ifndef __LINUX__
+#ifndef __linux__
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -140,7 +140,7 @@ namespace System_
 		OsSupport()
 		{}
 
-#ifdef __LINUX__
+#ifdef __linux__
         static struct sigaction s_sact;
 #else
         static HANDLE s_hThread;

@@ -14,7 +14,7 @@ namespace System_
 {
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
-#ifdef __LINUX__
+#ifdef __linux__
     const char * NamedPipeReader::s_LineBreak = "\x0A\0";
 #else
     const char * NamedPipeReader::s_LineBreak = "\x0D\x0A\0";
@@ -46,7 +46,7 @@ namespace System_
             cerr << "NamedPipeReader::openPipe> pipe already open" << endl;
             return false;
         }
-#ifndef __LINUX__
+#ifndef __linux__
         h_Pipe = CreateFile(PipeCmd.c_str(),
                             GENERIC_WRITE | GENERIC_READ,
                             0,
@@ -105,7 +105,7 @@ namespace System_
             cerr << "NamedPipeReader::closePipe> pipe is not open" << endl;
             return false;
         }
-#ifdef __LINUX__
+#ifdef __linux__
         close(h_Pipe);
 #else
         DisconnectNamedPipe(h_Pipe);
@@ -274,7 +274,7 @@ namespace System_
     bool NamedPipeReader::readPipe(char * buffer, int bufferlength, long & bytesread)
     {
         
-#ifdef __LINUX__
+#ifdef __linux__
         long cbRead = read(h_Pipe,
                            buffer,
                            (bufferlength-1) * sizeof(char));
