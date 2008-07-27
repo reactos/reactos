@@ -65,9 +65,8 @@ public:
 
 	static MingwModuleHandler* InstanciateHandler ( const Module& module_,
 	                                                MingwBackend* backend_ );
-	virtual HostType DefaultHost() = 0;
 	void GeneratePreconditionDependencies ();
-	virtual void Process () = 0;
+	virtual void Process () { GenerateRules (); }
 	virtual std::string TypeSpecificCFlags() { return ""; }
 	virtual std::string TypeSpecificNasmFlags() { return ""; }
 	virtual std::string TypeSpecificLinkerFlags() { return ""; }
@@ -192,7 +191,6 @@ class MingwBuildToolModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBuildToolModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostTrue; }
 	virtual void Process ();
 private:
 	void GenerateBuildToolModuleTarget ();
@@ -203,43 +201,9 @@ class MingwKernelModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 private:
 	void GenerateKernelModuleTarget ();
-};
-
-
-class MingwStaticLibraryModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwStaticLibraryModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-private:
-	void GenerateStaticLibraryModuleTarget ();
-};
-
-
-class MingwHostStaticLibraryModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwHostStaticLibraryModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostTrue; }
-	virtual void Process ();
-private:
-	void GenerateHostStaticLibraryModuleTarget ();
-};
-
-
-class MingwObjectLibraryModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwObjectLibraryModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-private:
-	void GenerateObjectLibraryModuleTarget ();
 };
 
 
@@ -247,7 +211,6 @@ class MingwKernelModeDLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModeDLLModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -259,7 +222,6 @@ class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModeDriverModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__"; }
 	void AddImplicitLibraries ( Module& module );
@@ -272,7 +234,6 @@ class MingwNativeDLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwNativeDLLModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -284,7 +245,6 @@ class MingwNativeCUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwNativeCUIModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTAPP__"; }
 	void AddImplicitLibraries ( Module& module );
@@ -297,7 +257,6 @@ class MingwWin32DLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32DLLModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -309,7 +268,6 @@ class MingwWin32OCXModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32OCXModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -321,7 +279,6 @@ class MingwWin32CUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32CUIModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -333,7 +290,6 @@ class MingwWin32GUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32GUIModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	void AddImplicitLibraries ( Module& module );
 private:
@@ -345,7 +301,6 @@ class MingwBootLoaderModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBootLoaderModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
@@ -357,7 +312,6 @@ class MingwBootSectorModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBootSectorModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificNasmFlags() { return "-f bin"; }
 private:
@@ -369,7 +323,6 @@ class MingwBootProgramModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBootProgramModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string GetProgTextAddrMacro ();
 	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
@@ -382,7 +335,6 @@ class MingwIsoModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwIsoModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 private:
 	void GenerateIsoModuleTarget ();
@@ -401,7 +353,6 @@ class MingwLiveIsoModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwLiveIsoModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 private:
 	void GenerateLiveIsoModuleTarget ();
@@ -420,7 +371,6 @@ class MingwTestModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwTestModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
@@ -428,54 +378,10 @@ private:
 	void GenerateTestModuleTarget ();
 };
 
-
-class MingwRpcServerModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwRpcServerModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
-
-class MingwRpcClientModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwRpcClientModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
-
-class MingwRpcProxyModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwRpcProxyModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
-class MingwMessageHeaderModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwMessageHeaderModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
 class MingwAliasModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwAliasModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
-class MingwIdlHeaderModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwIdlHeaderModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };
 
@@ -483,15 +389,6 @@ class MingwCabinetModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwCabinetModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ();
-};
-
-class MingwEmbeddedTypeLibModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwEmbeddedTypeLibModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };
 
@@ -499,7 +396,6 @@ class MingwElfExecutableModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwElfExecutableModuleHandler ( const Module& module );
-	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };
 

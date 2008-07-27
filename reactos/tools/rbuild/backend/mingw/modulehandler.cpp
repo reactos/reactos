@@ -165,17 +165,19 @@ MingwModuleHandler::InstanciateHandler (
 	MingwModuleHandler* handler;
 	switch ( module.type )
 	{
+		case StaticLibrary:
+		case HostStaticLibrary:
+		case ObjectLibrary:
+		case RpcServer:
+		case RpcClient:
+		case RpcProxy:
+		case MessageHeader:
+		case IdlHeader:
+		case EmbeddedTypeLib:
+			handler = new MingwModuleHandler( module );
+			break;
 		case BuildTool:
 			handler = new MingwBuildToolModuleHandler ( module );
-			break;
-		case StaticLibrary:
-			handler = new MingwStaticLibraryModuleHandler ( module );
-			break;
-		case HostStaticLibrary:
-			handler = new MingwHostStaticLibraryModuleHandler ( module );
-			break;
-		case ObjectLibrary:
-			handler = new MingwObjectLibraryModuleHandler ( module );
 			break;
 		case Kernel:
 			handler = new MingwKernelModuleHandler ( module );
@@ -230,29 +232,11 @@ MingwModuleHandler::InstanciateHandler (
 		case Test:
 			handler = new MingwTestModuleHandler ( module );
 			break;
-		case RpcServer:
-			handler = new MingwRpcServerModuleHandler ( module );
-			break;
-		case RpcClient:
-			handler = new MingwRpcClientModuleHandler ( module );
-			break;
-		case RpcProxy:
-			handler = new MingwRpcProxyModuleHandler ( module );
-			break;
 		case Alias:
 			handler = new MingwAliasModuleHandler ( module );
 			break;
-		case MessageHeader:
-			handler = new MingwMessageHeaderModuleHandler (module);
-			break;
-		case IdlHeader:
-			handler = new MingwIdlHeaderModuleHandler ( module );
-			break;
 		case Cabinet:
 			handler = new MingwCabinetModuleHandler ( module );
-			break;
-		case EmbeddedTypeLib:
-			handler = new MingwEmbeddedTypeLibModuleHandler ( module );
 			break;
 		case ElfExecutable:
 			handler = new MingwElfExecutableModuleHandler ( module );
@@ -2541,84 +2525,11 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 }
 
 
-MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwStaticLibraryModuleHandler::Process ()
-{
-	GenerateStaticLibraryModuleTarget ();
-}
-
-void
-MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ()
-{
-	GenerateRules ();
-}
-
-
-MingwHostStaticLibraryModuleHandler::MingwHostStaticLibraryModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwHostStaticLibraryModuleHandler::Process ()
-{
-	GenerateHostStaticLibraryModuleTarget ();
-}
-
-void
-MingwHostStaticLibraryModuleHandler::GenerateHostStaticLibraryModuleTarget ()
-{
-	GenerateRules ();
-}
-
-
-MingwObjectLibraryModuleHandler::MingwObjectLibraryModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwObjectLibraryModuleHandler::Process ()
-{
-	GenerateObjectLibraryModuleTarget ();
-}
-
-void
-MingwObjectLibraryModuleHandler::GenerateObjectLibraryModuleTarget ()
-{
-	GenerateRules ();
-}
-
-
 MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 	const Module& module_ )
 
 	: MingwModuleHandler ( module_ )
 {
-}
-
-MingwEmbeddedTypeLibModuleHandler::MingwEmbeddedTypeLibModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwEmbeddedTypeLibModuleHandler::Process ()
-{
-	GenerateRules ();
 }
 
 
@@ -3695,48 +3606,6 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 }
 
 
-MingwRpcServerModuleHandler::MingwRpcServerModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwRpcServerModuleHandler::Process ()
-{
-	GenerateRules ();
-}
-
-
-MingwRpcClientModuleHandler::MingwRpcClientModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwRpcClientModuleHandler::Process ()
-{
-	GenerateRules ();
-}
-
-
-MingwRpcProxyModuleHandler::MingwRpcProxyModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwRpcProxyModuleHandler::Process ()
-{
-	GenerateRules ();
-}
-
-
 MingwAliasModuleHandler::MingwAliasModuleHandler (
 	const Module& module_ )
 
@@ -3749,31 +3618,6 @@ MingwAliasModuleHandler::Process ()
 {
 }
 
-MingwMessageHeaderModuleHandler::MingwMessageHeaderModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwMessageHeaderModuleHandler::Process ()
-{
-	GenerateRules ();
-}
-
-MingwIdlHeaderModuleHandler::MingwIdlHeaderModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwIdlHeaderModuleHandler::Process ()
-{
-	GenerateRules ();
-}
 
 MingwCabinetModuleHandler::MingwCabinetModuleHandler (
 	const Module& module_ )

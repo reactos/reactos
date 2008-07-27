@@ -34,6 +34,44 @@ using std::map;
 
 typedef set<string> set_string;
 
+static const struct
+{
+	HostType DefaultHost;
+} ModuleHandlerInformations[] = {
+	{ HostTrue }, // BuildTool
+	{ HostFalse }, // StaticLibrary
+	{ HostFalse }, // ObjectLibrary
+	{ HostFalse }, // Kernel
+	{ HostFalse }, // KernelModeDLL
+	{ HostFalse }, // KernelModeDriver
+	{ HostFalse }, // NativeDLL
+	{ HostFalse }, // NativeCUI
+	{ HostFalse }, // Win32DLL
+	{ HostFalse }, // Win32OCX
+	{ HostFalse }, // Win32CUI
+	{ HostFalse }, // Win32GUI
+	{ HostFalse }, // BootLoader
+	{ HostFalse }, // BootSector
+	{ HostFalse }, // Iso
+	{ HostFalse }, // LiveIso
+	{ HostFalse }, // Test
+	{ HostFalse }, // RpcServer
+	{ HostFalse }, // RpcClient
+	{ HostFalse }, // Alias
+	{ HostFalse }, // BootProgram
+	{ HostFalse }, // Win32SCR
+	{ HostFalse }, // IdlHeader
+	{ HostFalse }, // IsoRegTest
+	{ HostFalse }, // LiveIsoRegTest
+	{ HostFalse }, // EmbeddedTypeLib
+	{ HostFalse }, // ElfExecutable
+	{ HostFalse }, // RpcProxy
+	{ HostTrue }, // HostStaticLibrary
+	{ HostFalse }, // Cabinet
+	{ HostFalse }, // KeyboardLayout
+	{ HostFalse }, // MessageHeader
+};
+
 string
 MingwBackend::GetFullPath ( const FileLocation& file ) const
 {
@@ -252,7 +290,7 @@ MingwBackend::ProcessModules ()
 			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )
 		{
-			module.host = h->DefaultHost();
+			module.host = ModuleHandlerInformations[h->module.type].DefaultHost;
 			assert ( module.host != HostDefault );
 		}
 		v.push_back ( h );
@@ -324,6 +362,8 @@ MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 void
 MingwBackend::ProcessNormal ()
 {
+    assert(sizeof(ModuleHandlerInformations)/sizeof(ModuleHandlerInformations[0]) == TypeDontCare);
+
 	DetectCompiler ();
 	DetectBinutils ();
 	DetectNetwideAssembler ();
