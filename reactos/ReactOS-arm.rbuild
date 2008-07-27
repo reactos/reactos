@@ -114,12 +114,18 @@
 				<xi:include href="lib/sdk/crt/crt.rbuild" />
 				<xi:include href="lib/sdk/crt/libcntpr.rbuild" />
 			</directory>
+			<directory name="nt">
+				<xi:include href="lib/sdk/nt/nt.rbuild" />
+			</directory>
 			<directory name="wdmguid">
 				<xi:include href="lib/sdk/wdmguid/wdmguid.rbuild" />
 			</directory>
 		</directory>
 		<directory name="ntdllsys">
 			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
+		</directory>
+		<directory name="smlib">
+			<xi:include href="lib/smlib/smlib.rbuild" />
 		</directory>
 	</directory>
 	<directory name="include">
@@ -172,6 +178,13 @@
 	<directory name="dll">
 		<directory name="ntdll">
 			<xi:include href="dll/ntdll/ntdll.rbuild" />
+		</directory>	
+	</directory>
+	<directory name="base">
+		<directory name="system">
+            <directory name="smss">
+                <xi:include href="base/system/smss/smss.rbuild" />
+            </directory>	
 		</directory>	
 	</directory>
 </project>
