@@ -293,12 +293,21 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
     // Get the PTE
     //
     PointerPte = MiGetPteAddress(Address);
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    
+    if (PointerPte->u.Hard.L1.Fault.Type == FaultPte)
+    {
+        //
+        // Invalid PTE
+        //
+        if (WasDirty) *WasDirty = FALSE;
+        if (Page) *Page = 0;
+        return;
+    }
+        
     //
     // Save the PTE
     //
     Pte = *PointerPte;
+    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
     
     //
     // Destroy the PTE
