@@ -104,6 +104,19 @@
 			<directory name="fastfat">
 				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
 			</directory>
+			<directory name="ext2">
+				<!-- xi:include href="drivers/filesystems/ext2/ext2.rbuild" / -->
+			</directory>
+		</directory>
+		<directory name="storage">
+			<directory name="ide">
+				<directory name="atapi">
+					<!-- xi:include href="drivers/storage/ide/atapi/atapi.rbuild" / -->
+				</directory>
+			</directory>
+			<directory name="scsiport">
+				<!-- xi:include href="drivers/storage/scsiport/scsiport.rbuild" / -->
+			</directory>
 		</directory>
 	</directory>
 
@@ -123,7 +136,7 @@
 	</directory>
 
 	<directory name="ntoskrnl">
-		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
+		<xi:include href="ntoskrnl/ntoskrnl-amd64hack.rbuild" />
 	</directory>
 
 	<!-- directory name="subsystems">

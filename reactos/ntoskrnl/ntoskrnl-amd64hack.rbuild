@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
-<group xmlns:xi="http://www.w3.org/2001/XInclude">
+<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="ntoskrnl_$(ARCH).def" />
 	<define name="_DISABLE_TIDENTS" />
@@ -36,6 +36,7 @@
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
+	<file>amd64stubs.c</file>
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -87,9 +88,15 @@
 				<file>ctxhelp.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file first="true">boot.S</file>
+				<file>kiinit.c</file>
+			</directory>
+		</if>
 		<file>apc.c</file>
 		<file>balmgr.c</file>
-		<file>bug.c</file>
+		<!-- file>bug.c</file -->
 		<file>clock.c</file>
 		<file>config.c</file>
 		<file>devqueue.c</file>
@@ -163,7 +170,7 @@
 	</directory>
 	<directory name="dbgk">
 		<file>dbgkutil.c</file>
-		<file>dbgkobj.c</file>
+		<!-- file>dbgkobj.c</file -->
 	</directory>
 	<directory name="ex" root="intermediate">
 		<file>zw.S</file>
@@ -180,7 +187,7 @@
 		<file>callback.c</file>
 		<file>dbgctrl.c</file>
 		<file>efi.c</file>
-		<file>event.c</file>
+		<!-- file>event.c</file -->
 		<file>evtpair.c</file>
 		<file>exintrin.c</file>
 		<file>fastinterlck.c</file>
@@ -191,17 +198,17 @@
 		<file>init.c</file>
 		<file>keyedevt.c</file>
 		<file>locale.c</file>
-		<file>lookas.c</file>
-		<file>mutant.c</file>
+		<!-- file>lookas.c</file -->
+		<!-- file>mutant.c</file -->
 		<file>pushlock.c</file>
 		<file>profile.c</file>
 		<file>resource.c</file>
 		<file>rundown.c</file>
-		<file>sem.c</file>
+		<!-- file>sem.c</file -->
 		<file>shutdown.c</file>
-		<file>sysinfo.c</file>
+		<!-- file>sysinfo.c</file -->
 		<file>time.c</file>
-		<file>timer.c</file>
+		<!-- file>timer.c</file -->
 		<file>uuid.c</file>
 		<file>win32k.c</file>
 		<file>work.c</file>
@@ -246,7 +253,7 @@
 			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>file.c</file>
-			<file>iocomp.c</file>
+			<!-- file>iocomp.c</file -->
 			<file>ioevent.c</file>
 			<file>iofunc.c</file>
 			<file>iomdl.c</file>
@@ -259,7 +266,7 @@
 			<file>ramdisk.c</file>
 			<file>rawfs.c</file>
 			<file>remlock.c</file>
-			<file>util.c</file>
+			<!-- file>util.c</file -->
 			<file>symlink.c</file>
 			<file>volume.c</file>
 		</directory>
@@ -287,8 +294,8 @@
 				</directory>
 			</if>
 			<if property="KDBG" value="1">
-				<file>kdb.c</file>
-				<file>kdb_cli.c</file>
+				<!-- file>kdb.c</file -->
+				<!-- file>kdb_cli.c</file -->
 				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
@@ -354,17 +361,17 @@
 		<file>anonmem.c</file>
 		<file>aspace.c</file>
 		<file>balance.c</file>
-		<file>cont.c</file>
+		<!-- file>cont.c</file -->
 		<file>drvlck.c</file>
 		<file>freelist.c</file>
-		<file>iospace.c</file>
+		<!-- file>iospace.c</file -->
 		<file>kmap.c</file>
 		<file>marea.c</file>
-		<file>mdlsup.c</file>
-		<file>mm.c</file>
-		<file>mminit.c</file>
+		<!-- file>mdlsup.c</file -->
+		<!-- file>mm.c</file -->
+		<!-- file>mminit.c</file -->
 		<file>mpw.c</file>
-		<file>ncache.c</file>
+		<!-- file>ncache.c</file -->
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
@@ -373,15 +380,15 @@
 		<file>paging.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
-		<file>pool.c</file>
+		<!-- file>pool.c</file -->
 		<file>ppool.c</file>
-		<file>procsup.c</file>
-		<file>region.c</file>
+		<!-- file>procsup.c</file -->
+		<!-- file>region.c</file -->
 		<file>rmap.c</file>
-		<file>section.c</file>
+		<!-- file>section.c</file -->
 		<file>sysldr.c</file>
 		<file>verifier.c</file>
-		<file>virtual.c</file>
+		<!-- file>virtual.c</file -->
 		<file>wset.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>
@@ -425,8 +432,8 @@
 		<file>quota.c</file>
 		<file>security.c</file>
 		<file>state.c</file>
-		<file>thread.c</file>
-		<file>win32.c</file>
+		<!-- file>thread.c</file -->
+		<!-- file>win32.c</file -->
 	</directory>
 	<directory name="rtl">
 		<if property="ARCH" value="arm">
@@ -434,7 +441,7 @@
 				<file>rtlexcpt.c</file>
 			</directory>
 		</if>
-		<file>libsupp.c</file>
+		<!-- file>libsupp.c</file -->
 		<file>misc.c</file>
 		<file>strtok.c</file>
 	</directory>
@@ -447,7 +454,7 @@
 		<file>sd.c</file>
 		<file>semgr.c</file>
 		<file>sid.c</file>
-		<file>token.c</file>
+		<!-- file>token.c</file -->
 	</directory>
 	<directory name="vdm">
 		<if property="ARCH" value="i386">
@@ -460,4 +467,5 @@
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
-</group>
+</module>
+
