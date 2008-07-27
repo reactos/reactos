@@ -303,45 +303,36 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     // Calculate the actual offset in the drive
     //
     ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
-    DPRINT1("Disk offset is: %d and Offset is: %I64d. Total: %I64d\n",
-            DeviceExtension->DiskOffset, Offset, ActualOffset);
     
     //
     // Convert to pages
     //
     ActualPages.QuadPart = ActualOffset.QuadPart >> PAGE_SHIFT;
-    DPRINT1("Offset in pages is: %I64x\n", ActualPages);
     
     //
     // Now add the base page
     //
     ActualPages.QuadPart = DeviceExtension->BasePage + ActualPages.QuadPart;
-    DPRINT1("Ramdisk mapped at page: %d, actual page is: %I64d\n",
-            DeviceExtension->BasePage, ActualPages);
     
     //
     // Calculate final amount of bytes
     //
     PhysicalAddress.QuadPart = ActualPages.QuadPart << PAGE_SHIFT;
-    DPRINT1("Physical Address is: %I64x\n", PhysicalAddress);
     
     //
     // Calculate pages spanned for the mapping
     //
     ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
-    DPRINT1("Length in pages: %d\n", ActualLength);
     
     //
     // And convert this back to bytes
     //
     ActualLength <<= PAGE_SHIFT;
-    DPRINT1("Length in bytes: %d\n", ActualLength);
     
     //
     // Get the offset within the page
     //
     PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
-    DPRINT1("Page offset: %lx\n", PageOffset);
     
     //
     // Map the I/O Space from the loader
@@ -353,7 +344,6 @@ RamdiskMapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     //
     if (MappedBase) MappedBase = (PVOID)((ULONG_PTR)MappedBase + PageOffset);
     *OutputLength = Length;
-    DPRINT1("Mapped at: %p\n", MappedBase);
     return MappedBase;
 }
 
@@ -377,32 +367,26 @@ RamdiskUnmapPages(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
     // Calculate the actual offset in the drive
     //
     ActualOffset.QuadPart = DeviceExtension->DiskOffset + Offset.QuadPart;
-    DPRINT1("Disk offset is: %d and Offset is: %I64d. Total: %I64d\n",
-            DeviceExtension->DiskOffset, Offset, ActualOffset);
     
     //
     // Calculate pages spanned for the mapping
     //
     ActualLength = ADDRESS_AND_SIZE_TO_SPAN_PAGES(ActualOffset.QuadPart, Length);
-    DPRINT1("Length in pages: %d\n", ActualLength);
     
     //
     // And convert this back to bytes
     //
     ActualLength <<= PAGE_SHIFT;
-    DPRINT1("Length in bytes: %d\n", ActualLength);
     
     //
     // Get the offset within the page
     //
     PageOffset = BYTE_OFFSET(ActualOffset.QuadPart);
-    DPRINT1("Page offset: %lx\n", PageOffset);
     
     //
     // Calculate actual base address where we mapped this
     //
     BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - PageOffset);
-    DPRINT1("Unmapping at: %p\n", BaseAddress);
     
     //
     // Unmap the I/O space we got from the loader
@@ -528,7 +512,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DeviceName.MaximumLength = Length;
         wcsncpy(Buffer, L"\\Device\\Ramdisk", Length / sizeof(WCHAR));
         wcsncat(Buffer, GuidString.Buffer, Length / sizeof(WCHAR));
-        DPRINT1("Creating device: %wZ\n", &DeviceName);
         
         //
         // Create the drive device
@@ -573,8 +556,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                 wcsncat(Buffer,
                         GuidString.Buffer,
                         SymbolicLinkName.MaximumLength / sizeof(WCHAR));
-                DPRINT1("Creating symbolic link: %wZ to %wZ \n",
-                        &SymbolicLinkName, &DeviceName);
                 Status = IoCreateSymbolicLink(&SymbolicLinkName, &DeviceName);
                 if (!NT_SUCCESS(Status))
                 {
@@ -612,8 +593,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                                L"\\DosDevices\\%wc:",
                                Input->DriveLetter);
                     RtlInitUnicodeString(&DriveString, LocalBuffer);
-                    DPRINT1("Creating symbolic link: %wZ to %wZ\n",
-                            &DriveString, &DeviceName);
                     IoDeleteSymbolicLink(&DriveString);
                     IoCreateSymbolicLink(&DriveString, &DeviceName);
                     
@@ -764,19 +743,6 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             //
             DriveExtension->Cylinders++;
         }
-        
-        //
-        // Sanity check for debugging
-        //
-        DPRINT1("[RAMDISK] Loaded...\n"
-                "Bytes per Sector: %d\n"
-                "Sectors per Track: %d\n"
-                "Number of Heads: %d\n"
-                "Number of Cylinders: %d\n",
-                DriveExtension->BytesPerSector,
-                DriveExtension->SectorsPerTrack,
-                DriveExtension->NumberOfHeads,
-                DriveExtension->Cylinders);
         
         //
         // Acquire the disk lock
@@ -1151,7 +1117,6 @@ RamdiskReadWriteReal(IN PIRP Irp,
     //
     // Do the copy loop
     //
-    DPRINT1("Initiating copy loop for %lx bytes at %p\n", BytesLeft, SystemVa);
     while (TRUE)
     {
         //
@@ -1286,11 +1251,7 @@ RamdiskGetPartitionInfo(IN PIRP Irp,
     PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
                                                                PartitionType);
     PartitionInfo->RewritePartition = FALSE;
-    
-    DPRINT1("Partition length: %I64d\n", PartitionInfo->PartitionLength);
-    DPRINT1("Type: %lx. Recognized: %d\n",
-            PartitionInfo->PartitionType, PartitionInfo->RecognizedPartition);
-    
+
     //
     // Unmap the partition table
     //
