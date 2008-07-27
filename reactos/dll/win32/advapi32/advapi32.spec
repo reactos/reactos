@@ -224,7 +224,7 @@
  @ stub FlushTraceW
  @ stub FreeEncryptedFileKeyInfo
  @ stub FreeEncryptionCertificateHashList
- @ stub FreeInheritedFromArray
+ @ stdcall FreeInheritedFromArray(ptr long ptr)
  @ stdcall FreeSid(ptr)
  @ stub GetAccessPermissionsForObjectA
  @ stub GetAccessPermissionsForObjectW
@@ -244,7 +244,7 @@
  @ stub GetInformationCodeAuthzLevelW
  @ stub GetInformationCodeAuthzPolicyW
  @ stub GetInheritanceSourceA
- @ stub GetInheritanceSourceW
+ @ stdcall GetInheritanceSourceW (ptr long long long ptr long ptr ptr ptr ptr)
  @ stdcall GetKernelObjectSecurity(long long ptr long ptr)
  @ stdcall GetLengthSid(ptr)
  @ stub GetLocalManagedApplicationData
