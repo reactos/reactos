@@ -23,6 +23,7 @@
 #include <ctime>
 #include <vector>
 #include <cstdlib>
+#include <cstring>
 
 #ifndef _MSC_VER
 #include <sys/time.h>
