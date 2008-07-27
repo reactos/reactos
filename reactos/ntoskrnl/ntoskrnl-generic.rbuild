@@ -13,7 +13,7 @@
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
-	<if property="_ELF" value="1">
+	<if property="_ELF_" value="1">
 		<define name="_ELF_" />
 	</if>
 	<include base="cmlib">.</include>
