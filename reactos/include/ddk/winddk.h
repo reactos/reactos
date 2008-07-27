@@ -761,27 +761,6 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  Context);
 
 
-typedef struct _EXCEPTION_RECORD32
-{
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG ExceptionRecord;
-    ULONG ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
-
-typedef struct _EXCEPTION_RECORD64
-{
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG64 ExceptionRecord;
-    ULONG64 ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG __unusedAlignment;
-    ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
-
 typedef EXCEPTION_DISPOSITION
 (DDKAPI *PEXCEPTION_ROUTINE)(
   IN struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -5518,6 +5497,12 @@ KeGetCurrentIrql (
     VOID
     );
 
+NTKERNELAPI
+PRKTHREAD
+NTAPI
+KeGetCurrentThread(
+    VOID);
+
 #elif defined(__PowerPC__)
 
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5748,7 +5733,9 @@ InterlockedExchangeAdd(
  *   IN OUT PVOID VOLATILE  *Target,
  *   IN PVOID  Value)
  */
-#if !defined (_M_AMD64)
+#if defined (_M_AMD64)
+#define InterlockedExchangePointer _InterlockedExchangePointer
+#else
 #define InterlockedExchangePointer(Target, Value) \
   ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
 #endif
@@ -5760,12 +5747,13 @@ InterlockedExchangeAdd(
  *   IN PVOID  Exchange,
  *   IN PVOID  Comparand)
  */
-#if !defined (_M_AMD64)
+#if defined (_M_AMD64)
+#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
+#else
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
 #endif
 
-#if defined (_M_AMD64)
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 #define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
 #define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
