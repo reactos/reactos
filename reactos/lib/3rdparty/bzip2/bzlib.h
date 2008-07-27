@@ -112,7 +112,9 @@ typedef
 
 #ifdef _WIN32
 #   include <stdio.h>
-#   define WINAPI __stdcall
+#     ifndef WINAPI
+#       define WINAPI __stdcall
+#   endif
 #   ifdef small
       /* windows.h define small to char */
 #      undef small

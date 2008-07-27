@@ -59,9 +59,9 @@ __SEHGlobalUnwind:
 
 	push 0 // ReturnValue
 	push 0 // ExceptionRecord
-	push .RestoreRegisters // TargetIp
+//	push .RestoreRegisters // TargetIp
 	push rbx // TargetFrame
-	call [__SEHRtlUnwind]
+//	call [__SEHRtlUnwind]
 
 .RestoreRegisters:
 	pop rdi

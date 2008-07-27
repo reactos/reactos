@@ -5,6 +5,14 @@
 EXPORTS
 ;
 KeQuerySystemTime
+KfAcquireSpinLock
+KfReleaseSpinLock
+KeRaiseIrql
+KefAcquireSpinLockAtDpcLevel
+KefReleaseSpinLockFromDpcLevel
+KeInitializeSpinLock
+KeGetCurrentProcessorNumber
+RtlConvertUlongToLargeInteger
 ;
 ; original:
 CcCanIWrite

@@ -108,6 +108,14 @@
 				<!-- xi:include href="drivers/filesystems/ext2/ext2.rbuild" / -->
 			</directory>
 		</directory>
+		<directory name="network">
+			<directory name="ndis">
+				<xi:include href="drivers/network/ndis/ndis.rbuild" />
+			</directory>
+			<directory name="tcpip">
+				<xi:include href="drivers/network/tcpip/tcpip.rbuild" />
+			</directory>
+		</directory>
 		<directory name="storage">
 			<directory name="ide">
 				<directory name="atapi">
