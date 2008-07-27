@@ -134,10 +134,8 @@ private:
 	                      const IfableData& data,
 	                      const std::vector<LinkerFlag*>* linkerFlags,
 	                      std::set<const Define *>& used_defs );
-	void GenerateSourceMacros ( const char* assignmentOperation,
-	                            const IfableData& data );
-	void GenerateObjectMacros ( const char* assignmentOperation,
-	                            const IfableData& data );
+	void GenerateSourceMacros ( const IfableData& data );
+	void GenerateObjectMacros ( const IfableData& data );
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;

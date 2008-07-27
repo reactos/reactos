@@ -868,7 +868,6 @@ MingwModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUnit*>
 
 void
 MingwModuleHandler::GenerateSourceMacros (
-	const char* assignmentOperation,
 	const IfableData& data )
 {
 	size_t i;
@@ -879,9 +878,8 @@ MingwModuleHandler::GenerateSourceMacros (
 	{
 		fprintf (
 			fMakefile,
-			"%s %s",
-			sourcesMacro.c_str (),
-			assignmentOperation );
+			"%s =",
+			sourcesMacro.c_str () );
 		for ( i = 0; i < compilationUnits.size(); i++ )
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[i];
@@ -911,10 +909,10 @@ MingwModuleHandler::GenerateSourceMacros (
 
 void
 MingwModuleHandler::GenerateObjectMacros (
-	const char* assignmentOperation,
 	const IfableData& data )
 {
 	size_t i;
+	const char* assignmentOperation = "=";
 
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	vector<const FileLocation *> headers;
@@ -930,11 +928,12 @@ MingwModuleHandler::GenerateObjectMacros (
 				const FileLocation& compilationName = compilationUnit.GetFilename ();
 				const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
 				fprintf ( fMakefile,
-					"%s := %s $(%s)\n",
+					"%s := %s\n",
 					objectsMacro.c_str(),
-					backend->GetFullName ( *object_file ).c_str (),
-					objectsMacro.c_str() );
+					backend->GetFullName ( *object_file ).c_str () );
 				delete object_file;
+				assignmentOperation = "+=";
+				break;
 			}
 		}
 		fprintf (
@@ -1755,9 +1754,7 @@ MingwModuleHandler::GenerateSourceMacro ()
 {
 	sourcesMacro = ssprintf ( "%s_SOURCES", module.name.c_str ());
 
-	GenerateSourceMacros (
-		"=",
-		module.non_if_data );
+	GenerateSourceMacros ( module.non_if_data );
 
 	// future references to the macro will be to get its values
 	sourcesMacro = ssprintf ("$(%s)", sourcesMacro.c_str ());
@@ -1768,9 +1765,7 @@ MingwModuleHandler::GenerateObjectMacro ()
 {
 	objectsMacro = ssprintf ("%s_OBJS", module.name.c_str ());
 
-	GenerateObjectMacros (
-		"=",
-		module.non_if_data );
+	GenerateObjectMacros ( module.non_if_data );
 
 	// future references to the macro will be to get its values
 	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
