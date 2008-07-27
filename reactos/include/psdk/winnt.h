@@ -510,8 +510,6 @@ typedef DWORD FLONG;
 #define THREAD_DIRECT_IMPERSONATION	0x200
 #endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
-#define EXCEPTION_NONCONTINUABLE	1
-#define EXCEPTION_MAXIMUM_PARAMETERS 15
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
 #ifndef __NTDDK_H
 #define MUTANT_QUERY_STATE	0x0001
@@ -2069,16 +2067,28 @@ typedef struct _CONTEXT {
 	BYTE	ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
 #elif defined(__x86_64__)
-#define CONTEXT_AMD64   0x00100000
 
-#define CONTEXT_CONTROL   (CONTEXT_AMD64 | 0x0001)
-#define CONTEXT_INTEGER   (CONTEXT_AMD64 | 0x0002)
-#define CONTEXT_SEGMENTS  (CONTEXT_AMD64 | 0x0004)
-#define CONTEXT_FLOATING_POINT  (CONTEXT_AMD64 | 0x0008L)
-#define CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x0010L)
+
+#define CONTEXT_AMD64 0x100000
+
+#if !defined(RC_INVOKED)
+#define CONTEXT_CONTROL (CONTEXT_AMD64 | 0x1L)
+#define CONTEXT_INTEGER (CONTEXT_AMD64 | 0x2L)
+#define CONTEXT_SEGMENTS (CONTEXT_AMD64 | 0x4L)
+#define CONTEXT_FLOATING_POINT (CONTEXT_AMD64 | 0x8L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x10L)
+
 #define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
 #define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS)
 
+#define CONTEXT_EXCEPTION_ACTIVE 0x8000000
+#define CONTEXT_SERVICE_ACTIVE 0x10000000
+#define CONTEXT_EXCEPTION_REQUEST 0x40000000
+#define CONTEXT_EXCEPTION_REPORTING 0x80000000
+#endif
+
+#define INITIAL_MXCSR 0x1f80
+#define INITIAL_FPCSR 0x027f
 #define EXCEPTION_READ_FAULT    0
 #define EXCEPTION_WRITE_FAULT   1
 #define EXCEPTION_EXECUTE_FAULT 8
@@ -2192,7 +2202,25 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     DWORD64 LastBranchFromRip;
     DWORD64 LastExceptionToRip;
     DWORD64 LastExceptionFromRip;
-} CONTEXT;
+} CONTEXT, *PCONTEXT;
+
+#define RUNTIME_FUNCTION_INDIRECT 0x1
+
+  typedef struct _RUNTIME_FUNCTION {
+    DWORD BeginAddress;
+    DWORD EndAddress;
+    DWORD UnwindData;
+  } RUNTIME_FUNCTION,*PRUNTIME_FUNCTION;
+
+  typedef PRUNTIME_FUNCTION (*PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD64 ControlPc,PVOID Context);
+  typedef DWORD (*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(HANDLE Process,PVOID TableAddress,PDWORD Entries,PRUNTIME_FUNCTION *Functions);
+
+  #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
+
+  NTSYSAPI VOID __cdecl RtlRestoreContext (PCONTEXT ContextRecord,struct _EXCEPTION_RECORD *ExceptionRecord);
+  NTSYSAPI BOOLEAN __cdecl RtlAddFunctionTable(PRUNTIME_FUNCTION FunctionTable,DWORD EntryCount,DWORD64 BaseAddress);
+  NTSYSAPI BOOLEAN __cdecl RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,DWORD64 BaseAddress,DWORD Length,PGET_RUNTIME_FUNCTION_CALLBACK Callback,PVOID Context,PCWSTR OutOfProcessCallbackDll);
+  NTSYSAPI BOOLEAN __cdecl RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
 
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL	1L
@@ -2681,18 +2709,44 @@ typedef struct _CONTEXT {
 #error "undefined processor type"
 #endif
 typedef CONTEXT *PCONTEXT,*LPCONTEXT;
-typedef struct _EXCEPTION_RECORD {
-	DWORD ExceptionCode;
-	DWORD ExceptionFlags;
-	struct _EXCEPTION_RECORD *ExceptionRecord;
-	PVOID ExceptionAddress;
-	DWORD NumberParameters;
-	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD,*PEXCEPTION_RECORD,*LPEXCEPTION_RECORD;
-typedef struct _EXCEPTION_POINTERS {
-	PEXCEPTION_RECORD ExceptionRecord;
-	PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS,*PEXCEPTION_POINTERS,*LPEXCEPTION_POINTERS;
+
+#define EXCEPTION_NONCONTINUABLE	1
+#define EXCEPTION_MAXIMUM_PARAMETERS 15
+
+    typedef struct _EXCEPTION_RECORD {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      struct _EXCEPTION_RECORD *ExceptionRecord;
+      PVOID ExceptionAddress;
+      DWORD NumberParameters;
+      ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
+
+    typedef EXCEPTION_RECORD *PEXCEPTION_RECORD;
+
+    typedef struct _EXCEPTION_RECORD32 {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      DWORD ExceptionRecord;
+      DWORD ExceptionAddress;
+      DWORD NumberParameters;
+      DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD32,*PEXCEPTION_RECORD32;
+
+    typedef struct _EXCEPTION_RECORD64 {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      DWORD64 ExceptionRecord;
+      DWORD64 ExceptionAddress;
+      DWORD NumberParameters;
+      DWORD __unusedAlignment;
+      DWORD64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD64,*PEXCEPTION_RECORD64;
+
+    typedef struct _EXCEPTION_POINTERS {
+      PEXCEPTION_RECORD ExceptionRecord;
+      PCONTEXT ContextRecord;
+    } EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
 
 #ifdef _M_PPC
 #define LARGE_INTEGER_ORDER(x) x HighPart; DWORD LowPart;
@@ -3044,6 +3098,12 @@ RtlCaptureStackBackTrace(
     OUT PDWORD BackTraceHash OPTIONAL
 );
 
+NTSYSAPI
+VOID
+NTAPI
+RtlCaptureContext(
+    PCONTEXT ContextRecord
+);
 
 NTSYSAPI
 PVOID
@@ -3498,14 +3558,75 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 	WORD Hint;
 	BYTE Name[1];
 } IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
-typedef struct _IMAGE_THUNK_DATA {
-	union {
-		ULONG ForwarderString;
-		ULONG Function;
-		DWORD Ordinal;
-		ULONG AddressOfData;
-	} u1;
-} IMAGE_THUNK_DATA,*PIMAGE_THUNK_DATA;
+#include "pshpack8.h"
+typedef struct _IMAGE_THUNK_DATA64 {
+    union {
+        ULONGLONG ForwarderString;
+        ULONGLONG Function;
+        ULONGLONG Ordinal;
+        ULONGLONG AddressOfData;
+    } u1;
+} IMAGE_THUNK_DATA64;
+typedef IMAGE_THUNK_DATA64 *PIMAGE_THUNK_DATA64;
+#include "poppack.h"
+
+typedef struct _IMAGE_THUNK_DATA32 {
+    union {
+        DWORD ForwarderString;
+        DWORD Function;
+        DWORD Ordinal;
+        DWORD AddressOfData;
+    } u1;
+} IMAGE_THUNK_DATA32;
+typedef IMAGE_THUNK_DATA32 *PIMAGE_THUNK_DATA32;
+
+#define IMAGE_ORDINAL_FLAG64 0x8000000000000000
+#define IMAGE_ORDINAL_FLAG32 0x80000000
+#define IMAGE_ORDINAL64(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_ORDINAL32(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_SNAP_BY_ORDINAL64(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG64)!=0)
+#define IMAGE_SNAP_BY_ORDINAL32(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG32)!=0)
+
+typedef VOID
+(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID DllHandle,DWORD Reason,PVOID Reserved);
+
+typedef struct _IMAGE_TLS_DIRECTORY64 {
+    ULONGLONG StartAddressOfRawData;
+    ULONGLONG EndAddressOfRawData;
+    ULONGLONG AddressOfIndex;
+    ULONGLONG AddressOfCallBacks;
+    DWORD SizeOfZeroFill;
+    DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY64;
+typedef IMAGE_TLS_DIRECTORY64 *PIMAGE_TLS_DIRECTORY64;
+
+typedef struct _IMAGE_TLS_DIRECTORY32 {
+    DWORD StartAddressOfRawData;
+    DWORD EndAddressOfRawData;
+    DWORD AddressOfIndex;
+    DWORD AddressOfCallBacks;
+    DWORD SizeOfZeroFill;
+    DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY32;
+typedef IMAGE_TLS_DIRECTORY32 *PIMAGE_TLS_DIRECTORY32;
+#ifdef _WIN64
+#define IMAGE_ORDINAL_FLAG IMAGE_ORDINAL_FLAG64
+#define IMAGE_ORDINAL(Ordinal) IMAGE_ORDINAL64(Ordinal)
+typedef IMAGE_THUNK_DATA64 IMAGE_THUNK_DATA;
+typedef PIMAGE_THUNK_DATA64 PIMAGE_THUNK_DATA;
+#define IMAGE_SNAP_BY_ORDINAL(Ordinal) IMAGE_SNAP_BY_ORDINAL64(Ordinal)
+typedef IMAGE_TLS_DIRECTORY64 IMAGE_TLS_DIRECTORY;
+typedef PIMAGE_TLS_DIRECTORY64 PIMAGE_TLS_DIRECTORY;
+#else
+#define IMAGE_ORDINAL_FLAG IMAGE_ORDINAL_FLAG32
+#define IMAGE_ORDINAL(Ordinal) IMAGE_ORDINAL32(Ordinal)
+typedef IMAGE_THUNK_DATA32 IMAGE_THUNK_DATA;
+typedef PIMAGE_THUNK_DATA32 PIMAGE_THUNK_DATA;
+#define IMAGE_SNAP_BY_ORDINAL(Ordinal) IMAGE_SNAP_BY_ORDINAL32(Ordinal)
+typedef IMAGE_TLS_DIRECTORY32 IMAGE_TLS_DIRECTORY;
+typedef PIMAGE_TLS_DIRECTORY32 PIMAGE_TLS_DIRECTORY;
+#endif
+
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	_ANONYMOUS_UNION union {
 		DWORD Characteristics;
@@ -3527,14 +3648,6 @@ typedef struct _IMAGE_BOUND_FORWARDER_REF {
 	WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
 typedef void(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID,DWORD,PVOID);
-typedef struct _IMAGE_TLS_DIRECTORY {
-	DWORD StartAddressOfRawData;
-	DWORD EndAddressOfRawData;
-	PDWORD AddressOfIndex;
-	PIMAGE_TLS_CALLBACK *AddressOfCallBacks;
-	DWORD SizeOfZeroFill;
-	DWORD Characteristics;
-} IMAGE_TLS_DIRECTORY,*PIMAGE_TLS_DIRECTORY;
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;

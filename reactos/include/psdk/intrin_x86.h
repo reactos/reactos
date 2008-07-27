@@ -813,10 +813,17 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotl16(const un
 }
 
 #ifndef __MSVCRT__
-static __inline__ __attribute__((always_inline)) unsigned long _rotl(const unsigned long value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned long _rotl(const unsigned int value, const unsigned char shift)
 {
 	unsigned long retval;
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	return retval;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned long _rotr(const unsigned int value, const unsigned char shift)
+{
+	unsigned long retval;
+	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #endif
