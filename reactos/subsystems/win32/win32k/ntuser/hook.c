@@ -913,10 +913,6 @@ NtUserCallNextHookEx(
    
    NextObj = IntGetNextHook(HookObj);
    ClientInfo->phkCurrent = NextObj; // Preset next hook from list.
-   if (HookObj->HookId == WH_GETMESSAGE)
-   {
-     DPRINT1(" WH_GETMESSAGE, Hook %x NextHook %x \n", HookObj, NextObj);
-   }
    UserCallNextHookEx( HookObj, Code, wParam, lParam, Ansi);
    UserDereferenceObject(HookObj);
 

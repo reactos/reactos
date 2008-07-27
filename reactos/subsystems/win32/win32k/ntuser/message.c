@@ -2114,7 +2114,7 @@ NtUserMessageCall(
             CWP.message = Msg;
             CWP.wParam  = wParam;
             CWP.lParam  = lParam;
-            DPRINT1("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+            DPRINT("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
      
             lResult = co_IntCallHookProc( Hook->HookId,
                                           HC_ACTION,
