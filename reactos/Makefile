@@ -183,7 +183,7 @@ endif
 else
 HOST=mingw32-linux
 HOST_CFLAGS+=-fshort-wchar -D__LINUX__
-HOST_CPPFLAGS+=-fshort-wchar
+HOST_CPPFLAGS+=-fshort-wchar -D__LINUX__
 endif
 endif
 
