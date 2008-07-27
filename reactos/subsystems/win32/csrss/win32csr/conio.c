@@ -36,7 +36,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS FASTCALL
+NTSTATUS FASTCALL
 ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console)
 {
   PCSRSS_CONSOLE ProcessConsole = ProcessData->Console;
@@ -961,6 +961,7 @@ ConioDeleteConsole(Object_t *Object)
   CloseHandle(Console->ActiveEvent);
   DeleteCriticalSection(&Console->Header.Lock);
   RtlFreeUnicodeString(&Console->Title);
+  IntDeleteAllAliases(Console->Aliases);
   HeapFree(Win32CsrApiHeap, 0, Console);
 }
 

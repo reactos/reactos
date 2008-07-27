@@ -217,7 +217,7 @@ AddConsoleAliasW (LPCWSTR lpSource,
 
   Request->Data.AddConsoleAlias.TargetLength = TargetLength;
 
-  CsrRequest = MAKE_CSR_API(ADD_CONSOLE_ALIAS, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(ADD_CONSOLE_ALIAS, CSR_CONSOLE);
   Status = CsrClientCallServer(Request,
                    NULL,
 			       CsrRequest,
@@ -342,7 +342,7 @@ GetConsoleAliasW (LPWSTR	lpSource,
 
   DPRINT("GetConsoleAliasW entered lpSource %S lpExeName %S\n", lpSource, lpExeName);
 
-  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIAS, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIAS, CSR_CONSOLE);
 
   ExeLength = wcslen(lpExeName) + 1;
   SourceLength = wcslen(lpSource) + 1;
@@ -458,7 +458,7 @@ GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
     return 0;
   }
 
-  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES, CSR_CONSOLE);
   CsrAllocateMessagePointer(CaptureBuffer,
                             ExeNameBufferLength,
                             (PVOID*)&Request.Data.GetConsoleAliasesExes.ExeNames);
@@ -519,7 +519,7 @@ GetConsoleAliasExesLengthW (VOID)
 
   DPRINT("GetConsoleAliasExesLengthW entered\n");
 
-  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CSR_CONSOLE);
   Request.Data.GetConsoleAliasesExesLength.Length = 0;
 
 
@@ -575,7 +575,7 @@ GetConsoleAliasesW (LPWSTR AliasBuffer,
   if (!dwLength || dwLength > AliasBufferLength)
       return 0;
 
-  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES, CSR_CONSOLE);
   Request.Data.GetAllConsoleAlias.AliasBuffer = AliasBuffer;
   Request.Data.GetAllConsoleAlias.AliasBufferLength = AliasBufferLength;
   Request.Data.GetAllConsoleAlias.lpExeName = ExeName;
@@ -639,7 +639,7 @@ GetConsoleAliasesLengthW (LPWSTR lpExeName)
 
   DPRINT("GetConsoleAliasesLengthW entered\n");
 
-  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES_LENGTH, CSR_NATIVE);
+  CsrRequest = MAKE_CSR_API(GET_ALL_CONSOLE_ALIASES_LENGTH, CSR_CONSOLE);
   Request.Data.GetAllConsoleAliasesLength.lpExeName = lpExeName;
   Request.Data.GetAllConsoleAliasesLength.Length = 0;
 

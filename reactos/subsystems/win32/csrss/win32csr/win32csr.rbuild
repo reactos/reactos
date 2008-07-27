@@ -17,6 +17,7 @@
 	<library>psapi</library>
 	<library>msvcrt</library>
 	<pch>w32csr.h</pch>
+	<file>alias.c</file>
 	<file>conio.c</file>
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>

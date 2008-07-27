@@ -17,7 +17,6 @@
 			<file>process.c</file>
 			<file>user.c</file>
 			<file>wapi.c</file>
-			<file>alias.c</file>
 		</directory>
 		<pch>csrss.h</pch>
 		<file>csrss.c</file>
