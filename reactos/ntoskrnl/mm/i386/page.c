@@ -145,9 +145,8 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    PUSHORT LdtDescriptor;
    ULONG LdtBase;
-   PULONG Pde;
    PULONG PageDir;
-   ULONG i, j;
+   ULONG i;
 
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
 
@@ -168,28 +167,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
     {
         if (PageDir[i] != 0)
         {
-            DPRINT1("Pde for %08x - %08x is not freed, RefCount %d\n",
-                    i * 4 * 1024 * 1024, (i + 1) * 4 * 1024 * 1024 - 1,
-                    ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable[i]);
-            Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(PageDir[i]));
-            for (j = 0; j < 1024; j++)
-            {
-                if(Pde[j] != 0)
-                {
-                    if (Pde[j] & PA_PRESENT)
-                    {
-                        DPRINT1("Page at %08x is not freed\n",
-                                i * 4 * 1024 * 1024 + j * PAGE_SIZE);
-                    }
-                    else
-                    {
-                        DPRINT1("Swapentry %x at %x is not freed\n",
-                                Pde[j], i * 4 * 1024 * 1024 + j * PAGE_SIZE);
-                        
-                    }
-                }
-            }
-            MmDeleteHyperspaceMapping(Pde);
+            MiZeroPage(PTE_TO_PFN(PageDir[i]));
             MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
         }
     }
@@ -604,25 +582,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
       {
          *Page = Pfn;
       }
-   /*
-    * Decrement the reference count for this page table.
-    */
-   if (Process != NULL && WasValid &&
-       ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
-       Address < MmSystemRangeStart)
-   {
-      PUSHORT Ptrc;
-      ULONG Idx;
-
-      Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
-      Idx = ADDR_TO_PAGE_TABLE(Address);
-
-      Ptrc[Idx]--;
-      if (Ptrc[Idx] == 0)
-      {
-         MmFreePageTable(Process, Address);
-      }
-   }
 }
 
 VOID
@@ -650,25 +609,6 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
       Pte = InterlockedExchangeUL(Pt, 0);
 
       MiFlushTlb(Pt, Address);
-
-      /*
-       * Decrement the reference count for this page table.
-       */
-      if (Process != NULL && Pte &&
-          ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
-          Address < MmSystemRangeStart)
-      {
-         PUSHORT Ptrc;
-
-         Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
-
-         Ptrc[ADDR_TO_PAGE_TABLE(Address)]--;
-         if (Ptrc[ADDR_TO_PAGE_TABLE(Address)] == 0)
-         {
-            MmFreePageTable(Process, Address);
-         }
-      }
-
 
       /*
        * Return some information to the caller
@@ -971,17 +911,6 @@ MmCreatePageFileMapping(PEPROCESS Process,
          MmUnmapPageTable(Pt);
       }
 
-   if (Process != NULL &&
-       ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
-       Address < MmSystemRangeStart)
-   {
-     PUSHORT Ptrc;
-     ULONG Idx;
-
-     Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
-     Idx = ADDR_TO_PAGE_TABLE(Address);
-     Ptrc[Idx]++;
-   }
    return(STATUS_SUCCESS);
 }
 
@@ -1092,16 +1021,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
          }
 	 (void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-         if (Address < MmSystemRangeStart &&
-	     ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
-             Attributes & PA_PRESENT)
-         {
-            PUSHORT Ptrc;
-
-            Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
-
-            Ptrc[ADDR_TO_PAGE_TABLE(Addr)]++;
-         }
          if (Pte != 0)
          {
             if (Address > MmSystemRangeStart ||
@@ -1409,13 +1328,6 @@ MmInitGlobalKernelPageDirectory(VOID)
 	    }
          }
       }
-}
-
-ULONG
-NTAPI
-MiGetUserPageDirectoryCount(VOID)
-{
-   return ADDR_TO_PDE_OFFSET(MmSystemRangeStart);
 }
 
 VOID

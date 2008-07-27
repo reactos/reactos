@@ -39,8 +39,6 @@ NTAPI
 MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
-    ULONG Count;
-    
     AddressSpace->MemoryAreaRoot = NULL;
 
     if (Process != NULL)
@@ -48,19 +46,12 @@ MmInitializeAddressSpace(PEPROCESS Process,
         AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;
         AddressSpace->Process = Process;
         AddressSpace->Lock = (PEX_PUSH_LOCK)&Process->AddressCreationLock;
-        ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
-        Count = MiGetUserPageDirectoryCount();
-        AddressSpace->PageTableRefCountTable = ExAllocatePoolWithTag(NonPagedPool,
-                                                                     Count * sizeof(USHORT),
-                                                                     TAG_PTRC);
-        RtlZeroMemory(AddressSpace->PageTableRefCountTable, Count * sizeof(USHORT));
-        
+        ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);        
     }
     else
     {
         AddressSpace->LowestAddress = MmSystemRangeStart;
         AddressSpace->Process = NULL;
-        AddressSpace->PageTableRefCountTable = NULL;
         AddressSpace->Lock = (PEX_PUSH_LOCK)&PsGetCurrentProcess()->AddressCreationLock;
         ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
     }
@@ -72,11 +63,6 @@ NTSTATUS
 NTAPI
 MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-    if (AddressSpace->PageTableRefCountTable)
-    {
-        ExFreePool(AddressSpace->PageTableRefCountTable);
-    }
-    
     return STATUS_SUCCESS;
 }
 

@@ -255,7 +255,6 @@ typedef struct _MADDRESS_SPACE
     PMEMORY_AREA MemoryAreaRoot;
     PVOID LowestAddress;
     PEPROCESS Process;
-    PUSHORT PageTableRefCountTable;
     PEX_PUSH_LOCK Lock;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
