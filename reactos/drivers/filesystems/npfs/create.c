@@ -255,9 +255,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 				if (ClientCcb->Data)
 					ExFreePool(ClientCcb->Data);
 				KeUnlockMutex(&Fcb->CcbListLock);
-				Irp->IoStatus.Status = STATUS_PIPE_BUSY;
+				Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
 				IoCompleteRequest(Irp, IO_NO_INCREMENT);
-				return STATUS_PIPE_BUSY;
+				return STATUS_OBJECT_PATH_NOT_FOUND;
 			}
 		}
 		else
@@ -368,9 +368,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		{
 			DPRINT("Out of instances.\n");
 			ExFreePool(Ccb);
-			Irp->IoStatus.Status = STATUS_PIPE_BUSY;
+			Irp->IoStatus.Status = STATUS_INSTANCE_NOT_AVAILABLE;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
-			return STATUS_PIPE_BUSY;
+			return STATUS_INSTANCE_NOT_AVAILABLE;
 		}
 
 		/* FIXME: Check pipe modes also! */
