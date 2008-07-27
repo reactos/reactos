@@ -674,6 +674,7 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
     UINT Length;
     DWORD dwName;
     int Pages;
+    CLSID clsid;
 
     pOffset = wcsrchr(wFileName, L'.');
     if (!pOffset)
@@ -681,8 +682,16 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
         Length = wcslen(szName);
         if (Length >=94)
            return 0;
-        wcscpy(szName, L"CLSID\\");
-        wcscpy(&szName[6], wFileName);
+
+        if (CLSIDFromString(wFileName, &clsid) == NOERROR)
+        {
+           wcscpy(szName, L"CLSID\\");
+           wcscpy(&szName[6], wFileName);
+        }
+        else
+        {
+           wcscpy(szName, wFileName);
+        }
     }
     else
     {
@@ -767,12 +776,17 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
         strcpyW(wFileName, lpf);
     }
 
-    if (PathIsDirectoryW(wFileName) || strlenW(wFileName) == 3)
+    if (PathIsDirectoryW(wFileName))
     {
-        FIXME("directory / drive resources are missing\n");
+        FIXME("directory resources are missing\n");
         return FALSE;
     }
-    
+
+    if (wcslen(wFileName) == 3)
+    {
+        return SH_ShowDriveProperties(wFileName);
+    }
+
     wcscpy(szTemp, wFileName);
     pFileName = wcsrchr(szTemp, '\\');
     if (pFileName)
