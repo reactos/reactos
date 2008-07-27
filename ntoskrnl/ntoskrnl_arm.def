@@ -187,10 +187,10 @@ FsRtlCurrentBatchOplock
 FsRtlDeleteKeyFromTunnelCache
 FsRtlDeleteTunnelCache
 FsRtlDeregisterUncProvider
-FsRtlDissectDbcs
-FsRtlDissectName
-FsRtlDoesDbcsContainWildCards
-FsRtlDoesNameContainWildCards
+FsRtlDissectDbcs@16
+FsRtlDissectName@16
+FsRtlDoesDbcsContainWildCards@4
+FsRtlDoesNameContainWildCards@4
 FsRtlFastCheckLockForRead
 FsRtlFastCheckLockForWrite
 FsRtlFastUnlockAll
