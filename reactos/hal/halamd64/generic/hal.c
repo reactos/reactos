@@ -47,22 +47,6 @@ ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
     0xFFFF0019, // IRQL 13
     0xFFFE0019, // IRQL 14
     0xFFFC0019, // IRQL 15
-    0xFFF80019, // IRQL 16
-    0xFFF00019, // IRQL 17
-    0xFFE00019, // IRQL 18
-    0xFFC00019, // IRQL 19
-    0xFF800019, // IRQL 20
-    0xFF000019, // IRQL 21
-    0xFE000019, // IRQL 22
-    0xFC000019, // IRQL 23
-    0xF0000019, // IRQL 24
-    0x80000019, // IRQL 25
-    0x19,       // IRQL 26
-    0x18,       // IRQL 27 PROFILE_LEVEL
-    0x10,       // IRQL 28 CLOCK2_LEVEL
-    0x00,       // IRQL 29 IPI_LEVEL
-    0x00,       // IRQL 30 POWER_LEVEL
-    0x00,       // IRQL 31 HIGH_LEVEL
 };
 
 UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
@@ -71,7 +55,7 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
     APC_LEVEL,     // INT 1 SOFTWARE INTERRUPT
     DISPATCH_LEVEL,// INT 2 COMM RX
     IPI_LEVEL,     // INT 3 COMM TX
-    CLOCK2_LEVEL,  // INT 4 TIMER 0
+    CLOCK_LEVEL,  // INT 4 TIMER 0
     3,
     4,
     5,
@@ -82,22 +66,7 @@ UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
     10,
     11,
     12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21,
-    22,
-    23,
-    24,
-    25,
-    26,
-    26,
-    26
+    13
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -145,34 +114,6 @@ HalSetProfileInterval(IN ULONG_PTR Interval)
     KEBUGCHECK(0);
     return Interval;
 }
-
-VOID
-FASTCALL
-ExAcquireFastMutex(
-  PFAST_MUTEX FastMutex)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-FASTCALL
-ExReleaseFastMutex(
-  PFAST_MUTEX FastMutex)
-{
-  UNIMPLEMENTED;
-}
-
-
-BOOLEAN FASTCALL
-ExTryToAcquireFastMutex(
-  PFAST_MUTEX FastMutex)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
 
 NTSTATUS
 NTAPI
@@ -482,93 +423,29 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 ULONG
 HalGetInterruptSource(VOID)
 {
-    ULONG InterruptStatus;
-    
-    //
-    // Get the interrupt status, and return the highest bit set
-    //
-    InterruptStatus = READ_REGISTER_ULONG(VIC_INT_STATUS);
-    return 31 - _clz(InterruptStatus);
+    KEBUGCHECK(0);
+    return 0;
 }
 
 VOID
 HalpClockInterrupt(VOID)
 {   
-    //
-    // Clear the interrupt
-    //
-    ASSERT(KeGetCurrentIrql() == CLOCK2_LEVEL);
-    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);
-    
-    //
-    // FIXME: Update HAL Perf counters
-    //
-    
-    //
-    // FIXME: Check if someone changed the clockrate
-    //
-    
-    //
-    // Call the kernel
-    //
-    KeUpdateSystemTime(KeGetCurrentThread()->TrapFrame,
-                       CLOCK2_LEVEL,
-                       HalpCurrentTimeIncrement);
-    
-    //
-    // We're done
-    //
+    KEBUGCHECK(0);
+    return;
 }
 
 VOID
 HalpStallInterrupt(VOID)
 {   
-    //
-    // Clear the interrupt
-    //
-    WRITE_REGISTER_ULONG(TIMER0_INT_CLEAR, 1);
+    KEBUGCHECK(0);
+    return;
 }
 
 VOID
 HalpInitializeInterrupts(VOID)
 {
-    PKPCR Pcr = (PKPCR)KeGetPcr();
-    ULONG ClockInterval;
-    SP804_CONTROL_REGISTER ControlRegister;
-    
-    //
-    // Fill out the IRQL mappings
-    //
-    RtlCopyMemory(Pcr->IrqlTable, HalpIrqlTable, sizeof(Pcr->IrqlTable));
-    RtlCopyMemory(Pcr->IrqlMask, HalpMaskTable, sizeof(Pcr->IrqlMask));
-    
-    //
-    // Setup the clock and profile interrupt
-    //
-    Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt;
-    
-    //
-    // Configure the interval to 10ms
-    //  (INTERVAL (10ms) * TIMCLKfreq (1MHz))
-    // --------------------------------------- == 10^4
-    //  (TIMCLKENXdiv (1) * PRESCALEdiv (1))
-    //
-    ClockInterval = 0x2710;
-    
-    //
-    // Configure the timer
-    //
-    ControlRegister.AsUlong = 0;
-    ControlRegister.Wide = TRUE;
-    ControlRegister.Periodic = TRUE;
-    ControlRegister.Interrupt = TRUE;
-    ControlRegister.Enabled = TRUE;
-    
-    //
-    // Enable the timer
-    //
-    WRITE_REGISTER_ULONG(TIMER0_LOAD, ClockInterval);
-    WRITE_REGISTER_ULONG(TIMER0_CONTROL, ControlRegister.AsUlong);
+    KEBUGCHECK(0);
+    return;
 }
 
 /*
@@ -579,91 +456,8 @@ NTAPI
 HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    
-    //
-    // Check the boot phase
-    //
-    if (!BootPhase)
-    {
-        //
-        // Get command-line parameters
-        //
-        HalpGetParameters(LoaderBlock);
-        
-#if DBG
-        //
-        // Checked HAL requires checked kernel
-        //
-        if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
-        {
-            //
-            // No match, bugcheck
-            //
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
-        }
-#else
-        //
-        // Release build requires release HAL
-        //
-        if (Prcb->BuildType & PRCB_BUILD_DEBUG)
-        {
-            //
-            // No match, bugcheck
-            //
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
-        
-#ifdef CONFIG_SMP
-        //
-        // SMP HAL requires SMP kernel
-        //
-        if (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR)
-        {
-            //
-            // No match, bugcheck
-            //
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
-        
-        //
-        // Validate the PRCB
-        //
-        if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
-        {
-            //
-            // Validation failed, bugcheck
-            //
-            KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
-        }
-        
-        //
-        // Setup time increments to 10ms and 1ms
-        //
-        HalpCurrentTimeIncrement = 100000;
-        HalpNextTimeIncrement = 100000;
-        HalpNextIntervalCount = 0;
-        KeSetTimeIncrement(100000, 10000);
-        
-        //
-        // Initialize interrupts
-        //
-        HalpInitializeInterrupts();
-    }
-    else if (BootPhase == 1)
-    {
-        //
-        // Switch to real clock interrupt
-        //
-        PCR->InterruptRoutine[CLOCK2_LEVEL] = HalpClockInterrupt;
-    }
-    
-    //
-    // All done, return
-    //
-    return TRUE;
+    KEBUGCHECK(0);
+    return;
 }
 
 
@@ -704,23 +498,7 @@ BOOLEAN
 NTAPI
 HalQueryRealTimeClock(IN PTIME_FIELDS Time)
 {
-    LARGE_INTEGER LargeTime;
-    ULONG Seconds;
-    
-    //
-    // Query the RTC value
-    //
-    Seconds = READ_REGISTER_ULONG(RTC_DATA);
-    
-    //
-    // Convert to time
-    //
-    RtlSecondsSince1970ToTime(Seconds, &LargeTime);
-    
-    //
-    // Convert to time-fields
-    //
-    RtlTimeToTimeFields(&LargeTime, Time);
+    KEBUGCHECK(0);
     return TRUE;
 }
 
@@ -746,7 +524,7 @@ HalReportResourceUsage(VOID)
 VOID
 NTAPI
 HalRequestIpi(
-  ULONG Unknown)
+    KAFFINITY TargetSet)
 {
   UNIMPLEMENTED;
 }
@@ -756,20 +534,16 @@ VOID
 FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Request)
 {
-    //
-    // Force a software interrupt
-    //
-    WRITE_REGISTER_ULONG(VIC_SOFT_INT, 1 << Request);
+    KEBUGCHECK(0);
+    return;
 }
 
 VOID
 FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Request)
 {    
-    //
-    // Clear a software interrupt
-    //
-    WRITE_REGISTER_ULONG(VIC_SOFT_INT_CLEAR, 1 << Request);
+    KEBUGCHECK(0);
+    return;
 }
 
 VOID
@@ -1024,245 +798,27 @@ VOID
 NTAPI
 KeStallExecutionProcessor(IN ULONG Microseconds)
 {
-    SP804_CONTROL_REGISTER ControlRegister;
-    
-    //
-    // Enable the timer
-    //
-    WRITE_REGISTER_ULONG(TIMER1_LOAD, Microseconds);
-    
-    //
-    // Configure the timer
-    //
-    ControlRegister.AsUlong = 0;
-    ControlRegister.OneShot = TRUE;
-    ControlRegister.Wide = TRUE;
-    ControlRegister.Periodic = TRUE;
-    ControlRegister.Enabled = TRUE;
-    WRITE_REGISTER_ULONG(TIMER1_CONTROL, ControlRegister.AsUlong);
-    
-    //
-    // Now we will loop until the timer reached 0
-    //
-    while (READ_REGISTER_ULONG(TIMER1_VALUE));
+  UNIMPLEMENTED;
+  return;
 }
 
 VOID
 FASTCALL
 KfLowerIrql(IN KIRQL NewIrql)
 {
-    ULONG InterruptMask;
-    ARM_STATUS_REGISTER Flags;
-    PKPCR Pcr = (PKPCR)KeGetPcr();
-    
-    //
-    // Validate the new IRQL
-    //
-    Flags = KeArmStatusRegisterGet();
-    _disable();
-    ASSERT(NewIrql <= Pcr->CurrentIrql);
-    
-    //
-    // IRQLs are internally 8 bits
-    //
-    NewIrql &= 0xFF;
-    
-    //
-    // Setup the interrupt mask for this IRQL
-    //
-    InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-//    DPRINT1("[LOWER] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
-    
-    //
-    // Clear interrupts associated to the old IRQL
-    //
-    WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
-    
-    //
-    // Set the new interrupt mask
-    // PL190 VIC support only for now
-    //
-    WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
-    
-    //
-    // Save the new IRQL
-    //
-    Pcr->CurrentIrql = NewIrql;
-    if (!Flags.IrqDisable) _enable();
+  UNIMPLEMENTED;
+  return;
 }
 
 KIRQL
 FASTCALL
 KfRaiseIrql(IN KIRQL NewIrql)
 {
-    KIRQL OldIrql;
-    ULONG InterruptMask;
-    ARM_STATUS_REGISTER Flags;
-    PKPCR Pcr = (PKPCR)KeGetPcr();
-    
-    //
-    // Save the current IRQL
-    //
-    Flags = KeArmStatusRegisterGet();
-    _disable();
-    OldIrql = Pcr->CurrentIrql;
-    
-    //
-    // IRQLs are internally 8 bits
-    //
-    NewIrql &= 0xFF;
-    
-    //
-    // Setup the interrupt mask for this IRQL
-    //
-    InterruptMask = KeGetPcr()->IrqlTable[NewIrql];
-  //  DPRINT1("[RAISE] IRQL: %d InterruptMask: %lx\n", NewIrql, InterruptMask);
-    ASSERT(NewIrql >= OldIrql);
-    
-    //
-    // Clear interrupts associated to the old IRQL
-    //
-    WRITE_REGISTER_ULONG(VIC_INT_CLEAR, 0xFFFFFFFF);
-    
-    //
-    // Set the new interrupt mask
-    // PL190 VIC support only for now
-    //
-    WRITE_REGISTER_ULONG(VIC_INT_ENABLE, InterruptMask);
-    
-    //
-    // Save the new IRQL
-    //
-    Pcr->CurrentIrql = NewIrql;
-    if (!Flags.IrqDisable) _enable();
-    return OldIrql;
-}
-
-VOID
-NTAPI
-READ_PORT_BUFFER_UCHAR(
-  PUCHAR Port,
-  PUCHAR Buffer,
-  ULONG Count)
-{
   UNIMPLEMENTED;
+  return;
 }
 
 
-VOID
-NTAPI
-READ_PORT_BUFFER_ULONG(
-  PULONG Port,
-  PULONG Buffer,
-  ULONG Count)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-READ_PORT_BUFFER_USHORT(
-  PUSHORT Port,
-  PUSHORT Buffer,
-  ULONG Count)
-{
-  UNIMPLEMENTED;
-}
-
-
-UCHAR
-NTAPI
-READ_PORT_UCHAR(
-  PUCHAR Port)
-{
-  UNIMPLEMENTED;
-
-  return 0;
-}
-
-
-ULONG
-NTAPI
-READ_PORT_ULONG(
-  PULONG Port)
-{
-  UNIMPLEMENTED;
-
-  return 0;
-}
-
-
-USHORT
-NTAPI
-READ_PORT_USHORT(
-  PUSHORT Port)
-{
-  UNIMPLEMENTED;
-
-  return 0;
-}
-
-
-VOID
-NTAPI
-WRITE_PORT_BUFFER_UCHAR(
-  PUCHAR Port,
-  PUCHAR Buffer,
-  ULONG Count)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-WRITE_PORT_BUFFER_USHORT(
-  PUSHORT Port,
-  PUSHORT Buffer,
-  ULONG Count)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-WRITE_PORT_BUFFER_ULONG(
-  PULONG Port,
-  PULONG Buffer,
-  ULONG Count)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-WRITE_PORT_UCHAR(
-  PUCHAR Port,
-  UCHAR Value)
-{
-  UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-WRITE_PORT_ULONG(
-  PULONG Port,
-  ULONG Value)
-{
-  UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-WRITE_PORT_USHORT(
-  PUSHORT Port,
-  USHORT Value)
-{
-  UNIMPLEMENTED;
-}
 
 KIRQL
 KeRaiseIrqlToDpcLevel(VOID)
@@ -1288,59 +844,22 @@ BOOLEAN HalpTestCleanSupported;
 VOID
 HalpIdentifyProcessor(VOID)
 {
-    ARM_ID_CODE_REGISTER IdRegister;
-
-    //
-    // Don't do it again
-    //
-    HalpProcessorIdentified = TRUE;
-    
-    //
-    // Read the ID Code
-    //
-    IdRegister = KeArmIdCodeRegisterGet();
-    
-    //
-    // Architecture "6" CPUs support test-and-clean (926EJ-S and 1026EJ-S)
-    //
-    HalpTestCleanSupported = (IdRegister.Architecture == 6);
+  UNIMPLEMENTED;
+  return;
 }
 
 VOID
 HalSweepDcache(VOID)
 {
-    //
-    // We get called very early on, before HalInitSystem or any of the Hal*
-    // processor routines, so we need to figure out what CPU we're on.
-    //
-    if (!HalpProcessorIdentified) HalpIdentifyProcessor();
-    
-    //
-    // Check if we can do it the ARMv5TE-J way
-    //
-    if (HalpTestCleanSupported)
-    {
-        //
-        // Test, clean, flush D-Cache
-        //
-        __asm__ __volatile__ ("1: mrc p15, 0, pc, c7, c14, 3; bne 1b");
-    }
-    else
-    {
-        //
-        // We need to do it it by set/way
-        //
-        UNIMPLEMENTED;
-    }
+  UNIMPLEMENTED;
+  return;
 }
 
 VOID
 HalSweepIcache(VOID)
 {
-    //
-    // All ARM cores support the same Icache flush command, no need for HAL work
-    //
-    KeArmFlushIcache();
+  UNIMPLEMENTED;
+  return;
 }
 
 /*
@@ -1351,8 +870,8 @@ KIRQL
 NTAPI
 KeGetCurrentIrql(VOID)
 {
-    /* Return IRQL */
-    return PCR->CurrentIrql;
+  UNIMPLEMENTED;
+  return;
 }
 
 /*

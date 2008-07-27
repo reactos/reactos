@@ -2,17 +2,11 @@
 #define __INTERNAL_HAL_HAL_H
 
 //
-// ARM Headers
+// amd64 Headers
 //
-#include <internal/arm/ke.h>
-#include <internal/arm/intrin_i.h>
+#include <internal/amd64/ke.h>
+#include <internal/amd64/intrin_i.h>
 
-//
-// Versatile Peripherals
-//
-#include <peripherals/pl011.h>
-#include <peripherals/pl190.h>
-#include <peripherals/sp804.h>
 
 //
 // WDK Hack
