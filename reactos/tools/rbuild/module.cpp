@@ -1128,13 +1128,17 @@ Module::GetDefaultModuleEntrypoint () const
 		case KeyboardLayout:
 		case KernelModeDLL:
 		case KernelModeDriver:
+            if (Environment::GetArch() == "arm") return "DriverEntry";
 			return "DriverEntry@8";
 		case NativeDLL:
-			return "DllMainCRTStartup@12";
+            if (Environment::GetArch() == "arm") return "DllMainCRTStartup";
+            return "DllMainCRTStartup@12";
 		case NativeCUI:
-			return "NtProcessStartup@4";
+            if (Environment::GetArch() == "arm") return "NtProcessStartup";
+            return "NtProcessStartup@4";            
 		case Win32DLL:
 		case Win32OCX:
+            if (Environment::GetArch() == "arm") return "DllMain";
 			return "DllMain@12";
 		case Win32CUI:
 		case Test:
