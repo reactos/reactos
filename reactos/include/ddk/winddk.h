@@ -5789,8 +5789,6 @@ InterlockedExchangeAdd(
 #define QueryDepthSList(Head) ExQueryDepthSList(Head)
 #endif // !defined(_WINBASE_
 
-#endif // defined (_WIN64)
-
 #endif /* !__INTERLOCKED_DECLARED */
 
 NTKERNELAPI
