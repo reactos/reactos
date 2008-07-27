@@ -11,11 +11,11 @@
 	<library>scm_client</library>
 	<library>lsa_client</library>
 	<library>eventlog_client</library>
-	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>pseh</library>
+	<library>ntdll</library>
 	<pch>advapi32.h</pch>
 	<directory name="crypt">
 			<file>crypt.c</file>
