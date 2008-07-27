@@ -95,9 +95,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	{
 		const IfableData& data = *ifs_list.back();
 		ifs_list.pop_back();
-		// TODO FIXME - refactor needed - we're discarding if conditions
-		for ( i = 0; i < data.ifs.size(); i++ )
-			ifs_list.push_back ( &data.ifs[i]->data );
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{

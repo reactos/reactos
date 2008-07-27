@@ -247,25 +247,6 @@ MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module 
 		if ( compilationUnit.GetFiles ().size () != 1 )
 			return false;
 	}
-	// intentionally make a copy so that we can append more work in
-	// the middle of processing without having to go recursive
-	vector<If*> v = module.non_if_data.ifs;
-	for ( i = 0; i < v.size (); i++ )
-	{
-		size_t j;
-		If& rIf = *v[i];
-		// check for sub-ifs to add to list
-		const vector<If*>& ifs = rIf.data.ifs;
-		for ( j = 0; j < ifs.size (); j++ )
-			v.push_back ( ifs[j] );
-		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
-		for ( j = 0; j < compilationUnits.size (); j++ )
-		{
-			CompilationUnit& compilationUnit = *compilationUnits[j];
-			if ( compilationUnit.GetFiles ().size () != 1 )
-				return false;
-		}
-	}
 	return true;
 }
 
@@ -455,27 +436,6 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 		GenerateProjectCFlagsMacro ( assignmentOperation,
 		                             data );
 	}
-
-	for ( i = 0; i < data.ifs.size(); i++ )
-	{
-		const If& rIf = *data.ifs[i];
-		if ( rIf.data.defines.size()
-			|| rIf.data.includes.size()
-			|| rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateGlobalCFlagsAndProperties (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
-	}
 }
 
 void
@@ -508,32 +468,10 @@ MingwBackend::GenerateProjectGccOptions (
 	const char* assignmentOperation,
 	IfableData& data ) const
 {
-	size_t i;
-
 	if ( data.compilerFlags.size() )
 	{
 		GenerateProjectGccOptionsMacro ( assignmentOperation,
 		                                 data );
-	}
-
-	for ( i = 0; i < data.ifs.size(); i++ )
-	{
-		If& rIf = *data.ifs[i];
-		if ( rIf.data.compilerFlags.size()
-		     || rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateProjectGccOptions (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
 	}
 }
 

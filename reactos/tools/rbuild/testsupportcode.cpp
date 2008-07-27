@@ -312,27 +312,6 @@ TestSupportCode::GetSourceFilenames ( string_list& list,
 		if ( !compilationUnits[i]->IsGeneratedFile () && IsTestFile ( filename ) )
 			list.push_back ( filename );
 	}
-	// intentionally make a copy so that we can append more work in
-	// the middle of processing without having to go recursive
-	vector<If*> v = module.non_if_data.ifs;
-	for ( i = 0; i < v.size (); i++ )
-	{
-		size_t j;
-		If& rIf = *v[i];
-		// check for sub-ifs to add to list
-		const vector<If*>& ifs = rIf.data.ifs;
-		for ( j = 0; j < ifs.size (); j++ )
-			v.push_back ( ifs[j] );
-		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
-		for ( j = 0; j < compilationUnits.size (); j++ )
-		{
-			CompilationUnit& compilationUnit = *compilationUnits[j];
-			const FileLocation& sourceFileLocation = compilationUnits[j]->GetFilename ();
-			string filename = sourceFileLocation.relative_path + sSep + sourceFileLocation.name;
-			if ( !compilationUnit.IsGeneratedFile () && IsTestFile ( filename ) )
-				list.push_back ( filename );
-		}
-	}
 }
 
 char*

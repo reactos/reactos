@@ -83,7 +83,6 @@ class Invoke;
 class InvokeFile;
 class Dependency;
 class ImportLibrary;
-class If;
 class CompilerFlag;
 class LinkerFlag;
 class LinkerScript;
@@ -198,7 +197,6 @@ public:
 class ParseContext
 {
 public:
-	If* ifData;
 	CompilationUnit* compilationUnit;
 	ParseContext ();
 };
@@ -215,7 +213,6 @@ public:
 	std::vector<Property*> properties;
 	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
-	std::vector<If*> ifs;
 	int asmFiles; // number of .asm files in compilationUnits
 
 	IfableData();
@@ -254,9 +251,9 @@ public:
 	const Module* LocateModule ( const std::string& name ) const;
 	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
+	const Property* LookupProperty ( const std::string& name ) const;
 private:
 	std::string ResolveNextProperty ( const std::string& s ) const;
-	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,
 	                              std::string alternativeName );
@@ -597,26 +594,6 @@ public:
 	                const XMLElement& node,
 	                const Module* module );
 	~ImportLibrary ();
-};
-
-
-class If
-{
-public:
-	const XMLElement& node;
-	const Project& project;
-	const Module* module;
-	const bool negated;
-	std::string property, value;
-	IfableData data;
-
-	If ( const XMLElement& node_,
-	     const Project& project_,
-	     const Module* module_,
-	     const bool negated_ = false );
-	~If();
-
-	void ProcessXML();
 };
 
 

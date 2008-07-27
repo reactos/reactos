@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2005 Casper S. Hornstrup
+ * Copyright (C) 2008 Hervé Poussineau
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -210,8 +211,6 @@ IfableData::~IfableData()
 		delete compilerFlags[i];
 	for ( i = 0; i < modules.size(); i++ )
 		delete modules[i];
-	for ( i = 0; i < ifs.size (); i++ )
-		delete ifs[i];
 	for ( i = 0; i < compilationUnits.size (); i++ )
 		delete compilationUnits[i];
 }
@@ -229,8 +228,6 @@ void IfableData::ProcessXML ()
 		properties[i]->ProcessXML ();
 	for ( i = 0; i < compilerFlags.size(); i++ )
 		compilerFlags[i]->ProcessXML ();
-	for ( i = 0; i < ifs.size (); i++ )
-		ifs[i]->ProcessXML ();
 	for ( i = 0; i < compilationUnits.size (); i++ )
 		compilationUnits[i]->ProcessXML ();
 }
@@ -606,7 +603,6 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	                           const string& relative_path,
                                ParseContext& parseContext )
 {
-	If* pOldIf = parseContext.ifData;
 	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
 	string subpath ( relative_path );
@@ -652,46 +648,35 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		else
 		{
 			CompilationUnit* pCompilationUnit = new CompilationUnit ( pFile );
-			if ( parseContext.ifData )
-				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
+			string ext = ToLower ( GetExtension ( e.value ) );
+			if ( ext == ".idl" )
+			{
+				// put .idl files at the start of the module
+				non_if_data.compilationUnits.insert (
+					non_if_data.compilationUnits.begin(),
+					pCompilationUnit );
+			}
+			else if ( ext == ".asm" || ext == ".s" )
+			{
+				// put .asm files at the end of the module
+				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+				non_if_data.asmFiles++;
+			}
 			else
 			{
-				string ext = ToLower ( GetExtension ( e.value ) );
-				if ( ext == ".idl" )
-				{
-					// put .idl files at the start of the module
-					non_if_data.compilationUnits.insert (
-						non_if_data.compilationUnits.begin(),
-						pCompilationUnit );
-				}
-				else if ( ext == ".asm" || ext == ".s" )
-				{
-					// put .asm files at the end of the module
-					non_if_data.compilationUnits.push_back ( pCompilationUnit );
-					non_if_data.asmFiles++;
-				}
-				else
-				{
-					// put other files in the middle
-					non_if_data.compilationUnits.insert (
-						non_if_data.compilationUnits.end() - non_if_data.asmFiles,
-						pCompilationUnit );
-				}
+				// put other files in the middle
+				non_if_data.compilationUnits.insert (
+					non_if_data.compilationUnits.end() - non_if_data.asmFiles,
+					pCompilationUnit );
 			}
 		}
-		if ( parseContext.ifData )
-			parseContext.ifData->data.files.push_back ( pFile );
-		else
-			non_if_data.files.push_back ( pFile );
+		non_if_data.files.push_back ( pFile );
 		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
 		Library* pLibrary = new Library ( e, *this, e.value );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.libraries.push_back ( pLibrary );
-		else
-			non_if_data.libraries.push_back ( pLibrary );
+		non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )
@@ -718,73 +703,37 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "include" )
 	{
 		Include* include = new Include ( project, &e, this );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.includes.push_back ( include );
-		else
-			non_if_data.includes.push_back ( include );
+		non_if_data.includes.push_back ( include );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
 		Define* pDefine = new Define ( project, this, e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.defines.push_back ( pDefine );
-		else
-			non_if_data.defines.push_back ( pDefine );
+		non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
 	else if ( e.name == "metadata" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<metadata> is not a valid sub-element of <if>" );
-		}
 		metadata = new Metadata ( e, *this );
 		subs_invalid = false;
 	}
 	else if ( e.name == "invoke" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<invoke> is not a valid sub-element of <if>" );
-		}
 		invocations.push_back ( new Invoke ( e, *this ) );
 		subs_invalid = false;
 	}
 	else if ( e.name == "dependency" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<dependency> is not a valid sub-element of <if>" );
-		}
 		dependencies.push_back ( new Dependency ( e, *this ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "bootsector" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<bootsector> is not a valid sub-element of <if>" );
-		}
 		bootSector = new Bootsector ( e, this );
 		subs_invalid = true;
 	}
 	else if ( e.name == "importlibrary" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<importlibrary> is not a valid sub-element of <if>" );
-		}
 		if ( importLibrary )
 		{
 			throw XMLInvalidBuildFileException (
@@ -794,31 +743,40 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		SetImportLibrary ( new ImportLibrary ( project, e, this ) );
 		subs_invalid = true;
 	}
-	else if ( e.name == "if" )
+	else if ( e.name == "if" || e.name == "ifnot" )
 	{
-		parseContext.ifData = new If ( e, project, this );
-		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( parseContext.ifData );
-		else
-			non_if_data.ifs.push_back ( parseContext.ifData );
-		subs_invalid = false;
-	}
-	else if ( e.name == "ifnot" )
-	{
-		parseContext.ifData = new If ( e, project, this, true );
-		if ( pOldIf )
-			pOldIf->data.ifs.push_back ( parseContext.ifData );
-		else
-			non_if_data.ifs.push_back ( parseContext.ifData );
+		const XMLAttribute* name;
+		name = e.GetAttribute ( "property", true );
+		assert( name );
+		const Property *property = project.LookupProperty( name->value );
+		if ( !property )
+		{
+			// Property not found
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Test on unknown property '%s' at %s",
+			                                  name->value.c_str (), e.location.c_str () );
+		}
+
+		const XMLAttribute* value;
+		value = e.GetAttribute ( "value", true );
+		assert( value );
+
+		bool negate = ( e.name == "ifnot" );
+		bool equality = ( property->value == value->value );
+		if ( equality == negate )
+		{
+			// Failed, skip this element
+			if ( project.configuration.Verbose )
+				printf("Skipping 'If' at %s\n", e.location.c_str () );
+			return;
+		}
 		subs_invalid = false;
 	}
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
-		if ( parseContext.ifData )
-			parseContext.ifData->data.compilerFlags.push_back ( pCompilerFlag );
-		else
-			non_if_data.compilerFlags.push_back ( pCompilerFlag );
+		non_if_data.compilerFlags.push_back ( pCompilerFlag );
 		subs_invalid = true;
 	}
 	else if ( e.name == "linkerflag" )
@@ -828,12 +786,6 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "linkerscript" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<linkerscript> is not a valid sub-element of <if>" );
-		}
 		if ( linkerScript )
 		{
 			throw XMLInvalidBuildFileException (
@@ -873,12 +825,6 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "pch" )
 	{
-		if ( parseContext.ifData )
-		{
-			throw XMLInvalidBuildFileException (
-				e.location,
-				"<pch> is not a valid sub-element of <if>" );
-		}
 		if ( pch )
 		{
 			throw XMLInvalidBuildFileException (
@@ -905,10 +851,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( project.configuration.CompilationUnitsEnabled )
 		{
 			CompilationUnit* pCompilationUnit = new CompilationUnit ( &project, this, &e );
-			if ( parseContext.ifData )
-				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
-			else
-				non_if_data.compilationUnits.push_back ( pCompilationUnit );
+			non_if_data.compilationUnits.push_back ( pCompilationUnit );
 			parseContext.compilationUnit = pCompilationUnit;
 		}
 		subs_invalid = false;
@@ -934,7 +877,6 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i], subdirectory, subpath, parseContext );
-	parseContext.ifData = pOldIf;
 	parseContext.compilationUnit = pOldCompilationUnit;
 }
 
@@ -1333,11 +1275,6 @@ Module::HasFileWithExtension (
 	{
 		CompilationUnit* compilationUnit = data.compilationUnits[i];
 		if ( compilationUnit->HasFileWithExtension ( extension ) )
-			return true;
-	}
-	for ( i = 0; i < data.ifs.size (); i++ )
-	{
-		if ( HasFileWithExtension ( data.ifs[i]->data, extension ) )
 			return true;
 	}
 	return false;
@@ -1825,34 +1762,6 @@ ImportLibrary::ImportLibrary ( const Project& project,
 		                            name,
 		                            &node );
 	}
-}
-
-
-If::If ( const XMLElement& node_,
-         const Project& project_,
-         const Module* module_,
-         const bool negated_ )
-	: node(node_), project(project_), module(module_), negated(negated_)
-{
-	const XMLAttribute* att;
-
-	att = node.GetAttribute ( "property", true );
-	assert(att);
-	property = att->value;
-
-	att = node.GetAttribute ( "value", true );
-	assert(att);
-	value = att->value;
-}
-
-If::~If ()
-{
-}
-
-void
-If::ProcessXML()
-{
-
 }
 
 

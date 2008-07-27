@@ -814,8 +814,6 @@ MingwModuleHandler::GenerateMacros (
 	const vector<LinkerFlag*>* linkerFlags,
 	set<const Define *>& used_defs )
 {
-	size_t i;
-
 	GenerateMacro ( assignmentOperation,
 	                cflagsMacro,
 	                data,
@@ -852,34 +850,6 @@ MingwModuleHandler::GenerateMacros (
 				libsMacro.c_str(),
 				assignmentOperation,
 				deps.c_str() );
-		}
-	}
-
-	const vector<If*>& ifs = data.ifs;
-	for ( i = 0; i < ifs.size(); i++ )
-	{
-		If& rIf = *ifs[i];
-		if ( rIf.data.defines.size()
-			|| rIf.data.includes.size()
-			|| rIf.data.libraries.size()
-			|| rIf.data.compilationUnits.size()
-			|| rIf.data.compilerFlags.size()
-			|| rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"%s (\"$(%s)\",\"%s\")\n",
-				rIf.negated ? "ifneq" : "ifeq",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateMacros (
-				"+=",
-				rIf.data,
-				NULL,
-				used_defs );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
 		}
 	}
 }
@@ -923,32 +893,6 @@ MingwModuleHandler::GenerateSourceMacros (
 				backend->GetFullName ( compilationName ).c_str () );
 		}
 		fprintf ( fMakefile, "\n" );
-	}
-
-	const vector<If*>& ifs = data.ifs;
-	for ( i = 0; i < ifs.size(); i++ )
-	{
-		If& rIf = *ifs[i];
-		if ( rIf.data.defines.size()
-			|| rIf.data.includes.size()
-			|| rIf.data.libraries.size()
-			|| rIf.data.compilationUnits.size()
-			|| rIf.data.compilerFlags.size()
-			|| rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"%s (\"$(%s)\",\"%s\")\n",
-				rIf.negated ? "ifneq" : "ifeq",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateSourceMacros (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
 	}
 
 	vector<CompilationUnit*> sourceCompilationUnits;
@@ -1081,32 +1025,6 @@ MingwModuleHandler::GenerateObjectMacros (
 			delete mcresources[i];
 		}
 		fprintf ( fMakefile, "\n" );
-	}
-
-	const vector<If*>& ifs = data.ifs;
-	for ( i = 0; i < ifs.size(); i++ )
-	{
-		If& rIf = *ifs[i];
-		if ( rIf.data.defines.size()
-			|| rIf.data.includes.size()
-			|| rIf.data.libraries.size()
-			|| rIf.data.compilationUnits.size()
-			|| rIf.data.compilerFlags.size()
-			|| rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"%s (\"$(%s)\",\"%s\")\n",
-				rIf.negated ? "ifneq" : "ifeq",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateObjectMacros (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
 	}
 
 	vector<CompilationUnit*> sourceCompilationUnits;
@@ -1702,12 +1620,6 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 		                   moduleDependencies );
 		fprintf ( fMakefile,
 		          "\n" );
-	}
-
-	const vector<If*>& ifs = data.ifs;
-	for ( i = 0; i < ifs.size(); i++ )
-	{
-		GenerateObjectFileTargets ( ifs[i]->data );
 	}
 
 	vector<CompilationUnit*> sourceCompilationUnits;
