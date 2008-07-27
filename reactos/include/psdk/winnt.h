@@ -2251,13 +2251,6 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
     };
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
-typedef EXCEPTION_DISPOSITION (*PEXCEPTION_ROUTINE) (
-    IN struct _EXCEPTION_RECORD *ExceptionRecord,
-    IN PVOID EstablisherFrame,
-    IN OUT struct _CONTEXT *ContextRecord,
-    IN OUT PVOID DispatcherContext
-    );
-
 #define UNW_FLAG_NHANDLER 0x0 /* No handler. */
 #define UNW_FLAG_EHANDLER 0x1 /* Exception handler should be called */
 #define UNW_FLAG_UHANDLER 0x2 /* Termination handler that should be called when unwinding an exception */
@@ -2303,17 +2296,6 @@ NTSYSAPI
 BOOLEAN
 __cdecl
 RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
-
-PEXCEPTION_ROUTINE
-WINAPI
-RtlVirtualUnwind (IN ULONG HandlerType,
-                  IN ULONG64 ImageBase,
-                  IN ULONG64 ControlPc,
-                  IN PRUNTIME_FUNCTION FunctionEntry,
-                  IN OUT PCONTEXT ContextRecord,
-                  OUT PVOID *HandlerData,
-                  OUT PULONG64 EstablisherFrame,
-                  IN OUT PKNONVOLATILE_CONTEXT_POINTERS ContextPointers OPTIONAL);
 
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL	1L
