@@ -2204,6 +2204,65 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     DWORD64 LastExceptionFromRip;
 } CONTEXT, *PCONTEXT;
 
+
+typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+    union {
+        PM128A FloatingContext[16];
+        struct {
+            PM128A Xmm0;
+            PM128A Xmm1;
+            PM128A Xmm2;
+            PM128A Xmm3;
+            PM128A Xmm4;
+            PM128A Xmm5;
+            PM128A Xmm6;
+            PM128A Xmm7;
+            PM128A Xmm8;
+            PM128A Xmm9;
+            PM128A Xmm10;
+            PM128A Xmm11;
+            PM128A Xmm12;
+            PM128A Xmm13;
+            PM128A Xmm14;
+            PM128A Xmm15;
+        };
+    };
+
+    union {
+        PULONG64 IntegerContext[16];
+        struct {
+            PULONG64 Rax;
+            PULONG64 Rcx;
+            PULONG64 Rdx;
+            PULONG64 Rbx;
+            PULONG64 Rsp;
+            PULONG64 Rbp;
+            PULONG64 Rsi;
+            PULONG64 Rdi;
+            PULONG64 R8;
+            PULONG64 R9;
+            PULONG64 R10;
+            PULONG64 R11;
+            PULONG64 R12;
+            PULONG64 R13;
+            PULONG64 R14;
+            PULONG64 R15;
+        };
+    };
+} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+
+typedef EXCEPTION_DISPOSITION (*PEXCEPTION_ROUTINE) (
+    IN struct _EXCEPTION_RECORD *ExceptionRecord,
+    IN PVOID EstablisherFrame,
+    IN OUT struct _CONTEXT *ContextRecord,
+    IN OUT PVOID DispatcherContext
+    );
+
+#define UNW_FLAG_NHANDLER 0x0 /* No handler. */
+#define UNW_FLAG_EHANDLER 0x1 /* Exception handler should be called */
+#define UNW_FLAG_UHANDLER 0x2 /* Termination handler that should be called when unwinding an exception */
+#define UNW_FLAG_CHAININFO 0x4 /* FunctionEntry member is the contents of a previous function table entry */
+
 #define RUNTIME_FUNCTION_INDIRECT 0x1
 
   typedef struct _RUNTIME_FUNCTION {
@@ -2217,10 +2276,44 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 
   #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
 
-  NTSYSAPI VOID __cdecl RtlRestoreContext (PCONTEXT ContextRecord,struct _EXCEPTION_RECORD *ExceptionRecord);
-  NTSYSAPI BOOLEAN __cdecl RtlAddFunctionTable(PRUNTIME_FUNCTION FunctionTable,DWORD EntryCount,DWORD64 BaseAddress);
-  NTSYSAPI BOOLEAN __cdecl RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,DWORD64 BaseAddress,DWORD Length,PGET_RUNTIME_FUNCTION_CALLBACK Callback,PVOID Context,PCWSTR OutOfProcessCallbackDll);
-  NTSYSAPI BOOLEAN __cdecl RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
+NTSYSAPI
+VOID
+__cdecl
+RtlRestoreContext(PCONTEXT ContextRecord,
+                  struct _EXCEPTION_RECORD *ExceptionRecord);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlAddFunctionTable(PRUNTIME_FUNCTION FunctionTable,
+                    DWORD EntryCount,
+                    DWORD64 BaseAddress);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,
+                                DWORD64 BaseAddress,
+                                DWORD Length,
+                                PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+                                PVOID Context,
+                                PCWSTR OutOfProcessCallbackDll);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
+
+PEXCEPTION_ROUTINE
+WINAPI
+RtlVirtualUnwind (IN ULONG HandlerType,
+                  IN ULONG64 ImageBase,
+                  IN ULONG64 ControlPc,
+                  IN PRUNTIME_FUNCTION FunctionEntry,
+                  IN OUT PCONTEXT ContextRecord,
+                  OUT PVOID *HandlerData,
+                  OUT PULONG64 EstablisherFrame,
+                  IN OUT PKNONVOLATILE_CONTEXT_POINTERS ContextPointers OPTIONAL);
 
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL	1L
