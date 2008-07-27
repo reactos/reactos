@@ -25,12 +25,23 @@ extern "C" {
  * including windows.h or any other method of including the windef.h header.
  */
 #endif
+
+#if !defined(WIN64) && !defined(_M_AMD64) && !defined(_M_IA64)
 #ifndef WIN32
 #define WIN32
 #endif
 #ifndef _WIN32
 #define _WIN32
 #endif
+#else // WIN64
+#ifdef WIN32
+#undef WIN32
+#endif
+#ifdef _WIN32
+#undef _WIN32
+#endif
+#endif // WIN64
+
 #define FAR
 #define far
 #define NEAR
