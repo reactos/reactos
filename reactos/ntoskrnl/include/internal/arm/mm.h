@@ -164,6 +164,6 @@ typedef enum _ARM_DOMAIN
 
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC1000000
-#define HYPER_SPACE ((PVOID)0xC1100000)
+#define HYPER_SPACE 0xC1100000
 
 #endif

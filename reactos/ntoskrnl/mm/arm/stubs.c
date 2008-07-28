@@ -619,7 +619,7 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     //
     // Loop hyperspace PTEs (1MB)
     //
-    FirstPte = PointerPte = MiGetPteAddress(HYPER_SPACE);
+    FirstPte = PointerPte = MiGetPteAddress((PVOID)HYPER_SPACE);
     LastPte = PointerPte + 256;
     while (PointerPte <= LastPte)
     {
@@ -657,7 +657,7 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     //
     // Return the address
     //
-    Address = HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE);
+    Address = (PVOID)(HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE));
     KeArmInvalidateTlbEntry(Address);
     DPRINT("[HMAP]: %p %lx\n", Address, Page);
     return Address;
