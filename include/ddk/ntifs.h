@@ -2970,7 +2970,7 @@ FsRtlIsHpfsDbcsLegal (
     IN ANSI_STRING  DbcsName,
     IN BOOLEAN      WildCardsPermissible,
     IN BOOLEAN      PathNamePermissible,
-    IN BOOLEAN      LeadingBackslashPermissible)
+    IN BOOLEAN      LeadingBackslashPermissible
 );
 
 NTKERNELAPI
