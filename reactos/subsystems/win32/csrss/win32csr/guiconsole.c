@@ -641,35 +641,50 @@ FASTCALL
 GuiConsoleInitScrollbar(PCSRSS_CONSOLE Console, HWND hwnd)
 {
   SCROLLINFO sInfo;
+  PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
+
+  DWORD Width = Console->Size.X * GuiData->CharWidth + 2 * GetSystemMetrics(SM_CXFIXEDFRAME);
+  DWORD Height = Console->Size.Y * GuiData->CharHeight + 2 * GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
 
   /* set scrollbar sizes */
   sInfo.cbSize = sizeof(SCROLLINFO);
-  sInfo.fMask = SIF_RANGE | SIF_POS;
+  sInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
   sInfo.nMin = 0;
-  sInfo.nMax = Console->ActiveBuffer->MaxY;
-  sInfo.nPos = 0;
-  SetScrollInfo(hwnd, SB_HORZ, &sInfo, TRUE);
-  ShowScrollBar(hwnd, SB_VERT, TRUE);
-
-  if (Console->ActiveBuffer->MaxX > Console->Size.X)
+  if (Console->ActiveBuffer->MaxY > Console->Size.Y)
   {
-      sInfo.cbSize = sizeof(SCROLLINFO);
-      sInfo.fMask = SIF_RANGE | SIF_POS;
-      sInfo.nMin = 0;
-      sInfo.nPos = 0;
-      sInfo.nMax = Console->ActiveBuffer->MaxX;
-      SetScrollInfo(hwnd, SB_HORZ, &sInfo, TRUE);
+      sInfo.nMax = Console->ActiveBuffer->MaxY - 1;
+      sInfo.nPage = Console->Size.Y;
+      sInfo.nPos = Console->ActiveBuffer->ShowY;
+      SetScrollInfo(hwnd, SB_VERT, &sInfo, TRUE);
+      Width += GetSystemMetrics(SM_CXVSCROLL);
+      ShowScrollBar(hwnd, SB_VERT, TRUE);
   }
   else
   {
-    ShowScrollBar(hwnd, SB_HORZ, FALSE);
+      ShowScrollBar(hwnd, SB_VERT, FALSE);
   }
+
+  if (Console->ActiveBuffer->MaxX > Console->Size.X)
+  {
+      sInfo.nMax = Console->ActiveBuffer->MaxX - 1;
+      sInfo.nPage = Console->Size.X;
+      sInfo.nPos = Console->ActiveBuffer->ShowX;
+      SetScrollInfo(hwnd, SB_HORZ, &sInfo, TRUE);
+      Height += GetSystemMetrics(SM_CYHSCROLL);
+      ShowScrollBar(hwnd, SB_HORZ, TRUE);
+  }
+  else
+  {
+      ShowScrollBar(hwnd, SB_HORZ, FALSE);
+  }
+
+  SetWindowPos(hwnd, NULL, 0, 0, Width, Height,
+               SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
 static BOOL FASTCALL
 GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 {
-  RECT Rect;
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Create->lpCreateParams;
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Console->PrivateData;
   HDC Dc;
@@ -762,14 +777,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   DPRINT("Console %p GuiData %p\n", Console, GuiData);
   Console->PrivateData = GuiData;
   SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
-
-  GetWindowRect(hWnd, &Rect);
-  Rect.right = Rect.left + Console->Size.X * GuiData->CharWidth +
-               2 * GetSystemMetrics(SM_CXFIXEDFRAME);
-  Rect.bottom = Rect.top + Console->Size.Y * GuiData->CharHeight +
-               2 * GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
-  MoveWindow(hWnd, Rect.left, Rect.top, Rect.right - Rect.left,
-             Rect.bottom - Rect.top, FALSE);
 
   SetTimer(hWnd, 1, CURSOR_BLINK_TIME, NULL);
   GuiConsoleCreateSysMenu(Console);
@@ -1551,8 +1558,8 @@ static VOID FASTCALL
 GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
 {
   DWORD windx, windy;
-  RECT rect;
   PCSRSS_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+  BOOL SizeChanged = FALSE;
 
   EnterCriticalSection(&ActiveBuffer->Header.Lock);
 
@@ -1561,7 +1568,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
   GuiData->ScreenBackground = pConInfo->ScreenBackground;
 
   /* apply cursor size */
-  ActiveBuffer->CursorInfo.dwSize = max(min(pConInfo->CursorSize, 1), 100);
+  ActiveBuffer->CursorInfo.dwSize = min(max(pConInfo->CursorSize, 1), 100);
 
   windx = LOWORD(pConInfo->ScreenBuffer);
   windy = HIWORD(pConInfo->ScreenBuffer);
@@ -1573,7 +1580,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
      if (Buffer)
      {
         DWORD Offset = 0;
-        DWORD BufferOffset = 0;
+        BYTE * OldPtr;
         USHORT CurrentY;
         BYTE * OldBuffer;
         USHORT value;
@@ -1587,17 +1594,17 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 
         for (CurrentY = 0; CurrentY < min(ActiveBuffer->MaxY, windy); CurrentY++)
         {
+            OldPtr = ConioCoordToPointer(ActiveBuffer, 0, CurrentY);
             if (windx <= ActiveBuffer->MaxX)
             {
                 /* reduce size */
-                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], windx * 2);
+                RtlCopyMemory(&Buffer[Offset], OldPtr, windx * 2);
                 Offset += (windx * 2);
-                BufferOffset += (ActiveBuffer->MaxX * 2);
             }
             else
             {
                 /* enlarge size */
-                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], ActiveBuffer->MaxX * 2);
+                RtlCopyMemory(&Buffer[Offset], OldPtr, ActiveBuffer->MaxX * 2);
                 Offset += (ActiveBuffer->MaxX * 2);
 
                 diff = windx - ActiveBuffer->MaxX;
@@ -1605,27 +1612,25 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 #if HAVE_WMEMSET
                 wmemset((WCHAR*)&Buffer[Offset], value, diff);
 #else
-                for (i = 0; i < diff * 2; i++)
+                for (i = 0; i < diff; i++)
                 {
-                    Buffer[Offset * 2] = ' ';
-                    Buffer[Offset * 2 + 1] = ActiveBuffer->DefaultAttrib;
+                    Buffer[Offset++] = ' ';
+                    Buffer[Offset++] = ActiveBuffer->DefaultAttrib;
                 }
 #endif
-                Offset += (diff * 2);
-                BufferOffset += (ActiveBuffer->MaxX * 2);
             }
         }
 
         if (windy > ActiveBuffer->MaxY)
         {
-            diff = windy - ActiveBuffer->MaxX;
+            diff = windy - ActiveBuffer->MaxY;
 #if HAVE_WMEMSET
                 wmemset((WCHAR*)&Buffer[Offset], value, diff * windx);
 #else
-                for (i = 0; i < diff * 2; i++)
+                for (i = 0; i < diff * windx; i++)
                 {
-                    Buffer[Offset * 2] = ' ';
-                    Buffer[Offset * 2 + 1] = ActiveBuffer->DefaultAttrib;
+                    Buffer[Offset++] = ' ';
+                    Buffer[Offset++] = ActiveBuffer->DefaultAttrib;
                 }
 #endif
         }
@@ -1634,7 +1639,8 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
         HeapFree(Win32CsrApiHeap, 0, OldBuffer);
         ActiveBuffer->MaxX = windx;
         ActiveBuffer->MaxY = windy;
-        InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
+        ActiveBuffer->VirtualY = 0;
+        SizeChanged = TRUE;
      }
      else
      {
@@ -1667,25 +1673,14 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
       /* resize window */
       Console->Size.X = windx;
       Console->Size.Y = windy;
-
-      GetWindowRect(pConInfo->hConsoleWindow, &rect);
-
-      rect.right = rect.left + Console->Size.X * GuiData->CharWidth + 2 * GetSystemMetrics(SM_CXFIXEDFRAME);
-      rect.bottom = rect.top + Console->Size.Y * GuiData->CharHeight + 2 * GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
-
-      MoveWindow(pConInfo->hConsoleWindow, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE);
-
-      if (Console->Size.X < ActiveBuffer->MaxX)
-      {
-          /* show scrollbar when window becomes smaller than active screen buffer */
-          ShowScrollBar(pConInfo->hConsoleWindow, SB_CTL, TRUE);
-      }
-      else
-      {
-          /* hide scrollbar */
-          ShowScrollBar(pConInfo->hConsoleWindow, SB_CTL, FALSE);
-      }
+      SizeChanged = TRUE;
   }
+
+  if (SizeChanged)
+  {
+      GuiConsoleInitScrollbar(Console, pConInfo->hConsoleWindow);
+  }
+
   LeaveCriticalSection(&ActiveBuffer->Header.Lock);
   InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
