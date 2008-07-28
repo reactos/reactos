@@ -928,7 +928,7 @@ VOID DIALOG_HelpHelp(VOID)
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif
-BOOL CALLBACK
+INT_PTR CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND    hLicenseEditWnd;
