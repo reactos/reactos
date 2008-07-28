@@ -584,6 +584,12 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
    VolumeFcb->Flags |= VCB_IS_DIRTY;
 
+   /* Initialize notify sync */
+#if 0
+   InitializeListHead(&(DeviceExt->NotifyList));
+   FsRtlNotifyInitializeSync(&(DeviceExt->NotifySync));
+#endif
+
    Status = STATUS_SUCCESS;
 ByeBye:
 
