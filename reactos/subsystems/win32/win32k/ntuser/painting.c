@@ -1682,7 +1682,7 @@ BOOL UserDrawCaption(
         && !(Wnd->ExStyle & WS_EX_TOOLWINDOW);
    }
    else
-     HasIcon = (BOOL) hIcon;
+     HasIcon = (hIcon != 0);
 
    IconWidth = UserGetSystemMetrics(SM_CXSIZE) + Padding;
 

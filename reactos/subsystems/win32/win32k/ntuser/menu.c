@@ -1954,7 +1954,7 @@ NtUserGetMenuBarInfo(
         RETURN(FALSE);
      }
 
-   hMenu = (HMENU)WindowObject->Wnd->IDMenu;
+   hMenu = (HMENU)(DWORD_PTR)WindowObject->Wnd->IDMenu;
 
    if (!(MenuObject = UserGetMenuObject(hMenu)))
      {
@@ -2257,7 +2257,7 @@ NtUserHiliteMenuItem(
       RETURN(FALSE);
    }
 
-   if(Window->Wnd->IDMenu == (UINT)hMenu)
+   if(Window->Wnd->IDMenu == (UINT)(UINT_PTR)hMenu)
    {
       RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
    }
@@ -2664,7 +2664,7 @@ NtUserThunkedMenuItemInfo(
       if bInsert == TRUE call NtUserInsertMenuItem() else NtUserSetMenuItemInfo()   */
 
    if (bInsert) return UserInsertMenuItem(hMenu, uItem, fByPosition, lpmii);
-   
+
    UNIMPLEMENTED
    return 0;
 }

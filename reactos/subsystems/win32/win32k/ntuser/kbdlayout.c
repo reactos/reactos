@@ -228,7 +228,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
       hKl |= 0xe001 << 16; /* FIXME */
    else hKl |= hKl << 16;
 
-   NewKbl->hkl = (HKL) hKl;
+   NewKbl->hkl = (HKL)(ULONG_PTR) hKl;
    NewKbl->klid = LocaleId;
    NewKbl->Flags = 0;
    NewKbl->RefCount = 0;
@@ -450,7 +450,7 @@ UserGetKeyboardLayout(
       return W32Thread->KeyboardLayout->hkl;
    }
 
-   Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+   Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
