@@ -439,7 +439,7 @@ co_IntCallHookProc(INT HookId,
                {
                   RtlCopyMemory(Extra, ClassName->Buffer, ClassName->Length);
                   CbtCreatewndExtra->Cs.lpszClass =
-                     (LPCWSTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
+                     (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
                   Extra += ClassName->Length;
                   *((WCHAR *) Extra) = L'\0';
                }
@@ -562,7 +562,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    IntRestoreTebWndCallback (hWnd, pWnd);
 
    IntCbFreeMemory(Argument);
-  
+
    if (!NT_SUCCESS(Status))
    {
       return 0;
