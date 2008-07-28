@@ -857,7 +857,6 @@ static void DoProperties(
         ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
         return;
     }
-#if 0
     else if (_ILIsDrive(This->apidl[0]))
     {
        WCHAR buffer[111];
@@ -865,7 +864,6 @@ static void DoProperties(
        SH_ShowDriveProperties(buffer);
        return;
     }
-#endif
     else if (_ILIsBitBucket(This->apidl[0]))
     {
        ///FIXME
