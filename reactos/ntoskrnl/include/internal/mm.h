@@ -1010,11 +1010,11 @@ NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
 FORCEINLINE
-VOID
+KIRQL
 NTAPI
 MmAcquirePageListLock()
 {
-	KeAcquireQueuedSpinLock(LockQueuePfnLock);
+	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
 }
 
 FORCEINLINE
