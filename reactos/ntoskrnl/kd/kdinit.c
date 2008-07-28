@@ -257,6 +257,8 @@ KdInitSystem(ULONG BootPhase,
         if (WrapperInitRoutine) WrapperInitRoutine(&WrapperTable, 0);
         return TRUE;
     }
+    else
+	KdpEnableSafeMem();
 
     /* Call the Initialization Routines of the Registered Providers */
     KdpCallInitRoutine(BootPhase);

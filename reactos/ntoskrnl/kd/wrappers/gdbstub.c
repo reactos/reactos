@@ -322,19 +322,9 @@ static volatile void *GspAccessLocation = NULL;
 static CHAR
 GspReadMemSafe(PCHAR Address)
 {
-  CHAR ch;
-
-  if (NULL == Address)
-    {
-      GspMemoryError = TRUE;
-      return '\0';
-    }
-
-  GspAccessLocation = Address;
-  ch = *Address;
-  GspAccessLocation = NULL;
-
-  return ch;
+    CHAR ch;
+    KdpSafeReadMemory((ULONG_PTR)Address, 1, &ch);
+    return ch;
 }
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer */
@@ -455,19 +445,11 @@ GspHex2Mem(PCHAR Buffer,
   return Buffer + 2 * Count;
 }
 
-static CHAR
-GspWriteMemSafeGetContent(PVOID Context, ULONG Offset)
-{
-  ASSERT(0 == Offset);
-
-  return *((PCHAR) Context);
-}
-
 static void
 GspWriteMemSafe(PCHAR Address,
   CHAR Ch)
 {
-  GspWriteMem(Address, 1, TRUE, GspWriteMemSafeGetContent, &Ch);
+    KdpSafeWriteMemory((ULONG_PTR)Address, 1, Ch);
 }
 
 

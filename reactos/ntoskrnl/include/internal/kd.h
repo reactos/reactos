@@ -251,6 +251,27 @@ KdpBochsDebugPrint(
     IN ULONG Length
 );
 
+BOOLEAN
+STDCALL
+KdpSafeReadMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    OUT PVOID Value
+);
+
+BOOLEAN
+STDCALL
+KdpSafeWriteMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    IN ULONGLONG Value
+);
+
+VOID
+STDCALL
+KdpEnableSafeMem();
+
+
 /* KD GLOBALS  ***************************************************************/
 
 typedef
