@@ -5796,17 +5796,6 @@ InterlockedExchangeAdd(
 #define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
 #define InterlockedExchangePointer _InterlockedExchangePointer
 
-#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
-#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
-#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
-
-#if !defined(_WINBASE_)
-#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
-#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
-#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
-#define QueryDepthSList(Head) ExQueryDepthSList(Head)
-#endif // !defined(_WINBASE_
-
 #endif // _M_AMD64
 
 #endif /* !__INTERLOCKED_DECLARED */
