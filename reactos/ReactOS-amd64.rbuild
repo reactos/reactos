@@ -106,6 +106,9 @@
 				<!-- xi:include href="drivers/filesystems/ext2/ext2.rbuild" / -->
 			</directory>
 		</directory>
+		<directory name="input">
+			<xi:include href="drivers/input/directory.rbuild" />
+		</directory>
 		<directory name="network">
 			<directory name="ndis">
 				<xi:include href="drivers/network/ndis/ndis.rbuild" />
