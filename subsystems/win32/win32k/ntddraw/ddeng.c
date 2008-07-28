@@ -77,3 +77,10 @@ EngUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
     UNIMPLEMENTED;
 	return FALSE;
 }
+
+VOID
+APIENTRY
+DxEngGetRedirectionBitmap(DWORD Param1)
+{
+    UNIMPLEMENTED;
+}

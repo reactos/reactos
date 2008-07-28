@@ -773,6 +773,10 @@
 				Name="ntuser"
 				>
 				<File
+					RelativePath=".\ntuser\usrfuncs.c"
+					>
+				</File>
+				<File
 					RelativePath=".\ntuser\usrstubs.c"
 					>
 				</File>

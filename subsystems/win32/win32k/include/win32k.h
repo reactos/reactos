@@ -72,3 +72,6 @@ typedef LPVOID LPSURFACEALIGNMENT;
 #include <win32k/ntgdityp.h>
 #define LANGPACK
 #include <psdk/ntgdi.h>
+
+/* Stubbed function declarations */
+#include <stubs.h>

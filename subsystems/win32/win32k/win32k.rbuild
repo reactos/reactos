@@ -54,6 +54,7 @@
 		<file>gdistubs.c</file>
 	</directory>
 	<directory name="ntuser">
+		<file>usrfuncs.c</file>
 		<file>usrstubs.c</file>
 	</directory>
 	<file>win32k.rc</file>

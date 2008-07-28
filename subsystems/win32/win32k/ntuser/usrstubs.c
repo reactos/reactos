@@ -718,7 +718,21 @@ NtUserGetClassInfo(HINSTANCE hInstance,
 		   PUNICODE_STRING ClassName,
 		   LPWNDCLASSEXW wcex,
 		   LPWSTR *ppszMenuName,
-		   BOOL Ansi) { UNIMPLEMENTED; }
+		   BOOL Ansi)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+NTAPI
+NtUserGetClassInfoEx(DWORD Param1, DWORD Param2,
+                     DWORD Param3, DWORD Param4,
+                     DWORD Param5)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 INT
 NTAPI
@@ -1013,11 +1027,6 @@ NTAPI
 NtUserGetThreadDesktop(
   DWORD dwThreadId,
   DWORD Unknown1) { UNIMPLEMENTED; }
-
-DWORD
-NTAPI
-NtUserGetThreadState(
-  DWORD Routine) { UNIMPLEMENTED; }
 
 BOOLEAN
 NTAPI

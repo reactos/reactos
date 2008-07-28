@@ -857,13 +857,6 @@ NtGdiUnrealizeObject(
 ) { UNIMPLEMENTED; }
 
 W32KAPI
-HANDLE
-APIENTRY
-NtGdiGetStockObject(
-    IN INT iObject
-) { UNIMPLEMENTED; }
-
-W32KAPI
 HBITMAP
 APIENTRY
 NtGdiCreateCompatibleBitmap(
@@ -1277,13 +1270,6 @@ NtGdiGetEudcTimeStampEx(
     IN OPTIONAL LPWSTR lpBaseFaceName,
     IN ULONG cwcBaseFaceName,
     IN BOOL bSystemTimeStamp
-) { UNIMPLEMENTED; }
-
-W32KAPI
-ULONG
-APIENTRY
-NtGdiQueryFontAssocInfo(
-    IN HDC hdc
 ) { UNIMPLEMENTED; }
 
 #if (_WIN32_WINNT >= 0x0500)
@@ -3634,3 +3620,19 @@ APIENTRY
 NtGdiEndPath(
     IN HDC hdc
 ) { UNIMPLEMENTED; }
+
+W32KAPI
+VOID
+APIENTRY
+UMPDDrvQuerySpoolType(DWORD Param1, DWORD Param2)
+{
+    UNIMPLEMENTED;
+}
+
+W32KAPI
+VOID
+APIENTRY
+DefaultHTCallBack(DWORD Param1)
+{
+    UNIMPLEMENTED;
+}
