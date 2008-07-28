@@ -21,7 +21,7 @@ DWORD_PTR STDCALL
 NtUserGetThreadState(
    DWORD Routine)
 {
-   DECLARE_RETURN(DWORD_PTR);
+   DWORD_PTR ret = 0;
 
    DPRINT("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -37,26 +37,29 @@ NtUserGetThreadState(
    {
       case THREADSTATE_GETTHREADINFO:
          GetW32ThreadInfo();
-         RETURN(0);
-
+         break;
       case THREADSTATE_FOCUSWINDOW:
-         RETURN( (DWORD_PTR)IntGetThreadFocusWindow());
+         ret = (DWORD_PTR)IntGetThreadFocusWindow();
+         break;
       case THREADSTATE_CAPTUREWINDOW:
          /* FIXME should use UserEnterShared */
-         RETURN( (DWORD_PTR)IntGetCapture());
+         ret = (DWORD_PTR)IntGetCapture();
+         break;
       case THREADSTATE_PROGMANWINDOW:
-         RETURN( (DWORD_PTR)GetW32ThreadInfo()->Desktop->hProgmanWindow);
+         ret = (DWORD_PTR)GetW32ThreadInfo()->Desktop->hProgmanWindow;
+         break;
       case THREADSTATE_TASKMANWINDOW:
-         RETURN( (DWORD_PTR)GetW32ThreadInfo()->Desktop->hTaskManWindow);
+         ret = (DWORD_PTR)GetW32ThreadInfo()->Desktop->hTaskManWindow;
+         break;
       case THREADSTATE_ACTIVEWINDOW:
-         RETURN ( (DWORD_PTR)UserGetActiveWindow());
+         ret = (DWORD_PTR)UserGetActiveWindow();
+         break;
    }
-   RETURN( 0);
 
-CLEANUP:
-   DPRINT("Leave NtUserGetThreadState, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+
+   return ret;
 }
 
 
@@ -124,7 +127,7 @@ NtUserGetGUIThreadInfo(
 
    if(idThread)
    {
-      Status = PsLookupThreadByThreadId((HANDLE)idThread, &Thread);
+      Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if(!NT_SUCCESS(Status))
       {
          SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -416,7 +419,7 @@ GetW32ProcessInfo(VOID)
                                 (ULONG_PTR)W32Process->HeapMappings.UserMapping;
             pi->psi = gpsi;
 
-            if (InterlockedCompareExchangePointer(&W32Process->ProcessInfo,
+            if (InterlockedCompareExchangePointer((PVOID*)&W32Process->ProcessInfo,
                                                   pi,
                                                   NULL) != NULL)
             {

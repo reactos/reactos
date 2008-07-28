@@ -7,13 +7,13 @@
  @ stdcall AccessCheckAndAuditAlarmA(str ptr str str ptr long ptr long ptr ptr ptr)
  @ stdcall AccessCheckAndAuditAlarmW(wstr ptr wstr wstr ptr long ptr long ptr ptr ptr)
  @ stub AccessCheckByType #(ptr ptr long long ptr long ptr ptr ptr ptr ptr)
- @ stub AccessCheckByTypeAndAuditAlarmA
- @ stub AccessCheckByTypeAndAuditAlarmW
+ @ stdcall AccessCheckByTypeAndAuditAlarmA(str ptr str str ptr ptr long long long ptr long ptr long ptr ptr ptr)
+ @ stdcall AccessCheckByTypeAndAuditAlarmW(wstr ptr wstr wstr ptr ptr long long long ptr long ptr long ptr ptr ptr)
  @ stub AccessCheckByTypeResultList
- @ stub AccessCheckByTypeResultListAndAuditAlarmA
- @ stub AccessCheckByTypeResultListAndAuditAlarmByHandleA
- @ stub AccessCheckByTypeResultListAndAuditAlarmByHandleW
- @ stub AccessCheckByTypeResultListAndAuditAlarmW
+ @ stdcall AccessCheckByTypeResultListAndAuditAlarmA(str ptr str str ptr long long long long ptr long ptr long ptr ptr ptr)
+ @ stdcall AccessCheckByTypeResultListAndAuditAlarmByHandleA(str ptr ptr str str ptr long long long long ptr long ptr long ptr ptr ptr)
+ @ stdcall AccessCheckByTypeResultListAndAuditAlarmByHandleW(wstr ptr ptr wstr wstr ptr long long long long ptr long ptr long ptr ptr ptr)
+ @ stdcall AccessCheckByTypeResultListAndAuditAlarmW(wstr ptr wstr wstr ptr long long long long ptr long ptr long ptr ptr ptr)
  @ stdcall AddAccessAllowedAce (ptr long long ptr)
  @ stdcall AddAccessAllowedAceEx (ptr long long long ptr)
  @ stub AddAccessAllowedObjectAce
@@ -243,8 +243,8 @@
  @ stdcall GetFileSecurityW(wstr long ptr long ptr)
  @ stub GetInformationCodeAuthzLevelW
  @ stub GetInformationCodeAuthzPolicyW
- @ stub GetInheritanceSourceA
- @ stdcall GetInheritanceSourceW (ptr long long long ptr long ptr ptr ptr ptr)
+ @ stdcall GetInheritanceSourceA(str long long long ptr long ptr ptr ptr ptr)
+ @ stdcall GetInheritanceSourceW(wstr long long long ptr long ptr ptr ptr ptr)
  @ stdcall GetKernelObjectSecurity(long long ptr long ptr)
  @ stdcall GetLengthSid(ptr)
  @ stub GetLocalManagedApplicationData
@@ -448,6 +448,7 @@
  @ stub QueryAllTracesA
  @ stub QueryAllTracesW
  @ stub QueryRecoveryAgentsOnEncryptedFile
+ @ stdcall QuerySecurityAccessMask(long ptr)
  @ stdcall QueryServiceConfig2A(long long ptr long ptr)
  @ stdcall QueryServiceConfig2W(long long ptr long ptr)
  @ stdcall QueryServiceConfigA(long ptr long ptr)
@@ -467,6 +468,8 @@
  @ stdcall RegCloseKey(long)
  @ stdcall RegConnectRegistryA(str long ptr)
  @ stdcall RegConnectRegistryW(wstr long ptr)
+ @ stdcall RegCopyTreeA(ptr str ptr)
+ @ stdcall RegCopyTreeW(ptr wstr ptr)
  @ stdcall RegCreateKeyA(long str ptr)
  @ stdcall RegCreateKeyExA(long str long ptr long long ptr ptr ptr)
  @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
@@ -572,6 +575,7 @@
  @ stdcall SetNamedSecurityInfoW(wstr long ptr ptr ptr ptr ptr)
  @ stdcall SetPrivateObjectSecurity(long ptr ptr ptr long)
  @ stub SetPrivateObjectSecurityEx
+ @ stdcall SetSecurityAccessMask(long ptr)
  @ stdcall SetSecurityDescriptorControl(ptr long long)
  @ stdcall SetSecurityDescriptorDacl(ptr long ptr long)
  @ stdcall SetSecurityDescriptorGroup (ptr ptr long)

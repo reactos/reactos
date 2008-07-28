@@ -120,8 +120,8 @@
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 @ stdcall CreateSemaphoreA(ptr long long str)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
-@ stdcall CreateSemaphoreExA(ptr long long long str long long)
-@ stdcall CreateSemaphoreExW(ptr long long long wstr long long)
+@ stdcall CreateSemaphoreExA(ptr long long str long long)
+@ stdcall CreateSemaphoreExW(ptr long long wstr long long)
 @ stdcall CreateSocketHandle()
 @ stdcall CreateSymbolicLinkA(str str long)
 @ stdcall CreateSymbolicLinkW(wstr wstr long)
@@ -311,7 +311,7 @@
 @ stdcall GetConsoleCP()
 @ stub GetConsoleCharType
 @ stdcall GetConsoleCommandHistoryA(long long long) #check
-@ stdcall GetConsoleCommandHistoryLengthA(long long long)#check
+@ stdcall GetConsoleCommandHistoryLengthA(long)#check
 @ stdcall GetConsoleCommandHistoryLengthW(long)#check
 @ stdcall GetConsoleCommandHistoryW(long long long)#check
 @ stdcall GetConsoleCursorInfo(long ptr)
@@ -399,6 +399,7 @@
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
 @ stdcall GetLocaleInfoW(long long ptr long)
+@ stdcall GetLocaleInfoEx(wstr long wstr long)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
@@ -575,7 +576,7 @@
 @ stdcall InitAtomTable(long)
 @ stdcall InitializeCriticalSection(ptr)
 @ stdcall InitializeCriticalSectionAndSpinCount(ptr long)
-@ stdcall InitializeCriticalSectionEx(ptr long long)
+#@ stdcall InitializeCriticalSectionEx(ptr long long)
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
 @ stdcall InterlockedCompareExchange (ptr long long)
