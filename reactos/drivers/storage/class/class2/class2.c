@@ -1316,7 +1316,7 @@ Return Value:
     // of original IRP.
     //
 
-    nextIrpStack->Parameters.Others.Argument1 = (PVOID) irpCount;
+    nextIrpStack->Parameters.Others.Argument1 = (PVOID)(ULONG_PTR) irpCount;
 
     for (i = 0; i < irpCount; i++) {
 
