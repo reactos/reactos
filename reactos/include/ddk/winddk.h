@@ -5693,6 +5693,7 @@ typedef struct _PCIBUSDATA
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
 
+#if defined (_X86_)
 #if defined(NO_INTERLOCKED_INTRINSICS)
 NTKERNELAPI
 LONG
@@ -5727,20 +5728,31 @@ FASTCALL
 InterlockedExchangeAdd(
   IN OUT LONG volatile *Addend,
   IN LONG  Value);
-#endif
 
+#else // !defined(NO_INTERLOCKED_INTRINSICS)
+
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedIncrement _InterlockedIncrement
+#define InterlockedDecrement _InterlockedDecrement
+#define InterlockedExchangeAdd _InterlockedExchangeAdd
+#define InterlockedCompareExchange (LONG)_InterlockedCompareExchange
+#define InterlockedOr _InterlockedOr
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedXor _InterlockedXor
+
+#endif // !defined(NO_INTERLOCKED_INTRINSICS)
+
+#endif // defined (_X86_)
+
+#if !defined (_WIN64)
 /*
  * PVOID
  * InterlockedExchangePointer(
  *   IN OUT PVOID VOLATILE  *Target,
  *   IN PVOID  Value)
  */
-#if defined (_M_AMD64)
-#define InterlockedExchangePointer _InterlockedExchangePointer
-#else
 #define InterlockedExchangePointer(Target, Value) \
   ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
-#endif
 
 /*
  * PVOID
@@ -5749,16 +5761,20 @@ InterlockedExchangeAdd(
  *   IN PVOID  Exchange,
  *   IN PVOID  Comparand)
  */
-#if defined (_M_AMD64)
-#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
-#else
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
-#endif
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 #define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
 #define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
+
+#endif // !defined (_WIN64)
+
+#if defined (_M_AMD64)
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG *)a, b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement64((LONGLONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement64((LONGLONG *)a)
 #define InterlockedAnd _InterlockedAnd
 #define InterlockedOr _InterlockedOr
 #define InterlockedXor _InterlockedXor
@@ -5790,6 +5806,8 @@ InterlockedExchangeAdd(
 #define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
 #define QueryDepthSList(Head) ExQueryDepthSList(Head)
 #endif // !defined(_WINBASE_
+
+#endif // _M_AMD64
 
 #endif /* !__INTERLOCKED_DECLARED */
 
