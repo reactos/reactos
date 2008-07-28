@@ -481,7 +481,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(vo
 #if defined(_M_AMD64)
 static __inline__ __attribute__((always_inline)) long long _InterlockedDecrement64(volatile long long * const lpAddend)
 {
-	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
+	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
 }
 
 static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement64(volatile long long * const lpAddend)
