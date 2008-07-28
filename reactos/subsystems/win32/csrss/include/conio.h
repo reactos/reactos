@@ -83,12 +83,14 @@ typedef struct tagCSRSS_CONSOLE
   UINT OutputCodePage;
   PCSRSS_CONSOLE_VTBL Vtbl;
   LIST_ENTRY ProcessList;
+  struct tagALIAS_HEADER *Aliases;
 } CSRSS_CONSOLE;
 
+NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
 VOID STDCALL ConioDeleteConsole(Object_t *Object);
 VOID STDCALL ConioDeleteScreenBuffer(Object_t *Buffer);
 void STDCALL ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
-DWORD FASTCALL ConioGetBufferOffset(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
+PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
 VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,
@@ -161,6 +163,16 @@ CSR_API(CsrGetProcessList);
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
 #define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
+
+/* alias.c */
+VOID IntDeleteAllAliases(struct tagALIAS_HEADER *RootHeader);
+CSR_API(CsrAddConsoleAlias);
+CSR_API(CsrGetConsoleAlias);
+CSR_API(CsrGetAllConsoleAliases);
+CSR_API(CsrGetAllConsoleAliasesLength);
+CSR_API(CsrGetConsoleAliasesExes);
+CSR_API(CsrGetConsoleAliasesExesLength);
+
 
 #endif /* CONIO_H_INCLUDED */
 

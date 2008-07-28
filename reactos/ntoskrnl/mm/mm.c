@@ -48,7 +48,7 @@ BOOLEAN NTAPI MmIsAddressValid(PVOID VirtualAddress)
  */
 {
    MEMORY_AREA* MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
+   PMM_AVL_TABLE AddressSpace;
 
    if (VirtualAddress >= MmSystemRangeStart)
    {
@@ -56,7 +56,7 @@ BOOLEAN NTAPI MmIsAddressValid(PVOID VirtualAddress)
    }
    else
    {
-      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
+      AddressSpace = &PsGetCurrentProcess()->VadRoot;
    }
 
    MmLockAddressSpace(AddressSpace);
@@ -78,7 +78,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
                   ULONG_PTR Address,
                   BOOLEAN FromMdl)
 {
-   PMADDRESS_SPACE AddressSpace;
+   PMM_AVL_TABLE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
@@ -114,7 +114,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
+      AddressSpace = &PsGetCurrentProcess()->VadRoot;
    }
 
    if (!FromMdl)
@@ -179,7 +179,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                            ULONG_PTR Address,
                            BOOLEAN FromMdl)
 {
-   PMADDRESS_SPACE AddressSpace;
+   PMM_AVL_TABLE AddressSpace;
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
@@ -210,7 +210,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
+      AddressSpace = &PsGetCurrentProcess()->VadRoot;
    }
 
    if (!FromMdl)

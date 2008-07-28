@@ -15,6 +15,8 @@
 #define OBP_LOCK_STATE_RELEASED                     0xEEEE1234
 #define OBP_LOCK_STATE_INITIALIZED                  0xFFFF1234
 
+#define OBP_NAME_LOOKASIDE_MAX_SIZE 248
+
 ULONG
 FORCEINLINE
 ObpSelectObjectLockSlot(IN POBJECT_HEADER ObjectHeader)

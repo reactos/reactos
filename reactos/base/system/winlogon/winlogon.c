@@ -361,6 +361,10 @@ WinMain(
 	else
 		PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
 
+	/* Tell kernel that CurrentControlSet is good (needed
+	 * to support Last good known configuration boot) */
+	NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED);
+
 	/* Message loop for the SAS window */
 	while (GetMessageW(&Msg, WLSession->SASWindow, 0, 0))
 	{

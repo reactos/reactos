@@ -16,21 +16,16 @@
 #pragma GCC system_header
 #endif
 
-/* translate GCC target defines to MS equivalents. Keep this synchronized
-   with winnt.h. */
-#if defined(__i686__) && !defined(_M_IX86)
-#define _M_IX86 600
-#elif defined(__i586__) && !defined(_M_IX86)
-#define _M_IX86 500
-#elif defined(__i486__) && !defined(_M_IX86)
-#define _M_IX86 400
-#elif defined(__i386__) && !defined(_M_IX86)
-#define _M_IX86 300
+#ifdef __GNUC__
+#include <msvctarget.h>
 #endif
+
 #if defined(_M_IX86) && !defined(_X86_)
 #define _X86_
 #elif defined(_M_ALPHA) && !defined(_ALPHA_)
 #define _ALPHA_
+#elif defined(_M_ARM) && !defined(_ARM_)
+#define _ARM_
 #elif defined(_M_PPC) && !defined(_PPC_)
 #define _PPC_
 #elif defined(_M_MRX000) && !defined(_MIPS_)

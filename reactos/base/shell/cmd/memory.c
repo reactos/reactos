@@ -34,7 +34,6 @@ ConvertDWord (DWORD num, LPTSTR des, INT len, BOOL bSeparator)
 
 INT CommandMemory (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	MEMORYSTATUS ms;
 	TCHAR szMemoryLoad[20];
 	TCHAR szTotalPhys[20];
@@ -62,10 +61,9 @@ INT CommandMemory (LPTSTR cmd, LPTSTR param)
 	ConvertDWord (ms.dwTotalVirtual, szTotalVirtual, 20, TRUE);
 	ConvertDWord (ms.dwAvailVirtual, szAvailVirtual, 20, TRUE);
 
-	LoadString(CMD_ModuleHandle, STRING_MEMMORY_HELP2, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg,
-	             szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
-	             szAvailPageFile, szTotalVirtual, szAvailVirtual);
+	ConOutResPrintf(STRING_MEMMORY_HELP2,
+	                szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
+	                szAvailPageFile, szTotalVirtual, szAvailVirtual);
 
 	return 0;
 }

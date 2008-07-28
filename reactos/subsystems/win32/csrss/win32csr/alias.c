@@ -11,7 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <csrss.h>
+#include "w32csr.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -31,8 +31,6 @@ typedef struct tagALIAS_HEADER
     struct tagALIAS_HEADER * Next;
 
 }ALIAS_HEADER, *PALIAS_HEADER;
-
-static PALIAS_HEADER RootHeader = NULL;
 
 /* Ensure that a buffer is contained within the process's shared memory section. */
 static BOOL
@@ -73,7 +71,7 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
   PALIAS_HEADER Entry;
   UINT dwLength = wcslen(lpExeName) + 1;
 
-  Entry = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
+  Entry = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
   if (!Entry)
       return Entry;
   
@@ -88,35 +86,20 @@ VOID
 IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
 {
   PALIAS_HEADER CurrentHeader;
-  PALIAS_HEADER LastHeader = NULL;
+  PALIAS_HEADER *LastLink = RootHeader;
 
-  if (*RootHeader == 0)
-  {
-    *RootHeader = NewHeader;
-     return;
-  }
-
-  CurrentHeader = *RootHeader;
-
-  while(CurrentHeader)
+  while ((CurrentHeader = *LastLink) != NULL)
   {
       INT Diff = _wcsicmp(NewHeader->lpExeName, CurrentHeader->lpExeName);
       if (Diff < 0)
       {
-        if (!LastHeader)
-            *RootHeader = NewHeader;
-        else
-            LastHeader->Next = NewHeader;
-
-        NewHeader->Next = CurrentHeader;
-        return;
+        break;
       }
-      LastHeader = CurrentHeader;
-      CurrentHeader = CurrentHeader->Next;
+      LastLink = &CurrentHeader->Next;
   }
 
-  LastHeader->Next = NewHeader;
-  NewHeader->Next = NULL;
+  *LastLink = NewHeader;
+  NewHeader->Next = CurrentHeader;
 }
 
 PALIAS_ENTRY
@@ -146,35 +129,20 @@ VOID
 IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
 {
   PALIAS_ENTRY CurrentEntry;
-  PALIAS_ENTRY LastEntry = NULL;
+  PALIAS_ENTRY *LastLink = &Header->Data;
 
-  CurrentEntry = Header->Data;
-
-  if (!CurrentEntry)
-  {
-    Header->Data = NewEntry;
-    NewEntry->Next = NULL;
-    return;
-  }
-
-  while(CurrentEntry)
+  while ((CurrentEntry = *LastLink) != NULL)
   {
     INT Diff = _wcsicmp(NewEntry->lpSource, CurrentEntry->lpSource);
     if (Diff < 0)
     {
-        if (!LastEntry)
-            Header->Data = NewEntry;
-        else
-            LastEntry->Next = NewEntry;
-        NewEntry->Next = CurrentEntry;
-        return;
+        break;
     }
-    LastEntry = CurrentEntry;
-    CurrentEntry = CurrentEntry->Next;
+    LastLink = &CurrentEntry->Next;
   }
 
-  LastEntry->Next = NewEntry;
-  NewEntry->Next = NULL;
+  *LastLink = NewEntry;
+  NewEntry->Next = CurrentEntry;
 }
 
 PALIAS_ENTRY
@@ -187,7 +155,7 @@ IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
    dwSource = wcslen(lpSource) + 1;
    dwTarget = wcslen(lpTarget) + 1;
 
-   Entry = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
+   Entry = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
    if (!Entry)
        return Entry;
 
@@ -291,33 +259,40 @@ IntGetAllConsoleAliases(PALIAS_HEADER Header, LPWSTR TargetBuffer, UINT TargetBu
 VOID
 IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
 {
-    PALIAS_ENTRY LastEntry;
+    PALIAS_ENTRY *LastLink = &Header->Data;
     PALIAS_ENTRY CurEntry;
 
-    if (Header->Data == Entry)
-    {
-        Header->Data = Entry->Next;
-        RtlFreeHeap(CsrssApiHeap, 0, Entry);
-        return;
-    }
-    LastEntry = Header->Data;
-    CurEntry = LastEntry->Next;
-
-    while(CurEntry)
+    while ((CurEntry = *LastLink) != NULL)
     {
         if (CurEntry == Entry)
         {
-            LastEntry->Next = Entry->Next;
-            RtlFreeHeap(CsrssApiHeap, 0, Entry);
+            *LastLink = Entry->Next;
+            RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
             return;
         }
-        LastEntry = CurEntry;
-        CurEntry = CurEntry->Next;
+        LastLink = &CurEntry->Next;
+    }
+}
+VOID
+IntDeleteAllAliases(PALIAS_HEADER RootHeader)
+{
+    PALIAS_HEADER Header, NextHeader;
+    PALIAS_ENTRY Entry, NextEntry;
+    for (Header = RootHeader; Header; Header = NextHeader)
+    {
+        NextHeader = Header->Next;
+        for (Entry = Header->Data; Entry; Entry = NextEntry)
+        {
+            NextEntry = Entry->Next;
+            RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
+        }
+        RtlFreeHeap(Win32CsrApiHeap, 0, Header);
     }
 }
 
 CSR_API(CsrAddConsoleAlias)
 {
+    PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     WCHAR * lpExeName;
@@ -341,16 +316,23 @@ CSR_API(CsrAddConsoleAlias)
         return Request->Status;
     }
     
-    Header = IntFindAliasHeader(RootHeader, lpExeName);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Request->Status))
+    {
+        return Request->Status;
+    }
+
+    Header = IntFindAliasHeader(Console->Aliases, lpExeName);
     if (!Header && lpTarget != NULL)
     {
         Header = IntCreateAliasHeader(lpExeName);
         if (!Header)
         {
             Request->Status = STATUS_INSUFFICIENT_RESOURCES;
+            ConioUnlockConsole(Console);
             return Request->Status;
         }
-        IntInsertAliasHeader(&RootHeader, Header);
+        IntInsertAliasHeader(&Console->Aliases, Header);
     }
 
     if (lpTarget == NULL) // delete the entry
@@ -365,6 +347,7 @@ CSR_API(CsrAddConsoleAlias)
         {
             Request->Status = STATUS_INVALID_PARAMETER;
         }
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
@@ -373,16 +356,19 @@ CSR_API(CsrAddConsoleAlias)
     if (!Entry)
     {
         Request->Status = STATUS_INSUFFICIENT_RESOURCES;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
     IntInsertAliasEntry(Header, Entry);
     Request->Status = STATUS_SUCCESS;
+    ConioUnlockConsole(Console);
     return Request->Status;
 }
 
 CSR_API(CsrGetConsoleAlias)
 {
+    PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
@@ -405,10 +391,17 @@ CSR_API(CsrGetConsoleAlias)
         return Request->Status;
     }
 
-    Header = IntFindAliasHeader(RootHeader, lpExeName);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Request->Status))
+    {
+        return Request->Status;
+    }
+
+    Header = IntFindAliasHeader(Console->Aliases, lpExeName);
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
@@ -416,6 +409,7 @@ CSR_API(CsrGetConsoleAlias)
     if (!Entry)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
@@ -423,23 +417,27 @@ CSR_API(CsrGetConsoleAlias)
     if (Length > Request->Data.GetConsoleAlias.TargetBufferLength)
     {
         Request->Status = STATUS_BUFFER_TOO_SMALL;
+        ConioUnlockConsole(Console);
         return Request->Status;      
     }
 
     if (!ValidateBuffer(ProcessData, lpTarget, Request->Data.GetConsoleAlias.TargetBufferLength))
     {
         Request->Status = STATUS_ACCESS_VIOLATION;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
     wcscpy(lpTarget, Entry->lpTarget);
     Request->Data.GetConsoleAlias.BytesWritten = Length;
     Request->Status = STATUS_SUCCESS;
+    ConioUnlockConsole(Console);
     return Request->Status;
 }
 
 CSR_API(CsrGetAllConsoleAliases)
 {
+    PCSRSS_CONSOLE Console;
     ULONG BytesWritten;
     PALIAS_HEADER Header;
 
@@ -449,16 +447,24 @@ CSR_API(CsrGetAllConsoleAliases)
         return Request->Status;
     }
 
-    Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAlias.lpExeName);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Request->Status))
+    {
+        return Request->Status;
+    }
+
+    Header = IntFindAliasHeader(Console->Aliases, Request->Data.GetAllConsoleAlias.lpExeName);
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
     if (IntGetAllConsoleAliasesLength(Header) > Request->Data.GetAllConsoleAlias.AliasBufferLength)
     {
         Request->Status = STATUS_BUFFER_OVERFLOW;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
@@ -467,6 +473,7 @@ CSR_API(CsrGetAllConsoleAliases)
                         Request->Data.GetAllConsoleAlias.AliasBufferLength))
     {
         Request->Status = STATUS_ACCESS_VIOLATION;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
@@ -476,11 +483,13 @@ CSR_API(CsrGetAllConsoleAliases)
 
     Request->Data.GetAllConsoleAlias.BytesWritten = BytesWritten;
     Request->Status = STATUS_SUCCESS;
+    ConioUnlockConsole(Console);
     return Request->Status;
 }
 
 CSR_API(CsrGetAllConsoleAliasesLength)
 {
+    PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     UINT Length;
 
@@ -490,38 +499,55 @@ CSR_API(CsrGetAllConsoleAliasesLength)
         return Request->Status;
     }
 
-    Header = IntFindAliasHeader(RootHeader, Request->Data.GetAllConsoleAliasesLength.lpExeName);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Request->Status))
+    {
+        return Request->Status;
+    }
+
+    Header = IntFindAliasHeader(Console->Aliases, Request->Data.GetAllConsoleAliasesLength.lpExeName);
     if (!Header)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
     Length = IntGetAllConsoleAliasesLength(Header);
     Request->Data.GetAllConsoleAliasesLength.Length = Length;
     Request->Status = STATUS_SUCCESS;
+    ConioUnlockConsole(Console);
     return Request->Status;
 
 }
 
 CSR_API(CsrGetConsoleAliasesExes)
 {
+    PCSRSS_CONSOLE Console;
     UINT BytesWritten;
     UINT ExesLength;
     
     DPRINT("CsrGetConsoleAliasesExes entered\n");
 
-    ExesLength = IntGetConsoleAliasesExesLength(RootHeader);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Request->Status))
+    {
+        return Request->Status;
+    }
+
+    ExesLength = IntGetConsoleAliasesExesLength(Console->Aliases);
     
     if (ExesLength > Request->Data.GetConsoleAliasesExes.Length)
     {
         Request->Status = STATUS_BUFFER_OVERFLOW;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
     if (Request->Data.GetConsoleAliasesExes.ExeNames == NULL)
     {
         Request->Status = STATUS_INVALID_PARAMETER;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
     
@@ -530,23 +556,30 @@ CSR_API(CsrGetConsoleAliasesExes)
                         Request->Data.GetConsoleAliasesExes.Length))
     {
         Request->Status = STATUS_ACCESS_VIOLATION;
+        ConioUnlockConsole(Console);
         return Request->Status;
     }
 
-    BytesWritten = IntGetConsoleAliasesExes(RootHeader, 
+    BytesWritten = IntGetConsoleAliasesExes(Console->Aliases, 
                                             Request->Data.GetConsoleAliasesExes.ExeNames,
                                             Request->Data.GetConsoleAliasesExes.Length);
 
     Request->Data.GetConsoleAliasesExes.BytesWritten = BytesWritten;
     Request->Status = STATUS_SUCCESS;
+    ConioUnlockConsole(Console);
     return Request->Status;
 }
 
 CSR_API(CsrGetConsoleAliasesExesLength)
 {
+    PCSRSS_CONSOLE Console;
     DPRINT("CsrGetConsoleAliasesExesLength entered\n");
 
-    Request->Status = STATUS_SUCCESS;
-    Request->Data.GetConsoleAliasesExesLength.Length = IntGetConsoleAliasesExesLength(RootHeader);
+    Request->Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (NT_SUCCESS(Request->Status))
+    {
+        Request->Data.GetConsoleAliasesExesLength.Length = IntGetConsoleAliasesExesLength(Console->Aliases);
+        ConioUnlockConsole(Console);
+    }
     return Request->Status;
 }

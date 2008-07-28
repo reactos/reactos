@@ -229,12 +229,13 @@ DriveGeneralDlg(
 )
 {
     LPPROPSHEETPAGEW ppsp;
-	LPDRAWITEMSTRUCT drawItem;
+    LPDRAWITEMSTRUCT drawItem;
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
     WCHAR * lpstr;
     WCHAR szPath[MAX_PATH];
     UINT length;
+    LPPSHNOTIFY lppsn;
 
     switch(uMsg)
     {
@@ -246,11 +247,11 @@ DriveGeneralDlg(
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lpstr);
         InitializeGeneralDriveDialog(hwndDlg, lpstr);
         return TRUE;
-	case WM_DRAWITEM:
-		drawItem = (LPDRAWITEMSTRUCT)lParam;
-	    if (drawItem->CtlID >= 14013 && drawItem->CtlID <= 14015)
+    case WM_DRAWITEM:
+        drawItem = (LPDRAWITEMSTRUCT)lParam;
+        if (drawItem->CtlID >= 14013 && drawItem->CtlID <= 14015)
         {
-			PaintStaticControls(hwndDlg, drawItem);
+            PaintStaticControls(hwndDlg, drawItem);
             return TRUE;
         }
         break;
@@ -272,7 +273,32 @@ DriveGeneralDlg(
               CloseHandle(pi.hProcess);
               CloseHandle(pi.hThread);
            }
+           break;
         }
+    case WM_NOTIFY:
+        lppsn = (LPPSHNOTIFY) lParam;
+        if (LOWORD(wParam) == 14001)
+        {
+           if (HIWORD(wParam) == EN_CHANGE)
+           {
+              PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+           }
+           break;
+        }
+        if (lppsn->hdr.code == PSN_APPLY)
+        {
+           lpstr = (LPWSTR)GetWindowLong(hwndDlg, DWLP_USER);
+           if (lpstr && SendDlgItemMessageW(hwndDlg, 14001, WM_GETTEXT, sizeof(szPath)/sizeof(WCHAR), (LPARAM)szPath))
+           {
+              szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+              SetVolumeLabelW(lpstr, szPath);
+           }
+           SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+           return TRUE;
+        }
+        break;
+
+    default:
         break;
    }
 
@@ -409,6 +435,8 @@ SH_ShowDriveProperties(WCHAR * drive)
    PROPSHEETHEADERW psh;
    BOOL ret;
    UINT i;
+   WCHAR szName[MAX_PATH];
+   DWORD dwMaxComponent, dwFileSysFlags;
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
    psh.dwSize = sizeof(PROPSHEETHEADERW);
@@ -416,6 +444,30 @@ SH_ShowDriveProperties(WCHAR * drive)
    psh.hwndParent = NULL;
    psh.nStartPage = 0;
    psh.phpage = hpsp;
+
+
+   if (GetVolumeInformationW(drive, szName, sizeof(szName)/sizeof(WCHAR), NULL, &dwMaxComponent,
+                             &dwFileSysFlags, NULL, 0))
+   {
+      psh.pszCaption = szName;
+      psh.dwFlags |= PSH_PROPTITLE;
+      if (!wcslen(szName))
+      {
+          /* FIXME
+           * check if disk is a really a local hdd 
+           */
+          i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szName, sizeof(szName)/sizeof(WCHAR));
+          if (i > 0 && i < (sizeof(szName)/sizeof(WCHAR)) + 6)
+          {
+              szName[i] = L' ';
+              szName[i+1] = L'(';
+              wcscpy(&szName[i+2], drive);
+              szName[i+4] = L')';
+              szName[i+5] = L'\0';
+          }
+      }
+   }
+
 
    for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
    {

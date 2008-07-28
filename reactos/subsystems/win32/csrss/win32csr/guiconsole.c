@@ -880,7 +880,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
-        From = Buff->Buffer + ConioGetBufferOffset(Buff, LeftChar, Line);
+        From = ConioCoordToPointer(Buff, LeftChar, Line);
         Start = LeftChar;
         To = GuiData->LineBuffer;
 
@@ -934,7 +934,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
             {
                 CursorHeight = 1;
             }
-            From = Buff->Buffer + ConioGetBufferOffset(Buff, Buff->CurrentX, Buff->CurrentY) + 1;
+            From = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY) + 1;
 
             if (*From != DEFAULT_ATTRIB)
             {

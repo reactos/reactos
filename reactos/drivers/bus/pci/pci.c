@@ -233,17 +233,9 @@ NTSTATUS
 PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
                           PPCI_DEVICE Device)
 {
-  WCHAR Buffer[32];
-  ULONG Index;
+  WCHAR Buffer[3];
 
-  Index = 0;
-  if (((PPDO_DEVICE_EXTENSION)Device->Pdo->DeviceExtension)->PciDevice->BusNumber != 0)
-  {
-    /* FIXME: Copy InstanceID of parent PCI bus to Buffer */
-    // Index += swprintf(Buffer, ....);
-  }
-
-  swprintf(&Buffer[Index], L"%02X", Device->SlotNumber.u.AsULONG & 0xff);
+  swprintf(Buffer, L"%02X", Device->SlotNumber.u.AsULONG & 0xff);
 
   return RtlCreateUnicodeString(InstanceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }

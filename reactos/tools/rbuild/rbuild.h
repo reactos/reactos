@@ -83,7 +83,6 @@ class Invoke;
 class InvokeFile;
 class Dependency;
 class ImportLibrary;
-class If;
 class CompilerFlag;
 class LinkerFlag;
 class LinkerScript;
@@ -198,7 +197,6 @@ public:
 class ParseContext
 {
 public:
-	If* ifData;
 	CompilationUnit* compilationUnit;
 	ParseContext ();
 };
@@ -215,7 +213,6 @@ public:
 	std::vector<Property*> properties;
 	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
-	std::vector<If*> ifs;
 	int asmFiles; // number of .asm files in compilationUnits
 
 	IfableData();
@@ -254,9 +251,9 @@ public:
 	const Module* LocateModule ( const std::string& name ) const;
 	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
+	const Property* LookupProperty ( const std::string& name ) const;
 private:
 	std::string ResolveNextProperty ( const std::string& s ) const;
-	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,
 	                              std::string alternativeName );
@@ -275,39 +272,39 @@ private:
 
 enum ModuleType
 {
-	BuildTool = 0,
-	StaticLibrary = 1,
-	ObjectLibrary = 2,
-	Kernel = 3,
-	KernelModeDLL = 4,
-	KernelModeDriver = 5,
-	NativeDLL = 6,
-	NativeCUI = 7,
-	Win32DLL = 8,
-	Win32OCX = 9,
-	Win32CUI = 10,
-	Win32GUI = 11,
-	BootLoader = 12,
-	BootSector = 13,
-	Iso = 14,
-	LiveIso = 15,
-	Test = 16,
-	RpcServer = 17,
-	RpcClient = 18,
-	Alias = 19,
-	BootProgram = 20,
-	Win32SCR = 21,
-	IdlHeader = 23,
-	IsoRegTest = 24,
-	LiveIsoRegTest = 25,
-	EmbeddedTypeLib = 26,
-	ElfExecutable = 27,
+	BuildTool,
+	StaticLibrary,
+	ObjectLibrary,
+	Kernel,
+	KernelModeDLL,
+	KernelModeDriver,
+	NativeDLL,
+	NativeCUI,
+	Win32DLL,
+	Win32OCX,
+	Win32CUI,
+	Win32GUI,
+	BootLoader,
+	BootSector,
+	Iso,
+	LiveIso,
+	Test,
+	RpcServer,
+	RpcClient,
+	Alias,
+	BootProgram,
+	Win32SCR,
+	IdlHeader,
+	IsoRegTest,
+	LiveIsoRegTest,
+	EmbeddedTypeLib,
+	ElfExecutable,
 	RpcProxy,
 	HostStaticLibrary,
-	TypeDontCare,
 	Cabinet,
 	KeyboardLayout,
-	MessageHeader
+	MessageHeader,
+	TypeDontCare, // always at the end
 };
 
 enum HostType
@@ -597,26 +594,6 @@ public:
 	                const XMLElement& node,
 	                const Module* module );
 	~ImportLibrary ();
-};
-
-
-class If
-{
-public:
-	const XMLElement& node;
-	const Project& project;
-	const Module* module;
-	const bool negated;
-	std::string property, value;
-	IfableData data;
-
-	If ( const XMLElement& node_,
-	     const Project& project_,
-	     const Module* module_,
-	     const bool negated_ = false );
-	~If();
-
-	void ProcessXML();
 };
 
 

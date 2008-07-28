@@ -129,18 +129,16 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
   UINT c;
-  PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
+  PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
 
   hash = ((ULONG_PTR)Pid >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
+  pPrevLink = &ProcessData[hash];
 
   LOCK;
 
-  pProcessData = ProcessData[hash];
-
-  while (pProcessData && pProcessData->ProcessId != Pid)
+  while ((pProcessData = *pPrevLink) && pProcessData->ProcessId != Pid)
     {
-      pPrevProcessData = pProcessData;
-      pProcessData = pProcessData->next;
+      pPrevLink = &pProcessData->next;
     }
 
   if (pProcessData)
@@ -150,10 +148,6 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
       {
          NtClose(pProcessData->Process);
       }
-      if (pProcessData->Console)
-        {
-          RemoveEntryList(&pProcessData->ProcessEntry);
-        }
       if (pProcessData->HandleTable)
         {
           for (c = 0; c < pProcessData->HandleTableSize; c++)
@@ -168,6 +162,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
       RtlDeleteCriticalSection(&pProcessData->HandleTableLock);
       if (pProcessData->Console)
         {
+          RemoveEntryList(&pProcessData->ProcessEntry);
           CsrReleaseObjectByPointer((Object_t *) pProcessData->Console);
         }
       if (pProcessData->CsrSectionViewBase)
@@ -178,14 +173,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
         {
           NtClose(pProcessData->ServerCommunicationPort);
         }
-      if (pPrevProcessData)
-        {
-          pPrevProcessData->next = pProcessData->next;
-        }
-      else
-        {
-          ProcessData[hash] = pProcessData->next;
-        }
+      *pPrevLink = pProcessData->next;
 
       RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
       UNLOCK;

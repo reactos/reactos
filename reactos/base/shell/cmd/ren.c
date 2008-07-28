@@ -42,7 +42,6 @@ enum
  */
 INT cmd_rename (LPTSTR cmd, LPTSTR param)
 {
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
   LPTSTR *arg = NULL;
   INT args = 0;
   INT nEvalArgs = 0; /* nunber of evaluated arguments */
@@ -232,8 +231,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 		{
 		  if (!(dwFlags & REN_ERROR))
 		  {
-		    LoadString(CMD_ModuleHandle, STRING_REN_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		    ConErrPrintf(szMsg, GetLastError());
+		    ConErrResPrintf(STRING_REN_ERROR1, GetLastError());
 		  }
 		}
 	    }
@@ -245,10 +243,9 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
   if (!(dwFlags & REN_QUIET))
   {
     if (dwFiles == 1)
-      LoadString( CMD_ModuleHandle, STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
+      ConOutResPrintf(STRING_REN_HELP2, dwFiles);
     else
-      LoadString( CMD_ModuleHandle, STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf(szMsg,dwFiles);
+      ConOutResPrintf(STRING_REN_HELP3, dwFiles);
   }
 
   freep(arg);

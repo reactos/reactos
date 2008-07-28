@@ -6,7 +6,10 @@ extern "C" {
 #endif
 
 #include <windows.h>
+#include <objbase.h>
 #define ANY_SIZE 1
+
+/* Structures used by the API Interface */
 
 typedef struct _DELETED_FILE_DETAILS_A
 {
@@ -34,12 +37,29 @@ typedef struct _DELETED_FILE_DETAILS_W
 #define PDELETED_FILE_DETAILS PDELETED_FILE_DETAILS_A
 #endif
 
+/* API Interface */
+
+/* Function called for each deleted file in the recycle bin
+ * Context: value given by the caller of the EnumerateRecycleBin function
+ * hDeletedFile: a handle to the deleted file
+ * Returning FALSE stops the enumeration.
+ * Remarks: the handle must be closed with the CloseRecycleBinHandle function
+ */
 typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HANDLE hDeletedFile);
 
+/* Closes a file deleted handle.
+ * hDeletedFile: the handle to close
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remark: The handle is obtained in the PENUMERATE_RECYCLEBIN_CALLBACK callback
+ */
 BOOL WINAPI
 CloseRecycleBinHandle(
 	IN HANDLE hDeletedFile);
 
+/* Moves a file to the recycle bin.
+ * FileName: the name of the file to move the recycle bin
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ */
 BOOL WINAPI
 DeleteFileToRecycleBinA(
 	IN LPCSTR FileName);
@@ -52,6 +72,11 @@ DeleteFileToRecycleBinW(
 #define DeleteFileToRecycleBin DeleteFileToRecycleBinA
 #endif
 
+/* Removes all elements contained in a recycle bin
+ * pszRoot: the name of the drive containing the recycle bin
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remarks: 'pszRoot' can be NULL to mean 'all recycle bins'.
+ */
 BOOL WINAPI
 EmptyRecycleBinA(
 	IN LPCSTR pszRoot OPTIONAL);
@@ -64,6 +89,13 @@ EmptyRecycleBinW(
 #define EmptyRecycleBin EmptyRecycleBinA
 #endif
 
+/* Enumerate contents of a recycle bin.
+ * pszRoot: the name of the drive containing the recycle bin
+ * pFnCallback: callback function to be called for each deleted item found
+ * Context: some value which will be given back in the callback function
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remarks: 'pszRoot' can be NULL to mean 'all recycle bins'.
+ */
 BOOL WINAPI
 EnumerateRecycleBinA(
 	IN LPCSTR pszRoot OPTIONAL,
@@ -80,6 +112,14 @@ EnumerateRecycleBinW(
 #define EnumerateRecycleBin EnumerateRecycleBinA
 #endif
 
+/* Gets details about a deleted file
+ * hDeletedFile: handle of the deleted file to get details about
+ * BufferSize: size of the 'FileDetails' buffer, in bytes
+ * FileDetails: if the function succeeded, contains details about the deleted file
+ * RequiredSize: contains the minimal buffer size required to get file information details
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remark: The handle is obtained in the PENUMERATE_RECYCLEBIN_CALLBACK callback
+ */
 BOOL WINAPI
 GetDeletedFileDetailsA(
 	IN HANDLE hDeletedFile,
@@ -98,67 +138,87 @@ GetDeletedFileDetailsW(
 #define GetDeletedFileDetails GetDeletedFileDetailsA
 #endif
 
+/* Restores a deleted file
+ * hDeletedFile: handle of the deleted file to restore
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remarks: if the function succeeds, the handle is not valid anymore.
+ */
 BOOL WINAPI
 RestoreFile(
 	IN HANDLE hDeletedFile);
 
 /* COM interface */
 
-typedef interface IRecycleBinFile IRecycleBinFile;
-EXTERN_C const IID IID_IRecycleBinFile;
+#undef INTERFACE
+#define INTERFACE IRecycleBinFile
 
-typedef struct IRecycleBinFileVtbl
+DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
 {
-	HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-		IN IRecycleBinFile *This,
-		IN REFIID riid,
-		OUT void **ppvObject);
+	BEGIN_INTERFACE
 
-	ULONG (STDMETHODCALLTYPE *AddRef)(
-		IN IRecycleBinFile *This);
+	/* IUnknown methods */
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppvObject) PURE;
+	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG, Release)(THIS) PURE;
 
-	ULONG (STDMETHODCALLTYPE *Release)(
-		IN IRecycleBinFile *This);
+	/* IRecycleBinFile methods */
+	STDMETHOD(GetLastModificationTime)(THIS_ FILETIME *pLastModificationTime) PURE;
+	STDMETHOD(GetDeletionTime)(THIS_ FILETIME *pDeletionTime) PURE;
+	STDMETHOD(GetFileSize)(THIS_ ULARGE_INTEGER *pFileSize) PURE;
+	STDMETHOD(GetPhysicalFileSize)(THIS_ ULARGE_INTEGER *pPhysicalFileSize) PURE;
+	STDMETHOD(GetAttributes)(THIS_ DWORD *pAttributes) PURE;
+	STDMETHOD(GetFileName)(THIS_ SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) PURE;
+	STDMETHOD(Delete)(THIS) PURE;
+	STDMETHOD(Restore)(THIS) PURE;
 
-	HRESULT (STDMETHODCALLTYPE *GetLastModificationTime)(
-		IN IRecycleBinFile *This,
-		OUT FILETIME *pLastModificationTime);
-
-	HRESULT (STDMETHODCALLTYPE *GetDeletionTime)(
-		IN IRecycleBinFile *This,
-		OUT FILETIME *pDeletionTime);
-
-	HRESULT (STDMETHODCALLTYPE *GetFileSize)(
-		IN IRecycleBinFile *This,
-		OUT ULARGE_INTEGER *pFileSize);
-
-	HRESULT (STDMETHODCALLTYPE *GetPhysicalFileSize)(
-		IN IRecycleBinFile *This,
-		OUT ULARGE_INTEGER *pPhysicalFileSize);
-
-	HRESULT (STDMETHODCALLTYPE *GetAttributes)(
-		IN IRecycleBinFile *This,
-		OUT DWORD *pAttributes);
-
-	HRESULT (STDMETHODCALLTYPE *GetFileName)(
-		IN IRecycleBinFile *This,
-		IN SIZE_T BufferSize,
-		IN OUT LPWSTR Buffer,
-		OUT SIZE_T *RequiredSize);
-
-	HRESULT (STDMETHODCALLTYPE *Delete)(
-		IN IRecycleBinFile *This);
-
-	HRESULT (STDMETHODCALLTYPE *Restore)(
-		IN IRecycleBinFile *This);
-} IRecycleBinFileVtbl;
-
-interface IRecycleBinFile
-{
-	CONST_VTBL struct IRecycleBinFileVtbl *lpVtbl;
+	END_INTERFACE
 };
 
-#ifdef COBJMACROS
+#undef INTERFACE
+#define INTERFACE IRecycleBinEnumList
+
+DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
+{
+	BEGIN_INTERFACE
+
+	/* IUnknown methods */
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppvObject) PURE;
+	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+	/* IRecycleBinEnumList methods */
+	STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched);
+	STDMETHOD(Skip)(THIS_ DWORD celt) PURE;
+	STDMETHOD(Reset)(THIS) PURE;
+
+	END_INTERFACE
+};
+
+#undef INTERFACE
+#define INTERFACE IRecycleBin
+
+DECLARE_INTERFACE_(IRecycleBin, IUnknown)
+{
+	BEGIN_INTERFACE
+
+	/* IUnknown methods */
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppvObject) PURE;
+	STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+	/* IRecycleBin methods */
+	STDMETHOD(DeleteFile)(THIS_ LPCWSTR szFileName);
+	STDMETHOD(EmptyRecycleBin)(THIS);
+	STDMETHOD(EnumObjects)(THIS_ IRecycleBinEnumList **ppEnumList);
+
+	END_INTERFACE
+};
+
+EXTERN_C const IID IID_IRecycleBinFile;
+EXTERN_C const IID IID_IRecycleBinEnumList;
+EXTERN_C const IID IID_IRecycleBin;
+
+#if (!defined(__cplusplus) || defined(CINTERFACE)) && defined(COBJMACROS)
 #define IRecycleBinFile_QueryInterface(This, riid, ppvObject) \
 	(This)->lpVtbl->QueryInterface(This, riid, ppvObject)
 #define IRecycleBinFile_AddRef(This) \
@@ -181,44 +241,7 @@ interface IRecycleBinFile
 	(This)->lpVtbl->Delete(This)
 #define IRecycleBinFile_Restore(This) \
 	(This)->lpVtbl->Restore(This)
-#endif
 
-typedef interface IRecycleBinEnumList IRecycleBinEnumList;
-EXTERN_C const IID IID_IRecycleBinEnumList;
-
-typedef struct IRecycleBinEnumListVtbl
-{
-	HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-		IN IRecycleBinEnumList *This,
-		IN REFIID riid,
-		OUT void **ppvObject);
-
-	ULONG (STDMETHODCALLTYPE *AddRef)(
-		IN IRecycleBinEnumList *This);
-
-	ULONG (STDMETHODCALLTYPE *Release)(
-		IN IRecycleBinEnumList *This);
-
-	HRESULT (STDMETHODCALLTYPE *Next)(
-		IN IRecycleBinEnumList *This,
-		IN DWORD celt,
-		IN OUT IRecycleBinFile **rgelt,
-		OUT DWORD *pceltFetched);
-
-	HRESULT (STDMETHODCALLTYPE *Skip)(
-		IN IRecycleBinEnumList *This,
-		IN DWORD celt);
-
-	HRESULT (STDMETHODCALLTYPE *Reset)(
-		IN IRecycleBinEnumList *This);
-} IRecycleBinEnumListVtbl;
-
-interface IRecycleBinEnumList
-{
-	CONST_VTBL struct IRecycleBinEnumListVtbl *lpVtbl;
-};
-
-#ifdef COBJMACROS
 #define IRecycleBinEnumList_QueryInterface(This, riid, ppvObject) \
 	(This)->lpVtbl->QueryInterface(This, riid, ppvObject)
 #define IRecycleBinEnumList_AddRef(This) \
@@ -231,42 +254,7 @@ interface IRecycleBinEnumList
 	(This)->lpVtbl->Skip(This, celt)
 #define IRecycleBinEnumList_Reset(This) \
 	(This)->lpVtbl->Reset(This)
-#endif
 
-typedef interface IRecycleBin IRecycleBin;
-EXTERN_C const IID IID_IRecycleBin;
-
-typedef struct IRecycleBinVtbl
-{
-	HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-		IN IRecycleBin *This,
-		IN REFIID riid,
-		OUT void **ppvObject);
-
-	ULONG (STDMETHODCALLTYPE *AddRef)(
-		IN IRecycleBin *This);
-
-	ULONG (STDMETHODCALLTYPE *Release)(
-		IN IRecycleBin *This);
-
-	HRESULT (STDMETHODCALLTYPE *DeleteFile)(
-		IN IRecycleBin *This,
-		IN LPCWSTR szFileName);
-
-	HRESULT (STDMETHODCALLTYPE *EmptyRecycleBin)(
-		IN IRecycleBin *This);
-
-	HRESULT (STDMETHODCALLTYPE *EnumObjects)(
-		IN IRecycleBin *This,
-		OUT IRecycleBinEnumList **ppEnumList);
-} IRecycleBinVtbl;
-
-interface IRecycleBin
-{
-	CONST_VTBL struct IRecycleBinVtbl *lpVtbl;
-};
-
-#ifdef COBJMACROS
 #define IRecycleBin_QueryInterface(This, riid, ppvObject) \
 	(This)->lpVtbl->QueryInterface(This, riid, ppvObject)
 #define IRecycleBin_AddRef(This) \

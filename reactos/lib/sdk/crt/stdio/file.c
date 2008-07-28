@@ -96,7 +96,7 @@ typedef struct {
 
 /*static */ioinfo fdesc[MAX_FILES];
 
-FILE _iob[3];
+FILE _iob[3] = { { 0 } };
 
 static int fdstart = 3; /* first unallocated fd */
 static int fdend = 3; /* highest allocated fd */
@@ -182,7 +182,7 @@ static HANDLE fdtoh(int fd)
     *_errno() = EBADF;
     return INVALID_HANDLE_VALUE;
   }
-  if (fdesc[fd].handle == INVALID_HANDLE_VALUE) FIXME("wtf\n");
+  //if (fdesc[fd].handle == INVALID_HANDLE_VALUE) FIXME("wtf\n");
   return fdesc[fd].handle;
 }
 

@@ -55,11 +55,9 @@ enum
 static INT MoveOverwrite (LPTSTR fn)
 {
 	/*ask the user if they want to override*/
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT res;
-	LoadString(CMD_ModuleHandle, STRING_MOVE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg,fn);
-	res = FilePromptYNA (_T(""));
+	ConOutResPrintf(STRING_MOVE_HELP1, fn);
+	res = FilePromptYNA (0);
 	return res;
 }
 
@@ -87,7 +85,6 @@ void GetDirectory (LPTSTR wholepath, LPTSTR directory, BOOL CheckExisting)
 
 INT cmd_move (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
 	INT argc, i, nFiles;
 	TCHAR szDestPath[MAX_PATH];
@@ -519,11 +516,9 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			}
 		}
 		if (MoveStatus)
-			LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+			ConOutResPrintf(STRING_MOVE_ERROR1);
 		else
-			LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-		
-		ConOutPrintf(szMsg);
+			ConOutResPrintf(STRING_MOVE_ERROR2);
 	}
 	while ((!OnlyOneFile || dwMoveStatusFlags & MOVE_SRC_CURRENT_IS_DIR ) &&
 			!(dwMoveStatusFlags & MOVE_SOURCE_IS_DIR) &&

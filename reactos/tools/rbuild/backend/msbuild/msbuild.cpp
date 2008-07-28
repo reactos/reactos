@@ -100,16 +100,6 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	{
 		const IfableData& data = *ifs_list.back();
 		ifs_list.pop_back();
-		for ( i = 0; i < data.ifs.size(); i++ )
-		{
-			const Property* property = _lookup_property( module, data.ifs[i]->property );
-			if ( property != NULL )
-			{
-				if ( data.ifs[i]->value == property->value && data.ifs[i]->negated == false ||
-					data.ifs[i]->value != property->value && data.ifs[i]->negated)
-					ifs_list.push_back ( &data.ifs[i]->data );
-			}
-		}
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{

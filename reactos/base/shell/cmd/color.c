@@ -65,8 +65,6 @@ VOID SetScreenColor (WORD wColor, BOOL bNoFill)
  */
 INT CommandColor (LPTSTR first, LPTSTR rest)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
 		ConOutResPaging(TRUE,STRING_COLOR_HELP1);
@@ -115,14 +113,12 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	if (((bc) && (bc->bEcho)) || !bc)
 	{
-		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, wColor);
+		ConErrResPrintf(STRING_COLOR_ERROR3, wColor);
 	}
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
-		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, wColor);
+		ConErrResPrintf(STRING_COLOR_ERROR4, wColor);
 		nErrorLevel = 1;
 		return 1;
 	}

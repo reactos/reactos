@@ -34,6 +34,44 @@ using std::map;
 
 typedef set<string> set_string;
 
+static const struct
+{
+	HostType DefaultHost;
+} ModuleHandlerInformations[] = {
+	{ HostTrue }, // BuildTool
+	{ HostFalse }, // StaticLibrary
+	{ HostFalse }, // ObjectLibrary
+	{ HostFalse }, // Kernel
+	{ HostFalse }, // KernelModeDLL
+	{ HostFalse }, // KernelModeDriver
+	{ HostFalse }, // NativeDLL
+	{ HostFalse }, // NativeCUI
+	{ HostFalse }, // Win32DLL
+	{ HostFalse }, // Win32OCX
+	{ HostFalse }, // Win32CUI
+	{ HostFalse }, // Win32GUI
+	{ HostFalse }, // BootLoader
+	{ HostFalse }, // BootSector
+	{ HostFalse }, // Iso
+	{ HostFalse }, // LiveIso
+	{ HostFalse }, // Test
+	{ HostFalse }, // RpcServer
+	{ HostFalse }, // RpcClient
+	{ HostFalse }, // Alias
+	{ HostFalse }, // BootProgram
+	{ HostFalse }, // Win32SCR
+	{ HostFalse }, // IdlHeader
+	{ HostFalse }, // IsoRegTest
+	{ HostFalse }, // LiveIsoRegTest
+	{ HostFalse }, // EmbeddedTypeLib
+	{ HostFalse }, // ElfExecutable
+	{ HostFalse }, // RpcProxy
+	{ HostTrue }, // HostStaticLibrary
+	{ HostFalse }, // Cabinet
+	{ HostFalse }, // KeyboardLayout
+	{ HostFalse }, // MessageHeader
+};
+
 string
 MingwBackend::GetFullPath ( const FileLocation& file ) const
 {
@@ -209,25 +247,6 @@ MingwBackend::CanEnablePreCompiledHeaderSupportForModule ( const Module& module 
 		if ( compilationUnit.GetFiles ().size () != 1 )
 			return false;
 	}
-	// intentionally make a copy so that we can append more work in
-	// the middle of processing without having to go recursive
-	vector<If*> v = module.non_if_data.ifs;
-	for ( i = 0; i < v.size (); i++ )
-	{
-		size_t j;
-		If& rIf = *v[i];
-		// check for sub-ifs to add to list
-		const vector<If*>& ifs = rIf.data.ifs;
-		for ( j = 0; j < ifs.size (); j++ )
-			v.push_back ( ifs[j] );
-		const vector<CompilationUnit*>& compilationUnits = rIf.data.compilationUnits;
-		for ( j = 0; j < compilationUnits.size (); j++ )
-		{
-			CompilationUnit& compilationUnit = *compilationUnits[j];
-			if ( compilationUnit.GetFiles ().size () != 1 )
-				return false;
-		}
-	}
 	return true;
 }
 
@@ -252,7 +271,7 @@ MingwBackend::ProcessModules ()
 			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )
 		{
-			module.host = h->DefaultHost();
+			module.host = ModuleHandlerInformations[h->module.type].DefaultHost;
 			assert ( module.host != HostDefault );
 		}
 		v.push_back ( h );
@@ -324,6 +343,8 @@ MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 void
 MingwBackend::ProcessNormal ()
 {
+    assert(sizeof(ModuleHandlerInformations)/sizeof(ModuleHandlerInformations[0]) == TypeDontCare);
+
 	DetectCompiler ();
 	DetectBinutils ();
 	DetectNetwideAssembler ();
@@ -415,27 +436,6 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 		GenerateProjectCFlagsMacro ( assignmentOperation,
 		                             data );
 	}
-
-	for ( i = 0; i < data.ifs.size(); i++ )
-	{
-		const If& rIf = *data.ifs[i];
-		if ( rIf.data.defines.size()
-			|| rIf.data.includes.size()
-			|| rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateGlobalCFlagsAndProperties (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
-	}
 }
 
 void
@@ -468,32 +468,10 @@ MingwBackend::GenerateProjectGccOptions (
 	const char* assignmentOperation,
 	IfableData& data ) const
 {
-	size_t i;
-
 	if ( data.compilerFlags.size() )
 	{
 		GenerateProjectGccOptionsMacro ( assignmentOperation,
 		                                 data );
-	}
-
-	for ( i = 0; i < data.ifs.size(); i++ )
-	{
-		If& rIf = *data.ifs[i];
-		if ( rIf.data.compilerFlags.size()
-		     || rIf.data.ifs.size() )
-		{
-			fprintf (
-				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
-				rIf.property.c_str(),
-				rIf.value.c_str() );
-			GenerateProjectGccOptions (
-				"+=",
-				rIf.data );
-			fprintf (
-				fMakefile,
-				"endif\n\n" );
-		}
 	}
 }
 

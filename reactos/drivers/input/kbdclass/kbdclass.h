@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <pseh/pseh.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define MAX_PATH 260
@@ -13,6 +12,7 @@
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define CLASS_TAG TAG('K', 'b', 'd', 'C')
+#define DPFLTR_CLASS_NAME_ID DPFLTR_KBDCLASS_ID
 
 typedef enum
 {

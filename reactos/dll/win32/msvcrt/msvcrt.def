@@ -104,8 +104,8 @@ EXPORTS
 ;  ___lc_collate_cp_func @99
 ;  ___lc_handle_func @100
 ;  ___mb_cur_max_func @101
-;  ___setlc_active_func @102
-;  ___unguarded_readlc_active_add_func @103
+  ___setlc_active_func @102
+  ___unguarded_readlc_active_add_func @103
   __argc @104 DATA
   __argv @105 DATA
   __badioinfo @106 DATA

@@ -277,7 +277,6 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	TCHAR szFinalPath[MAX_PATH];
 	TCHAR * tmpPath;
 	TCHAR szCurrent[MAX_PATH];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT i;
 
 
@@ -301,8 +300,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		if(!tmpPath)
 		{
 			/* Didnt find an directories */
-			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 			nErrorLevel = 1;
 			return 1;
 		}
@@ -368,8 +366,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 			return 0;
 		}
 		/* Didnt find an directories */
-		LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 		nErrorLevel = 1;
 		return 1;
 
@@ -414,8 +411,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	}while(FindNextFile (hFile, &f));
 
 	/* Didnt find an directories */
-	LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg);
+	ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 	nErrorLevel = 1;
 	return 1;
 }
@@ -439,16 +435,16 @@ MakeFullPath(TCHAR * DirPath)
         p += 2;
     while (*p == _T('\\'))
         p++; /* skip drive root */
-    while ((p = _tcschr(p, _T('\\'))) != NULL)
+    do
     {
-       n = p - DirPath + 1;
+       p = _tcschr(p, _T('\\'));
+       n = p ? p++ - DirPath : _tcslen(DirPath);
        _tcsncpy(path, DirPath, n);
        path[n] = _T('\0');
        if( !CreateDirectory(path, NULL) &&
            (GetLastError() != ERROR_ALREADY_EXISTS))
            return FALSE;
-       p++;
-    }
+    } while (p != NULL);
     if (GetLastError() == ERROR_ALREADY_EXISTS)
        SetLastError(ERROR_SUCCESS);
 
@@ -463,7 +459,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR place;	/* used to search for the \ when no space is used */
-	LPTSTR new_dir, *p = NULL;
+	LPTSTR *p = NULL;
 	INT argc;
 	nErrorLevel = 0;
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -514,17 +510,6 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 		if(p != NULL)
 			freep (p);
 		return 1;
-	}
-
-	/* Add a \ at the end of the path is there isnt on already */
-	if (dir[_tcslen (dir) - 1] != _T('\\'))
-	{
-		new_dir = cmd_realloc(dir, (_tcslen (dir) + 2) * sizeof(TCHAR));
-		if (new_dir != NULL)
-		{
-			p[0] = dir = new_dir;
-			_tcscat(dir,_T("\\"));
-		}
 	}
 
     if (!MakeFullPath(dir))
@@ -600,7 +585,6 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	HANDLE hFile;
 	WIN32_FIND_DATA f;
 	INT res;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullPath[MAX_PATH];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -669,8 +653,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		/* ask if they want to delete evrything in the folder */
 		if (!RD_QUIET)
 		{
-			LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
-			res = FilePromptYNA (szMsg);
+			res = FilePromptYNA (STRING_DEL_HELP2);
 			if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 			{
 				freep(arg);

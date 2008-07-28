@@ -161,7 +161,8 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
 }
 
 /* find the next hook in the chain, skipping the deleted ones */
-static PHOOK FASTCALL
+PHOOK
+FASTCALL
 IntGetNextHook(PHOOK Hook)
 {
    PHOOKTABLE Table = IntGetTable(Hook);
@@ -279,11 +280,16 @@ IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Ho
    return NT_SUCCESS(Status) ? uResult : 0;
 }
 
-LRESULT FASTCALL
+/*
+  Called from inside kernel space.
+ */
+LRESULT
+FASTCALL
 co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
-   PHOOK Hook;
+   PHOOK Hook, SaveHook;
    PW32THREAD Win32Thread;
+   PW32CLIENTINFO ClientInfo;
    PHOOKTABLE Table;
    LRESULT Result;
    PWINSTATION_OBJECT WinStaObj;
@@ -330,8 +336,14 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       GlobalHooks->Counts[HOOKID_TO_INDEX(HookId)]++;
    }
 
+   ClientInfo = GetWin32ClientInfo();
+   SaveHook = ClientInfo->phkCurrent;
+   ClientInfo->phkCurrent = Hook;     // Load the call.
+
    Result = co_IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
                                Hook->Ansi, &Hook->ModuleName);
+
+   ClientInfo->phkCurrent = SaveHook;
 
    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                            KernelMode,
@@ -397,9 +409,20 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
    }
 }
 
+static LRESULT
+FASTCALL
+co_HOOK_CallHookNext(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
+{
+   DPRINT("CALLING HOOK %d\n",Hook->HookId);
+   return co_IntCallHookProc(Hook->HookId, Code, wParam, lParam, Hook->Proc,
+                                  Hook->Ansi, &Hook->ModuleName);
+}
+
+
 LRESULT
 FASTCALL
 IntCallDebugHook(
+   PHOOK Hook,
    int Code,
    WPARAM wParam,
    LPARAM lParam)
@@ -514,15 +537,18 @@ IntCallDebugHook(
    }
 
    if (HooklParam) Debug.lParam = (LPARAM)HooklParam;
-   lResult = co_HOOK_CallHooks(WH_DEBUG, Code, wParam, (LPARAM)&Debug);
+   lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Debug);
    if (HooklParam) ExFreePool(HooklParam);
    return lResult;
 }
 
+/*
+   Called from user space via CallNextHook.
+ */
 LRESULT
 FASTCALL
 UserCallNextHookEx(
-   int HookId,
+   PHOOK Hook,
    int Code,
    WPARAM wParam,
    LPARAM lParam,
@@ -532,7 +558,8 @@ UserCallNextHookEx(
   BOOL BadChk = FALSE;
 
 // Handle this one first.
-  if ((HookId == WH_MOUSE) || (HookId == WH_CBT && Code == HCBT_CLICKSKIPPED))
+  if ((Hook->HookId == WH_MOUSE) ||
+      (Hook->HookId == WH_CBT && Code == HCBT_CLICKSKIPPED))
   {
      MOUSEHOOKSTRUCTEX Mouse;
      if (lParam)
@@ -558,12 +585,12 @@ UserCallNextHookEx(
      }
      if (!BadChk)
      {
-        lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Mouse);
+        lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Mouse);
      }
      return lResult;
   }
 
-  switch(HookId)
+  switch(Hook->HookId)
   {
       case WH_MOUSE_LL:
       {
@@ -591,7 +618,7 @@ UserCallNextHookEx(
          }
          if (!BadChk)
          {
-            lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Mouse);
+            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Mouse);
          }
          break;
       }
@@ -622,7 +649,7 @@ UserCallNextHookEx(
          }
          if (!BadChk)
          {
-            lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Keyboard);
+            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Keyboard);
          }
          break;
       }
@@ -655,8 +682,8 @@ UserCallNextHookEx(
          }
          if (!BadChk)
          {
-            lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&Msg);
-            if (lParam && (HookId == WH_GETMESSAGE))
+            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Msg);
+            if (lParam && (Hook->HookId == WH_GETMESSAGE))
             {
                _SEH_TRY
                {
@@ -682,16 +709,18 @@ UserCallNextHookEx(
       }
 
       case WH_CBT:
+         DPRINT1("HOOK WH_CBT!\n");
          switch (Code)
          {
             case HCBT_CREATEWND: // Use Ansi.
-               lResult = co_HOOK_CallHooks(HookId, Code, wParam, lParam);
+               DPRINT1("HOOK HCBT_CREATEWND\n");
+//               lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                break;
 
             case HCBT_MOVESIZE:
             {
                RECT rt;
-
+               DPRINT1("HOOK HCBT_MOVESIZE\n");
                if (lParam)
                {
                   _SEH_TRY
@@ -715,7 +744,7 @@ UserCallNextHookEx(
                }
                if (!BadChk)
                {
-                   lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&rt);
+                   lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&rt);
                }
                break;
             }
@@ -723,7 +752,7 @@ UserCallNextHookEx(
             case HCBT_ACTIVATE:
             {
                CBTACTIVATESTRUCT CbAs;
-
+               DPRINT1("HOOK HCBT_ACTIVATE\n");
                if (lParam)
                {
                   _SEH_TRY
@@ -747,7 +776,7 @@ UserCallNextHookEx(
                }
                if (!BadChk)
                {
-                   lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)&CbAs);
+                   lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&CbAs);
                }
                break;
             }
@@ -755,7 +784,8 @@ UserCallNextHookEx(
                 The rest just use default.
              */
             default:
-               lResult = co_HOOK_CallHooks(HookId, Code, wParam, lParam);
+               DPRINT1("HOOK HCBT_ %d\n",Code);
+               lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                break;
          }
          break;
@@ -787,7 +817,7 @@ UserCallNextHookEx(
          }
          if (!BadChk) 
          {               
-            lResult = co_HOOK_CallHooks(HookId, Code, wParam, (LPARAM)(lParam ? &EventMsg : NULL));
+            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)(lParam ? &EventMsg : NULL));
             if (lParam)
             {
                _SEH_TRY
@@ -814,7 +844,7 @@ UserCallNextHookEx(
       }
 
       case WH_DEBUG:
-         lResult = IntCallDebugHook( Code, wParam, lParam);
+         lResult = IntCallDebugHook(Hook, Code, wParam, lParam);
          break;
 /*
     Default the rest like, WH_FOREGROUNDIDLE, WH_KEYBOARD and WH_SHELL.
@@ -822,11 +852,11 @@ UserCallNextHookEx(
       case WH_FOREGROUNDIDLE:
       case WH_KEYBOARD:
       case WH_SHELL:
-         lResult = co_HOOK_CallHooks(HookId, Code, wParam, lParam);      
+         lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);      
          break;
 
       default:
-         DPRINT1("Unsupported HOOK Id -> %d\n",HookId);
+         DPRINT1("Unsupported HOOK Id -> %d\n",Hook->HookId);
          break;
   }
   return lResult; 
@@ -844,8 +874,6 @@ NtUserCallNextHookEx(
    PW32CLIENTINFO ClientInfo;
    PWINSTATION_OBJECT WinStaObj;
    NTSTATUS Status;
-   LRESULT lResult;
-   INT HookId;
    DECLARE_RETURN(LRESULT);
 
    DPRINT("Enter NtUserCallNextHookEx\n");
@@ -855,7 +883,6 @@ NtUserCallNextHookEx(
                                            KernelMode,
                                            0,
                                            &WinStaObj);
-
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -866,9 +893,14 @@ NtUserCallNextHookEx(
 
    ClientInfo = GetWin32ClientInfo();
 
-   HookObj = ClientInfo->phkCurrent; // Use this one set from SetWindowHook.
+   if (!ClientInfo) RETURN( 0);
 
-   HookId = HookObj->HookId;
+   HookObj = ClientInfo->phkCurrent;
+
+   if (!HookObj) RETURN( 0);
+
+   UserReferenceObject(HookObj);
+
    Ansi = HookObj->Ansi;
 
    if (NULL != HookObj->Thread && (HookObj->Thread != PsGetCurrentThread()))
@@ -880,19 +912,11 @@ NtUserCallNextHookEx(
    }
    
    NextObj = IntGetNextHook(HookObj);
+   ClientInfo->phkCurrent = NextObj; // Preset next hook from list.
+   UserCallNextHookEx( HookObj, Code, wParam, lParam, Ansi);
    UserDereferenceObject(HookObj);
-   if (NULL != NextObj)
-   {
-      lResult = UserCallNextHookEx( HookId, Code, wParam, lParam, Ansi);
 
-      ClientInfo->phkCurrent = NextObj;
-
-      if (lResult == 0) RETURN( 0);
-      RETURN( (LRESULT)NextObj);
-   }
-   ClientInfo->phkCurrent = NextObj;
-
-   RETURN( 0);
+   RETURN( (LRESULT)NextObj);
 
 CLEANUP:
    DPRINT("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
@@ -1003,7 +1027,8 @@ NtUserSetWindowsHookEx(
    /* We only (partially) support local WH_CBT hooks and
     * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
     */
-   if  (WH_DEBUG == HookId ||
+   if  (Global ||
+        WH_DEBUG == HookId ||
         WH_JOURNALPLAYBACK == HookId ||
         WH_JOURNALRECORD == HookId ||
         WH_FOREGROUNDIDLE == HookId ||
@@ -1108,8 +1133,8 @@ NtUserSetWindowsHookEx(
    Hook->Ansi = Ansi;
    Handle = Hook->Self;
 
-// Set the client threads next hook based on the hooks type.
-   ClientInfo->phkCurrent    = IntGetNextHook( Hook); 
+// Clear the client threads next hook.
+   ClientInfo->phkCurrent = 0;
    
    UserDereferenceObject(Hook);
    ObDereferenceObject(WinStaObj);

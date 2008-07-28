@@ -76,7 +76,10 @@ NtProcessStartup(PPEB Peb)
     ULONG Length;
     ASSERT(Peb);
 
-    DPRINT("%s(%08lx) called\n", __FUNCTION__, Peb);
+#ifdef _M_ARM // Huge achievement
+    DPRINT1("%s(%08lx) called\n", __FUNCTION__, Peb);
+    while (TRUE);
+#endif
 
     /* Normalize and get the Process Parameters */
     ProcessParameters = RtlNormalizeProcessParams(Peb->ProcessParameters);

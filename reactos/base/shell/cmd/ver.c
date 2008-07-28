@@ -29,7 +29,6 @@ VOID ShortVersion (VOID)
 	OSVERSIONINFO VersionInfo;
 	unsigned RosVersionLen;
 	LPTSTR RosVersion;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	ConOutResPuts (STRING_CMD_SHELLINFO );
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -44,8 +43,7 @@ VOID ShortVersion (VOID)
 	                        (RosVersion - VersionInfo.szCSDVersion);
 		if (7 <= RosVersionLen && 0 == _tcsnicmp(RosVersion, _T("ReactOS"), 7))
 		{
-			LoadString( CMD_ModuleHandle, STRING_VERSION_RUNVER, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf (szMsg, RosVersion);
+			ConOutResPrintf(STRING_VERSION_RUNVER, RosVersion);
 		}
 	}
 	ConOutPuts (_T("\n"));

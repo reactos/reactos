@@ -687,7 +687,6 @@ DoCommand (LPTSTR line)
 
 VOID ParseCommandLine (LPTSTR cmd)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR cmdline[CMDLINE_LENGTH];
 	LPTSTR s;
 #ifdef FEATURE_REDIRECTION
@@ -786,15 +785,13 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, in);
+			ConErrResPrintf(STRING_CMD_ERROR1, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, in);
+			ConErrResPrintf(STRING_CMD_ERROR1, in);
 			return;
 		}
 		TRACE ("Input redirected from: %s\n", debugstr_aw(in));
@@ -820,8 +817,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		if (hFile[1] == INVALID_HANDLE_VALUE)
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConErrResPrintf(STRING_CMD_ERROR2);
 			return;
 		}
 
@@ -884,8 +880,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 			if (out[size] != _T(':'))
 			{
-				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, out);
+				ConErrResPrintf(STRING_CMD_ERROR3, out);
 				return;
 			}
 
@@ -896,8 +891,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
-				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, out);
+				ConErrResPrintf(STRING_CMD_ERROR3, out);
 				return;
 			}
 
@@ -905,8 +899,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, out);
+			ConErrResPrintf(STRING_CMD_ERROR3, out);
 			return;
 		}
 
@@ -955,16 +948,14 @@ VOID ParseCommandLine (LPTSTR cmd)
 			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
-				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-				ConErrPrintf(szMsg, err);
+				ConErrResPrintf(STRING_CMD_ERROR3, err);
 				return;
 			}
 		}
 
 		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, err);
+			ConErrResPrintf(STRING_CMD_ERROR3, err);
 			return;
 		}
 

@@ -27,7 +27,7 @@
  */
 #define MAX_ELEM_LEN 64 /* Max length of country/language/CP string */
 
-unsigned char MSVCRT_mbctype[257];
+unsigned char MSVCRT_mbctype[257] = { 0 };
 static int g_mbcp_is_multibyte = 0;
 
 /* It seems that the data about valid trail bytes is not available from kernel32
@@ -49,11 +49,11 @@ static struct cp_extra_info_t g_cpextrainfo[] =
 };
 
 
-char MSVCRT_current_lc_all[MAX_LOCALE_LENGTH];
-LCID MSVCRT_current_lc_all_lcid;
-int MSVCRT___lc_codepage;
-int MSVCRT___lc_collate_cp;
-HANDLE MSVCRT___lc_handle[MSVCRT_LC_MAX - MSVCRT_LC_MIN + 1];
+char MSVCRT_current_lc_all[MAX_LOCALE_LENGTH] = { 0 };
+LCID MSVCRT_current_lc_all_lcid = 0;
+int MSVCRT___lc_codepage = 0;
+int MSVCRT___lc_collate_cp = 0;
+HANDLE MSVCRT___lc_handle[MSVCRT_LC_MAX - MSVCRT_LC_MIN + 1] = { 0 };
 
 /* MT */
 #define LOCK_LOCALE   _mlock(_SETLOCALE_LOCK);
@@ -874,4 +874,20 @@ int __crtLCMapStringW(
 int CDECL _getmbcp(void)
 {
     return MSVCRT___lc_codepage;
+}
+
+/*********************************************************************
+ *		___unguarded_readlc_active_add_func (MSVCRT.@)
+ */
+unsigned int * CDECL ___unguarded_readlc_active_add_func(void)
+{
+  return &__unguarded_readlc_active;
+}
+
+/*********************************************************************
+ *		___setlc_active_func (MSVCRT.@)
+ */
+unsigned int CDECL ___setlc_active_func(void)
+{
+  return __setlc_active;
 }

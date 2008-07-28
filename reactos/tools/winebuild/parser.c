@@ -57,6 +57,7 @@ static const char * const TypeNames[TYPE_NBTYPES] =
     "stdcall",      /* TYPE_STDCALL */
     "cdecl",        /* TYPE_CDECL */
     "varargs",      /* TYPE_VARARGS */
+    "fastcall",     /* TYPE_FASTCALL */
     "extern"        /* TYPE_EXTERN */
 };
 
@@ -490,6 +491,7 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
     case TYPE_STDCALL:
     case TYPE_VARARGS:
     case TYPE_CDECL:
+    case TYPE_FASTCALL:
         if (!parse_spec_export( odp, spec )) goto error;
         break;
     case TYPE_ABS:

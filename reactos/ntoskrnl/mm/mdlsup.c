@@ -366,12 +366,12 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
         ASSERT(Mdl->Process == PsGetCurrentProcess());
         
         /* Find the memory area */
-        MemoryArea = MmLocateMemoryAreaByAddress((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+        MemoryArea = MmLocateMemoryAreaByAddress(&Mdl->Process->VadRoot,
                                                  BaseAddress);
         ASSERT(MemoryArea);
 
         /* Free it */
-        MmFreeMemoryArea((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+        MmFreeMemoryArea(&Mdl->Process->VadRoot,
                          MemoryArea,
                          NULL,
                          NULL);
@@ -395,7 +395,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PFN_TYPE Page;
     PEPROCESS CurrentProcess;
     PETHREAD Thread;
-    PMADDRESS_SPACE AddressSpace;
+    PMM_AVL_TABLE AddressSpace;
     DPRINT("Probing MDL: %p\n", Mdl);
     
     /* Sanity checks */
@@ -479,7 +479,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         Mdl->Process = CurrentProcess;
         
         /* Use the process lock */
-        AddressSpace = (PMADDRESS_SPACE)&(CurrentProcess)->VadRoot;
+        AddressSpace = &CurrentProcess->VadRoot;
     }
     
     
@@ -732,8 +732,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
     
     CurrentProcess = PsGetCurrentProcess();
     
-    MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
-    Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,
+    MmLockAddressSpace(&CurrentProcess->VadRoot);
+    Status = MmCreateMemoryArea(&CurrentProcess->VadRoot,
                                 MEMORY_AREA_MDL_MAPPING,
                                 &Base,
                                 PageCount * PAGE_SIZE,
@@ -742,7 +742,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                                 (Base != NULL),
                                 0,
                                 BoundaryAddressMultiple);
-    MmUnlockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
+    MmUnlockAddressSpace(&CurrentProcess->VadRoot);
     if (!NT_SUCCESS(Status))
     {
         if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)

@@ -30,12 +30,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#ifndef __LINUX__
+#ifdef WIN32
 #include <io.h>
 #include <errno.h>
 #endif
 
-#ifdef __LINUX__
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/types.h>
 #if defined(__FreeBSD__) || defined(__APPLE__)

@@ -368,6 +368,7 @@ NTAPI
 MmInit1(VOID)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+    LARGE_INTEGER Dummy;
     
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
@@ -395,7 +396,8 @@ MmInit1(VOID)
     DbgPrint("Used memory %dKb\n", (MmNumberOfPhysicalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
-    MmInitializeKernelAddressSpace();
+    MmInitializeHandBuiltProcess(PsGetCurrentProcess(), &Dummy);
+    MmKernelAddressSpace = MmGetCurrentAddressSpace();
     MmInitGlobalKernelPageDirectory();
     
     /* Get kernel address boundaries */
@@ -456,7 +458,6 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG Flags = 0;
     if (Phase == 0)
     {
         /* Initialize Mm bootstrap */
@@ -464,13 +465,6 @@ MmInitSystem(IN ULONG Phase,
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
-
-        /* Initialize the address space for the system process */
-        MmInitializeProcessAddressSpace(PsGetCurrentProcess(),
-                                        NULL,
-                                        NULL,
-                                        &Flags,
-                                        NULL);
 
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);

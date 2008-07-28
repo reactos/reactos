@@ -14,104 +14,188 @@
 
 /* GLOBALS ********************************************************************/
 
-#undef UNIMPLEMENTED
-#define UNIMPLEMENTED \
-{ \
-    DPRINT1("[ARM Mm Bringup]: %s is unimplemented!\n", __FUNCTION__); \
-    while (TRUE); \
-}
-
-//
-// Take 0x80812345 and extract:
-// PTE_BASE[0x808][0x12]
-//
-#define MiGetPteAddress(x)         \
-    (PMMPTE)(PTE_BASE + (((ULONG)(x) >> 20) << 12) + ((((ULONG)(x) >> 12) & 0xFF) << 2))
-
-#define MiGetPdeAddress(x)         \
-    (PMMPTE)(PDE_BASE + (((ULONG)(x) >> 20) << 2))
-
-#define MiGetPdeOffset(x) (((ULONG)(x)) >> 22)
-
-#define PTE_BASE    0xC0000000
-#define PDE_BASE    0xC1000000
-#define HYPER_SPACE ((PVOID)0xC1100000)
-
 ULONG MmGlobalKernelPageDirectory[1024];
 MMPTE MiArmTemplatePte, MiArmTemplatePde;
 
-VOID
-KiFlushSingleTb(IN BOOLEAN Invalid,
-                IN PVOID Virtual);
-
-/* FUNCTIONS ******************************************************************/
-
-VOID
-NTAPI
-MmUpdatePageDir(IN PEPROCESS Process,
-                IN PVOID Address,
-                IN ULONG Size)
-{
-    //
-    // Nothing to do
-    //
-    return;
-}
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(IN PEPROCESS Process)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
-    return 0;
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
-{
-    //
-    // Share the directory base with the idle process
-    //
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
-    
-    //
-    // Initialize the Addresss Space
-    //
-    MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
-    
-    //
-    // The process now has an address space
-    //
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
-}
-
-PULONG
-MmGetPageDirectory(VOID)
-{
-    //
-    // Return the TTB
-    //
-    return (PULONG)KeArmTranslationTableRegisterGet().AsUlong;
-}
-
+/* PRIVATE FUNCTIONS **********************************************************/
 
 BOOLEAN
 NTAPI
-MmCreateProcessAddressSpace(IN ULONG MinWs,
-                            IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+MiUnmapPageTable(IN PMMPTE PointerPde)
 {
     //
-    // TODO
+    // Check if this address belongs to the kernel
     //
-    UNIMPLEMENTED;
-    return 0;
+    if (((ULONG_PTR)PointerPde > PDE_BASE) ||
+        ((ULONG_PTR)PointerPde < (PDE_BASE + 1024*1024)))
+    {
+        //
+        // Nothing to do
+        //
+        return TRUE;
+    }
+    
+    //
+    // FIXME-USER: Shouldn't get here yet
+    //
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+VOID
+NTAPI
+MiFlushTlb(IN PMMPTE PointerPte,
+           IN PVOID Address)
+{
+    //
+    // Make sure the PTE is valid, and unmap the pagetable if user-mode
+    //
+    if (((PointerPte) && (MiUnmapPageTable(PointerPte))) ||
+        (Address >= MmSystemRangeStart))
+    {
+        //
+        // Invalidate this page
+        //
+        KeArmInvalidateTlbEntry(Address);
+    }
+}
+
+PMMPTE
+NTAPI
+MiGetPageTableForProcess(IN PEPROCESS Process,
+                         IN PVOID Address,
+                         IN BOOLEAN Create)
+{
+    ULONG PdeOffset;
+    PMMPTE PointerPde;
+    MMPTE Pte;
+    NTSTATUS Status;
+    PFN_NUMBER Pfn;
+    
+    //
+    // Check if this is a user-mode, non-kernel or non-current address
+    //
+    if ((Address < MmSystemRangeStart) &&
+        (Process) &&
+        (Process != PsGetCurrentProcess()))
+    {
+        //
+        // FIXME-USER: No user-mode memory support
+        //
+        ASSERT(FALSE);
+    }
+    
+    //
+    // Get the PDE
+    //
+    PointerPde = MiGetPdeAddress(Address);
+    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte)
+    {
+        //
+        // Invalid PDE, is this a kernel address?
+        //
+        if (Address >= MmSystemRangeStart)
+        {            
+            //
+            // Does it exist in the kernel page directory?
+            //
+            PdeOffset = MiGetPdeOffset(Address);
+            if (MmGlobalKernelPageDirectory[PdeOffset] == 0)
+            {
+                //
+                // It doesn't. Is this a create operation? If not, fail
+                //
+                if (Create == FALSE) return NULL;
+                
+                //
+                // THIS WHOLE PATH IS TODO
+                //
+                ASSERT(FALSE);
+                
+                //
+                // Allocate a non paged pool page for the PDE
+                //
+                Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+                if (!NT_SUCCESS(Status)) return NULL;
+                
+                //
+                // Make the entry valid
+                //
+                Pte.u.Hard.AsUlong = 0xDEADBEEF;
+                
+                //
+                // Save it
+                //
+                MmGlobalKernelPageDirectory[PdeOffset] = Pte.u.Hard.AsUlong;
+            }
+            
+            //
+            // Now set the actual PDE
+            //
+            PointerPde = (PMMPTE)&MmGlobalKernelPageDirectory[PdeOffset];
+        }
+        else
+        {
+            //
+            // Is this a create operation? If not, fail
+            //
+            if (Create == FALSE) return NULL;
+            
+            //
+            // THIS WHOLE PATH IS TODO
+            //
+            ASSERT(FALSE);
+         
+            //
+            // Allocate a non paged pool page for the PDE
+            //
+            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+            if (!NT_SUCCESS(Status)) return NULL;
+            
+            //
+            // Make the entry valid
+            //
+            Pte.u.Hard.AsUlong = 0xDEADBEEF;
+            
+            //
+            // Set it
+            //
+            *PointerPde = Pte;
+        }
+    }
+    
+    //
+    // Return the PTE
+    //
+    return MiGetPteAddress(Address);
+}
+
+MMPTE
+NTAPI
+MiGetPageEntryForProcess(IN PEPROCESS Process,
+                         IN PVOID Address)
+{
+    PMMPTE PointerPte;
+    MMPTE Pte;
+    Pte.u.Hard.AsUlong = 0;
+    
+    //
+    // Get the PTE
+    //
+    PointerPte = MiGetPageTableForProcess(Process, Address, FALSE);
+    if (PointerPte)
+    {
+        //
+        // Capture the PTE value and unmap the page table
+        //
+        Pte = *PointerPte;
+        MiUnmapPageTable(PointerPte);
+    }
+
+    //
+    // Return the PTE value
+    //
+    return Pte;
 }
 
 VOID
@@ -133,17 +217,16 @@ MmDeletePageTable(IN PEPROCESS Process,
     if ((Process) && (Process != PsGetCurrentProcess()))
     {
         //
-        // TODO
+        // FIXME-USER: Need to attach to the process
         //
-        UNIMPLEMENTED;
-        return;
+        ASSERT(FALSE);
     }
-       
+    
     //
     // Get the PDE
     //
     PointerPde = MiGetPdeAddress(Address);
-
+    
     //
     // On ARM, we use a section mapping for the original low-memory mapping
     //
@@ -164,49 +247,78 @@ MmDeletePageTable(IN PEPROCESS Process,
     //
     // Invalidate the TLB entry
     //
-    KiFlushSingleTb(TRUE, Address);
+    MiFlushTlb(PointerPde, MiAddressToPte(Address));
 }
 
-PFN_TYPE
+BOOLEAN
 NTAPI
-MmGetPfnForProcess(IN PEPROCESS Process,
-                   IN PVOID Address)
+MmCreateProcessAddressSpace(IN ULONG MinWs,
+                            IN PEPROCESS Process,
+                            IN PLARGE_INTEGER DirectoryTableBase)
 {
-    PMMPTE Pte;
+    //
+    // FIXME-USER: Need to create address space
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    return 0;
+}
+
+VOID
+NTAPI
+MmUpdatePageDir(IN PEPROCESS Process,
+                IN PVOID Address,
+                IN ULONG Size)
+{
+    //
+    // Nothing to do
+    //
+    return;
+}
+
+NTSTATUS
+NTAPI
+Mmi386ReleaseMmInfo(IN PEPROCESS Process)
+{
+    //
+    // FIXME-USER: Need to delete address space
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    return 0;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess(IN PEPROCESS Process,
+                             IN PLARGE_INTEGER DirectoryTableBase)
+{
+    //
+    // Share the directory base with the idle process
+    //
+    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
     
     //
-    // Check if this is for a different process
+    // Initialize the Addresss Space
     //
-    if ((Process) && (Process != PsGetCurrentProcess()))
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        return 0;
-    }
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
     
     //
-    // Get the PDE
+    // The process now has an address space
     //
-    Pte = MiGetPdeAddress(Address);
-    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
-    {
-        //
-        // Get the PTE
-        //
-        Pte = MiGetPteAddress(Address);
-    }
-    
+    Process->HasAddressSpace = TRUE;
+    return STATUS_SUCCESS;
+}
+
+PULONG
+NTAPI
+MmGetPageDirectory(VOID)
+{
     //
-    // If PTE is invalid, return 0
+    // Return the TTB
     //
-    if (Pte->u.Hard.L2.Fault.Type == FaultPte) return 0;
-    
-    //
-    // Return PFN
-    //
-    return Pte->u.Hard.L2.Small.BaseAddress;
+    return (PULONG)KeArmTranslationTableRegisterGet().AsUlong;
 }
 
 VOID
@@ -220,177 +332,7 @@ MmDisableVirtualMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmRawDeleteVirtualMapping(IN PVOID Address)
-{
-    PMMPTE PointerPte, PointerPde;
-    
-    //
-    // Get the PDE
-    //
-    PointerPde = MiGetPdeAddress(Address);
-    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte) return;
-
-    //
-    // Get the PTE
-    //
-    PointerPte = MiGetPteAddress(Address);
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    
-    //
-    // Destroy the PTE
-    //
-    PointerPte->u.Hard.AsUlong = 0;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-    
-    //
-    // Flush the TLB
-    //
-    KiFlushSingleTb(TRUE, Address);
-}
-
-VOID
-NTAPI
-MmDeleteVirtualMapping(IN PEPROCESS Process,
-                       IN PVOID Address,
-                       IN BOOLEAN FreePage,
-                       OUT PBOOLEAN WasDirty,
-                       OUT PPFN_TYPE Page)
-{
-    PMMPTE PointerPte, PointerPde;
-    MMPTE Pte;
-    
-    //
-    // Check if this is for a different process
-    //
-    if ((Process) && (Process != PsGetCurrentProcess()))
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        return;
-    }
-    
-    //
-    // Get the PDE
-    //
-    PointerPde = MiGetPdeAddress(Address);
-    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte)
-    {
-        //
-        // Invalid PDE
-        //
-        if (WasDirty) *WasDirty = FALSE;
-        if (Page) *Page = 0;
-        return;
-    }
-    
-    //
-    // Get the PTE
-    //
-    PointerPte = MiGetPteAddress(Address);
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    
-    //
-    // Save the PTE
-    //
-    Pte = *PointerPte;
-    
-    //
-    // Destroy the PTE
-    //
-    PointerPte->u.Hard.AsUlong = 0;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-
-    //
-    // Flush the TLB
-    //
-    KiFlushSingleTb(TRUE, Address);
-    
-    //
-    // Check if the PTE was valid
-    //
-    if (Pte.u.Hard.L2.Fault.Type != FaultPte)
-    {
-        //
-        // Mark the page as unmapped
-        //
-        MmMarkPageUnmapped(Pte.u.Hard.L2.Small.BaseAddress);
-    }
-    else
-    {
-        //
-        // Make it sane
-        //
-        Pte.u.Hard.L2.Small.BaseAddress = 0;
-    }
-    
-    //
-    // Check if this was our page, and valid
-    //
-    if ((FreePage) && (Pte.u.Hard.L2.Fault.Type != FaultPte))
-    {
-        //
-        // Release it
-        //
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pte.u.Hard.L2.Small.BaseAddress);
-    }
-    
-    //
-    // Return if the page was dirty
-    //
-    if (WasDirty) *WasDirty = TRUE; // LIE!!!
-    if (Page) *Page = Pte.u.Hard.L2.Small.BaseAddress;
-}
-
-VOID
-NTAPI
-MmDeletePageFileMapping(IN PEPROCESS Process,
-                        IN PVOID Address,
-                        IN SWAPENTRY *SwapEntry)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
-}
-
-BOOLEAN
-NTAPI
-MmIsDirtyPage(IN PEPROCESS Process,
-              IN PVOID Address)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
-    return 0;
-}
-
-VOID
-NTAPI
-MmSetCleanPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
-MmSetDirtyPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
+    while (TRUE);
 }
 
 VOID
@@ -402,80 +344,7 @@ MmEnableVirtualMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-}
-
-BOOLEAN
-NTAPI
-MmIsPagePresent(IN PEPROCESS Process,
-                IN PVOID Address)
-{
-    PMMPTE Pte;
-    
-    //
-    // Check if this is for a different process
-    //
-    if ((Process) && (Process != PsGetCurrentProcess()))
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        return 0;
-    }
-
-    //
-    // Get the PDE
-    //
-    Pte = MiGetPdeAddress(Address);
-    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
-    {
-        //
-        // Get the PTE
-        //
-        Pte = MiGetPteAddress(Address);
-    }
-    
-    //
-    // Return whether or not it's valid
-    //
-    return (Pte->u.Hard.L1.Fault.Type != FaultPte);
-}
-
-BOOLEAN
-NTAPI
-MmIsPageSwapEntry(IN PEPROCESS Process,
-                  IN PVOID Address)
-{
-    PMMPTE Pte;
-    
-    //
-    // Check if this is for a different process
-    //
-    if ((Process) && (Process != PsGetCurrentProcess()))
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        return 0;
-    }
-    
-    //
-    // Get the PDE
-    //
-    Pte = MiGetPdeAddress(Address);
-    if (Pte->u.Hard.L1.Fault.Type != FaultPte)
-    {
-        //
-        // Get the PTE
-        //
-        Pte = MiGetPteAddress(Address);
-    }
-    
-    //
-    // Return whether or not it's valid
-    //
-    return ((Pte->u.Hard.L2.Fault.Type == FaultPte) && (Pte->u.Hard.AsUlong));
+    while (TRUE);
 }
 
 NTSTATUS
@@ -492,13 +361,13 @@ MmCreateVirtualMappingInternal(IN PVOID Address,
     PFN_NUMBER Pfn;
     DPRINT("[KMAP]: %p %d\n", Address, PageCount);
     //ASSERT(Address >= MmSystemRangeStart);
-
+    
     //
     // Get our templates
     //
     TempPte = MiArmTemplatePte;
     TempPde = MiArmTemplatePde;
-
+    
     //
     // Check if we have PDEs for this region
     //
@@ -538,7 +407,7 @@ MmCreateVirtualMappingInternal(IN PVOID Address,
             // Write the PFN of the PDE
             //
             TempPte.u.Hard.L2.Small.BaseAddress = Pfn;
-
+            
             //
             // Write the PTE
             //
@@ -564,7 +433,7 @@ MmCreateVirtualMappingInternal(IN PVOID Address,
         // Mark it as mapped
         //
         if (MarkAsMapped) MmMarkPageMapped(*Pages);
-
+        
         //
         // Set the PFN
         //
@@ -588,20 +457,6 @@ MmCreateVirtualMappingInternal(IN PVOID Address,
     //
     return STATUS_SUCCESS;
 }
-
-NTSTATUS
-NTAPI
-MmCreatePageFileMapping(IN PEPROCESS Process,
-                        IN PVOID Address,
-                        IN SWAPENTRY SwapEntry)
-{
-    //
-    // TODO
-    //
-    UNIMPLEMENTED;
-    return 0;
-}
-
 
 NTSTATUS
 NTAPI
@@ -644,9 +499,9 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
     }
     
     //
-    // TODO
+    // FIXME-USER: Support user-mode mappings
     //
-    UNIMPLEMENTED;
+    ASSERT(FALSE);
     return 0;
 }
 
@@ -659,7 +514,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN ULONG PageCount)
 {
     ULONG i;
-
+    
     //
     // Loop each page
     //
@@ -681,76 +536,76 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                                         PageCount);
 }
 
-ULONG
-NTAPI
-MmGetPageProtect(IN PEPROCESS Process,
-                 IN PVOID Address)
-{
-    //
-    // We don't enforce any protection on the pages -- they are all RWX
-    //
-    return PAGE_READWRITE;
-}
-
 VOID
 NTAPI
-MmSetPageProtect(IN PEPROCESS Process,
-                 IN PVOID Address,
-                 IN ULONG Protection)
+MmRawDeleteVirtualMapping(IN PVOID Address)
 {
-    //
-    // We don't enforce any protection on the pages -- they are all RWX
-    //
-    return;
-}
-
-/*
- * @implemented
- */
-PHYSICAL_ADDRESS
-NTAPI
-MmGetPhysicalAddress(IN PVOID Address)
-{
-    PHYSICAL_ADDRESS PhysicalAddress = {{0}};
     PMMPTE PointerPte;
-
-    //
-    // Early boot PCR check
-    //
-    if (Address == PCR)
-    {
-        //
-        // ARM Hack while we still use a section PTE
-        //
-        PointerPte = MiGetPdeAddress(PCR);
-        ASSERT(PointerPte->u.Hard.L1.Section.Type == SectionPte);
-        PhysicalAddress.QuadPart = PointerPte->u.Hard.L1.Section.BaseAddress;
-        PhysicalAddress.QuadPart <<= CPT_SHIFT;
-        PhysicalAddress.LowPart += BYTE_OFFSET(Address);
-        return PhysicalAddress;
-    }
     
     //
     // Get the PTE
     //
-    PointerPte = MiGetPteAddress(Address);
-    if (PointerPte->u.Hard.L1.Fault.Type == FaultPte)
+    PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
+    if ((PointerPte) && (PointerPte->u.Hard.L2.Fault.Type != FaultPte))
     {
         //
-        // Invalid address
+        // Destroy it
         //
-        DPRINT1("Address invalid: %p\n", Address);
-        return PhysicalAddress;
+        PointerPte->u.Hard.AsUlong = 0;
+    
+        //
+        // Flush the TLB
+        //
+        MiFlushTlb(PointerPte, Address);
     }
+}
 
+VOID
+NTAPI
+MmDeleteVirtualMapping(IN PEPROCESS Process,
+                       IN PVOID Address,
+                       IN BOOLEAN FreePage,
+                       OUT PBOOLEAN WasDirty,
+                       OUT PPFN_TYPE Page)
+{
+    PMMPTE PointerPte;
+    MMPTE Pte;
+    PFN_NUMBER Pfn = 0;
+    
     //
-    // Return the information
+    // Get the PTE
     //
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    PhysicalAddress.QuadPart = PointerPte->u.Hard.L2.Small.BaseAddress;
-    PhysicalAddress.QuadPart <<= PAGE_SHIFT;
-    PhysicalAddress.LowPart += BYTE_OFFSET(Address);
-    return PhysicalAddress;
+    PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
+    if (PointerPte)
+    {       
+        //
+        // Save and destroy the PTE
+        //
+        Pte = *PointerPte;
+        PointerPte->u.Hard.AsUlong = 0;
+        
+        //
+        // Flush the TLB
+        //
+        MiFlushTlb(PointerPte, Address);
+        
+        //
+        // Unmap the PFN
+        //
+        Pfn = Pte.u.Hard.L2.Small.BaseAddress;
+        if (Pfn) MmMarkPageUnmapped(Pfn);
+        
+        //
+        // Release the PFN if it was ours
+        //
+        if ((FreePage) && (Pfn)) MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+    }
+    
+    //
+    // Return if the page was dirty
+    //
+    if (WasDirty) *WasDirty = FALSE; // LIE!!!
+    if (Page) *Page = Pfn;
 }
 
 PVOID
@@ -760,11 +615,11 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     PMMPTE PointerPte, FirstPte, LastPte;
     MMPTE TempPte;
     PVOID Address;
-
+    
     //
     // Loop hyperspace PTEs (1MB)
     //
-    FirstPte = PointerPte = MiGetPteAddress(HYPER_SPACE);
+    FirstPte = PointerPte = MiGetPteAddress((PVOID)HYPER_SPACE);
     LastPte = PointerPte + 256;
     while (PointerPte <= LastPte)
     {
@@ -798,12 +653,12 @@ MmCreateHyperspaceMapping(IN PFN_TYPE Page)
     ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
     ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
     *PointerPte = TempPte;
-
+    
     //
     // Return the address
     //
-    Address = HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE);
-    KiFlushSingleTb(FALSE, Address);
+    Address = (PVOID)(HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE));
+    KeArmInvalidateTlbEntry(Address);
     DPRINT("[HMAP]: %p %lx\n", Address, Page);
     return Address;
 }
@@ -836,8 +691,143 @@ MmDeleteHyperspaceMapping(IN PVOID Address)
     //
     // Flush the TLB entry and return the PFN
     //
-    KiFlushSingleTb(TRUE, Address);
+    KeArmInvalidateTlbEntry(Address);
     return Pfn;
+}
+
+VOID
+NTAPI
+MmDeletePageFileMapping(IN PEPROCESS Process,
+                        IN PVOID Address,
+                        IN SWAPENTRY *SwapEntry)
+{
+    //
+    // TODO
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+NTSTATUS
+NTAPI
+MmCreatePageFileMapping(IN PEPROCESS Process,
+                        IN PVOID Address,
+                        IN SWAPENTRY SwapEntry)
+{
+    //
+    // TODO
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    return 0;
+}
+
+PFN_TYPE
+NTAPI
+MmGetPfnForProcess(IN PEPROCESS Process,
+                   IN PVOID Address)
+{
+    MMPTE Pte;
+    
+    //
+    // Get the PTE
+    //
+    Pte = MiGetPageEntryForProcess(Process, Address);
+    if (Pte.u.Hard.L2.Fault.Type == FaultPte) return 0;
+    
+    //
+    // Return PFN
+    //
+    return Pte.u.Hard.L2.Small.BaseAddress;
+}
+
+BOOLEAN
+NTAPI
+MmIsDirtyPage(IN PEPROCESS Process,
+              IN PVOID Address)
+{
+    //
+    // TODO
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    return 0;
+}
+
+VOID
+NTAPI
+MmSetCleanPage(IN PEPROCESS Process,
+               IN PVOID Address)
+{
+    //
+    // TODO
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+MmSetDirtyPage(IN PEPROCESS Process,
+               IN PVOID Address)
+{
+    //
+    // TODO
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+BOOLEAN
+NTAPI
+MmIsPagePresent(IN PEPROCESS Process,
+                IN PVOID Address)
+{
+    //
+    // Fault PTEs are 0, which is FALSE (non-present)
+    //
+    return MiGetPageEntryForProcess(Process, Address).u.Hard.L2.Fault.Type;
+}
+
+BOOLEAN
+NTAPI
+MmIsPageSwapEntry(IN PEPROCESS Process,
+                  IN PVOID Address)
+{
+    MMPTE Pte;
+    
+    //
+    // Get the PTE
+    //
+    Pte = MiGetPageEntryForProcess(Process, Address);
+    
+    //
+    // Make sure it's valid, but faulting
+    //
+    return (Pte.u.Hard.L2.Fault.Type == FaultPte) && (Pte.u.Hard.AsUlong);
+}
+
+ULONG
+NTAPI
+MmGetPageProtect(IN PEPROCESS Process,
+                 IN PVOID Address)
+{
+    //
+    // We don't enforce any protection on the pages -- they are all RWX
+    //
+    return PAGE_READWRITE;
+}
+
+VOID
+NTAPI
+MmSetPageProtect(IN PEPROCESS Process,
+                 IN PVOID Address,
+                 IN ULONG Protection)
+{
+    //
+    // We don't enforce any protection on the pages -- they are all RWX
+    //
+    return;
 }
 
 VOID
@@ -853,7 +843,7 @@ MmInitGlobalKernelPageDirectory(VOID)
     //
     MiArmTemplatePte = *MiGetPteAddress(0x80000000);
     MiArmTemplatePde = *MiGetPdeAddress(0x80000000);
-
+    
     //
     // Loop the 2GB of address space which belong to the kernel
     //
@@ -875,16 +865,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     }
 }
 
-ULONG
-NTAPI
-MiGetUserPageDirectoryCount(VOID)
-{
-    //
-    // Return the index
-    //
-    return MiGetPdeOffset(MmSystemRangeStart);
-}
-
 VOID
 NTAPI
 MiInitPageDirectoryMap(VOID)
@@ -893,7 +873,7 @@ MiInitPageDirectoryMap(VOID)
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID BaseAddress;
     NTSTATUS Status;
-
+    
     //
     // Create memory area for the PTE area
     //
@@ -909,7 +889,7 @@ MiInitPageDirectoryMap(VOID)
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(NT_SUCCESS(Status));
-
+    
     //
     // Create memory area for the PDE area
     //
@@ -939,4 +919,61 @@ MiInitPageDirectoryMap(VOID)
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(NT_SUCCESS(Status));
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+PHYSICAL_ADDRESS
+NTAPI
+MmGetPhysicalAddress(IN PVOID Address)
+{
+    PHYSICAL_ADDRESS PhysicalAddress;
+    MMPTE Pte;
+
+    //
+    // Early boot PCR check
+    //
+    if (Address == PCR)
+    {
+        //
+        // ARM Hack while we still use a section PTE
+        //
+        PMMPTE PointerPte;
+        PointerPte = MiGetPdeAddress(PCR);
+        ASSERT(PointerPte->u.Hard.L1.Section.Type == SectionPte);
+        PhysicalAddress.QuadPart = PointerPte->u.Hard.L1.Section.BaseAddress;
+        PhysicalAddress.QuadPart <<= CPT_SHIFT;
+        PhysicalAddress.LowPart += BYTE_OFFSET(Address);
+        return PhysicalAddress;
+    }
+    
+    //
+    // Get the PTE
+    //
+    Pte = MiGetPageEntryForProcess(NULL, Address);
+    if ((Pte.u.Hard.AsUlong) && (Pte.u.Hard.L2.Fault.Type != FaultPte))
+    {
+        //
+        // Return the information
+        //
+        ASSERT(Pte.u.Hard.L2.Small.Type == SmallPte);
+        PhysicalAddress.QuadPart = Pte.u.Hard.L2.Small.BaseAddress;
+        PhysicalAddress.QuadPart <<= PAGE_SHIFT;
+        PhysicalAddress.LowPart += BYTE_OFFSET(Address);
+    }
+    else
+    {
+        //
+        // Invalid or unmapped
+        //
+        PhysicalAddress.QuadPart = 0;
+    }
+    
+    //
+    // Return the physical address
+    //
+    return PhysicalAddress;
 }

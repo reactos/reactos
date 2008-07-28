@@ -147,4 +147,23 @@ typedef enum _ARM_DOMAIN
     ManagerDomain
 } ARM_DOMAIN;
 
+//
+// Take 0x80812345 and extract:
+// PTE_BASE[0x808][0x12]
+//
+#define MiGetPteAddress(x)         \
+    (PMMPTE)(PTE_BASE + \
+             (((ULONG)(x) >> 20) << 12) + \
+             ((((ULONG)(x) >> 12) & 0xFF) << 2))
+
+#define MiGetPdeAddress(x)         \
+    (PMMPTE)(PDE_BASE + \
+             (((ULONG)(x) >> 20) << 2))
+
+#define MiGetPdeOffset(x) (((ULONG)(x)) >> 22)
+
+#define PTE_BASE    0xC0000000
+#define PDE_BASE    0xC1000000
+#define HYPER_SPACE 0xC1100000
+
 #endif

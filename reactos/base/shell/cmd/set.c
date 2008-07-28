@@ -53,7 +53,6 @@ skip_ws ( LPCTSTR p )
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT i;
 	LPTSTR p;
 
@@ -114,8 +113,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 
 	if ( !_tcsnicmp (param, _T("/"), 1) )
 	{
-		LoadString(CMD_ModuleHandle, STRING_SYNTAX_COMMAND_INCORRECT, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf (szMsg, param);
+		ConErrResPrintf (STRING_SYNTAX_COMMAND_INCORRECT, param);
 		return 0;
 	}
 
@@ -126,8 +124,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		if (p == param)
 		{
 			/* handle set =val case */
-			LoadString(CMD_ModuleHandle, STRING_SYNTAX_COMMAND_INCORRECT, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf (szMsg, param);
+			ConErrResPrintf (STRING_SYNTAX_COMMAND_INCORRECT, param);
 			return 0;
 		}
 
@@ -149,8 +146,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (param, pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			LoadString(CMD_ModuleHandle, STRING_PATH_ERROR, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf (szMsg, param);
+			ConErrResPrintf (STRING_PATH_ERROR, param);
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

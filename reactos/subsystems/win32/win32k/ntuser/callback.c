@@ -339,7 +339,7 @@ co_IntCallHookProc(INT HookId,
 {
    ULONG ArgumentLength;
    PVOID Argument;
-   LRESULT Result;
+   LRESULT Result = 0;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
@@ -491,10 +491,21 @@ co_IntCallHookProc(INT HookId,
                                &ResultPointer,
                                &ResultLength);
 
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
-
    UserEnterCo();
+
+   _SEH_TRY
+   {
+      ProbeForRead((PVOID)*(LRESULT*)ResultPointer,
+                                   sizeof(LRESULT),
+                                                 1);
+      /* Simulate old behaviour: copy into our local buffer */
+      Result = *(LRESULT*)ResultPointer;
+   }
+   _SEH_HANDLE
+   {
+      Result = 0;
+   }
+   _SEH_END;
 
    IntCbFreeMemory(Argument);
 

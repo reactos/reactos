@@ -10,7 +10,7 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#ifndef __LINUX__
+#ifdef WIN32
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -23,6 +23,7 @@
 #include <ctime>
 #include <vector>
 #include <cstdlib>
+#include <cstring>
 
 #ifndef _MSC_VER
 #include <sys/time.h>
@@ -139,7 +140,7 @@ namespace System_
 		OsSupport()
 		{}
 
-#ifdef __LINUX__
+#ifndef WIN32
         static struct sigaction s_sact;
 #else
         static HANDLE s_hThread;

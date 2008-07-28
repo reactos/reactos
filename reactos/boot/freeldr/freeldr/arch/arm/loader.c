@@ -82,20 +82,6 @@ ULONG LenBits[] =
 //
 #define UART_VIRTUAL 0xE0000000
 
-#define PTE_BASE     0xC0000000
-#define PDE_BASE     0xC1000000
-#define HYPER_SPACE  0xC1100000
-
-//
-// Take 0x80812345 and extract:
-// PTE_BASE[0x808][0x12]
-//
-#define MiAddressToPte(x)         \
-    (PTE_BASE + (((x) >> 20) << 12) + ((((x) >> 12) & 0xFF) << 2))
-
-#define MiAddressToPde(x)         \
-    (PDE_BASE + (((x) >> 20) << 2))
-
 /* FUNCTIONS ******************************************************************/
 
 PVOID

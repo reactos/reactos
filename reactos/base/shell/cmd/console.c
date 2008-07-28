@@ -236,10 +236,10 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 {
 	INT len;
-	PCHAR pBuf;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
+	HANDLE hOutput = GetStdHandle(nStdHandle);
 
 	/* used to count number of lines since last pause */
 	static int LineCount = 0;
@@ -247,13 +247,10 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	/* used to see how big the screen is */
 	int ScreenLines = 0;
 
-	/* the number of chars in a roow */
-	int ScreenCol = 0;
-
 	/* chars since start of line */
-	int CharSL = 0;
+	int CharSL;
 
-	int i = 0;
+	int from = 0, i = 0;
 
 	if(NewPage == TRUE)
 		LineCount = 0;
@@ -264,7 +261,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 
 
 	//get the size of the visual screen that can be printed too
-	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
+	if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
 	{
 		// we assuming its a file handle
 		ConPrintf(szFormat, arg_ptr, nStdHandle);
@@ -272,7 +269,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	}
 	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
 	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
-	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
+	CharSL = csbi.dwCursorPosition.X;
 
 	//make sure they didnt make the screen to small
 	if(ScreenLines<4)
@@ -282,45 +279,32 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	}
 
 	len = _vstprintf (szOut, szFormat, arg_ptr);
-#ifdef _UNICODE
-	pBuf = cmd_alloc(len + 1);
-	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
-#else
-	pBuf = szOut;
-#endif
 
-	for(i = 0; i < len; i++)
+	while (i < len)
 	{
-		// search 'end of string' '\n' or 'end of screen line'
-		for(; (i < len) && (pBuf[i] != _T('\n') && (CharSL<ScreenCol)) ; i++)
-			CharSL++;
+		// Search until the end of a line is reached
+		if (szOut[i++] != _T('\n') && ++CharSL < csbi.dwSize.X)
+			continue;
 
-		WriteFile (GetStdHandle (nStdHandle),&pBuf[i-CharSL],sizeof(CHAR)*(CharSL+1),&dwWritten,NULL);
 		LineCount++;
 		CharSL=0;
 
 		if(LineCount >= ScreenLines)
 		{
-			if(_strnicmp(&pBuf[i], "\n", 2)!=0)
-				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL);
+			WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
+			from = i;
 
 			if(PagePrompt() != PROMPT_YES)
 			{
-#ifdef _UNICODE
-				cmd_free(pBuf);
-#endif
 				return 1;
 			}
 			//reset the number of lines being printed
 			LineCount = 0;
-			CharSL=0;
 		}
-
 	}
 
-#ifdef _UNICODE
-	cmd_free(pBuf);
-#endif
+	WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
+
 	return 0;
 }
 
@@ -382,6 +366,17 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 }
 
+VOID ConOutResPrintf (UINT resID, ...)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	va_list arg_ptr;
+
+	va_start (arg_ptr, resID);
+	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
+	va_end (arg_ptr);
+}
+
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {
 	va_list arg_ptr;
@@ -420,6 +415,17 @@ VOID ConErrPuts (LPTSTR szText)
 	ConPuts(szText, STD_ERROR_HANDLE);
 }
 
+
+VOID ConErrResPrintf (UINT resID, ...)
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	va_list arg_ptr;
+
+	va_start (arg_ptr, resID);
+	LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+	ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
+	va_end (arg_ptr);
+}
 
 VOID ConErrPrintf (LPTSTR szFormat, ...)
 {

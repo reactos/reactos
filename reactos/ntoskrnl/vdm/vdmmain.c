@@ -23,16 +23,10 @@ VOID
 INIT_FUNCTION
 NtEarlyInitVdm(VOID)
 {
-    /* GCC 3.4 hack */
-    PVOID start = (PVOID)0x0;
-
-    /*
-     * Save various BIOS data tables. At this point the lower 4MB memory
-     * map is still active so we can just copy the data from low memory.
-     * HACK HACK HACK: We should just map Physical Memory!!!
-     */
+    PCHAR start = MmCreateHyperspaceMapping(0);
     memcpy(OrigIVT, start, 1024);
-    memcpy(OrigBDA, (PVOID)0x400, 256);
+    memcpy(OrigBDA, start+0x400, 256);
+    MmDeleteHyperspaceMapping(start);
 }
 
 VOID

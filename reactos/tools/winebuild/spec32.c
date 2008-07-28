@@ -577,23 +577,25 @@ void BuildDef32File( DLLSPEC *spec )
 
         if (!(odp->flags & FLAG_PRIVATE)) total++;
 
-
-        output( "  %s", name );
-
         switch(odp->type)
         {
         case TYPE_EXTERN:
+            output( "  %s", name );
             is_data = 1;
-            /* fall through */
+            if(strcmp(name, odp->link_name) || (odp->flags & FLAG_FORWARD))
+                output( "=%s", odp->link_name );
+            break;
         case TYPE_VARARGS:
         case TYPE_CDECL:
             /* try to reduce output */
+            output( "  %s", name );
             if(strcmp(name, odp->link_name) || (odp->flags & FLAG_FORWARD))
                 output( "=%s", odp->link_name );
             break;
         case TYPE_STDCALL:
         {
             int at_param = strlen(odp->u.func.arg_types) * get_ptr_size();
+            output( "  %s", name );
             if (!kill_at) output( "@%d", at_param );
             if  (odp->flags & FLAG_FORWARD)
             {
@@ -606,8 +608,25 @@ void BuildDef32File( DLLSPEC *spec )
             }
             break;
         }
+        case TYPE_FASTCALL:
+        {
+            int at_param = strlen(odp->u.func.arg_types) * get_ptr_size();
+            output( "  @%s", name );
+            if (!kill_at) output( "@%d", at_param );
+            if  (odp->flags & FLAG_FORWARD)
+            {
+                output( "=@%s", odp->link_name );
+            }
+            else if (strcmp(name, odp->link_name)) /* try to reduce output */
+            {
+                output( "=@%s", odp->link_name );
+                if (!kill_at) output( "@%d", at_param );
+            }
+            break;
+        }
         case TYPE_STUB:
         {
+            output( "  %s", name );
             if (!kill_at)
             {
                 const char *check = name + strlen(name);

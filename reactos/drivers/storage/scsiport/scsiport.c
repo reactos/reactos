@@ -4405,7 +4405,8 @@ SpiCompletionRoutine(PDEVICE_OBJECT DeviceObject,
 
     if (Irp->MdlAddress != NULL)
     {
-        MmUnlockPages(Irp->MdlAddress);
+		/* We don't need to unlock this MDL because the request could 
+		 * only have come from dispatch level */
         IoFreeMdl(Irp->MdlAddress);
         Irp->MdlAddress = NULL;
     }

@@ -13,7 +13,7 @@
 #include <string>
 #include <iostream>
 
-#ifndef __LINUX__
+#ifdef WIN32
 #define popen _popen
 #define pclose _pclose
 #endif

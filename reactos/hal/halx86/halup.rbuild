@@ -2,7 +2,7 @@
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<module name="halup" type="kernelmodedll" entrypoint="0" installname="hal.dll">
-		<importlibrary base="hal" definition="hal_i386.def" />
+		<importlibrary base="hal" definition="hal.spec.def" />
 		<bootstrap installbase="$(CDOUTPUT)" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>

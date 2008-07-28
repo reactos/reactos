@@ -1084,4 +1084,23 @@ KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
   UNIMPLEMENTED;
 }
 
+VOID
+HalSweepDcache(VOID)
+{
+  UNIMPLEMENTED;
+}
+
+VOID
+HalSweepIcache(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+ULONG
+HalGetInterruptSource(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* EOF */

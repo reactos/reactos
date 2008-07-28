@@ -33,11 +33,11 @@
 #define FALSE 0
 #define TRUE  1
 
-static char * argv0 = "";
+static const char * argv0 = "";
 static char * filename = NULL;
 static char * build_tag = NULL;
 
-int count_wide_string( wchar_t *str )
+int count_wide_string( const wchar_t *str )
 {
 	int i;
 	for( i = 0; str[i]; i++ )

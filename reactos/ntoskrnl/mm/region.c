@@ -33,7 +33,7 @@ InsertAfterEntry(PLIST_ENTRY Previous,
 PMM_REGION static
 MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
               PVOID StartAddress, ULONG Length, ULONG NewType,
-              ULONG NewProtect, PMADDRESS_SPACE AddressSpace,
+              ULONG NewProtect, PMM_AVL_TABLE AddressSpace,
               PMM_ALTER_REGION_FUNC AlterFunc)
 {
    PMM_REGION NewRegion1;
@@ -105,7 +105,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
 
 NTSTATUS
 NTAPI
-MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
+MmAlterRegion(PMM_AVL_TABLE AddressSpace, PVOID BaseAddress,
               PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length,
               ULONG NewType, ULONG NewProtect, PMM_ALTER_REGION_FUNC AlterFunc)
 {
