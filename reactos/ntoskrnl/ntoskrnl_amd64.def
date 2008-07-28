@@ -13,6 +13,7 @@ KefReleaseSpinLockFromDpcLevel
 KeInitializeSpinLock
 KeGetCurrentProcessorNumber
 RtlConvertUlongToLargeInteger
+RtlExtendedIntegerMultiply
 ;
 ; original:
 CcCanIWrite

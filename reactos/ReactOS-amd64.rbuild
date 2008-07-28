@@ -117,13 +117,21 @@
 			</directory>
 		</directory>
 		<directory name="storage">
-			<directory name="ide">
-				<directory name="atapi">
-					<!-- xi:include href="drivers/storage/ide/atapi/atapi.rbuild" / -->
+			<directory name="class">
+				<directory name="class2">
+					<xi:include href="drivers/storage/class/class2/class2.rbuild" />
 				</directory>
 			</directory>
+			<directory name="ide">
+				<directory name="atapi">
+					<xi:include href="drivers/storage/ide/atapi/atapi.rbuild" />
+				</directory>
+			</directory>
+			<directory name="port">
+				<xi:include href="drivers/storage/port/directory.rbuild" />
+			</directory>
 			<directory name="scsiport">
-				<!-- xi:include href="drivers/storage/scsiport/scsiport.rbuild" / -->
+				<xi:include href="drivers/storage/scsiport/scsiport.rbuild" />
 			</directory>
 		</directory>
 	</directory>
