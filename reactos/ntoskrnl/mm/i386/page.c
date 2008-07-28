@@ -196,6 +196,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
     *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
     
     /* Initialize the Addresss Space */
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
     MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
     
     /* The process now has an address space */

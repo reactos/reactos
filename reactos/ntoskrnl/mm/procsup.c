@@ -520,6 +520,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     BoundaryAddressMultiple.QuadPart = 0;
 
     /* Initialize the Addresss Space */
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
     MmInitializeAddressSpace(Process, ProcessAddressSpace);
 
     /* Acquire the Lock */

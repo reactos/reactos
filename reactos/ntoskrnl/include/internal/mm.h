@@ -1574,16 +1574,14 @@ FORCEINLINE
 VOID
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-    KeEnterCriticalRegion();
-    ExAcquirePushLockExclusive((PEX_PUSH_LOCK)&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
+    KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-    ExReleasePushLock((PEX_PUSH_LOCK)&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
-    KeLeaveCriticalRegion();
+    KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
 }
 
 FORCEINLINE
