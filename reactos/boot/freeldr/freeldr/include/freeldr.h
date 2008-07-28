@@ -107,6 +107,10 @@
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 #endif
 
+#ifdef _M_AMD64
+#define KeAmd64EraseFlags(x)     __asm__ __volatile__("pushq $0 ; popfq\n")
+#endif
+
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
 
