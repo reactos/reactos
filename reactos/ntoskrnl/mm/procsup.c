@@ -80,7 +80,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
                  PVOID BaseAddress)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    PMM_AVL_TABLE ProcessAddressSpace = &Process->VadRoot;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID AllocatedBase = BaseAddress;
@@ -161,7 +161,7 @@ STDCALL
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
-    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    PMM_AVL_TABLE ProcessAddressSpace = &Process->VadRoot;
     PMEMORY_AREA MemoryArea;
 
     /* Lock the Address Space */
@@ -484,7 +484,7 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    PMM_AVL_TABLE ProcessAddressSpace = &Process->VadRoot;
     BoundaryAddressMultiple.QuadPart = 0;
 
     /* Create the shared data page */
@@ -510,7 +510,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
                                 IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    PMM_AVL_TABLE ProcessAddressSpace = &Process->VadRoot;
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -519,9 +519,9 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PROS_SECTION_OBJECT SectionObject = Section;
     BoundaryAddressMultiple.QuadPart = 0;
 
-    /* Initialize the Addresss Space */
+    /* Initialize the Addresss Space lock */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    MmInitializeAddressSpace(Process, ProcessAddressSpace);
+    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
 
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
@@ -682,17 +682,17 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
-   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmLockAddressSpace(&Process->VadRoot);
 
-   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
+   while ((MemoryArea = (PMEMORY_AREA)Process->VadRoot.BalancedRoot.u1.Parent) != NULL)
    {
       switch (MemoryArea->Type)
       {
          case MEMORY_AREA_SECTION_VIEW:
              Address = (PVOID)MemoryArea->StartingAddress;
-             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             MmUnlockAddressSpace(&Process->VadRoot);
              MmUnmapViewOfSection(Process, Address);
-             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             MmLockAddressSpace(&Process->VadRoot);
              break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -702,7 +702,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
          case MEMORY_AREA_SHARED_DATA:
          case MEMORY_AREA_NO_ACCESS:
-             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
+             MmFreeMemoryArea(&Process->VadRoot,
                               MemoryArea,
                               NULL,
                               NULL);
@@ -719,8 +719,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
    Mmi386ReleaseMmInfo(Process);
 
-   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmUnlockAddressSpace(&Process->VadRoot);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
    return(STATUS_SUCCESS);

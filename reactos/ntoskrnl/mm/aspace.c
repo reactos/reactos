@@ -19,27 +19,9 @@
 
 /* GLOBALS ******************************************************************/
 
-PMADDRESS_SPACE MmKernelAddressSpace;
-
-ULONGLONG Cycles;
-ULONG TimeDelta;
+PMM_AVL_TABLE MmKernelAddressSpace;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-NTAPI
-MmInitializeAddressSpace(PEPROCESS Process,
-                         PMADDRESS_SPACE AddressSpace)
-{
-    AddressSpace->MemoryAreaRoot = NULL;
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
-{
-    return STATUS_SUCCESS;
-}
 
 /* EOF */

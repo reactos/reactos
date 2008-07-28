@@ -250,11 +250,6 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct _MADDRESS_SPACE
-{
-    PMEMORY_AREA MemoryAreaRoot;
-} MADDRESS_SPACE, *PMADDRESS_SPACE;
-
 typedef struct
 {
     ULONG NrTotalPages;
@@ -367,7 +362,7 @@ extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 
 typedef VOID
 (*PMM_ALTER_REGION_FUNC)(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID BaseAddress,
     ULONG Length,
     ULONG OldType,
@@ -386,22 +381,6 @@ typedef VOID
     BOOLEAN Dirty
 );
 
-/* aspace.c ******************************************************************/
-
-VOID
-NTAPI
-MmInitializeKernelAddressSpace(VOID);
-
-NTSTATUS
-NTAPI
-MmInitializeAddressSpace(
-    struct _EPROCESS* Process,
-    PMADDRESS_SPACE AddressSpace);
-
-NTSTATUS
-NTAPI
-MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
-
 /* marea.c *******************************************************************/
 
 NTSTATUS
@@ -411,7 +390,7 @@ MmInitMemoryAreas(VOID);
 NTSTATUS
 NTAPI
 MmCreateMemoryArea(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     ULONG Type,
     PVOID *BaseAddress,
     ULONG_PTR Length,
@@ -425,21 +404,21 @@ MmCreateMemoryArea(
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByAddress(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID Address
 );
 
 ULONG_PTR
 NTAPI
 MmFindGapAtAddress(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID Address
 );
 
 NTSTATUS
 NTAPI
 MmFreeMemoryArea(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MemoryArea,
     PMM_FREE_PAGE_FUNC FreePage,
     PVOID FreePageContext
@@ -448,7 +427,7 @@ MmFreeMemoryArea(
 NTSTATUS
 NTAPI
 MmFreeMemoryAreaByPtr(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID BaseAddress,
     PMM_FREE_PAGE_FUNC FreePage,
     PVOID FreePageContext
@@ -456,12 +435,12 @@ MmFreeMemoryAreaByPtr(
 
 VOID
 NTAPI
-MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace);
+MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace);
 
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID Address,
     ULONG_PTR Length
 );
@@ -469,7 +448,7 @@ MmLocateMemoryAreaByRegion(
 PVOID
 NTAPI
 MmFindGap(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     ULONG_PTR Length,
     ULONG_PTR Granularity,
     BOOLEAN TopDown
@@ -479,7 +458,7 @@ VOID
 NTAPI
 MmReleaseMemoryAreaIfDecommitted(
     struct _EPROCESS *Process,
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID BaseAddress
 );
 
@@ -745,7 +724,7 @@ MmAccessFault(
 NTSTATUS
 NTAPI
 MmNotPresentFaultVirtualMemory(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -754,7 +733,7 @@ MmNotPresentFaultVirtualMemory(
 NTSTATUS
 NTAPI
 MmPageOutVirtualMemory(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     struct _MM_PAGEOP* PageOp
@@ -779,7 +758,7 @@ MmFreeVirtualMemory(
 NTSTATUS
 NTAPI
 MmProtectAnonMem(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
     ULONG Length,
@@ -790,7 +769,7 @@ MmProtectAnonMem(
 NTSTATUS
 NTAPI
 MmWritePageVirtualMemory(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
     PMM_PAGEOP PageOp
@@ -1360,7 +1339,7 @@ MmTrimUserMemory(
 NTSTATUS
 NTAPI
 MmAlterRegion(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PVOID BaseAddress,
     PLIST_ENTRY RegionListHead,
     PVOID StartAddress,
@@ -1428,7 +1407,7 @@ MmQuerySectionView(
 NTSTATUS
 NTAPI
 MmProtectSectionView(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
     ULONG Length,
@@ -1439,7 +1418,7 @@ MmProtectSectionView(
 NTSTATUS
 NTAPI
 MmWritePageSectionView(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
     PMM_PAGEOP PageOp
@@ -1452,7 +1431,7 @@ MmInitSectionImplementation(VOID);
 NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -1461,7 +1440,7 @@ MmNotPresentFaultSectionView(
 NTSTATUS
 NTAPI
 MmPageOutSectionView(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     struct _MM_PAGEOP *PageOp
@@ -1474,7 +1453,7 @@ MmCreatePhysicalMemorySection(VOID);
 NTSTATUS
 NTAPI
 MmAccessFaultSectionView(
-    PMADDRESS_SPACE AddressSpace,
+    PMM_AVL_TABLE AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -1568,39 +1547,39 @@ MiSyncThreadProcessViews(IN PVOID Process,
 }
 
 
-extern PMADDRESS_SPACE MmKernelAddressSpace;
+extern PMM_AVL_TABLE MmKernelAddressSpace;
 
 FORCEINLINE
 VOID
-MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
+MmLockAddressSpace(PMM_AVL_TABLE AddressSpace)
 {
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
 }
 
 FORCEINLINE
 VOID
-MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
+MmUnlockAddressSpace(PMM_AVL_TABLE AddressSpace)
 {
     KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
 }
 
 FORCEINLINE
 PEPROCESS
-MmGetAddressSpaceOwner(IN PMADDRESS_SPACE AddressSpace)
+MmGetAddressSpaceOwner(IN PMM_AVL_TABLE AddressSpace)
 {
     if (AddressSpace == MmKernelAddressSpace) return NULL;
     return CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot);
 }
 
 FORCEINLINE
-PMADDRESS_SPACE
+PMM_AVL_TABLE
 MmGetCurrentAddressSpace(VOID)
 {
-    return (PMADDRESS_SPACE)&((PEPROCESS)KeGetCurrentThread()->ApcState.Process)->VadRoot;
+    return &((PEPROCESS)KeGetCurrentThread()->ApcState.Process)->VadRoot;
 }
 
 FORCEINLINE
-PMADDRESS_SPACE
+PMM_AVL_TABLE
 MmGetKernelAddressSpace(VOID)
 {
     return MmKernelAddressSpace;

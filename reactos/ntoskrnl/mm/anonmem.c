@@ -47,7 +47,7 @@
 
 NTSTATUS
 NTAPI
-MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
+MmWritePageVirtualMemory(PMM_AVL_TABLE AddressSpace,
                          PMEMORY_AREA MemoryArea,
                          PVOID Address,
                          PMM_PAGEOP PageOp)
@@ -130,7 +130,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS
 NTAPI
-MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
+MmPageOutVirtualMemory(PMM_AVL_TABLE AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
                        PMM_PAGEOP PageOp)
@@ -239,7 +239,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 
 NTSTATUS
 NTAPI
-MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
+MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
                                MEMORY_AREA* MemoryArea,
                                PVOID Address,
                                BOOLEAN Locked)
@@ -437,7 +437,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 }
 
 VOID static
-MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
+MmModifyAttributes(PMM_AVL_TABLE AddressSpace,
                    PVOID BaseAddress,
                    ULONG RegionSize,
                    ULONG OldType,
@@ -553,7 +553,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    ULONG_PTR MemoryAreaLength;
    ULONG Type;
    NTSTATUS Status;
-   PMADDRESS_SPACE AddressSpace;
+   PMM_AVL_TABLE AddressSpace;
    PVOID BaseAddress;
    ULONG RegionSize;
    PVOID PBaseAddress;
@@ -704,7 +704,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
    DPRINT("Type %x\n", Type);
 
-   AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+   AddressSpace = &Process->VadRoot;
    MmLockAddressSpace(AddressSpace);
 
    if (PBaseAddress != 0)
@@ -861,7 +861,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
          if (PageOp != NULL)
          {
             NTSTATUS Status;
-            MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+            MmUnlockAddressSpace(&Process->VadRoot);
             Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
                                            0,
                                            KernelMode,
@@ -872,7 +872,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
                DPRINT1("Failed to wait for page op\n");
                KEBUGCHECK(0);
             }
-            MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+            MmLockAddressSpace(&Process->VadRoot);
             MmReleasePageOp(PageOp);
          }
       }
@@ -888,7 +888,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
    }
 
    /* Actually free the memory area. */
-   MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
+   MmFreeMemoryArea(&Process->VadRoot,
                     MemoryArea,
                     MmFreeVirtualMemoryPage,
                     (PVOID)Process);
@@ -918,7 +918,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    PEPROCESS Process;
-   PMADDRESS_SPACE AddressSpace;
+   PMM_AVL_TABLE AddressSpace;
    PVOID BaseAddress;
    ULONG RegionSize;
 
@@ -941,7 +941,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
-   AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+   AddressSpace = &Process->VadRoot;
 
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
@@ -991,7 +991,7 @@ unlock_deref_and_return:
 
 NTSTATUS
 NTAPI
-MmProtectAnonMem(PMADDRESS_SPACE AddressSpace,
+MmProtectAnonMem(PMM_AVL_TABLE AddressSpace,
                  PMEMORY_AREA MemoryArea,
                  PVOID BaseAddress,
                  ULONG Length,
