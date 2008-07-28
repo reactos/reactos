@@ -5693,6 +5693,7 @@ typedef struct _PCIBUSDATA
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
 
+#if defined(NO_INTERLOCKED_INTRINSICS)
 NTKERNELAPI
 LONG
 FASTCALL
@@ -5726,6 +5727,7 @@ FASTCALL
 InterlockedExchangeAdd(
   IN OUT LONG volatile *Addend,
   IN LONG  Value);
+#endif
 
 /*
  * PVOID
