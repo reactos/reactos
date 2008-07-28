@@ -74,7 +74,7 @@ GenerateChars(SOCKET sock)
             line[i] = chars[charIndex];
 
             /* if we hit the end char, reset it */
-            if (chars[charIndex] == chars[NUM_CHARS])
+            if (chars[charIndex] == chars[NUM_CHARS - 1])
                 charIndex = 0;
             else
                 charIndex++;
