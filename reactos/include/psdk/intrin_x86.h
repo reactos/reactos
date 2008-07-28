@@ -147,6 +147,13 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(vo
 	return __sync_fetch_and_add(Addend, Value);
 }
 
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) long long _InterlockedExchangeAdd64(volatile long long * const Addend, const long long Value)
+{
+	return __sync_fetch_and_add(Addend, Value);
+}
+#endif
+
 static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
 {
 	return __sync_fetch_and_and(value, mask);
@@ -470,6 +477,18 @@ static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(vo
 {
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
+
+#if defined(_M_AMD64)
+static __inline__ __attribute__((always_inline)) long long _InterlockedDecrement64(volatile long long * const lpAddend)
+{
+	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
+}
+
+static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement64(volatile long long * const lpAddend)
+{
+	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
+}
+#endif
 
 static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * a, const long b)
 {
