@@ -1,6 +1,7 @@
 
 #define STUB(x) void x() {}
 
+STUB(KdpEnableSafeMem)
 STUB(KfLowerIrql)
 STUB(KeRaiseIrql)
 STUB(KeLowerIrql)
