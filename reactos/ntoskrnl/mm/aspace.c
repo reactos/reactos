@@ -32,8 +32,6 @@ MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
     AddressSpace->MemoryAreaRoot = NULL;
-    AddressSpace->Lock = (PEX_PUSH_LOCK)&Process->AddressCreationLock;
-    ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
     return STATUS_SUCCESS;
 }
 

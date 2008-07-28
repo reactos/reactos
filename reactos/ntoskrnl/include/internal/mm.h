@@ -253,7 +253,6 @@ typedef struct _MEMORY_AREA
 typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
-    PEX_PUSH_LOCK Lock;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 typedef struct
@@ -1576,14 +1575,14 @@ VOID
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
     KeEnterCriticalRegion();
-    ExAcquirePushLockExclusive(AddressSpace->Lock);
+    ExAcquirePushLockExclusive((PEX_PUSH_LOCK)&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-    ExReleasePushLock(AddressSpace->Lock);
+    ExReleasePushLock((PEX_PUSH_LOCK)&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
     KeLeaveCriticalRegion();
 }
 
