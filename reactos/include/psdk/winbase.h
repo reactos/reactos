@@ -1707,7 +1707,7 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #ifndef __INTERLOCKED_DECLARED
 #define __INTERLOCKED_DECLARED
 
-#if defined (_M_AMD64)
+#if defined (_M_AMD64) || defined (_M_IA64)
 
 #define InterlockedAnd _InterlockedAnd
 #define InterlockedOr _InterlockedOr
@@ -1737,7 +1737,8 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #define InterlockedCompareExchange64 _InterlockedCompareExchange64
 #define InterlockedCompareExchangeAcquire64 InterlockedCompareExchange64
 #define InterlockedCompareExchangeRelease64 InterlockedCompareExchange64
-#else
+
+#else // !(defined (_M_AMD64) || defined (_M_IA64))
 
 LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
 LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
@@ -1769,8 +1770,56 @@ PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
 PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
 #endif
 
-#endif /* !defined(_WIN64) */
+#endif // !(defined (_M_AMD64) || defined (_M_IA64))
+
+#if !defined(InterlockedAnd)
+#define InterlockedAnd InterlockedAnd_Inline
+FORCEINLINE
+LONG
+InterlockedAnd_Inline(IN OUT volatile LONG *Target,
+               IN LONG Set)
+{
+    LONG i;
+    LONG j;
+
+    j = *Target;
+    do {
+        i = j;
+        j = _InterlockedCompareExchange((PLONG)Target,
+                                        i & Set,
+                                        i);
+
+    } while (i != j);
+
+    return j;
+}
+#endif
+
+#if !defined(InterlockedOr)
+#define InterlockedOr InterlockedOr_Inline
+FORCEINLINE
+LONG
+InterlockedOr_Inline(IN OUT volatile LONG *Target,
+              IN LONG Set)
+{
+    LONG i;
+    LONG j;
+
+    j = *Target;
+    do {
+        i = j;
+        j = _InterlockedCompareExchange((PLONG)Target,
+                                        i | Set,
+                                        i);
+
+    } while (i != j);
+
+    return j;
+}
+#endif
+
 #endif /* __INTERLOCKED_DECLARED */
+
 BOOL WINAPI IsBadCodePtr(FARPROC);
 BOOL WINAPI IsBadHugeReadPtr(PCVOID,UINT_PTR);
 BOOL WINAPI IsBadHugeWritePtr(PVOID,UINT_PTR);

@@ -18,51 +18,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME *********************************************************************/
-
-/* FIXME: Interlocked functions that need to be made into a public header */
-#if 0
-FORCEINLINE
-LONG
-InterlockedAnd(IN OUT volatile LONG *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
-                                        i & Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-
-FORCEINLINE
-LONG
-InterlockedOr(IN OUT volatile LONG *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
-                                        i | Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
-
 /* FUNCTIONS *****************************************************************/
 
 #ifdef _WIN64
