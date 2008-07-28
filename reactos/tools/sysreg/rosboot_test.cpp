@@ -46,7 +46,7 @@ namespace Sysreg_
 	string RosBootTest::XEN_CONFIG_FILE = "XEN_CONFIG_FILE";
 	string RosBootTest::XEN_CONFIG_NAME = "XEN_CONFIG_NAME";
 
-#ifdef __linux__
+#ifndef WIN32
     string RosBootTest::ROS_EMU_PATH = "ROS_EMU_PATH_LIN";
 #else
     string RosBootTest::ROS_EMU_PATH = "ROS_EMU_PATH_WIN";
@@ -117,7 +117,7 @@ namespace Sysreg_
         img = "output-i386";
 
         EnvironmentVariable::getValue("ROS_OUTPUT", img);
-#ifdef __linux__
+#ifndef WIN32
         img += "/ros.hd";
 #else
         img += "\\ros.hd";
@@ -159,7 +159,7 @@ namespace Sysreg_
         }
 
 
-#ifdef __linux__
+#ifndef WIN32
         qemuimgdir += "/qemu-img";
 
 #else
@@ -176,7 +176,7 @@ namespace Sysreg_
        const char * options[] = {NULL,
                                   "create",
                                   "-f",
-#ifdef __linux__
+#ifndef WIN32
                                   "raw",
 #else
                                   "vmdk",
@@ -241,7 +241,7 @@ namespace Sysreg_
     {
         string::size_type pos;
 
-#ifdef __linux__
+#ifndef WIN32
         pos = m_EmuPath.find_last_of("/");
 #else
         pos = m_EmuPath.find_last_of("\\");
@@ -266,7 +266,7 @@ namespace Sysreg_
             m_MaxMem = "64";
         }
 
-#ifdef __linux__
+#ifndef WIN32
 
         if (mktemp(pipename))
         {
@@ -332,7 +332,7 @@ namespace Sysreg_
             return false;
         }
 
-#ifdef __linux__
+#ifndef WIN32
                 /* on linux we need get pid in order to be able
                  * to terminate the emulator in case of errors
                  * on windows we can get pid as return of CreateProcess
@@ -369,7 +369,7 @@ namespace Sysreg_
         {
            pipe = pipe.substr(0, pos);
         }
-#ifdef __linux__
+#ifndef WIN32
         m_Src = pipe;
 #else
 	m_Src = "\\\\.\\pipe\\" + pipe.substr(0, pos);
@@ -577,7 +577,7 @@ namespace Sysreg_
                 return false;
             }
         }
-#ifdef __linux__
+#ifndef WIN32
     if (mkfifo(m_Src.c_str(), 400))
     {
 /*
@@ -802,7 +802,7 @@ namespace Sysreg_
             cleanup(conf_parser);
             return false;
         }
-#ifdef __linux__
+#ifndef WIN32
         /*
          * For linux systems we can only
          * check if the emulator runs by
@@ -832,7 +832,7 @@ namespace Sysreg_
         }
 #endif
         OsSupport::cancelAlarms();
-#ifdef __linux__
+#ifndef WIN32
      //   OsSupport::setAlarm (m_MaxTime, m_Pid);
      //   OsSupport::setAlarm(m_MaxTime, getpid());
 #else

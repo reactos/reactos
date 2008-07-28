@@ -38,7 +38,7 @@ namespace System_
             }
         }
 
-#ifdef __linux__
+#ifndef WIN32
         if (s_Entries.size())
         {
             long secs = s_Entries[i]->tm.tv_sec - tm.tv_sec;
@@ -54,7 +54,7 @@ namespace System_
     void OsSupport::cancelAlarms()
     {
 
-#ifndef __linux__
+#ifdef WIN32
         if (s_hThread)
         {
             TerminateThread(s_hThread, 0);
@@ -73,7 +73,7 @@ namespace System_
     }
 
 
-#ifndef __linux__
+#ifdef WIN32
 
     HANDLE OsSupport::s_hThread = 0;
     static HANDLE hTimer;
