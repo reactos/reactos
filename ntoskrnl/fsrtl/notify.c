@@ -404,6 +404,10 @@ VOID
 NTAPI
 FsRtlNotifyUninitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KEBUGCHECK(0);
+    if (*NotifySync)
+    {
+        ExFreePoolWithTag(*NotifySync, TAG('F', 'S', 'N', 'S'));
+        *NotifySync = NULL;
+    }
 }
 

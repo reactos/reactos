@@ -228,7 +228,7 @@ FsRtlInitializeBaseMcb
 FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb
 FsRtlInitializeMcb
-FsRtlInitializeOplock
+FsRtlInitializeOplock@4
 FsRtlInitializeTunnelCache
 FsRtlInsertPerFileObjectContext
 FsRtlInsertPerStreamContext
@@ -265,7 +265,7 @@ FsRtlNotifyFullChangeDirectory@40
 FsRtlNotifyFullReportChange
 FsRtlNotifyInitializeSync
 FsRtlNotifyReportChange
-FsRtlNotifyUninitializeSync
+FsRtlNotifyUninitializeSync@4
 FsRtlNotifyVolumeEvent
 FsRtlNumberOfRunsInBaseMcb
 FsRtlNumberOfRunsInLargeMcb
