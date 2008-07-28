@@ -65,6 +65,7 @@
 		<compilerflag>-O3</compilerflag>
 	</if>
 
+	<define name="__MSVCRT__"/>
 	<compilerflag>-Wno-attributes</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<linkerflag>-s</linkerflag>
