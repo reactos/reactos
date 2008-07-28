@@ -682,31 +682,24 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
                 return NULL;
             }
 
-			if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+			/* Probe and Lock */
+			_SEH_TRY
 			{
-				MmBuildMdlForNonPagedPool(Irp->MdlAddress);
+				/* Do the probe */
+				MmProbeAndLockPages(Irp->MdlAddress,
+									KernelMode,
+									MajorFunction == IRP_MJ_READ ?
+									IoWriteAccess : IoReadAccess);
 			}
-			else
+			_SEH_HANDLE
 			{
-				/* Probe and Lock */
-				_SEH_TRY
-				{
-					/* Do the probe */
-					MmProbeAndLockPages(Irp->MdlAddress,
-										KernelMode,
-										MajorFunction == IRP_MJ_READ ?
-										IoWriteAccess : IoReadAccess);
-				}
-				_SEH_HANDLE
-				{
-					/* Free the IRP and its MDL */
-					IoFreeMdl(Irp->MdlAddress);
-					IoFreeIrp(Irp);
-					Irp = NULL;
-				}
-				_SEH_END;
+				/* Free the IRP and its MDL */
+				IoFreeMdl(Irp->MdlAddress);
+				IoFreeIrp(Irp);
+				Irp = NULL;
 			}
-
+			_SEH_END;
+		
             /* This is how we know if we failed during the probe */
             if (!Irp) return NULL;
         }

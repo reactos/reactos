@@ -1009,6 +1009,22 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
+FORCEINLINE
+VOID
+NTAPI
+MmAcquirePageListLock()
+{
+	KeAcquireQueuedSpinLock(LockQueuePfnLock);
+}
+
+FORCEINLINE
+VOID
+NTAPI
+MmReleasePageListLock(KIRQL oldIrql)
+{
+	KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+}
+
 VOID
 NTAPI
 MmInitializePageList(
