@@ -93,14 +93,12 @@
 
 	<directory name="drivers">
 		<directory name="base">
-			<directory name="bootvid">
-				<xi:include href="drivers/base/bootvid/bootvid.rbuild" />
-			</directory>
-			<directory name="kdcom">
-				<xi:include href="drivers/base/kdcom/kdcom.rbuild" />
-			</directory>
+			<xi:include href="drivers/base/directory.rbuild" />
 		</directory>
 		<directory name="filesystems">
+			<directory name="cdfs">
+				<xi:include href="drivers/filesystems/cdfs/cdfs.rbuild" />
+			</directory>
 			<directory name="fastfat">
 				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
 			</directory>
@@ -116,11 +114,23 @@
 				<xi:include href="drivers/network/tcpip/tcpip.rbuild" />
 			</directory>
 		</directory>
+		<directory name="setup">
+			<xi:include href="drivers/setup/directory.rbuild" />
+		</directory>
 		<directory name="storage">
 			<directory name="class">
+				<directory name="cdrom">
+					<xi:include href="drivers/storage/class/cdrom/cdrom.rbuild" />
+				</directory>
 				<directory name="class2">
 					<xi:include href="drivers/storage/class/class2/class2.rbuild" />
 				</directory>
+				<directory name="disk">
+					<xi:include href="drivers/storage/class/disk/disk.rbuild" />
+				</directory>
+			</directory>
+			<directory name="floppy">
+				<xi:include href="drivers/storage/floppy/floppy.rbuild" />
 			</directory>
 			<directory name="ide">
 				<directory name="atapi">
