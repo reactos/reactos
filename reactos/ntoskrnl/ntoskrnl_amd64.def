@@ -15,6 +15,7 @@ KeGetCurrentProcessorNumber
 RtlConvertUlongToLargeInteger
 RtlExtendedIntegerMultiply
 KeQueryTickCount
+KeQueryInterruptTime
 ;
 ; original:
 CcCanIWrite
