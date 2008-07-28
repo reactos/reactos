@@ -19,20 +19,12 @@
 
 /* GLOBALS ******************************************************************/
 
-MADDRESS_SPACE MmKernelAddressSpace;
+PMADDRESS_SPACE MmKernelAddressSpace;
 
 ULONGLONG Cycles;
 ULONG TimeDelta;
 
 /* FUNCTIONS *****************************************************************/
-
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitializeKernelAddressSpace(VOID)
-{
-    MmInitializeAddressSpace(NULL, &MmKernelAddressSpace);
-}
 
 NTSTATUS
 NTAPI
@@ -40,18 +32,8 @@ MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
     AddressSpace->MemoryAreaRoot = NULL;
-
-    if (Process != NULL)
-    {
-        AddressSpace->Lock = (PEX_PUSH_LOCK)&Process->AddressCreationLock;
-        ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);        
-    }
-    else
-    {
-        AddressSpace->Lock = (PEX_PUSH_LOCK)&PsGetCurrentProcess()->AddressCreationLock;
-        ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
-    }
-    
+    AddressSpace->Lock = (PEX_PUSH_LOCK)&Process->AddressCreationLock;
+    ExInitializePushLock((PULONG_PTR)AddressSpace->Lock);
     return STATUS_SUCCESS;
 }
 

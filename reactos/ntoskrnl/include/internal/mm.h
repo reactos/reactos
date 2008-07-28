@@ -1569,7 +1569,7 @@ MiSyncThreadProcessViews(IN PVOID Process,
 }
 
 
-extern MADDRESS_SPACE MmKernelAddressSpace;
+extern PMADDRESS_SPACE MmKernelAddressSpace;
 
 FORCEINLINE
 VOID
@@ -1591,7 +1591,7 @@ FORCEINLINE
 PEPROCESS
 MmGetAddressSpaceOwner(IN PMADDRESS_SPACE AddressSpace)
 {
-    if (AddressSpace == &MmKernelAddressSpace) return NULL;
+    if (AddressSpace == MmKernelAddressSpace) return NULL;
     return CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot);
 }
 
@@ -1606,7 +1606,7 @@ FORCEINLINE
 PMADDRESS_SPACE
 MmGetKernelAddressSpace(VOID)
 {
-    return &MmKernelAddressSpace;
+    return MmKernelAddressSpace;
 }
 
 #endif
