@@ -106,9 +106,6 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x90, 0x10, LoaderOsloaderHeap); // Disk read buffer for int 13h. DISKREADBUFFER
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xA0, 0x60, LoaderFirmwarePermanent); // ROM / Video
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0xFFF, 1, LoaderSpecialMemory); // unusable memory
-#if defined (_M_AMD64)
-	MmMarkPagesInLookupTable(PageLookupTableAddress, PML4_PAGENUM, PML4_PAGES, LoaderSpecialMemory); // the page table
-#endif
 #elif __arm__
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x00, 1, LoaderFirmwarePermanent); // arm exception handlers
 	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x01, 7, LoaderFirmwareTemporary); // arm board block + freeldr stack + cmdline

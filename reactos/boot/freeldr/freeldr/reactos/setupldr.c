@@ -406,7 +406,10 @@ VOID RunLoader(VOID)
 
   /* Load ext2.sys (could be loaded by the setup prog!) */
   if (!LoadDriver(SourcePath, "ext2.sys"))
-    return;
+  {
+      DbgPrint((DPRINT_WARNING, "Could not load ext2\n"));
+//    return;
+  }
 
     /* Load additional files specified in txtsetup.inf */
     if (InfFindFirstLine(InfHandle,
@@ -423,7 +426,10 @@ VOID RunLoader(VOID)
                 if (strcmp(Media, "x") == 0)
                 {
                     if (!LoadDriver(SourcePath, DriverName))
+                    {
+                        DbgPrint((DPRINT_WARNING, "could not load %s, %s\n", SourcePath, DriverName));
                         return;
+                    }
                 }
             }
         } while (InfFindNextLine(&InfContext, &InfContext));

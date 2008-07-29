@@ -99,22 +99,27 @@ x86_16_BuildPageTables:
 	pusha
 	push es
 
-	mov ax, PML4_SEG
+	/* Get segment of pml4 */
+	mov eax, offset _pml4_startup
+	shr eax, 4
 	mov es, ax
 	cld
 	xor di, di
 
 	/* One entry in the PML4 pointing to PDP */
-	mov eax, (PDP_PAGENUM << 12) | 0x00f
+	mov eax, offset _pdp_startup
+	or eax, 0x00f
 	stosd
+	/* clear rest */
 	xor eax, eax
 	mov cx, 0x03ff
 	rep stosd
 
 	/* One entry in the PDP pointing to PD */
-	mov eax, (PD_PAGENUM << 12) | 0x00f
+	mov eax, offset _pd_startup
+	or eax, 0x00f
 	stosd
-
+	/* clear rest */
 	xor eax, eax
 	mov ecx, 0x03ff
 	rep stosd
@@ -159,7 +164,7 @@ x86_16_SwitchToLong:
 	mov eax, 0x00a0			// Set PAE and PGE: 10100000b
 	mov cr4, eax
 
-	mov edx, PML4_ADDRESS	// Point cr3 at PML4
+	mov edx, offset _pml4_startup // Point cr3 at PML4
 	mov cr3, edx
 
 	mov ecx, 0xC0000080		// Specify EFER MSR

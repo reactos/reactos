@@ -28,16 +28,12 @@
 	 * Here we assume the kernel is loaded at 1mb
 	 * This boots the kernel
 	 */
-	.code32
+	.code64
     .globl _PageDirectoryStart
     
-    .globl _startup_pagedirectory
-    .globl _lowmem_pagetable
-    .globl _kernel_pagetable
-    .globl _hyperspace_pagetable
-    .globl _apic_pagetable
-    .globl _kpcr_pagetable
-    .globl _kuser_pagetable
+    .globl _pml4_startup
+    .globl _pdp_startup
+    .globl _pd_startup
 
     .globl _PageDirectoryEnd
 
@@ -55,25 +51,13 @@ EXTERN(_reactos_memory_map)
 
 .bss
 _PageDirectoryStart:
-_startup_pagedirectory:
+_pml4_startup:
 	.fill 4096, 1, 0
 
-_lowmem_pagetable:
+_pdp_startup:
 	.fill 4096, 1, 0
 
-_kernel_pagetable:
-	.fill 2*4096, 1, 0
-
-_hyperspace_pagetable:
+_pd_startup:
 	.fill 4096, 1, 0
-	
-_apic_pagetable:
-	.fill 4096, 1, 0
-
-_kpcr_pagetable:
-	.fill 4096, 1, 0   
-
-_kuser_pagetable:
-	.fill 4096, 1, 0   
 
 _PageDirectoryEnd:

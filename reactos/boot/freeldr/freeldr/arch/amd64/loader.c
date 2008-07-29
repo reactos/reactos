@@ -22,18 +22,15 @@
 
 #define NDEBUG
 #include <debug.h>
-#undef DbgPrint
+//#undef DbgPrint
 
 /* Page Directory and Tables for non-PAE Systems */
-extern PAGE_DIRECTORY_X86 startup_pagedirectory;
-extern PAGE_DIRECTORY_X86 lowmem_pagetable;
-extern PAGE_DIRECTORY_X86 kernel_pagetable;
-extern PAGE_DIRECTORY_X86 hyperspace_pagetable;
-extern PAGE_DIRECTORY_X86 apic_pagetable;
-extern PAGE_DIRECTORY_X86 kpcr_pagetable;
-extern PAGE_DIRECTORY_X86 kuser_pagetable;
+extern ULONG_PTR NextModuleBase;
 extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
+
+PPAGE_DIRECTORY_AMD64 pPML4;
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -56,56 +53,93 @@ VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
-    ASSERT(FALSE);
-#if 0
     /* Disable Interrupts */
     _disable();
 
     /* Re-initalize EFLAGS */
-    Ke386EraseFlags();
+    KeAmd64EraseFlags();
 
     /* Initialize the page directory */
     FrLdrSetupPageDirectory();
 
-    /* Initialize Paging, Write-Protection and Load NTOSKRNL */
-    FrLdrSetupPae(Magic);
-#endif
-}
+    /* Set the new PML4 */
+    __writecr3((ULONGLONG)pPML4);
 
-/*++
- * FrLdrSetupPae
- * INTERNAL
- *
- *     Configures PAE on a MP System, and sets the PDBR if it's supported, or if
- *     the system is UP.
- *
- * Params:
- *     Magic - Multiboot Magic
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     None.
- *
- *--*/
-VOID
-FASTCALL
-FrLdrSetupPae(ULONG Magic)
-{
-#if 0
-    ULONG_PTR PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectory;
-
-    /* Set the PDBR */
-    __writecr3(PageDirectoryBaseAddress);
-
-    /* Enable Paging and Write Protect*/
-    __writecr0(__readcr0() | X86_CR0_PG | X86_CR0_WP);
+DbgPrint((DPRINT_WARNING, "Jumping to kernel @ %p.\n", KernelEntryPoint));
 
     /* Jump to Kernel */
     (*KernelEntryPoint)(Magic, &LoaderBlock);
-#endif
+
 }
+
+PPAGE_DIRECTORY_AMD64
+FrLdrGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
+{
+	PPAGE_DIRECTORY_AMD64 pSubDir;
+
+	if (!pDir)
+		return NULL;
+
+	if (!pDir->Pde[Index].Valid)
+	{
+		pSubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+		if (!pSubDir)
+			return NULL;
+		RtlZeroMemory(pSubDir, PAGE_SIZE);
+		pDir->Pde[Index].PageFrameNumber = (ULONGLONG)pSubDir / PAGE_SIZE;
+		pDir->Pde[Index].Valid = 1;
+		pDir->Pde[Index].Write = 1;
+	}
+	else
+	{
+		pSubDir = (PPAGE_DIRECTORY_AMD64)((ULONGLONG)(pDir->Pde[Index].PageFrameNumber) * PAGE_SIZE);
+	}
+	return pSubDir;
+}
+
+BOOLEAN
+FrLdrMapSinglePage(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress)
+{
+	PPAGE_DIRECTORY_AMD64 pDir3, pDir2, pDir1;
+	ULONG Index;
+
+	pDir3 = FrLdrGetOrCreatePageDir(pPML4, VAtoIndex4(VirtualAddress));
+	pDir2 = FrLdrGetOrCreatePageDir(pDir3, VAtoIndex3(VirtualAddress));
+	pDir1 = FrLdrGetOrCreatePageDir(pDir2, VAtoIndex2(VirtualAddress));
+
+	if (!pDir1)
+		return FALSE;
+
+	Index = VAtoIndex1(VirtualAddress);
+	if (pDir1->Pde[Index].Valid)
+	{
+		return FALSE;
+	}
+
+	pDir1->Pde[Index].Valid = 1;
+	pDir1->Pde[Index].Write = 1;
+	pDir1->Pde[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
+
+	return TRUE;
+}
+
+ULONG
+FrLdrMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG cPages)
+{
+	ULONG i;
+
+	for (i = 0; i < cPages; i++)
+	{
+		if (!FrLdrMapSinglePage(VirtualAddress, PhysicalAddress))
+		{
+			return i;
+		}
+		VirtualAddress += PAGE_SIZE;
+		PhysicalAddress += PAGE_SIZE;
+	}
+	return i;
+}
+
 
 /*++
  * FrLdrSetupPageDirectory
@@ -128,89 +162,38 @@ VOID
 FASTCALL
 FrLdrSetupPageDirectory(VOID)
 {
-#if 0
-    PPAGE_DIRECTORY_X86 PageDir;
-    ULONG KernelPageTableIndex;
-    ULONG i;
+	ULONG KernelPages;
 
-    /* Get the Kernel Table Index */
-    KernelPageTableIndex = KernelBase >> PDE_SHIFT;
+	/* Allocate a Page for the PML4 */
+	pPML4 = MmAllocateMemoryWithType(4096, LoaderSpecialMemory);
 
-    /* Get the Startup Page Directory */
-    PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
+	ASSERT(pPML4);
 
-    /* Set up the Low Memory PDE */
-    PageDir->Pde[LowMemPageTableIndex].Valid = 1;
-    PageDir->Pde[LowMemPageTableIndex].Write = 1;
-    PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = PaPtrToPfn(lowmem_pagetable);
+	/* The page tables are located at 0xfffff68000000000 
+	 * We create a recursive self mapping through all 4 levels at 
+	 * virtual address 0xfffff6fb7dbedf68 */
+	pPML4->Pde[VAtoIndex4(PML4_BASE)].Valid = 1;
+	pPML4->Pde[VAtoIndex4(PML4_BASE)].Write = 1;
+	pPML4->Pde[VAtoIndex4(PML4_BASE)].PageFrameNumber = PtrToPfn(PML4_BASE);
 
-    /* Set up the Kernel PDEs */
-    PageDir->Pde[KernelPageTableIndex].Valid = 1;
-    PageDir->Pde[KernelPageTableIndex].Write = 1;
-    PageDir->Pde[KernelPageTableIndex].PageFrameNumber = PaPtrToPfn(kernel_pagetable);
-    PageDir->Pde[KernelPageTableIndex + 1].Valid = 1;
-    PageDir->Pde[KernelPageTableIndex + 1].Write = 1;
-    PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = PaPtrToPfn(kernel_pagetable + 4096);
+	ASSERT(VAtoIndex4(PML4_BASE) == 0x1ed);
+	ASSERT(VAtoIndex3(PML4_BASE) == 0x1ed);
+	ASSERT(VAtoIndex2(PML4_BASE) == 0x1ed);
+	ASSERT(VAtoIndex1(PML4_BASE) == 0x1ed);
 
-    /* Set up the Startup PDE */
-    PageDir->Pde[StartupPageTableIndex].Valid = 1;
-    PageDir->Pde[StartupPageTableIndex].Write = 1;
-    PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
+	/* Setup low memory pages */
+	if (FrLdrMapRangeOfPages(0, 0, 1024) < 1024)
+	{
+		DbgPrint((DPRINT_WARNING, "Could not map low memory pages.\n"));
+	}
 
-    /* Set up the Hyperspace PDE */
-    PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
-    PageDir->Pde[HyperspacePageTableIndex].Write = 1;
-    PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
+	/* Setup kernel pages */
+	KernelPages = (ROUND_TO_PAGES(NextModuleBase - KERNEL_BASE_PHYS) / PAGE_SIZE);
+	DbgPrint((DPRINT_WARNING, "Trying to map %d pages for kernel.\n", KernelPages));
+	if (FrLdrMapRangeOfPages(KernelBase, KERNEL_BASE_PHYS, KernelPages) != KernelPages)
+	{
+		DbgPrint((DPRINT_WARNING, "Could not map %d kernel pages.\n", KernelPages));
+	}
 
-    /* Set up the HAL PDE */
-    PageDir->Pde[HalPageTableIndex].Valid = 1;
-    PageDir->Pde[HalPageTableIndex].Write = 1;
-    PageDir->Pde[HalPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
-
-    /* Set up Low Memory PTEs */
-    PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
-    for (i=0; i<1024; i++)
-    {
-        PageDir->Pde[i].Valid = 1;
-        PageDir->Pde[i].Write = 1;
-        PageDir->Pde[i].Owner = 1;
-        PageDir->Pde[i].PageFrameNumber = PaToPfn(i * PAGE_SIZE);
-    }
-
-    /* Set up Kernel PTEs */
-    PageDir = (PPAGE_DIRECTORY_X86)&kernel_pagetable;
-    for (i=0; i<1536; i++)
-    {
-        PageDir->Pde[i].Valid = 1;
-        PageDir->Pde[i].Write = 1;
-        PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
-    }
-
-    /* Setup APIC Base */
-    PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
-    PageDir->Pde[0].Valid = 1;
-    PageDir->Pde[0].Write = 1;
-    PageDir->Pde[0].CacheDisable = 1;
-    PageDir->Pde[0].WriteThrough = 1;
-    PageDir->Pde[0].PageFrameNumber = PaToPfn(HAL_BASE);
-    PageDir->Pde[0x200].Valid = 1;
-    PageDir->Pde[0x200].Write = 1;
-    PageDir->Pde[0x200].CacheDisable = 1;
-    PageDir->Pde[0x200].WriteThrough = 1;
-    PageDir->Pde[0x200].PageFrameNumber = PaToPfn(HAL_BASE + KERNEL_BASE_PHYS);
-
-    /* Setup KUSER_SHARED_DATA Base */
-    PageDir->Pde[0x1F0].Valid = 1;
-    PageDir->Pde[0x1F0].Write = 1;
-    PageDir->Pde[0x1F0].PageFrameNumber = 2;
-
-    /* Setup KPCR Base*/
-    PageDir->Pde[0x1FF].Valid = 1;
-    PageDir->Pde[0x1FF].Write = 1;
-    PageDir->Pde[0x1FF].PageFrameNumber = 1;
-
-    /* Zero shared data */
-    RtlZeroMemory((PVOID)(2 << MM_PAGE_SHIFT), PAGE_SIZE);
-#endif
 }
 
