@@ -730,6 +730,7 @@ static const WCHAR wszRecycleBin[] = { 'T','r','a','s','h', 0 };
 static const WCHAR wszMyComputer[] = { 'M','y','C','o','m','p','u','t','e','r',0 };
 static const WCHAR wszControlPanel[] = { 'C','o','n','t','r','o','l','P','a','n','e','l',0 };
 static const WCHAR wszFolderOptions[] = { 'F','o','l','d','e','r',' ','O','p','t','i','o','n','s',0 };
+static const WCHAR wszNethoodFolder[] = { 'N','e','t','h','o','o','d',' ','f','o','l','d','e','r',0};
 
 const GUID CLSID_FolderOptions = { 0x6DFD7C5C, 0x2451, 0x11d3, {0xa2,0x99,0x00,0xC0,0x4F,0x8e,0xf6,0xaf} };
 
@@ -745,6 +746,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         &CLSID_MyDocuments,
         wszDesktop,
         wszMyDocuments
+    },
+    {
+        &CLSID_NetworkPlaces,
+        wszDesktop,
+        wszNethoodFolder
     },
     {
         &CLSID_RecycleBin,
