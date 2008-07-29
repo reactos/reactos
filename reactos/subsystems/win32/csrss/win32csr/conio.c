@@ -1292,6 +1292,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
 CSR_API(CsrGetScreenBufferInfo)
 {
   NTSTATUS Status;
+  PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
   PCONSOLE_SCREEN_BUFFER_INFO pInfo;
 
@@ -1300,9 +1301,15 @@ CSR_API(CsrGetScreenBufferInfo)
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
+  Status = ConioConsoleFromProcessData(ProcessData, &Console);
+  if (! NT_SUCCESS(Status))
+    {
+      return Request->Status = Status;
+    }
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
+      ConioUnlockConsole(Console);
       return Request->Status = Status;
     }
   pInfo = &Request->Data.ScreenBufferInfoRequest.Info;
@@ -1311,13 +1318,14 @@ CSR_API(CsrGetScreenBufferInfo)
   pInfo->dwCursorPosition.X = Buff->CurrentX;
   pInfo->dwCursorPosition.Y = Buff->CurrentY;
   pInfo->wAttributes = Buff->DefaultAttrib;
-  pInfo->srWindow.Left = 0;
-  pInfo->srWindow.Right = Buff->MaxX - 1;
-  pInfo->srWindow.Top = 0;
-  pInfo->srWindow.Bottom = Buff->MaxY - 1;
+  pInfo->srWindow.Left = Buff->ShowX;
+  pInfo->srWindow.Right = Buff->ShowX + Console->Size.X - 1;
+  pInfo->srWindow.Top = Buff->ShowY;
+  pInfo->srWindow.Bottom = Buff->ShowY + Console->Size.Y - 1;
   pInfo->dwMaximumWindowSize.X = Buff->MaxX;
   pInfo->dwMaximumWindowSize.Y = Buff->MaxY;
   ConioUnlockScreenBuffer(Buff);
+  ConioUnlockConsole(Console);
 
   Request->Status = STATUS_SUCCESS;
 
