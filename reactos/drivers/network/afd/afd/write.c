@@ -41,7 +41,7 @@ static NTSTATUS NTAPI SendComplete
     ASSERT_IRQL(APC_LEVEL);
 
     if (Irp->Cancel) {
-        FCB->ReceiveIrp.InFlightRequest = NULL;
+        FCB->SendIrp.InFlightRequest = NULL;
         return STATUS_SUCCESS;
     }
 
@@ -175,7 +175,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 			    Irp->IoStatus.Information));
 
     if (Irp->Cancel) {
-        FCB->ReceiveIrp.InFlightRequest = NULL;
+        FCB->SendIrp.InFlightRequest = NULL;
         return STATUS_SUCCESS;
     }
 
