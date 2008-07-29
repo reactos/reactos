@@ -185,6 +185,7 @@ HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046}","",0x00000000,""
+HKCR,"lnkfile\shellex\PropertySheetHandlers\Shellink Property Page", "", 0x00000000, "{00021401-0000-0000-C000-000000000046}"
 
 ; Text Documents
 HKCR,".log","",0x00000000,"txtfile"
