@@ -336,7 +336,7 @@ GetUser32Handle(HANDLE handle)
 /*
  * Decide whether an object is located on the desktop or shared heap
  */
-static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_MONITOR + 1] =
+static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_EVENT + 1] =
 {
     FALSE, /* VALIDATE_TYPE_FREE (not used) */
     TRUE, /* VALIDATE_TYPE_WIN */ /* FIXME: FALSE once WINDOW_OBJECT is deleted! */
@@ -350,7 +350,10 @@ static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_MONITOR + 1] =
     FALSE, /* (not used) */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
-    TRUE /* VALIDATE_TYPE_MONITOR */
+    TRUE, /* VALIDATE_TYPE_MONITOR */
+    FALSE, /* (not used) */
+    FALSE, /* (not used) */
+    TRUE  /* VALIDATE_TYPE_EVENT */
 };
 
 //
@@ -363,7 +366,7 @@ ValidateHandle(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= VALIDATE_TYPE_MONITOR);
+  ASSERT(uType <= VALIDATE_TYPE_EVENT);
 
   pEntry = GetUser32Handle(handle);
 
@@ -418,7 +421,7 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= VALIDATE_TYPE_MONITOR);
+  ASSERT(uType <= VALIDATE_TYPE_EVENT);
 
   pEntry = GetUser32Handle(handle);
 
