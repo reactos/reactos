@@ -14,7 +14,7 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAbortDoc(IN HDC hdc)
@@ -23,7 +23,7 @@ NtGdiAbortDoc(IN HDC hdc)
     return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAbortPath(IN HDC hdc)
@@ -32,7 +32,7 @@ NtGdiAbortPath(IN HDC hdc)
     return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiFillPath(
@@ -44,7 +44,7 @@ NtGdiFillPath(
 }
 
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiStrokeAndFillPath(
@@ -55,7 +55,7 @@ NtGdiStrokeAndFillPath(
     return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiStrokePath(
@@ -66,7 +66,7 @@ NtGdiStrokePath(
     return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiWidenPath(
@@ -77,7 +77,7 @@ NtGdiWidenPath(
     return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiFlattenPath(
@@ -88,7 +88,7 @@ NtGdiFlattenPath(
     return FALSE;
 }
 
-W32KAPI
+
 NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(VOID)
@@ -97,7 +97,7 @@ NtGdiFlushUserBatch(VOID)
     return STATUS_UNSUCCESSFUL;
 }
 
-W32KAPI
+
 HRGN
 APIENTRY
 NtGdiPathToRegion(
@@ -105,9 +105,10 @@ NtGdiPathToRegion(
 )
 {
     UNIMPLEMENTED;
+	return NULL;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetMiterLimit(
@@ -117,9 +118,10 @@ NtGdiSetMiterLimit(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetFontXform(
@@ -129,9 +131,10 @@ NtGdiSetFontXform(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetMiterLimit(
@@ -140,9 +143,10 @@ NtGdiGetMiterLimit(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEllipse(
@@ -154,9 +158,10 @@ NtGdiEllipse(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRectangle(
@@ -168,9 +173,10 @@ NtGdiRectangle(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRoundRect(
@@ -184,9 +190,10 @@ NtGdiRoundRect(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPlgBlt(
@@ -204,9 +211,10 @@ NtGdiPlgBlt(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMaskBlt(
@@ -226,9 +234,10 @@ NtGdiMaskBlt(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiExtFloodFill(
@@ -240,9 +249,10 @@ NtGdiExtFloodFill(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiFillRgn(
@@ -252,9 +262,10 @@ NtGdiFillRgn(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiFrameRgn(
@@ -266,9 +277,10 @@ NtGdiFrameRgn(
 )
 {
     UNIMPLEMENTED;
+	return FALSE;
 }
 
-W32KAPI
+
 COLORREF
 APIENTRY
 NtGdiSetPixel(
@@ -279,32 +291,45 @@ NtGdiSetPixel(
 )
 {
     UNIMPLEMENTED;
+	return 0;
 }
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetPixel(
     IN HDC hdc,
     IN INT x,
     IN INT y
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiStartPage(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEndPage(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiStartDoc(
@@ -312,23 +337,35 @@ NtGdiStartDoc(
     IN DOCINFOW *pdi,
     OUT BOOL *pbBanding,
     IN INT iJob
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEndDoc(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiUpdateColors(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetCharWidthW(
@@ -338,17 +375,25 @@ NtGdiGetCharWidthW(
     IN OPTIONAL PWCHAR pwc,
     IN FLONG fl,
     OUT PVOID pvBuf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetCharWidthInfo(
     IN HDC hdc,
     OUT PCHWIDTHINFO pChWidthInfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiDrawEscape(
@@ -356,9 +401,13 @@ NtGdiDrawEscape(
     IN INT iEsc,
     IN INT cjIn,
     IN OPTIONAL LPSTR pjIn
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiExtEscape(
@@ -370,9 +419,13 @@ NtGdiExtEscape(
     IN OPTIONAL LPSTR pjIn,
     IN INT cjOut,
     OUT OPTIONAL LPSTR pjOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetFontData(
@@ -381,9 +434,13 @@ NtGdiGetFontData(
     IN DWORD dwOffset,
     OUT OPTIONAL PVOID pvBuf,
     IN ULONG cjBuf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(
@@ -395,49 +452,73 @@ NtGdiGetGlyphOutline(
     OUT OPTIONAL PVOID pvBuf,
     IN LPMAT2 pmat2,
     IN BOOL bIgnoreRotation
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetETM(
     IN HDC hdc,
     OUT EXTTEXTMETRIC *petm
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetRasterizerCaps(
     OUT LPRASTERIZER_STATUS praststat,
     IN ULONG cjBytes
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetKerningPairs(
     IN HDC hdc,
     IN ULONG cPairs,
     OUT OPTIONAL KERNINGPAIR *pkpDst
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMonoBitmap(
     IN HBITMAP hbm
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiGetObjectBitmapHandle(
     IN HBRUSH hbr,
     OUT UINT *piUsage
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiEnumObjects(
@@ -445,9 +526,13 @@ NtGdiEnumObjects(
     IN INT iObjectType,
     IN ULONG cjBuf,
     OUT OPTIONAL PVOID pvBuf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiResetDC(
@@ -456,41 +541,61 @@ NtGdiResetDC(
     OUT PBOOL pbBanding,
     IN OPTIONAL VOID *pDriverInfo2, // this is "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
     OUT VOID *ppUMdhpdev
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiSetBoundsRect(
     IN HDC hdc,
     IN LPRECT prc,
     IN DWORD f
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetColorAdjustment(
     IN HDC hdc,
     OUT PCOLORADJUSTMENT pcaOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetColorAdjustment(
     IN HDC hdc,
     IN PCOLORADJUSTMENT pca
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiCancelDC(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HDC
 APIENTRY
 NtGdiOpenDCW(
@@ -501,27 +606,39 @@ NtGdiOpenDCW(
     IN OPTIONAL HANDLE hspool,
     IN OPTIONAL VOID *pDriverInfo2, // this is  "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
     OUT VOID *pUMdhpdev
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetDCDword(
     IN HDC hdc,
     IN UINT u,
     OUT DWORD *Result
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetDCPoint(
     IN HDC hdc,
     IN UINT iPoint,
     OUT PPOINTL pptOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiScaleViewportExtEx(
@@ -531,9 +648,13 @@ NtGdiScaleViewportExtEx(
     IN INT yNum,
     IN INT yDenom,
     OUT OPTIONAL LPSIZE pszOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiScaleWindowExtEx(
@@ -543,9 +664,13 @@ NtGdiScaleWindowExtEx(
     IN INT yNum,
     IN INT yDenom,
     OUT OPTIONAL LPSIZE pszOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetVirtualResolution(
@@ -554,45 +679,65 @@ NtGdiSetVirtualResolution(
     IN INT cyVirtualDevicePixel,
     IN INT cxVirtualDeviceMm,
     IN INT cyVirtualDeviceMm
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetSizeDevice(
     IN HDC hdc,
     IN INT cxVirtualDevice,
     IN INT cyVirtualDevice
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetTransform(
     IN HDC hdc,
     IN DWORD iXform,
     OUT LPXFORM pxf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiModifyWorldTransform(
     IN HDC hdc,
     IN OPTIONAL LPXFORM pxf,
     IN DWORD iXform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiCombineTransform(
     OUT LPXFORM pxfDst,
     IN LPXFORM pxfSrc1,
     IN LPXFORM pxfSrc2
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiTransformPoints(
@@ -601,26 +746,38 @@ NtGdiTransformPoints(
     OUT PPOINT pptOut,
     IN INT c,
     IN INT iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiConvertMetafileRect(
     IN HDC hdc,
     IN OUT PRECTL prect
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetTextCharsetInfo(
     IN HDC hdc,
     OUT OPTIONAL LPFONTSIGNATURE lpSig,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDoBanding(
@@ -628,17 +785,25 @@ NtGdiDoBanding(
     IN BOOL bStart,
     OUT POINTL *pptl,
     OUT PSIZE pSize
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetPerBandInfo(
     IN HDC hdc,
     IN OUT PERBANDINFO *ppbi
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 NTSTATUS
 APIENTRY
 NtGdiGetStats(
@@ -653,57 +818,81 @@ NtGdiGetStats(
     return STATUS_UNSUCCESSFUL;
 }
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetMagicColors(
     IN HDC hdc,
     IN PALETTEENTRY peMagic,
     IN ULONG Index
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiSelectBrush(
     IN HDC hdc,
     IN HBRUSH hbrush
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HPEN
 APIENTRY
 NtGdiSelectPen(
     IN HDC hdc,
     IN HPEN hpen
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiSelectBitmap(
     IN HDC hdc,
     IN HBITMAP hbm
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HFONT
 APIENTRY
 NtGdiSelectFont(
     IN HDC hdc,
     IN HFONT hf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiExtSelectClipRgn(
     IN HDC hdc,
     IN HRGN hrgn,
     IN INT iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HPEN
 APIENTRY
 NtGdiCreatePen(
@@ -711,9 +900,13 @@ NtGdiCreatePen(
     IN INT iPenWidth,
     IN COLORREF cr,
     IN HBRUSH hbr
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiBitBlt(
@@ -728,9 +921,13 @@ NtGdiBitBlt(
     IN DWORD rop4,
     IN DWORD crBackColor,
     IN FLONG fl
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiTileBitBlt(
@@ -741,9 +938,13 @@ NtGdiTileBitBlt(
     IN POINTL * pptlOrigin,
     IN DWORD rop4,
     IN DWORD crBackColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiTransparentBlt(
@@ -758,9 +959,13 @@ NtGdiTransparentBlt(
     IN INT cxSrc,
     IN INT cySrc,
     IN COLORREF TransColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetTextExtent(
@@ -769,18 +974,26 @@ NtGdiGetTextExtent(
     IN INT cwc,
     OUT LPSIZE psize,
     IN UINT flOpts
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     IN HDC hdc,
     OUT TMW_INTERNAL * ptm,
     IN ULONG cj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetTextFaceW(
@@ -788,9 +1001,13 @@ NtGdiGetTextFaceW(
     IN INT cChar,
     OUT OPTIONAL LPWSTR pszOut,
     IN BOOL bAliasName
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
@@ -803,9 +1020,13 @@ NtGdiExtTextOutW(
     IN INT cwc,
     IN OPTIONAL LPINT pdx,
     IN DWORD dwCodePage
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiIntersectClipRect(
@@ -814,9 +1035,13 @@ NtGdiIntersectClipRect(
     IN INT yTop,
     IN INT xRight,
     IN INT yBottom
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HRGN
 APIENTRY
 NtGdiCreateRectRgn(
@@ -824,9 +1049,13 @@ NtGdiCreateRectRgn(
     IN INT yTop,
     IN INT xRight,
     IN INT yBottom
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPatBlt(
@@ -836,9 +1065,13 @@ NtGdiPatBlt(
     IN INT cx,
     IN INT cy,
     IN DWORD rop4
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPolyPatBlt(
@@ -847,34 +1080,50 @@ NtGdiPolyPatBlt(
     IN PPOLYPATBLT pPoly,
     IN DWORD Count,
     IN DWORD Mode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiUnrealizeObject(
     IN HANDLE h
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiCreateCompatibleBitmap(
     IN HDC hdc,
     IN INT cx,
     IN INT cy
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiLineTo(
     IN HDC hdc,
     IN INT x,
     IN INT y
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMoveTo(
@@ -882,34 +1131,50 @@ NtGdiMoveTo(
     IN INT x,
     IN INT y,
     OUT OPTIONAL LPPOINT pptOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiExtGetObjectW(
     IN HANDLE h,
     IN INT cj,
     OUT OPTIONAL LPVOID pvOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetDeviceCaps(
     IN HDC hdc,
     IN INT i
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll (
     IN HDC hdc,
     OUT PDEVCAPS pDevCaps
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiStretchBlt(
@@ -925,9 +1190,13 @@ NtGdiStretchBlt(
     IN INT cySrc,
     IN DWORD dwRop,
     IN DWORD dwBackColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetBrushOrg(
@@ -935,9 +1204,13 @@ NtGdiSetBrushOrg(
     IN INT x,
     IN INT y,
     OUT LPPOINT pptOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiCreateBitmap(
@@ -946,24 +1219,36 @@ NtGdiCreateBitmap(
     IN UINT cPlanes,
     IN UINT cBPP,
     IN OPTIONAL LPBYTE pjInit
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HPALETTE
 APIENTRY
 NtGdiCreateHalftonePalette(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRestoreDC(
     IN HDC hdc,
     IN INT iLevel
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiExcludeClipRect(
@@ -972,16 +1257,24 @@ NtGdiExcludeClipRect(
     IN INT yTop,
     IN INT xRight,
     IN INT yBottom
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiSaveDC(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiCombineRgn(
@@ -989,9 +1282,13 @@ NtGdiCombineRgn(
     IN HRGN hrgnSrc1,
     IN HRGN hrgnSrc2,
     IN INT iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetRectRgn(
@@ -1000,18 +1297,26 @@ NtGdiSetRectRgn(
     IN INT yTop,
     IN INT xRight,
     IN INT yBottom
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiSetBitmapBits(
     IN HBITMAP hbm,
     IN ULONG cj,
     IN PBYTE pjInit
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetDIBitsInternal(
@@ -1024,102 +1329,149 @@ NtGdiGetDIBitsInternal(
     IN UINT iUsage,
     IN UINT cjMaxBits,
     IN UINT cjMaxInfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiOffsetRgn(
     IN HRGN hrgn,
     IN INT cx,
     IN INT cy
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetRandomRgn(
     IN HDC hDC,
     OUT HRGN hDest,
     IN INT iCode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetRgnBox(
     IN HRGN hrgn,
     OUT LPRECT prcOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRectInRegion(
     IN HRGN hrgn,
     IN OUT LPRECT prcl
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetBoundsRect(
     IN HDC hdc,
     OUT LPRECT prc,
     IN DWORD f
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPtInRegion(
     IN HRGN hrgn,
     IN INT x,
     IN INT y
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 COLORREF
 APIENTRY
 NtGdiGetNearestColor(
     IN HDC hdc,
     IN COLORREF cr
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 UINT
 APIENTRY
 NtGdiGetSystemPaletteUse(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 UINT
 APIENTRY
 NtGdiSetSystemPaletteUse(
     IN HDC hdc,
     IN UINT ui
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetRegionData(
     IN HRGN hrgn,
     IN DWORD nCount,
     OUT OPTIONAL LPRGNDATA lpRgnData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiInvertRgn(
     IN HDC hdc,
     IN HRGN hrgn
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
 INT
-W32KAPI
 APIENTRY
 NtGdiAddFontResourceW(
     IN WCHAR *pwszFiles,
@@ -1128,10 +1480,12 @@ NtGdiAddFontResourceW(
     IN FLONG f,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-#if (_WIN32_WINNT >= 0x0500)
-W32KAPI
 HFONT
 APIENTRY
 NtGdiHfontCreate(
@@ -1140,35 +1494,35 @@ NtGdiHfontCreate(
     IN LFTYPE lft,
     IN FLONG  fl,
     IN PVOID pvCliData
-) { UNIMPLEMENTED; }
-#else
-W32KAPI
-HFONT
-APIENTRY
-NtGdiHfontCreate(
-    IN LPEXTLOGFONTW pelfw,
-    IN ULONG cjElfw,
-    IN LFTYPE lft,
-    IN FLONG fl,
-    IN PVOID pvCliData
-) { UNIMPLEMENTED; }
-#endif
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiSetFontEnumeration(
     IN ULONG ulType
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEnumFontClose(
     IN ULONG_PTR idEnum
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEnumFontChunk(
@@ -1177,9 +1531,13 @@ NtGdiEnumFontChunk(
     IN ULONG cjEfdw,
     OUT ULONG *pcjEfdw,
     OUT PENUMFONTDATAW pefdw
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG_PTR
 APIENTRY
 NtGdiEnumFontOpen(
@@ -1190,18 +1548,26 @@ NtGdiEnumFontOpen(
     IN OPTIONAL LPWSTR pwszFaceName,
     IN ULONG lfCharSet,
     OUT ULONG *pulCount
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiQueryFonts(
     OUT PUNIVERSAL_FONT_ID pufiFontList,
     IN ULONG nBufferSize,
     OUT PLARGE_INTEGER pTimeStamp
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiConsoleTextOut(
@@ -1209,9 +1575,13 @@ NtGdiConsoleTextOut(
     IN POLYTEXTW *lpto,
     IN UINT nStrings,
     IN RECTL *prclBounds
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 NTSTATUS
 APIENTRY
 NtGdiFullscreenControl(
@@ -1226,20 +1596,28 @@ NtGdiFullscreenControl(
     return STATUS_UNSUCCESSFUL;
 }
 
-W32KAPI
+
 DWORD
 NtGdiGetCharSet(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEnableEudc(
     IN BOOL Param1
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEudcLoadUnloadLink(
@@ -1250,9 +1628,13 @@ NtGdiEudcLoadUnloadLink(
     IN INT iPriority,
     IN INT iFontLinkType,
     IN BOOL bLoadLin
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 UINT
 APIENTRY
 NtGdiGetStringBitmapW(
@@ -1261,71 +1643,98 @@ NtGdiGetStringBitmapW(
     IN UINT cwc,
     OUT BYTE *lpSB,
     IN UINT cj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetEudcTimeStampEx(
     IN OPTIONAL LPWSTR lpBaseFaceName,
     IN ULONG cwcBaseFaceName,
     IN BOOL bSystemTimeStamp
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-#if (_WIN32_WINNT >= 0x0500)
-W32KAPI
 DWORD
 NtGdiGetFontUnicodeRanges(
     IN HDC hdc,
     OUT OPTIONAL LPGLYPHSET pgs
-) { UNIMPLEMENTED; }
-#endif
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-#ifdef LANGPACK
-W32KAPI
+
 BOOL
 NtGdiGetRealizationInfo(
     IN HDC hdc,
     OUT PREALIZATION_INFO pri,
     IN HFONT hf
-) { UNIMPLEMENTED; }
-#endif
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 NtGdiAddRemoteMMInstanceToDC(
     IN HDC hdc,
     IN DOWNLOADDESIGNVECTOR *pddv,
     IN ULONG cjDDV
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiUnloadPrinterDriver(
     IN LPWSTR pDriverName,
     IN ULONG cbDriverName
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngAssociateSurface(
     IN HSURF hsurf,
     IN HDEV hdev,
     IN FLONG flHooks
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngEraseSurface(
     IN SURFOBJ *pso,
     IN RECTL *prcl,
     IN ULONG iColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiEngCreateBitmap(
@@ -1334,55 +1743,82 @@ NtGdiEngCreateBitmap(
     IN ULONG iFormat,
     IN FLONG fl,
     IN OPTIONAL PVOID pvBits
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngDeleteSurface(
     IN HSURF hsurf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 SURFOBJ*
 APIENTRY
 NtGdiEngLockSurface(
     IN HSURF hsurf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiEngUnlockSurface(
     IN SURFOBJ *SurfObj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngMarkBandingSurface(
     IN HSURF hsurf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HSURF
 APIENTRY
 NtGdiEngCreateDeviceSurface(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
     IN ULONG iFormatCompat
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiEngCreateDeviceBitmap(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
     IN ULONG iFormatCompat
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngCopyBits(
@@ -1392,9 +1828,13 @@ NtGdiEngCopyBits(
     IN XLATEOBJ *pxlo,
     IN RECTL *prclDst,
     IN POINTL *pptlSrc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngStretchBlt(
@@ -1409,9 +1849,13 @@ NtGdiEngStretchBlt(
     IN RECTL *prclSrc,
     IN POINTL *pptlMask,
     IN ULONG iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngBitBlt(
@@ -1426,9 +1870,13 @@ NtGdiEngBitBlt(
     IN BRUSHOBJ *pbo,
     IN POINTL *pptlBrush,
     IN ROP4 rop4
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngPlgBlt(
@@ -1443,9 +1891,13 @@ NtGdiEngPlgBlt(
     IN RECTL *prclSrc,
     IN OPTIONAL POINTL *pptlMask,
     IN ULONG iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HPALETTE
 APIENTRY
 NtGdiEngCreatePalette(
@@ -1455,16 +1907,24 @@ NtGdiEngCreatePalette(
     IN FLONG flRed,
     IN FLONG flGreen,
     IN FLONG flBlue
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngDeletePalette(
     IN HPALETTE hPal
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngStrokePath(
@@ -1476,9 +1936,13 @@ NtGdiEngStrokePath(
     IN POINTL *pptlBrushOrg,
     IN LINEATTRS *plineattrs,
     IN MIX mix
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngFillPath(
@@ -1489,9 +1953,13 @@ NtGdiEngFillPath(
     IN POINTL *pptlBrushOrg,
     IN MIX mix,
     IN FLONG flOptions
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngStrokeAndFillPath(
@@ -1504,9 +1972,13 @@ NtGdiEngStrokeAndFillPath(
     IN POINTL *pptlBrushOrg,
     IN MIX mix,
     IN FLONG flOptions
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngPaint(
@@ -1515,9 +1987,13 @@ NtGdiEngPaint(
     IN BRUSHOBJ *pbo,
     IN POINTL *pptlBrushOrg,
     IN MIX mix
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngLineTo(
@@ -1530,9 +2006,13 @@ NtGdiEngLineTo(
     IN LONG y2,
     IN RECTL *prclBounds,
     IN MIX mix
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngAlphaBlend(
@@ -1543,9 +2023,13 @@ NtGdiEngAlphaBlend(
     IN RECTL *prclDest,
     IN RECTL *prclSrc,
     IN BLENDOBJ *pBlendObj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngGradientFill(
@@ -1559,9 +2043,13 @@ NtGdiEngGradientFill(
     IN RECTL *prclExtents,
     IN POINTL *pptlDitherOrg,
     IN ULONG ulMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngTransparentBlt(
@@ -1573,9 +2061,13 @@ NtGdiEngTransparentBlt(
     IN RECTL *prclSrc,
     IN ULONG iTransColor,
     IN ULONG ulReserved
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngTextOut(
@@ -1589,9 +2081,13 @@ NtGdiEngTextOut(
     IN BRUSHOBJ *pboOpaque,
     IN POINTL *pptlOrg,
     IN MIX mix
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngStretchBltROP(
@@ -1608,9 +2104,13 @@ NtGdiEngStretchBltROP(
     IN ULONG iMode,
     IN BRUSHOBJ *pbo,
     IN ROP4 rop4
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_cGetPalette(
@@ -1618,9 +2118,13 @@ NtGdiXLATEOBJ_cGetPalette(
     IN ULONG iPal,
     IN ULONG cPal,
     OUT ULONG *pPal
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiCLIPOBJ_cEnumStart(
@@ -1629,66 +2133,101 @@ NtGdiCLIPOBJ_cEnumStart(
     IN ULONG iType,
     IN ULONG iDirection,
     IN ULONG cLimit
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiCLIPOBJ_bEnum(
     IN CLIPOBJ *pco,
     IN ULONG cj,
     OUT ULONG *pul
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 PATHOBJ*
 APIENTRY
 NtGdiCLIPOBJ_ppoGetPath(
     IN CLIPOBJ *pco
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 CLIPOBJ*
 APIENTRY
-NtGdiEngCreateClip() { UNIMPLEMENTED; }
+NtGdiEngCreateClip(VOID)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiEngDeleteClip(
     IN CLIPOBJ*pco
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvAllocRbrush(
     IN BRUSHOBJ *pbo,
     IN ULONG cj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvGetRbrush(
     IN BRUSHOBJ *pbo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiBRUSHOBJ_ulGetBrushColor(
     IN BRUSHOBJ *pbo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiBRUSHOBJ_hGetColorTransform(
     IN BRUSHOBJ *pbo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiXFORMOBJ_bApplyXform(
@@ -1697,26 +2236,37 @@ NtGdiXFORMOBJ_bApplyXform(
     IN ULONG cPoints,
     IN  PVOID pvIn,
     OUT PVOID pvOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiXFORMOBJ_iGetXform(
     IN XFORMOBJ *pxo,
     OUT OPTIONAL XFORML *pxform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiFONTOBJ_vGetInfo(
     IN FONTOBJ *pfo,
     IN ULONG cjSize,
     OUT FONTINFO *pfi
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetGlyphs(
@@ -1725,86 +2275,129 @@ NtGdiFONTOBJ_cGetGlyphs(
     IN ULONG cGlyph,
     IN HGLYPH *phg,
     OUT PVOID *ppvGlyph
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 XFORMOBJ*
 APIENTRY
 NtGdiFONTOBJ_pxoGetXform(
     IN FONTOBJ *pfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 IFIMETRICS*
 APIENTRY
 NtGdiFONTOBJ_pifi(
     IN FONTOBJ *pfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 FD_GLYPHSET*
 APIENTRY
 NtGdiFONTOBJ_pfdg(
     IN FONTOBJ *pfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetAllGlyphHandles(
     IN FONTOBJ *pfo,
     OUT OPTIONAL HGLYPH *phg
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 PVOID
 APIENTRY
 NtGdiFONTOBJ_pvTrueTypeFontFile(
     IN FONTOBJ *pfo,
     OUT ULONG *pcjFile
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 PFD_GLYPHATTR
 APIENTRY
 NtGdiFONTOBJ_pQueryGlyphAttrs(
     IN FONTOBJ *pfo,
     IN ULONG iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnum(
     IN STROBJ *pstro,
     OUT ULONG *pc,
     OUT PGLYPHPOS *ppgpos
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnumPositionsOnly(
     IN STROBJ *pstro,
     OUT ULONG *pc,
     OUT PGLYPHPOS *ppgpos
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiSTROBJ_vEnumStart(
     IN STROBJ *pstro
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiSTROBJ_dwGetCodePage(
     IN STROBJ *pstro
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSTROBJ_bGetAdvanceWidths(
@@ -1812,63 +2405,92 @@ NtGdiSTROBJ_bGetAdvanceWidths(
     IN ULONG iFirst,
     IN ULONG c,
     OUT POINTQF*pptqD
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 FD_GLYPHSET*
 APIENTRY
 NtGdiEngComputeGlyphSet(
     IN INT nCodePage,
     IN INT nFirstChar,
     IN INT cChars
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_iXlate(
     IN XLATEOBJ *pxlo,
     IN ULONG iColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiXLATEOBJ_hGetColorTransform(
     IN XLATEOBJ *pxlo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiPATHOBJ_vGetBounds(
     IN PATHOBJ *ppo,
     OUT PRECTFX prectfx
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnum(
     IN PATHOBJ *ppo,
     OUT PATHDATA *ppd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiPATHOBJ_vEnumStart(
     IN PATHOBJ *ppo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiEngDeletePath(
     IN PATHOBJ *ppo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
 NtGdiPATHOBJ_vEnumStartClipLines(
@@ -1876,31 +2498,46 @@ NtGdiPATHOBJ_vEnumStartClipLines(
     IN CLIPOBJ *pco,
     IN SURFOBJ *pso,
     IN LINEATTRS *pla
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnumClipLines(
     IN PATHOBJ *ppo,
     IN ULONG cb,
     OUT CLIPLINE *pcl
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEngCheckAbort(
     IN SURFOBJ *pso
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DHPDEV
 NtGdiGetDhpdev(
     IN HDEV hdev
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiHT_Get8BPPFormatPalette(
@@ -1908,9 +2545,13 @@ NtGdiHT_Get8BPPFormatPalette(
     IN USHORT RedGamma,
     IN USHORT GreenGamma,
     IN USHORT BlueGamma
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiHT_Get8BPPMaskPalette(
@@ -1920,130 +2561,198 @@ NtGdiHT_Get8BPPMaskPalette(
     IN USHORT RedGamma,
     IN USHORT GreenGamma,
     IN USHORT BlueGamma
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 NtGdiUpdateTransform(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiSetLayout(
     IN HDC hdc,
     IN LONG wox,
     IN DWORD dwLayout
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMirrorWindowOrg(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiGetDeviceWidth(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 NtGdiSetPUMPDOBJ(
     IN HUMPD humpd,
     IN BOOL bStoreID,
     OUT HUMPD *phumpd,
     OUT BOOL *pbWOW64
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 NtGdiBRUSHOBJ_DeleteRbrush(
     IN BRUSHOBJ *pbo,
     IN BRUSHOBJ *pboB
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 NtGdiUMPDEngFreeUserMem(
     IN KERNEL_PVOID *ppv
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiSetBitmapAttributes(
     IN HBITMAP hbm,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiClearBitmapAttributes(
     IN HBITMAP hbm,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiSetBrushAttributes(
     IN HBRUSH hbm,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiClearBrushAttributes(
     IN HBRUSH hbm,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDrawStream(
     IN HDC hdcDst,
     IN ULONG cjIn,
     IN VOID *pvIn
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMakeObjectXferable(
     IN HANDLE h,
     IN DWORD dwProcessId
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMakeObjectUnXferable(
     IN HANDLE h
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
-NtGdiInitSpool() { UNIMPLEMENTED; }
+NtGdiInitSpool()
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-/* FIXME wrong prototypes fix the build */
-W32KAPI
+/* FIXME wrong prototypes */
+
 INT
 APIENTRY
 NtGdiGetSpoolMessage( DWORD u1,
                       DWORD u2,
                       DWORD u3,
-                      DWORD u4) { UNIMPLEMENTED; }
+                      DWORD u4)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiSetDIBitsToDeviceInternal(
@@ -2063,9 +2772,13 @@ NtGdiSetDIBitsToDeviceInternal(
     IN UINT cjMaxInfo,
     IN BOOL bTransformCoordinates,
     IN OPTIONAL HANDLE hcmXform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
@@ -2076,9 +2789,13 @@ NtGdiGetFontResourceInfoInternalW(
     OUT LPDWORD pdwBytes,
     OUT LPVOID pvBuf,
     IN DWORD iType
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
@@ -2087,9 +2804,13 @@ NtGdiGetGlyphIndicesW(
     IN INT cwc,
     OUT OPTIONAL LPWORD pgi,
     IN DWORD iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesWInternal(
@@ -2099,17 +2820,25 @@ NtGdiGetGlyphIndicesWInternal(
     OUT OPTIONAL LPWORD pgi,
     IN DWORD iMode,
     IN BOOL bSubset
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HPALETTE
 APIENTRY
 NtGdiCreatePaletteInternal(
     IN LPLOGPALETTE pLogPal,
     IN UINT cEntries
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiArcInternal(
@@ -2123,9 +2852,13 @@ NtGdiArcInternal(
     IN INT y3,
     IN INT x4,
     IN INT y4
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiStretchDIBitsInternal(
@@ -2145,9 +2878,13 @@ NtGdiStretchDIBitsInternal(
     IN UINT cjMaxInfo,
     IN UINT cjMaxBits,
     IN HANDLE hcmXform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
@@ -2155,9 +2892,13 @@ NtGdiGetOutlineTextMetricsInternalW(
     IN ULONG cjotm,
     OUT OPTIONAL OUTLINETEXTMETRICW *potmw,
     OUT TMDIFF *ptmd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetAndSetDCDword(
@@ -2165,51 +2906,75 @@ NtGdiGetAndSetDCDword(
     IN UINT u,
     IN DWORD dwIn,
     OUT DWORD *pdwResult
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiGetDCObject(
     IN  HDC hdc,
     IN  INT itype
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HDC
 APIENTRY
 NtGdiGetDCforBitmap(
     IN HBITMAP hsurf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetMonitorID(
     IN  HDC hdc,
     IN  DWORD dwSize,
     OUT LPWSTR pszMonitorID
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetLinkedUFIs(
     IN HDC hdc,
     OUT OPTIONAL PUNIVERSAL_FONT_ID pufiLinkedUFIs,
     IN INT BufferSize
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetLinkedUFIs(
     IN HDC hdc,
     IN PUNIVERSAL_FONT_ID pufiLinks,
     IN ULONG uNumUFIs
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetUFI(
@@ -2219,17 +2984,25 @@ NtGdiGetUFI(
     OUT ULONG *pcjDV,
     OUT ULONG *pulBaseCheckSum,
     OUT FLONG *pfl
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiForceUFIMapping(
     IN HDC hdc,
     IN PUNIVERSAL_FONT_ID pufi
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetUFIPathname(
@@ -2243,9 +3016,13 @@ NtGdiGetUFIPathname(
     OUT OPTIONAL PVOID pvView,
     OUT OPTIONAL BOOL *pbTTC,
     OUT OPTIONAL ULONG *piTTC
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAddRemoteFontToDC(
@@ -2253,9 +3030,13 @@ NtGdiAddRemoteFontToDC(
     IN PVOID pvBuffer,
     IN ULONG cjBuffer,
     IN OPTIONAL PUNIVERSAL_FONT_ID pufi
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
@@ -2264,38 +3045,58 @@ NtGdiAddFontMemResourceEx(
     IN DESIGNVECTOR *pdv,
     IN ULONG cjDV,
     OUT DWORD *pNumFonts
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRemoveFontMemResourceEx(
     IN HANDLE hMMFont
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiUnmapMemFont(
     IN PVOID pvView
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRemoveMergeFont(
     IN HDC hdc,
     IN UNIVERSAL_FONT_ID *pufi
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAnyLinkedFonts(
     VOID
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetEmbUFI(
@@ -2306,39 +3107,59 @@ NtGdiGetEmbUFI(
     OUT ULONG *pulBaseCheckSum,
     OUT FLONG  *pfl,
     OUT KERNEL_PVOID *embFontID
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetEmbedFonts(
     VOID
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiChangeGhostFont(
     IN KERNEL_PVOID *pfontID,
     IN BOOL bLoad
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAddEmbFontToDC(
     IN HDC hdc,
     IN VOID **pFontID
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiFontIsLinked(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG_PTR
 APIENTRY
 NtGdiPolyPolyDraw(
@@ -2347,9 +3168,13 @@ NtGdiPolyPolyDraw(
     IN PULONG pcpt,
     IN ULONG ccpt,
     IN INT iFunc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiDoPalette(
@@ -2359,16 +3184,24 @@ NtGdiDoPalette(
     IN LPVOID pEntries,
     IN DWORD iFunc,
     IN BOOL bInbound
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiComputeXformCoefficients(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetWidthTable(
@@ -2379,9 +3212,13 @@ NtGdiGetWidthTable(
     OUT USHORT *psWidth,
     OUT OPTIONAL WIDTHDATA *pwd,
     OUT FLONG *pflInfo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiDescribePixelFormat(
@@ -2389,33 +3226,49 @@ NtGdiDescribePixelFormat(
     IN INT ipfd,
     IN UINT cjpfd,
     OUT PPIXELFORMATDESCRIPTOR ppfd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetPixelFormat(
     IN HDC hdc,
     IN INT ipfd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSwapBuffers(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiSetupPublicCFONT(
     IN HDC hdc,
     IN OPTIONAL HFONT hf,
     IN ULONG ulAve
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDxgGenericThunk(
@@ -2425,58 +3278,86 @@ NtGdiDxgGenericThunk(
     IN OUT  PVOID pvPtr1,
     IN OUT SIZE_T *pdwSizeOfPtr2,
     IN OUT  PVOID pvPtr2
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdAddAttachedSurface(
     IN HANDLE hSurface,
     IN HANDLE hSurfaceAttached,
     IN OUT PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdAttachSurface(
     IN HANDLE  hSurfaceFrom,
     IN HANDLE  hSurfaceTo
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdBlt(
     IN HANDLE hSurfaceDest,
     IN HANDLE hSurfaceSrc,
     IN OUT PDD_BLTDATA puBltData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdCanCreateSurface(
     IN HANDLE hDirectDraw,
     IN OUT PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdColorControl(
     IN HANDLE hSurface,
     IN OUT PDD_COLORCONTROLDATA puColorControlData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiDdCreateDirectDrawObject(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdCreateSurface(
@@ -2488,9 +3369,13 @@ NtGdiDdCreateSurface(
     IN OUT DD_SURFACE_MORE* puSurfaceMoreData,
     IN OUT DD_CREATESURFACEDATA* puCreateSurfaceData,
     OUT HANDLE* puhSurface
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiDdCreateSurfaceObject(
@@ -2500,31 +3385,47 @@ NtGdiDdCreateSurfaceObject(
     IN PDD_SURFACE_MORE puSurfaceMore,
     IN PDD_SURFACE_GLOBAL puSurfaceGlobal,
     IN BOOL bComplete
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdDeleteSurfaceObject(
     IN HANDLE hSurface
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdDeleteDirectDrawObject(
     IN HANDLE hDirectDrawLocal
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdDestroySurface(
     IN HANDLE hSurface,
     IN BOOL bRealDestroy
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdFlip(
@@ -2533,82 +3434,122 @@ NtGdiDdFlip(
     IN HANDLE hSurfaceCurrentLeft,
     IN HANDLE hSurfaceTargetLeft,
     IN OUT PDD_FLIPDATA puFlipData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetAvailDriverMemory(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetBltStatus(
     IN HANDLE hSurface,
     IN OUT PDD_GETBLTSTATUSDATA puGetBltStatusData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HDC
 APIENTRY
 NtGdiDdGetDC(
     IN HANDLE hSurface,
     IN PALETTEENTRY* puColorTable
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetDriverInfo(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETDRIVERINFODATA puGetDriverInfoData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetFlipStatus(
     IN HANDLE hSurface,
     IN OUT PDD_GETFLIPSTATUSDATA puGetFlipStatusData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetScanLine(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETSCANLINEDATA puGetScanLineData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdSetExclusiveMode(
     IN HANDLE hDirectDraw,
     IN OUT PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdFlipToGDISurface(
     IN HANDLE hDirectDraw,
     IN OUT PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdLock(
     IN HANDLE hSurface,
     IN OUT PDD_LOCKDATA puLockData,
     IN HDC hdcClip
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdQueryDirectDrawObject(
@@ -2623,116 +3564,172 @@ NtGdiDdQueryDirectDrawObject(
     OUT OPTIONAL VIDEOMEMORY* puvmList,
     OUT DWORD* puNumFourCC,
     OUT OPTIONAL DWORD* puFourCC
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdReenableDirectDrawObject(
     IN HANDLE hDirectDrawLocal,
     IN OUT BOOL* pubNewMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdReleaseDC(
     IN HANDLE hSurface
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdResetVisrgn(
     IN HANDLE hSurface,
     IN HWND hwnd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdSetColorKey(
     IN HANDLE hSurface,
     IN OUT PDD_SETCOLORKEYDATA puSetColorKeyData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdSetOverlayPosition(
     IN HANDLE hSurfaceSource,
     IN HANDLE hSurfaceDestination,
     IN OUT PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdUnattachSurface(
     IN HANDLE hSurface,
     IN HANDLE hSurfaceAttached
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdUnlock(
     IN HANDLE hSurface,
     IN OUT PDD_UNLOCKDATA puUnlockData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdUpdateOverlay(
     IN HANDLE hSurfaceDestination,
     IN HANDLE hSurfaceSource,
     IN OUT PDD_UPDATEOVERLAYDATA puUpdateOverlayData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdWaitForVerticalBlank(
     IN HANDLE hDirectDraw,
     IN OUT PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiDdGetDxHandle(
     IN OPTIONAL HANDLE hDirectDraw,
     IN OPTIONAL HANDLE hSurface,
     IN BOOL bRelease
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDdSetGammaRamp(
     IN HANDLE hDirectDraw,
     IN HDC hdc,
     IN LPVOID lpGammaRamp
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdLockD3D(
     IN HANDLE hSurface,
     IN OUT PDD_LOCKDATA puLockData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdUnlockD3D(
     IN HANDLE hSurface,
     IN OUT PDD_UNLOCKDATA puUnlockData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdCreateD3DBuffer(
@@ -2744,24 +3741,36 @@ NtGdiDdCreateD3DBuffer(
     IN OUT DD_SURFACE_MORE* puSurfaceMoreData,
     IN OUT DD_CREATESURFACEDATA* puCreateSurfaceData,
     IN OUT HANDLE* puhSurface
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdCanCreateD3DBuffer(
     IN HANDLE hDirectDraw,
     IN OUT PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdDestroyD3DBuffer(
     IN HANDLE hSurface
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiD3dContextCreate(
@@ -2769,30 +3778,46 @@ NtGdiD3dContextCreate(
     IN HANDLE hSurfColor,
     IN HANDLE hSurfZ,
     IN OUT D3DNTHAL_CONTEXTCREATEI *pdcci
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiD3dContextDestroy(
     IN LPD3DNTHAL_CONTEXTDESTROYDATA pdcdd
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiD3dContextDestroyAll(
     OUT LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcdad
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiD3dValidateTextureStageState(
     IN OUT LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiD3dDrawPrimitives2(
@@ -2803,57 +3828,85 @@ NtGdiD3dDrawPrimitives2(
     IN OUT DWORD* pdwSizeCmd,
     IN OUT FLATPTR* pfpVidMemVtx,
     IN OUT DWORD* pdwSizeVtx
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetDriverState(
     IN OUT PDD_GETDRIVERSTATEDATA pdata
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdCreateSurfaceEx(
     IN HANDLE hDirectDraw,
     IN HANDLE hSurface,
     IN DWORD dwSurfaceHandle
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpCanCreateVideoPort(
     IN HANDLE hDirectDraw,
     IN OUT PDD_CANCREATEVPORTDATA puCanCreateVPortData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpColorControl(
     IN HANDLE hVideoPort,
     IN OUT PDD_VPORTCOLORDATA puVPortColorData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiDvpCreateVideoPort(
     IN HANDLE hDirectDraw,
     IN OUT PDD_CREATEVPORTDATA puCreateVPortData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpDestroyVideoPort(
     IN HANDLE hVideoPort,
     IN OUT PDD_DESTROYVPORTDATA puDestroyVPortData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpFlipVideoPort(
@@ -2861,73 +3914,109 @@ NtGdiDvpFlipVideoPort(
     IN HANDLE hDDSurfaceCurrent,
     IN HANDLE hDDSurfaceTarget,
     IN OUT PDD_FLIPVPORTDATA puFlipVPortData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortBandwidth(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortField(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTFIELDDATA puGetVPortFieldData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortFlipStatus(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortInputFormats(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortLine(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTLINEDATA puGetVPortLineData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortOutputFormats(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortConnectInfo(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETVPORTCONNECTDATA puGetVPortConnectData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpGetVideoSignalStatus(
     IN HANDLE hVideoPort,
     IN OUT PDD_GETVPORTSIGNALDATA puGetVPortSignalData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpUpdateVideoPort(
@@ -2935,123 +4024,183 @@ NtGdiDvpUpdateVideoPort(
     IN HANDLE* phSurfaceVideo,
     IN HANDLE* phSurfaceVbi,
     IN OUT PDD_UPDATEVPORTDATA puUpdateVPortData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpWaitForVideoPortSync(
     IN HANDLE hVideoPort,
     IN OUT PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpAcquireNotification(
     IN HANDLE hVideoPort,
     IN OUT HANDLE* hEvent,
     IN LPDDVIDEOPORTNOTIFY pNotify
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDvpReleaseNotification(
     IN HANDLE hVideoPort,
     IN HANDLE hEvent
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetMoCompGuids(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetMoCompFormats(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetMoCompBuffInfo(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdGetInternalMoCompInfo(
     IN HANDLE hDirectDraw,
     IN OUT PDD_GETINTERNALMOCOMPDATA puGetInternalData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiDdCreateMoComp(
     IN HANDLE hDirectDraw,
     IN OUT PDD_CREATEMOCOMPDATA puCreateMoCompData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdDestroyMoComp(
     IN HANDLE hMoComp,
     IN OUT PDD_DESTROYMOCOMPDATA puDestroyMoCompData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdBeginMoCompFrame(
     IN HANDLE hMoComp,
     IN OUT PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdEndMoCompFrame(
     IN HANDLE hMoComp,
     IN OUT PDD_ENDMOCOMPFRAMEDATA puEndFrameData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdRenderMoComp(
     IN HANDLE hMoComp,
     IN OUT PDD_RENDERMOCOMPDATA puRenderMoCompData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdQueryMoCompStatus(
     IN HANDLE hMoComp,
     IN OUT PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiDdAlphaBlt(
     IN HANDLE hSurfaceDest,
     IN OPTIONAL HANDLE hSurfaceSrc,
     IN OUT PDD_BLTDATA puBltData
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAlphaBlend(
@@ -3067,9 +4216,13 @@ NtGdiAlphaBlend(
     IN LONG SrcCy,
     IN BLENDFUNCTION BlendFunction,
     IN HANDLE hcmXform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGradientFill(
@@ -3079,40 +4232,60 @@ NtGdiGradientFill(
     IN PVOID pMesh,
     IN ULONG nMesh,
     IN ULONG ulMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetIcmMode(
     IN HDC hdc,
     IN ULONG nCommand,
     IN ULONG ulMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiCreateColorSpace(
     IN PLOGCOLORSPACEEXW pLogColorSpace
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDeleteColorSpace(
     IN HANDLE hColorSpace
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetColorSpace(
     IN HDC hdc,
     IN HCOLORSPACE hColorSpace
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiCreateColorTransform(
@@ -3124,17 +4297,25 @@ NtGdiCreateColorTransform(
     IN ULONG cjDestProfile,
     IN OPTIONAL PVOID pvTargetProfile,
     IN ULONG cjTargetProfile
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDeleteColorTransform(
     IN HDC hdc,
     IN HANDLE hColorTransform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiCheckBitmapBits(
@@ -3146,9 +4327,13 @@ NtGdiCheckBitmapBits(
     IN DWORD dwHeight,
     IN DWORD dwStride,
     OUT PBYTE paResults
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiColorCorrectPalette(
@@ -3158,32 +4343,48 @@ NtGdiColorCorrectPalette(
     IN ULONG NumberOfEntries,
     IN OUT PALETTEENTRY *ppalEntry,
     IN ULONG Command
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 ULONG_PTR
 APIENTRY
 NtGdiGetColorSpaceforBitmap(
     IN HBITMAP hsurf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetDeviceGammaRamp(
     IN HDC hdc,
     OUT LPVOID lpGammaRamp
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetDeviceGammaRamp(
     IN HDC hdc,
     IN LPVOID lpGammaRamp
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiIcmBrushInfo(
@@ -3195,59 +4396,90 @@ NtGdiIcmBrushInfo(
     OUT OPTIONAL DWORD *piUsage,
     OUT OPTIONAL BOOL *pbAlreadyTran,
     IN ULONG Command
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 VOID
 APIENTRY
-NtGdiFlush() { UNIMPLEMENTED; }
+NtGdiFlush(VOID)
+{
+    UNIMPLEMENTED;
+}
 
-W32KAPI
+
 HDC
 APIENTRY
 NtGdiCreateMetafileDC(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiMakeInfoDC(
     IN HDC hdc,
     IN BOOL bSet
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiCreateClientObj(
     IN ULONG ulType
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDeleteClientObj(
     IN HANDLE h
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 LONG
 APIENTRY
 NtGdiGetBitmapBits(
     IN HBITMAP hbm,
     IN ULONG cjMax,
     OUT OPTIONAL PBYTE pjOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiDeleteObjectApp(
     IN HANDLE hobj
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetPath(
@@ -3255,16 +4487,24 @@ NtGdiGetPath(
     OUT OPTIONAL LPPOINT pptlBuf,
     OUT OPTIONAL LPBYTE pjTypes,
     IN INT cptBuf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 HDC
 APIENTRY
 NtGdiCreateCompatibleDC(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiCreateDIBitmapInternal(
@@ -3279,9 +4519,13 @@ NtGdiCreateDIBitmapInternal(
     IN UINT cjMaxBits,
     IN FLONG f,
     IN HANDLE hcmXform
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBITMAP
 APIENTRY
 NtGdiCreateDIBSection(
@@ -3294,17 +4538,25 @@ NtGdiCreateDIBSection(
     IN FLONG fl,
     IN ULONG_PTR dwColorSpace,
     OUT PVOID *ppvBits
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiCreateSolidBrush(
     IN COLORREF cr,
     IN OPTIONAL HBRUSH hbr
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiCreateDIBBrush(
@@ -3314,27 +4566,39 @@ NtGdiCreateDIBBrush(
     IN BOOL  b8X8,
     IN BOOL bPen,
     IN PVOID pClient
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiCreatePatternBrushInternal(
     IN HBITMAP hbm,
     IN BOOL bPen,
     IN BOOL b8X8
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HBRUSH
 APIENTRY
 NtGdiCreateHatchBrushInternal(
     IN ULONG ulStyle,
     IN COLORREF clrr,
     IN BOOL bPen
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HPEN
 APIENTRY
 NtGdiExtCreatePen(
@@ -3349,9 +4613,13 @@ NtGdiExtCreatePen(
     IN ULONG cjDIB,
     IN BOOL bOldStylePen,
     IN OPTIONAL HBRUSH hbrush
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HRGN
 APIENTRY
 NtGdiCreateEllipticRgn(
@@ -3359,9 +4627,13 @@ NtGdiCreateEllipticRgn(
     IN INT yTop,
     IN INT xRight,
     IN INT yBottom
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HRGN
 APIENTRY
 NtGdiCreateRoundRectRgn(
@@ -3371,9 +4643,13 @@ NtGdiCreateRoundRectRgn(
     IN INT yBottom,
     IN INT xWidth,
     IN INT yHeight
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HANDLE
 APIENTRY
 NtGdiCreateServerMetaFile(
@@ -3383,18 +4659,26 @@ NtGdiCreateServerMetaFile(
     IN DWORD mm,
     IN DWORD xExt,
     IN DWORD yExt
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 HRGN
 APIENTRY
 NtGdiExtCreateRegion(
     IN OPTIONAL LPXFORM px,
     IN DWORD cj,
     IN LPRGNDATA prgn
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return NULL;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiMakeFontDir(
@@ -3403,9 +4687,13 @@ NtGdiMakeFontDir(
     IN unsigned cjFontDir,
     IN LPWSTR pwszPathname,
     IN unsigned cjPathname
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPolyDraw(
@@ -3413,9 +4701,13 @@ NtGdiPolyDraw(
     IN LPPOINT ppt,
     IN LPBYTE pjAttr,
     IN ULONG cpt
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPolyTextOutW(
@@ -3423,9 +4715,13 @@ NtGdiPolyTextOutW(
     IN POLYTEXTW *pptw,
     IN UINT cStr,
     IN DWORD dwCodePage
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 ULONG
 APIENTRY
 NtGdiGetServerMetaFileBits(
@@ -3436,50 +4732,74 @@ NtGdiGetServerMetaFileBits(
     OUT PDWORD pmm,
     OUT PDWORD pxExt,
     OUT PDWORD pyExt
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEqualRgn(
     IN HRGN hrgn1,
     IN HRGN hrgn2
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetBitmapDimension(
     IN HBITMAP hbm,
     OUT LPSIZE psize
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 UINT
 APIENTRY
 NtGdiGetNearestPaletteIndex(
     IN HPALETTE hpal,
     IN COLORREF crColor
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiPtVisible(
     IN HDC hdc,
     IN INT x,
     IN INT y
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRectVisible(
     IN HDC hdc,
     IN LPRECT prc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiRemoveFontResourceW(
@@ -3489,17 +4809,25 @@ NtGdiRemoveFontResourceW(
     IN ULONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiResizePalette(
     IN HPALETTE hpal,
     IN UINT cEntry
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetBitmapDimension(
@@ -3507,42 +4835,62 @@ NtGdiSetBitmapDimension(
     IN INT cx,
     IN INT cy,
     OUT OPTIONAL LPSIZE psizeOut
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiOffsetClipRgn(
     IN HDC hdc,
     IN INT x,
     IN INT y
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiSetMetaRgn(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSetTextJustification(
     IN HDC hdc,
     IN INT lBreakExtra,
     IN INT cBreak
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 INT
 APIENTRY
 NtGdiGetAppClipBox(
     IN HDC hdc,
     OUT LPRECT prc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
@@ -3554,9 +4902,13 @@ NtGdiGetTextExtentExW(
     OUT OPTIONAL PULONG pdxOut,
     OUT LPSIZE psize,
     IN FLONG fl
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiGetCharABCWidthsW(
@@ -3566,9 +4918,13 @@ NtGdiGetCharABCWidthsW(
     IN OPTIONAL PWCHAR pwch,
     IN FLONG fl,
     OUT PVOID pvBuf
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 DWORD
 APIENTRY
 NtGdiGetCharacterPlacementW(
@@ -3578,9 +4934,13 @@ NtGdiGetCharacterPlacementW(
     IN INT nMaxExtent,
     IN OUT LPGCP_RESULTSW pgcpw,
     IN DWORD dwFlags
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return 0;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiAngleArc(
@@ -3590,49 +4950,53 @@ NtGdiAngleArc(
     IN DWORD dwRadius,
     IN DWORD dwStartAngle,
     IN DWORD dwSweepAngle
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiBeginPath(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiSelectClipPath(
     IN HDC hdc,
     IN INT iMode
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiCloseFigure(
     IN HDC hdc
-) { UNIMPLEMENTED; }
+)
+{
+    UNIMPLEMENTED;
+	return FALSE;
+}
 
-W32KAPI
+
 BOOL
 APIENTRY
 NtGdiEndPath(
     IN HDC hdc
-) { UNIMPLEMENTED; }
-
-W32KAPI
-VOID
-APIENTRY
-UMPDDrvQuerySpoolType(DWORD Param1, DWORD Param2)
+)
 {
     UNIMPLEMENTED;
-}
-
-W32KAPI
-VOID
-APIENTRY
-DefaultHTCallBack(DWORD Param1)
-{
-    UNIMPLEMENTED;
+	return FALSE;
 }

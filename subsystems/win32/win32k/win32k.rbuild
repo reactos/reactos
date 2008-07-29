@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys">
 	<importlibrary definition="win32k.def" />
 	<define name="_WIN32K_" />
 	<include base="win32k">include</include>

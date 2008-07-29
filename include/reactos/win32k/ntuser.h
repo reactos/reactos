@@ -1164,23 +1164,13 @@ NtUserEnumDisplayDevices (
   PDISPLAY_DEVICEW lpDisplayDevice, /* device information */
   DWORD dwFlags ); /* reserved */
 
-/*BOOL
+BOOL
 NTAPI
 NtUserEnumDisplayMonitors (
   HDC hdc,
   LPCRECT lprcClip,
   MONITORENUMPROC lpfnEnum,
-  LPARAM dwData );*/
-/* FIXME:  The call below is ros-specific and should be rewritten to use the same params as the correct call above.  */
-INT
-NTAPI
-NtUserEnumDisplayMonitors(
-  OPTIONAL IN HDC hDC,
-  OPTIONAL IN LPCRECT pRect,
-  OPTIONAL OUT HMONITOR *hMonitorList,
-  OPTIONAL OUT LPRECT monitorRectList,
-  OPTIONAL IN DWORD listSize );
-
+  LPARAM dwData );
 
 NTSTATUS
 NTAPI
@@ -1270,25 +1260,30 @@ NTAPI
 NtUserGetCaretPos(
   LPPOINT lpPoint);
 
-BOOL NTAPI
+#if 0
+/* Left for documentation */
+BOOL
+NTAPI
 NtUserGetClassInfo(HINSTANCE hInstance,
 		   PUNICODE_STRING ClassName,
 		   LPWNDCLASSEXW wcex,
 		   LPWSTR *ppszMenuName,
 		   BOOL Ansi);
+#endif
 
-INT
+BOOL
 NTAPI
-NtUserGetClassName(HWND hWnd,
-		   PUNICODE_STRING ClassName,
-                   BOOL Ansi);
-#if 0 // Real NtUserGetClassName
+NtUserGetClassInfoEx(DWORD Param1,
+                     DWORD Param2,
+					 DWORD Param3,
+					 DWORD Param4,
+					 DWORD Param5);
+
 INT
 NTAPI
 NtUserGetClassName(HWND hWnd,
                    BOOL Real, // 0 GetClassNameW, 1 RealGetWindowClassA/W
                    PUNICODE_STRING ClassName);
-#endif
 
 HANDLE
 NTAPI
