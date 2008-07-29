@@ -700,8 +700,6 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                            &dwVolumeSerialNumber,
                            &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
                 pszPath[MAX_PATH-1] = L'\0';
-                pszPath[0] = L'\0';
-
                 if (!wcslen(pszPath))
                 {
                     UINT DriveType, ResourceId;
