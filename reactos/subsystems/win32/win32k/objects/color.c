@@ -436,18 +436,16 @@ IntGetSystemPaletteEntries(HDC  hDC,
     {
         if (pe != NULL)
         {
-            UINT CopyEntries;
-
-            if (StartIndex + Entries < palGDI->NumColors)
-                CopyEntries = StartIndex + Entries;
-            else
-                CopyEntries = palGDI->NumColors - StartIndex;
+            if (StartIndex >= palGDI->NumColors)
+                Entries = 0;
+            else if (Entries > palGDI->NumColors - StartIndex)
+                Entries = palGDI->NumColors - StartIndex;
 
             memcpy(pe,
                    palGDI->IndexedColors + StartIndex,
-                   CopyEntries * sizeof(pe[0]));
+                   Entries * sizeof(pe[0]));
 
-            Ret = CopyEntries;
+            Ret = Entries;
         }
         else
         {
@@ -837,6 +835,7 @@ NtGdiDoPalette(
     IN BOOL bInbound)
 {
 	LONG ret;
+	LPVOID pEntries = NULL;
 
 	/* FIXME: Handle bInbound correctly */
 
@@ -846,58 +845,76 @@ NtGdiDoPalette(
 		return 0;
 	}
 
-	_SEH_TRY
+	if (pUnsafeEntries)
 	{
-		switch(iFunc)
+		pEntries = ExAllocatePool(PagedPool, cEntries * sizeof(PALETTEENTRY));
+		if (!pEntries)
+			return 0;
+		if (bInbound)
 		{
-			case GdiPalAnimate:
+			_SEH_TRY
+			{
 				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				ret = IntAnimatePalette((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
-				break;
-
-			case GdiPalSetEntries:
-				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				ret = IntSetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
-				break;
-
-			case GdiPalGetEntries:
-				if (pUnsafeEntries)
-				{
-					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				}
-				ret = IntGetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
-				break;
-
-			case GdiPalGetSystemEntries:
-				if (pUnsafeEntries)
-				{
-					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				}
-				ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, pUnsafeEntries);
-				break;
-
-			case GdiPalSetColorTable:
-				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				ret = IntSetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pUnsafeEntries);
-				break;
-
-			case GdiPalGetColorTable:
-				if (pUnsafeEntries)
-				{
-					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
-				}
-				ret = IntGetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pUnsafeEntries);
-				break;
-
-			default:
-				ret = 0;
+				memcpy(pEntries, pUnsafeEntries, cEntries * sizeof(PALETTEENTRY));
+			}
+			_SEH_HANDLE
+			{
+				ExFreePool(pEntries);
+				_SEH_YIELD(return 0);
+			}
+			_SEH_END
 		}
 	}
-	_SEH_HANDLE
+
+	ret = 0;
+	switch(iFunc)
 	{
-		ret = 0;
+		case GdiPalAnimate:
+			if (pEntries)
+				ret = IntAnimatePalette((HPALETTE)hObj, iStart, cEntries, pEntries);
+			break;
+
+		case GdiPalSetEntries:
+			if (pEntries)
+				ret = IntSetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pEntries);
+			break;
+
+		case GdiPalGetEntries:
+			ret = IntGetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pEntries);
+			break;
+
+		case GdiPalGetSystemEntries:
+			ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, pEntries);
+			break;
+
+		case GdiPalSetColorTable:
+			if (pEntries)
+				ret = IntSetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries);
+			break;
+
+		case GdiPalGetColorTable:
+			if (pEntries)
+				ret = IntGetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries);
+			break;
 	}
-	_SEH_END
+
+	if (pEntries)
+	{
+		if (!bInbound)
+		{
+			_SEH_TRY
+			{
+				ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				memcpy(pUnsafeEntries, pEntries, cEntries * sizeof(PALETTEENTRY));
+			}
+			_SEH_HANDLE
+			{
+				ret = 0;
+			}
+			_SEH_END
+		}
+		ExFreePool(pEntries);
+	}
 
 	return ret;
 }
