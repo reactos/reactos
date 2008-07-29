@@ -1,18 +1,20 @@
 /*++ NDK Version: 0095
 
 Copyright (c) Alex Ionescu.  All rights reserved.
+Copyright (c) Timo Kreuzer  All rights reserved.
 
 Header Name:
 
-    mmtypes.h (X86)
+    mmtypes.h (AMD64)
 
 Abstract:
 
-    i386 Type definitions for the Memory Manager
+    AMD64 Type definitions for the Memory Manager
 
 Author:
 
     Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Timo Kreuzer (timo.kreuzer@reactos.com)   29-Jul-2008
 
 --*/
 
@@ -43,29 +45,26 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 #endif
 
 //
-// PAE SEG0 Base?
-//
-#define KSEG0_BASE_PAE                    0xE0000000
-
-//
 // Page Table Entry Definitions
 //
-typedef struct _HARDWARE_PTE_X86
+typedef struct _HARDWARE_PTE_AMD64
 {
-    ULONG Valid:1;
-    ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype: 1;
-    ULONG reserved: 1;
-    ULONG PageFrameNumber:20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
+    ULONGLONG Valid:1;
+    ULONGLONG Write:1;
+    ULONGLONG Owner:1;
+    ULONGLONG WriteThrough:1;
+    ULONGLONG CacheDisable:1;
+    ULONGLONG Accessed:1;
+    ULONGLONG Dirty:1;
+    ULONGLONG LargePage:1;
+    ULONGLONG Global:1;
+    ULONGLONG CopyOnWrite:1;
+    ULONGLONG Prototype: 1;
+    ULONGLONG reserved1: 1;
+    ULONGLONG PageFrameNumber:40;
+    ULONGLONG reserved2:11;
+    ULONGLONG NoExecute:1;
+} HARDWARE_PTE_AMD64, *PHARDWARE_PTE_AMD64;
 
 typedef struct _MMPTE_SOFTWARE
 {
@@ -124,46 +123,33 @@ typedef struct _MMPTE_LIST
 
 typedef struct _MMPTE_HARDWARE
 {
-    ULONG Valid:1;
-    ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype:1;
-    ULONG reserved:1;
-    ULONG PageFrameNumber:20;
+    ULONGLONG Valid:1;
+    ULONGLONG Write:1;
+    ULONGLONG Owner:1;
+    ULONGLONG WriteThrough:1;
+    ULONGLONG CacheDisable:1;
+    ULONGLONG Accessed:1;
+    ULONGLONG Dirty:1;
+    ULONGLONG LargePage:1;
+    ULONGLONG Global:1;
+    ULONGLONG CopyOnWrite:1;
+    ULONGLONG Prototype: 1;
+    ULONGLONG reserved1: 1;
+    ULONGLONG PageFrameNumber:40;
+    ULONGLONG reserved2:11;
+    ULONGLONG NoExecute:1;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 #else
 
-typedef struct _MMPTE_HARDWARE
-{
-    ULONG Valid:1;
-    ULONG Writable:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Accessed:1;
-    ULONG Dirty:1;
-    ULONG LargePage:1;
-    ULONG Global:1;
-    ULONG CopyOnWrite:1;
-    ULONG Prototype:1;
-    ULONG Write:1;
-    ULONG PageFrameNumber:20;
-} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+#error MMPTE_HARDWARE undeclared
 
 #endif
 
 //
 // Use the right PTE structure
 //
-#define HARDWARE_PTE        HARDWARE_PTE_X86
-#define PHARDWARE_PTE       PHARDWARE_PTE_X86
+#define HARDWARE_PTE        HARDWARE_PTE_AMD64
+#define PHARDWARE_PTE       PHARDWARE_PTE_AMD64
 
 #endif

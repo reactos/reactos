@@ -5772,7 +5772,7 @@ InterlockedExchangeAdd(
 
 #if defined (_M_AMD64)
 
-#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG *)a, b)
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONGLONG *)a, (LONGLONG)b)
 #define InterlockedIncrementSizeT(a) InterlockedIncrement64((LONGLONG *)a)
 #define InterlockedDecrementSizeT(a) InterlockedDecrement64((LONGLONG *)a)
 #define InterlockedAnd _InterlockedAnd
