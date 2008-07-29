@@ -30,7 +30,7 @@
 //
 #define InterlockedDecrement        _InterlockedDecrement
 #define InterlockedIncrement        _InterlockedIncrement
-#define InterlockedCompareExchange  (LONG)_InterlockedCompareExchange
+#define InterlockedCompareExchange  _InterlockedCompareExchange
 #define InterlockedExchange         _InterlockedExchange
 #define InterlockedExchangeAdd      _InterlockedExchangeAdd
 

@@ -5735,7 +5735,7 @@ InterlockedExchangeAdd(
 #define InterlockedIncrement _InterlockedIncrement
 #define InterlockedDecrement _InterlockedDecrement
 #define InterlockedExchangeAdd _InterlockedExchangeAdd
-#define InterlockedCompareExchange (LONG)_InterlockedCompareExchange
+#define InterlockedCompareExchange _InterlockedCompareExchange
 #define InterlockedOr _InterlockedOr
 #define InterlockedAnd _InterlockedAnd
 #define InterlockedXor _InterlockedXor
