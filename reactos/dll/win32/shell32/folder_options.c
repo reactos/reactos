@@ -41,6 +41,7 @@
 #include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
+#define MAX_PROPERTY_SHEET_PAGE (32)
 
 /// Folder Options:
 /// CLASSKEY = HKEY_CLASSES_ROOT\CLSID\{6DFD7C5C-2451-11d3-A299-00C04F8EF6AF}
@@ -49,6 +50,16 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 ///       Cmd: rundll32.exe shell32.dll,Options_RunDLL 0
 
 /// ShellFolder Attributes: 0x0
+
+typedef struct
+{
+   DWORD cFiles;
+   DWORD cFolder;
+   LARGE_INTEGER bSize;
+   HWND hwndDlg;
+   WCHAR szFolderPath[MAX_PATH];
+}FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
+
 
 INT_PTR
 CALLBACK
@@ -276,5 +287,273 @@ VOID WINAPI Options_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
     Options_RunDLLCommon(hWnd, hInst, StrToIntW(cmd), nCmdShow);
 }
 
+static
+DWORD WINAPI
+CountFolderAndFiles(LPVOID lParam)
+{
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFile;
+    UINT Length;
+    LPWSTR pOffset;
+    BOOL ret;
+    PFOLDER_PROPERTIES_CONTEXT pContext = (PFOLDER_PROPERTIES_CONTEXT) lParam;
+
+    pOffset = PathAddBackslashW(pContext->szFolderPath);
+    if (!pOffset)
+       return 0;
+
+    Length = pOffset - pContext->szFolderPath;
+
+    wcscpy(pOffset, L"*.*");
+    hFile = FindFirstFileW(pContext->szFolderPath, &FindData);
+    if (hFile == INVALID_HANDLE_VALUE)
+       return 0;
+
+    do
+    {
+        ret = FindNextFileW(hFile, &FindData);
+        if (ret)
+        {
+            if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                if (FindData.cFileName[0] == L'.' && FindData.cFileName[1] == L'.' &&
+                    FindData.cFileName[2] == L'\0')
+                    continue;
+
+                pContext->cFolder++;
+                wcscpy(pOffset, FindData.cFileName);
+                CountFolderAndFiles((LPVOID)pContext);
+                pOffset[0] = L'\0';
+            }
+            else
+            {
+                pContext->cFiles++;
+                pContext->bSize.u.LowPart += FindData.nFileSizeLow;
+                pContext->bSize.u.HighPart += FindData.nFileSizeHigh;
+            }	
+        }
+        else if (GetLastError() == ERROR_NO_MORE_FILES)
+        {
+            break;
+        }
+    }while(1);
+
+    FindClose(hFile);
+    return 1;
+}
+
+static
+VOID
+InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
+{
+    LPWSTR pFolderName;
+    WIN32_FILE_ATTRIBUTE_DATA FolderAttribute;
+    FILETIME ft;
+    SYSTEMTIME dt;
+    WCHAR szBuffer[MAX_PATH+5];
+    WCHAR szFormat[30] = {0};
+
+    static const WCHAR wFormat[] = {'%','0','2','d','/','%','0','2','d','/','%','0','4','d',' ',' ','%','0','2','d',':','%','0','2','u',0};
+
+    pFolderName = wcsrchr(pContext->szFolderPath, L'\\');
+    if (!pFolderName)
+        return;
+
+    /* set folder name */
+    SendDlgItemMessageW(pContext->hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM) (pFolderName + 1));
+    /* set folder location */
+    pFolderName[0] = L'\0';
+    if (wcslen(pContext->szFolderPath) == 2)
+    {
+        /* folder is located at root */
+        WCHAR szDrive[4] = {L'C',L':',L'\\',L'\0'};
+        szDrive[0] = pContext->szFolderPath[0];
+        SendDlgItemMessageW(pContext->hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM) szDrive);
+    }
+    else
+    {
+        SendDlgItemMessageW(pContext->hwndDlg, 14007, WM_SETTEXT, 0, (LPARAM) pContext->szFolderPath);
+    }
+    pFolderName[0] = L'\\';
+    /* get folder properties */
+    if (GetFileAttributesExW(pContext->szFolderPath, GetFileExInfoStandard, (LPVOID)&FolderAttribute))
+    {
+        if (FolderAttribute.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+        {
+            /* check readonly button */
+            SendDlgItemMessage(pContext->hwndDlg, 14021, BM_SETCHECK, BST_CHECKED, 0);
+        }
+
+        if (FolderAttribute.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        {
+            /* check hidden button */
+            SendDlgItemMessage(pContext->hwndDlg, 14022, BM_SETCHECK, BST_CHECKED, 0);
+        }
+
+       if (FileTimeToLocalFileTime(&FolderAttribute.ftCreationTime, &ft))
+       {
+           FileTimeToSystemTime(&ft, &dt);
+           sprintfW (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
+           SendDlgItemMessageW(pContext->hwndDlg, 14015, WM_SETTEXT, 0, (LPARAM) szBuffer);
+       }
+    }
+    /* now enumerate enumerate contents */
+    wcscpy(szBuffer, pContext->szFolderPath);
+    CountFolderAndFiles((LPVOID)pContext);
+    wcscpy(pContext->szFolderPath, szBuffer);
+    /* set folder details */
+    LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, szFormat, sizeof(szFormat)/sizeof(WCHAR));
+    szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
+    sprintfW(szBuffer, szFormat, pContext->cFiles, pContext->cFolder);
+    SendDlgItemMessageW(pContext->hwndDlg, 14011, WM_SETTEXT, 0, (LPARAM) szBuffer);
+
+    if (StrFormatByteSizeW(pContext->bSize.QuadPart, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        /* store folder size */
+        SendDlgItemMessageW(pContext->hwndDlg, 14009, WM_SETTEXT, 0, (LPARAM) szBuffer);
+    }
+}
+
+
+INT_PTR
+CALLBACK
+FolderPropertiesGeneralDlg(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    LPPROPSHEETPAGEW ppsp;
+    PFOLDER_PROPERTIES_CONTEXT pContext;
+    HICON hIcon;
+    WIN32_FILE_ATTRIBUTE_DATA FolderAttribute;
+    LONG res;
+    LPPSHNOTIFY lppsn;
+    DWORD Attribute;
+
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            ppsp = (LPPROPSHEETPAGEW)lParam;
+            if (ppsp == NULL)
+                break;
+            hIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPEN));
+            if (hIcon)
+               SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON,  (WPARAM)hIcon, 0);
+
+            pContext = SHAlloc(sizeof(FOLDER_PROPERTIES_CONTEXT));
+            if (pContext)
+            {
+                ZeroMemory(pContext, sizeof(FOLDER_PROPERTIES_CONTEXT));
+                pContext->hwndDlg = hwndDlg;
+                wcscpy(pContext->szFolderPath, (LPWSTR)ppsp->lParam);
+                SetWindowLongPtr(hwndDlg, DWL_USER, (LONG_PTR)pContext);
+                InitializeFolderGeneralDlg(pContext);
+            }
+            return TRUE;
+        case WM_COMMAND:
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+               PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+            break;
+        case WM_DESTROY:
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            SHFree((LPVOID)pContext);
+            break;
+        case WM_NOTIFY:
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            lppsn = (LPPSHNOTIFY) lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                if (GetFileAttributesExW(pContext->szFolderPath, GetFileExInfoStandard, (LPVOID)&FolderAttribute))
+                {
+                    res = SendDlgItemMessageW(hwndDlg, 14021, BM_GETCHECK, 0, 0);
+                    if (res == BST_CHECKED)
+                        FolderAttribute.dwFileAttributes |= FILE_ATTRIBUTE_READONLY;
+                    else
+                        FolderAttribute.dwFileAttributes &= (~FILE_ATTRIBUTE_READONLY);
+
+                    res = SendDlgItemMessageW(hwndDlg, 14022, BM_GETCHECK, 0, 0);
+                    if (res == BST_CHECKED)
+                        FolderAttribute.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+                    else
+                        FolderAttribute.dwFileAttributes &= (~FILE_ATTRIBUTE_HIDDEN);
+
+                    Attribute = FolderAttribute.dwFileAttributes & 
+(FILE_ATTRIBUTE_ARCHIVE|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_NORMAL|FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_SYSTEM|FILE_ATTRIBUTE_TEMPORARY);
+
+                    SetFileAttributesW(pContext->szFolderPath, Attribute);
+                }
+                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
+static
+BOOL
+CALLBACK
+FolderAddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
+{
+    PROPSHEETHEADERW *ppsh = (PROPSHEETHEADERW *)lParam;
+    if (ppsh != NULL && ppsh->nPages < MAX_PROPERTY_SHEET_PAGE)
+    {
+        ppsh->u3.phpage[ppsh->nPages++] = hpage;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL
+SH_ShowFolderProperties(LPWSTR pwszFolder)
+{
+    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
+    HPROPSHEETPAGE hpage;
+    PROPSHEETHEADERW psh;
+    BOOL ret;
+    WCHAR szName[MAX_PATH] = {0};
+    HPSXA hpsx;
+    LPWSTR pFolderName;
+
+    if (!PathIsDirectoryW(pwszFolder))
+        return FALSE;
+
+    pFolderName = wcsrchr(pwszFolder, L'\\');
+    if (!pFolderName)
+        return FALSE;
+
+    wcscpy(szName, pFolderName + 1);
+
+    hpage = SH_CreatePropertySheetPage("SHELL_FOLDER_GENERAL_DLG", FolderPropertiesGeneralDlg, (LPARAM)pwszFolder, NULL);
+    if (!hpage)
+        return FALSE;
+
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+    hppages[psh.nPages] = hpage;
+    psh.nPages++;
+    psh.dwSize = sizeof(PROPSHEETHEADERW);
+    psh.dwFlags = PSH_PROPTITLE;
+    psh.hwndParent = NULL;
+    psh.u3.phpage = hppages;
+    psh.pszCaption = szName;
+
+    hpsx = SHCreatePropSheetExtArray(HKEY_CLASSES_ROOT,
+                                     L"Folder",
+                                     MAX_PROPERTY_SHEET_PAGE-1);
+
+    SHAddFromPropSheetExtArray(hpsx,
+                               (LPFNADDPROPSHEETPAGE)FolderAddPropSheetPageProc,
+                               (LPARAM)&psh);
+
+    ret = PropertySheetW(&psh);
+    if (ret < 0)
+        return FALSE;
+    else
+        return TRUE;
+}
 
 

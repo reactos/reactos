@@ -140,7 +140,7 @@
 #define IDS_PRINT_VERB              304
 #define IDS_PLAY_VERB               305
 #define IDS_PREVIEW_VERB            306
-
+#define IDS_FILE_FOLDER             307
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
 
