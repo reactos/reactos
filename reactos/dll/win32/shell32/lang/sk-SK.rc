@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  07-07-2008
+ * LAST CHANGE:  30-07-2008
  */   
 
 /*
@@ -212,18 +212,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "Folder", 14005, 68, 35, 160, 10
-	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "Typ:", 14004, 8, 35, 50, 10
+	LTEXT "PrieËinok", 14005, 68, 35, 160, 10
+	LTEXT "Umiestnenie:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
-	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "Veækosù:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "Obsahuje:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "&Iba na ËÌtanie", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Skryt˝", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
@@ -241,15 +241,15 @@ BEGIN
 	LTEXT "", 14009, 68, 72, 315, 10
 	LTEXT "Veækosù:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "VytvorenÈ:", 14014, 8, 118, 45, 10
+	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	LTEXT "ZmenenÈ:", 14016, 8, 140, 45, 10
+	LTEXT "Zmenen˝:", 14016, 8, 140, 45, 10
 	LTEXT "", 14017, 68, 140, 160, 10
-	LTEXT "OtvorenÈ:", 14018, 8, 160, 45, 10
+	LTEXT "Otvoren˝:", 14018, 8, 160, 45, 10
 	LTEXT "", 14019, 68, 160, 160, 10
 	LTEXT "Atrib˙ty:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Iba na ËÌtanie", 14021, 58, 189, 67, 10
-	CHECKBOX "S&kryt˝", 14022, 126, 189, 50, 10
+	CHECKBOX "&Skryt˝", 14022, 126, 189, 50, 10
 	CHECKBOX "&ArchÌvny", 14023, 181, 189, 49, 10
 END
 
@@ -299,10 +299,10 @@ BEGIN
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Jednotka %s", 14010, 100, 170, 40, 10
+	LTEXT "Jednotka %s", 14010, 100, 170, 45, 10
 	PUSHBUTTON "&»istenie disku", 14011, 180, 175, 50, 15, WS_TABSTOP
 	CHECKBOX "Uöetriù miesto na disku &kompresiou jednotky", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 15, 220, 200, 10, WS_DISABLED
+	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 15, 220, 220, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -360,7 +360,7 @@ BEGIN
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "&Maxim·lna veækosù (MB):", -1, 20, 105, 70, 10
 	RADIOBUTTON "S˙bory nepremiestÚovaù do &koöa. ZmazanÈ s˙bory hneÔ odstr·niù.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "Zobrazovaù &dialÛgovÈ okno potvrdenia odstr·nenia", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "Zobrazovaù &dialÛgovÈ okno potvrdenia odstr·nenia", 14004, 20, 155, 196, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -715,5 +715,5 @@ BEGIN
 	IDS_PLAY_VERB               "Prehraù"
 	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
+	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
 END

@@ -47,6 +47,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/pt-PT.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sl-SI.rc"
+#include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"

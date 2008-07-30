@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-05-2008
- * LAST CHANGE:  17-06-2008
+ * LAST CHANGE:  30-07-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -12,7 +12,7 @@ BEGIN
     IDS_MANUFACTURER "V˝robca: %1"
     IDS_LOCATION "Umiestnenie: %1"
     IDS_STATUS "Stav zariadenia: %1"
-    IDS_UNKNOWN "Nezn·my"
+    IDS_UNKNOWN "Nezn·me"
     IDS_LOCATIONSTR "Umiestnenie %1!u! (%2)"
     IDS_DEVCODE " (KÛd %1!u!)"
     IDS_DEVCODE2 " (KÛd %2!u!)"
@@ -21,14 +21,14 @@ BEGIN
     IDS_UNKNOWNDEVICE "Nezn·me zariadenie"
     IDS_NODRIVERLOADED "Pre toto zariadenie nie s˙ nainötalovanÈ ûiadne ovl·daËe."
     IDS_DEVONPARENT "na %1"
-    IDS_TROUBLESHOOTDEV "&Troubleshoot..."
+    IDS_TROUBLESHOOTDEV "&Rieöenie problÈmov..."
     IDS_ENABLEDEV "E&nable Device"
     IDS_REINSTALLDRV "Re&install Driver"
     IDS_PROPERTIES "P&roperties"
-    IDS_UPDATEDRV "U&pdate Driver..."
+    IDS_UPDATEDRV "&Aktualizovaù ovl·daË..."
     IDS_REBOOT "Restart &Computer..."
     IDS_NOTAVAILABLE "Nie je k dispozÌcii" //Not available
-    IDS_NOTDIGITALLYSIGNED "Not digitally signed"
+    IDS_NOTDIGITALLYSIGNED "Digit·lne nepodpÌsan˝"
     IDS_NODRIVERS "No driver files are required or have been loaded for this device."
 END
 
@@ -98,7 +98,7 @@ IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Devices:",IDC_DEVICES,7,6,196,10
+    LTEXT           "&Zariadenia:",IDC_DEVICES,7,6,196,10
     CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
                     LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
@@ -106,7 +106,7 @@ BEGIN
     LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_STATUS,14,112,183,30
-    PUSHBUTTON      "&Troubleshoot...",IDC_TROUBLESHOOT,85,140,54,14,
+    PUSHBUTTON      "&Rieöenie problÈmov...",IDC_TROUBLESHOOT,85,140,54,14,
                     BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
     PUSHBUTTON      "Vl&astnosti",IDC_PROPERTIES,146,140,50,14
 END
@@ -126,8 +126,8 @@ BEGIN
      EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      GROUPBOX "Stav zariadenia", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
      EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-     PUSHBUTTON "&Troubleshoot...", IDC_DEVPROBLEM, 148, 163, 90, 15
-     LTEXT "&Device usage:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+     PUSHBUTTON "&Rieöenie problÈmov...", IDC_DEVPROBLEM, 148, 163, 90, 15
+     LTEXT "&Vyuûitie zariadenia:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
      COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
@@ -152,7 +152,7 @@ END
 
 IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 250
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Detaily s˙boru ovl·daËa"
+CAPTION "Detaily o s˙boroch ovl·daËa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
