@@ -174,14 +174,14 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_GETMENU:
          {
             PWINDOW_OBJECT Window;
-            DWORD DWORD_PTR;
+            DWORD_PTR Result;
 
             if(!(Window = UserGetWindowObject((HWND)Param)))
             {
                RETURN( FALSE);
             }
 
-            Result = (DWORD_PTR)Window->Wnd->IDMenu;
+            Result = Window->Wnd->IDMenu;
 
             RETURN( Result);
          }
