@@ -137,7 +137,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
  */
 VOID STDCALL
 MmUnmapIoSpace (IN PVOID BaseAddress,
-                IN ULONG NumberOfBytes)
+                IN SIZE_T NumberOfBytes)
 {
    LONG Offset;
    PVOID Address = BaseAddress;
@@ -163,7 +163,7 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
  */
 PVOID STDCALL
 MmMapVideoDisplay (IN PHYSICAL_ADDRESS PhysicalAddress,
-                   IN ULONG   NumberOfBytes,
+                   IN SIZE_T   NumberOfBytes,
                    IN MEMORY_CACHING_TYPE CacheType)
 {
    return MmMapIoSpace (PhysicalAddress, NumberOfBytes, (BOOLEAN)CacheType);
@@ -175,7 +175,7 @@ MmMapVideoDisplay (IN PHYSICAL_ADDRESS PhysicalAddress,
  */
 VOID STDCALL
 MmUnmapVideoDisplay (IN PVOID BaseAddress,
-                     IN ULONG NumberOfBytes)
+                     IN SIZE_T NumberOfBytes)
 {
    MmUnmapIoSpace (BaseAddress, NumberOfBytes);
 }

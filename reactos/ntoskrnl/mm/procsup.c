@@ -384,7 +384,7 @@ MmCreatePeb(PEPROCESS Process)
             ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
-                                                           &ViewSize);
+                                                           (PULONG)&ViewSize);
 
             ProbeForRead(ImageConfigData,
                          sizeof(IMAGE_LOAD_CONFIG_DIRECTORY),

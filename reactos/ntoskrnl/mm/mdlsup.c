@@ -81,7 +81,7 @@ PMDL
 NTAPI
 MmCreateMdl(IN PMDL Mdl,
             IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
     ULONG Size;
     
@@ -107,7 +107,7 @@ MmCreateMdl(IN PMDL Mdl,
 ULONG
 NTAPI
 MmSizeOfMdl(IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
     /* Return the MDL size */
     return sizeof(MDL) + (ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Length) * sizeof(PFN_NUMBER));

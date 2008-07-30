@@ -14,7 +14,7 @@
 
 /* GLOBALS *****************************************************************/
 
-ULONG MmUserProbeAddress = 0;
+ULONG_PTR MmUserProbeAddress = 0;
 PVOID MmHighestUserAddress = NULL;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 PVOID MmSystemRangeStart = NULL;
@@ -394,7 +394,7 @@ NTSTATUS
 NTAPI
 NtResetWriteWatch(IN HANDLE ProcessHandle,
                  IN PVOID BaseAddress,
-                 IN ULONG RegionSize)
+                 IN SIZE_T RegionSize)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

@@ -225,7 +225,7 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
  */
 VOID STDCALL
 MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
-                                   IN ULONG NumberOfBytes,
+                                   IN SIZE_T NumberOfBytes,
                                    IN MEMORY_CACHING_TYPE CacheType)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());

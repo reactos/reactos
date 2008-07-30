@@ -647,7 +647,7 @@ MiSnapThunk(IN PVOID DllBase,
                     ForwardName->Hint = 0;
 
                     /* Set the new address */
-                    *(PULONG)&ForwardThunk.u1.AddressOfData = (ULONG)ForwardName;
+                    ForwardThunk.u1.AddressOfData = (ULONG_PTR)ForwardName;
 
                     /* Snap the forwarder */
                     Status = MiSnapThunk(LdrEntry->DllBase,
@@ -1289,7 +1289,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LdrEntry = CONTAINING_RECORD(NextEntry,
                                  LDR_DATA_TABLE_ENTRY,
                                  InLoadOrderLinks);
-    PsNtosImageBase = (ULONG)LdrEntry->DllBase;
+    PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
 
     /* Loop the loader block */
     while (NextEntry != ListHead)

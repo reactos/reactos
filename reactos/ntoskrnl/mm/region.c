@@ -238,7 +238,7 @@ MmAlterRegion(PMM_AVL_TABLE AddressSpace, PVOID BaseAddress,
 
 VOID
 NTAPI
-MmInitializeRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
+MmInitializeRegion(PLIST_ENTRY RegionListHead, SIZE_T Length, ULONG Type,
                    ULONG Protect)
 {
    PMM_REGION Region;

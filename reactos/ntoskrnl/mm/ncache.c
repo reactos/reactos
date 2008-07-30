@@ -115,7 +115,7 @@ MmFreeNonCachedPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
  * @implemented
  */
 VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
-                                    IN ULONG NumberOfBytes)
+                                    IN SIZE_T NumberOfBytes)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
    MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),

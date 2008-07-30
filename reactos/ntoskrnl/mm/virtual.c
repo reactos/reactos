@@ -678,8 +678,8 @@ NTAPI
 NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID BaseAddress,
                     OUT PVOID Buffer,
-                    IN ULONG NumberOfBytesToRead,
-                    OUT PULONG NumberOfBytesRead OPTIONAL)
+                    IN SIZE_T NumberOfBytesToRead,
+                    OUT PSIZE_T NumberOfBytesRead OPTIONAL)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
@@ -765,8 +765,8 @@ NTAPI
 NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID BaseAddress,
                      IN PVOID Buffer,
-                     IN ULONG NumberOfBytesToWrite,
-                     OUT PULONG NumberOfBytesWritten OPTIONAL)
+                     IN SIZE_T NumberOfBytesToWrite,
+                     OUT PSIZE_T NumberOfBytesWritten OPTIONAL)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
@@ -950,8 +950,8 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID Address,
                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
                      OUT PVOID VirtualMemoryInformation,
-                     IN ULONG Length,
-                     OUT PULONG UnsafeResultLength)
+                     IN SIZE_T Length,
+                     OUT PSIZE_T UnsafeResultLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG ResultLength = 0;
@@ -1062,8 +1062,8 @@ NTSTATUS
 NTAPI
 NtUnlockVirtualMemory(IN HANDLE ProcessHandle,
                       IN PVOID BaseAddress,
-                      IN ULONG NumberOfBytesToUnlock,
-                      OUT PULONG NumberOfBytesUnlocked OPTIONAL)
+                      IN SIZE_T NumberOfBytesToUnlock,
+                      OUT PSIZE_T NumberOfBytesUnlocked OPTIONAL)
 {
     UNIMPLEMENTED;
     if (NumberOfBytesUnlocked) *NumberOfBytesUnlocked = 0;

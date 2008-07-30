@@ -50,7 +50,7 @@ EiAllocatePool(POOL_TYPE PoolType,
  * @implemented
  */
 PVOID STDCALL
-ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
+ExAllocatePool (POOL_TYPE PoolType, SIZE_T NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
  * to the allocated block. This routine is used for general purpose allocation
@@ -99,7 +99,7 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @implemented
  */
 PVOID STDCALL
-ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
+ExAllocatePoolWithTag (POOL_TYPE PoolType, SIZE_T NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
 
@@ -127,7 +127,7 @@ ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
  * @implemented
  */
 PVOID STDCALL
-ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
+ExAllocatePoolWithQuota (POOL_TYPE PoolType, SIZE_T NumberOfBytes)
 {
    return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
 }
@@ -180,7 +180,7 @@ _SEH_FILTER(FreeAndGoOn)
 PVOID
 NTAPI
 ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
-                            IN ULONG NumberOfBytes,
+                            IN SIZE_T NumberOfBytes,
                             IN ULONG Tag)
 {
     PEPROCESS Process;

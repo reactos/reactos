@@ -374,7 +374,7 @@ MmInit1(VOID)
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
     /* Set the page directory */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
 
     /* Get the size of FreeLDR's image allocations */
     MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
