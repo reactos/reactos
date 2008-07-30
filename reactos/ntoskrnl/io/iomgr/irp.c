@@ -525,6 +525,9 @@ IoAllocateIrp(IN CCHAR StackSize,
     PNPAGED_LOOKASIDE_LIST List = NULL;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
 
+    /* Set Charge Quota Flag */
+    if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
+
     /* Figure out which Lookaside List to use */
     if ((StackSize <= 8) && (ChargeQuota == FALSE))
     {
@@ -586,11 +589,11 @@ IoAllocateIrp(IN CCHAR StackSize,
     else
     {
         /* We have an IRP from Lookaside */
-        Flags |= IRP_LOOKASIDE_ALLOCATION;
-    }
+        if (ChargeQuota) Flags |= IRP_LOOKASIDE_ALLOCATION;
 
-    /* Set Flag */
-    if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
+        /* In this case there is no charge quota */
+        Flags &= ~IRP_QUOTA_CHARGED;
+    }
 
     /* Now Initialize it */
     IoInitializeIrp(Irp, Size, StackSize);
