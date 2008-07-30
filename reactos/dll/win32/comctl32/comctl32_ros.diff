@@ -134,12 +134,3 @@ Index: treeview.c
      if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
  	infoPtr->cdmode =
  	    TREEVIEW_SendCustomDrawNotify(infoPtr, CDDS_POSTPAINT, hdc, rect);
-@@ -3209,7 +3207,7 @@
-     {
-         scrollRect.top = nextItem->rect.top;
- 
--        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
-+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, &scrollRect,
-                        NULL, NULL, SW_ERASE | SW_INVALIDATE);
-         TREEVIEW_Invalidate(infoPtr, wineItem);
-     } else {
