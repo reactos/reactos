@@ -695,6 +695,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                 static const WCHAR wszCloseBracket[] = {')',0};
 
                 lstrcpynW(wszDrive, pszPath, 4);
+                pszPath[0] = L'\0';
                 GetVolumeInformationW (wszDrive, pszPath,
                            MAX_PATH - 7,
                            &dwVolumeSerialNumber,
@@ -723,12 +724,6 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                         dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
                         if (dwFileSystemFlags > MAX_PATH - 7)
                             pszPath[MAX_PATH-7] = L'\0';
-                        else if (dwFileSystemFlags == 0)
-                            pszPath[0] = L'\0';
-                    }
-                    else
-                    {
-                        pszPath[0] = L'\0';
                     }
                 }
                 strcatW (pszPath, wszOpenBracket);
