@@ -864,6 +864,14 @@ static void DoProperties(
        SH_ShowDriveProperties(buffer);
        return;
     }
+    else if (_ILIsNetHood(This->apidl[0]))
+    {
+       /* FIXME
+        * implement nethood properties
+        */
+       FIXME("implement nethood property dialog\n");
+       return;
+    }
     else if (_ILIsBitBucket(This->apidl[0]))
     {
        ///FIXME
