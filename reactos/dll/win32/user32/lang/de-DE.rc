@@ -43,11 +43,11 @@ SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 BEGIN
   MENUITEM "&Wiederherstellen", 61728
   MENUITEM "&Verschieben", 61456
-  MENUITEM "&Grösse", 61440
+  MENUITEM "&Größe", 61440
   MENUITEM "Mi&nimieren", 61472
   MENUITEM "Ma&ximieren", 61488
   MENUITEM SEPARATOR
-  MENUITEM "S&chliessen\tAlt-F4", 61536
+  MENUITEM "S&chließen\tAlt-F4", 61536
 END
 
 /////////////////////////////////////////////////////////////////////////////
