@@ -3388,7 +3388,7 @@ typedef struct _IMAGE_OPTIONAL_HEADER64 {
 	WORD MinorImageVersion;
 	WORD MajorSubsystemVersion;
 	WORD MinorSubsystemVersion;
-	DWORD Reserved1;
+	DWORD Win32VersionValue;
 	DWORD SizeOfImage;
 	DWORD SizeOfHeaders;
 	DWORD CheckSum;
@@ -3647,7 +3647,7 @@ typedef struct _IMAGE_THUNK_DATA32 {
 } IMAGE_THUNK_DATA32;
 typedef IMAGE_THUNK_DATA32 *PIMAGE_THUNK_DATA32;
 
-#define IMAGE_ORDINAL_FLAG64 0x8000000000000000
+#define IMAGE_ORDINAL_FLAG64 0x8000000000000000ULL
 #define IMAGE_ORDINAL_FLAG32 0x80000000
 #define IMAGE_ORDINAL64(Ordinal) (Ordinal & 0xffff)
 #define IMAGE_ORDINAL32(Ordinal) (Ordinal & 0xffff)

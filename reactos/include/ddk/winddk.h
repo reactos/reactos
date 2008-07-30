@@ -5485,7 +5485,28 @@ KeGetCurrentThread(
 #define PROFILE_LEVEL                     15
 #define HIGH_LEVEL                        15
 
-#define KI_USER_SHARED_DATA     0xFFFFF78000000000
+#define KI_USER_SHARED_DATA     0xFFFFF78000000000ULL
+
+typedef struct _KPCR
+{
+    NT_TIB NtTib;
+    struct _KPRCB *CurrentPrcb;
+    ULONG64 SavedRcx;
+    ULONG64 SavedR11;
+    KIRQL Irql;
+    UCHAR SecondLevelCacheAssociativity;
+    UCHAR Number;
+    UCHAR Fill0;
+    ULONG Irr;
+    ULONG IrrActive;
+    ULONG Idr;
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    union _KIDTENTRY64 *IdtBase;
+    union _KGDTENTRY64 *GdtBase;
+    struct _KTSS64 *TssBase;
+} KPCR, *PKPCR;
 
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
@@ -5502,6 +5523,13 @@ PRKTHREAD
 NTAPI
 KeGetCurrentThread(
     VOID);
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readgsbyte(FIELD_OFFSET(KPCR, Number));
+}
 
 #elif defined(__PowerPC__)
 
