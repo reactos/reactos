@@ -171,7 +171,7 @@ VOID NtoskrnlIoIrpTest()
 
 VOID NtoskrnlIoTests()
 {
-    //NtoskrnlIoMdlTest();
-    //NtoskrnlIoDeviceInterface();
+    NtoskrnlIoMdlTest();
+    NtoskrnlIoDeviceInterface();
     NtoskrnlIoIrpTest();
 }

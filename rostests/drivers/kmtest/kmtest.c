@@ -131,12 +131,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Set necessary routines */
     DriverObject->DriverUnload = KmtestUnload;
 
-
-    //NtoskrnlExecutiveTests();
-    //NtoskrnlIoDeviceInterface();
+    NtoskrnlExecutiveTests();
     NtoskrnlIoTests();
-    //NtoskrnlObTest();
-    //NtoskrnlPoolsTest();
+    NtoskrnlObTest();
+    NtoskrnlPoolsTest();
 
     return STATUS_SUCCESS;
 }
