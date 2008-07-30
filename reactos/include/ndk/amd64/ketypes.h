@@ -1,10 +1,11 @@
 /*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
+Copyright (c) Timo Kreuzer.  All rights reserved.
 
 Header Name:
 
-    ketypes.h (X86)
+    ketypes.h (AMD64)
 
 Abstract:
 
@@ -13,6 +14,7 @@ Abstract:
 Author:
 
     Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
+    Timo Kreuzer (timo.kreuzer@reactos.org) - Updated - 30-Jul-2008
 
 --*/
 
@@ -28,6 +30,7 @@ Author:
 //
 //#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 //#define PCR                     ((volatile KPCR * const)K0IPCR)
+#define PCR 0 // HACK
 //#if defined(CONFIG_SMP) || defined(NT_BUILD)
 //#undef  KeGetPcr
 //#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
@@ -131,7 +134,7 @@ Author:
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
-#define KSEG0_BASE              0xffff080000000000ULL
+#define KSEG0_BASE 0xfffff80000000000ULL
 
 //
 // Synchronization-level IRQL
