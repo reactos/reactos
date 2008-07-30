@@ -22,6 +22,7 @@
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
+extern BOOL ConsoleInitialized;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 /* GLOBALS *******************************************************************/
@@ -87,6 +88,8 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 			erException.NumberParameters = 0;
 			RtlRaiseException(&erException);
 		}
+
+		if (!ConsoleInitialized) ExitThread(0);
 		RtlEnterCriticalSection(&ConsoleLock);
 
 		if(!(nCode == CTRL_C_EVENT &&
@@ -106,6 +109,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	default: ExitThread(0);
 	}
 
+	if (!ConsoleInitialized) ExitThread(0);
 	RtlEnterCriticalSection(&ConsoleLock);
 
 	if(!(nCode == CTRL_C_EVENT &&
