@@ -3081,6 +3081,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                 TRUE,
                                                 MUIGetString(STRING_SETUPCOPYINGFILES));
 
+    /* ATTENTION: The following progress bars are debug stuff, which should not be translated!! */
     /* Create the paged pool progress bar */
     CopyContext.MemoryBars[0] = CreateProgressBar(13,
                                                   40,
@@ -3089,7 +3090,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   10,
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_PAGEDMEM));
+                                                  "Paged Memory");
 
     /* Create the non paged pool progress bar */
     CopyContext.MemoryBars[1] = CreateProgressBar(28,
@@ -3099,7 +3100,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   24,
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_NONPAGEDMEM));
+                                                  "Nonpaged Memory");
 
     /* Create the global memory progress bar */
     CopyContext.MemoryBars[2] = CreateProgressBar(43,
@@ -3109,7 +3110,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                   40,
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_FREEMEM));
+                                                  "Free Memory");
 
     /* Do the file copying */
     SetupCommitFileQueueW(NULL,

@@ -1622,12 +1622,6 @@ MUI_STRING skSKStrings[] =
      "\xB3 Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Inçtal tor kop¡ruje s£bory..."},
-    {STRING_PAGEDMEM,
-     "Str nkovan "}, //reœazec "Str nkovan  pam„œ" sa nevmest¡
-    {STRING_NONPAGEDMEM,
-     "Nestr nkovan "}, //reœazec "Nestr nkovan  pam„œ" sa nevmest¡
-    {STRING_FREEMEM,
-     "Vo–n  pam„œ"},
     {STRING_REGHIVEUPDATE,
     "   Aktualizujem polo§ky registrov..."},
     {STRING_IMPORTFILE,
