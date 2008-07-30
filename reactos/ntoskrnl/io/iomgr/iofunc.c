@@ -3355,7 +3355,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     Status = IopPerformSynchronousRequest(DeviceObject,
                                           Irp,
                                           FileObject,
-                                          TRUE,
+                                          FALSE,
                                           PreviousMode,
                                           !LocalEvent,
                                           IopOtherTransfer);
