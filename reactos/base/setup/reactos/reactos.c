@@ -29,6 +29,7 @@
 #include <commctrl.h>
 #include <tchar.h>
 #include <setupapi.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
 
@@ -211,9 +212,6 @@ LangSelDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 	        
@@ -309,9 +307,6 @@ TypeDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -364,9 +359,6 @@ DeviceDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -416,9 +408,6 @@ DriveDlgProc(HWND hwndDlg,
 		DWORD dwStyle;
 
           	hwndControl = GetParent(hwndDlg);
-
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
 
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -471,9 +460,6 @@ ProcessDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -524,9 +510,6 @@ RestartDlgProc(HWND hwndDlg,
 		DWORD dwStyle;
 
           	hwndControl = GetParent(hwndDlg);
-
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
 
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -586,6 +569,7 @@ RestartDlgProc(HWND hwndDlg,
 BOOL isUnattendSetup()
 {
 	WCHAR szPath[MAX_PATH];
+	WCHAR *ch;
 	HINF hUnattendedInf;
 	INFCONTEXT InfContext;
 	TCHAR szValue[MAX_PATH];
@@ -593,7 +577,10 @@ BOOL isUnattendSetup()
 	//HKEY hKey;
 	BOOL result = 0;
 
-	GetCurrentDirectoryW(MAX_PATH, szPath); // FIXME
+	GetModuleFileNameW(NULL,szPath,MAX_PATH);
+	ch = strrchrW(szPath,L'\\');
+	if (ch != NULL)
+		*ch = L'\0';
 
 	wcscat(szPath, L"\\unattend.inf");
 	hUnattendedInf = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
