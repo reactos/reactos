@@ -972,7 +972,7 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
    hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)sDrive, NULL);
    if (!hprop)
    {
-       ERR("Failed to create property sheet");
+       ERR("Failed to create property sheet\n");
        return FALSE;
    }
    hpsp[psh.nPages] = hprop;
@@ -1006,7 +1006,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hKey);
    if (res != ERROR_SUCCESS)
    {
-      FIXME("Failed to open registry path");
+      FIXME("Failed to open registry path\n");
       return FALSE;
    }
    dwLength = sizeof(RegSerial);
@@ -1021,7 +1021,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
            /* FIXME
             * the current volume was mounted on a different path
             */
-           FIXME("mismatched serial volume number");
+           FIXME("mismatched serial volume number\n");
            RegCloseKey(hKey);
            return FALSE;
        }
