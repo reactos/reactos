@@ -225,6 +225,6 @@ static inline void list_move_head( struct list *dst, struct list *src )
 
 /* get pointer to object containing list element */
 #define LIST_ENTRY(elem, type, field) \
-    ((type *)((char *)(elem) - (unsigned int)(&((type *)0)->field)))
+    ((type *)((char *)(elem) - (unsigned long)(&((type *)0)->field)))
 
 #endif  /* __WINE_SERVER_LIST_H */
