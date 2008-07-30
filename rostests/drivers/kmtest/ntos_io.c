@@ -89,6 +89,8 @@ VOID NtoskrnlIoIrpTest()
     USHORT size;
     IRP *iorp;
 
+    StartTest();
+
     // 1st test
     size = sizeof(IRP) + 5 * sizeof(IO_STACK_LOCATION);
     iorp = ExAllocatePool(NonPagedPool, size);
@@ -163,6 +165,8 @@ VOID NtoskrnlIoIrpTest()
 
         IoFreeIrp(iorp);
     }
+
+    FinishTest("NTOSKRNL Io Irp");
 }
 
 VOID NtoskrnlIoTests()

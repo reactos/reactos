@@ -109,6 +109,16 @@ VOID NtoskrnlExecutiveTests();
 VOID NtoskrnlPoolsTest();
 
 /*
+ * KmtestUnload
+ */
+VOID
+NTAPI
+KmtestUnload(IN PDRIVER_OBJECT DriverObject)
+{
+    /* Nothing to do here */
+}
+
+/*
  * DriverEntry
  */
 NTSTATUS
@@ -117,6 +127,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
     DbgPrint("\n===============================================\nKernel Mode Regression Test driver starting...\n");
+
+    /* Set necessary routines */
+    DriverObject->DriverUnload = KmtestUnload;
+
+
     //NtoskrnlExecutiveTests();
     //NtoskrnlIoDeviceInterface();
     NtoskrnlIoTests();
