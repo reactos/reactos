@@ -1,0 +1,323 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/i386/page.c
+ * PURPOSE:         Low level memory managment manipulation
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ */
+
+/* INCLUDES ***************************************************************/
+
+#include <ntoskrnl.h>
+#define NDEBUG
+#include <internal/debug.h>
+
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
+#pragma alloc_text(INIT, MiInitPageDirectoryMap)
+#endif
+
+
+/* GLOBALS *****************************************************************/
+
+
+
+/* FUNCTIONS ***************************************************************/
+
+BOOLEAN MmUnmapPageTable(PULONG Pt);
+
+ULONG_PTR
+NTAPI
+MiFlushTlbIpiRoutine(ULONG_PTR Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+MiFlushTlb(PULONG Pt, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+
+
+PULONG_PTR
+MmGetPageDirectory(VOID)
+{
+   return (PULONG_PTR)__readcr3();
+}
+
+static ULONG
+ProtectToPTE(ULONG flProtect)
+{
+
+}
+
+NTSTATUS
+NTAPI
+Mmi386ReleaseMmInfo(PEPROCESS Process)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess(IN PEPROCESS Process,
+                             IN PLARGE_INTEGER DirectoryTableBase)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+BOOLEAN
+STDCALL
+MmCreateProcessAddressSpace(IN ULONG MinWs,
+                            IN PEPROCESS Process,
+                            IN PLARGE_INTEGER DirectoryTableBase)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MmDeletePageTable(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmFreePageTable(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN MmUnmapPageTable(PULONG Pt)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+PFN_TYPE
+NTAPI
+MmGetPfnForProcess(PEPROCESS Process,
+                   PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmRawDeleteVirtualMapping(PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+                       BOOLEAN* WasDirty, PPFN_TYPE Page)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
+                        SWAPENTRY* SwapEntry)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN
+Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+MmIsDirtyPage(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MmSetCleanPage(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmSetDirtyPage(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+MmIsPagePresent(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+BOOLEAN
+NTAPI
+MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+NTSTATUS
+NTAPI
+MmCreateVirtualMappingForKernel(PVOID Address,
+                                ULONG flProtect,
+                                PPFN_TYPE Pages,
+				ULONG PageCount)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+MmCreatePageFileMapping(PEPROCESS Process,
+                        PVOID Address,
+                        SWAPENTRY SwapEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+NTSTATUS
+NTAPI
+MmCreateVirtualMappingUnsafe(PEPROCESS Process,
+                             PVOID Address,
+                             ULONG flProtect,
+                             PPFN_TYPE Pages,
+                             ULONG PageCount)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+MmCreateVirtualMapping(PEPROCESS Process,
+                       PVOID Address,
+                       ULONG flProtect,
+                       PPFN_TYPE Pages,
+                       ULONG PageCount)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+ULONG
+NTAPI
+MmGetPageProtect(PEPROCESS Process, PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+PHYSICAL_ADDRESS STDCALL
+MmGetPhysicalAddress(PVOID vaddr)
+{
+	PHYSICAL_ADDRESS ret = {{0}};
+    UNIMPLEMENTED;
+    return ret;
+}
+
+PVOID
+NTAPI
+MmCreateHyperspaceMapping(PFN_TYPE Page)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+PFN_TYPE
+NTAPI
+MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+PFN_TYPE
+NTAPI
+MmDeleteHyperspaceMapping(PVOID Address)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+NTAPI
+MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+INIT_FUNCTION
+NTAPI
+MmInitGlobalKernelPageDirectory(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+INIT_FUNCTION
+NTAPI
+MiInitPageDirectoryMap(VOID)
+{
+    UNIMPLEMENTED;
+}
+
+/* EOF */

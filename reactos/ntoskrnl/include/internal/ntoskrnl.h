@@ -35,9 +35,13 @@
 #define InterlockedExchangeAdd      _InterlockedExchangeAdd
 
 #include "ke.h"
+#ifdef _M_AMD64
+#include "amd64/mm.h"
+#else
 #include "i386/mm.h"
 #include "i386/fpu.h"
 #include "i386/v86m.h"
+#endif
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
@@ -136,7 +140,11 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
+#ifndef _M_AMD64
 FORCEINLINE
+#else
+static inline
+#endif
 NTSTATUS
 DefaultSetInfoBufferCheck(ULONG Class,
                           const INFORMATION_CLASS_INFO *ClassList,
@@ -186,7 +194,11 @@ DefaultSetInfoBufferCheck(ULONG Class,
     return Status;
 }
 
+#ifndef _M_AMD64
 FORCEINLINE
+#else
+static inline
+#endif
 NTSTATUS
 DefaultQueryInfoBufferCheck(ULONG Class,
                             const INFORMATION_CLASS_INFO *ClassList,

@@ -6,7 +6,7 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
 struct _EPROCESS;
-PULONG MmGetPageDirectory(VOID);
+PULONG_PTR MmGetPageDirectory(VOID);
 
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))

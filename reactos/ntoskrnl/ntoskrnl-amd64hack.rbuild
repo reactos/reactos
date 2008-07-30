@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
-<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" allowwarnings="true">
+<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" baseaddress="0xfffff80000800000" entrypoint="KiSystemStartup" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="ntoskrnl_$(ARCH).def" />
 	<define name="_DISABLE_TIDENTS" />
@@ -358,20 +358,25 @@
 				<file>page.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>page.c</file>
+			</directory>
+		</if>
 		<file>anonmem.c</file>
 		<file>aspace.c</file>
 		<file>balance.c</file>
-		<!-- file>cont.c</file -->
+		<file>cont.c</file>
 		<file>drvlck.c</file>
 		<file>freelist.c</file>
-		<!-- file>iospace.c</file -->
+		<file>iospace.c</file>
 		<file>kmap.c</file>
 		<file>marea.c</file>
-		<!-- file>mdlsup.c</file -->
-		<!-- file>mm.c</file -->
-		<!-- file>mminit.c</file -->
+		<file>mdlsup.c</file>
+		<file>mm.c</file>
+		<file>mminit.c</file>
 		<file>mpw.c</file>
-		<!-- file>ncache.c</file -->
+		<file>ncache.c</file>
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
@@ -380,15 +385,15 @@
 		<file>paging.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
-		<!-- file>pool.c</file -->
+		<file>pool.c</file>
 		<file>ppool.c</file>
-		<!-- file>procsup.c</file -->
-		<!-- file>region.c</file -->
+		<file>procsup.c</file>
+		<file>region.c</file>
 		<file>rmap.c</file>
-		<!-- file>section.c</file -->
+		<file>section.c</file>
 		<file>sysldr.c</file>
 		<file>verifier.c</file>
-		<!-- file>virtual.c</file -->
+		<file>virtual.c</file>
 		<file>wset.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>
