@@ -96,7 +96,7 @@
 		</if>
 		<file>apc.c</file>
 		<file>balmgr.c</file>
-		<!-- file>bug.c</file -->
+		<file>bug.c</file>
 		<file>clock.c</file>
 		<file>config.c</file>
 		<file>devqueue.c</file>
@@ -170,7 +170,7 @@
 	</directory>
 	<directory name="dbgk">
 		<file>dbgkutil.c</file>
-		<!-- file>dbgkobj.c</file -->
+		<file>dbgkobj.c</file>
 	</directory>
 	<directory name="ex" root="intermediate">
 		<file>zw.S</file>
@@ -187,7 +187,7 @@
 		<file>callback.c</file>
 		<file>dbgctrl.c</file>
 		<file>efi.c</file>
-		<!-- file>event.c</file -->
+		<file>event.c</file>
 		<file>evtpair.c</file>
 		<file>exintrin.c</file>
 		<file>fastinterlck.c</file>
@@ -198,17 +198,17 @@
 		<file>init.c</file>
 		<file>keyedevt.c</file>
 		<file>locale.c</file>
-		<!-- file>lookas.c</file -->
-		<!-- file>mutant.c</file -->
+		<file>lookas.c</file>
+		<file>mutant.c</file>
 		<file>pushlock.c</file>
 		<file>profile.c</file>
 		<file>resource.c</file>
 		<file>rundown.c</file>
-		<!-- file>sem.c</file -->
+		<file>sem.c</file>
 		<file>shutdown.c</file>
-		<!-- file>sysinfo.c</file -->
+		<file>sysinfo.c</file>
 		<file>time.c</file>
-		<!-- file>timer.c</file -->
+		<file>timer.c</file>
 		<file>uuid.c</file>
 		<file>win32k.c</file>
 		<file>work.c</file>
@@ -253,7 +253,7 @@
 			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>file.c</file>
-			<!-- file>iocomp.c</file -->
+			<file>iocomp.c</file>
 			<file>ioevent.c</file>
 			<file>iofunc.c</file>
 			<file>iomdl.c</file>
@@ -266,7 +266,7 @@
 			<file>ramdisk.c</file>
 			<file>rawfs.c</file>
 			<file>remlock.c</file>
-			<!-- file>util.c</file -->
+			<file>util.c</file>
 			<file>symlink.c</file>
 			<file>volume.c</file>
 		</directory>
@@ -437,8 +437,8 @@
 		<file>quota.c</file>
 		<file>security.c</file>
 		<file>state.c</file>
-		<!-- file>thread.c</file -->
-		<!-- file>win32.c</file -->
+		<file>thread.c</file>
+		<file>win32.c</file>
 	</directory>
 	<directory name="rtl">
 		<if property="ARCH" value="arm">
@@ -446,7 +446,7 @@
 				<file>rtlexcpt.c</file>
 			</directory>
 		</if>
-		<!-- file>libsupp.c</file -->
+		<file>libsupp.c</file>
 		<file>misc.c</file>
 		<file>strtok.c</file>
 	</directory>
@@ -459,7 +459,7 @@
 		<file>sd.c</file>
 		<file>semgr.c</file>
 		<file>sid.c</file>
-		<!-- file>token.c</file -->
+		<file>token.c</file>
 	</directory>
 	<directory name="vdm">
 		<if property="ARCH" value="i386">

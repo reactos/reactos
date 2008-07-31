@@ -211,7 +211,7 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
     return FALSE;
 }
 
-#ifndef _ARM_
+#if !defined(_ARM_) && !defined(_AMD64_)
 
 BOOLEAN
 NTAPI

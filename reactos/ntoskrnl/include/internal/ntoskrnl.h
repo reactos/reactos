@@ -71,6 +71,8 @@
 #include "hal.h"
 #include "arch/intrin_i.h"
 
+ULONG (*FrLdrDbgPrint)(const char *Format, ...);
+
 #include <pshpack1.h>
 /*
  * Defines a descriptor as it appears in the processor tables

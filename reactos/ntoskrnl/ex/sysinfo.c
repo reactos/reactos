@@ -899,7 +899,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	}
 
 	CurrentTime.QuadPart = KeQueryInterruptTime();
-	Prcb = KeGetPcr()->Prcb;
+	Prcb = KeGetCurrentPrcb();
 	for (i = 0; i < KeNumberProcessors; i++)
 	{
 	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL;
@@ -1195,7 +1195,11 @@ QSI_DEF(SystemInterruptInformation)
   for (i = 0; i < KeNumberProcessors; i++)
   {
     Prcb = KiProcessorBlock[i];
+#ifdef _M_AMD64
+    Pcr = CONTAINING_RECORD(Prcb, KPCR, CurrentPrcb);
+#else
     Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
+#endif
 #ifdef _M_ARM // This code should probably be done differently
     sii->ContextSwitches = Pcr->ContextSwitches;
 #else
@@ -1929,6 +1933,9 @@ NtFlushInstructionCache (
     for (;;);
 #elif defined(_M_ARM)
     __asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
+#elif defined(_M_AMD64)
+    DPRINT1("NtFlushInstructionCache() is not implemented\n");
+    for (;;);
 #else
 #error Unknown architecture
 #endif
