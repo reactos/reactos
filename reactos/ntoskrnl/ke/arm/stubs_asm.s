@@ -32,8 +32,6 @@ GENERATE_ARM_STUB KeSynchronizeExecution
 //
 // User Mode Support
 //
-GENERATE_ARM_STUB KiInitializeUserApc
-GENERATE_ARM_STUB KiSwapProcess
 GENERATE_ARM_STUB KeSwitchKernelStack
 GENERATE_ARM_STUB RtlCreateUserThread
 GENERATE_ARM_STUB RtlInitializeContext

@@ -87,6 +87,32 @@ KiIdleLoop(VOID)
     }
 }
 
+VOID
+NTAPI
+KiSwapProcess(IN PKPROCESS NewProcess,
+              IN PKPROCESS OldProcess)
+{
+    ARM_TTB_REGISTER TtbRegister;
+    DPRINT1("Swapping from: %p (%16s) to %p (%16s)\n",
+            OldProcess, ((PEPROCESS)OldProcess)->ImageFileName,
+            NewProcess, ((PEPROCESS)NewProcess)->ImageFileName);
+    
+    //
+    // Update the page directory base
+    //
+    TtbRegister.AsUlong = (ULONG)NewProcess->DirectoryTableBase.LowPart;
+    ASSERT(TtbRegister.Reserved == 0);
+    KeArmTranslationTableRegisterSet(TtbRegister);
+    
+    //
+    // FIXME: Flush the TLB
+    //
+    
+    
+    DPRINT1("Survived!\n");
+    while (TRUE);
+}
+
 BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)

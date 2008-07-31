@@ -261,3 +261,47 @@ KiSystemService(IN PKTHREAD Thread,
     //
     Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->PreviousTrapFrame;
 }
+
+VOID
+NTAPI
+KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
+                    IN PKTRAP_FRAME TrapFrame,
+                    IN PKNORMAL_ROUTINE NormalRoutine,
+                    IN PVOID NormalContext,
+                    IN PVOID SystemArgument1,
+                    IN PVOID SystemArgument2)
+{
+    CONTEXT Context;
+    ULONG_PTR Stack;
+    ULONG ContextLength;
+    DPRINT1("User APC: %p %p %p\n", NormalContext, SystemArgument1, SystemArgument2);
+    
+    //
+    // Build the user mode context
+    //
+    Context.ContextFlags = CONTEXT_FULL;
+    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
+    
+    //
+    // Setup the context on the user stack
+    //
+    ContextLength = sizeof(CONTEXT);
+    Stack = (ULONG_PTR)(Context.Sp & ~7) - ContextLength;
+        
+    //
+    // Make sure the stack is valid, and copy the context
+    //
+    ProbeForWrite((PVOID)Stack, ContextLength, sizeof(QUAD));
+    RtlMoveMemory((PVOID)Stack, &Context, sizeof(CONTEXT));
+
+    //
+    // Setup the trap frame when we return to user mode
+    //
+    TrapFrame->R0 = (ULONG)NormalContext;
+    TrapFrame->R1 = (ULONG)SystemArgument1;
+    TrapFrame->R2 = (ULONG)SystemArgument2;
+    TrapFrame->R3 = (ULONG)NormalRoutine;
+    TrapFrame->R8 = Stack;
+    TrapFrame->UserSp = Stack;
+    TrapFrame->UserLr = (ULONG)KeUserApcDispatcher;
+}
