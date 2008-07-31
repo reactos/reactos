@@ -3195,6 +3195,37 @@ typedef BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
 NTKERNELAPI
 VOID
 NTAPI
+FsRtlNotifyFilterChangeDirectory (
+    IN PNOTIFY_SYNC                 NotifySync,
+    IN PLIST_ENTRY                  NotifyList,
+    IN PVOID                        FsContext,
+    IN PSTRING                      FullDirectoryName,
+    IN BOOLEAN                      WatchTree,
+    IN BOOLEAN                      IgnoreBuffer,
+    IN ULONG                        CompletionFilter,
+    IN PIRP                         NotifyIrp,
+    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
+    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL,
+    IN PFILTER_REPORT_CHANGE        FilterCallback OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterReportChange (
+    IN PNOTIFY_SYNC   NotifySync,
+    IN PLIST_ENTRY    NotifyList,
+    IN PSTRING        FullTargetName,
+    IN USHORT         TargetNameOffset,
+    IN PSTRING        StreamName OPTIONAL,
+    IN PSTRING        NormalizedParentName OPTIONAL,
+    IN ULONG          FilterMatch,
+    IN ULONG          Action,
+    IN PVOID          TargetContext,
+    IN PVOID          FilterContext);
+
+NTKERNELAPI
+VOID
+NTAPI
 FsRtlNotifyFullChangeDirectory (
     IN PNOTIFY_SYNC                 NotifySync,
     IN PLIST_ENTRY                  NotifyList,
