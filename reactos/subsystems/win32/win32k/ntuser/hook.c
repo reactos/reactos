@@ -1142,7 +1142,11 @@ NtUserSetWindowsHookEx(
       Hook->ModuleName.Length = ModuleName.Length;
    }
 
-   Hook->Proc = HookProc;
+   if (Mod) /* make proc relative to the module base */
+     Hook->Proc = (void *)((char *)HookProc - (char *)Mod);
+   else
+     Hook->Proc = HookProc;
+
    Hook->Ansi = Ansi;
    Handle = Hook->Self;
 
