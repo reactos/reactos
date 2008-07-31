@@ -273,9 +273,11 @@
 		</directory>
 	</directory>
 	<directory name="kd">
-		<directory name="i386">
-			<file>kdmemsup.c</file>
-		</directory>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>kdmemsup.c</file>
+			</directory>
+		</if>
 	</directory>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">

@@ -258,7 +258,11 @@ KdInitSystem(ULONG BootPhase,
         return TRUE;
     }
     else
-	KdpEnableSafeMem();
+    {
+#ifdef _M_IX86
+        KdpEnableSafeMem();
+#endif
+    }
 
     /* Call the Initialization Routines of the Registered Providers */
     KdpCallInitRoutine(BootPhase);
