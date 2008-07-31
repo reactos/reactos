@@ -44,8 +44,7 @@
  *
  * @return None
  *
- * @remarks This function only redirects to FsRtlNotifyFullChangeDirectory.
- * So, it's better to call the entire function.  
+ * @remarks This function only redirects to FsRtlNotifyFilterChangeDirectory.
  *
  *--*/
 VOID
@@ -58,16 +57,17 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                            IN ULONG CompletionFilter,
                            IN PIRP NotifyIrp)
 {
-    FsRtlNotifyFullChangeDirectory(NotifySync,
-                                   NotifyList,
-                                   FsContext,
-                                   FullDirectoryName,
-                                   WatchTree,
-                                   TRUE,
-                                   CompletionFilter,
-                                   NotifyIrp,
-                                   NULL,
-                                   NULL);
+    FsRtlNotifyFilterChangeDirectory(NotifySync,
+                                     NotifyList,
+                                     FsContext,
+                                     FullDirectoryName,
+                                     WatchTree,
+                                     TRUE,
+                                     CompletionFilter,
+                                     NotifyIrp,
+                                     NULL,
+                                     NULL,
+                                     NULL);
 }
 
 /*++
@@ -219,43 +219,46 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
 
 /*++
  * @name FsRtlNotifyFullChangeDirectory
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Lets FSD know if changes occures in the specified directory. 
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FsContext
- *        FILLME
+ *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        FILLME
+ *        String (A or W) containing the full directory name 
  *
  * @param WatchTree
- *        FILLME
+ *        True to notify changes in subdirectories too
  *
  * @param IgnoreBuffer
- *        FILLME
+ *        True to reenumerate directory. It's ignored it NotifyIrp is null
  *
  * @param CompletionFilter
- *        FILLME
+ *        Used to define types of changes to notify
  *
- * @param Irp
- *        FILLME
+ * @param NotifyIrp
+ *        IRP pointer to complete notify operation. It can be null
  *
  * @param TraverseCallback
- *        FILLME
+ *        Pointer to a callback function. It's called each time a change is
+ *        done in a subdirectory of the main directory. It's ignored it NotifyIrp
+ *        is null
  *
  * @param SubjectContext
- *        FILLME
+ *        Pointer to pass to SubjectContext member of TraverseCallback.
+ *        It's freed after use. It's ignored it NotifyIrp is null
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterChangeDirectory.
  *
  *--*/
 VOID
@@ -267,49 +270,60 @@ FsRtlNotifyFullChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                IN BOOLEAN WatchTree,
                                IN BOOLEAN IgnoreBuffer,
                                IN ULONG CompletionFilter,
-                               IN PIRP Irp,
+                               IN PIRP NotifyIrp,
                                IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
                                IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL)
 {
-    KEBUGCHECK(0);
+    FsRtlNotifyFilterChangeDirectory(NotifySync,
+                                     NotifyList,
+                                     FsContext,
+                                     FullDirectoryName,
+                                     WatchTree,
+                                     IgnoreBuffer,
+                                     CompletionFilter,
+                                     NotifyIrp,
+                                     TraverseCallback,
+                                     SubjectContext,
+                                     NULL);
 }
 
 /*++
  * @name FsRtlNotifyFullReportChange
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Complets the pending notify IRPs.
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FullTargetName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed
  *
  * @param TargetNameOffset
- *        FILLME
+ *        Offset, in FullTargetName, of the final component that is in the changed directory 
  *
  * @param StreamName
- *        FILLME
+ *        String (A or W) containing a stream name
  *
  * @param NormalizedParentName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed with long names
  *
  * @param FilterMatch
- *        FILLME
+ *        Flags that will be compared to the completion filter
  *
  * @param Action
- *        FILLME
+ *        Action code to store in user's buffer
  *
  * @param TargetContext
- *        FILLME
+ *        Pointer to a callback function. It's called each time a change is
+ *        done in a subdirectory of the main directory.
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterReportChange.
  *
  *--*/
 VOID
@@ -324,7 +338,16 @@ FsRtlNotifyFullReportChange(IN PNOTIFY_SYNC NotifySync,
                             IN ULONG Action,
                             IN PVOID TargetContext)
 {
-    KEBUGCHECK(0);
+    FsRtlNotifyFilterReportChange(NotifySync,
+                                  NotifyList,
+                                  FullTargetName,
+                                  TargetNameOffset,
+                                  StreamName,
+                                  NormalizedParentName,
+                                  FilterMatch,
+                                  Action,
+                                  TargetContext,
+                                  NULL);
 }
 
 /*++
@@ -350,28 +373,28 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
 
 /*++
  * @name FsRtlNotifyReportChange
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Complets the pending notify IRPs.
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FullTargetName
- *        FILLME
+ *        String (A or W) containing the full directory name that changed
  *
  * @param FileNamePartLength
- *        FILLME
+ *        Length of the final component that is in the changed directory
  *
  * @param FilterMatch
- *        FILLME
+ *        Flags that will be compared to the completion filter
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function only redirects to FsRtlNotifyFilterReportChange.
  *
  *--*/
 VOID
@@ -382,11 +405,20 @@ FsRtlNotifyReportChange(IN PNOTIFY_SYNC NotifySync,
                         IN PUSHORT FileNamePartLength,
                         IN ULONG FilterMatch)
 {
-    KEBUGCHECK(0);
+      FsRtlNotifyFilterReportChange(NotifySync,
+                                    NotifyList,
+                                    FullTargetName,
+                                    FullTargetName->Length - *FileNamePartLength,
+                                    NULL,
+                                    NULL,
+                                    FilterMatch,
+                                    0,
+                                    NULL,
+                                    NULL); 
 }
 
 /*++
- * @name FsRtlCurrentBatchOplock
+ * @name FsRtlNotifyUninitializeSync
  * @implemented
  *
  * Uninitialize a NOTIFY_SYNC object
