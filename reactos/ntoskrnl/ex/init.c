@@ -68,7 +68,7 @@ PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
-ULONG ExpNlsTableSize;
+SIZE_T ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
 
 /* CMOS Timer Sanity */
@@ -196,7 +196,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     HANDLE NlsSection;
     PVOID SectionBase = NULL;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionOffset = {{0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
@@ -369,7 +369,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PCHAR *ProcessEnvironment)
 {
     NTSTATUS Status;
-    ULONG Size;
+    SIZE_T Size;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString, DebugString;
@@ -829,7 +829,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
-    ULONG Remaining = 0;
+    SIZE_T Remaining = 0;
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
@@ -1258,7 +1258,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
     ANSI_STRING TempString;
-    ULONG LastTzBias, Size, Length, YearHack = 0, Disposition, MessageCode = 0;
+    ULONG LastTzBias, Size, YearHack = 0, Disposition, MessageCode = 0;
+    SIZE_T Length;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName, DebugString;
@@ -1738,7 +1739,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                          KeyValuePartialInformation,
                                          &KeyPartialInfo,
                                          sizeof(KeyPartialInfo),
-                                         &Length);
+                                         &Size);
                 if (!NT_SUCCESS(Status)) AlternateShell = FALSE;
             }
 
@@ -1890,17 +1891,17 @@ Phase1InitializationDiscard(IN PVOID Context)
     ZwClose(ProcessInfo->ProcessHandle);
 
     /* Free the initial process environment */
-    Size = 0;
+    Length = 0;
     ZwFreeVirtualMemory(NtCurrentProcess(),
                         (PVOID*)&Environment,
-                        &Size,
+                        &Length,
                         MEM_RELEASE);
 
     /* Free the initial process parameters */
-    Size = 0;
+    Length = 0;
     ZwFreeVirtualMemory(NtCurrentProcess(),
                         (PVOID*)&ProcessParameters,
-                        &Size,
+                        &Length,
                         MEM_RELEASE);
 
     /* Increase init phase */

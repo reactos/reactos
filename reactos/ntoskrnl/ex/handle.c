@@ -516,7 +516,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
 
         /* Write the new level and attempt to change the table code */
         TableBase = ((ULONG_PTR)Mid) | 1;
-        Value = InterlockedExchangePointer(&HandleTable->TableCode, TableBase);
+        Value = InterlockedExchangePointer((PVOID*)&HandleTable->TableCode, (PVOID)TableBase);
     }
     else if (TableLevel == 1)
     {
@@ -533,7 +533,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             if (!Low) return FALSE;
 
             /* Update the table */
-            Value = InterlockedExchangePointer(&SecondLevel[i], Low);
+            Value = InterlockedExchangePointer((PVOID*)&SecondLevel[i], Low);
             ASSERT(Value == NULL);
         }
         else
@@ -560,7 +560,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
 
             /* Write the new table and change the table code */
             TableBase = ((ULONG_PTR)High) | 2;
-            Value = InterlockedExchangePointer(&HandleTable->TableCode,
+            Value = InterlockedExchangePointer((PVOID*)&HandleTable->TableCode,
                                                (PVOID)TableBase);
         }
     }
@@ -581,7 +581,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             if (!Mid) return FALSE;
 
             /* Update the table pointer */
-            Value = InterlockedExchangePointer(&ThirdLevel[i], Mid);
+            Value = InterlockedExchangePointer((PVOID*)&ThirdLevel[i], Mid);
             ASSERT(Value == NULL);
         }
         else
@@ -596,7 +596,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             if (!Low) return FALSE;
 
             /* Update the table pointer */
-            Value = InterlockedExchangePointer(&ThirdLevel[i][j], Low);
+            Value = InterlockedExchangePointer((PVOID*)&ThirdLevel[i][j], Low);
             ASSERT(Value == NULL);
         }
     }
@@ -886,8 +886,8 @@ ExpLockHandleTableEntry(IN PHANDLE_TABLE HandleTable,
             /* It's not locked, remove the lock bit to lock it */
             NewValue = OldValue & ~EXHANDLE_TABLE_ENTRY_LOCK_BIT;
             if (InterlockedCompareExchangePointer(&HandleTableEntry->Object,
-                                                  NewValue,
-                                                  OldValue) == (PVOID)OldValue)
+                                                  (PVOID)NewValue,
+                                                  (PVOID)OldValue) == (PVOID)OldValue)
             {
                 /* We locked it, get out */
                 return TRUE;
@@ -1010,7 +1010,7 @@ ExDestroyHandle(IN PHANDLE_TABLE HandleTable,
     }
 
     /* Clear the handle */
-    Object = InterlockedExchangePointer(&HandleTableEntry->Object, NULL);
+    Object = InterlockedExchangePointer((PVOID*)&HandleTableEntry->Object, NULL);
 
     /* Sanity checks */
     ASSERT(Object != NULL);
