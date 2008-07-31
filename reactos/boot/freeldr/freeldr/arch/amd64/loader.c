@@ -22,7 +22,7 @@
 
 #define NDEBUG
 #include <debug.h>
-//#undef DbgPrint
+#undef DbgPrint
 
 /* Page Directory and Tables for non-PAE Systems */
 extern ULONG_PTR NextModuleBase;
@@ -32,6 +32,33 @@ extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 PPAGE_DIRECTORY_AMD64 pPML4;
 
 /* FUNCTIONS *****************************************************************/
+
+void
+DumpLoaderBlock()
+{
+	DbgPrint("LoaderBlock @ %p.\n", &LoaderBlock);
+	DbgPrint("Flags = 0x%x.\n", LoaderBlock.Flags);
+	DbgPrint("MemLower = 0x%p.\n", (PVOID)LoaderBlock.MemLower);
+	DbgPrint("MemHigher = 0x%p.\n", (PVOID)LoaderBlock.MemHigher);
+	DbgPrint("BootDevice = 0x%x.\n", LoaderBlock.BootDevice);
+	DbgPrint("CommandLine = %s.\n", LoaderBlock.CommandLine);
+	DbgPrint("ModsCount = 0x%x.\n", LoaderBlock.ModsCount);
+	DbgPrint("ModsAddr = 0x%p.\n", LoaderBlock.ModsAddr);
+	DbgPrint("Syms = 0x%s.\n", LoaderBlock.Syms);
+	DbgPrint("MmapLength = 0x%x.\n", LoaderBlock.MmapLength);
+	DbgPrint("MmapAddr = 0x%p.\n", (PVOID)LoaderBlock.MmapAddr);
+	DbgPrint("RdLength = 0x%x.\n", LoaderBlock.RdLength);
+	DbgPrint("RdAddr = 0x%p.\n", (PVOID)LoaderBlock.RdAddr);
+	DbgPrint("DrivesCount = 0x%x.\n", LoaderBlock.DrivesCount);
+	DbgPrint("DrivesAddr = 0x%p.\n", (PVOID)LoaderBlock.DrivesAddr);
+	DbgPrint("ConfigTable = 0x%x.\n", LoaderBlock.ConfigTable);
+	DbgPrint("BootLoaderName = 0x%x.\n", LoaderBlock.BootLoaderName);
+	DbgPrint("PageDirectoryStart = 0x%p.\n", (PVOID)LoaderBlock.PageDirectoryStart);
+	DbgPrint("PageDirectoryEnd = 0x%p.\n", (PVOID)LoaderBlock.PageDirectoryEnd);
+	DbgPrint("KernelBase = 0x%p.\n", (PVOID)LoaderBlock.KernelBase);
+	DbgPrint("ArchExtra = 0x%p.\n", (PVOID)LoaderBlock.ArchExtra);
+
+}
 
 /*++
  * FrLdrStartup
@@ -53,22 +80,26 @@ VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
-    /* Disable Interrupts */
-    _disable();
+	/* Disable Interrupts */
+	_disable();
 
-    /* Re-initalize EFLAGS */
-    KeAmd64EraseFlags();
+	/* Re-initalize EFLAGS */
+	KeAmd64EraseFlags();
 
-    /* Initialize the page directory */
-    FrLdrSetupPageDirectory();
+	/* Initialize the page directory */
+	FrLdrSetupPageDirectory();
 
-    /* Set the new PML4 */
-    __writecr3((ULONGLONG)pPML4);
+	/* Set the new PML4 */
+	__writecr3((ULONGLONG)pPML4);
 
-DbgPrint((DPRINT_WARNING, "Jumping to kernel @ %p.\n", KernelEntryPoint));
+	LoaderBlock.FrLdrDbgPrint = DbgPrint;
 
-    /* Jump to Kernel */
-    (*KernelEntryPoint)(Magic, &LoaderBlock);
+//	DumpLoaderBlock();
+
+	DbgPrint("Jumping to kernel @ %p.\n", KernelEntryPoint);
+
+	/* Jump to Kernel */
+	(*KernelEntryPoint)(Magic, &LoaderBlock);
 
 }
 
@@ -184,15 +215,14 @@ FrLdrSetupPageDirectory(VOID)
 	/* Setup low memory pages */
 	if (FrLdrMapRangeOfPages(0, 0, 1024) < 1024)
 	{
-		DbgPrint((DPRINT_WARNING, "Could not map low memory pages.\n"));
+		DbgPrint("Could not map low memory pages.\n");
 	}
 
 	/* Setup kernel pages */
 	KernelPages = (ROUND_TO_PAGES(NextModuleBase - KERNEL_BASE_PHYS) / PAGE_SIZE);
-	DbgPrint((DPRINT_WARNING, "Trying to map %d pages for kernel.\n", KernelPages));
 	if (FrLdrMapRangeOfPages(KernelBase, KERNEL_BASE_PHYS, KernelPages) != KernelPages)
 	{
-		DbgPrint((DPRINT_WARNING, "Could not map %d kernel pages.\n", KernelPages));
+		DbgPrint("Could not map %d kernel pages.\n", KernelPages);
 	}
 
 }
