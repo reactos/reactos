@@ -281,7 +281,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
                                          lParam,
                                            5000,
                                            TRUE,
-                                           TRUE,
+                                     MSQ_ISHOOK,
                                        &uResult);
 
    return NT_SUCCESS(Status) ? uResult : 0;

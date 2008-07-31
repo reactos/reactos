@@ -1555,7 +1555,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
                                                 lParam,
                                               uTimeout,
                                  (uFlags & SMTO_BLOCK),
-                                                 FALSE,
+                                            MSQ_NORMAL,
                                                uResult);
    }
    while ((STATUS_TIMEOUT == Status) &&
