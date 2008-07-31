@@ -281,7 +281,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
                 (Dispatch.Interrupt->Mode == Interrupt->Mode))
         {
             /* The vector is shared and the interrupts are compatible */
-            while (TRUE); // FIXME: NOT YET SUPPORTED/TESTED
+            ASSERT(FALSE); // FIXME: NOT YET SUPPORTED/TESTED
             Interrupt->Connected = Connected = TRUE;
             ASSERT(Irql <= SYNCH_LEVEL);
 
