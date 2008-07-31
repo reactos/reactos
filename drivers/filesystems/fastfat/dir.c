@@ -471,54 +471,112 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   return RC;
 }
 
-#if 0
-static NTSTATUS NotifyChange (PVFAT_IRP_CONTEXT IrpContext) //bug 2821
+VOID VfatNotifyChangeFinal (PVFAT_IRP_CONTEXT IrpContext,
+                            PVFATFCB pFcb,
+                            BOOLEAN AcquiredFCB,
+                            BOOLEAN PostRequest,
+                            PNTSTATUS pRC)
+{
+  if (PostRequest)
+  {
+    if (AcquiredFCB)
+    {
+      ExReleaseResourceLite(&pFcb->MainResource);
+      AcquiredFCB = FALSE;
+    }
+    *pRC = STATUS_PENDING;
+  }
+  else
+  {
+    VfatFreeIrpContext(IrpContext);
+  }
+
+  if (AcquiredFCB)
+  {
+    ExReleaseResourceLite(&pFcb->MainResource);
+    AcquiredFCB = FALSE;
+  }
+}
+
+_SEH_DEFINE_LOCALS(VfatNotifyChangeFinal)
+{
+  PVFAT_IRP_CONTEXT IrpContext;
+  PVFATFCB pFcb;
+  BOOLEAN AcquiredFCB;
+  BOOLEAN PostRequest;
+  PNTSTATUS pRC;
+};
+
+_SEH_FINALLYFUNC(VfatNotifyChangeFinal_PSEH) 
+{ 
+  _SEH_ACCESS_LOCALS(VfatNotifyChangeFinal); 
+  VfatNotifyChangeFinal(_SEH_VAR(IrpContext), _SEH_VAR(pFcb), 
+                        _SEH_VAR(AcquiredFCB), _SEH_VAR(PostRequest), _SEH_VAR(pRC));
+}
+
+static NTSTATUS VfatNotifyChange (PVFAT_IRP_CONTEXT IrpContext)
 {
   PIRP pIrp;
   PVFATCCB pCcb;
   PVFATFCB pFcb;
   PDEVICE_EXTENSION pVcb;
-  BOOLEAN	WatchTree = FALSE;
-  ULONG	CompletionFilter = 0;
-  BOOLEAN	PostRequest = FALSE;
+#if 0
+  BOOLEAN WatchTree = FALSE;
+  ULONG CompletionFilter = 0;
+#endif
   NTSTATUS RC = STATUS_SUCCESS;
-
+#if 0
   PIO_STACK_LOCATION Stack = IrpContext->Stack;
-  
+#endif
+
   pIrp = (PIRP) IrpContext->Irp;
   pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pVcb = (PDEVICE_EXTENSION) IrpContext->DeviceExt;
-    
-  if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
-                                   (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+
+  if (!vfatFCBIsDirectory(pFcb))
   {
-    PostRequest = TRUE;
+    return STATUS_INVALID_PARAMETER;
   }
 
-  if (!PostRequest)
+#if 0
+  _SEH_TRY
   {
+    _SEH_DECLARE_LOCALS(VfatNotifyChangeFinal);
+    _SEH_VAR(IrpContext) = IrpContext;
+    _SEH_VAR(pFcb) = pFcb;
+    _SEH_VAR(AcquiredFCB) = FALSE;
+    _SEH_VAR(PostRequest) = FALSE;
+    _SEH_VAR(pRC) = &RC;
+
+    if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
+                                     (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+    {
+      _SEH_VAR(PostRequest) = TRUE;
+      RC = STATUS_PENDING;
+      _SEH_LEAVE;
+    }
+    _SEH_VAR(AcquiredFCB) = TRUE;
+
     CompletionFilter = Stack->Parameters.NotifyDirectory.CompletionFilter;
     WatchTree = (Stack->Flags & SL_WATCH_TREE ? TRUE : FALSE);
-      
+
+    /* FIXME: FsRtlNotifyFullChangeDirectory is unimplemented */
     FsRtlNotifyFullChangeDirectory(pVcb->NotifySync, &(pVcb->NotifyList), pCcb,
                                    (PSTRING)&(pFcb->LongNameU), WatchTree, FALSE,
                                    CompletionFilter, pIrp, NULL, NULL);
+
+    RC = STATUS_PENDING;
   }
-  
-  if (PostRequest)
-  {
-    VfatQueueRequest(IrpContext);
-  }
-  else
-  {
-    VfatFreeIrpContext(IrpContext);
-    ExReleaseResourceLite(&pFcb->MainResource);
-  }
-  
+  _SEH_FINALLY(VfatNotifyChangeFinal_PSEH)
+  _SEH_END;
+#else
+  DPRINT (" vfat, dir : change\n");
+  RC = STATUS_NOT_IMPLEMENTED;
+#endif
+
   return RC;
 }
-#endif
 
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
@@ -535,17 +593,11 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
       RC = DoQuery (IrpContext);
       break;
     case IRP_MN_NOTIFY_CHANGE_DIRECTORY:
-#if 0
-      RC = NotifyChange (IrpContext);
-#else
-      DPRINT (" vfat, dir : change\n");
-      RC = STATUS_NOT_IMPLEMENTED;
-#endif
+      RC = VfatNotifyChange (IrpContext);
       break;
     default:
       // error
-      DbgPrint ("unexpected minor function %x in VFAT driver\n",
-		IrpContext->MinorFunction);
+      DbgPrint ("unexpected minor function %x in VFAT driver\n", IrpContext->MinorFunction);
       RC = STATUS_INVALID_DEVICE_REQUEST;
       break;
     }
