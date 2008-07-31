@@ -265,6 +265,8 @@ SMAPI(SmExecPgm)
 						DPRINT1("SM: %s: SmCreateClient failed (Status=0x%08lx)\n",
 							__FUNCTION__, Status);
 					}
+					NtClose(ProcessInfo.ThreadHandle);
+					NtClose(ProcessInfo.ProcessHandle);
 				}
 			}
 			else
