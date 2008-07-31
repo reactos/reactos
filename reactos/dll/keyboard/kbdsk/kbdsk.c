@@ -41,9 +41,9 @@ ROSDATA USHORT scancode_to_vk[] = {
   '7',          '8',          '9',          '0',
   VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
-  /* First Letters Row */
+  /* First Letters Row - qwertZ */
   VK_TAB,       'Q',          'W',          'E',
-  'R',          'T',          'Y',          'U',
+  'R',          'T',          'Z',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
@@ -55,7 +55,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LSHIFT,    VK_OEM_7,
   /* - 2c - */
   /* Third letters row */
-  'Z',          'X',          'C',          'V',
+  'Y',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
   VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT|KEXT,
   /* - 37 - */
@@ -253,8 +253,8 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 'V',	CAPS,   {'v', 'V', 0x16, '@'} },
   { 'W',	CAPS,   {'w', 'W', 0x17, '|'} },
   { 'X',	CAPS,   {'x', 'X', 0x18, '#'} },
-  { 'Y',	CAPS,   {'z', 'Z', 0x1a, WCH_NONE} },  // qwertZ
-  { 'Z',	CAPS,   {'y', 'Y', 0x19, '>'} },
+  { 'Y',	CAPS,   {'y', 'Y', 0x19, WCH_NONE} },
+  { 'Z',	CAPS,   {'z', 'Z', 0x1a, '>'} },
   { 0, 0 }
 };
 
