@@ -104,7 +104,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
         Prcb = KeGetCurrentPrcb();
         NewCookie = Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
                     SystemTime.u.LowPart ^ SystemTime.u.HighPart ^
-                    (ULONG)&SystemTime;
+                    (ULONG_PTR)&SystemTime;
 
         /* Set the new cookie*/
         InterlockedCompareExchange((LONG*)&SharedUserData->Cookie,
@@ -333,6 +333,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 #elif defined(_M_ARM)
         Thread->StartAddress = (PVOID)ThreadContext->Pc;
         Thread->Win32StartAddress = (PVOID)ThreadContext->R0;
+#elif defined(_M_AMD64)
+        Thread->StartAddress = (PVOID)ThreadContext->Rip;
+        Thread->Win32StartAddress = (PVOID)ThreadContext->Rax;
 #else
 #error Unknown architecture
 #endif

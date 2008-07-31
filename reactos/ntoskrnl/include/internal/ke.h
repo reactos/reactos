@@ -742,10 +742,10 @@ VOID
 NTAPI
 KeBugCheckWithTf(
     ULONG BugCheckCode,
-    ULONG BugCheckParameter1,
-    ULONG BugCheckParameter2,
-    ULONG BugCheckParameter3,
-    ULONG BugCheckParameter4,
+    ULONG_PTR BugCheckParameter1,
+    ULONG_PTR BugCheckParameter2,
+    ULONG_PTR BugCheckParameter3,
+    ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
 

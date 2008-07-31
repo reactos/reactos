@@ -390,8 +390,8 @@ NTAPI
 NtQuerySystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    IN ULONG Length,
+    OUT PULONG ResultLength
 );
 
 NTSYSCALLAPI
@@ -539,7 +539,7 @@ NTAPI
 NtSetSystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     IN PVOID SystemInformation,
-    IN SIZE_T SystemInformationLength
+    IN ULONG SystemInformationLength
 );
 
 NTSYSCALLAPI

@@ -50,8 +50,8 @@ IoGetInitialStack(VOID)
  */
 VOID
 NTAPI
-IoGetStackLimits(OUT PULONG LowLimit,
-                 OUT PULONG HighLimit)
+IoGetStackLimits(OUT PULONG_PTR LowLimit,
+                 OUT PULONG_PTR HighLimit)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG_PTR DpcStack = (ULONG_PTR)(Prcb->DpcStack);
