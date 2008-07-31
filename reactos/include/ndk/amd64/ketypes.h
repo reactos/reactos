@@ -635,41 +635,42 @@ typedef struct _KIPCR
         NT_TIB NtTib;
         struct
         {
-            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
-            PVOID Used_StackBase;
-            PVOID PerfGlobalGroupMask;
-            PVOID TssCopy;
-            ULONG ContextSwitches;
-            KAFFINITY SetMemberCopy;
+            union _KGDTENTRY64 *GdtBase;
+            struct _KTSS64 *TssBase;
+            ULONG64 UserRsp;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
             PVOID Used_Self;
         };
     };
-    struct _KPCR *Self;
-    struct _KPRCB *Prcb;
+    union _KIDTENTRY64 *IdtBase;
+    ULONG64 Unused[2];
     KIRQL Irql;
-    ULONG IRR;
-    ULONG IrrActive;
-    ULONG IDR;
-    PVOID KdVersionBlock;
-    PKIDTENTRY IDT;
-    PKGDTENTRY GDT;
-    struct _KTSS *TSS;
+    UCHAR SecondLevelCacheAssociativity;
+    UCHAR ObsoleteNumber;
+    UCHAR Fill0;
+    ULONG Unused0[3];
     USHORT MajorVersion;
     USHORT MinorVersion;
-    KAFFINITY SetMember;
     ULONG StallScaleFactor;
-    UCHAR SparedUnused;
-    UCHAR Number;
-    UCHAR Reserved;
-    UCHAR L2CacheAssociativity;
-    ULONG VdmAlert;
-    ULONG KernelReserved[14];
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
     ULONG SecondLevelCacheSize;
     ULONG HalReserved[16];
-    ULONG InterruptMode;
-    UCHAR Spare1;
-    ULONG KernelReserved2[17];
-    KPRCB PrcbData;
+    ULONG Unused2;
+    ULONG Fill1;
+    PVOID KdVersionBlock; // 0x108
+    PVOID Unused3;
+    ULONG PcrAlign1[24];
+
+    ULONG Unknown1; // 0x178
+    ULONG Unknown2;
+    ULONG Unknown3;
+    USHORT CpuNumber; // 0x184
+    // hack:
+    ULONG ContextSwitches;
+
 } KIPCR, *PKIPCR;
 #pragma pack(pop)
 

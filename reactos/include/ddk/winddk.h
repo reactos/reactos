@@ -5516,23 +5516,38 @@ KeGetCurrentThread(
 
 typedef struct _KPCR
 {
-    NT_TIB NtTib;
-    struct _KPRCB *CurrentPrcb;
-    ULONG64 SavedRcx;
-    ULONG64 SavedR11;
+    union
+    {
+        NT_TIB NtTib;
+        struct
+        {
+            union _KGDTENTRY64 *GdtBase;
+            struct _KTSS64 *TssBase;
+            ULONG64 UserRsp;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    union _KIDTENTRY64 *IdtBase;
+    ULONG64 Unused[2];
     KIRQL Irql;
     UCHAR SecondLevelCacheAssociativity;
-    UCHAR Number;
+    UCHAR ObsoleteNumber;
     UCHAR Fill0;
-    ULONG Irr;
-    ULONG IrrActive;
-    ULONG Idr;
+    ULONG Unused0[3];
     USHORT MajorVersion;
     USHORT MinorVersion;
     ULONG StallScaleFactor;
-    union _KIDTENTRY64 *IdtBase;
-    union _KGDTENTRY64 *GdtBase;
-    struct _KTSS64 *TssBase;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
+    ULONG Unused2;
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[24];
 } KPCR, *PKPCR;
 
 typedef struct _KFLOATING_SAVE {
@@ -5552,10 +5567,17 @@ KeGetCurrentThread(
     VOID);
 
 FORCEINLINE
+PKPCR
+KeGetPcr(VOID)
+{
+    return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
+}
+
+FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
-    return (ULONG)__readgsbyte(FIELD_OFFSET(KPCR, Number));
+    return (ULONG)__readgsword(0x184);
 }
 
 #elif defined(__PowerPC__)
