@@ -138,7 +138,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
     else
         WINE_ERR("-Unable to peruse .DBG file %s (%s)\n", dbg_name, debugstr_a(tmp));
 
-    if (dbg_mapping) UnmapViewOfFile(dbg_mapping);
+    if (dbg_mapping) UnmapViewOfFile((PVOID)dbg_mapping);
     if (hMap) CloseHandle(hMap);
     if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
     return ret;
@@ -266,7 +266,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
                 for (j = 0; j < exports->NumberOfNames; j++)
                     if ((ordinals[j] == i) && names[j]) break;
                 if (j < exports->NumberOfNames) continue;
-                snprintf(buffer, sizeof(buffer), "%d", i + exports->Base);
+                snprintf(buffer, sizeof(buffer), "%lu", i + exports->Base);
                 symt_new_public(module, NULL, buffer, base + (DWORD)functions[i], 1,
                                 TRUE /* FIXME */, TRUE /* FIXME */);
             }
