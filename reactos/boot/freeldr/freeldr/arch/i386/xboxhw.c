@@ -42,7 +42,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	 sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -77,7 +77,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   else
     {
       DbgPrint((DPRINT_HWDETECT, "Reading disk geometry failed\n"));
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
       return;
     }
   DbgPrint((DPRINT_HWDETECT,
@@ -89,7 +89,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 	   DiskGeometry->BytesPerSector));
 
   FldrSetConfigurationData(DiskKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
 }
 
 
@@ -225,7 +225,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    PartialResourceList = MmAllocateMemory(Size);
+    PartialResourceList = MmHeapAlloc(Size);
     if (PartialResourceList == NULL)
     {
         DbgPrint((DPRINT_HWDETECT,
@@ -268,7 +268,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(SystemKey, PartialResourceList, Size);
-    MmFreeMemory(PartialResourceList);
+    MmHeapFree(PartialResourceList);
     
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
@@ -323,7 +323,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
 	 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-  PartialResourceList = MmAllocateMemory(Size);
+  PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
       DbgPrint((DPRINT_HWDETECT,
@@ -339,7 +339,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
   /* Set 'Configuration Data' value */
   FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-  MmFreeMemory(PartialResourceList);
+  MmHeapFree(PartialResourceList);
 
 
   /* Detect ISA/BIOS devices */
