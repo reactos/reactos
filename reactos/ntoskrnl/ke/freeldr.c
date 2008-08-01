@@ -31,7 +31,7 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
-BOOLEAN AcpiTableDetected;
+BOOLEAN AcpiTableDetected = FALSE;
 ADDRESS_RANGE KeMemoryMap[64];
 ULONG KeMemoryMapRangeCount;
 
@@ -1187,7 +1187,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     if (LoaderBlock->SetupLdrBlock)
     {
         /* All we'll setup right now is the flag for text-mode setup */
-        LoaderBlock->SetupLdrBlock->Flags = 1;
+        LoaderBlock->SetupLdrBlock->Flags = SETUPLDR_TEXT_MODE;
     }
 
     /* Make a copy of the command line */
