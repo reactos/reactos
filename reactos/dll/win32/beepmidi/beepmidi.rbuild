@@ -5,5 +5,6 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>winmm</library>
+	<pch>beepmidi.h</pch>
 	<file>beepmidi.c</file>
 </module>

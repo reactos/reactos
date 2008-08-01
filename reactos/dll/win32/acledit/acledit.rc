@@ -1,5 +1,4 @@
-#include <windows.h>
-#include "resource.h"
+#include "acleditint.h"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Access Control Editor\0"

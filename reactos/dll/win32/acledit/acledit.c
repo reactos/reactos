@@ -29,9 +29,8 @@
  * UPDATE HISTORY:
  *      07/09/2004  Created
  */
-#include <windows.h>
+
 #include "acleditint.h"
-#include "resource.h"
 
 HINSTANCE hDllInstance;
 

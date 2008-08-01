@@ -4,6 +4,7 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>ws2_32</library>
+	<pch>wsock32.h</pch>
 	<file>stubs.c</file>
 	<file>wsock32.rc</file>
 </module>

@@ -5,6 +5,7 @@
 	<define name="_WIN32_WINNT">0x0600</define>
 	<library>vfatlib</library>
 	<library>ntdll</library>
+	<pch>precomp.h</pch>
 	<file>ufat.c</file>
 	<file>ufat.rc</file>
 </module>

@@ -5,6 +5,7 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>ws2_32</library>
+	<pch>wshirda.h</pch>
 	<file>wshirda.c</file>
 	<file>wshirda.rc</file>
 </module>

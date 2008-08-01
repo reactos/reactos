@@ -1,13 +1,6 @@
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ntsecapi.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include "lsa_s.h"
-
+#include "precomp.h"
 #define NDEBUG
 #include <debug.h>
 

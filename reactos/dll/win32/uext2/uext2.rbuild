@@ -5,6 +5,7 @@
 	<define name="_WIN32_WINNT">0x0600</define>
 	<library>ext2lib</library>
 	<library>ntdll</library>
+	<pch>precomp.h</pch>
 	<file>uext2.c</file>
 	<file>uext2.rc</file>
 </module>

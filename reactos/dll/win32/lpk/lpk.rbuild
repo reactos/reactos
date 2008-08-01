@@ -9,7 +9,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>usp10</library>
-
+	<pch>ros_lpk.h</pch>
 	<file>dllmain.c</file>
 	<file>stub.c</file>
 

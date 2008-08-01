@@ -9,6 +9,7 @@
 	<library>kernel32</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>
+	<pch>precomp.h</pch>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>
