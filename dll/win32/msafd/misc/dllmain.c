@@ -279,17 +279,17 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
     if( Errno ) { 
         switch (Status) {
         case STATUS_CANT_WAIT: *Errno = WSAEWOULDBLOCK; break;
-        case STATUS_TIMEOUT:
+        case STATUS_TIMEOUT: *Errno = WSAETIMEDOUT; break;
         case STATUS_SUCCESS: 
             /* Return Number of bytes Read */
             if( ReturnedBytes ) *ReturnedBytes = Received; break;
-        case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; *ReturnedBytes = 0; break;
+        case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; break;
         case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
         case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
-        default: {
+        case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
+        default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
-        } break;
         }
     }
 
