@@ -1515,6 +1515,7 @@ RtlLargeIntegerToChar(
    IN ULONG  Length,
    IN OUT PCHAR  String)
 {
+   NTSTATUS Status = STATUS_SUCCESS;
    ULONG Radix;
    CHAR  temp[65];
    ULONGLONG v = Value->QuadPart;
@@ -1538,19 +1539,32 @@ RtlLargeIntegerToChar(
       if (i < 10)
          *tp = i + '0';
       else
-         *tp = i + 'a' - 10;
+         *tp = i + 'A' - 10;
       tp++;
    }
 
-   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) >= Length)
-      return STATUS_BUFFER_TOO_SMALL;
+   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) > Length)
+      return STATUS_BUFFER_OVERFLOW;
 
-   sp = String;
-   while (tp > temp)
-      *sp++ = *--tp;
-   *sp = 0;
+   //_SEH_TRY
+   {
+      sp = String;
+      while (tp > temp)
+         *sp++ = *--tp;
 
-   return STATUS_SUCCESS;
+      if((ULONG)((ULONG_PTR)sp - (ULONG_PTR)String) < Length)
+         *sp = 0;
+   }
+#if 0
+   _SEH_HANDLE
+   {
+      /* Get the error code */
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+#endif
+
+   return Status;
 }
 
 /*
