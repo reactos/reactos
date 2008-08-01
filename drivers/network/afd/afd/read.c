@@ -227,11 +227,6 @@ NTSTATUS NTAPI ReceiveComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if (Irp->Cancel) {
-        FCB->ReceiveIrp.InFlightRequest = NULL;
-        return STATUS_SUCCESS;
-    }
-
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
@@ -447,11 +442,6 @@ PacketSocketRecvComplete(
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
-
-    if (Irp->Cancel) {
-        FCB->ReceiveIrp.InFlightRequest = NULL;
-        return STATUS_SUCCESS;
-    }
 
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_UNSUCCESSFUL;
 
