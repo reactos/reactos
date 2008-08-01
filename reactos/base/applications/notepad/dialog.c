@@ -235,10 +235,13 @@ static VOID DoSaveFile(VOID)
     }
 #endif
 
-    if (!WriteText(hFile, (LPWSTR)pTemp, size, Globals.iEncoding, Globals.iEoln))
-        ShowLastError();
-    else
-        SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
+    if (size)
+    {
+        if (!WriteText(hFile, (LPWSTR)pTemp, size, Globals.iEncoding, Globals.iEoln))
+            ShowLastError();
+        else
+            SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
+    }
 
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, pTemp);

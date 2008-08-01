@@ -316,79 +316,73 @@ done:
 
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln)
 {
-	WCHAR wcBom;
-	WCHAR wcEoln;
-	BYTE bEoln;
-	LPBYTE pbEoln = NULL;
-	DWORD dwDummy, dwPos, dwNext, dwEolnSize = 0;
+  WCHAR wcBom;
+  BYTE bEoln[1];
+  LPBYTE pbEoln = NULL;
+  DWORD dwDummy, dwPos, dwNext, dwEolnSize = 0;
 
-	/* Write the proper byte order marks if not ANSI */
-	if (iEncoding != ENCODING_ANSI)
-	{
-		wcBom = 0xFEFF;
-		if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
-			return FALSE;
-	}
+  /* Write the proper byte order marks if not ANSI */
+  if (iEncoding != ENCODING_ANSI)
+  {
+    wcBom = 0xFEFF;
+    if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
+      return FALSE;
+  }
 
-	/* Identify the proper eoln to use */
-	switch(iEoln)
-	{
-	case EOLN_LF:
-		bEoln = '\n';
-		pbEoln = &bEoln;
-		dwEolnSize = sizeof(bEoln);
-		break;
-	case EOLN_CR:
-		bEoln = '\r';
-		pbEoln = &bEoln;
-		dwEolnSize = sizeof(bEoln);
-		break;
-	}
+  /* Identify the proper eoln to use */
+  switch(iEoln)
+  {
+      case EOLN_LF:
+        bEoln[0] = '\n';
+        pbEoln = (LPBYTE) &bEoln;
+        dwEolnSize = 1;
+        break;
+      case EOLN_CR:
+        bEoln[0] = '\r';
+        pbEoln = (LPBYTE) &bEoln;
+        dwEolnSize = 1;
+        break;
+      case EOLN_CRLF:
+        bEoln[0] = '\r';
+        bEoln[1] = '\n';
+        pbEoln = (LPBYTE) &bEoln;
+        dwEolnSize = 2;
+        break;
+      default:
+        return FALSE;
+  }
 
-	/* If we have an eoln, make sure it is of the proper encoding */
-	if (pbEoln && ((iEncoding == ENCODING_UNICODE) || (iEncoding == ENCODING_UNICODE_BE)))
-	{
-		wcEoln = bEoln;
-		pbEoln = (LPBYTE) &wcEoln;
-		dwEolnSize = sizeof(wcEoln);
-	}
+  dwPos = 0;
 
-	dwPos = 0;
+  /* pszText eoln are always \r\n */
 
-	while(dwPos < dwTextLen)
-	{
-		if (pbEoln)
-		{
-			/* Find the next eoln */
-			dwNext = dwPos;
-			while(dwNext < dwTextLen-1)
-			{
-				if ((pszText[dwNext] == '\r') && (pszText[dwNext+1] == '\n'))
-					break;
-				dwNext++;
-			}
-		}
-		else
-		{
-			/* No eoln conversion is necessary */
-			dwNext = dwTextLen;
-		}
+  do
+  {
+    /* Find the next eoln */
+    dwNext = dwPos;
+    while(dwNext < dwTextLen)
+    {
+      if (pszText[dwNext] == '\r' && pszText[dwNext + 1] == '\n')
+        break;
+      dwNext++;
+    }
 
-		if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
-			return FALSE;
-		dwPos = dwNext;
+    /* Write text (without eoln) */
+    if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+      return FALSE;
 
-		/* are we at an eoln? */
-		while ((dwPos < dwTextLen-1) &&
-			((pszText[dwPos] == '\r') && (pszText[dwPos+1] == '\n')))
-		{
-			if (!WriteFile(hFile, pbEoln, dwEolnSize, &dwDummy, NULL))
-				return FALSE;
-			dwPos += 2;
-		}
-	}
-	while(dwPos < dwTextLen);
+    /* Write eoln */
+    if (dwNext != dwTextLen)
+    {
+      if (!WriteFile(hFile, pbEoln, dwEolnSize, &dwDummy, NULL))
+        return FALSE;
+    }
 
-	return TRUE;
+    /* Skip \r\n */
+    dwPos = dwNext + 2;
+  }
+  while (dwPos < dwTextLen);
+
+  return TRUE;
 }
 
