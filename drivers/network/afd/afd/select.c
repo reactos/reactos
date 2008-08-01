@@ -276,14 +276,14 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if ( !EventSelectInfo ) {
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				   0, NULL, FALSE );
+				   0, NULL );
     }
     AFD_DbgPrint(MID_TRACE,("Called (Event %x Triggers %x)\n",
 			    EventSelectInfo->EventObject,
 			    EventSelectInfo->Events));
 
     if( !SocketAcquireStateLock( FCB ) ) {
-	return LostSocket( Irp, TRUE );
+	return LostSocket( Irp );
     }
 
     FCB->EventSelectTriggers = FCB->EventsFired = 0;
@@ -309,7 +309,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
-				   0, NULL, TRUE );
+				   0, NULL );
 }
 
 NTSTATUS STDCALL
@@ -324,18 +324,18 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if ( !EnumReq ) {
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				   0, NULL, FALSE );
+				   0, NULL );
     }
 
     if( !SocketAcquireStateLock( FCB ) ) {
-	return LostSocket( Irp, TRUE );
+	return LostSocket( Irp );
     }
 
     EnumReq->PollEvents = FCB->PollState;
     RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
-				   0, NULL, TRUE );
+				   0, NULL );
 }
 
 /* * * NOTE ALWAYS CALLED AT DISPATCH_LEVEL * * */

@@ -157,16 +157,16 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !(ListenReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL, FALSE );
+				       0, NULL );
 
     if( FCB->State != SOCKET_STATE_BOUND ) {
 	Status = STATUS_UNSUCCESSFUL;
 	AFD_DbgPrint(MID_TRACE,("Could not listen an unbound socket\n"));
-	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
     }
 
     FCB->DelayedAccept = ListenReq->UseDelayedAcceptance;
@@ -198,7 +198,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -209,7 +209,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
 	PLIST_ENTRY PendingConn = FCB->PendingConnections.Flink;
@@ -246,7 +246,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     FCB->EventsFired &= ~AFD_EVENT_ACCEPT;
 
