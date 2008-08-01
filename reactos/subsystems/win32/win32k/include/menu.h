@@ -50,8 +50,7 @@ IntGetMenuObject(HMENU hMenu);
   UserDereferenceObject(MenuObj)
 
 BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
-    BOOL RemoveFromList, BOOL bRecurse);
+IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, BOOL bRecurse);
 
 BOOL FASTCALL
 IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
