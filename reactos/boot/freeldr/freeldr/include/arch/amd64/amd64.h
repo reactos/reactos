@@ -28,21 +28,15 @@
 #define LMODE_DS	0x10
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
-#define PML4_SHIFT (12+9+9+9)
-#define PDP_SHIFT (12+9+9)
-#define PD_SHIFT (12+9)
-#define PT_SHIFT 12
 
 #define PtrToPfn(p) \
-    ((((ULONGLONG)p) >> PT_SHIFT) & 0xffffffffffULL)
+    ((((ULONGLONG)p) >> PAGE_SHIFT) & 0xffffffffffULL)
 
-#define VAtoIndex4(va) (((va) >> PML4_SHIFT) & 0x1FF)
-#define VAtoIndex3(va) (((va) >> PDP_SHIFT) & 0x1FF)
-#define VAtoIndex2(va) (((va) >> PD_SHIFT) & 0x1FF)
-#define VAtoIndex1(va) (((va) >> PT_SHIFT) & 0x1FF)
+#define VAtoPXI(va) (((va) >> PXI_SHIFT) & 0x1FF)
+#define VAtoPPI(va) (((va) >> PPI_SHIFT) & 0x1FF)
+#define VAtoPDI(va) (((va) >> PDI_SHIFT) & 0x1FF)
+#define VAtoPTI(va) (((va) >> PTI_SHIFT) & 0x1FF)
 
-#define PAGETABLE_BASE              0xfffff68000000000ULL
-#define PML4_BASE                   0xfffff6fb7dbedf68ULL
 #define HYPERSPACE_BASE             0xfffff70000000000ULL
 #define HAL_BASE                    0xffffffff80000000ULL
 #define APIC_BASE                   0xffffffffff000000ULL // FIXME

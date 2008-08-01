@@ -134,14 +134,14 @@ FrLdrMapSinglePage(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress)
 	PPAGE_DIRECTORY_AMD64 pDir3, pDir2, pDir1;
 	ULONG Index;
 
-	pDir3 = FrLdrGetOrCreatePageDir(pPML4, VAtoIndex4(VirtualAddress));
-	pDir2 = FrLdrGetOrCreatePageDir(pDir3, VAtoIndex3(VirtualAddress));
-	pDir1 = FrLdrGetOrCreatePageDir(pDir2, VAtoIndex2(VirtualAddress));
+	pDir3 = FrLdrGetOrCreatePageDir(pPML4, VAtoPXI(VirtualAddress));
+	pDir2 = FrLdrGetOrCreatePageDir(pDir3, VAtoPPI(VirtualAddress));
+	pDir1 = FrLdrGetOrCreatePageDir(pDir2, VAtoPDI(VirtualAddress));
 
 	if (!pDir1)
 		return FALSE;
 
-	Index = VAtoIndex1(VirtualAddress);
+	Index = VAtoPTI(VirtualAddress);
 	if (pDir1->Pde[Index].Valid)
 	{
 		return FALSE;
@@ -203,14 +203,9 @@ FrLdrSetupPageDirectory(VOID)
 	/* The page tables are located at 0xfffff68000000000 
 	 * We create a recursive self mapping through all 4 levels at 
 	 * virtual address 0xfffff6fb7dbedf68 */
-	pPML4->Pde[VAtoIndex4(PML4_BASE)].Valid = 1;
-	pPML4->Pde[VAtoIndex4(PML4_BASE)].Write = 1;
-	pPML4->Pde[VAtoIndex4(PML4_BASE)].PageFrameNumber = PtrToPfn(PML4_BASE);
-
-	ASSERT(VAtoIndex4(PML4_BASE) == 0x1ed);
-	ASSERT(VAtoIndex3(PML4_BASE) == 0x1ed);
-	ASSERT(VAtoIndex2(PML4_BASE) == 0x1ed);
-	ASSERT(VAtoIndex1(PML4_BASE) == 0x1ed);
+	pPML4->Pde[VAtoPXI(PXE_BASE)].Valid = 1;
+	pPML4->Pde[VAtoPXI(PXE_BASE)].Write = 1;
+	pPML4->Pde[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(PXE_BASE);
 
 	/* Setup low memory pages */
 	if (FrLdrMapRangeOfPages(0, 0, 1024) < 1024)
