@@ -1,10 +1,6 @@
 #ifndef __ACLEDITINT_H
 #define __ACLEDITINT_H
 
-#include <windows.h>
-
-#define IDI_DEVMGR	100
-
 extern HINSTANCE hDllInstance;
 
 typedef struct _ACL_HELP_CONTROL

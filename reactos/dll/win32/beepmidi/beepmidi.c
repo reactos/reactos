@@ -40,7 +40,16 @@
 */
 #define CONTINUOUS_NOTES
 
-#include <beepmidi.h>
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
+#include <windows.h>
+#include <ndk/ntndk.h>
+#include <stdio.h>
+#include <ntddbeep.h>
+#include <math.h>
+
+#include <mmddk.h>
+#include <mmsystem.h>
 
 /*#define DPRINT printf*/
 #define DPRINT FakePrintf

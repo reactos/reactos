@@ -6,7 +6,6 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>ws2_32</library>
-	<pch>wshtcpip.h</pch>
 	<file>wshtcpip.c</file>
 	<file>wshtcpip.rc</file>
 </module>

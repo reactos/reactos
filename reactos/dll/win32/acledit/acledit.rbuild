@@ -8,7 +8,6 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
-	<pch>acleditint.h</pch>
 	<file>acledit.c</file>
 	<file>stubs.c</file>
 	<file>acledit.rc</file>

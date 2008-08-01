@@ -21,9 +21,6 @@
 #ifndef _CARDS_H
 #define _CARDS_H
 
-#include <stdarg.h>
-#include "windows.h"
-
 /*
  * 52 card faces +
  * 12 card backs +

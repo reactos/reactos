@@ -8,7 +8,6 @@
 	<library>msvcrt</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
-	<pch>dhcpsvc.h</pch>
 	<file>dhcpcsvc.c</file>
 	<file>dhcpcsvc.rc</file>
 	<file>dhcpcsvc.spec</file>

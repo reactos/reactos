@@ -17,7 +17,12 @@
  */
 
 #include <precomp.h>
+#include <internal/wine/msvcrt.h>
+#include <sys/stat.h>
+#include <locale.h>
+#include <mbctype.h>
 
+#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
 
 

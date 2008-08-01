@@ -6,7 +6,11 @@
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */
 
-#include <dhcpsvc.h>
+#include <roscfg.h>
+#include <winsock2.h>
+#include <dhcpcsdk.h>
+#include <time.h>
+#include <dhcp/rosdhcp_public.h>
 
 #define NDEBUG
 #include <debug.h>
