@@ -26,7 +26,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     _SEH_TRY {
 	if( !SocketAcquireStateLock( FCB ) ) {
-	    Status = LostSocket( Irp, FALSE );
+	    Status = LostSocket( Irp );
 	    _SEH_YIELD(return Status);
 	}
 
@@ -69,7 +69,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
 NTSTATUS STDCALL
@@ -84,11 +84,11 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( FCB->AddressFile.Object == NULL) {
 	return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0,
-	                               NULL, FALSE );
+	                               NULL );
     }
 
     Mdl = IoAllocateMdl
@@ -159,5 +159,5 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }

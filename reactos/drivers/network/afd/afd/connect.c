@@ -71,7 +71,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
@@ -137,10 +137,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_CONNECT_INFO ConnectReq;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
     if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL, FALSE );
+				       0, NULL );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
 #if 0
@@ -177,11 +177,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    if( NT_SUCCESS(Status) )
 		FCB->State = SOCKET_STATE_BOUND;
 	    else
-		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL,
-					       TRUE );
+		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 	} else
 	    return UnlockAndMaybeComplete
-		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, TRUE );
+		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
     } /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
@@ -228,5 +227,5 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
     }
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }

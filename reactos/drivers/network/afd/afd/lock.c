@@ -235,8 +235,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
-  PIO_COMPLETION_ROUTINE Completion,
-  BOOL ShouldUnlock ) {
+  PIO_COMPLETION_ROUTINE Completion ) {
 
     if( Status == STATUS_PENDING ) {
 	/* We should firstly mark this IRP as pending, because
@@ -244,29 +243,25 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
 	   before we return from SocketStateUnlock(). */
 	IoMarkIrpPending( Irp );
 	SocketStateUnlock( FCB );
-	if( ShouldUnlock )
-	    UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     } else {
+	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	SocketStateUnlock( FCB );
 	Irp->IoStatus.Status = Status;
 	Irp->IoStatus.Information = Information;
 	if( Completion )
 	    Completion( FCB->DeviceExt->DeviceObject, Irp, FCB );
-	if( ShouldUnlock )
-	    UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
     return Status;
 }
 
 
-NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp ) {
+NTSTATUS LostSocket( PIRP Irp ) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     AFD_DbgPrint(MIN_TRACE,("Called.\n"));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
-    if( ShouldUnlockIrp )
-	UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+    if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
     return Status;
 }
@@ -274,7 +269,7 @@ NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
-    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL, FALSE );
+    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL );
 }
 
 VOID SocketCalloutEnter( PAFD_FCB FCB ) {

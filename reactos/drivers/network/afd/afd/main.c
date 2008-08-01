@@ -257,11 +257,11 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status;
     USHORT Flags = 0;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !(DisReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, FALSE );
+				       Irp, 0, NULL );
 
     if (NULL == FCB->RemoteAddress)
       {
@@ -274,7 +274,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !NT_SUCCESS(Status) || !ConnInfo )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-					   Irp, 0, NULL, TRUE );
+					   Irp, 0, NULL );
       }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
@@ -294,7 +294,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
 static NTSTATUS STDCALL

@@ -48,10 +48,10 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
     if( !(BindReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, FALSE );
+				       Irp, 0, NULL );
 
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
@@ -61,7 +61,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( NT_SUCCESS(Status) )
 	FCB->State = SOCKET_STATE_BOUND;
-    else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, FALSE );
+    else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
@@ -87,6 +87,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
     }
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
