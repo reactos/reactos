@@ -1,5 +1,0 @@
-NAME	blankscr.SCR
-
-EXPORTS
-	ScreenSaverProc
-	ScreenSaverConfigureDialog

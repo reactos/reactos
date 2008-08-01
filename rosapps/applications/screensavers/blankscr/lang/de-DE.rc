@@ -1,7 +1,0 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Schwarzer Bildschirm"
-    IDS_TEXT        "Keine Einstellungen notwendig."
-END
