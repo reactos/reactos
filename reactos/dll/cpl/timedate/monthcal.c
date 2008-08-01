@@ -75,6 +75,19 @@ MonthCalNotifyControlParent(IN PMONTHCALWND infoPtr,
     return Ret;
 }
 
+/*
+ * for the year range 1..9999
+ * return 1 if is leap year otherwise 0
+ */
+static WORD LeapYear(IN WORD Year)
+{
+	return 
+#ifdef WITH_1752
+		(Year <= 1752) ? !(Year % 4) :
+#endif	       
+		!(Year % 4) && ((Year % 100) || !(Year % 400));
+}
+
 static WORD
 MonthCalMonthLength(IN WORD Month,
                     IN WORD Year)
@@ -82,9 +95,16 @@ MonthCalMonthLength(IN WORD Month,
     const BYTE MonthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
 
     if(Month == 2)
-        return MonthDays[Month - 1] + ((Year % 400 == 0) ? 1 : ((Year % 100 != 0) && (Year % 4 == 0)) ? 1 : 0);
+        return MonthDays[Month - 1] + LeapYear(Year);
     else
-        return MonthDays[Month - 1];
+    {
+#ifdef WITH_1752
+        if ((Year == 1752) && (Month == 9))
+	   return 19; // special case: September 1752 has no 3rd-13th
+	else
+#endif
+     	   return MonthDays[Month - 1];
+    }
 }
 
 static WORD
@@ -134,7 +154,7 @@ MonthCalValidDate(IN WORD Day,
     if (Month < 1 || Month > 12 ||
         Day == 0 || Day > MonthCalMonthLength(Month,
                                               Year) ||
-        Year < 1980 || Year > 2099)
+        Year < 1899 || Year > 9999)
     {
         return FALSE;
     }
