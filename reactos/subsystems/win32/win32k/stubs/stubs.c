@@ -2971,8 +2971,7 @@ ULONGLONG
 APIENTRY
 EngGetTickCount(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
+ return ((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
 }
  
 BOOLEAN
