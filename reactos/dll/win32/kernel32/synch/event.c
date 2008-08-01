@@ -80,7 +80,7 @@ CreateEventExW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
         return NULL;
     }
 
-	/* Set initial state and event type */
+    /* Set initial state and event type */
     InitialState = (dwFlags & CREATE_EVENT_INITIAL_SET) ? TRUE : FALSE;
     EventType = (dwFlags & CREATE_EVENT_MANUAL_RESET) ? NotificationEvent : SynchronizationEvent;
 
@@ -130,11 +130,11 @@ CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
 {
     DWORD dwFlags = 0;
 
-	/* Set new flags */
+    /* Set new flags */
     if (bManualReset) dwFlags |= CREATE_EVENT_MANUAL_RESET;
     if (bInitialState) dwFlags |= CREATE_EVENT_INITIAL_SET;
 
-	/* Call the newer API */
+    /* Call the newer API */
     return CreateEventExA(lpEventAttributes,
                           lpName,
                           dwFlags,
