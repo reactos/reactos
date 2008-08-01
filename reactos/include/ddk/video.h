@@ -1348,7 +1348,7 @@ BOOLEAN
 DDKAPI
 VideoPortSignalDmaComplete(
   IN PVOID  HwDeviceExtension,
-  IN PVOID  pDmaHandle);
+  IN PDMA  pDmaHandle);
 
 VPAPI
 VOID
