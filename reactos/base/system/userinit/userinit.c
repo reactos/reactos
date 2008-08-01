@@ -263,7 +263,6 @@ TryToStartShell(
 
     StartAutoApplications(CSIDL_STARTUP);
     StartAutoApplications(CSIDL_COMMON_STARTUP);
-    WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return TRUE;
