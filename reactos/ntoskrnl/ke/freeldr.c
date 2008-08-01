@@ -15,10 +15,10 @@
 #ifdef _M_PPC
 #include <ppcmmu/mmu.h>
 #define KERNEL_RVA(x) RVA(x,0x80800000)
-#define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x + KernelBase) >> PAGE_SHIFT)
+#define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)(x) + KernelBase) >> PAGE_SHIFT)
 #else
 #define KERNEL_RVA(x) RVA(x,KSEG0_BASE)
-#define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x &~ KSEG0_BASE) >> PAGE_SHIFT)
+#define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)(x) & ~KSEG0_BASE) >> PAGE_SHIFT)
 #endif
 
 typedef struct _BIOS_MEMORY_DESCRIPTOR
@@ -28,6 +28,9 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 } BIOS_MEMORY_DESCRIPTOR, *PBIOS_MEMORY_DESCRIPTOR;
 
 /* GLOBALS *******************************************************************/
+
+/* Function pointer for early debug prints */
+ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
@@ -869,7 +872,7 @@ KiRosBuildArcMemoryList(VOID)
 VOID
 NTAPI
 KiRosFixupComponentTree(IN PCONFIGURATION_COMPONENT_DATA p,
-                        IN ULONG i)
+                        IN ULONG_PTR i)
 {
     PCONFIGURATION_COMPONENT pp;
 
@@ -1144,7 +1147,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Now mark the remainder of the FreeLDR 6MB area as "in use" */
     KiRosAllocateNtDescriptor(LoaderMemoryData,
                               KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
-                              KERNEL_DESCRIPTOR_PAGE((0x80800000 + 0x600000)) -
+                              KERNEL_DESCRIPTOR_PAGE((RosLoaderBlock->KernelBase + 0x600000)) -
                               KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
                               0,
                               &Base);
@@ -1297,12 +1300,15 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     /* Save pointer to ROS Block */
     KeRosLoaderBlock = LoaderBlock;
 
+    /* Get debugging function */
+    FrLdrDbgPrint = LoaderBlock->FrLdrDbgPrint;
+
     /* Save memory manager data */
     KeMemoryMapRangeCount = 0;
     if (LoaderBlock->Flags & MB_FLAGS_MMAP_INFO)
     {
         /* We have a memory map from the nice BIOS */
-        ent = ((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
+        ent = ((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG))); // FIXME: this is ugly
         size = *ent;
         i = 0;
 
@@ -1323,13 +1329,13 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
         /* Save data */
         LoaderBlock->MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
-        LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
+        LoaderBlock->MmapAddr = (ULONG_PTR)KeMemoryMap;
     }
     else
     {
         /* Nothing from BIOS */
         LoaderBlock->MmapLength = 0;
-        LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
+        LoaderBlock->MmapAddr = (ULONG_PTR)KeMemoryMap;
     }
 
 #if defined(_M_IX86)
