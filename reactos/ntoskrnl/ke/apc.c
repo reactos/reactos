@@ -207,7 +207,6 @@ KiInsertQueueApc(IN PKAPC Apc,
                     Status = STATUS_KERNEL_APC;
 
                     /* Wake up the thread */
-Unwait:
                     KiUnwaitThread(Thread, Status, PriorityBoost);
                 }
                 else if (Thread->State == GateWait)
@@ -240,7 +239,9 @@ Unwait:
                 /* Set user-mode APC pending */
                 Thread->ApcState.UserApcPending = TRUE;
                 Status = STATUS_USER_APC;
-                goto Unwait;
+
+                /* Wake up the thread */
+                KiUnwaitThread(Thread, Status, PriorityBoost);
             }
 
             /* Release dispatcher lock */
