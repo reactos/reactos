@@ -537,7 +537,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
-   /* FIXME: Guard by SEH. */
    CcInitializeCacheMap(DeviceExt->FATFileObject,
                         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                         FALSE,

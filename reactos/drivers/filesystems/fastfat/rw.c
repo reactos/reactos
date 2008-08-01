@@ -671,7 +671,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-        /* FIXME: Guard by SEH. */
         CcInitializeCacheMap(IrpContext->FileObject,
                              (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                              FALSE,
@@ -965,7 +964,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-         /* FIXME: Guard by SEH. */
          CcInitializeCacheMap(IrpContext->FileObject,
                               (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                               FALSE,
