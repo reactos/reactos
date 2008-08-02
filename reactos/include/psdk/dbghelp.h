@@ -88,7 +88,7 @@ typedef struct _tagADDRESS64
 #define SYMF_THUNK            0x00002000
 #define SYMF_TLSREL           0x00004000
 
-typedef enum
+typedef enum 
 {
     SymNone = 0,
     SymCoff,
@@ -375,10 +375,10 @@ typedef struct _IMAGEHLP_DUPLICATE_SYMBOL64
 #define SYMOPT_EXACT_SYMBOLS            0x00000400
 #define SYMOPT_WILD_UNDERSCORE          0x00000800
 #define SYMOPT_USE_DEFAULTS             0x00001000
-/* latest SDK defines: */
+/* latest SDK defines:
 #define SYMOPT_ALLOW_ABSOLUTE_SYMBOLS   0x00000800
 #define SYMOPT_IGNORE_NT_SYMPATH        0x00001000
-
+*/
 #define SYMOPT_INCLUDE_32BIT_MODULES    0x00002000
 #define SYMOPT_PUBLICS_ONLY             0x00004000
 #define SYMOPT_NO_PUBLICS               0x00008000
@@ -430,7 +430,7 @@ typedef struct _DBGHELP_MODLOAD_DATA
 typedef DWORD   RVA;
 typedef ULONG64 RVA64;
 
-typedef enum _MINIDUMP_TYPE
+typedef enum _MINIDUMP_TYPE 
 {
     MiniDumpNormal                              = 0x0000,
     MiniDumpWithDataSegs                        = 0x0001,
@@ -469,7 +469,7 @@ typedef struct _MINIDUMP_THREAD_CALLBACK
     ULONG64                     StackEnd;
 } MINIDUMP_THREAD_CALLBACK, *PMINIDUMP_THREAD_CALLBACK;
 
-typedef struct _MINIDUMP_THREAD_EX_CALLBACK
+typedef struct _MINIDUMP_THREAD_EX_CALLBACK 
 {
     ULONG                       ThreadId;
     HANDLE                      ThreadHandle;
@@ -486,7 +486,7 @@ typedef struct _MINIDUMP_INCLUDE_THREAD_CALLBACK
     ULONG ThreadId;
 } MINIDUMP_INCLUDE_THREAD_CALLBACK, *PMINIDUMP_INCLUDE_THREAD_CALLBACK;
 
-typedef enum _THREAD_WRITE_FLAGS
+typedef enum _THREAD_WRITE_FLAGS 
 {
     ThreadWriteThread            = 0x0001,
     ThreadWriteStack             = 0x0002,
@@ -497,7 +497,7 @@ typedef enum _THREAD_WRITE_FLAGS
     ThreadWriteThreadInfo        = 0x0040
 } THREAD_WRITE_FLAGS;
 
-typedef struct _MINIDUMP_MODULE_CALLBACK
+typedef struct _MINIDUMP_MODULE_CALLBACK 
 {
     PWCHAR                      FullPath;
     ULONG64                     BaseOfImage;
@@ -511,12 +511,12 @@ typedef struct _MINIDUMP_MODULE_CALLBACK
     ULONG                       SizeOfMiscRecord;
 } MINIDUMP_MODULE_CALLBACK, *PMINIDUMP_MODULE_CALLBACK;
 
-typedef struct _MINIDUMP_INCLUDE_MODULE_CALLBACK
+typedef struct _MINIDUMP_INCLUDE_MODULE_CALLBACK 
 {
     ULONG64 BaseOfImage;
 } MINIDUMP_INCLUDE_MODULE_CALLBACK, *PMINIDUMP_INCLUDE_MODULE_CALLBACK;
 
-typedef enum _MODULE_WRITE_FLAGS
+typedef enum _MODULE_WRITE_FLAGS 
 {
     ModuleWriteModule        = 0x0001,
     ModuleWriteDataSeg       = 0x0002,
@@ -527,12 +527,12 @@ typedef enum _MODULE_WRITE_FLAGS
     ModuleWriteCodeSegs      = 0x0040,
 } MODULE_WRITE_FLAGS;
 
-typedef struct _MINIDUMP_CALLBACK_INPUT
+typedef struct _MINIDUMP_CALLBACK_INPUT 
 {
     ULONG                       ProcessId;
     HANDLE                      ProcessHandle;
     ULONG                       CallbackType;
-    union
+    union 
     {
         MINIDUMP_THREAD_CALLBACK        Thread;
         MINIDUMP_THREAD_EX_CALLBACK     ThreadEx;
@@ -544,7 +544,7 @@ typedef struct _MINIDUMP_CALLBACK_INPUT
 
 typedef struct _MINIDUMP_CALLBACK_OUTPUT
 {
-    union
+    union 
     {
         ULONG                           ModuleWriteFlags;
         ULONG                           ThreadWriteFlags;
@@ -558,19 +558,19 @@ typedef struct _MINIDUMP_CALLBACK_OUTPUT
 
 typedef BOOL (WINAPI* MINIDUMP_CALLBACK_ROUTINE)(PVOID, const PMINIDUMP_CALLBACK_INPUT, PMINIDUMP_CALLBACK_OUTPUT);
 
-typedef struct _MINIDUMP_CALLBACK_INFORMATION
+typedef struct _MINIDUMP_CALLBACK_INFORMATION 
 {
     MINIDUMP_CALLBACK_ROUTINE   CallbackRoutine;
     void*                       CallbackParam;
 } MINIDUMP_CALLBACK_INFORMATION, *PMINIDUMP_CALLBACK_INFORMATION;
 
-typedef struct _MINIDUMP_LOCATION_DESCRIPTOR
+typedef struct _MINIDUMP_LOCATION_DESCRIPTOR 
 {
     ULONG                       DataSize;
     RVA                         Rva;
 } MINIDUMP_LOCATION_DESCRIPTOR;
 
-typedef struct _MINIDUMP_LOCATION_DESCRIPTOR64
+typedef struct _MINIDUMP_LOCATION_DESCRIPTOR64 
 {
     ULONG64                     DataSize;
     RVA64                       Rva;
@@ -615,7 +615,7 @@ typedef struct _MINIDUMP_HEADER
     DWORD                       NumberOfStreams;
     RVA                         StreamDirectoryRva;
     DWORD                       CheckSum;
-    union
+    union 
     {
         DWORD                           Reserved;
         DWORD                           TimeDateStamp;
@@ -662,7 +662,7 @@ typedef struct _MINIDUMP_MODULE
     ULONG64                     Reserved1;
 } MINIDUMP_MODULE, *PMINIDUMP_MODULE;
 
-typedef struct _MINIDUMP_MODULE_LIST
+typedef struct _MINIDUMP_MODULE_LIST 
 {
     ULONG                       NumberOfModules;
     MINIDUMP_MODULE             Modules[1]; /* FIXME: 0-sized array not supported */
@@ -713,7 +713,7 @@ typedef struct _MINIDUMP_SYSTEM_INFO
             ULONG                       FeatureInformation;
             ULONG                       AMDExtendedCpuFeatures;
         } X86CpuInfo;
-        struct
+        struct 
         {
             ULONG64                     ProcessorFeatures[2];
         } OtherCpuInfo;
@@ -783,13 +783,6 @@ BOOL WINAPI MiniDumpReadDumpStream(PVOID, ULONG, PMINIDUMP_DIRECTORY*, PVOID*,
                                    ULONG*);
 
 #include <poppack.h>
-
-/*************************
- * User mode dump        *
- *************************/
-typedef BOOL (WINAPI *PDBGHELP_CREATE_USER_DUMP_CALLBACK)(DWORD, PVOID*, LPDWORD, PVOID);
-BOOL WINAPI DbgHelpCreateUserDump(LPSTR, PDBGHELP_CREATE_USER_DUMP_CALLBACK, PVOID);
-BOOL WINAPI DbgHelpCreateUserDumpW(LPWSTR, PDBGHELP_CREATE_USER_DUMP_CALLBACK, PVOID);
 
 /*************************
  *    MODULE handling    *
@@ -906,7 +899,7 @@ typedef struct _SYMBOL_INFO_PACKAGEW
     WCHAR        name[MAX_SYM_NAME+1];
 } SYMBOL_INFO_PACKAGEW, *PSYMBOL_INFO_PACKAGEW;
 
-typedef enum _IMAGEHLP_SYMBOL_TYPE_INFO
+typedef enum _IMAGEHLP_SYMBOL_TYPE_INFO 
 {
     TI_GET_SYMTAG,
     TI_GET_SYMNAME,
@@ -961,7 +954,7 @@ typedef struct _IMAGEHLP_GET_TYPE_INFO_PARAMS
     PULONG64    ReqsValid;
 } IMAGEHLP_GET_TYPE_INFO_PARAMS, *PIMAGEHLP_GET_TYPE_INFO_PARAMS;
 
-typedef struct _TI_FINDCHILDREN_PARAMS
+typedef struct _TI_FINDCHILDREN_PARAMS 
 {
     ULONG Count;
     ULONG Start;
@@ -1076,7 +1069,7 @@ BOOL WINAPI SymGetLineNextW64(HANDLE, PIMAGEHLP_LINEW64);
 BOOL WINAPI SymGetLineFromName(HANDLE, PCSTR, PCSTR, DWORD, PLONG, PIMAGEHLP_LINE);
 BOOL WINAPI SymGetLineFromName64(HANDLE, PCSTR, PCSTR, DWORD, PLONG, PIMAGEHLP_LINE64);
 BOOL WINAPI SymGetLineFromNameW64(HANDLE, PCWSTR, PCWSTR, DWORD, PLONG, PIMAGEHLP_LINEW64);
-BOOL WINAPI SymGetFileLineOffsets64(HANDLE, PSTR, PSTR, PDWORD64, ULONG);
+ULONG WINAPI SymGetFileLineOffsets64(HANDLE, PCSTR, PCSTR, PDWORD64, ULONG);
 BOOL WINAPI SymGetSourceFile(HANDLE, ULONG64, PCSTR, PCSTR, PSTR, DWORD);
 BOOL WINAPI SymGetSourceFileW(HANDLE, ULONG64, PCWSTR, PCWSTR, PWSTR, DWORD);
 BOOL WINAPI SymGetSourceFileToken(HANDLE, ULONG64, PCSTR, PVOID*, DWORD*);
@@ -1131,7 +1124,8 @@ HANDLE WINAPI SymFindDebugInfoFile(HANDLE, PCSTR, PSTR, PFIND_DEBUG_FILE_CALLBAC
 HANDLE WINAPI SymFindDebugInfoFileW(HANDLE, PCWSTR, PWSTR, PFIND_DEBUG_FILE_CALLBACKW, PVOID);
 typedef BOOL (CALLBACK *PFINDFILEINPATHCALLBACK)(PCSTR, PVOID);
 typedef BOOL (CALLBACK *PFINDFILEINPATHCALLBACKW)(PCWSTR, PVOID);
-BOOL WINAPI FindFileInPath(HANDLE, LPSTR, LPSTR, PVOID, DWORD, DWORD, DWORD, LPSTR);
+BOOL WINAPI FindFileInPath(HANDLE, PCSTR, PCSTR, PVOID, DWORD, DWORD, DWORD,
+                           PSTR, PFINDFILEINPATHCALLBACK, PVOID);
 BOOL WINAPI SymFindFileInPath(HANDLE, PCSTR, PCSTR, PVOID, DWORD, DWORD, DWORD,
                               PSTR, PFINDFILEINPATHCALLBACK, PVOID);
 BOOL WINAPI SymFindFileInPathW(HANDLE, PCWSTR, PCWSTR, PVOID, DWORD, DWORD, DWORD,
@@ -1177,11 +1171,6 @@ PWSTR WINAPI SymGetHomeDirectoryW(DWORD, PWSTR, size_t);
  *************************/
 BOOL WINAPI SymSetContext(HANDLE, PIMAGEHLP_STACK_FRAME, PIMAGEHLP_CONTEXT);
 
-/*************************
- *   Processes           *
- *************************/
-typedef BOOL (*PSYM_ENUMPROCESSES_CALLBACK)(HANDLE, PVOID); 
-BOOL SymEnumProcesses(PSYM_ENUMPROCESSES_CALLBACK, PVOID);
 
 /*************************
  *    Stack management   *

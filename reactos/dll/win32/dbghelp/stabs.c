@@ -30,6 +30,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -498,7 +499,7 @@ static int stabs_pts_read_range(struct ParseTypedefData* ptd, const char* typena
     PTS_ABORTIF(ptd, *ptd->ptr++ != ';');	/* ';' */
 
     /* basically, we don't use ref... in some cases, for example, float is declared
-     * as a derivated type of int... which won't help us... so we guess the types
+     * as a derived type of int... which won't help us... so we guess the types
      * from the various formats
      */
     if (lo.sign == 0 && hi.sign < 0)
@@ -793,9 +794,9 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
                                    struct symt** ret_dt)
 {
     int			idx;
-    long                sz = -1;
-    struct symt*        new_dt = NULL; /* newly created data type */
-    struct symt*        ref_dt;		   /* referenced data type (pointer...) */
+    long		sz = -1;
+    struct symt*	new_dt = NULL;     /* newly created data type */
+    struct symt*	ref_dt;		   /* referenced data type (pointer...) */
     long		filenr1, subnr1, tmp;
 
     /* things are a bit complicated because of the way the typedefs are stored inside
@@ -807,7 +808,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
     while (*ptd->ptr == '=')
     {
 	ptd->ptr++;
-	PTS_ABORTIF(ptd, new_dt != btNoType);
+	PTS_ABORTIF(ptd, new_dt != NULL);
 
 	/* first handle attribute if any */
 	switch (*ptd->ptr)      
@@ -856,7 +857,8 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
 	    new_dt = &symt_new_function_signature(ptd->module, ref_dt, -1)->symt;
 	    break;
 	case 'e':
-	    new_dt = &symt_new_enum(ptd->module, typename)->symt;
+            stabs_get_basic(ptd, 1 /* int */, &ref_dt);
+            new_dt = &symt_new_enum(ptd->module, typename, ref_dt)->symt;
 	    PTS_ABORTIF(ptd, stabs_pts_read_enum(ptd, (struct symt_enum*)new_dt) == -1);
 	    break;
 	case 's':
@@ -910,7 +912,8 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
 	    switch (tmp)
             {
 	    case 'e':
-                new_dt = &symt_new_enum(ptd->module, ptd->buf + idx)->symt;
+                stabs_get_basic(ptd, 1 /* int */, &ref_dt);
+                new_dt = &symt_new_enum(ptd->module, ptd->buf + idx, ref_dt)->symt;
                 break;
 	    case 's':
                 new_dt = &symt_new_udt(ptd->module, ptd->buf + idx, 0, UdtStruct)->symt;
@@ -1000,7 +1003,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
 
     *stabs_find_ref(filenr1, subnr1) = *ret_dt = new_dt;
 
-    TRACE("Adding (%ld,%ld) %s\n", filenr1, subnr1, typename);
+    TRACE("Adding (%ld,%ld) %s\n", filenr1, subnr1, debugstr_a(typename));
 
     return 0;
 }
@@ -1145,7 +1148,7 @@ static void pending_flush(struct pending_block* pending, struct module* module,
  * Ends function creation: mainly:
  * - cleans up line number information
  * - tries to set up a debug-start tag (FIXME: heuristic to be enhanced)
- * - for stabs which have abolute address in them, initializes the size of the 
+ * - for stabs which have absolute address in them, initializes the size of the
  *   function (assuming that current function ends where next function starts)
  */
 static void stabs_finalize_function(struct module* module, struct symt_function* func,

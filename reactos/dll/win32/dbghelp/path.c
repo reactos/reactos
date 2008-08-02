@@ -57,7 +57,7 @@ HANDLE WINAPI FindDebugInfoFile(PCSTR FileName, PCSTR SymbolPath, PSTR DebugFile
 {
     HANDLE      h;
 
-    h = CreateFileA(DebugFilePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+    h = CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
@@ -79,7 +79,7 @@ HANDLE WINAPI FindDebugInfoFileEx(PCSTR FileName, PCSTR SymbolPath,
                                   PVOID CallerData)
 {
     FIXME("(%s %s %p %p %p): stub\n", 
-          FileName, SymbolPath, DebugFilePath, Callback, CallerData);
+          debugstr_a(FileName), debugstr_a(SymbolPath), debugstr_a(DebugFilePath), Callback, CallerData);
     return NULL;
 }
 
@@ -191,7 +191,7 @@ BOOL WINAPI SymMatchFileName(PCSTR file, PCSTR match,
     PCSTR fptr;
     PCSTR mptr;
 
-    TRACE("(%s %s %p %p)\n", file, match, filestop, matchstop);
+    TRACE("(%s %s %p %p)\n", debugstr_a(file), debugstr_a(match), filestop, matchstop);
 
     fptr = file + strlen(file) - 1;
     mptr = match + strlen(match) - 1;
@@ -217,7 +217,7 @@ static BOOL do_searchW(PCWSTR file, PWSTR buffer, BOOL recurse,
     BOOL                found = FALSE;
     static const WCHAR  S_AllW[] = {'*','.','*','\0'};
     static const WCHAR  S_DotW[] = {'.','\0'};
-    static const WCHAR  S_DotDotW[] = {'.','\0'};
+    static const WCHAR  S_DotDotW[] = {'.','.','\0'};
 
     pos = strlenW(buffer);
     if (buffer[pos - 1] != '\\') buffer[pos++] = '\\';
@@ -478,7 +478,7 @@ BOOL WINAPI SymFindFileInPathW(HANDLE hProcess, PCWSTR searchPath, PCWSTR full_p
     WCHAR*              ptr;
     const WCHAR*        filename;
 
-    TRACE("(%p %s %s %p %08x %08x %08x %p %p %p)\n",
+    TRACE("(hProcess = %p, searchPath = %s, full_path = %s, id = %p, two = 0x%08x, three = 0x%08x, flags = 0x%08x, buffer = %p, cb = %p, user = %p)\n",
           hProcess, debugstr_w(searchPath), debugstr_w(full_path),
           id, two, three, flags, buffer, cb, user);
 

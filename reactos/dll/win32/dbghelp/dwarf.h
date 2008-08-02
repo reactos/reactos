@@ -18,34 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-typedef struct
-{
-  unsigned char length[4];
-  unsigned char version[2];
-  unsigned char abbrev_offset[4];
-  unsigned char word_size[1];
-} dwarf2_comp_unit_stream_t;
-
-typedef struct
-{
-  unsigned long  length;
-  unsigned short version;
-  unsigned long  abbrev_offset;
-  unsigned char  word_size;
-} dwarf2_comp_unit_t;
-
-typedef struct
-{
-  unsigned int   length;
-  unsigned short version;
-  unsigned int   prologue_length;
-  unsigned char  min_insn_length;
-  unsigned char  default_is_stmt;
-  int            line_base;
-  unsigned char  line_range;
-  unsigned char  opcode_base;
-} dwarf2_line_info_t;
-
 typedef enum dwarf_tag_e
 {
   DW_TAG_padding                        = 0x00,

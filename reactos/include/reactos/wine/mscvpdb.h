@@ -81,7 +81,7 @@
  * For the evolution of types, the need of the second flavor was the
  * number of types to be defined (limited to 0xFFFF, including the C
  * basic types); the need of the third flavor is the increase of
- * symbol size (to be greated than 256), which was likely needed for
+ * symbol size (to be greater than 256), which was likely needed for
  * complex C++ types (nested + templates).
  *
  * It's somehow difficult to represent the layout of those types on
@@ -343,9 +343,9 @@ union codeview_type
     {
         unsigned short int      len;
         short int               id;
-        unsigned                this_type;
-        unsigned int            class_type;
         unsigned int            rvtype;
+        unsigned int            class_type;
+        unsigned                this_type;
         unsigned char           call;
         unsigned char           reserved;
         unsigned short          params;
@@ -732,41 +732,317 @@ union codeview_fieldtype
  * bit mode.  There are many other types listed in the documents, but these
  * are apparently not used by the compiler, or represent pointer types
  * that are not used.
+ *
+ * Official MS documentation says that type (< 0x4000, so 12 bits) is made of:
+ *        +----------+------+------+----------+------+
+ *        |    11    | 10-8 | 7-4  |     3    | 2-0  |
+ *        +----------+------+------+----------+------+
+ *        | reserved | mode | type | reserved | size |
+ *        +----------+------+------+----------+------+
+ * In recent PDB files, type 8 exists, and is seen as an HRESULT... So we've
+ * added this basic type... as if bit 3 had been integrated into the size field
  */
-#define T_NOTYPE	        0x0000	/* Notype */
-#define T_ABS		        0x0001	/* Abs */
-#define T_VOID		        0x0003	/* Void */
-#define T_CHAR		        0x0010	/* signed char */
-#define T_SHORT		        0x0011	/* short */
-#define T_LONG		        0x0012	/* long */
-#define T_QUAD		        0x0013	/* long long */
-#define T_UCHAR		        0x0020	/* unsigned  char */
-#define T_USHORT	        0x0021	/* unsigned short */
-#define T_ULONG		        0x0022	/* unsigned long */
-#define T_UQUAD		        0x0023	/* unsigned long long */
-#define T_REAL32	        0x0040	/* float */
-#define T_REAL64	        0x0041	/* double */
-#define T_RCHAR		        0x0070	/* real char */
-#define T_WCHAR		        0x0071	/* wide char */
-#define T_INT4		        0x0074	/* int */
-#define T_UINT4		        0x0075	/* unsigned int */
 
-#define T_32PVOID	        0x0403	/* 32 bit near pointer to void */
-#define T_32PCHAR	        0x0410  /* 16:32 near pointer to signed char */
-#define T_32PSHORT	        0x0411  /* 16:32 near pointer to short */
-#define T_32PLONG	        0x0412  /* 16:32 near pointer to int */
-#define T_32PQUAD	        0x0413  /* 16:32 near pointer to long long */
-#define T_32PUCHAR	        0x0420  /* 16:32 near pointer to unsigned char */
-#define T_32PUSHORT	        0x0421  /* 16:32 near pointer to unsigned short */
-#define T_32PULONG	        0x0422	/* 16:32 near pointer to unsigned int */
-#define T_32PUQUAD	        0x0423  /* 16:32 near pointer to long long */
-#define T_32PREAL32	        0x0440	/* 16:32 near pointer to float */
-#define T_32PREAL64	        0x0441	/* 16:32 near pointer to float */
-#define T_32PRCHAR	        0x0470	/* 16:32 near pointer to real char */
-#define T_32PWCHAR	        0x0471	/* 16:32 near pointer to real char */
-#define T_32PINT4	        0x0474	/* 16:32 near pointer to int */
-#define T_32PUINT4	        0x0475  /* 16:32 near pointer to unsigned int */
+/* the type number of a built-in type is a 16-bit value specified in the following format:
+    bit #   |   11     |   10-8   |   7-4    |    3     |    2-0   |
+    field   | reserved |   mode   |   type   | reserved |   size   |
 
+    where
+        <type> is one of the following types:
+                0x00 Special
+                0x01 Signed integral value
+                0x02 Unsigned integral value
+                0x03 Boolean
+                0x04 Real
+                0x05 Complex
+                0x06 Special2
+                0x07 Real int value
+                0x08 Reserved
+                0x09 Reserved
+                0x0a Reserved
+                0x0b Reserved
+                0x0c Reserved
+                0x0d Reserved
+                0x0e Reserved
+                0x0f Reserved for debugger expression evaluator
+
+        <size> is an enumerated value for each of the types.
+                Type = special
+                    0x00 No type
+                    0x01 Absolute symbol
+                    0x02 Segment
+                    0x03 Void
+                    0x04 Basic 8-byte currency value
+                    0x05 Near Basic string
+                    0x06 Far Basic string
+                    0x07 Untranslated type from previous Microsoft symbol formats
+                Type = signed/unsigned integral and Boolean values
+                    0x00 1 byte
+                    0x01 2 byte
+                    0x02 4 byte
+                    0x03 8 byte
+                    0x04 Reserved
+                    0x05 Reserved
+                    0x06 Reserved
+                    0x07 Reserved
+                Type = real and complex
+                    0x00 32 bit
+                    0x01 64 bit
+                    0x02 80 bit
+                    0x03 128 bit
+                    0x04 48 bit
+                    0x05 Reserved
+                    0x06 Reserved
+                    0x07 Reserved
+                Type = special2
+                    0x00 Bit
+                    0x01 Pascal CHAR
+                Type = Real int
+                    0x00 Char
+                    0x01 Wide character
+                    0x02 2-byte signed integer
+                    0x03 2-byte unsigned integer
+                    0x04 4-byte signed integer
+                    0x05 4-byte unsigned integer
+                    0x06 8-byte signed integer
+                    0x07 8-byte unsigned integer
+
+            <mode> is the pointer mode:
+                0x00 Direct; not a pointer
+                0x01 Near pointer
+                0x02 Far pointer
+                0x03 Huge pointer
+                0x04 32-bit near pointer
+                0x05 32-bit far pointer
+                0x06 64-bit near pointer
+                0x07 Reserved
+*/
+
+/* basic types */
+#define T_NOTYPE            0x0000  /* Notype */
+#define T_ABS               0x0001  /* Abs */
+#define T_SEGMENT           0x0002  /* segment type */
+#define T_VOID              0x0003  /* Void */
+#define T_CURRENCY          0x0004  /* basic 8-byte currency value */
+#define T_NBASICSTR         0x0005  /* near basic string */
+#define T_FBASICSTR         0x0006  /* far basic string */
+#define T_NOTTRANS          0x0007  /* untranslated type record from MS symbol format */
+#define T_HRESULT           0x0008  /* HRESULT - or error code ??? */
+#define T_CHAR              0x0010  /* signed char */
+#define T_SHORT             0x0011  /* short */
+#define T_LONG              0x0012  /* long */
+#define T_QUAD              0x0013  /* long long */
+#define T_UCHAR             0x0020  /* unsigned  char */
+#define T_USHORT            0x0021  /* unsigned short */
+#define T_ULONG             0x0022  /* unsigned long */
+#define T_UQUAD             0x0023  /* unsigned long long */
+#define T_BOOL08            0x0030  /* 8-bit boolean */
+#define T_BOOL16            0x0031  /* 16-bit boolean */
+#define T_BOOL32            0x0032  /* 32-bit boolean */
+#define T_BOOL64            0x0033  /* 64-bit boolean */
+#define T_REAL32            0x0040  /* float */
+#define T_REAL64            0x0041  /* double */
+#define T_REAL80            0x0042  /* 80-bit real */
+#define T_REAL128           0x0043  /* 128-bit real */
+#define T_REAL48            0x0044  /* 48-bit real */
+#define T_CPLX32            0x0050  /* 32-bit complex number */
+#define T_CPLX64            0x0051  /* 64-bit complex number */
+#define T_CPLX80            0x0052  /* 80-bit complex number */
+#define T_CPLX128           0x0053  /* 128-bit complex number */
+#define T_BIT               0x0060  /* bit */
+#define T_PASCHAR           0x0061  /* pascal CHAR */
+#define T_RCHAR             0x0070  /* real char */
+#define T_WCHAR             0x0071  /* wide char */
+#define T_INT2              0x0072  /* real 16-bit signed int */
+#define T_UINT2             0x0073  /* real 16-bit unsigned int */
+#define T_INT4              0x0074  /* int */
+#define T_UINT4             0x0075  /* unsigned int */
+#define T_INT8              0x0076  /* 64-bit signed int */
+#define T_UINT8             0x0077  /* 64-bit unsigned int */
+
+
+/* near pointers to basic types */
+#define T_PVOID             0x0103  /* near pointer to void */
+#define T_PCHAR             0x0110  /* Near pointer to 8-bit signed */
+#define T_PSHORT            0x0111  /* Near pointer to 16-bit signed */
+#define T_PLONG             0x0112  /* Near pointer to 32-bit signed */
+#define T_PQUAD             0x0113  /* Near pointer to 64-bit signed */
+#define T_PUCHAR            0x0120  /* Near pointer to 8-bit unsigned */
+#define T_PUSHORT           0x0121  /* Near pointer to 16-bit unsigned */
+#define T_PULONG            0x0122  /* Near pointer to 32-bit unsigned */
+#define T_PUQUAD            0x0123  /* Near pointer to 64-bit unsigned */
+#define T_PBOOL08           0x0130  /* Near pointer to 8-bit Boolean */
+#define T_PBOOL16           0x0131  /* Near pointer to 16-bit Boolean */
+#define T_PBOOL32           0x0132  /* Near pointer to 32-bit Boolean */
+#define T_PBOOL64           0x0133  /* Near pointer to 64-bit Boolean */
+#define T_PREAL32           0x0140  /* Near pointer to 32-bit real */
+#define T_PREAL64           0x0141  /* Near pointer to 64-bit real */
+#define T_PREAL80           0x0142  /* Near pointer to 80-bit real */
+#define T_PREAL128          0x0143  /* Near pointer to 128-bit real */
+#define T_PREAL48           0x0144  /* Near pointer to 48-bit real */
+#define T_PCPLX32           0x0150  /* Near pointer to 32-bit complex */
+#define T_PCPLX64           0x0151  /* Near pointer to 64-bit complex */
+#define T_PCPLX80           0x0152  /* Near pointer to 80-bit complex */
+#define T_PCPLX128          0x0153  /* Near pointer to 128-bit complex */
+#define T_PRCHAR            0x0170  /* Near pointer to a real char */
+#define T_PWCHAR            0x0171  /* Near pointer to a wide char */
+#define T_PINT2             0x0172  /* Near pointer to 16-bit signed int */
+#define T_PUINT2            0x0173  /* Near pointer to 16-bit unsigned int */
+#define T_PINT4             0x0174  /* Near pointer to 32-bit signed int */
+#define T_PUINT4            0x0175  /* Near pointer to 32-bit unsigned int */
+#define T_PINT8             0x0176  /* Near pointer to 64-bit signed int */
+#define T_PUINT8            0x0177  /* Near pointer to 64-bit unsigned int */
+
+
+/* far pointers to basic types */
+#define T_PFVOID            0x0203  /* Far pointer to void */
+#define T_PFCHAR            0x0210  /* Far pointer to 8-bit signed */
+#define T_PFSHORT           0x0211  /* Far pointer to 16-bit signed */
+#define T_PFLONG            0x0212  /* Far pointer to 32-bit signed */
+#define T_PFQUAD            0x0213  /* Far pointer to 64-bit signed */
+#define T_PFUCHAR           0x0220  /* Far pointer to 8-bit unsigned */
+#define T_PFUSHORT          0x0221  /* Far pointer to 16-bit unsigned */
+#define T_PFULONG           0x0222  /* Far pointer to 32-bit unsigned */
+#define T_PFUQUAD           0x0223  /* Far pointer to 64-bit unsigned */
+#define T_PFBOOL08          0x0230  /* Far pointer to 8-bit Boolean */
+#define T_PFBOOL16          0x0231  /* Far pointer to 16-bit Boolean */
+#define T_PFBOOL32          0x0232  /* Far pointer to 32-bit Boolean */
+#define T_PFBOOL64          0x0233  /* Far pointer to 64-bit Boolean */
+#define T_PFREAL32          0x0240  /* Far pointer to 32-bit real */
+#define T_PFREAL64          0x0241  /* Far pointer to 64-bit real */
+#define T_PFREAL80          0x0242  /* Far pointer to 80-bit real */
+#define T_PFREAL128         0x0243  /* Far pointer to 128-bit real */
+#define T_PFREAL48          0x0244  /* Far pointer to 48-bit real */
+#define T_PFCPLX32          0x0250  /* Far pointer to 32-bit complex */
+#define T_PFCPLX64          0x0251  /* Far pointer to 64-bit complex */
+#define T_PFCPLX80          0x0252  /* Far pointer to 80-bit complex */
+#define T_PFCPLX128         0x0253  /* Far pointer to 128-bit complex */
+#define T_PFRCHAR           0x0270  /* Far pointer to a real char */
+#define T_PFWCHAR           0x0271  /* Far pointer to a wide char */
+#define T_PFINT2            0x0272  /* Far pointer to 16-bit signed int */
+#define T_PFUINT2           0x0273  /* Far pointer to 16-bit unsigned int */
+#define T_PFINT4            0x0274  /* Far pointer to 32-bit signed int */
+#define T_PFUINT4           0x0275  /* Far pointer to 32-bit unsigned int */
+#define T_PFINT8            0x0276  /* Far pointer to 64-bit signed int */
+#define T_PFUINT8           0x0277  /* Far pointer to 64-bit unsigned int */
+
+
+/* huge pointers to basic types */
+#define T_PHVOID            0x0303  /* Huge pointer to void */
+#define T_PHCHAR            0x0310  /* Huge pointer to 8-bit signed */
+#define T_PHSHORT           0x0311  /* Huge pointer to 16-bit signed */
+#define T_PHLONG            0x0312  /* Huge pointer to 32-bit signed */
+#define T_PHQUAD            0x0313  /* Huge pointer to 64-bit signed */
+#define T_PHUCHAR           0x0320  /* Huge pointer to 8-bit unsigned */
+#define T_PHUSHORT          0x0321  /* Huge pointer to 16-bit unsigned */
+#define T_PHULONG           0x0322  /* Huge pointer to 32-bit unsigned */
+#define T_PHUQUAD           0x0323  /* Huge pointer to 64-bit unsigned */
+#define T_PHBOOL08          0x0330  /* Huge pointer to 8-bit Boolean */
+#define T_PHBOOL16          0x0331  /* Huge pointer to 16-bit Boolean */
+#define T_PHBOOL32          0x0332  /* Huge pointer to 32-bit Boolean */
+#define T_PHBOOL64          0x0333  /* Huge pointer to 64-bit Boolean */
+#define T_PHREAL32          0x0340  /* Huge pointer to 32-bit real */
+#define T_PHREAL64          0x0341  /* Huge pointer to 64-bit real */
+#define T_PHREAL80          0x0342  /* Huge pointer to 80-bit real */
+#define T_PHREAL128         0x0343  /* Huge pointer to 128-bit real */
+#define T_PHREAL48          0x0344  /* Huge pointer to 48-bit real */
+#define T_PHCPLX32          0x0350  /* Huge pointer to 32-bit complex */
+#define T_PHCPLX64          0x0351  /* Huge pointer to 64-bit complex */
+#define T_PHCPLX80          0x0352  /* Huge pointer to 80-bit complex */
+#define T_PHCPLX128         0x0353  /* Huge pointer to 128-bit real */
+#define T_PHRCHAR           0x0370  /* Huge pointer to a real char */
+#define T_PHWCHAR           0x0371  /* Huge pointer to a wide char */
+#define T_PHINT2            0x0372  /* Huge pointer to 16-bit signed int */
+#define T_PHUINT2           0x0373  /* Huge pointer to 16-bit unsigned int */
+#define T_PHINT4            0x0374  /* Huge pointer to 32-bit signed int */
+#define T_PHUINT4           0x0375  /* Huge pointer to 32-bit unsigned int */
+#define T_PHINT8            0x0376  /* Huge pointer to 64-bit signed int */
+#define T_PHUINT8           0x0377  /* Huge pointer to 64-bit unsigned int */
+
+
+/* 32-bit near pointers to basic types */
+#define T_32PVOID           0x0403  /* 32-bit near pointer to void */
+#define T_32PHRESULT        0x0408  /* 16:32 near pointer to HRESULT - or error code ??? */
+#define T_32PCHAR           0x0410  /* 16:32 near pointer to 8-bit signed */
+#define T_32PSHORT          0x0411  /* 16:32 near pointer to 16-bit signed */
+#define T_32PLONG           0x0412  /* 16:32 near pointer to 32-bit signed */
+#define T_32PQUAD           0x0413  /* 16:32 near pointer to 64-bit signed */
+#define T_32PUCHAR          0x0420  /* 16:32 near pointer to 8-bit unsigned */
+#define T_32PUSHORT         0x0421  /* 16:32 near pointer to 16-bit unsigned */
+#define T_32PULONG          0x0422  /* 16:32 near pointer to 32-bit unsigned */
+#define T_32PUQUAD          0x0423  /* 16:32 near pointer to 64-bit unsigned */
+#define T_32PBOOL08         0x0430  /* 16:32 near pointer to 8-bit Boolean */
+#define T_32PBOOL16         0x0431  /* 16:32 near pointer to 16-bit Boolean */
+#define T_32PBOOL32         0x0432  /* 16:32 near pointer to 32-bit Boolean */
+#define T_32PBOOL64         0x0433  /* 16:32 near pointer to 64-bit Boolean */
+#define T_32PREAL32         0x0440  /* 16:32 near pointer to 32-bit real */
+#define T_32PREAL64         0x0441  /* 16:32 near pointer to 64-bit real */
+#define T_32PREAL80         0x0442  /* 16:32 near pointer to 80-bit real */
+#define T_32PREAL128        0x0443  /* 16:32 near pointer to 128-bit real */
+#define T_32PREAL48         0x0444  /* 16:32 near pointer to 48-bit real */
+#define T_32PCPLX32         0x0450  /* 16:32 near pointer to 32-bit complex */
+#define T_32PCPLX64         0x0451  /* 16:32 near pointer to 64-bit complex */
+#define T_32PCPLX80         0x0452  /* 16:32 near pointer to 80-bit complex */
+#define T_32PCPLX128        0x0453  /* 16:32 near pointer to 128-bit complex */
+#define T_32PRCHAR          0x0470  /* 16:32 near pointer to a real char */
+#define T_32PWCHAR          0x0471  /* 16:32 near pointer to a wide char */
+#define T_32PINT2           0x0472  /* 16:32 near pointer to 16-bit signed int */
+#define T_32PUINT2          0x0473  /* 16:32 near pointer to 16-bit unsigned int */
+#define T_32PINT4           0x0474  /* 16:32 near pointer to 32-bit signed int */
+#define T_32PUINT4          0x0475  /* 16:32 near pointer to 32-bit unsigned int */
+#define T_32PINT8           0x0476  /* 16:32 near pointer to 64-bit signed int */
+#define T_32PUINT8          0x0477  /* 16:32 near pointer to 64-bit unsigned int */
+
+
+/* 32-bit far pointers to basic types */
+#define T_32PFVOID          0x0503  /* 32-bit far pointer to void */
+#define T_32PFCHAR          0x0510  /* 16:32 far pointer to 8-bit signed */
+#define T_32PFSHORT         0x0511  /* 16:32 far pointer to 16-bit signed */
+#define T_32PFLONG          0x0512  /* 16:32 far pointer to 32-bit signed */
+#define T_32PFQUAD          0x0513  /* 16:32 far pointer to 64-bit signed */
+#define T_32PFUCHAR         0x0520  /* 16:32 far pointer to 8-bit unsigned */
+#define T_32PFUSHORT        0x0521  /* 16:32 far pointer to 16-bit unsigned */
+#define T_32PFULONG         0x0522  /* 16:32 far pointer to 32-bit unsigned */
+#define T_32PFUQUAD         0x0523  /* 16:32 far pointer to 64-bit unsigned */
+#define T_32PFBOOL08        0x0530  /* 16:32 far pointer to 8-bit Boolean */
+#define T_32PFBOOL16        0x0531  /* 16:32 far pointer to 16-bit Boolean */
+#define T_32PFBOOL32        0x0532  /* 16:32 far pointer to 32-bit Boolean */
+#define T_32PFBOOL64        0x0533  /* 16:32 far pointer to 64-bit Boolean */
+#define T_32PFREAL32        0x0540  /* 16:32 far pointer to 32-bit real */
+#define T_32PFREAL64        0x0541  /* 16:32 far pointer to 64-bit real */
+#define T_32PFREAL80        0x0542  /* 16:32 far pointer to 80-bit real */
+#define T_32PFREAL128       0x0543  /* 16:32 far pointer to 128-bit real */
+#define T_32PFREAL48        0x0544  /* 16:32 far pointer to 48-bit real */
+#define T_32PFCPLX32        0x0550  /* 16:32 far pointer to 32-bit complex */
+#define T_32PFCPLX64        0x0551  /* 16:32 far pointer to 64-bit complex */
+#define T_32PFCPLX80        0x0552  /* 16:32 far pointer to 80-bit complex */
+#define T_32PFCPLX128       0x0553  /* 16:32 far pointer to 128-bit complex */
+#define T_32PFRCHAR         0x0570  /* 16:32 far pointer to a real char */
+#define T_32PFWCHAR         0x0571  /* 16:32 far pointer to a wide char */
+#define T_32PFINT2          0x0572  /* 16:32 far pointer to 16-bit signed int */
+#define T_32PFUINT2         0x0573  /* 16:32 far pointer to 16-bit unsigned int */
+#define T_32PFINT4          0x0574  /* 16:32 far pointer to 32-bit signed int */
+#define T_32PFUINT4         0x0575  /* 16:32 far pointer to 32-bit unsigned int */
+#define T_32PFINT8          0x0576  /* 16:32 far pointer to 64-bit signed int */
+#define T_32PFUINT8         0x0577  /* 16:32 far pointer to 64-bit unsigned int */
+
+
+/* counts, bit masks, and shift values needed to access various parts of the built-in type numbers */
+#define T_MAXPREDEFINEDTYPE 0x0580  /* maximum type index for all built-in types */
+#define T_MAXBASICTYPE      0x0080  /* maximum type index all non-pointer built-in types */
+#define T_BASICTYPE_MASK    0x00ff  /* mask of bits that can potentially identify a non-pointer basic type */
+#define T_BASICTYPE_SHIFT   8       /* shift count to push out the basic type bits from a type number */
+#define T_MODE_MASK         0x0700  /* type mode mask (ptr/non-ptr) */
+#define T_SIZE_MASK         0x0007  /* type size mask (depends on 'type' value) */
+#define T_TYPE_MASK         0x00f0  /* type type mask (data treatment mode) */
+
+/* bit patterns for the <mode> portion of a built-in type number */
+#define T_NEARPTR_BITS      0x0100
+#define T_FARPTR_BITS       0x0200
+#define T_HUGEPTR_BITS      0x0300
+#define T_NEAR32PTR_BITS    0x0400
+#define T_FAR32PTR_BITS     0x0500
+#define T_NEAR64PTR_BITS    0x0600
 
 #define LF_MODIFIER_V1          0x0001
 #define LF_POINTER_V1           0x0002
@@ -1067,6 +1343,16 @@ union codeview_symbol
 
     struct
     {
+        short int               len;            /* Total length of this entry */
+        short int               id;             /* Always S_BPREL_V3 */
+        int                     offset;         /* Stack offset relative to BP */
+        unsigned int            symtype;
+        unsigned short          unknown;
+        char                    name[1];
+    } stack_xxxx_v3;
+
+    struct
+    {
 	short int	        len;	        /* Total length of this entry */
 	short int	        id;		/* Always S_REGISTER */
         unsigned short          type;
@@ -1307,7 +1593,8 @@ union codeview_symbol
 #define S_PUB_V3        0x110E
 #define S_LPROC_V3      0x110F
 #define S_GPROC_V3      0x1110
-#define S_MSTOOL_V3     0x1116  /* not really understood */
+#define S_BPREL_XXXX_V3 0x1111  /* not really understood, but looks like bprel... */
+#define S_MSTOOL_V3     0x1116  /* compiler command line options and build information */
 #define S_PUB_FUNC1_V3  0x1125  /* didn't get the difference between the two */
 #define S_PUB_FUNC2_V3  0x1127
 
@@ -1523,7 +1810,8 @@ typedef struct _PDB_SYMBOLS
     DWORD       unknown;
     DWORD       hash1_file;
     DWORD       hash2_file;
-    DWORD       gsym_file;
+    WORD        gsym_file;
+    WORD        unknown1;
     DWORD       module_size;
     DWORD       offset_size;
     DWORD       hash_size;

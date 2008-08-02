@@ -21,6 +21,9 @@
  * Note: This really doesn't do much at the moment, but it forms the framework
  * upon which full support for datatype handling will eventually be built.
  */
+
+#define NONAMELESSUNION
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -83,7 +86,7 @@ const char* symt_get_name(const struct symt* sym)
     case SymTagFunction:        return ((const struct symt_function*)sym)->hash_elt.name;
     case SymTagPublicSymbol:    return ((const struct symt_public*)sym)->hash_elt.name;
     case SymTagBaseType:        return ((const struct symt_basic*)sym)->hash_elt.name;
-    case SymTagLabel:           return ((const struct symt_function_point*)sym)->name;
+    case SymTagLabel:           return ((const struct symt_hierarchy_point*)sym)->hash_elt.name;
     case SymTagThunk:           return ((const struct symt_thunk*)sym)->hash_elt.name;
     /* hierarchy tree */
     case SymTagEnum:            return ((const struct symt_enum*)sym)->name;
@@ -243,7 +246,8 @@ BOOL symt_add_udt_element(struct module* module, struct symt_udt* udt_type,
     return TRUE;
 }
 
-struct symt_enum* symt_new_enum(struct module* module, const char* typename)
+struct symt_enum* symt_new_enum(struct module* module, const char* typename,
+                                struct symt* basetype)
 {
     struct symt_enum*   sym;
 
@@ -251,6 +255,7 @@ struct symt_enum* symt_new_enum(struct module* module, const char* typename)
     {
         sym->symt.tag            = SymTagEnum;
         sym->name = (typename) ? pool_strdup(&module->pool, typename) : NULL;
+        sym->base_type           = basetype;
         vector_init(&sym->vchildren, sizeof(struct symt*), 8);
     }
     return sym;
@@ -271,8 +276,7 @@ BOOL symt_add_enum_element(struct module* module, struct symt_enum* enum_type,
     e->hash_elt.next = NULL;
     e->kind = DataIsConstant;
     e->container = &enum_type->symt;
-    /* CV defines the underlying type for the enumeration */
-    e->type = &symt_new_basic(module, btInt, "int", 4)->symt;
+    e->type = enum_type->base_type;
     e->u.value.n1.n2.vt = VT_I4;
     e->u.value.n1.n2.n3.lVal = value;
 
@@ -518,8 +522,10 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         case SymTagFuncDebugStart:
         case SymTagFuncDebugEnd:
         case SymTagLabel:
-            X(ULONG64) = ((const struct symt_function_point*)type)->parent->address + 
-                ((const struct symt_function_point*)type)->loc.offset;
+            if (!symt_get_info(((const struct symt_hierarchy_point*)type)->parent,
+                               req, pInfo))
+                return FALSE;
+            X(ULONG64) += ((const struct symt_hierarchy_point*)type)->loc.offset;
             break;
         case SymTagThunk:
             X(ULONG64) = ((const struct symt_thunk*)type)->address;
@@ -648,6 +654,9 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         case SymTagThunk:
             X(DWORD64) = ((const struct symt_thunk*)type)->size;
             break;
+        case SymTagLabel:
+            X(DWORD64) = 0;
+            break;
         default:
             FIXME("Unsupported sym-tag %s for get-length\n", 
                   symt_get_tag_str(type->tag));
@@ -759,7 +768,9 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         case SymTagFunction:
             X(DWORD) = (DWORD)((const struct symt_function*)type)->type;
             break;
-            /* FIXME: should also work for enums */
+        case SymTagEnum:
+            X(DWORD) = (DWORD)((const struct symt_enum*)type)->base_type;
+            break;
         case SymTagFunctionArgType:
             X(DWORD) = (DWORD)((const struct symt_function_arg_type*)type)->arg_type;
             break;
@@ -768,6 +779,7 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
                   symt_get_tag_str(type->tag));
         case SymTagPublicSymbol:
         case SymTagThunk:
+        case SymTagLabel:
             return FALSE;
         }
         break;
@@ -797,10 +809,15 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         X(DWORD) = (DWORD)((const struct symt_array*)type)->index_type;
         break;
 
+    case TI_GET_CLASSPARENTID:
+        /* FIXME: we don't support properly C++ for now, pretend this symbol doesn't
+         * belong to a parent class
+         */
+        return FALSE;
+
 #undef X
 
     case TI_GET_ADDRESSOFFSET:
-    case TI_GET_CLASSPARENTID:
     case TI_GET_SYMINDEX:
     case TI_GET_THISADJUST:
     case TI_GET_VIRTUALBASECLASS:
