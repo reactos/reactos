@@ -313,6 +313,8 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	ASSERT(FileObject == IrpSp->FileObject);
     }
 
+    Irp->IoStatus.Information = 0;
+
     switch(IrpSp->MajorFunction)
     {
 	/* opening and closing handles to the device */
@@ -457,7 +459,6 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	default:
 	    Status = STATUS_NOT_IMPLEMENTED;
-	    Irp->IoStatus.Information = 0;
 	    AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%x)\n",
 				     IrpSp->Parameters.DeviceIoControl.
 				     IoControlCode));

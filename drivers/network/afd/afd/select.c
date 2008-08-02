@@ -262,6 +262,8 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
+    Irp->IoStatus.Status = Status;
+
     return Status;
 }
 
