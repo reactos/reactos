@@ -1,6 +1,7 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS NT Library
- * FILE:            lib/ntdll/main/dispatch.c
+ * FILE:            dll/ntdll/dispatch/dispatch.c
  * PURPOSE:         User-Mode NT Dispatchers
  * PROGRAMERS:      Alex Ionescu (alex@relsoft.net)
  *                  David Welch <welch@cwcom.net>

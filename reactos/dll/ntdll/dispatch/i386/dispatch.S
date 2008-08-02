@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS NT Library
- * FILE:            lib/ntdll/main/i386/dispatch.S
+ * FILE:            dl/ntdll/dispatch/i386/dispatch.S
  * PURPOSE:         User-Mode NT Dispatchers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

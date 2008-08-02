@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/ntdll/inc/ntdll.h
+ * FILE:            dll/ntdll/include/ntdll.h
  * PURPOSE:         Native Libary Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
