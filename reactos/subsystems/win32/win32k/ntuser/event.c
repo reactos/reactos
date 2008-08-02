@@ -362,6 +362,8 @@ NtUserSetWinEventHook(
       else
          pEH->Proc = lpfnWinEventProc;
 
+      UserDereferenceObject(pEH);
+
       Ret = Handle;
       IntSetSrvEventMask( eventMin, eventMax);
    }
