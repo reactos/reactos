@@ -209,7 +209,7 @@ CSR_API(CsrCreateDesktop)
       BgInitialized = TRUE;
       if (! DtbgInit())
         {
-          return Request->Status = STATUS_UNSUCCESSFUL;
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
@@ -222,7 +222,7 @@ CSR_API(CsrCreateDesktop)
   if (NULL == ThreadData.Event)
     {
       DPRINT1("Failed to create event (error %d)\n", GetLastError());
-      return Request->Status = STATUS_UNSUCCESSFUL;
+      return STATUS_UNSUCCESSFUL;
     }
   ThreadHandle = CreateThread(NULL,
                               0,
@@ -234,16 +234,14 @@ CSR_API(CsrCreateDesktop)
     {
       CloseHandle(ThreadData.Event);
       DPRINT1("Failed to create desktop window thread.\n");
-      return Request->Status = STATUS_UNSUCCESSFUL;
+      return STATUS_UNSUCCESSFUL;
     }
   CloseHandle(ThreadHandle);
 
   WaitForSingleObject(ThreadData.Event, INFINITE);
   CloseHandle(ThreadData.Event);
 
-  Request->Status = ThreadData.Status;
-
-  return Request->Status;
+  return ThreadData.Status;
 }
 
 CSR_API(CsrShowDesktop)
@@ -261,13 +259,11 @@ CSR_API(CsrShowDesktop)
   nmh.ShowDesktop.Width = (int)Request->Data.ShowDesktopRequest.Width;
   nmh.ShowDesktop.Height = (int)Request->Data.ShowDesktopRequest.Height;
 
-  Request->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
-                               WM_NOTIFY,
-                               (WPARAM)nmh.hdr.hwndFrom,
-                               (LPARAM)&nmh)
-                  ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
-
-  return Request->Status;
+  return SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+                      WM_NOTIFY,
+                      (WPARAM)nmh.hdr.hwndFrom,
+                      (LPARAM)&nmh)
+         ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 }
 
 CSR_API(CsrHideDesktop)
@@ -282,13 +278,11 @@ CSR_API(CsrHideDesktop)
   nmh.hdr.idFrom = 0;
   nmh.hdr.code = PM_HIDE_DESKTOP;
 
-  Request->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
-                               WM_NOTIFY,
-                               (WPARAM)nmh.hdr.hwndFrom,
-                               (LPARAM)&nmh)
-                  ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
-
-  return Request->Status;
+  return SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+                      WM_NOTIFY,
+                      (WPARAM)nmh.hdr.hwndFrom,
+                      (LPARAM)&nmh)
+         ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 }
 
 BOOL FASTCALL

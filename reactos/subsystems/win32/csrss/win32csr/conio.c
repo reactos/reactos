@@ -245,21 +245,11 @@ CSR_API(CsrAllocConsole)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-    if (ProcessData == NULL)
-    {
-        DPRINT1("No process data\n");
-        return Request->Status = STATUS_INVALID_PARAMETER;
-    }
-
     if (ProcessData->Console)
     {
         DPRINT1("Process already has a console\n");
-        Request->Status = STATUS_INVALID_PARAMETER;
         return STATUS_INVALID_PARAMETER;
     }
-
-    /* Assume success */
-    Request->Status = STATUS_SUCCESS;
 
     /* If we don't need a console, then get out of here */
     if (!Request->Data.AllocConsoleRequest.ConsoleNeeded)
@@ -278,7 +268,6 @@ CSR_API(CsrAllocConsole)
         if (NULL == Console)
         {
             DPRINT1("Not enough memory for console\n");
-            Request->Status = STATUS_NO_MEMORY;
             return STATUS_NO_MEMORY;
         }
         /* initialize list head */
@@ -286,12 +275,12 @@ CSR_API(CsrAllocConsole)
         /* insert process data required for GUI initialization */
         InsertHeadList(&Console->ProcessList, &ProcessData->ProcessEntry);
         /* Initialize the Console */
-        Request->Status = CsrInitConsole(Console);
-        if (!NT_SUCCESS(Request->Status))
+        Status = CsrInitConsole(Console);
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console init failed\n");
             HeapFree(Win32CsrApiHeap, 0, Console);
-            return Request->Status;
+            return Status;
         }
     }
     else
@@ -322,7 +311,7 @@ CSR_API(CsrAllocConsole)
             DPRINT1("Failed to insert object\n");
             ConioDeleteConsole((Object_t *) Console);
             ProcessData->Console = 0;
-            return Request->Status = Status;
+            return Status;
         }
 
         Status = Win32CsrInsertObject(ProcessData,
@@ -337,7 +326,7 @@ CSR_API(CsrAllocConsole)
             Win32CsrReleaseObject(ProcessData,
                                   Request->Data.AllocConsoleRequest.InputHandle);
             ProcessData->Console = 0;
-            return Request->Status = Status;
+            return Status;
         }
     }
 
@@ -360,7 +349,7 @@ CSR_API(CsrAllocConsole)
                                   Request->Data.AllocConsoleRequest.InputHandle);
         }
         ProcessData->Console = 0;
-        return Request->Status = Status;
+        return Status;
     }
 
     /* Set the Ctrl Dispatcher */
@@ -384,9 +373,9 @@ CSR_API(CsrFreeConsole)
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  if (ProcessData == NULL || ProcessData->Console == NULL)
+  if (ProcessData->Console == NULL)
     {
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
 
   Console = ProcessData->Console;
@@ -576,7 +565,7 @@ CSR_API(CsrReadConsole)
                                &Console, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
   Request->Data.ReadConsoleRequest.EventHandle = ProcessData->ConsoleEvent;
   for (i = 0; i < nNumberOfCharsToRead && Console->InputEvents.Flink != &Console->InputEvents; i++)
@@ -619,7 +608,6 @@ CSR_API(CsrReadConsole)
                   ConioUnlockConsole(Console);
                   HeapFree(Win32CsrApiHeap, 0, Input);
                   Request->Data.ReadConsoleRequest.NrCharactersRead = 0;
-                  Request->Status = STATUS_NOTIFY_CLEANUP;
                   return STATUS_NOTIFY_CLEANUP;
 
                 }
@@ -653,27 +641,27 @@ CSR_API(CsrReadConsole)
   Request->Data.ReadConsoleRequest.NrCharactersRead = i;
   if (0 == i)
     {
-      Request->Status = STATUS_PENDING;    /* we didn't read anything */
+      Status = STATUS_PENDING;    /* we didn't read anything */
     }
   else if (0 != (Console->Mode & ENABLE_LINE_INPUT))
     {
       if (0 == Console->WaitingLines ||
           (Request->Data.ReadConsoleRequest.Unicode ? (L'\n' != UnicodeBuffer[i - 1]) : ('\n' != Buffer[i - 1])))
         {
-          Request->Status = STATUS_PENDING; /* line buffered, didn't get a complete line */
+          Status = STATUS_PENDING; /* line buffered, didn't get a complete line */
         }
       else
         {
           Console->WaitingLines--;
-          Request->Status = STATUS_SUCCESS; /* line buffered, did get a complete line */
+          Status = STATUS_SUCCESS; /* line buffered, did get a complete line */
         }
     }
   else
     {
-      Request->Status = STATUS_SUCCESS;  /* not line buffered, did read something */
+      Status = STATUS_SUCCESS;  /* not line buffered, did read something */
     }
 
-  if (Request->Status == STATUS_PENDING)
+  if (Status == STATUS_PENDING)
     {
       Console->EchoCount = nNumberOfCharsToRead - i;
     }
@@ -690,7 +678,7 @@ CSR_API(CsrReadConsole)
       Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
     }
 
-  return Request->Status;
+  return Status;
 }
 
 BOOLEAN __inline ConioGetIntersection(
@@ -846,7 +834,7 @@ CSR_API(CsrWriteConsole)
       DPRINT1("Invalid request size\n");
       Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
       Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
 
@@ -855,7 +843,7 @@ CSR_API(CsrWriteConsole)
 
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   if(Request->Data.WriteConsoleRequest.Unicode)
@@ -887,8 +875,8 @@ CSR_API(CsrWriteConsole)
       Status = ConioLockScreenBuffer(ProcessData, Request->Data.WriteConsoleRequest.ConsoleHandle, &Buff, GENERIC_WRITE);
       if (NT_SUCCESS(Status))
         {
-          Request->Status = ConioWriteConsole(Console, Buff, Buffer,
-                                              Request->Data.WriteConsoleRequest.NrCharactersToWrite, TRUE);
+          Status = ConioWriteConsole(Console, Buff, Buffer,
+                                     Request->Data.WriteConsoleRequest.NrCharactersToWrite, TRUE);
           if (NT_SUCCESS(Status))
             {
               Written = Request->Data.WriteConsoleRequest.NrCharactersToWrite;
@@ -904,7 +892,7 @@ CSR_API(CsrWriteConsole)
 
   Request->Data.WriteConsoleRequest.NrCharactersWritten = Written;
 
-  return Request->Status = Status;
+  return Status;
 }
 
 VOID STDCALL
@@ -1304,13 +1292,13 @@ CSR_API(CsrGetScreenBufferInfo)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ScreenBufferInfoRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
   pInfo = &Request->Data.ScreenBufferInfoRequest.Info;
   pInfo->dwSize.X = Buff->MaxX;
@@ -1327,9 +1315,7 @@ CSR_API(CsrGetScreenBufferInfo)
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  Request->Status = STATUS_SUCCESS;
-
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetCursor)
@@ -1345,7 +1331,7 @@ CSR_API(CsrSetCursor)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -1355,7 +1341,7 @@ CSR_API(CsrSetCursor)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   NewCursorX = Request->Data.SetCursorRequest.Position.X;
@@ -1365,7 +1351,7 @@ CSR_API(CsrSetCursor)
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
   OldCursorX = Buff->CurrentX;
   OldCursorY = Buff->CurrentY;
@@ -1377,14 +1363,14 @@ CSR_API(CsrSetCursor)
         {
           ConioUnlockScreenBuffer(Buff);
           ConioUnlockConsole(Console);
-          return Request->Status = STATUS_UNSUCCESSFUL;
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 static VOID FASTCALL
@@ -1435,7 +1421,7 @@ CSR_API(CsrWriteConsoleOutputChar)
       DPRINT1("Invalid request size\n");
       Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
       Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
@@ -1514,7 +1500,7 @@ CSR_API(CsrWriteConsoleOutputChar)
       ConioUnlockConsole(Console);
     }
   Request->Data.WriteConsoleOutputCharRequest.NrCharactersWritten = Written;
-  return Request->Status = Status;
+  return Status;
 }
 
 CSR_API(CsrFillOutputChar)
@@ -1535,14 +1521,14 @@ CSR_API(CsrFillOutputChar)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.FillOutputRequest.ConsoleHandle, &Buff, GENERIC_WRITE);
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   X = Request->Data.FillOutputRequest.Position.X;
@@ -1580,7 +1566,7 @@ CSR_API(CsrFillOutputChar)
   ConioUnlockConsole(Console);
   Length = Request->Data.FillOutputRequest.Length;
   Request->Data.FillOutputRequest.NrCharactersWritten = Length;
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrReadInputEvent)
@@ -1600,7 +1586,7 @@ CSR_API(CsrReadInputEvent)
   Status = ConioLockConsole(ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, &Console, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   /* only get input if there is any */
@@ -1659,7 +1645,7 @@ CSR_API(CsrReadInputEvent)
 
   ConioUnlockConsole(Console);
 
-  return Request->Status = Status;
+  return Status;
 }
 
 CSR_API(CsrWriteConsoleOutputAttrib)
@@ -1681,7 +1667,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
       DPRINT1("Invalid request size\n");
       Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
       Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
@@ -1689,7 +1675,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Status = ConioLockScreenBuffer(ProcessData,
@@ -1699,7 +1685,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   X = Request->Data.WriteConsoleOutputAttribRequest.Coord.X;
@@ -1736,7 +1722,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 
   ConioUnlockScreenBuffer(Buff);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrFillOutputAttrib)
@@ -1754,7 +1740,7 @@ CSR_API(CsrFillOutputAttrib)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -1763,7 +1749,7 @@ CSR_API(CsrFillOutputAttrib)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   X = Request->Data.FillOutputAttribRequest.Coord.X;
@@ -1796,7 +1782,7 @@ CSR_API(CsrFillOutputAttrib)
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
@@ -1813,13 +1799,13 @@ CSR_API(CsrGetCursorInfo)
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.GetCursorInfoRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
   Request->Data.GetCursorInfoRequest.Info.bVisible = Buff->CursorInfo.bVisible;
   Request->Data.GetCursorInfoRequest.Info.dwSize = Buff->CursorInfo.dwSize;
   ConioUnlockScreenBuffer(Buff);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetCursorInfo)
@@ -1838,14 +1824,14 @@ CSR_API(CsrSetCursorInfo)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetCursorInfoRequest.ConsoleHandle, &Buff, GENERIC_WRITE);
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   Size = Request->Data.SetCursorInfoRequest.Info.dwSize;
@@ -1869,14 +1855,14 @@ CSR_API(CsrSetCursorInfo)
         {
           ConioUnlockScreenBuffer(Buff);
           ConioUnlockConsole(Console);
-          return Request->Status = STATUS_UNSUCCESSFUL;
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetTextAttrib)
@@ -1890,14 +1876,14 @@ CSR_API(CsrSetTextAttrib)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetCursorRequest.ConsoleHandle, &Buff, GENERIC_WRITE);
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   Buff->DefaultAttrib = Request->Data.SetAttribRequest.Attrib;
@@ -1907,14 +1893,14 @@ CSR_API(CsrSetTextAttrib)
         {
           ConioUnlockScreenBuffer(Buff);
           ConioUnlockConsole(Console);
-          return Request->Status = STATUS_UNSUCCESSFUL;
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetConsoleMode)
@@ -1932,7 +1918,7 @@ CSR_API(CsrSetConsoleMode)
                              (Object_t **) &Console, GENERIC_WRITE);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Buff = (PCSRSS_SCREEN_BUFFER)Console;
@@ -1951,7 +1937,7 @@ CSR_API(CsrSetConsoleMode)
 
   Win32CsrReleaseObjectByPointer((Object_t *)Console);
 
-  return Request->Status = Status;
+  return Status;
 }
 
 CSR_API(CsrGetConsoleMode)
@@ -1968,9 +1954,9 @@ CSR_API(CsrGetConsoleMode)
                              (Object_t **) &Console, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
-  Request->Status = STATUS_SUCCESS;
+  Status = STATUS_SUCCESS;
   Buff = (PCSRSS_SCREEN_BUFFER) Console;
   if (CONIO_CONSOLE_MAGIC == Console->Header.Type)
     {
@@ -1982,11 +1968,11 @@ CSR_API(CsrGetConsoleMode)
     }
   else
     {
-      Request->Status = STATUS_INVALID_HANDLE;
+      Status = STATUS_INVALID_HANDLE;
     }
 
   Win32CsrReleaseObjectByPointer((Object_t *)Console);
-  return Request->Status;
+  return Status;
 }
 
 CSR_API(CsrCreateScreenBuffer)
@@ -1997,15 +1983,10 @@ CSR_API(CsrCreateScreenBuffer)
 
   DPRINT("CsrCreateScreenBuffer\n");
 
-  if (ProcessData == NULL)
-    {
-      return Request->Status = STATUS_INVALID_PARAMETER;
-    }
-
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -2039,13 +2020,9 @@ CSR_API(CsrCreateScreenBuffer)
         }
 
       Status = CsrInitConsoleScreenBuffer(Console, Buff);
-      if(! NT_SUCCESS(Status))
+      if(NT_SUCCESS(Status))
         {
-          Request->Status = Status;
-        }
-      else
-        {
-          Request->Status = Win32CsrInsertObject(ProcessData,
+          Status = Win32CsrInsertObject(ProcessData,
             &Request->Data.CreateScreenBufferRequest.OutputHandle,
             &Buff->Header,
             Request->Data.CreateScreenBufferRequest.Access,
@@ -2054,11 +2031,11 @@ CSR_API(CsrCreateScreenBuffer)
     }
   else
     {
-      Request->Status = STATUS_INSUFFICIENT_RESOURCES;
+      Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
   ConioUnlockConsole(Console);
-  return Request->Status;
+  return Status;
 }
 
 CSR_API(CsrSetScreenBuffer)
@@ -2072,7 +2049,7 @@ CSR_API(CsrSetScreenBuffer)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -2082,14 +2059,14 @@ CSR_API(CsrSetScreenBuffer)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   if (Buff == Console->ActiveBuffer)
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
 
   /* drop reference to old buffer, maybe delete */
@@ -2107,7 +2084,7 @@ CSR_API(CsrSetScreenBuffer)
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetTitle)
@@ -2125,17 +2102,13 @@ CSR_API(CsrSetTitle)
       DPRINT1("Invalid request size\n");
       Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
       Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-      return Request->Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-  if(! NT_SUCCESS(Status))
-    {
-      Request->Status = Status;
-    }
-  else
+  if(NT_SUCCESS(Status))
     {
       Buffer =  RtlAllocateHeap(RtlGetProcessHeap(), 0, Request->Data.SetTitleRequest.Length);
       if (Buffer)
@@ -2147,21 +2120,21 @@ CSR_API(CsrSetTitle)
           memcpy(Console->Title.Buffer, Request->Data.SetTitleRequest.Title, Console->Title.Length);
           if (! ConioChangeTitle(Console))
             {
-              Request->Status = STATUS_UNSUCCESSFUL;
+              Status = STATUS_UNSUCCESSFUL;
             }
           else
             {
-              Request->Status = STATUS_SUCCESS;
+              Status = STATUS_SUCCESS;
             }
         }
       else
         {
-          Request->Status = STATUS_NO_MEMORY;
+          Status = STATUS_NO_MEMORY;
         }
       ConioUnlockConsole(Console);
     }
 
-  return Request->Status;
+  return Status;
 }
 
 CSR_API(CsrGetTitle)
@@ -2178,7 +2151,7 @@ CSR_API(CsrGetTitle)
   if (! NT_SUCCESS(Status))
     {
       DPRINT1("Can't get console\n");
-      return Request->Status = Status;
+      return Status;
     }
 
   /* Copy title of the console to the user title buffer */
@@ -2195,9 +2168,7 @@ CSR_API(CsrGetTitle)
       Request->Header.u1.s1.TotalLength = Length;
       Request->Header.u1.s1.DataLength = Length - sizeof(PORT_MESSAGE);
     }
-  Request->Status = STATUS_SUCCESS;
-
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrWriteConsoleOutput)
@@ -2220,7 +2191,7 @@ CSR_API(CsrWriteConsoleOutput)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -2232,7 +2203,7 @@ CSR_API(CsrWriteConsoleOutput)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   BufferSize = Request->Data.WriteConsoleOutputRequest.BufferSize;
@@ -2245,7 +2216,7 @@ CSR_API(CsrWriteConsoleOutput)
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_ACCESS_VIOLATION;
+      return STATUS_ACCESS_VIOLATION;
     }
   WriteRegion.left = Request->Data.WriteConsoleOutputRequest.WriteRegion.Left;
   WriteRegion.top = Request->Data.WriteConsoleOutputRequest.WriteRegion.Top;
@@ -2266,7 +2237,7 @@ CSR_API(CsrWriteConsoleOutput)
 
       /* It is okay to have a WriteRegion completely outside the screen buffer.
          No data is written then. */
-      return Request->Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
 
   for (i = 0, Y = WriteRegion.top; Y <= WriteRegion.bottom; i++, Y++)
@@ -2300,7 +2271,7 @@ CSR_API(CsrWriteConsoleOutput)
   Request->Data.WriteConsoleOutputRequest.WriteRegion.Left = WriteRegion.left;
   Request->Data.WriteConsoleOutputRequest.WriteRegion.Top = WriteRegion.top;
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrFlushInputBuffer)
@@ -2320,7 +2291,7 @@ CSR_API(CsrFlushInputBuffer)
                             GENERIC_WRITE);
   if(! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   /* Discard all entries in the input event queue */
@@ -2336,7 +2307,7 @@ CSR_API(CsrFlushInputBuffer)
 
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrScrollConsoleScreenBuffer)
@@ -2366,7 +2337,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -2375,7 +2346,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   ScrollRectangle.left = Request->Data.ScrollConsoleScreenBufferRequest.ScrollRectangle.Left;
@@ -2389,7 +2360,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
 
   /* If the source was clipped on the left or top, adjust the destination accordingly */
@@ -2412,7 +2383,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
         {
           ConioUnlockConsole(Console);
           ConioUnlockScreenBuffer(Buff);
-          return Request->Status = STATUS_SUCCESS;
+          return STATUS_SUCCESS;
       }
     }
   else
@@ -2446,7 +2417,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   ConioUnlockScreenBuffer(Buff);
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrReadConsoleOutputChar)
@@ -2471,14 +2442,14 @@ CSR_API(CsrReadConsoleOutputChar)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status = Status;
+      return Status;
     }
 
   Xpos = Request->Data.ReadConsoleOutputCharRequest.ReadCoord.X;
@@ -2511,7 +2482,6 @@ CSR_API(CsrReadConsoleOutputChar)
     }
 
   *ReadBuffer = 0;
-  Request->Status = STATUS_SUCCESS;
   Request->Data.ReadConsoleOutputCharRequest.EndCoord.X = Xpos;
   Request->Data.ReadConsoleOutputCharRequest.EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
 
@@ -2525,7 +2495,7 @@ CSR_API(CsrReadConsoleOutputChar)
       Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
     }
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -2547,7 +2517,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Xpos = Request->Data.ReadConsoleOutputAttribRequest.ReadCoord.X;
@@ -2574,7 +2544,6 @@ CSR_API(CsrReadConsoleOutputAttrib)
 
   *ReadBuffer = 0;
 
-  Request->Status = STATUS_SUCCESS;
   Request->Data.ReadConsoleOutputAttribRequest.EndCoord.X = Xpos;
   Request->Data.ReadConsoleOutputAttribRequest.EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
 
@@ -2588,7 +2557,7 @@ CSR_API(CsrReadConsoleOutputAttrib)
       Request->Header.u1.s1.DataLength = CurrentLength - sizeof(PORT_MESSAGE);
     }
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -2608,7 +2577,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
   Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   CurrentItem = Console->InputEvents.Flink;
@@ -2627,10 +2596,9 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 
   ConioUnlockConsole(Console);
 
-  Request->Status = STATUS_SUCCESS;
   Request->Data.GetNumInputEventsRequest.NumInputEvents = NumEvents;
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -2653,7 +2621,7 @@ CSR_API(CsrPeekConsoleInput)
   Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
   if(! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   InputRecord = Request->Data.PeekConsoleInputRequest.InputRecord;
@@ -2664,8 +2632,7 @@ CSR_API(CsrPeekConsoleInput)
       || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockConsole(Console);
-      Request->Status = STATUS_ACCESS_VIOLATION;
-      return Request->Status ;
+      return STATUS_ACCESS_VIOLATION;
     }
 
   NumItems = 0;
@@ -2699,10 +2666,9 @@ CSR_API(CsrPeekConsoleInput)
 
   ConioUnlockConsole(Console);
 
-  Request->Status = STATUS_SUCCESS;
   Request->Data.PeekConsoleInputRequest.Length = NumItems;
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -2732,7 +2698,7 @@ CSR_API(CsrReadConsoleOutput)
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputRequest.ConsoleHandle, &Buff, GENERIC_READ);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   CharInfo = Request->Data.ReadConsoleOutputRequest.CharInfo;
@@ -2752,8 +2718,7 @@ CSR_API(CsrReadConsoleOutput)
       || (((ULONG_PTR)CharInfo + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockScreenBuffer(Buff);
-      Request->Status = STATUS_ACCESS_VIOLATION;
-      return Request->Status ;
+      return STATUS_ACCESS_VIOLATION;
     }
 
   SizeY = min(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&ReadRegion));
@@ -2765,8 +2730,7 @@ CSR_API(CsrReadConsoleOutput)
   if (! ConioGetIntersection(&ReadRegion, &ScreenRect, &ReadRegion))
     {
       ConioUnlockScreenBuffer(Buff);
-      Request->Status = STATUS_SUCCESS;
-      return Request->Status;
+      return STATUS_SUCCESS;
     }
 
   for (i = 0, Y = ReadRegion.top; Y < ReadRegion.bottom; ++i, ++Y)
@@ -2793,13 +2757,12 @@ CSR_API(CsrReadConsoleOutput)
 
   ConioUnlockScreenBuffer(Buff);
 
-  Request->Status = STATUS_SUCCESS;
   Request->Data.ReadConsoleOutputRequest.ReadRegion.Right = ReadRegion.left + SizeX - 1;
   Request->Data.ReadConsoleOutputRequest.ReadRegion.Bottom = ReadRegion.top + SizeY - 1;
   Request->Data.ReadConsoleOutputRequest.ReadRegion.Left = ReadRegion.left;
   Request->Data.ReadConsoleOutputRequest.ReadRegion.Top = ReadRegion.top;
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -2821,7 +2784,7 @@ CSR_API(CsrWriteConsoleInput)
   Status = ConioLockConsole(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, &Console, GENERIC_WRITE);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   InputRecord = Request->Data.WriteConsoleInputRequest.InputRecord;
@@ -2832,8 +2795,7 @@ CSR_API(CsrWriteConsoleInput)
       || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
     {
       ConioUnlockConsole(Console);
-      Request->Status = STATUS_ACCESS_VIOLATION;
-      return Request->Status ;
+      return STATUS_ACCESS_VIOLATION;
     }
 
   for (i = 0; i < Length; i++)
@@ -2842,8 +2804,7 @@ CSR_API(CsrWriteConsoleInput)
       if (NULL == Record)
         {
           ConioUnlockConsole(Console);
-          Request->Status = STATUS_INSUFFICIENT_RESOURCES;
-          return Request->Status;
+          return STATUS_INSUFFICIENT_RESOURCES;
         }
 
       Record->Echoed = FALSE;
@@ -2859,10 +2820,9 @@ CSR_API(CsrWriteConsoleInput)
 
   ConioUnlockConsole(Console);
 
-  Request->Status = STATUS_SUCCESS;
   Request->Data.WriteConsoleInputRequest.Length = i;
 
-  return Request->Status;
+  return STATUS_SUCCESS;
 }
 
 /**********************************************************************
@@ -2917,7 +2877,7 @@ CSR_API(CsrHardwareStateProperty)
   if (! NT_SUCCESS(Status))
     {
       DPRINT1("Failed to get console handle in SetConsoleHardwareState\n");
-      return Request->Status = Status;
+      return Status;
     }
 
   switch (Request->Data.ConsoleHardwareStateRequest.SetGet)
@@ -2928,17 +2888,17 @@ CSR_API(CsrHardwareStateProperty)
 
       case CONSOLE_HARDWARE_STATE_SET:
         DPRINT("Setting console hardware state.\n");
-        Request->Status = SetConsoleHardwareState(Console, Request->Data.ConsoleHardwareStateRequest.State);
+        Status = SetConsoleHardwareState(Console, Request->Data.ConsoleHardwareStateRequest.State);
         break;
 
       default:
-        Request->Status = STATUS_INVALID_PARAMETER_2; /* Client: (handle, [set_get], mode) */
+        Status = STATUS_INVALID_PARAMETER_2; /* Client: (handle, [set_get], mode) */
         break;
     }
 
   ConioUnlockConsole(Console);
 
-  return Request->Status;
+  return Status;
 }
 
 CSR_API(CsrGetConsoleWindow)
@@ -2954,13 +2914,13 @@ CSR_API(CsrGetConsoleWindow)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Data.GetConsoleWindowRequest.WindowHandle = Console->hWindow;
   ConioUnlockConsole(Console);
 
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetConsoleIcon)
@@ -2976,14 +2936,14 @@ CSR_API(CsrSetConsoleIcon)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
-  Request->Status = (ConioChangeIcon(Console, Request->Data.SetConsoleIconRequest.WindowIcon)
-                     ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+  Status = (ConioChangeIcon(Console, Request->Data.SetConsoleIconRequest.WindowIcon)
+            ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
   ConioUnlockConsole(Console);
 
-  return Request->Status;
+  return Status;
 }
 
 CSR_API(CsrGetConsoleCodePage)
@@ -2996,14 +2956,14 @@ CSR_API(CsrGetConsoleCodePage)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   Request->Data.GetConsoleCodePage.CodePage = Console->CodePage;
   ConioUnlockConsole(Console);
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetConsoleCodePage)
@@ -3016,7 +2976,7 @@ CSR_API(CsrSetConsoleCodePage)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -3025,10 +2985,10 @@ CSR_API(CsrSetConsoleCodePage)
     {
       Console->CodePage = Request->Data.SetConsoleCodePage.CodePage;
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
   ConioUnlockConsole(Console);
-  return Request->Status = STATUS_UNSUCCESSFUL;
+  return STATUS_UNSUCCESSFUL;
 }
 
 CSR_API(CsrGetConsoleOutputCodePage)
@@ -3041,14 +3001,14 @@ CSR_API(CsrGetConsoleOutputCodePage)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   Request->Data.GetConsoleOutputCodePage.CodePage = Console->OutputCodePage;
   ConioUnlockConsole(Console);
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetConsoleOutputCodePage)
@@ -3061,7 +3021,7 @@ CSR_API(CsrSetConsoleOutputCodePage)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
-      return Request->Status = Status;
+      return Status;
     }
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -3070,10 +3030,10 @@ CSR_API(CsrSetConsoleOutputCodePage)
     {
       Console->OutputCodePage = Request->Data.SetConsoleOutputCodePage.CodePage;
       ConioUnlockConsole(Console);
-      return Request->Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
   ConioUnlockConsole(Console);
-  return Request->Status = STATUS_UNSUCCESSFUL;
+  return STATUS_UNSUCCESSFUL;
 }
 
 CSR_API(CsrGetProcessList)
@@ -3098,7 +3058,7 @@ CSR_API(CsrGetProcessList)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
   {
-    return Request->Status = Status;
+    return Status;
   }
 
   DPRINT1("Console_Api Ctrl-C\n");
@@ -3126,7 +3086,7 @@ CSR_API(CsrGetProcessList)
      Request->Header.u1.s1.TotalLength = Length;
      Request->Header.u1.s1.DataLength = Length - sizeof(PORT_MESSAGE);
   }
-  return Request->Status = STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 CSR_API(CsrGenerateCtrlEvent)
@@ -3143,7 +3103,7 @@ CSR_API(CsrGenerateCtrlEvent)
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
   {
-    return Request->Status = Status;
+    return Status;
   }
 
   Group = Request->Data.GenerateCtrlEvent.ProcessGroup;
@@ -3162,7 +3122,7 @@ CSR_API(CsrGenerateCtrlEvent)
 
   ConioUnlockConsole(Console);
 
-  return Request->Status = Status;
+  return Status;
 }
 
 /* EOF */

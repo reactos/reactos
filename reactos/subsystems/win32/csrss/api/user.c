@@ -26,26 +26,20 @@ static ULONG ServicesProcessId;
 
 CSR_API(CsrRegisterServicesProcess)
 {
-  NTSTATUS Status;
-
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   if (ServicesProcessIdValid == TRUE)
     {
       /* Only accept a single call */
-      Status = STATUS_INVALID_PARAMETER;
+      return STATUS_INVALID_PARAMETER;
     }
   else
     {
       ServicesProcessId = (ULONG)Request->Data.RegisterServicesProcessRequest.ProcessId;
       ServicesProcessIdValid = TRUE;
-      Status = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
     }
-
-  Request->Status = Status;
-
-  return(Status);
 }
 
 /* EOF */
