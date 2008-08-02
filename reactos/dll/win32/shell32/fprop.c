@@ -349,10 +349,10 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
         return FALSE;
     }
     CloseHandle(hFile);
-    if (!StrFormatByteSizeW(file_size.QuadPart, resultstr, sizeof(resultstr)/sizeof(resultstr[0])));
+    if (!StrFormatByteSizeW(file_size.QuadPart, resultstr, sizeof(resultstr) / sizeof(WCHAR)))
        return FALSE;
     hDlgCtrl = GetDlgItem(hwndDlg, 14011);
-    ERR("result size %u resultstr %s %s\n", file_size.QuadPart, debugstr_w(resultstr), resultstr);
+    TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
     SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
 
     if (lpfilesize)
