@@ -16,6 +16,7 @@
 /* Not defined in any header file */
 extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
 extern VOID STDCALL PrivateCsrssInitialized();
+extern VOID STDCALL InitializeAppSwitchHook();
 
 /* GLOBALS *******************************************************************/
 
@@ -95,6 +96,7 @@ DllMain(HANDLE hDll,
   if (DLL_PROCESS_ATTACH == dwReason)
     {
       Win32CsrDllHandle = hDll;
+      InitializeAppSwitchHook();
     }
 
   return TRUE;
