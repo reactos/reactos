@@ -3129,4 +3129,40 @@ CSR_API(CsrGetProcessList)
   return Request->Status = STATUS_SUCCESS;
 }
 
+CSR_API(CsrGenerateCtrlEvent)
+{
+  PCSRSS_CONSOLE Console;
+  PCSRSS_PROCESS_DATA current;
+  PLIST_ENTRY current_entry;
+  DWORD Group;
+  NTSTATUS Status;
+
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+  Status = ConioConsoleFromProcessData(ProcessData, &Console);
+  if (! NT_SUCCESS(Status))
+  {
+    return Request->Status = Status;
+  }
+
+  Group = Request->Data.GenerateCtrlEvent.ProcessGroup;
+  Status = STATUS_INVALID_PARAMETER;
+  for (current_entry = Console->ProcessList.Flink;
+       current_entry != &Console->ProcessList;
+       current_entry = current_entry->Flink)
+  {
+    current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+    if (Group == 0 || current->ProcessGroup == Group)
+    {
+      ConioConsoleCtrlEvent(Request->Data.GenerateCtrlEvent.Event, current);
+      Status = STATUS_SUCCESS;
+    }
+  }
+
+  ConioUnlockConsole(Console);
+
+  return Request->Status = Status;
+}
+
 /* EOF */

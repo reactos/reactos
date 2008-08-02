@@ -242,6 +242,15 @@ CSR_API(CsrCreateProcess)
          }
      }
 
+   if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_PROCESS_GROUP)
+     {
+       NewProcessData->ProcessGroup = (DWORD)NewProcessData->ProcessId;
+     }
+   else
+     {
+       NewProcessData->ProcessGroup = ProcessData->ProcessGroup;
+     }
+
    /* Set default shutdown parameters */
    NewProcessData->ShutdownLevel = 0x280;
    NewProcessData->ShutdownFlags = 0;

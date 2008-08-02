@@ -41,7 +41,7 @@ typedef struct tagCSRSS_SCREEN_BUFFER
   USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
   ULONG CurrentX;                  /* Current X cursor position */
   ULONG CurrentY;                  /* Current Y cursor position */
-  BYTE DefaultAttrib;              /* default char attribute */
+  WORD DefaultAttrib;              /* default char attribute */
   USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
   CONSOLE_CURSOR_INFO CursorInfo;
   USHORT Mode;
@@ -135,6 +135,7 @@ CSR_API(CsrSetConsoleCodePage);
 CSR_API(CsrGetConsoleOutputCodePage);
 CSR_API(CsrSetConsoleOutputCodePage);
 CSR_API(CsrGetProcessList);
+CSR_API(CsrGenerateCtrlEvent);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
