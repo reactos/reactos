@@ -26,7 +26,7 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE {
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
-
+BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -56,6 +56,9 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
   PPEB Peb = NULL;
   INT Count = 0;
   INT Length;
+
+  if (!KdbpSymbolsInitialized)
+	  return FALSE;
 
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != NULL)
@@ -109,6 +112,9 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
   PLDR_DATA_TABLE_ENTRY current;
   INT Count = 0;
   INT Length;
+
+  if (!KdbpSymbolsInitialized)
+	  return FALSE;
 
   current_entry = PsLoadedModuleList.Flink;
 
@@ -213,7 +219,7 @@ KdbSymPrintAddress(IN PVOID Address)
   CHAR FileName[256];
   CHAR FunctionName[256];
 
-  if (!KdbpSymFindModuleByAddress(Address, &Info))
+  if (!KdbpSymbolsInitialized || !KdbpSymFindModuleByAddress(Address, &Info))
     return FALSE;
 
   RelativeAddress = (ULONG_PTR) Address - Info.Base;
@@ -259,6 +265,11 @@ KdbSymGetAddressInformation(IN PROSSYM_INFO RosSymInfo,
                             OUT PCH FileName  OPTIONAL,
                             OUT PCH FunctionName  OPTIONAL)
 {
+  if (!KdbpSymbolsInitialized)
+    {
+	  return STATUS_UNSUCCESSFUL;
+	}
+
   if (NULL == RosSymInfo)
     {
       return STATUS_UNSUCCESSFUL;
@@ -772,6 +783,7 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
         SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
 
         KdbSymProcessSymbols(NULL, &SymbolsInfo);
+		KdbpSymbolsInitialized = TRUE;
     }
 }
 
