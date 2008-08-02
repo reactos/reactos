@@ -974,9 +974,15 @@ NtUserSetWindowsHookEx(
    DPRINT("Enter NtUserSetWindowsHookEx\n");
    UserEnterExclusive();
 
-   if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId || NULL == HookProc)
+   if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      RETURN( NULL);
+   }
+
+   if (!HookProc)
+   {
+      SetLastWin32Error(ERROR_INVALID_FILTER_PROC);
       RETURN( NULL);
    }
 
@@ -1029,7 +1035,7 @@ NtUserSetWindowsHookEx(
       }
       else if (NULL ==  Mod)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
          RETURN( NULL);
       }
       else
@@ -1039,10 +1045,7 @@ NtUserSetWindowsHookEx(
       Global = TRUE;
    }
 
-   /* We only (partially) support local WH_CBT hooks and
-    * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
-    */
-   if  (Global ||
+   if  ( Global ||
         WH_DEBUG == HookId ||
         WH_JOURNALPLAYBACK == HookId ||
         WH_JOURNALRECORD == HookId)

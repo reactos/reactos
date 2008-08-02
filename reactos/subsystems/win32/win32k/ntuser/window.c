@@ -2059,7 +2059,7 @@ AllocErr:
       RETURN((HWND)0);
    }
 #if 0
-   Result = co_EVENT_CallEvents(EVENT_OBJECT_CREATE, Window->hSelf, OBJID_WINDOW, 0);
+   Result = IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_WINDOW, 0);
 
    if (Result == (LRESULT)-1)
    {
