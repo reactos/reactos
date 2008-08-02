@@ -518,6 +518,8 @@ TiDispatchInternal(
 
   if( Complete )
       IRPFinish( Irp, Status );
+  else
+      Irp->IoStatus.Status = Status;
 
   return Status;
 }
