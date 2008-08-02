@@ -661,5 +661,8 @@ NtGdiSetPUMPDOBJ                                 4
 NtGdiBRUSHOBJ_DeleteRbrush                       2
 NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
+#NtUserDbgWin32HeapFail                          2 # checked build only
+#NtUserDbgWin32HeapStat                          2 # checked build only
+#NtUserSetRipFlags                               1 # checked build only
 NtGdiMakeObjectXferable                          2
 NtGdiMakeObjectUnXferable                        1
