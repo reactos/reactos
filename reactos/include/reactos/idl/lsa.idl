@@ -38,8 +38,10 @@ typedef struct _LSAPR_SECURITY_DESCRIPTOR {
     SECURITY_DESCRIPTOR_CONTROL Control;
     PRPC_SID Owner;
     PRPC_SID Group;
-    PLSAPR_ACL Sacl;
-    PLSAPR_ACL Dacl;
+    LSAPR_ACL *Sacl;
+    /* FIXME: should be PLSAPR_ACL Sacl; */
+    LSAPR_ACL *Dacl;
+    /* FIXME: should be PLSAPR_ACL Dacl; */
 } LSAPR_SECURITY_DESCRIPTOR, *PLSAPR_SECURITY_DESCRIPTOR;
 
 cpp_quote("#if 0");
