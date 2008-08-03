@@ -7,17 +7,17 @@ IDS_HELP, "Affiche ou change la liste des contrôles d'accès (ACLs) de fichiers\n
 CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                [/P user:perm [...]] [/D user [...]]\n\
    nomfichier    Affiche les ACLs du fichier.\n\
-   /T            Change les ACLs des fichiers specifiés dans\n\
+   /T            Change les ACLs des fichiers spécifiés dans\n\
                  le répertoire en cours et tous les sous-répertoires.\n\
    /E            Édite les ACL au lieu de les remplacer.\n\
    /C            Continuer en cas de refus d'accès.\n\
-   /G user:perm  Accorder des droit d'accès à l'utilisateur spécifié.\n\
+   /G user:perm  Accorder des droits d'accès à l'utilisateur spécifié.\n\
                  Perm peut valoir : R  Lecture\n\
                                     W  Écriture\n\
                                     C  Modification (Écriture)\n\
                                     F  Contrôle total\n\
    /R user       Supprime les droits d'accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
-   /P user:perm  Remplace les droits d'accès de l'utilisateur specifié.\n\
+   /P user:perm  Remplace les droits d'accès de l'utilisateur spécifié.\n\
                  Perm peut valoir : N  Aucun \n\
                                     R  Lecture\n\
                                     W  Écriture\n\
@@ -27,11 +27,11 @@ CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
 Il est possible d'utiliser des caractères joker pour sélectionner plus d'un fichier avec une commande.\n\
 Il est possible de spécifier plus d'un utilisateur dans une commande.\n\n\
 Abréviations:\n\
-   CI - Heritage du conteneur.\n\
+   CI - Héritage du conteneur.\n\
         Le ACE sera appliqué aux répertoires.\n\
    OI - Héritage de l'objet.\n\
         Le ACE sera appliqué aux fichiers.\n\
-   IO - Heritage seul.\n\
+   IO - Héritage seul.\n\
         Le ACE ne sera pas appliqué au fichier/répertoire actuel.\n"
 
 IDS_ABBR_CI, "(CI)"
