@@ -288,6 +288,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
         case STATUS_INSUFFICIENT_RESOURCES: *Errno = WSA_NOT_ENOUGH_MEMORY; break;
         case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
+        case STATUS_REMOTE_NOT_LISTENING: *Errno = WSAECONNRESET; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
