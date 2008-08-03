@@ -88,7 +88,7 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 }
 
 ULONG
-NTAPI
+FASTCALL
 ExfInterlockedAddUlong(IN PULONG Addend,
                        IN ULONG Increment,
                        PKSPIN_LOCK Lock)
