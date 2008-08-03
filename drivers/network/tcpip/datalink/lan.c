@@ -860,8 +860,10 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
             Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
                                      Kbio, KbioLength, &ResultLength );
 
-            TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
-            return Status;
+            if( !NT_SUCCESS(Status) ) {
+                TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
+                return Status;
+            }
         }
 
         if( NT_SUCCESS(Status) ) {
