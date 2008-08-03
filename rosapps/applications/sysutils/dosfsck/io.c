@@ -68,7 +68,7 @@ static loff_t WIN32llseek(int fd, loff_t offset, int whence);
 #endif
 #define llseek	WIN32llseek
 
-static int is_device = 0;
+//static int is_device = 0;
 
 void fs_open(char *path,int rw)
 {
@@ -139,8 +139,6 @@ int fs_test(loff_t pos,int size)
 #if 1 // TMN
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
 	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
-	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
-	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
     scratch = alloc(readsize_aligned);
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
     okay = read(fd,scratch,readsize_aligned) == (int)readsize_aligned;
@@ -166,7 +164,6 @@ void fs_write(loff_t pos,int size,void *data)
         const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
         const loff_t seekpos_aligned = pos - (pos % 512);
         const size_t seek_delta = (size_t)(pos - seekpos_aligned);
-        const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned;
         boolean use_read = (seek_delta != 0) || ((readsize_aligned-size) != 0);
 
         /* Aloc temp buffer if write is not aligned */
@@ -184,7 +181,7 @@ void fs_write(loff_t pos,int size,void *data)
             if (read(fd,scratch,readsize_aligned) < 0) pdie("Read %d bytes at %I64d",size,pos);
 
             /* Patch data in memory */
-            memcpy(data, scratch+seek_delta, size);
+            memcpy(data, (char *)scratch+seek_delta, size);
         }
 
         /* Write it back */
@@ -229,7 +226,7 @@ void fs_write(loff_t pos,int size,void *data)
 static void fs_flush(void)
 {
     CHANGE *this;
-    int size;
+    //int size;
     int old_write_immed = write_immed;
 
     /* Disable writes to the list now */
@@ -300,9 +297,9 @@ int fs_changed(void)
 static int WIN32open(const char *path, int oflag, ...)
 {
 	HANDLE fh;
-	DWORD desiredAccess;
-	DWORD shareMode;
-	DWORD creationDisposition;
+	DWORD desiredAccess = 0;
+	DWORD shareMode = 0;
+	DWORD creationDisposition = 0;
 	DWORD flagsAttributes = FILE_ATTRIBUTE_NORMAL;
 	SECURITY_ATTRIBUTES securityAttributes;
 	va_list ap;
