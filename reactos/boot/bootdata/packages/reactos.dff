@@ -586,7 +586,7 @@ modules\rosapps\applications\imagesoft\imagesoft.exe                            
 modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
 modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
 modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
-modules\rosapps\applications\net\roshttpd\roshttpd.exe                                      1   optional
+modules\rosapps\applications\net\roshttpd\roshttpd.exe                                  1   optional
 modules\rosapps\applications\notevil\notevil.exe                                        1   optional
 modules\rosapps\applications\magnify\magnify.exe                                        1   optional
 modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
@@ -596,6 +596,7 @@ modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                         
 modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
 modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
 modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
+modules\rosapps\applications\sysutils\dosfsck\dosfsck.exe                                       1   optional
 modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
 modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
 modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
@@ -603,7 +604,7 @@ modules\rosapps\applications\sysutils\pedump\pedump.exe                         
 modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
 modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
 modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
-modules\rosapps\applications\sysutils\screenshot\screenshot.exe                                  1   optional
+modules\rosapps\applications\sysutils\screenshot\screenshot.exe                         1   optional
 modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
 modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
 modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
