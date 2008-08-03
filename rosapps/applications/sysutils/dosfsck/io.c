@@ -181,7 +181,7 @@ void fs_write(loff_t pos,int size,void *data)
             if (read(fd,scratch,readsize_aligned) < 0) pdie("Read %d bytes at %I64d",size,pos);
 
             /* Patch data in memory */
-            memcpy(data, (char *)scratch+seek_delta, size);
+            memcpy((char *)scratch+seek_delta, data, size);
         }
 
         /* Write it back */
