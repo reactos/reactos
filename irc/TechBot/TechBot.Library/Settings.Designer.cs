@@ -61,7 +61,7 @@ namespace TechBot.Library {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("svn://svn.reactos.org/trunk/reactos")]
+        [global::System.Configuration.DefaultSettingValueAttribute("svn://svn.reactos.org/reactos/trunk")]
         public string SVNRoot {
             get {
                 return ((string)(this["SVNRoot"]));
@@ -70,7 +70,7 @@ namespace TechBot.Library {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("@")]
+        [global::System.Configuration.DefaultSettingValueAttribute("!")]
         public string CommandPrefix {
             get {
                 return ((string)(this["CommandPrefix"]));

@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.Common", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.MSDN", "TechBot.Commands.MSDN\TechBot.Commands.MSDN.csproj", "{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechBot.Commands.RBuild", "TechBot.Commands.RBuild\TechBot.Commands.RBuild.csproj", "{D676FEDE-62DD-4B4D-94C6-308598E827F9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,10 +55,6 @@ Global
 		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADBF1ED6-A586-4707-BD59-4CD53448D0FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D676FEDE-62DD-4B4D-94C6-308598E827F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,7 @@
       <Value Profile="(Default)">C:\Ros\current\irc\TechBot\Resources\wm.xml</Value>
     </Setting>
     <Setting Name="SVNRoot" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">svn://svn.reactos.org/trunk/reactos</Value>
+      <Value Profile="(Default)">svn://svn.reactos.org/reactos/trunk</Value>
     </Setting>
   </Settings>
 </SettingsFile>
