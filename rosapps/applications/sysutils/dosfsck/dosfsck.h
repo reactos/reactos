@@ -162,7 +162,7 @@ typedef struct {
 #define offsetof(t,e)	((int)&(((t *)0)->e))
 #endif
 
-extern int interactive,list,verbose,test,write_immed;
+extern int interactive,list,verbose,test,write_immed,no_change_list;
 extern int atari_format;
 extern unsigned n_files;
 extern void *mem_queue;
