@@ -1,4 +1,15 @@
+
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            subsys/csrss/win32csr/appswitch.c
+ * PURPOSE:         app switching functionality
+ * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ */
+
 #include "w32csr.h"
+//#define NDEBUG
+#include <debug.h>
 
 typedef struct APPSWITCH_ITEM
 {
