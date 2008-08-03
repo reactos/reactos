@@ -611,15 +611,21 @@ void BuildDef32File( DLLSPEC *spec )
         case TYPE_FASTCALL:
         {
             int at_param = strlen(odp->u.func.arg_types) * get_ptr_size();
-            output( "  @%s", name );
+            output( "  " );
+            if (!kill_at) output( "@" );
+            output( "%s", name );
             if (!kill_at) output( "@%d", at_param );
             if  (odp->flags & FLAG_FORWARD)
             {
-                output( "=@%s", odp->link_name );
+                output( "=" );
+                if (!kill_at) output( "@" );
+                output( "%s", odp->link_name );
             }
             else if (strcmp(name, odp->link_name)) /* try to reduce output */
             {
-                output( "=@%s", odp->link_name );
+                output( "=" );
+                if (!kill_at) output( "@" );
+                output( "%s", odp->link_name );
                 if (!kill_at) output( "@%d", at_param );
             }
             break;
