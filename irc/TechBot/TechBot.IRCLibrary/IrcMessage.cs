@@ -419,7 +419,7 @@ namespace TechBot.IRCLibrary
 		{
 			foreach (char c in command)
 			{
-				if (!Char.IsLetter(c))
+				if (!Char.IsLetter(c) && !Char.IsWhiteSpace(c))
 				{
 					return false;
 				}
