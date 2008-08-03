@@ -17,6 +17,7 @@ namespace TechBot.IRCLibrary
 		public const string PRIVMSG = "PRIVMSG";
 		public const string USER = "USER";
 		public const string PASS = "PASS";
+        public const string GHOST = "NS GHOST";
 
 		public const string RPL_NAMREPLY = "353";
 		public const string RPL_ENDOFNAMES = "366";
