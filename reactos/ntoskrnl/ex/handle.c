@@ -35,10 +35,8 @@ NTAPI
 ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
                           IN EXHANDLE LookupHandle)
 {
-    ULONG i, j, k, NextHandle;
-    ULONG_PTR TableCode = HandleTable->TableCode;
-    ULONG_PTR TableBase = TableCode & ~3;
-    ULONG TableLevel = (ULONG)(TableCode & 3);
+    ULONG i, j, k, TableLevel, NextHandle;
+    ULONG_PTR TableBase;
     PHANDLE_TABLE_ENTRY Entry = NULL;
     EXHANDLE Handle = LookupHandle;
     PUCHAR Level1, Level2, Level3;
@@ -47,6 +45,13 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     Handle.TagBits = 0;
     NextHandle = *(volatile ULONG*)&HandleTable->NextHandleNeedingPool;
     if (Handle.Value >= NextHandle) return NULL;
+
+    /* Get the table code */
+    TableBase = *(volatile ULONG_PTR*)&HandleTable->TableCode;
+
+    /* Extract the table level and actual table base */
+    TableLevel = (ULONG)(TableBase & 3);
+    TableBase = TableBase - TableLevel;
 
     /* Check what level we're running at */
     switch (TableLevel)
@@ -205,8 +210,8 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     PEPROCESS Process = HandleTable->QuotaProcess;
     ULONG i, j;
     ULONG_PTR TableCode = HandleTable->TableCode;
+    ULONG TableLevel = TableCode & 3;
     ULONG_PTR TableBase = TableCode & ~3;
-    ULONG TableLevel = (ULONG)(TableCode & 3);
     PHANDLE_TABLE_ENTRY Level1, *Level2, **Level3;
     PAGED_CODE();
 
@@ -728,13 +733,6 @@ ExpAllocateHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
         /* Lookup the entry for this handle */
         Entry = ExpLookupHandleTableEntry(HandleTable, Handle);
-
-        /* Make sure that we found an entry */
-        if (!Entry)
-        {
-            /* We didn't, fail */
-            return NULL;
-        }
 
         /* Get an available lock and acquire it */
         i = ((OldValue & FREE_HANDLE_MASK) >> 2) % 4;
