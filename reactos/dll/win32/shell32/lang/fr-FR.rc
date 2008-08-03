@@ -278,7 +278,7 @@ BEGIN
 	LTEXT "Type :", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
-	LTEXT "Système de fichier :", -1, 15, 70, 100, 10
+	LTEXT "Système de fichiers :", -1, 15, 70, 100, 10
 	LTEXT "", 14003, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
@@ -333,7 +333,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Quel compte d'utilisateur désirez-vous utiliser pour lancer ce programme?", -1, 10, 20, 220, 20
 	CHECKBOX "Utilisateur actuel %s", 14000, 10, 45, 150, 10
-	LTEXT "Protéger mon ordinateur et mes données de l'activé de programme non autorisés", -1, 25, 57, 200, 10, WS_DISABLED
+	LTEXT "Protéger mon ordinateur et mes données des activités des programmes non autorisés", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "Cette option peut empêcher les virus d'ordinateur d'endommager votre ordinateur ou vos données personnelles, néanmoins sélectionner cette option pourrait empêcher le programme de fonctionner correctement.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "L'utilisateur suivant :", 14002, 10, 100, 90, 10
 	LTEXT "Nom d'utilisateur :", -1, 20, 118, 54, 10
@@ -385,8 +385,8 @@ BEGIN
 
 GROUPBOX "Tâches", -1, 7, 10, 249, 45
 //ICON
-AUTORADIOBUTTON "Montrer les tâches communes dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Utilisez les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP
 GROUPBOX "Parcourir les dossiers", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
 AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP
@@ -394,9 +394,9 @@ AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 1
 GROUPBOX "Cliquer sur les éléments de la façon suivante", -1, 7, 110, 249, 60
 //ICON
 AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Toujours souligner les titres des icônes avec mon navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP
 AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP
 PUSHBUTTON "Pa&ramètres par défaut", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -417,19 +417,19 @@ END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Types de fichier"
+CAPTION "Types de fichiers"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Types de fichier enregistrés :", -1, 7, 10, 70, 10
+LTEXT "&Types de fichiers enregistrés :", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
 PUSHBUTTON "&Nouveau", 14001, 120, 110, 50, 14, WS_TABSTOP
 PUSHBUTTON "Supprimer", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Détails pour l'extension '%s'", 14003, 7, 130, 249, 70
+GROUPBOX "Détails concernant l'extension '%s'", 14003, 7, 130, 249, 70
 LTEXT "Ouvrir avec :", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nom de l'application", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Changer...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Les fichiers avec l'extension '%s' sont du type '%s'. Pour\nchanger les paramètres qui concernent tous les fichiers '%s', cliquez\nsur Avancé.", 14007, 12, 155, 160, 30
+PUSHBUTTON "&Modifier...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Les fichiers avec l'extension '%s' sont de type '%s'. Pour\nmodifier les paramètres qui concernent tous les fichiers '%s', cliquez\nsur Avancé.", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vancé", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -481,7 +481,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Exécution automatique"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Sélectionnez un type de contenu, puis choisissez une action que ReactOS réalisera automatiquement que ce type sera utilisé dans ce périphérique :", 1000, 7, 7, 215, 20
+	LTEXT "Sélectionnez un type de contenu, puis choisissez une action que ReactOS réalisera automatiquement quand ce type sera utilisé dans ce périphérique :", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
 	GROUPBOX "Actions", -1, 7, 45, 212, 146
 	AUTORADIOBUTTON "Sélectionnez une action à réaliser :", 1005, 14, 54, 202, 10, WS_GROUP
@@ -496,7 +496,7 @@ CAPTION "Contenu mixte"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "Ce disque ou dispositif contient plus d'un type de fichier.", 1001, 32, 7, 191, 20
+	LTEXT "Ce disque ou dispositif contient plus d'un type de fichiers.", 1001, 32, 7, 191, 20
 	LTEXT "Que voulez-vous que ReactOS fasse ?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
@@ -556,7 +556,7 @@ BEGIN
 	PUSHBUTTON "Fermer", IDCANCEL, 118, 198, 60, 14
 	LTEXT "Ca&pacité :", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Système de fichier", -1, 7, 35, 170, 9
+	LTEXT "Système de fichiers", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
 	LTEXT "Taille d'unité d'&allocation", -1, 7, 64, 170, 9
@@ -603,7 +603,7 @@ BEGIN
 	IDS_DESKTOP                 "Bureau"
 	IDS_MYCOMPUTER              "Poste de travail"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
-	IDS_CONTROLPANEL            "Panneau de contrôle"
+	IDS_CONTROLPANEL            "Panneau de configuration"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Grandes icônes"
