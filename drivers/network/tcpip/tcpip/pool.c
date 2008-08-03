@@ -48,11 +48,20 @@ VOID PoolFreeBuffer(
 }
 
 PVOID TcpipAllocateFromNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List ) {
-    return ExAllocateFromNPagedLookasideList( List );
+    PVOID Buffer;
+
+    Buffer = ExAllocateFromNPagedLookasideList( List );
+
+    TI_DbgPrint(DEBUG_MEMORY, ("Allocated from Nonpaged Lookaside List at (0x%X).\n", Buffer));
+
+    return Buffer;
 }
 
 VOID TcpipFreeToNPagedLookasideList( PNPAGED_LOOKASIDE_LIST List,
 				     PVOID Thing ) {
+
+    TI_DbgPrint(DEBUG_MEMORY, ("Freeing buffer (0x%X) to Nonpaged Lookaside List.\n", Thing));
+
     ExFreeToNPagedLookasideList( List, Thing );
 }
 
