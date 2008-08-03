@@ -234,7 +234,7 @@ NTSTATUS
 NTAPI
 NtQueryOpenSubKeys(
     IN POBJECT_ATTRIBUTES TargetKey,
-    IN ULONG HandleCount
+    OUT PULONG HandleCount
 );
 
 NTSTATUS
