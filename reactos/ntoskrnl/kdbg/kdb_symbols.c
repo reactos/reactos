@@ -354,7 +354,7 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
   CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                       FileName->Length,
                                                       TAG_KDBS);
-  RtlInitUnicodeString(&CacheEntry->FileName, FileName->Buffer);
+  RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
   ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->RosSymInfo = RosSymInfo;
