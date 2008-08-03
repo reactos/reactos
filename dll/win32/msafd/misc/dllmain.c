@@ -286,6 +286,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; break;
         case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
         case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
+        case STATUS_INSUFFICIENT_RESOURCES: *Errno = WSA_NOT_ENOUGH_MEMORY; break;
         case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
