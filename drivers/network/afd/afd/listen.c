@@ -131,11 +131,12 @@ static NTSTATUS NTAPI ListenComplete
 	PLIST_ENTRY PendingIrp  =
 	    RemoveHeadList( &FCB->PendingIrpList[FUNCTION_PREACCEPT] );
 	PLIST_ENTRY PendingConn = FCB->PendingConnections.Flink;
+	Qelt = CONTAINING_RECORD( PendingConn, AFD_TDI_OBJECT_QELT, ListEntry );
 	SatisfyPreAccept
 	    ( CONTAINING_RECORD( PendingIrp, IRP,
 				 Tail.Overlay.ListEntry ),
-	      CONTAINING_RECORD( PendingConn, AFD_TDI_OBJECT_QELT,
-				 ListEntry ) );
+	      Qelt );
+	ExFreePool( Qelt );
     }
 
     FCB->NeedsNewListen = TRUE;
