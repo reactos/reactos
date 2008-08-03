@@ -237,6 +237,9 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
   UINT Information,
   PIO_COMPLETION_ROUTINE Completion ) {
 
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = Information;
+
     if( Status == STATUS_PENDING ) {
 	/* We should firstly mark this IRP as pending, because
 	   otherwise it may be completed by StreamSocketConnectComplete()
@@ -246,8 +249,6 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
     } else {
 	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	SocketStateUnlock( FCB );
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = Information;
 	if( Completion )
 	    Completion( FCB->DeviceExt->DeviceObject, Irp, FCB );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );

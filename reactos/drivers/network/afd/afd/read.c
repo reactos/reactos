@@ -129,7 +129,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     PIRP NextIrp;
     PIO_STACK_LOCATION NextIrpSp;
     PAFD_RECV_INFO RecvReq;
-    UINT TotalBytesCopied = 0;
+    UINT TotalBytesCopied = 0, RetBytesCopied = 0;
     NTSTATUS Status = STATUS_SUCCESS, RetStatus = STATUS_PENDING;
 
     AFD_DbgPrint(MID_TRACE,("%x %x\n", FCB, Irp));
@@ -197,7 +197,10 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 			       RecvReq->BufferCount, FALSE );
 		NextIrp->IoStatus.Status = Status;
 		NextIrp->IoStatus.Information = TotalBytesCopied;
-                if( NextIrp == Irp ) RetStatus = Status;
+		if( NextIrp == Irp ) { 
+		    RetStatus = Status;
+		    RetBytesCopied = TotalBytesCopied;
+		}
 		if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	    }
@@ -212,6 +215,12 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
+
+    /* Sometimes we're called with a NULL Irp */
+    if( Irp ) {
+        Irp->IoStatus.Status = RetStatus;
+        Irp->IoStatus.Information = RetBytesCopied;
+    }
 
     return RetStatus;
 }
