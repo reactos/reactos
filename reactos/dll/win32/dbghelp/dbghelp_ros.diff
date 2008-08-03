@@ -1,0 +1,50 @@
+Index: dbghelp.spec
+===================================================================
+--- dbghelp.spec	(revision 35049)
++++ dbghelp.spec	(working copy)
+@@ -40,8 +40,8 @@
+ @ stub SymEnumSym
+ @ stdcall SymEnumSymbols(ptr double str ptr ptr)
+ @ stdcall SymEnumSymbolsW(ptr double wstr ptr ptr)
+-@ stub SymEnumSymbolsForAddr
+-@ stub SymEnumSymbolsForAddrW
++@ stdcall SymEnumSymbolsForAddr (ptr double ptr ptr)
++@ stdcall SymEnumSymbolsForAddrW (ptr double ptr ptr)
+ @ stdcall SymEnumTypes(ptr double ptr ptr)
+ @ stdcall SymEnumTypesW(ptr double ptr ptr)
+ @ stdcall SymEnumerateModules(long ptr ptr)
+Index: symbol.c
+===================================================================
+--- symbol.c	(revision 35049)
++++ symbol.c	(working copy)
+@@ -1000,6 +1000,30 @@
+ }
+ 
+ /******************************************************************
++ *		SymEnumSymbolsForAddrW (DBGHELP.@)
++ *
++ */
++BOOL WINAPI SymEnumSymbolsForAddrW(HANDLE hProcess, DWORD64 Address, 
++                                   PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
++                                   PVOID UserContext)
++{
++    UNIMPLEMENTED;
++    return FALSE;
++}
++
++/******************************************************************
++ *		SymEnumSymbolsForAddr (DBGHELP.@)
++ *
++ */
++BOOL WINAPI SymEnumSymbolsForAddr(HANDLE hProcess, DWORD64 Address,
++                                  PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
++                                  PVOID UserContext)
++{
++    UNIMPLEMENTED;
++    return FALSE;
++}
++
++/******************************************************************
+  *		SymEnumSymbolsW (DBGHELP.@)
+  *
+  */

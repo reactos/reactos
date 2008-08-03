@@ -1000,6 +1000,30 @@ static BOOL CALLBACK sym_enumW(PSYMBOL_INFO si, ULONG size, PVOID ctx)
 }
 
 /******************************************************************
+ *		SymEnumSymbolsForAddrW (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymEnumSymbolsForAddrW(HANDLE hProcess, DWORD64 Address, 
+                                   PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
+                                   PVOID UserContext)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymEnumSymbolsForAddr (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymEnumSymbolsForAddr(HANDLE hProcess, DWORD64 Address,
+                                  PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
+                                  PVOID UserContext)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/******************************************************************
  *		SymEnumSymbolsW (DBGHELP.@)
  *
  */

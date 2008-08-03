@@ -40,8 +40,8 @@
 @ stub SymEnumSym
 @ stdcall SymEnumSymbols(ptr double str ptr ptr)
 @ stdcall SymEnumSymbolsW(ptr double wstr ptr ptr)
-@ stub SymEnumSymbolsForAddr
-@ stub SymEnumSymbolsForAddrW
+@ stdcall SymEnumSymbolsForAddr (ptr double ptr ptr)
+@ stdcall SymEnumSymbolsForAddrW (ptr double ptr ptr)
 @ stdcall SymEnumTypes(ptr double ptr ptr)
 @ stdcall SymEnumTypesW(ptr double ptr ptr)
 @ stdcall SymEnumerateModules(long ptr ptr)
