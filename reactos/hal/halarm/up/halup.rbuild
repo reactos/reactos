@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halarm_up" type="kernelmodedll" installbase="system32" installname="hal.dll">
-	<importlibrary definition="../../hal/hal_arm.def" />
+	<importlibrary base="hal" definition="hal.spec.def" />
 	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="halarm_generic">../include</include>
 	<include base="ntoskrnl">include</include>
