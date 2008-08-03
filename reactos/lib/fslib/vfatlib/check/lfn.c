@@ -62,7 +62,7 @@ static __inline char* CNV_THIS_PART(LFN_ENT *lfn)
 {							\
 	char __part_uni[CHARS_PER_LFN*2];
 	copy_lfn_part( __part_uni, lfn );
-	cnv_unicode( __part_uni, CHARS_PER_LFN, 0 );
+	return cnv_unicode( (unsigned char*)__part_uni, CHARS_PER_LFN, 0 );
 }
 
 /* Convert name parts collected so far (from previous slots) from unicode to
@@ -105,7 +105,7 @@ static char *cnv_unicode( const unsigned char *uni, int maxlen, int use_q )
     }
     *cp = 0;
 
-    return( out );
+    return (char *)out;
 }
 
 
@@ -322,7 +322,7 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
     if (lfn_slot != -1) {
 	lfn_slot--;
 	offset = lfn_slot * CHARS_PER_LFN*2;
-	copy_lfn_part( lfn_unicode+offset, lfn );
+	copy_lfn_part( (char*)lfn_unicode+offset, lfn );
 	if (lfn->id & LFN_ID_START)
 	    lfn_unicode[offset+26] = lfn_unicode[offset+27] = 0;
 	lfn_offsets[lfn_parts++] = dir_offset;

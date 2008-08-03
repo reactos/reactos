@@ -44,7 +44,7 @@ FD_TYPE file_type(FDSC **curr,char *fixed);
 /* Returns the attribute of the file FIXED in directory CURR or FDT_NONE if no
    such file exists or if CURR is NULL. */
 
-void file_modify(FDSC **curr,char *fixed);
+void file_modify(FDSC **curr,unsigned char *fixed);
 
 /* Performs the necessary operation on the entry of CURR that is named FIXED. */
 

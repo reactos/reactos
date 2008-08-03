@@ -111,14 +111,14 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	}
 	memset(de,0,sizeof(DIR_ENT));
 	while (1) {
-	    sprintf(de->name,pattern,curr_num);
+	    sprintf((char*)de->name,pattern,curr_num);
 	    clu_num = fs->root_cluster;
 	    i = 0;
 	    offset2 = cluster_start(fs,clu_num);
 	    while (clu_num > 0 && clu_num != -1) {
 		fs_read(offset2,sizeof(DIR_ENT),&d2);
 		if (offset2 != offset &&
-		    !strncmp(d2.name,de->name,MSDOS_NAME))
+		    !strncmp((char*)d2.name,(char*)de->name,MSDOS_NAME))
 		    break;
 		i += sizeof(DIR_ENT);
 		offset2 += sizeof(DIR_ENT);
@@ -151,10 +151,10 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	offset = fs->root_start+next_free*sizeof(DIR_ENT);
 	memset(de,0,sizeof(DIR_ENT));
 	while (1) {
-	    sprintf(de->name,pattern,curr_num);
+	    sprintf((char*)de->name,pattern,curr_num);
 	    for (scan = 0; scan < (int)fs->root_entries; scan++)
 		if (scan != next_free &&
-		    !strncmp(root[scan].name,de->name,MSDOS_NAME))
+		    !strncmp((char*)root[scan].name,(char*)de->name,MSDOS_NAME))
 		    break;
 	    if (scan == (int)fs->root_entries) break;
 	    if (++curr_num >= 10000) die("Unable to create unique name");
@@ -226,8 +226,8 @@ static int bad_name(unsigned char *name)
 
     /* Do not complain about (and auto-correct) the extended attribute files
      * of OS/2. */
-    if (strncmp(name,"EA DATA  SF",11) == 0 ||
-        strncmp(name,"WP ROOT  SF",11) == 0) return 0;
+    if (strncmp((char*)name,"EA DATA  SF",11) == 0 ||
+        strncmp((char*)name,"WP ROOT  SF",11) == 0) return 0;
 
     for (i = 0; i < 8; i++) {
 	if (name[i] < ' ' || name[i] == 0x7f) return 1;
@@ -313,10 +313,10 @@ static void auto_rename(DOS_FILE *file)
     first = file->parent ? file->parent->first : root;
     number = 0;
     while (1) {
-	sprintf(file->dir_ent.name,"FSCK%04d",number);
-	strncpy(file->dir_ent.ext,"REN",3);
+	sprintf((char*)file->dir_ent.name,"FSCK%04d",number);
+	strncpy((char*)file->dir_ent.ext,"REN",3);
 	for (walk = first; walk; walk = walk->next)
-	    if (walk != file && !strncmp(walk->dir_ent.name,file->dir_ent.
+	    if (walk != file && !strncmp((char*)walk->dir_ent.name,(char*)file->dir_ent.
 	      name,MSDOS_NAME)) break;
 	if (!walk) {
 	    fs_write(file->offset,MSDOS_NAME,file->dir_ent.name);
@@ -340,9 +340,9 @@ static void rename_file(DOS_FILE *file)
     while (1) {
 	printf("New name: ");
 	fflush(stdout);
-	if (fgets(name,45,stdin)) {
-	    if ((here = strchr(name,'\n'))) *here = 0;
-	    for (walk = strrchr(name,0); walk >= name && (*walk == ' ' ||
+	if (fgets((char*)name,45,stdin)) {
+	    if ((here = (unsigned char*)strchr((char*)name,'\n'))) *here = 0;
+	    for (walk = (unsigned char*)strrchr((char*)name,0); walk >= name && (*walk == ' ' ||
 	      *walk == '\t'); walk--);
 	    walk[1] = 0;
 	    for (walk = name; *walk == ' ' || *walk == '\t'; walk++);
@@ -359,7 +359,7 @@ static int handle_dot(DOS_FS *fs,DOS_FILE *file,int dots)
 {
     char *name;
 
-    name = strncmp(file->dir_ent.name,MSDOS_DOT,MSDOS_NAME) ? ".." : ".";
+    name = strncmp((char*)file->dir_ent.name,MSDOS_DOT,MSDOS_NAME) ? ".." : ".";
     if (!(file->dir_ent.attr & ATTR_DIR)) {
 	printf("%s\n  Is a non-directory.\n",path_name(file));
 	if (interactive)
@@ -404,7 +404,7 @@ static int check_file(DOS_FS *fs,DOS_FILE *file)
 	      path_name(file));
 	    MODIFY(file,size,CT_LE_L(0));
 	}
-	if (file->parent && !strncmp(file->dir_ent.name,MSDOS_DOT,MSDOS_NAME)) {
+	if (file->parent && !strncmp((char*)file->dir_ent.name,MSDOS_DOT,MSDOS_NAME)) {
 	    expect = FSTART(file->parent,fs);
 	    if (FSTART(file,fs) != expect) {
 		printf("%s\n  Start (%ld) does not point to parent (%ld)\n",
@@ -413,7 +413,7 @@ static int check_file(DOS_FS *fs,DOS_FILE *file)
 	    }
 	    return 0;
 	}
-	if (file->parent && !strncmp(file->dir_ent.name,MSDOS_DOTDOT,
+	if (file->parent && !strncmp((char*)file->dir_ent.name,MSDOS_DOTDOT,
 	  MSDOS_NAME)) {
 	    expect = file->parent->parent ? FSTART(file->parent->parent,fs):0;
 	    if (fs->root_cluster && expect == fs->root_cluster)
@@ -569,13 +569,13 @@ static int check_dir(DOS_FS *fs,DOS_FILE **root,int dots)
     dot = dotdot = redo = 0;
     walk = root;
     while (*walk) {
-	if (!strncmp((*walk)->dir_ent.name,MSDOS_DOT,MSDOS_NAME) ||
-	  !strncmp((*walk)->dir_ent.name,MSDOS_DOTDOT,MSDOS_NAME)) {
+	if (!strncmp((char*)(*walk)->dir_ent.name,MSDOS_DOT,MSDOS_NAME) ||
+	  !strncmp((char*)(*walk)->dir_ent.name,MSDOS_DOTDOT,MSDOS_NAME)) {
 	    if (handle_dot(fs,*walk,dots)) {
 		*walk = (*walk)->next;
 		continue;
 	    }
-	    if (!strncmp((*walk)->dir_ent.name,MSDOS_DOT,MSDOS_NAME)) dot++;
+	    if (!strncmp((char*)(*walk)->dir_ent.name,MSDOS_DOT,MSDOS_NAME)) dot++;
 	    else dotdot++;
 	}
 	if (!((*walk)->dir_ent.attr & ATTR_VOLUME) &&
@@ -609,7 +609,7 @@ static int check_dir(DOS_FS *fs,DOS_FILE **root,int dots)
 	    skip = 0;
 	    while (*scan && !skip) {
 		if (!((*scan)->dir_ent.attr & ATTR_VOLUME) &&
-		    !strncmp((*walk)->dir_ent.name,(*scan)->dir_ent.name,MSDOS_NAME)) {
+		    !strncmp((char*)(*walk)->dir_ent.name,(char*)(*scan)->dir_ent.name,MSDOS_NAME)) {
 		    printf("%s\n  Duplicate directory entry.\n  First  %s\n",
 			   path_name(*walk),file_stat(*walk));
 		    printf("  Second %s\n",file_stat(*scan));
@@ -763,7 +763,7 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
 	de.start = CT_LE_W(fs->root_cluster & 0xffff);
 	de.starthi = CT_LE_W((fs->root_cluster >> 16) & 0xffff);
     }
-    if ((type = file_type(cp,de.name)) != fdt_none) {
+    if ((type = file_type(cp,(char*)de.name)) != fdt_none) {
 	if (type == fdt_undelete && (de.attr & ATTR_DIR))
 	    die("Can't undelete directories.");
 	file_modify(cp,de.name);
@@ -793,8 +793,8 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
 	printf("\n");
     }
     if (offset &&
-	strncmp(de.name,MSDOS_DOT,MSDOS_NAME) != 0 &&
-	strncmp(de.name,MSDOS_DOTDOT,MSDOS_NAME) != 0)
+	strncmp((char*)de.name,MSDOS_DOT,MSDOS_NAME) != 0 &&
+	strncmp((char*)de.name,MSDOS_DOTDOT,MSDOS_NAME) != 0)
 	++n_files;
     test_file(fs,new,test);
 }
@@ -834,9 +834,9 @@ static int subdirs(DOS_FS *fs,DOS_FILE *parent,FDSC **cp)
 
     for (walk = parent ? parent->first : root; walk; walk = walk->next)
 	if (walk->dir_ent.attr & ATTR_DIR)
-	    if (strncmp(walk->dir_ent.name,MSDOS_DOT,MSDOS_NAME) &&
-	      strncmp(walk->dir_ent.name,MSDOS_DOTDOT,MSDOS_NAME))
-		if (scan_dir(fs,walk,file_cd(cp,walk->dir_ent.name))) return 1;
+	    if (strncmp((char*)walk->dir_ent.name,MSDOS_DOT,MSDOS_NAME) &&
+	      strncmp((char*)walk->dir_ent.name,MSDOS_DOTDOT,MSDOS_NAME))
+		if (scan_dir(fs,walk,file_cd(cp,(char*)walk->dir_ent.name))) return 1;
     return 0;
 }
 

@@ -17,7 +17,7 @@
 #include "check.h"
 #include "fat.h"
 
-#pragma warning(disable: 4018)
+//#pragma warning(disable: 4018)
 
 static void get_fat(FAT_ENTRY *entry,void *fat,unsigned long cluster,DOS_FS *fs)
 {
