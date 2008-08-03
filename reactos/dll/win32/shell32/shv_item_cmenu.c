@@ -554,6 +554,9 @@ SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
           idResource = IDS_PLAY_VERB;
        else if (!wcsicmp(curEntry->szVerb, L"preview"))
           idResource = IDS_PREVIEW_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"cplopen"))
+          idResource = IDS_OPEN_VERB;
+
        else
           idResource = 0;
 
