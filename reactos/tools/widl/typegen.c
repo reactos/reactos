@@ -3299,9 +3299,8 @@ int write_expr_eval_routines(FILE *file, const char *iface)
         print_file(file, 0, "static void __RPC_USER %s_%sExprEval_%04u(PMIDL_STUB_MESSAGE pStubMsg)\n",
                    iface, name, callback_offset);
         print_file(file, 0, "{\n");
-        print_file (file, 1, "%s%s *%s = (%s%s *)(pStubMsg->StackTop - %u);\n",
-                    is_struct(eval->structure->type) ? "struct " : "", name, var_name,
-                    is_struct(eval->structure->type) ? "struct " : "", name, eval->baseoff);
+        print_file (file, 1, "%s *%s = (%s *)(pStubMsg->StackTop - %u);\n",
+                    name, var_name, name, eval->baseoff);
         print_file(file, 1, "pStubMsg->Offset = 0;\n"); /* FIXME */
         print_file(file, 1, "pStubMsg->MaxCount = (unsigned long)");
         write_struct_expr(file, eval->expr, 1, fields, var_name);
