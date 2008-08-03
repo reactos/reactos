@@ -844,9 +844,11 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
 
     Status = OpenRegistryKey( &EnumKeyName, &EnumKey );
 
-    if( !NT_SUCCESS(Status) )
+    if( !NT_SUCCESS(Status) ) {
         TI_DbgPrint(DEBUG_DATALINK,("Couldn't open Enum key %wZ: %x\n",
                                     &EnumKeyName, Status));
+        return Status;
+    }
 
     for( i = 0; NT_SUCCESS(Status); i++ ) {
         Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
