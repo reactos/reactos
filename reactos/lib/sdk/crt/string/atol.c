@@ -8,7 +8,7 @@
 long
 _ttol(const _TCHAR *str)
 {
-  return _tcstol(str, 0, 10);
+  return (long)_ttoi64(str);
 }
 
 int _atoldbl(long double *value, const char *str)
