@@ -19,21 +19,21 @@
  * @name FsRtlAreNamesEqual
  * @implemented
  *
- * FILLME
+ * Compare two strings to check if they match
  *
  * @param Name1
- *        FILLME
+ *        First unicode string to compare
  *
  * @param Name2
- *        FILLME
+ *        Second unicode string to compare
  *
  * @param IgnoreCase
- *        FILLME
+ *        If TRUE, Case will be ignored when comparing strings
  *
  * @param UpcaseTable
- *        FILLME
+ *        Table for upcase letters. If NULL is given, system one will be used
  *
- * @return None
+ * @return TRUE if the strings are equal
  *
  * @remarks From Bo Branten's ntifs.h v25.
  *
@@ -188,7 +188,7 @@ FsRtlDissectName(IN UNICODE_STRING Name,
  * @name FsRtlDoesNameContainWildCards
  * @implemented
  *
- * FILLME
+ * Checks if the given string contains WildCards
  *
  * @param Name
  *        Pointer to a UNICODE_STRING containing Name to examine
