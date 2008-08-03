@@ -839,6 +839,8 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         ExAllocatePool(NonPagedPool, sizeof(KEY_BASIC_INFORMATION));
     ULONG KbioLength = sizeof(KEY_BASIC_INFORMATION), ResultLength;
 
+    if( !Kbio ) return STATUS_INSUFFICIENT_RESOURCES;
+
     RtlInitUnicodeString
         (&EnumKeyName, CCS_ROOT L"\\Control\\Class\\" TCPIP_GUID);
 
@@ -847,6 +849,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
     if( !NT_SUCCESS(Status) ) {
         TI_DbgPrint(DEBUG_DATALINK,("Couldn't open Enum key %wZ: %x\n",
                                     &EnumKeyName, Status));
+        ExFreePool( Kbio );
         return Status;
     }
 
@@ -854,7 +857,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
                                  Kbio, KbioLength, &ResultLength );
 
-        if( Status == STATUS_BUFFER_TOO_SMALL ) {
+        if( Status == STATUS_BUFFER_TOO_SMALL || Status == STATUS_BUFFER_OVERFLOW ) {
             ExFreePool( Kbio );
             KbioLength = ResultLength;
             Kbio = ExAllocatePool( NonPagedPool, KbioLength );
@@ -864,6 +867,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
 
             if( !NT_SUCCESS(Status) ) {
                 TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
+                ExFreePool( Kbio );
                 return Status;
             }
         }
@@ -877,6 +881,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
                 ( &EnumKeyName, &TargetKeyName, Name, DeviceDesc );
             if( NT_SUCCESS(Status) ) {
                 NtClose( EnumKey );
+                ExFreePool( Kbio );
                 return Status;
             } else Status = STATUS_SUCCESS;
         }
@@ -885,6 +890,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
     RtlInitUnicodeString( DeviceDesc, L"" );
     AppendUnicodeString( DeviceDesc, &TargetKeyName, FALSE );
     NtClose( EnumKey );
+    ExFreePool( Kbio );
     return STATUS_UNSUCCESSFUL;
 }
 
