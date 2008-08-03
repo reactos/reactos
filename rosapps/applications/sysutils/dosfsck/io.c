@@ -194,16 +194,14 @@ void fs_write(loff_t pos,int size,void *data)
         die("Wrote %d bytes instead of %d at %I64d",did,size,pos);
     }
 
-    if (!no_change_list)
-    {
-        new = alloc(sizeof(CHANGE));
-        new->pos = pos;
-        memcpy(new->data = alloc(new->size = size),data,size);
-        new->next = NULL;
-        if (last) last->next = new;
-        else changes = new;
-        last = new;
-    }
+    new = alloc(sizeof(CHANGE));
+    new->pos = pos;
+    memcpy(new->data = alloc(new->size = size),data,size);
+    new->next = NULL;
+    if (last) last->next = new;
+    else changes = new;
+    last = new;
+
 #else //SAE
     if (write_immed) {
 	did_change = 1;
@@ -230,7 +228,6 @@ static void fs_flush(void)
     int old_write_immed = write_immed;
 
     /* Disable writes to the list now */
-    no_change_list = 1;
     write_immed = 1;
 
     while (changes) {
@@ -255,7 +252,6 @@ static void fs_flush(void)
     }
 
     /* Restore values */
-    no_change_list = 0;
     write_immed = old_write_immed;
 }
 
