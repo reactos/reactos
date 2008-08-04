@@ -616,6 +616,22 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
 }
 
 /*
+ * @unimplemented
+ */
+PMDL
+NTAPI
+MmAllocatePagesForMdlEx(IN PHYSICAL_ADDRESS LowAddress,
+                        IN PHYSICAL_ADDRESS HighAddress,
+                        IN PHYSICAL_ADDRESS SkipBytes,
+                        IN SIZE_T Totalbytes,
+                        IN MEMORY_CACHING_TYPE CacheType,
+                        IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
  * @implemented
  */
 PVOID

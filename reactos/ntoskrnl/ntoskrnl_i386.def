@@ -388,7 +388,7 @@ IoDisconnectInterrupt@4
 IoDriverObjectType DATA
 IoEnqueueIrp@4
 IoEnumerateDeviceObjectList@16
-;IoEnumerateRegisteredFiltersList
+IoEnumerateRegisteredFiltersList@12
 IoFastQueryNetworkAttributes@20
 IoFileObjectType=_IoFileObjectType
 IoForwardAndCatchIrp@8=IoForwardIrpSynchronously@8
@@ -416,7 +416,7 @@ IoGetDriverObjectExtension@8
 IoGetFileObjectGenericMapping@0
 IoGetInitialStack@0
 IoGetLowerDeviceObject@4
-;IoGetPagingIoPriority
+IoGetPagingIoPriority@4
 IoGetRelatedDeviceObject@4
 IoGetRequestorProcess@4
 IoGetRequestorProcessId@4
@@ -535,7 +535,7 @@ KdEnableDebugger@0
 KdEnteredDebugger
 KdPollBreakIn@0
 KdPowerTransition@4
-;KdRefreshDebuggerNotPresent
+KdRefreshDebuggerNotPresent@0
 KdSystemDebugControl@28
 Ke386CallBios@8
 ;Ke386IoSetAccessProcess
@@ -544,10 +544,10 @@ Ke386CallBios@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
 @KeAcquireInStackQueuedSpinLockAtDpcLevel@8
-;KeAcquireInStackQueuedSpinLockForDpc
+@KeAcquireInStackQueuedSpinLockForDpc@8
 KeAcquireInterruptSpinLock@4
 KeAcquireSpinLockAtDpcLevel@4
-;KeAcquireSpinLockForDpc
+@KeAcquireSpinLockForDpc@4
 KeAddSystemServiceTable@20
 KeAreAllApcsDisabled@0
 KeAreApcsDisabled@0
@@ -561,7 +561,7 @@ KeConnectInterrupt@4
 KeDelayExecutionThread@12
 KeDeregisterBugCheckCallback@4
 KeDeregisterBugCheckReasonCallback@4
-;KeDeregisterNmiCallback
+KeDeregisterNmiCallback@4
 KeDetachProcess@0
 KeDisconnectInterrupt@4
 KeEnterCriticalRegion@0=_KeEnterCriticalRegion@0
@@ -581,12 +581,12 @@ KeI386AllocateGdtSelectors@8
 ;KeI386Call16BitFunction
 KeI386FlatToGdtSelector@12
 ;KeI386GetLid
-;KeI386MachineType DATA
+KeI386MachineType DATA
 KeI386ReleaseGdtSelectors@8
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
 KeInitializeApc@32
-;KeInitializeCrashDumpHeader
+KeInitializeCrashDumpHeader@20
 KeInitializeDeviceQueue@4
 KeInitializeDpc@12
 KeInitializeEvent@12
@@ -597,7 +597,7 @@ KeInitializeMutex@8
 KeInitializeQueue@8
 KeInitializeSemaphore@12
 KeInitializeSpinLock@4
-;KeInitializeThreadedDpc
+KeInitializeThreadedDpc@12
 KeInitializeTimer@4
 KeInitializeTimerEx@8
 KeInsertByKeyDeviceQueue@12
@@ -634,16 +634,16 @@ KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
 KeRegisterBugCheckReasonCallback@16
-;KeRegisterNmiCallback
+KeRegisterNmiCallback@8
 @KeReleaseGuardedMutex@4
 @KeReleaseGuardedMutexUnsafe@4
-;KeReleaseInStackQueuedSpinLockForDpc
+@KeReleaseInStackQueuedSpinLockForDpc@4
 @KeReleaseInStackQueuedSpinLockFromDpcLevel@4
 KeReleaseInterruptSpinLock@8
 KeReleaseMutant@16
 KeReleaseMutex@8
 KeReleaseSemaphore@16
-;KeReleaseSpinLockForDpc
+@KeReleaseSpinLockForDpc@8
 KeReleaseSpinLockFromDpcLevel@4
 KeRemoveByKeyDeviceQueue@8
 KeRemoveByKeyDeviceQueueIfBusy@8
@@ -679,7 +679,7 @@ KeSetTimerEx@20
 KeStackAttachProcess@8
 KeSynchronizeExecution@12
 KeTerminateThread@4
-;KeTestSpinLock
+@KeTestSpinLock@4
 KeTickCount DATA
 @KeTryToAcquireGuardedMutex@4
 @KeTryToAcquireSpinLockAtDpcLevel@4
@@ -727,7 +727,7 @@ MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateMappingAddress@8
 MmAllocateNonCachedMemory@4
 MmAllocatePagesForMdl@28
-;MmAllocatePagesForMdlEx
+MmAllocatePagesForMdlEx@36
 MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated@8
 ;MmCommitSessionMappedView

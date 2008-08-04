@@ -747,6 +747,15 @@ typedef struct _KUSER_SHARED_DATA
 
 #define IRP_MN_REGINFO_EX                 0x0b
 
+typedef enum _IO_PAGING_PRIORITY
+{
+  IoPagingPriorityInvalid,        
+  IoPagingPriorityNormal,         
+  IoPagingPriorityHigh,           
+  IoPagingPriorityReserved1,      
+  IoPagingPriorityReserved2       
+} IO_PAGING_PRIORITY;
+
 typedef enum _IO_ALLOCATION_ACTION {
   KeepObject = 1,
   DeallocateObject,
@@ -4855,6 +4864,11 @@ typedef struct _KBUGCHECK_CALLBACK_RECORD {
   ULONG_PTR  Checksum;
   UCHAR  State;
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
+
+typedef BOOLEAN
+(DDKAPI *PNMI_CALLBACK)(
+    IN PVOID Context,
+    IN BOOLEAN Handled);
 
 /*
  * VOID

@@ -646,6 +646,19 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoEnumerateRegisteredFiltersList(IN PDRIVER_OBJECT *DriverObjectList,
+                                 IN ULONG DriverObjectListSize,
+                                 OUT PULONG ActualNumberDriverObjects)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
