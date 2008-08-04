@@ -57,7 +57,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		szRootPath[0] = szCurPath[0];
 	}
 
-	_tcsncpy (szLabel, param, 12);
+	_tcsncat(szLabel, param, 79);
 
 	/* check root path */
 	if (!IsValidPathName (szRootPath))
@@ -67,30 +67,35 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	GetVolumeInformation(szRootPath, szOldLabel, 80, &dwSerialNr,
-	                     NULL, NULL, NULL, 0);
-
-	/* print drive info */
-	if (szOldLabel[0] != _T('\0'))
-	{
-		ConOutResPrintf(STRING_LABEL_HELP2, _totupper(szRootPath[0]), szOldLabel);
-	}
-	else
-	{
-		ConOutResPrintf(STRING_LABEL_HELP3, _totupper(szRootPath[0]));
-	}
-
-	/* print the volume serial number */
-	ConOutResPrintf(STRING_LABEL_HELP4, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
-
 	if (szLabel[0] == _T('\0'))
 	{
+		GetVolumeInformation(szRootPath, szOldLabel, 80, &dwSerialNr,
+		                     NULL, NULL, NULL, 0);
+
+		/* print drive info */
+		if (szOldLabel[0] != _T('\0'))
+		{
+			ConOutResPrintf(STRING_LABEL_HELP2, _totupper(szRootPath[0]), szOldLabel);
+		}
+		else
+		{
+			ConOutResPrintf(STRING_LABEL_HELP3, _totupper(szRootPath[0]));
+		}
+
+		/* print the volume serial number */
+		ConOutResPrintf(STRING_LABEL_HELP4, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+
 		ConOutResPuts(STRING_LABEL_HELP5);
 
 		ConInString(szLabel, 80);
 	}
 
-	SetVolumeLabel(szRootPath, szLabel);
+	if (!SetVolumeLabel(szRootPath, szLabel))
+	{
+		ConOutFormatMessage(GetLastError());
+		nErrorLevel = 1;
+		return 1;
+	}
 
 	return 0;
 }
