@@ -353,6 +353,8 @@ FlushFileBuffers(HANDLE hFile)
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
 
+   hFile = TranslateStdHandle(hFile);
+
    if (IsConsoleHandle(hFile))
    {
       return FALSE;
@@ -561,20 +563,7 @@ GetFileType(HANDLE hFile)
   NTSTATUS Status;
 
   /* Get real handle */
-  switch ((ULONG)hFile)
-    {
-      case STD_INPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->StandardInput;
-	break;
-
-      case STD_OUTPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->StandardOutput;
-	break;
-
-      case STD_ERROR_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->StandardError;
-	break;
-    }
+  hFile = TranslateStdHandle(hFile);
 
   /* Check for console handle */
   if (IsConsoleHandle(hFile))

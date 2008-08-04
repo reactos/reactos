@@ -41,29 +41,7 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
   NTSTATUS Status;
 
     /* Get real handle */
-    switch ((ULONG)hHandle)
-    {
-        /* Input handle */
-        case STD_INPUT_HANDLE:
-
-            /* Read it from the PEB */
-            hHandle = NtCurrentPeb()->ProcessParameters->StandardInput;
-            break;
-
-        /* Output handle */
-        case STD_OUTPUT_HANDLE:
-
-            /* Read it from the PEB */
-            hHandle = NtCurrentPeb()->ProcessParameters->StandardOutput;
-            break;
-
-        /* Error handle */
-        case STD_ERROR_HANDLE:
-
-            /* Read it from the PEB */
-            hHandle = NtCurrentPeb()->ProcessParameters->StandardError;
-            break;
-    }
+    hHandle = TranslateStdHandle(hHandle);
 
     /* Check for console handle */
     if ((IsConsoleHandle(hHandle)) && (VerifyConsoleIoHandle(hHandle)))
@@ -163,26 +141,7 @@ WaitForMultipleObjectsEx(IN DWORD nCount,
     for (i = 0; i < nCount; i++)
     {
         /* Check what kind of handle this is */
-        switch ((ULONG)HandleBuffer[i])
-        {
-            /* Input handle */
-            case STD_INPUT_HANDLE:
-                HandleBuffer[i] = NtCurrentPeb()->
-                                  ProcessParameters->StandardInput;
-                break;
-
-            /* Output handle */
-            case STD_OUTPUT_HANDLE:
-                HandleBuffer[i] = NtCurrentPeb()->
-                                  ProcessParameters->StandardOutput;
-                break;
-
-            /* Error handle */
-            case STD_ERROR_HANDLE:
-                HandleBuffer[i] = NtCurrentPeb()->
-                                  ProcessParameters->StandardError;
-                break;
-        }
+        HandleBuffer[i] = TranslateStdHandle(HandleBuffer[i]);
 
         /* Check for console handle */
         if ((IsConsoleHandle(HandleBuffer[i])) &&
@@ -249,32 +208,7 @@ SignalObjectAndWait(IN HANDLE hObjectToSignal,
     NTSTATUS Status;
 
     /* Get real handle */
-    switch ((ULONG)hObjectToWaitOn)
-    {
-        /* Input handle */
-        case STD_INPUT_HANDLE:
-
-            /* Read it from the PEB */
-            hObjectToWaitOn = NtCurrentPeb()->
-                              ProcessParameters->StandardInput;
-            break;
-
-        /* Output handle */
-        case STD_OUTPUT_HANDLE:
-
-            /* Read it from the PEB */
-            hObjectToWaitOn = NtCurrentPeb()->
-                              ProcessParameters->StandardOutput;
-            break;
-
-        /* Error handle */
-        case STD_ERROR_HANDLE:
-
-            /* Read it from the PEB */
-            hObjectToWaitOn = NtCurrentPeb()->
-                              ProcessParameters->StandardError;
-            break;
-    }
+    hObjectToWaitOn = TranslateStdHandle(hObjectToWaitOn);
 
     /* Check for console handle */
     if ((IsConsoleHandle(hObjectToWaitOn)) &&

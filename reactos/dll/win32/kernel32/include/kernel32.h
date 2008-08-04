@@ -73,6 +73,8 @@ HANDLE STDCALL OpenConsoleW (LPCWSTR wsName,
 
 PTEB GetTeb(VOID);
 
+HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
+
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
 
 DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sourceLen);

@@ -37,6 +37,8 @@ WriteFile(IN HANDLE hFile,
         *lpNumberOfBytesWritten = 0;
      }
 
+   hFile = TranslateStdHandle(hFile);
+
    if (IsConsoleHandle(hFile))
      {
 	return WriteConsoleA(hFile,
@@ -141,6 +143,8 @@ ReadFile(IN HANDLE hFile,
      {
         *lpNumberOfBytesRead = 0;
      }
+
+   hFile = TranslateStdHandle(hFile);
 
    if (IsConsoleHandle(hFile))
      {
