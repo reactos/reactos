@@ -8,17 +8,17 @@
 #define _COMMON_H
 
 //void die(char *msg,...) __attribute((noreturn));
-__declspec(noreturn) void die(char *msg,...);
+void die(char *msg,...);
 
 /* Displays a prinf-style message and terminates the program. */
 
 //void pdie(char *msg,...) __attribute((noreturn));
-__declspec(noreturn) void pdie(char *msg,...);
+void pdie(char *msg,...);
 
 /* Like die, but appends an error message according to the state of errno. */
 
 void *alloc(int size);
-
+void free(void *ptr);
 /* mallocs SIZE bytes and returns a pointer to the data. Terminates the program
    if malloc fails. */
 

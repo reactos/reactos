@@ -23,34 +23,48 @@ void die(char *msg,...)
     va_list args;
 
     va_start(args,msg);
-    vfprintf(stderr,msg,args);
+    //vfprintf(stderr,msg,args);
+    DPRINT1("Unrecoverable problem!\n");
     va_end(args);
-    fprintf(stderr,"\n");
-    exit(1);
+    //fprintf(stderr,"\n");
+    //exit(1);
 }
-
 
 void pdie(char *msg,...)
 {
     va_list args;
 
     va_start(args,msg);
-    vfprintf(stderr,msg,args);
+    //vfprintf(stderr,msg,args);
+    DPRINT1("Unrecoverable problem!\n");
     va_end(args);
-    fprintf(stderr,":%s\n",strerror(errno));
-    exit(1);
+    //fprintf(stderr,":%s\n",strerror(errno));
+    //exit(1);
+    DbgBreakPoint();
 }
 
 
 void *alloc(int size)
 {
-    void *this;
+    void *ptr;
 
-    if ((this = malloc(size))) return this;
-    pdie("malloc");
-    return NULL; /* for GCC */
+    ptr = RtlAllocateHeap(RtlGetProcessHeap (),
+                           0,
+                           size);
+
+    if (ptr == NULL)
+    {
+        DPRINT1("Allocation failed!\n");
+        return NULL;
+    }
+
+    return ptr;
 }
 
+void free(void *ptr)
+{
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ptr);
+}
 
 void *qalloc(void **root,int size)
 {
@@ -87,10 +101,11 @@ int min(int a,int b)
 
 char get_key(char *valid,char *prompt)
 {
+#if 0
     int ch,okay;
 
     while (1) {
-	if (prompt) printf("%s ",prompt);
+	if (prompt) VfatPrint("%s ",prompt);
 	fflush(stdout);
 	while (ch = getchar(), ch == ' ' || ch == '\t');
 	if (ch == EOF) exit(1);
@@ -98,8 +113,11 @@ char get_key(char *valid,char *prompt)
 	while (ch = getchar(), ch != '\n' && ch != EOF);
 	if (ch == EOF) exit(1);
 	if (okay) return okay;
-	printf("Invalid input.\n");
+	VfatPrint("Invalid input.\n");
     }
+#else
+    return 0;
+#endif
 }
 
 /* Local Variables: */

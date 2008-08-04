@@ -9,7 +9,7 @@
 loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern);
 
 /* Allocate a free slot in the root directory for a new file. The file name is
-   constructed after 'pattern', which must include a %d type format for printf
+   constructed after 'pattern', which must include a %d type format for VfatPrint
    and expand to exactly 11 characters. The name actually used is written into
    the 'de' structure, the rest of *de is cleared. The offset returned is to
    where in the filesystem the entry belongs. */

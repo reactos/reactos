@@ -66,7 +66,7 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw)
         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtOpenFile() failed with status 0x%.08x\n", Status);
+        DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
         return;
     }
 
@@ -86,7 +86,7 @@ void fs_read(loff_t pos,int size,void *data)
  	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
  	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
 	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
-	char* tmpBuf = malloc(readsize_aligned);                                    // TMN:
+	char* tmpBuf = alloc(readsize_aligned);                                    // TMN:
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %I64d",pos);
     if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %I64d",size,pos);
 	assert(got >= size);
@@ -274,7 +274,7 @@ static int WIN32read(HANDLE FileHandle, void *buf, unsigned int len)
                         NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+        DPRINT1("NtReadFile() failed (Status %lx)\n", Status);
         return -1;
     }
 
@@ -298,7 +298,7 @@ static int WIN32write(HANDLE FileHandle, void *buf, unsigned int len)
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+        DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
         return -1;
     }
 

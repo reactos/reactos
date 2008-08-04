@@ -71,30 +71,30 @@ void read_fat(DOS_FS *fs)
 	first_ok = (first_media.value & FAT_EXTD(fs)) == FAT_EXTD(fs);
 	second_ok = (second_media.value & FAT_EXTD(fs)) == FAT_EXTD(fs);
 	if (first_ok && !second_ok) {
-	    printf("FATs differ - using first FAT.\n");
+	    VfatPrint("FATs differ - using first FAT.\n");
 	    fs_write(fs->fat_start+fs->fat_size,eff_size,use = first);
 	}
 	if (!first_ok && second_ok) {
-	    printf("FATs differ - using second FAT.\n");
+	    VfatPrint("FATs differ - using second FAT.\n");
 	    fs_write(fs->fat_start,eff_size,use = second);
 	}
 	if (first_ok && second_ok) {
 	    if (interactive) {
-		printf("FATs differ but appear to be intact. Use which FAT ?\n"
+		VfatPrint("FATs differ but appear to be intact. Use which FAT ?\n"
 		  "1) Use first FAT\n2) Use second FAT\n");
 		if (get_key("12","?") == '1')
 		    fs_write(fs->fat_start+fs->fat_size,eff_size,use = first);
 		else fs_write(fs->fat_start,eff_size,use = second);
 	    }
 	    else {
-		printf("FATs differ but appear to be intact. Using first "
+		VfatPrint("FATs differ but appear to be intact. Using first "
 		  "FAT.\n");
 		fs_write(fs->fat_start+fs->fat_size,eff_size,use = first);
 	    }
 	}
 	if (!first_ok && !second_ok) {
-	    printf("Both FATs appear to be corrupt. Giving up.\n");
-	    exit(1);
+	    VfatPrint("Both FATs appear to be corrupt. Giving up.\n");
+	    //exit(1);
 	}
     }
     fs->fat = qalloc(&mem_queue,sizeof(FAT_ENTRY)*(fs->clusters+2));
@@ -102,7 +102,7 @@ void read_fat(DOS_FS *fs)
     for (i = 2; i < fs->clusters+2; i++)
 	if (fs->fat[i].value >= fs->clusters+2 &&
 	    (fs->fat[i].value < FAT_MIN_BAD(fs))) {
-	    printf("Cluster %ld out of range (%ld > %ld). Setting to EOF.\n",
+	    VfatPrint("Cluster %ld out of range (%ld > %ld). Setting to EOF.\n",
 		   i-2,fs->fat[i].value,fs->clusters+2-1);
 	    set_fat(fs,i,-1);
 	}
@@ -115,8 +115,8 @@ void read_fat(DOS_FS *fs)
 void set_fat(DOS_FS *fs,unsigned long cluster,unsigned long new)
 {
     unsigned char data[4];
-    int size;
-    loff_t offs;
+    int size = 0;
+    loff_t offs = 0LL;
 
     if ((long)new == -1)
 	new = FAT_EOF(fs);
@@ -200,11 +200,11 @@ void fix_bad(DOS_FS *fs)
     unsigned long i;
 
     if (verbose)
-	printf("Checking for bad clusters.\n");
+	VfatPrint("Checking for bad clusters.\n");
     for (i = 2; i < fs->clusters+2; i++)
 	if (!get_owner(fs,i) && !FAT_IS_BAD(fs,fs->fat[i].value))
 	    if (!fs_test(cluster_start(fs,i),fs->cluster_size)) {
-		printf("Cluster %lu is unreadable.\n",i);
+		VfatPrint("Cluster %lu is unreadable.\n",i);
 		set_fat(fs,i,-2);
 	    }
 }
@@ -216,7 +216,7 @@ void reclaim_free(DOS_FS *fs)
     unsigned long i;
 
     if (verbose)
-	printf("Checking for unused clusters.\n");
+	VfatPrint("Checking for unused clusters.\n");
     reclaimed = 0;
     for (i = 2; i < fs->clusters+2; i++)
 	if (!get_owner(fs,i) && fs->fat[i].value &&
@@ -225,7 +225,7 @@ void reclaim_free(DOS_FS *fs)
 	    reclaimed++;
 	}
     if (reclaimed)
-	printf("Reclaimed %d unused cluster%s (%d bytes).\n",reclaimed,
+	VfatPrint("Reclaimed %d unused cluster%s (%d bytes).\n",reclaimed,
 	  reclaimed == 1 ?  "" : "s",reclaimed*fs->cluster_size);
 }
 
@@ -262,7 +262,7 @@ void reclaim_file(DOS_FS *fs)
     unsigned long i,next,walk;
 
     if (verbose)
-	printf("Reclaiming unconnected clusters.\n");
+	VfatPrint("Reclaiming unconnected clusters.\n");
     for (i = 2; i < fs->clusters+2; i++) fs->fat[i].prev = 0;
     for (i = 2; i < fs->clusters+2; i++) {
 	next = fs->fat[i].value;
@@ -282,7 +282,7 @@ void reclaim_file(DOS_FS *fs)
 		    die("Internal error: prev going below zero");
 		set_fat(fs,i,-1);
 		changed = 1;
-		printf("Broke cycle at cluster %lu in free chain.\n",i);
+		VfatPrint("Broke cycle at cluster %lu in free chain.\n",i);
 		break;
 	    }
     }
@@ -305,7 +305,7 @@ void reclaim_file(DOS_FS *fs)
 	    fs_write(offset,sizeof(DIR_ENT),&de);
 	}
     if (reclaimed)
-	printf("Reclaimed %d unused cluster%s (%d bytes) in %d chain%s.\n",
+	VfatPrint("Reclaimed %d unused cluster%s (%d bytes) in %d chain%s.\n",
 	  reclaimed,reclaimed == 1 ? "" : "s",reclaimed*fs->cluster_size,files,
 	  files == 1 ? "" : "s");
 }
@@ -325,23 +325,23 @@ unsigned long update_free(DOS_FS *fs)
 	return free;
 
     if (verbose)
-	printf("Checking free cluster summary.\n");
+	VfatPrint("Checking free cluster summary.\n");
     if (fs->free_clusters >= 0) {
 	if (free != fs->free_clusters) {
-	    printf( "Free cluster summary wrong (%ld vs. really %ld)\n",
+	    VfatPrint( "Free cluster summary wrong (%ld vs. really %ld)\n",
 		    fs->free_clusters,free);
 	    if (interactive)
-		printf( "1) Correct\n2) Don't correct\n" );
-	    else printf( "  Auto-correcting.\n" );
+		VfatPrint( "1) Correct\n2) Don't correct\n" );
+	    else VfatPrint( "  Auto-correcting.\n" );
 	    if (!interactive || get_key("12","?") == '1')
 		do_set = 1;
 	}
     }
     else {
-	printf( "Free cluster summary uninitialized (should be %ld)\n", free );
+	VfatPrint( "Free cluster summary uninitialized (should be %ld)\n", free );
 	if (interactive)
-	    printf( "1) Set it\n2) Leave it uninitialized\n" );
-	else printf( "  Auto-setting.\n" );
+	    VfatPrint( "1) Set it\n2) Leave it uninitialized\n" );
+	else VfatPrint( "  Auto-setting.\n" );
 	if (!interactive || get_key("12","?") == '1')
 	    do_set = 1;
     }

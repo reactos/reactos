@@ -4,7 +4,9 @@
 /*
  * The MS-DOS filesystem constants/structures
  */
+#ifdef _M_IX86
 #include "byteorder.h"
+#endif
 
 #define SECTOR_SIZE	512		/* sector size (bytes) */
 #define SECTOR_BITS	9		/* log2(SECTOR_SIZE) */

@@ -35,7 +35,10 @@ typedef __int64 ll_t;
 
 //#include <linux/version.h>
 //# include "types.h"
-# include "byteorder.h"
+
+#ifdef _M_IX86
+#include "byteorder.h"
+#endif
 
 #include "msdos_fs.h"
 

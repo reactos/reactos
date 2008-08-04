@@ -5,6 +5,9 @@
 /* FAT32, VFAT, Atari format support, and various fixes additions May 1998
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
+/* Need to define this so that islower isn't inlined
+   (ntdll doesn't export isctype) */
+#define __NO_CTYPE_INLINES
 
 #include "vfatlib.h"
 
@@ -50,7 +53,6 @@ char *file_name(unsigned char *fixed)
     return path;
 }
 
-
 int file_cvt(unsigned char *name,unsigned char *fixed)
 {
     unsigned char c;
@@ -61,13 +63,13 @@ int file_cvt(unsigned char *name,unsigned char *fixed)
     while (*name) {
 	c = *name;
 	if (c < ' ' || c > 0x7e || strchr("*?<>|\"/",c)) {
-	    printf("Invalid character in name. Use \\ooo for special "
+	    VfatPrint("Invalid character in name. Use \\ooo for special "
 	      "characters.\n");
 	    return 0;
 	}
 	if (c == '.') {
 	    if (ext) {
-		printf("Duplicate dots in name.\n");
+		VfatPrint("Duplicate dots in name.\n");
 		return 0;
 	    }
 	    while (size--) *fixed++ = ' ';
@@ -80,13 +82,13 @@ int file_cvt(unsigned char *name,unsigned char *fixed)
 	    c = 0;
 	    for (cnt = 3; cnt; cnt--) {
 		if (*name < '0' || *name > '7') {
-		    printf("Invalid octal character.\n");
+		    VfatPrint("Invalid octal character.\n");
 		    return 0;
 		}
 		c = c*8+*name++-'0';
 	    }
 	    if (cnt < 4) {
-		printf("Expected three octal digits.\n");
+		VfatPrint("Expected three octal digits.\n");
 		return 0;
 	    }
 	    name += 3;
@@ -119,7 +121,7 @@ void file_add(char *path,FD_TYPE type)
     path++;
     while (1) {
 	if ((here = strchr(path,'/'))) *here = 0;
-	if (!file_cvt((unsigned char*)path,(unsigned char *)name)) exit(2);
+    if (!file_cvt((unsigned char*)path,(unsigned char *)name)) {return; /*exit(2);*/}
 	for (walk = *current; walk; walk = walk->next)
 	    if (!here && (!strncmp(name,walk->name,MSDOS_NAME) || (type ==
 	      fdt_undelete && !strncmp(name+1,walk->name+1,MSDOS_NAME-1))))
@@ -190,12 +192,12 @@ void file_modify(FDSC **curr,unsigned char *fixed)
 	die("Internal error: file_find failed");
     switch ((*this)->type) {
 	case fdt_drop:
-	    printf("Dropping %s\n",file_name(fixed));
+	    VfatPrint("Dropping %s\n",file_name(fixed));
 	    *fixed = DELETED_FLAG;
 	    break;
 	case fdt_undelete:
 	    *fixed = *(*this)->name;
-	    printf("Undeleting %s\n",file_name(fixed));
+	    VfatPrint("Undeleting %s\n",file_name(fixed));
 	    break;
 	default:
 	    die("Internal error: file_modify");
@@ -214,7 +216,7 @@ static void report_unused(FDSC *this)
 	next = this->next;
 	if (this->first) report_unused(this->first);
 	else if (this->type != fdt_none)
-		printf("Warning: did not %s file %s\n",this->type == fdt_drop ?
+		VfatPrint("Warning: did not %s file %s\n",this->type == fdt_drop ?
 		  "drop" : "undelete",file_name((unsigned char*)this->name));
 	free(this);
 	this = next;

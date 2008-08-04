@@ -58,55 +58,55 @@ static void dump_boot(DOS_FS *fs,struct boot_sector *b,unsigned lss)
 {
     unsigned short sectors;
 
-    printf("Boot sector contents:\n");
+    VfatPrint("Boot sector contents:\n");
     if (!atari_format) {
 	char id[9];
 	strncpy(id,(char*)b->system_id,8);
 	id[8] = 0;
-	printf("System ID \"%s\"\n",id);
+	VfatPrint("System ID \"%s\"\n",id);
     }
     else {
 	/* On Atari, a 24 bit serial number is stored at offset 8 of the boot
 	 * sector */
-	printf("Serial number 0x%x\n",
+	VfatPrint("Serial number 0x%x\n",
 	       b->system_id[5] | (b->system_id[6]<<8) | (b->system_id[7]<<16));
     }
-    printf("Media byte 0x%02x (%s)\n",b->media,get_media_descr(b->media));
-    printf("%10d bytes per logical sector\n",GET_UNALIGNED_W(b->sector_size));
-    printf("%10d bytes per cluster\n",fs->cluster_size);
-    printf("%10d reserved sector%s\n",CF_LE_W(b->reserved),
+    VfatPrint("Media byte 0x%02x (%s)\n",b->media,get_media_descr(b->media));
+    VfatPrint("%10d bytes per logical sector\n",GET_UNALIGNED_W(b->sector_size));
+    VfatPrint("%10d bytes per cluster\n",fs->cluster_size);
+    VfatPrint("%10d reserved sector%s\n",CF_LE_W(b->reserved),
 	   CF_LE_W(b->reserved) == 1 ? "" : "s");
-    printf("First FAT starts at byte %llu (sector %llu)\n",
+    VfatPrint("First FAT starts at byte %llu (sector %llu)\n",
 	   (__u64)fs->fat_start,
 	   (__u64)fs->fat_start/lss);
-    printf("%10d FATs, %d bit entries\n",b->fats,fs->fat_bits);
-    printf("%10d bytes per FAT (= %u sectors)\n",fs->fat_size,
+    VfatPrint("%10d FATs, %d bit entries\n",b->fats,fs->fat_bits);
+    VfatPrint("%10d bytes per FAT (= %u sectors)\n",fs->fat_size,
 	   fs->fat_size/lss);
     if (!fs->root_cluster) {
-	printf("Root directory starts at byte %llu (sector %llu)\n",
+	VfatPrint("Root directory starts at byte %llu (sector %llu)\n",
 	       (__u64)fs->root_start,
 	       (__u64)fs->root_start/lss);
-	printf("%10d root directory entries\n",fs->root_entries);
+	VfatPrint("%10d root directory entries\n",fs->root_entries);
     }
     else {
-	printf( "Root directory start at cluster %lu (arbitrary size)\n",
+	VfatPrint( "Root directory start at cluster %lu (arbitrary size)\n",
 		fs->root_cluster);
     }
-    printf("Data area starts at byte %llu (sector %llu)\n",
+    VfatPrint("Data area starts at byte %llu (sector %llu)\n",
 	   (__u64)fs->data_start,
 	   (__u64)fs->data_start/lss);
-    printf("%10lu data clusters (%llu bytes)\n",fs->clusters,
+    VfatPrint("%10lu data clusters (%llu bytes)\n",fs->clusters,
 	   (__u64)fs->clusters*fs->cluster_size);
-    printf("%u sectors/track, %u heads\n",CF_LE_W(b->secs_track),
+    VfatPrint("%u sectors/track, %u heads\n",CF_LE_W(b->secs_track),
 	   CF_LE_W(b->heads));
-    printf("%10u hidden sectors\n",
+    VfatPrint("%10u hidden sectors\n",
 	   atari_format ?
 	   /* On Atari, the hidden field is only 16 bit wide and unused */
 	   (((unsigned char *)&b->hidden)[0] |
 	    ((unsigned char *)&b->hidden)[1] << 8) :
 	   CF_LE_L(b->hidden));
     sectors = GET_UNALIGNED_W( b->sectors );
-    printf("%10u sectors total\n", sectors ? sectors : CF_LE_L(b->total_sect));
+    VfatPrint("%10u sectors total\n", sectors ? sectors : CF_LE_L(b->total_sect));
 }
 
 static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
@@ -114,14 +114,14 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
     struct boot_sector b2;
 
     if (!fs->backupboot_start) {
-	printf( "There is no backup boot sector.\n" );
+	VfatPrint( "There is no backup boot sector.\n" );
 	if (CF_LE_W(b->reserved) < 3) {
-	    printf( "And there is no space for creating one!\n" );
+	    VfatPrint( "And there is no space for creating one!\n" );
 	    return;
 	}
 	if (interactive)
-	    printf( "1) Create one\n2) Do without a backup\n" );
-	else printf( "  Auto-creating backup boot block.\n" );
+	    VfatPrint( "1) Create one\n2) Do without a backup\n" );
+	else VfatPrint( "  Auto-creating backup boot block.\n" );
 	if (!interactive || get_key("12","?") == '1') {
 	    int bbs;
 	    /* The usual place for the backup boot sector is sector 6. Choose
@@ -138,7 +138,7 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
 	    fs_write(fs->backupboot_start,sizeof(*b),b);
 	    fs_write((off_t)offsetof(struct boot_sector,backup_boot),
 		     sizeof(b->backup_boot),&b->backup_boot);
-	    printf( "Created backup of boot sector in sector %d\n", bbs );
+	    VfatPrint( "Created backup of boot sector in sector %d\n", bbs );
 	    return;
 	}
 	else return;
@@ -151,27 +151,27 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
 	int i, pos, first = 1;
 	char buf[20];
 
-	printf( "There are differences between boot sector and its backup.\n" );
-	printf( "Differences: (offset:original/backup)\n  " );
+	VfatPrint( "There are differences between boot sector and its backup.\n" );
+	VfatPrint( "Differences: (offset:original/backup)\n  " );
 	pos = 2;
 	for( p = (__u8 *)b, q = (__u8 *)&b2, i = 0; i < sizeof(b2);
 	     ++p, ++q, ++i ) {
 	    if (*p != *q) {
 		sprintf( buf, "%s%u:%02x/%02x", first ? "" : ", ",
 			 (unsigned)(p-(__u8 *)b), *p, *q );
-		if (pos + strlen(buf) > 78) printf( "\n  " ), pos = 2;
-		printf( "%s", buf );
+		if (pos + strlen(buf) > 78) VfatPrint( "\n  " ), pos = 2;
+		VfatPrint( "%s", buf );
 		pos += strlen(buf);
 		first = 0;
 	    }
 	}
-	printf( "\n" );
+	VfatPrint( "\n" );
 
 	if (interactive)
-	    printf( "1) Copy original to backup\n"
+	    VfatPrint( "1) Copy original to backup\n"
 		    "2) Copy backup to original\n"
 		    "3) No action\n" );
-	else printf( "  Not automatically fixing this.\n" );
+	else VfatPrint( "  Not automatically fixing this.\n" );
 	switch (interactive ? get_key("123","?") : '3') {
 	  case '1':
 	    fs_write(fs->backupboot_start,sizeof(*b),b);
@@ -199,10 +199,10 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
     struct info_sector i;
 
     if (!b->info_sector) {
-	printf( "No FSINFO sector\n" );
+	VfatPrint( "No FSINFO sector\n" );
 	if (interactive)
-	    printf( "1) Create one\n2) Do without FSINFO\n" );
-	else printf( "  Not automatically creating it.\n" );
+	    VfatPrint( "1) Create one\n2) Do without FSINFO\n" );
+	else VfatPrint( "  Not automatically creating it.\n" );
 	if (interactive && get_key("12","?") == '1') {
 	    /* search for a free reserved sector (not boot sector and not
 	     * backup boot sector) */
@@ -221,7 +221,7 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
 			     sizeof(b->info_sector),&b->info_sector);
 	    }
 	    else {
-		printf( "No free reserved sector found -- "
+		VfatPrint( "No free reserved sector found -- "
 			"no space for FSINFO sector!\n" );
 		return;
 	    }
@@ -235,22 +235,22 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
     if (i.magic != CT_LE_L(0x41615252) ||
 	i.signature != CT_LE_L(0x61417272) ||
 	i.boot_sign != CT_LE_W(0xaa55)) {
-	printf( "FSINFO sector has bad magic number(s):\n" );
+	VfatPrint( "FSINFO sector has bad magic number(s):\n" );
 	if (i.magic != CT_LE_L(0x41615252))
-	    printf( "  Offset %llu: 0x%08x != expected 0x%08x\n",
+	    VfatPrint( "  Offset %llu: 0x%08x != expected 0x%08x\n",
 		    (__u64)offsetof(struct info_sector,magic),
 		    CF_LE_L(i.magic),0x41615252);
 	if (i.signature != CT_LE_L(0x61417272))
-	    printf( "  Offset %llu: 0x%08x != expected 0x%08x\n",
+	    VfatPrint( "  Offset %llu: 0x%08x != expected 0x%08x\n",
 		    (__u64)offsetof(struct info_sector,signature),
 		    CF_LE_L(i.signature),0x61417272);
 	if (i.boot_sign != CT_LE_W(0xaa55))
-	    printf( "  Offset %llu: 0x%04x != expected 0x%04x\n",
+	    VfatPrint( "  Offset %llu: 0x%04x != expected 0x%04x\n",
 		    (__u64)offsetof(struct info_sector,boot_sign),
 		    CF_LE_W(i.boot_sign),0xaa55);
 	if (interactive)
-	    printf( "1) Correct\n2) Don't correct (FSINFO invalid then)\n" );
-	else printf( "  Auto-correcting it.\n" );
+	    VfatPrint( "1) Correct\n2) Don't correct (FSINFO invalid then)\n" );
+	else VfatPrint( "  Auto-correcting it.\n" );
 	if (!interactive || get_key("12","?") == '1') {
 	    init_fsinfo(&i);
 	    fs_write(fs->fsinfo_start,sizeof(i),&i);
@@ -280,7 +280,7 @@ void read_boot(DOS_FS *fs)
     fs->nfats = b.fats;
     sectors = GET_UNALIGNED_W(b.sectors);
     total_sectors = sectors ? sectors : CF_LE_L(b.total_sect);
-    if (verbose) printf("Checking we can access the last sector of the filesystem\n");
+    if (verbose) VfatPrint("Checking we can access the last sector of the filesystem\n");
     /* Can't access last odd sector anyway, so round down */
     fs_test((loff_t)((total_sectors & ~1)-1)*(loff_t)logical_sector_size,
 	    logical_sector_size);
@@ -306,12 +306,12 @@ void read_boot(DOS_FS *fs)
 	     * (root_entries != 0), we handle the root dir the old way. Give a
 	     * warning, but convertig to a root dir in a cluster chain seems
 	     * to complex for now... */
-	    printf( "Warning: FAT32 root dir not in cluster chain! "
+	    VfatPrint( "Warning: FAT32 root dir not in cluster chain! "
 		    "Compability mode...\n" );
 	else if (!fs->root_cluster && !fs->root_entries)
 	    die("No root directory!");
 	else if (fs->root_cluster && fs->root_entries)
-	    printf( "Warning: FAT32 root dir is in a cluster chain, but "
+	    VfatPrint( "Warning: FAT32 root dir is in a cluster chain, but "
 		    "a separate root dir\n"
 		    "  area is defined. Cannot fix this easily.\n" );
 
