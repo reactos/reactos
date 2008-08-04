@@ -513,8 +513,6 @@ PacketSocketRecvComplete(
 	    AFD_DbgPrint(MID_TRACE,("Completing\n"));
 	    IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 	}
-
-	ExFreePool( DatagramRecv );
     }
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
