@@ -95,6 +95,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
 	NextIrp->IoStatus.Status = Status;
 	NextIrp->IoStatus.Information = 0;
+	if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
     }
 
