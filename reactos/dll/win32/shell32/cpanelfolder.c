@@ -1187,11 +1187,11 @@ static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
     {
         if (Count)
         {
-            _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_DEFAULT);
+            _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_ENABLED);
         }
         szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
 
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
         Count++;
     }
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
@@ -1205,12 +1205,8 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
 	IContextMenu2 *iface,
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
-    WCHAR szBuffer[100];
     SHELLEXECUTEINFOW sei;
     ICPanelImpl *This = impl_from_IContextMenu(iface);
-
-    sprintfW(szBuffer, L"verb %p\n", lpcmi->lpVerb);
-    MessageBoxW(NULL, szBuffer, L"invoke", MB_OK);
 
     if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
     {
