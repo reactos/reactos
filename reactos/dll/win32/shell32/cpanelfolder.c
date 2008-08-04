@@ -984,6 +984,45 @@ static ULONG STDMETHODCALLTYPE IShellExecuteHookW_fnRelease(IShellExecuteHookW* 
     return IUnknown_Release(This->pUnkOuter);
 }
 
+HRESULT
+ExecuteAppletFromCLSID(LPOLESTR pOleStr)
+{
+    WCHAR szCmd[MAX_PATH];
+    WCHAR szExpCmd[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFOW si;
+    WCHAR szBuffer[90] = { 'C', 'L', 'S', 'I', 'D', '\\', 0 };
+    DWORD dwType, dwSize;
+
+    wcscpy(&szBuffer[6], pOleStr);
+    wcscat(szBuffer, L"\\shell\\open\\command");
+
+    dwSize = sizeof(szCmd);
+    if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
+    {
+        ERR("RegGetValueW failed with %u\n", GetLastError());
+        return E_FAIL;
+    }
+
+#if 0
+    if (dwType != RRF_RT_REG_SZ && dwType != RRF_RT_REG_EXPAND_SZ)
+        return E_FAIL;
+#endif
+
+    if (!ExpandEnvironmentStringsW(szCmd, szExpCmd, sizeof(szExpCmd)/sizeof(WCHAR)))
+        return E_FAIL;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    if (!CreateProcessW(NULL, szExpCmd, NULL, NULL, FALSE, 0, NULL,	NULL, &si, &pi))
+        return E_FAIL;
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return S_OK;
+}
+
+
 static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LPSHELLEXECUTEINFOW psei)
 {
     static const WCHAR wCplopen[] = {'c','p','l','o','p','e','n','\0'};
@@ -994,18 +1033,33 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
     WCHAR path[MAX_PATH];
     WCHAR params[MAX_PATH];
     BOOL ret;
+    HRESULT hr;
     int l;
 
     TRACE("(%p)->execute(%p)\n", This, psei);
 
     if (!psei)
-	return E_INVALIDARG;
+        return E_INVALIDARG;
 
     pcpanel = _ILGetCPanelPointer(ILFindLastID(psei->lpIDList));
 
     if (!pcpanel)
-	return E_INVALIDARG;
+    {
+        LPOLESTR pOleStr;
 
+        IID * iid = _ILGetGUIDPointer(ILFindLastID(psei->lpIDList));
+        if (!iid)
+            return E_INVALIDARG;
+        if (StringFromCLSID(iid, &pOleStr) == S_OK)
+        {
+
+            hr = ExecuteAppletFromCLSID(pOleStr);
+            CoTaskMemFree(pOleStr);
+            return hr;
+        }
+
+        return E_INVALIDARG;
+    }
     path[0] = '\"';
     /* Return value from MultiByteToWideChar includes terminating NUL, which
      * compensates for the starting double quote we just put in */
@@ -1025,9 +1079,9 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
 
     ret = ShellExecuteExW(&sei_tmp);
     if (ret)
-	return S_OK;
+        return S_OK;
     else
-	return S_FALSE;
+        return S_FALSE;
 }
 
 static const IShellExecuteHookWVtbl vt_ShellExecuteHookW =
