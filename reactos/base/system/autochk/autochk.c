@@ -277,6 +277,7 @@ CheckVolume(
     ANSI_STRING ChkdskFunctionName = RTL_CONSTANT_STRING("ChkdskEx");
     PVOID Provider;
     CHKDSKEX ChkdskFunc;
+    WCHAR NtDrivePath[64];
     UNICODE_STRING DrivePathU;
     NTSTATUS Status;
 
@@ -315,7 +316,11 @@ CheckVolume(
 
     /* Call provider */
     //PrintString("  Verifying volume %S\n", DrivePath);
-    RtlInitUnicodeString(&DrivePathU, DrivePath);
+    swprintf(NtDrivePath, L"\\??\\");
+    wcscat(NtDrivePath, DrivePath);
+    NtDrivePath[wcslen(NtDrivePath)-1] = 0;
+    RtlInitUnicodeString(&DrivePathU, NtDrivePath);
+
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose
