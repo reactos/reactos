@@ -1260,7 +1260,17 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
     SHELLEXECUTEINFOW sei;
+    WCHAR szPath[MAX_PATH];
+    char szTarget[MAX_PATH];
+    STRRET strret;
+    WCHAR* pszPath;
+    INT Length, cLength;
+    PIDLCPanelStruct *pcpanel;
+    IPersistFile * ppf;
+    IShellLinkA * isl;
     ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
     if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
     {
@@ -1277,17 +1287,63 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCE(2))
     {
-        /* FIXME
-         * retrieve CSIDL_DESKTOPDIRECTORY path, 
-         * retrieve name from pidl and create a link there
-         */
-         FIXME("implement shortcuthandling\n");
-         return NOERROR;
+        if (!SHGetSpecialFolderPathW(NULL, szPath, CSIDL_DESKTOPDIRECTORY, FALSE))
+             return E_FAIL;
+
+        pszPath = PathAddBackslashW(szPath);
+        if (!pszPath)
+             return E_FAIL;
+
+        if (IShellFolder_GetDisplayNameOf((IShellFolder*)This, This->apidl[0], SHGDN_FORPARSING, &strret) != S_OK)
+            return E_FAIL;
+
+        Length =  MAX_PATH - (pszPath - szPath);
+        cLength = strlen(strret.u.cStr);
+        if (Length < cLength + 5)
+        {
+            FIXME("\n");
+            return E_FAIL;
+        }
+
+        if (MultiByteToWideChar(CP_ACP, 0, strret.u.cStr, cLength +1, pszPath, Length))
+        {
+            pszPath += cLength;
+            Length -= cLength;
+        }
+
+        if (Length > 10)
+        {
+            wcscpy(pszPath, L" - ");
+            cLength = LoadStringW(shell32_hInstance, IDS_LNK_FILE, &pszPath[3], Length -4) + 3;
+            if (cLength + 5 > Length)
+                cLength = Length - 5;
+            Length -= cLength;
+            pszPath += cLength;
+        }
+        wcscpy(pszPath, L".lnk");
+
+        pcpanel = _ILGetCPanelPointer(ILFindLastID(This->apidl[0]));
+        if (pcpanel)
+        {
+           strncpy(szTarget, pcpanel->szName, MAX_PATH);
+        }
+        else
+        {
+           FIXME("\n");
+           return E_FAIL;
+        }
+        if (SUCCEEDED(IShellLink_Constructor(NULL, &IID_IShellLinkA, (LPVOID*)&isl)))
+        {
+            IShellLinkA_SetPath(isl, szTarget);
+            if (SUCCEEDED(IShellLinkA_QueryInterface(isl, &IID_IPersistFile, (LPVOID*)&ppf)))
+            {
+                IPersistFile_Save(ppf, szPath, TRUE);
+                IPersistFile_Release(ppf);
+            }
+            IShellLinkA_Release(isl);
+        }
+        return NOERROR;
     }
-
-
-    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
-
     return S_OK;
 }
 
