@@ -405,11 +405,11 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_ABOUT_EXPLORER:
-		explorer_about(_hwnd);
+		explorer_about(g_Globals._hwndDesktop);
 		break;
 
 	  case ID_DESKTOPBAR_SETTINGS:
-		ExplorerPropertySheet(_hwnd);
+		ExplorerPropertySheet(g_Globals._hwndDesktop);
 		break;
 
 	  case ID_MINIMIZE_ALL:

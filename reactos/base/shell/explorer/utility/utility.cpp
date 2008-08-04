@@ -382,10 +382,12 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 
 BOOL launch_cpanel(HWND hwnd, LPCTSTR applet)
 {
-	//launch_file(_hwnd, applet, SW_SHOWNORMAL);	// This would be enough, but we want the to use the most direct and fastest call.
-	//launch_file(_hwnd, String(TEXT("rundll32.exe /d shell32.dll,Control_RunDLL "))+applet, SW_SHOWNORMAL);
+	TCHAR parameters[MAX_PATH];
+	
+	_tcscpy(parameters, TEXT("shell32.dll,Control_RunDLL "));
+	_tcscat(parameters, applet);
 
-	return RunDLL(hwnd, TEXT("shell32"), CONTROL_RUNDLL, applet, SW_SHOWNORMAL);
+	return ((int)ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), parameters, NULL, SW_SHOWDEFAULT) > 32);
 }
 
 
