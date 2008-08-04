@@ -694,7 +694,7 @@ KeWaitForSingleObject@20
 @KefReleaseSpinLockFromDpcLevel@4
 Kei386EoiHelper@0
 @KiAcquireSpinLock@4
-;KiBugCheckData DATA
+KiBugCheckData DATA
 KiCheckForKernelApcDelivery@0
 KiCoprocessorError@0
 KiDeliverApc@12
