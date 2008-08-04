@@ -2,17 +2,12 @@
 
 /* Written 1998 by Roman Hodek */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <time.h>
+#include "vfatlib.h"
 
-#include "common.h"
-#include "io.h"
-#include "dosfsck.h"
-#include "lfn.h"
-#include "file.h"
+#include <limits.h> // for INT_MAX definition
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct {
 	__u8    id;		/* sequence number for slot */

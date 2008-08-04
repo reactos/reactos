@@ -16,7 +16,7 @@
  * sufficient (or even better :) for 64 bit offsets in the meantime */
 #define llseek lseek
 
-void fs_open(char *path,int rw);
+void fs_open(PUNICODE_STRING DriveRoot,int rw);
 
 /* Opens the file system PATH. If RW is zero, the file system is opened
    read-only, otherwise, it is opened read-write. */

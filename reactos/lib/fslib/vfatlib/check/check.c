@@ -6,20 +6,12 @@
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
+#include "vfatlib.h"
 #include <time.h>
-#include <windows.h>
 
-#include "common.h"
-#include "dosfsck.h"
-#include "io.h"
-#include "fat.h"
-#include "file.h"
-#include "lfn.h"
-#include "check.h"
+#define NDEBUG
+#include <debug.h>
+
 
 
 static DOS_FILE *root;

@@ -6,13 +6,10 @@
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
+#include "vfatlib.h"
 
-#include "common.h"
+#define NDEBUG
+#include <debug.h>
 
 
 typedef struct _link {

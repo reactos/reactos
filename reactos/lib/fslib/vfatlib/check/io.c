@@ -11,35 +11,11 @@
 /* FAT32, VFAT, Atari format support, and various fixes additions May 1998
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-//#include <unistd.h>
-#include <sys/stat.h>
-//#include <sys/ioctl.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <assert.h>
-//#include <linux/fd.h>
 
+#include "vfatlib.h"
 
-#ifdef _WIN32
-#define _WIN32_WINNT	0x0400
-#include <windows.h>
-#include <winioctl.h>
-#define __LITTLE_ENDIAN	1234
-#define __BIG_ENDIAN	4321
-#define __BYTE_ORDER	__LITTLE_ENDIAN
-#define inline
-#define __attribute__(x)
-#define BLOCK_SIZE		512
-#endif
-
-
-#include "dosfsck.h"
-#include "common.h"
-#include "io.h"
-
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _change {
     void *data;
@@ -50,19 +26,19 @@ typedef struct _change {
 
 
 static CHANGE *changes,*last;
-static int fd,did_change = 0;
+static int did_change = 0;
+static HANDLE fd;
+static LARGE_INTEGER CurrentOffset;
 
 unsigned device_no;
 
-static int WIN32open(const char *path, int oflag, ...);
-#define open	WIN32open
-static int WIN32close(int fd);
+static int WIN32close(HANDLE fd);
 #define close	WIN32close
-static int WIN32read(int fd, void *buf, unsigned int len);
+static int WIN32read(HANDLE fd, void *buf, unsigned int len);
 #define read	WIN32read
-static int WIN32write(int fd, void *buf, unsigned int len);
+static int WIN32write(HANDLE fd, void *buf, unsigned int len);
 #define write	WIN32write
-static loff_t WIN32llseek(int fd, loff_t offset, int whence);
+static loff_t WIN32llseek(HANDLE fd, loff_t offset, int whence);
 #ifdef llseek
 #undef llseek
 #endif
@@ -70,30 +46,34 @@ static loff_t WIN32llseek(int fd, loff_t offset, int whence);
 
 //static int is_device = 0;
 
-void fs_open(char *path,int rw)
+void fs_open(PUNICODE_STRING DriveRoot,int rw)
 {
-#ifdef _WIN32
-  static char dev_buf[] = "\\\\.\\X:";
-#else
-    struct stat stbuf;
-#endif
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
 
-  if (path[1] == ':' && path[2] == '\0') {
-	  dev_buf[4] = path[0];
-	  path = dev_buf;
-//	  is_device = 1;
-  }
+    InitializeObjectAttributes(&ObjectAttributes,
+        DriveRoot,
+        0,
+        NULL,
+        NULL);
 
-    if ((fd = open(path,rw ? O_RDWR : O_RDONLY)) < 0)
-	pdie("open %s",path);
+    Status = NtOpenFile(&fd,
+        FILE_GENERIC_READ | (rw ? FILE_GENERIC_WRITE : 0),
+        &ObjectAttributes,
+        &Iosb,
+        rw ? 0 : FILE_SHARE_READ,
+        FILE_SYNCHRONOUS_IO_ALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtOpenFile() failed with status 0x%.08x\n", Status);
+        return;
+    }
+
+    CurrentOffset.QuadPart = 0LL;
+
     changes = last = NULL;
     did_change = 0;
-
-#if 0
-    if (fstat(fd,&stbuf) < 0)
-	pdie("fstat %s",path);
-    device_no = S_ISBLK(stbuf.st_mode) ? (stbuf.st_rdev >> 8) & 0xff : 0;
-#endif
 }
 
 
@@ -224,7 +204,6 @@ void fs_write(loff_t pos,int size,void *data)
 static void fs_flush(void)
 {
     CHANGE *this;
-    //int size;
     int old_write_immed = write_immed;
 
     /* Disable writes to the list now */
@@ -233,19 +212,8 @@ static void fs_flush(void)
     while (changes) {
 	this = changes;
 	changes = changes->next;
-#if 0
-	if (llseek(fd,this->pos,0) != this->pos)
-	    fprintf(stderr,"Seek to %lld failed: %s\n  Did not write %d bytes.\n",
-	      (__int64)this->pos,strerror(errno),this->size);
-	else if ((size = write(fd,this->data,this->size)) < 0)
-		fprintf(stderr,"Writing %d bytes at %lld failed: %s\n",this->size,
-		  (__int64)this->pos,strerror(errno));
-	    else if (size != this->size)
-		    fprintf(stderr,"Wrote %d bytes instead of %d bytes at %lld."
-		      "\n",size,this->size,(__int64)this->pos);
-#else
+
     fs_write(this->pos, this->size, this->data);
-#endif
 
 	free(this->data);
 	free(this);
@@ -283,163 +251,64 @@ int fs_changed(void)
 /* tab-width: 8     */
 /* End:             */
 
-
-#define O_SHORT_LIVED   _O_SHORT_LIVED
-//#define O_ACCMODE       3
-#define O_NONE          3
-#define O_BACKUP        0x10000
-#define O_SHARED        0x20000
-
-static int WIN32open(const char *path, int oflag, ...)
+static int WIN32close(HANDLE FileHandle)
 {
-	HANDLE fh;
-	DWORD desiredAccess = 0;
-	DWORD shareMode = 0;
-	DWORD creationDisposition = 0;
-	DWORD flagsAttributes = FILE_ATTRIBUTE_NORMAL;
-	SECURITY_ATTRIBUTES securityAttributes;
-	va_list ap;
-	int pmode;
-	int trunc = FALSE;
+    if (!NT_SUCCESS(NtClose(FileHandle))) return -1;
 
-	securityAttributes.nLength = sizeof(securityAttributes);
-	securityAttributes.lpSecurityDescriptor = NULL;
-	securityAttributes.bInheritHandle = oflag & O_NOINHERIT ? FALSE : TRUE;
-	switch (oflag & O_ACCMODE) {
-	case O_RDONLY:
-		desiredAccess = GENERIC_READ;
-//		shareMode = FILE_SHARE_READ;
-		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE; // TMN:
-		break;
-	case O_WRONLY:
-		desiredAccess = GENERIC_WRITE;
-		shareMode = 0;
-		break;
-	case O_RDWR:
-		desiredAccess = GENERIC_READ|GENERIC_WRITE;
-		shareMode = 0;
-		break;
-	case O_NONE:
-		desiredAccess = 0;
-		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
-	}
-	if (oflag & O_APPEND) {
-		desiredAccess |= FILE_APPEND_DATA|SYNCHRONIZE;
-		shareMode = FILE_SHARE_READ|FILE_SHARE_WRITE;
-	}
-	if (oflag & O_SHARED)
-		shareMode |= FILE_SHARE_READ|FILE_SHARE_WRITE;
-        switch (oflag & (O_CREAT|O_EXCL|O_TRUNC)) {
-	case 0:
-	case O_EXCL:
-		creationDisposition = OPEN_EXISTING;
-		break;
-	case O_CREAT:
-		creationDisposition = OPEN_ALWAYS;
-		break;
-	case O_CREAT|O_EXCL:
-	case O_CREAT|O_TRUNC|O_EXCL:
-		creationDisposition = CREATE_NEW;
-		break;
-	case O_TRUNC:
-	case O_TRUNC|O_EXCL:
-		creationDisposition = TRUNCATE_EXISTING;
-		break;
-	case O_CREAT|O_TRUNC:
-		creationDisposition = OPEN_ALWAYS;
-		trunc = TRUE;
-		break;
-        }
-	if (oflag & O_CREAT) {
-		va_start(ap, oflag);
-		pmode = va_arg(ap, int);
-		va_end(ap);
-		if ((pmode & 0222) == 0)
-			flagsAttributes |= FILE_ATTRIBUTE_READONLY;
-	}
-	if (oflag & O_TEMPORARY) {
-		flagsAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
-		desiredAccess |= DELETE;
-	}
-	if (oflag & O_SHORT_LIVED)
-		flagsAttributes |= FILE_ATTRIBUTE_TEMPORARY;
-	if (oflag & O_SEQUENTIAL)
-		flagsAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
-	else if (oflag & O_RANDOM)
-		flagsAttributes |= FILE_FLAG_RANDOM_ACCESS;
-	if (oflag & O_BACKUP)
-		flagsAttributes |= FILE_FLAG_BACKUP_SEMANTICS;
-	if ((fh = CreateFile(path, desiredAccess, shareMode, &securityAttributes,
-				creationDisposition, flagsAttributes, NULL)) == INVALID_HANDLE_VALUE) {
-		errno = GetLastError();
-		return -1;
-	}
-	if (trunc) {
-		if (!SetEndOfFile(fh)) {
-			errno = GetLastError();
-			CloseHandle(fh);
-			DeleteFile(path);
-			return -1;
-		}
-	}
-	return (int)fh;
+    return 0;
 }
 
-static int WIN32close(int fd)
+static int WIN32read(HANDLE FileHandle, void *buf, unsigned int len)
 {
-	if (!CloseHandle((HANDLE)fd)) {
-		errno = GetLastError();
-		return -1;
-	}
-	return 0;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        buf,
+                        len,
+                        &CurrentOffset,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+        return -1;
+    }
+
+    CurrentOffset.QuadPart += len;
+    return (int)len;
 }
 
-static int WIN32read(int fd, void *buf, unsigned int len)
+static int WIN32write(HANDLE FileHandle, void *buf, unsigned int len)
 {
-	DWORD actualLen;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
 
-	if (!ReadFile((HANDLE)fd, buf, (DWORD)len, &actualLen, NULL)) {
-		errno = GetLastError();
-		if (errno == ERROR_BROKEN_PIPE)
-			return 0;
-		else
-			return -1;
-	}
-	return (int)actualLen;
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         buf,
+                         len,
+                         &CurrentOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
+        return -1;
+    }
+
+    CurrentOffset.QuadPart += len;
+    return (int)len;
 }
 
-static int WIN32write(int fd, void *buf, unsigned int len)
+static loff_t WIN32llseek(HANDLE fd, loff_t offset, int whence)
 {
-	DWORD actualLen;
+    CurrentOffset.QuadPart = (ULONGLONG)offset;
 
-	if (!WriteFile((HANDLE)fd, buf, (DWORD)len, &actualLen, NULL)) {
-		errno = GetLastError();
-		return -1;
-	}
-	return (int)actualLen;
-}
-
-static loff_t WIN32llseek(int fd, loff_t offset, int whence)
-{
-	long lo, hi;
-	DWORD err;
-
-	lo = (long)(offset & 0xffffffff);
-	hi = (long)(offset >> 32);
-	lo = SetFilePointer((HANDLE)fd, lo, &hi, whence);
-	if (lo == 0xFFFFFFFF && (err = GetLastError()) != NO_ERROR) {
-		errno = err;
-		return -1;
-	}
-	return ((loff_t)hi << 32) | (__u32)lo;
-}
-
-int fsctl(int fd, int code)
-{
-	DWORD ret;
-	if (!DeviceIoControl((HANDLE)fd, code, NULL, 0, NULL, 0, &ret, NULL)) {
-		errno = GetLastError();
-		return -1;
-	}
-	return 0;
+    return offset;
 }

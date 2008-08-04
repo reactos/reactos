@@ -6,29 +6,10 @@
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-//#include <unistd.h>
+#include "vfatlib.h"
 
-#define _LINUX_STAT_H		/* hack to avoid inclusion of <linux/stat.h> */
-#define _LINUX_STRING_H_	/* hack to avoid inclusion of <linux/string.h>*/
-#define _LINUX_FS_H             /* hack to avoid inclusion of <linux/fs.h> */
-
-//#include <linux/version.h>
-//#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
-//# define __KERNEL__
-//# include <asm/types.h>
-//# undef __KERNEL__
-//#endif
-
-#include "dosfsck.h"
-#include "msdos_fs.h"
-
-#include "common.h"
-#include "file.h"
-
+#define NDEBUG
+#include <debug.h>
 
 FDSC *fp_root = NULL;
 

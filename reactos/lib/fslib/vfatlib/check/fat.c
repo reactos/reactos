@@ -6,16 +6,11 @@
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-//#include <unistd.h>
+#include "vfatlib.h"
 
-#include "common.h"
-#include "dosfsck.h"
-#include "io.h"
-#include "check.h"
-#include "fat.h"
+#define NDEBUG
+#include <debug.h>
+
 
 //#pragma warning(disable: 4018)
 

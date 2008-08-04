@@ -5,14 +5,10 @@
 /* FAT32, VFAT, Atari format support, and various fixes additions May 1998
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
+#include "vfatlib.h"
 
-#include "common.h"
-#include "dosfsck.h"
-#include "io.h"
-#include "boot.h"
+#define NDEBUG
+#include <debug.h>
 
 
 #define ROUND_TO_MULTIPLE(n,m) ((n) && (m) ? (n)+(m)-1-((n)-1)%(m) : 0)
