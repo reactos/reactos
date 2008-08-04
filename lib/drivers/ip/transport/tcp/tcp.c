@@ -238,6 +238,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                 Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                 Complete = Bucket->Request.RequestNotifyObject;
                 Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+                PoolFreeBuffer( Bucket );
             }
         }
     }
