@@ -89,8 +89,10 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	    if( Status == STATUS_PENDING ) {
 		InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
 		break;
-	    } else
+	    } else {
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
+	    }
 	}
     }
 
@@ -141,6 +143,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
+		PoolFreeBuffer( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->ReceiveRequest, &Bucket->Entry );
@@ -150,6 +153,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Receive request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
 	    }
 	}
     }
@@ -198,6 +202,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Sent );
+		PoolFreeBuffer( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->SendRequest, &Bucket->Entry );
@@ -207,6 +212,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Send request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
 	    }
 	}
     }
