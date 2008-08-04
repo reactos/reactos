@@ -141,6 +141,8 @@
 #define IDS_PLAY_VERB               305
 #define IDS_PREVIEW_VERB            306
 #define IDS_FILE_FOLDER             307
+#define IDS_CREATELINK              308
+
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
 

@@ -611,6 +611,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Подробен"
 	IDS_SELECT                  "Избор"
 	IDS_OPEN                    "Отваряне"
+	IDS_CREATELINK              "Създаване на &връзка"
 
 	IDS_CREATEFOLDER_DENIED     "Създаването на нова папка е невъзможно: недостатъчни права."
 	IDS_CREATEFOLDER_CAPTION    "Грешка при създаване на нова папка"

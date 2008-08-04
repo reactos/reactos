@@ -600,6 +600,7 @@ BEGIN
 	IDS_DESKTOP                 "Робочий стіл"
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
+	IDS_CONTROLPANEL            "Панель керування"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"
@@ -608,7 +609,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Подробиці"
 	IDS_SELECT                  "Ви&брати"
 	IDS_OPEN                    "Ві&дкрити"
-	IDS_CONTROLPANEL            "Панель керування"
+	IDS_CREATELINK              "Створити &ярлик"
 
 	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
 	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової папки"

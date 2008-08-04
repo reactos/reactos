@@ -612,6 +612,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Détails"
 	IDS_SELECT                  "Sélectionner"
 	IDS_OPEN                    "Ouvrir"
+	IDS_CREATELINK              "Créer un &lien"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"

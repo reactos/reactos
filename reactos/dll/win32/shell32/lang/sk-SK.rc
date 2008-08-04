@@ -614,6 +614,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Podrobnosti"
 	IDS_SELECT                  "Vybraù"
 	IDS_OPEN                    "Otvoriù"
+	IDS_CREATELINK              "Vytvoriù o&dkaz"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"

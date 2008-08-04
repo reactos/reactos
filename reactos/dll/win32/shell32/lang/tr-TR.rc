@@ -608,6 +608,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Ayrýntýlý"
 	IDS_SELECT                  "Seç"
 	IDS_OPEN                    "Aç"
+	IDS_CREATELINK              "Kýsayol O&luþtur"
 
 	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
 	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"

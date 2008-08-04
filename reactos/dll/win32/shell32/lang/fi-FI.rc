@@ -608,6 +608,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Tiedot"
 	IDS_SELECT                  "Valitse"
 	IDS_OPEN                    "Avaa"
+	IDS_CREATELINK              "Lu&o Linkki"
 
 	IDS_CREATEFOLDER_DENIED     "Uutta kansiota ei voitu luoda: Oikeudet eivät riitä."
 	IDS_CREATEFOLDER_CAPTION    "Virhe luotaessa uutta kansiota"

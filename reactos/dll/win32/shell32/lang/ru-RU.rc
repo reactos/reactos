@@ -607,6 +607,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Подробно"
 	IDS_SELECT                  "&Выбрать"
 	IDS_OPEN                    "&Открыть"
+	IDS_CREATELINK              "Создать &ярлык"
 
 	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
 	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"

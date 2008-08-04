@@ -610,6 +610,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Detalhes"
 	IDS_SELECT                  "Seleccionar"
 	IDS_OPEN                    "Abrir"
+	IDS_CREATELINK              "Create &Link"
 
 	IDS_CREATEFOLDER_DENIED     "Não é possível criar nova pasta: Permissão negada."
 	IDS_CREATEFOLDER_CAPTION    "Erro durante a criação da nova pasta"

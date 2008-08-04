@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include "wine/config.h"
 #include "wine/port.h"
 
 #include <stdlib.h>
@@ -63,23 +63,32 @@ typedef struct {
     const IPersistFolder2Vtbl    *lpVtblPersistFolder2;
     const IShellExecuteHookWVtbl *lpVtblShellExecuteHookW;
     const IShellExecuteHookAVtbl *lpVtblShellExecuteHookA;
-
+    const IContextMenu2Vtbl       *lpVtblContextMenu;
     IUnknown *pUnkOuter;	/* used for aggregation */
 
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
     int dwAttributes;		/* attributes returned by GetAttributesOf FIXME: use it */
+    LPCITEMIDLIST *apidl;
+    UINT cidl;
 } ICPanelImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_PersistFolder2;
 static const IShellExecuteHookWVtbl vt_ShellExecuteHookW;
 static const IShellExecuteHookAVtbl vt_ShellExecuteHookA;
+static const IContextMenu2Vtbl vt_ContextMenu;
 
 static inline ICPanelImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
 {
     return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblPersistFolder2));
 }
+
+static inline ICPanelImpl *impl_from_IContextMenu( IContextMenu2 *iface )
+{
+    return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblContextMenu));
+}
+
 
 static inline ICPanelImpl *impl_from_IShellExecuteHookW( IShellExecuteHookW *iface )
 {
@@ -104,6 +113,7 @@ static inline ICPanelImpl *impl_from_IShellExecuteHookA( IShellExecuteHookA *ifa
 #define _IPersistFolder2_(This)	   (IPersistFolder2*)&(This->lpVtblPersistFolder2)
 #define _IShellExecuteHookW_(This) (IShellExecuteHookW*)&(This->lpVtblShellExecuteHookW)
 #define _IShellExecuteHookA_(This) (IShellExecuteHookA*)&(This->lpVtblShellExecuteHookA)
+
 
 /***********************************************************************
 *   IShellFolder [ControlPanel] implementation
@@ -135,10 +145,13 @@ HRESULT WINAPI IControlPanel_Constructor(IUnknown* pUnkOuter, REFIID riid, LPVOI
 	return E_OUTOFMEMORY;
 
     sf->ref = 0;
+    sf->apidl = NULL;
+    sf->cidl = 0;
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
     sf->lpVtblShellExecuteHookW = &vt_ShellExecuteHookW;
     sf->lpVtblShellExecuteHookA = &vt_ShellExecuteHookA;
+    sf->lpVtblContextMenu = &vt_ContextMenu;
     sf->pidlRoot = _ILCreateControlPanel();	/* my qualified pidl */
     sf->pUnkOuter = pUnkOuter ? pUnkOuter : _IUnknown_ (sf);
 
@@ -611,7 +624,10 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	*ppvOut = NULL;
 
 	if (IsEqualIID(riid, &IID_IContextMenu) &&(cidl >= 1)) {
-        hr = CDefFolderMenu_Create2(This->pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)iface, NULL, 0, NULL, (IContextMenu**)&pObj);
+		pObj = (IUnknown*)(&This->lpVtblContextMenu);
+		This->apidl = apidl;
+		This->cidl = cidl;
+		IUnknown_AddRef(pObj);
 	} else if (IsEqualIID(riid, &IID_IDataObject) &&(cidl >= 1)) {
 	    pObj = (LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
@@ -1100,3 +1116,178 @@ static const IShellExecuteHookAVtbl vt_ShellExecuteHookA =
     IShellExecuteHookA_fnRelease,
     IShellExecuteHookA_fnExecute
 };
+
+/**************************************************************************
+* IContextMenu2 Implementation
+*/
+
+/************************************************************************
+ * ICPanel_IContextMenu_QueryInterface
+ */
+static HRESULT WINAPI ICPanel_IContextMenu2_QueryInterface(IContextMenu2 * iface, REFIID iid, LPVOID * ppvObject)
+{
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("(%p)\n", This);
+
+    return IUnknown_QueryInterface(_IUnknown_(This), iid, ppvObject);
+}
+
+/************************************************************************
+ * ICPanel_IContextMenu_AddRef
+ */
+static ULONG WINAPI ICPanel_IContextMenu2_AddRef(IContextMenu2 * iface)
+{
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->ref);
+
+    return IUnknown_AddRef(_IUnknown_(This));
+}
+
+/************************************************************************
+ * ICPanel_IContextMenu_Release
+ */
+static ULONG WINAPI ICPanel_IContextMenu2_Release(IContextMenu2  * iface)
+{
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->ref);
+
+    return IUnknown_Release(_IUnknown_(This));
+}
+
+/**************************************************************************
+* ICPanel_IContextMenu_QueryContextMenu()
+*/
+static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
+	IContextMenu2 *iface,
+	HMENU hMenu,
+	UINT indexMenu,
+	UINT idCmdFirst,
+	UINT idCmdLast,
+	UINT uFlags)
+{
+    char szBuffer[30] = {0};
+    ULONG Count = 1;
+
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
+          This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    if (LoadStringA(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        Count++;
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_CREATELINK, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        if (Count)
+        {
+            _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_DEFAULT);
+        }
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        Count++;
+    }
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+}
+
+
+/**************************************************************************
+* ICPanel_IContextMenu_InvokeCommand()
+*/
+static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
+	IContextMenu2 *iface,
+	LPCMINVOKECOMMANDINFO lpcmi)
+{
+    WCHAR szBuffer[100];
+    SHELLEXECUTEINFOW sei;
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    sprintfW(szBuffer, L"verb %p\n", lpcmi->lpVerb);
+    MessageBoxW(NULL, szBuffer, L"invoke", MB_OK);
+
+    if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+    {
+       ZeroMemory(&sei, sizeof(sei));
+       sei.cbSize = sizeof(sei);
+       sei.fMask = SEE_MASK_INVOKEIDLIST;
+       sei.lpIDList = ILCombine(This->pidlRoot, This->apidl[0]);
+       sei.hwnd = lpcmi->hwnd;
+       sei.nShow = SW_SHOWNORMAL;
+       sei.lpVerb = L"open";
+       ShellExecuteExW(&sei);
+       if (sei.hInstApp <= (HINSTANCE)32)
+          return E_FAIL;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCE(2))
+    {
+        /* FIXME
+         * retrieve CSIDL_DESKTOPDIRECTORY path, 
+         * retrieve name from pidl and create a link there
+         */
+         FIXME("implement shortcuthandling\n");
+         return NOERROR;
+    }
+
+
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+
+    return S_OK;
+}
+
+/**************************************************************************
+ *  ICPanel_IContextMenu_GetCommandString()
+ *
+ */
+static HRESULT WINAPI ICPanel_IContextMenu2_GetCommandString(
+	IContextMenu2 *iface,
+	UINT_PTR idCommand,
+	UINT uFlags,
+	UINT* lpReserved,
+	LPSTR lpszName,
+	UINT uMaxNameLen)
+{
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+	TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+
+
+	FIXME("unknown command string\n");
+	return E_FAIL;
+}
+
+
+
+/**************************************************************************
+* ICPanel_IContextMenu_HandleMenuMsg()
+*/
+static HRESULT WINAPI ICPanel_IContextMenu2_HandleMenuMsg(
+	IContextMenu2 *iface,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+    ICPanelImpl *This = impl_from_IContextMenu(iface);
+
+    TRACE("ICPanel_IContextMenu_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    return E_NOTIMPL;
+}
+
+static const IContextMenu2Vtbl vt_ContextMenu =
+{
+	ICPanel_IContextMenu2_QueryInterface,
+	ICPanel_IContextMenu2_AddRef,
+	ICPanel_IContextMenu2_Release,
+	ICPanel_IContextMenu2_QueryContextMenu,
+	ICPanel_IContextMenu2_InvokeCommand,
+	ICPanel_IContextMenu2_GetCommandString,
+	ICPanel_IContextMenu2_HandleMenuMsg
+};
+

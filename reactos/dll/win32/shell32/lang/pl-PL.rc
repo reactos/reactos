@@ -614,6 +614,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Szczegó³y"
 	IDS_SELECT                  "Zaznacz"
 	IDS_OPEN                    "Otwórz"
+	IDS_CREATELINK	            "Utwórz &Skrót"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."

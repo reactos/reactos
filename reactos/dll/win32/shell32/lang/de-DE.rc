@@ -610,6 +610,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Details"
 	IDS_SELECT                  "Auswählen"
 	IDS_OPEN                    "Öffnen"
+	IDS_CREATELINK              "&Verknüpfung erstellen"
 
 	IDS_CREATEFOLDER_DENIED     "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
 	IDS_CREATEFOLDER_CAPTION    "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."

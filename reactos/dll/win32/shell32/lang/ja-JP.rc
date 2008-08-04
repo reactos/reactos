@@ -608,6 +608,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "詳細(&D)"
 	IDS_SELECT                  "選択"
 	IDS_OPEN                    "開く"
+	IDS_CREATELINK              "ショートカットの作成(&L)"
 
 	IDS_CREATEFOLDER_DENIED     "新しいフォルダを作成できませんでした: アクセス権がありません。"
 	IDS_CREATEFOLDER_CAPTION    "新しいフォルダの作成中にエラーが発生しました"

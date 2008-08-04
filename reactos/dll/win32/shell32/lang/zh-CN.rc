@@ -597,6 +597,7 @@ BEGIN
 	IDS_VIEW_DETAILS            "详细信息(&D)"
 	IDS_SELECT                  "Select"
 	IDS_OPEN                    "Open"
+	IDS_CREATELINK              "创建快捷方式(&L)"
 
 	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
 	IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"
