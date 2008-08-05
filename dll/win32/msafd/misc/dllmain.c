@@ -515,6 +515,7 @@ WSPBind(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}         
 	
 	/* Set up Socket Data */
@@ -524,7 +525,7 @@ WSPBind(
 	NtClose( SockEvent );
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 int 
@@ -568,6 +569,7 @@ WSPListen(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}         
 
 	/* Set to Listening */
@@ -576,7 +578,7 @@ WSPListen(
 	NtClose( SockEvent );
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1249,7 +1251,7 @@ WSPConnect(
 
 	NtClose( SockEvent );
     
-    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
+    return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
 int
 WSPAPI 
@@ -1312,13 +1314,14 @@ WSPShutdown(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}
 
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 	NtClose( SockEvent );
 
-    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
+    return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1403,7 +1406,7 @@ WSPGetSockName(
 	}
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, 0, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1488,7 +1491,7 @@ WSPGetPeerName(
 	}
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, 0, NULL );    
+	    ( Status, lpErrno, 0, NULL );
 }
 
 INT
