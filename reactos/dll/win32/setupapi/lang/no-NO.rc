@@ -25,7 +25,7 @@ STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Kopierer filer . . ."
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "Cancel", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "Avbryt", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	LTEXT "Kilde:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "Mål:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -35,7 +35,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Your computer needs to be rebooted to finish installation. Do you want to proceed?"
-	IDS_QUERY_REBOOT_CAPTION     "Reboot"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_QUERY_REBOOT_TEXT        "Din datamaskin trenger å startes på nytt for å fullføre installasjonen. Vil du starte på nytt?"
+	IDS_QUERY_REBOOT_CAPTION     "Start på nytt"
+	IDS_INF_FILE                 "Installerings informasjon"
 END
