@@ -867,6 +867,7 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
 
             if( !NT_SUCCESS(Status) ) {
                 TI_DbgPrint(DEBUG_DATALINK,("Couldn't enum key child %d\n", i));
+                NtClose( EnumKey );
                 ExFreePool( Kbio );
                 return Status;
             }
