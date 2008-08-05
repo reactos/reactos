@@ -45,3 +45,7 @@ ReactOS = "ReactOS Team"
 
 GenericMfg = "(Generic system devices)"
 *PNP0C08.DeviceDesc = "ACPI hardware"
+
+[Strings.0405]
+GenericMfg = "(Generick� syst�mov� za��zen�)"
+*PNP0C08.DeviceDesc = "ACPI hardware"
