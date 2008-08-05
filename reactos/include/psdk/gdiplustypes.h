@@ -236,6 +236,12 @@ typedef struct Rect
     INT Height;
 } Rect;
 
+typedef struct CharacterRange
+{
+    INT First;
+    INT Length;
+} CharacterRange;
+
 typedef enum Status Status;
 
 #endif /* end of c typedefs */

@@ -75,6 +75,24 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             memcpy(dest->pathdata.Points, src->pathdata.Points, count * sizeof(PointF));
             memcpy(dest->pathdata.Types, src->pathdata.Types, count);
 
+            /* blending */
+            count = src->blendcount;
+            dest->blendcount = count;
+            dest->blendfac = GdipAlloc(count * sizeof(REAL));
+            dest->blendpos = GdipAlloc(count * sizeof(REAL));
+
+            if(!dest->blendfac || !dest->blendpos){
+                GdipFree(dest->pathdata.Points);
+                GdipFree(dest->pathdata.Types);
+                GdipFree(dest->blendfac);
+                GdipFree(dest->blendpos);
+                GdipFree(dest);
+                return OutOfMemory;
+            }
+
+            memcpy(dest->blendfac, src->blendfac, count * sizeof(REAL));
+            memcpy(dest->blendpos, src->blendpos, count * sizeof(REAL));
+
             break;
         }
         case BrushTypeLinearGradient:
@@ -180,6 +198,25 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
     return GdipCreateLineBrushFromRect(&rectF, startcolor, endcolor, mode, wrap, line);
 }
 
+/* FIXME: angle value completely ignored. Don't know how to use it since native
+          always set Brush rectangle to rect (independetly of this angle).
+          Maybe it's used only on drawing.  */
+GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect,
+    ARGB startcolor, ARGB endcolor, REAL angle, BOOL isAngleScalable, GpWrapMode wrap,
+    GpLineGradient **line)
+{
+    return GdipCreateLineBrushFromRect(rect, startcolor, endcolor, LinearGradientModeForwardDiagonal,
+                                       wrap, line);
+}
+
+GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect,
+    ARGB startcolor, ARGB endcolor, REAL angle, BOOL isAngleScalable, GpWrapMode wrap,
+    GpLineGradient **line)
+{
+    return GdipCreateLineBrushFromRectI(rect, startcolor, endcolor, LinearGradientModeForwardDiagonal,
+                                        wrap, line);
+}
+
 GpStatus WINGDIPAPI GdipCreatePathGradient(GDIPCONST GpPointF* points,
     INT count, GpWrapMode wrap, GpPathGradient **grad)
 {
@@ -193,6 +230,15 @@ GpStatus WINGDIPAPI GdipCreatePathGradient(GDIPCONST GpPointF* points,
 
     *grad = GdipAlloc(sizeof(GpPathGradient));
     if (!*grad) return OutOfMemory;
+
+    (*grad)->blendfac = GdipAlloc(sizeof(REAL));
+    if(!(*grad)->blendfac){
+        GdipFree(*grad);
+        return OutOfMemory;
+    }
+    (*grad)->blendfac[0] = 1.0;
+    (*grad)->blendpos    = NULL;
+    (*grad)->blendcount  = 1;
 
     (*grad)->pathdata.Count = count;
     (*grad)->pathdata.Points = GdipAlloc(count * sizeof(PointF));
@@ -264,6 +310,15 @@ GpStatus WINGDIPAPI GdipCreatePathGradientFromPath(GDIPCONST GpPath* path,
 
     *grad = GdipAlloc(sizeof(GpPathGradient));
     if (!*grad) return OutOfMemory;
+
+    (*grad)->blendfac = GdipAlloc(sizeof(REAL));
+    if(!(*grad)->blendfac){
+        GdipFree(*grad);
+        return OutOfMemory;
+    }
+    (*grad)->blendfac[0] = 1.0;
+    (*grad)->blendpos    = NULL;
+    (*grad)->blendcount  = 1;
 
     (*grad)->pathdata.Count = path->pathdata.Count;
     (*grad)->pathdata.Points = GdipAlloc(path->pathdata.Count * sizeof(PointF));
@@ -457,6 +512,8 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
         case BrushTypePathGradient:
             GdipFree(((GpPathGradient*) brush)->pathdata.Points);
             GdipFree(((GpPathGradient*) brush)->pathdata.Types);
+            GdipFree(((GpPathGradient*) brush)->blendfac);
+            GdipFree(((GpPathGradient*) brush)->blendpos);
             break;
         case BrushTypeSolidColor:
         case BrushTypeLinearGradient:
@@ -478,6 +535,43 @@ GpStatus WINGDIPAPI GdipGetLineGammaCorrection(GpLineGradient *line,
         return InvalidParameter;
 
     *usinggamma = line->gamma;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetLineWrapMode(GpLineGradient *brush, GpWrapMode *wrapmode)
+{
+    if(!brush || !wrapmode)
+        return InvalidParameter;
+
+    *wrapmode = brush->wrap;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPathGradientBlend(GpPathGradient *brush, REAL *blend,
+    REAL *positions, INT count)
+{
+    if(!brush || !blend || !positions || count <= 0)
+        return InvalidParameter;
+
+    if(count < brush->blendcount)
+        return InsufficientBuffer;
+
+    memcpy(blend, brush->blendfac, count*sizeof(REAL));
+    if(brush->blendcount > 1){
+        memcpy(positions, brush->blendpos, count*sizeof(REAL));
+    }
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPathGradientBlendCount(GpPathGradient *brush, INT *count)
+{
+    if(!brush || !count)
+        return InvalidParameter;
+
+    *count = brush->blendcount;
 
     return Ok;
 }
@@ -543,6 +637,51 @@ GpStatus WINGDIPAPI GdipGetPathGradientPointCount(GpPathGradient *grad,
         return InvalidParameter;
 
     *count = grad->pathdata.Count;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPathGradientRect(GpPathGradient *brush, GpRectF *rect)
+{
+    GpRectF r;
+    GpPath* path;
+    GpStatus stat;
+
+    if(!brush || !rect)
+        return InvalidParameter;
+
+    stat = GdipCreatePath2(brush->pathdata.Points, brush->pathdata.Types,
+                           brush->pathdata.Count, FillModeAlternate, &path);
+    if(stat != Ok)  return stat;
+
+    stat = GdipGetPathWorldBounds(path, &r, NULL, NULL);
+    if(stat != Ok){
+        GdipDeletePath(path);
+        return stat;
+    }
+
+    memcpy(rect, &r, sizeof(GpRectF));
+
+    GdipDeletePath(path);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetPathGradientRectI(GpPathGradient *brush, GpRect *rect)
+{
+    GpRectF rectf;
+    GpStatus stat;
+
+    if(!brush || !rect)
+        return InvalidParameter;
+
+    stat = GdipGetPathGradientRect(brush, &rectf);
+    if(stat != Ok)  return stat;
+
+    rect->X = roundr(rectf.X);
+    rect->Y = roundr(rectf.Y);
+    rect->Width  = roundr(rectf.Width);
+    rect->Height = roundr(rectf.Height);
 
     return Ok;
 }

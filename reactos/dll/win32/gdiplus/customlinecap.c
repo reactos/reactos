@@ -100,6 +100,8 @@ GpStatus WINGDIPAPI GdipCreateCustomLineCap(GpPath* fillPath, GpPath* strokePath
 
     (*customCap)->inset = baseInset;
     (*customCap)->cap = baseCap;
+    (*customCap)->join = LineJoinMiter;
+    (*customCap)->scale = 1.0;
 
     return Ok;
 }
@@ -112,6 +114,28 @@ GpStatus WINGDIPAPI GdipDeleteCustomLineCap(GpCustomLineCap *customCap)
     GdipFree(customCap->pathdata.Points);
     GdipFree(customCap->pathdata.Types);
     GdipFree(customCap);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetCustomLineCapStrokeJoin(GpCustomLineCap* customCap,
+    GpLineJoin* lineJoin)
+{
+    if(!customCap || !lineJoin)
+        return InvalidParameter;
+
+    *lineJoin = customCap->join;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetCustomLineCapWidthScale(GpCustomLineCap* custom,
+    REAL* widthScale)
+{
+    if(!custom || !widthScale)
+        return InvalidParameter;
+
+    *widthScale = custom->scale;
 
     return Ok;
 }
@@ -144,12 +168,12 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapBaseCap(GpCustomLineCap* custom,
 GpStatus WINGDIPAPI GdipGetCustomLineCapBaseInset(GpCustomLineCap* custom,
     REAL* inset)
 {
-    static int calls;
+    if(!custom || !inset)
+        return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    *inset = custom->inset;
 
-    return NotImplemented;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetCustomLineCapBaseInset(GpCustomLineCap* custom,
@@ -163,15 +187,16 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapBaseInset(GpCustomLineCap* custom,
     return NotImplemented;
 }
 
+/*FIXME: LineJoin completely ignored now */
 GpStatus WINGDIPAPI GdipSetCustomLineCapStrokeJoin(GpCustomLineCap* custom,
     GpLineJoin join)
 {
-    static int calls;
+    if(!custom)
+        return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    custom->join = join;
 
-    return NotImplemented;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetCustomLineCapWidthScale(GpCustomLineCap* custom,
