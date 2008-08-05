@@ -621,7 +621,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         8,
-        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© ¾e w Nap©dzie A: nie ma dyskietki i",
         TEXT_STYLE_NORMAL
     },
     {

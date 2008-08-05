@@ -50,9 +50,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.",
           IDC_STATIC, 20, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 20, 37, 120, 8
+    LTEXT "No&me:", IDC_STATIC, 20, 37, 108, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 120, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 108, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 

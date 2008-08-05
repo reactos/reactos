@@ -1,3 +1,9 @@
+/* FILE:        dll/cpl/main/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * THANKS TO:   Kamil Hornicek, who translated major part of this file 
+ * UPDATED:     2008-07-27
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
@@ -162,11 +168,11 @@ BEGIN
   IDS_HAND "Výbìr odkazu"
   IDS_NONE "(Není)"
   IDS_SYSTEM_SCHEME "(systémové schéma)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_BROWSE_FILTER "Kurzory (*.ani, *.cur)\0*.ani;*.cur\0Animované kurzory (*.ani)\0*.ani\0Statické kurzory (*.cur)\0*.cur\0Všechny soubory\0*.*\0\0"
+  IDS_BROWSE_TITLE "Procházet"
+  IDS_REMOVE_TITLE "Potvrdit odebrání kurzorového schématu"
+  IDS_REMOVE_TEXT "Jste si jistí, že chcete odebrat kurzorové schéma '%s'?"
+  IDS_OVERWRITE_TITLE "Potvrdit pøepsání kurzorového schématu"
+  IDS_OVERWRITE_TEXT "Zvolený název kurzorového schématu je již používán. Chcete pøepsat existující kurzorové schéma?"
+  IDS_ANIMATE_CURSOR "Animovaný kurzor"
 END

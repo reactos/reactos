@@ -716,5 +716,5 @@ BEGIN
 	IDS_PLAY_VERB               "Odtwórz"
 	IDS_PREVIEW_VERB            "Podgl¹d"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
+	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
 END

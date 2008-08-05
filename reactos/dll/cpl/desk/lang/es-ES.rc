@@ -161,7 +161,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiples Monitores)"
+    IDS_MULTIPLEMONITORS "(Múltiples Monitores)"
     IDS_UNKNOWNMONITOR "(Monitor Desconocido)"
     IDS_ADVANCEDTITLEFMT "%s y %s"
 END
@@ -196,7 +196,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_INACTWIN "Ventana Inactiva"
     IDS_ACTWIN   "Ventana Activa"
-    IDS_WINTEXT  "Texto de la vantana"
+    IDS_WINTEXT  "Texto de la ventana"
     IDS_MESSBOX  "Cuadro de mensaje"
     IDS_MESSTEXT "Texto del mensaje"
     IDS_BUTTEXT  "Aceptar"

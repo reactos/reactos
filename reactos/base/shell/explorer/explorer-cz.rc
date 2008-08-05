@@ -330,7 +330,7 @@ BEGIN
     IDS_START               "Start"
     IDS_LOGOFF              "Odhlásit se..."
     IDS_SHUTDOWN            "Vypnout..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "Restartovat..."
     IDS_LAUNCH              "Spustit..."
     IDS_START_HELP          "Pomoc"
     IDS_SEARCH_FILES        "Hledat"
@@ -381,8 +381,8 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Nastavení plochy"
     IDS_DESKTOP             "Plocha"
     IDS_TASKBAR             "Panel úloh"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
+    IDS_NAMECOLUMN          "Název"
+    IDS_PATHCOLUMN          "Cesta"
     IDS_MENUCOLUMN          "Menu path"
 END
 

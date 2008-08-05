@@ -2,6 +2,7 @@
 #include <windows.h>
 
 #include "lang/bg-BG.rc"
+#include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
