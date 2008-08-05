@@ -910,6 +910,44 @@ static __inline__ __attribute__((always_inline)) unsigned long long __ull_rshift
 	return retval;
 }
 
+static __inline__ __attribute__((always_inline)) unsigned short _byteswap_ushort(unsigned short value)
+{
+	unsigned short retval;
+	__asm__("rorw $8, %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
+	return retval;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned long _byteswap_ulong(unsigned long value)
+{
+	unsigned long retval;
+	__asm__("bswapl %[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
+	return retval;
+}
+
+#ifdef _M_AMD64
+static __inline__ __attribute__((always_inline)) unsigned __int64 _byteswap_uint64(unsigned __int64 value)
+{
+	unsigned __int64 retval;
+	__asm__("bswapq %[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
+	return retval;
+}
+#else
+static __inline__ __attribute__((always_inline)) unsigned __int64 _byteswap_uint64(unsigned __int64 value)
+{
+	union {
+		__int64 int64part;
+		struct {
+			unsigned long lowpart;
+			unsigned long hipart;
+		};
+	} retval;
+	retval.int64part = value;
+	__asm__("bswapl %[lowpart]\n"
+	        "bswapl %[hipart]\n"
+	        : [lowpart] "=rm" (retval.hipart), [hipart] "=rm" (retval.lowpart)  : "[lowpart]" (retval.lowpart), "[hipart]" (retval.hipart) );
+	return retval.int64part;
+}
+#endif
 
 /*** 64-bit math ***/
 static __inline__ __attribute__((always_inline)) long long __emul(const int a, const int b)
