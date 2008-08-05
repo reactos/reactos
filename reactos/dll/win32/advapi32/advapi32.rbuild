@@ -41,6 +41,7 @@
 	<directory name="sec">
 			<file>ac.c</file>
 			<file>audit.c</file>
+			<file>cred.c</file>
 			<file>lsa.c</file>
 			<file>misc.c</file>
 			<file>sec.c</file>
