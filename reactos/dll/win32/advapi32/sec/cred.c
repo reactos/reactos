@@ -26,13 +26,6 @@
 #include "winreg.h"
 #include "wincred.h"
 #include "winternl.h"
-
-#ifdef __APPLE__
-# include <Security/SecKeychain.h>
-# include <Security/SecKeychainItem.h>
-# include <Security/SecKeychainSearch.h>
-#endif
-
 #include "../crypt/crypt.h"
 
 #include "wine/unicode.h"
@@ -946,7 +939,10 @@ static void convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW,
     if (CredentialW->TargetName)
     {
         CredentialA->TargetName = buffer;
-        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->TargetName, -1, CredentialA->TargetName, -1, NULL, NULL);
+
+        /* Buffer is guaranteed to be large enough */
+        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->TargetName, -1, CredentialA->TargetName, 0x7FFFFFFF, NULL, NULL);
+
         buffer += string_len;
         *len += string_len;
     }
@@ -955,7 +951,7 @@ static void convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW,
     if (CredentialW->Comment)
     {
         CredentialA->Comment = buffer;
-        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->Comment, -1, CredentialA->Comment, -1, NULL, NULL);
+        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->Comment, -1, CredentialA->Comment, 0x7FFFFFFF, NULL, NULL);
         buffer += string_len;
         *len += string_len;
     }
@@ -979,7 +975,7 @@ static void convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW,
     if (CredentialW->TargetAlias)
     {
         CredentialA->TargetAlias = buffer;
-        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->TargetAlias, -1, CredentialA->TargetAlias, -1, NULL, NULL);
+        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->TargetAlias, -1, CredentialA->TargetAlias, 0x7FFFFFFF, NULL, NULL);
         buffer += string_len;
         *len += string_len;
     }
@@ -988,7 +984,7 @@ static void convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW,
     if (CredentialW->UserName)
     {
         CredentialA->UserName = buffer;
-        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->UserName, -1, CredentialA->UserName, -1, NULL, NULL);
+        string_len = WideCharToMultiByte(CP_ACP, 0, CredentialW->UserName, -1, CredentialA->UserName, 0x7FFFFFFF, NULL, NULL);
         buffer += string_len;
         *len += string_len;
     }
@@ -1018,7 +1014,7 @@ static void convert_PCREDENTIALA_to_PCREDENTIALW(const CREDENTIALA *CredentialA,
     if (CredentialA->TargetName)
     {
         CredentialW->TargetName = (LPWSTR)buffer;
-        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->TargetName, -1, CredentialW->TargetName, -1);
+        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->TargetName, -1, CredentialW->TargetName, 0x7FFFFFFF);
         buffer += sizeof(WCHAR) * string_len;
         *len += sizeof(WCHAR) * string_len;
     }
@@ -1027,7 +1023,7 @@ static void convert_PCREDENTIALA_to_PCREDENTIALW(const CREDENTIALA *CredentialA,
     if (CredentialA->Comment)
     {
         CredentialW->Comment = (LPWSTR)buffer;
-        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->Comment, -1, CredentialW->Comment, -1);
+        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->Comment, -1, CredentialW->Comment, 0x7FFFFFFF);
         buffer += sizeof(WCHAR) * string_len;
         *len += sizeof(WCHAR) * string_len;
     }
@@ -1051,7 +1047,7 @@ static void convert_PCREDENTIALA_to_PCREDENTIALW(const CREDENTIALA *CredentialA,
     if (CredentialA->TargetAlias)
     {
         CredentialW->TargetAlias = (LPWSTR)buffer;
-        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->TargetAlias, -1, CredentialW->TargetAlias, -1);
+        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->TargetAlias, -1, CredentialW->TargetAlias, 0x7FFFFFFF);
         buffer += sizeof(WCHAR) * string_len;
         *len += sizeof(WCHAR) * string_len;
     }
@@ -1060,7 +1056,7 @@ static void convert_PCREDENTIALA_to_PCREDENTIALW(const CREDENTIALA *CredentialA,
     if (CredentialA->UserName)
     {
         CredentialW->UserName = (LPWSTR)buffer;
-        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->UserName, -1, CredentialW->UserName, -1);
+        string_len = MultiByteToWideChar(CP_ACP, 0, CredentialA->UserName, -1, CredentialW->UserName, 0x7FFFFFFF);
         buffer += sizeof(WCHAR) * string_len;
         *len += sizeof(WCHAR) * string_len;
     }
