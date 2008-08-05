@@ -711,25 +711,32 @@ NtUserToUnicodeEx(
       DPRINT1( "Couldn't copy key state from caller.\n" );
       RETURN(0);
    }
-   OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
-   if( !OutPwszBuff )
+   
+   /* Virtual code is correct and key is pressed currently? */
+   if (wVirtKey < 0x100 && KeyStateBuf[wVirtKey] & KS_DOWN_BIT)
    {
-      DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
-      RETURN(0);
+      OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
+      if( !OutPwszBuff )
+      {
+         DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
+         RETURN(0);
+      }
+      RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
+
+      ret = ToUnicodeInner( wVirtKey,
+                            wScanCode,
+                            KeyStateBuf,
+                            OutPwszBuff,
+                            cchBuff,
+                            wFlags,
+                            PsGetCurrentThreadWin32Thread() ?
+                               PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0 );
+
+      MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
+      ExFreePool(OutPwszBuff);
    }
-   RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
-
-   ret = ToUnicodeInner( wVirtKey,
-                         wScanCode,
-                         KeyStateBuf,
-                         OutPwszBuff,
-                         cchBuff,
-                         wFlags,
-                         PsGetCurrentThreadWin32Thread() ?
-                            PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0 );
-
-   MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
-   ExFreePool(OutPwszBuff);
+   else
+      ret = 0;
 
    RETURN(ret);
 
