@@ -14,13 +14,6 @@
 			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.16.exe</location>
 		</application>
-		<application name="Opera">
-			<regname>Opera</regname>
-			<licence>Freeware</licence>
-			<version>9.26</version>
-			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://mirror.nwps.ws/opera/win/926/en/Opera_9.26_Classic_Setup.exe</location>
-		</application>
 		<application name="Thunderbird 1.5">
 			<regname>Mozilla Thunderbird (1.5)</regname>
 			<licence>MPL/GPL/LGPL</licence>
@@ -34,12 +27,6 @@
 			<version>2.0.0.16</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
 			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/latest-2.0/win32/en-US/Thunderbird%20Setup%202.0.0.16.exe</location>
-		</application>
-		<application name="SeaMonkey">
-			<regname>SeaMonkey (1.1.9)</regname>
-			<version>1.1.9</version>
-			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.9/seamonkey-1.1.9.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
 			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
@@ -63,52 +50,16 @@
 			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
 			<location>http://svn.reactos.org/packages/samba-tng.exe</location>
 		</application>
-		<application name="Miranda IM">
-			<regname>Miranda IM</regname>
-			<version>0.7.4</version>
-			<description>Open source multiprotocol instant messaging application - May not work completely.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.7.4-unicode.exe</location>
-		</application>
-		<application name="Putty">
-			<regname>PuTTY version 0.60</regname>
-			<licence>MIT</licence>
-			<version>0.60</version>
-			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
-			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.60-installer.exe</location>
-		</application>
 	</category>
 	<category name="Office" icon="2">
 		<application name="Abiword">
-			<regname>"AbiWord 2.6.4 (remove only)"</regname>
-			<version>2.6.4</version>
+			<regname>"AbiWord 2.4.6 (remove only)"</regname>
+			<version>2.4.6</version>
 			<description>Word processor.</description>
-			<location>http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe</location>
-		</application>
-		<application name="OpenOffice">
-			<regname>OpenOffice.org 2.4</regname>
-			<version>2.4.0</version>
-			<description>THE Open Source Office Suite.</description>
-			<location>http://ftp.tu-chemnitz.de/pub/openoffice-extended/stable/2.4.0/OOo_2.4.0_Win32Intel_install_en-US.exe</location>
+			<location>http://abisource.com/downloads/abiword/2.4.6/Windows/abiword-setup-2.4.6.exe</location>
 		</application>
 	</category>
 	<category name="Graphics" icon="3">
-		<application name="IrfanView">
-			<regname>IrfanView (remove only)</regname>
-			<version>4.10</version>
-			<description>Viewer for all kinds of graphics/audio files/video files.</description>
-			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview410_setup.exe</location>
-		</application>
-		<application name="IrfanView Plugins">
-			<version>4.10</version>
-			<description>Additional Plugins for supporting more file types.</description>
-			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_410_setup.exe</location>
-		</application>
-		<application name="TuxPaint">
-			<regname>Tux Paint 0.9.19</regname>
-			<version>0.9.19</version>
-			<description>An Open Source bitmap graphics editor geared towards young children.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.19-win32-installer.exe</location>
-		</application>
 		<application name="zeckensack's glide wrapper">
 			<regname>GlidewrapZbag</regname>
 			<version>0.84c</version>
@@ -116,21 +67,7 @@
 			<location>http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe</location>
 		</application>
 	</category>
-	<category name="Multimedia" icon="4">
-	</category>
 	<category name="Development" icon="5">
-		<application name="ReactOS Build Environment">
-			<regname>ReactOS Build Environment 1.2</regname>
-			<version>1.2</version>
-			<description>Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-1.2.exe</location>
-		</application>
-		<application name="MinGW">
-			<regname>MinGW 5.1.3</regname>
-			<version>5.1.3</version>
-			<description>A Port of the GNU toolchain with GCC, GDB, GNU make, etc.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe</location>
-		</application>
 		<application name="FreeBASIC">
 			<regname>FreeBASIC 0.18.4b</regname>
 			<version>0.18.4b</version>
@@ -139,12 +76,6 @@
 		</application>
 	</category>
 	<category name="Games &amp; Fun" icon="6">
-		<application name="ScummVM">
-			<regname>ScummVM 0.11.1</regname>
-			<version>0.11.1</version>
-			<description>SamNMax, Day of Tentacle, etc on ReactOS</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/scummvm/scummvm-0.11.1-win32.exe</location>
-		</application>
 		<application name="Diablo 2 Shareware">
 			<regname>Diablo II Shareware</regname>
 			<version>1.4</version>
@@ -157,23 +88,11 @@
 			<description>Nice Clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted Original.</description>
 			<location>http://www.muppetlabs.com/~breadbox/pub/software/tworld/tworld-1.3.0-win32-CCLP2.exe</location>
 		</application>
-		<application name="OpenTTD">
-			<regname>OpenTTD 0.6.0</regname>
-			<version>0.6.0</version>
-			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe</location>
-		</application>
 		<application name="LBreakout2">
 			<regname>LBreakout2 2.4.1</regname>
 			<version>2.4.1</version>
 			<description>Breakout Clone using SDL libs.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lbreakout2-2.4.1-win32.exe</location>
-		</application>
-		<application name="LGeneral">
-			<regname>LGeneral 1.1</regname>
-			<version>1.1</version>
-			<description>Panzer General Clone using SDL libs.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lgeneral-1.1-win32.exe</location>
 		</application>
 		<application name="LMarbles">
 			<regname>LMarbles 1.0.6</regname>
@@ -188,12 +107,6 @@
 			<description>WinBoard is a graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet Chess Servers, and for electronic mail correspondence chess.</description>
 			<location>http://ftp.gnu.org/gnu/winboard/winboard-4_2_7b.exe</location>
 		</application>
-	</category>
-	<category name="Science" icon="11">
-	</category>
-	<category name="Edutainment" icon="12">
-	</category>
-	<category name="Engineering" icon="13">
 	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
