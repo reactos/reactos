@@ -79,7 +79,7 @@ void read_fat(DOS_FS *fs)
 	    fs_write(fs->fat_start,eff_size,use = second);
 	}
 	if (first_ok && second_ok) {
-	    if (interactive) {
+	    if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 		VfatPrint("FATs differ but appear to be intact. Use which FAT ?\n"
 		  "1) Use first FAT\n2) Use second FAT\n");
 		if (get_key("12","?") == '1')
@@ -199,7 +199,7 @@ void fix_bad(DOS_FS *fs)
 {
     unsigned long i;
 
-    if (verbose)
+    if (FsCheckFlags & FSCHECK_VERBOSE)
 	VfatPrint("Checking for bad clusters.\n");
     for (i = 2; i < fs->clusters+2; i++)
 	if (!get_owner(fs,i) && !FAT_IS_BAD(fs,fs->fat[i].value))
@@ -215,7 +215,7 @@ void reclaim_free(DOS_FS *fs)
     int reclaimed;
     unsigned long i;
 
-    if (verbose)
+    if (FsCheckFlags & FSCHECK_VERBOSE)
 	VfatPrint("Checking for unused clusters.\n");
     reclaimed = 0;
     for (i = 2; i < fs->clusters+2; i++)
@@ -261,7 +261,7 @@ void reclaim_file(DOS_FS *fs)
     int reclaimed,files,changed;
     unsigned long i,next,walk;
 
-    if (verbose)
+    if (FsCheckFlags & FSCHECK_VERBOSE)
 	VfatPrint("Reclaiming unconnected clusters.\n");
     for (i = 2; i < fs->clusters+2; i++) fs->fat[i].prev = 0;
     for (i = 2; i < fs->clusters+2; i++) {
@@ -324,25 +324,25 @@ unsigned long update_free(DOS_FS *fs)
     if (!fs->fsinfo_start)
 	return free;
 
-    if (verbose)
+    if (FsCheckFlags & FSCHECK_VERBOSE)
 	VfatPrint("Checking free cluster summary.\n");
     if (fs->free_clusters >= 0) {
 	if (free != fs->free_clusters) {
 	    VfatPrint( "Free cluster summary wrong (%ld vs. really %ld)\n",
 		    fs->free_clusters,free);
-	    if (interactive)
+	    if (FsCheckFlags & FSCHECK_INTERACTIVE)
 		VfatPrint( "1) Correct\n2) Don't correct\n" );
 	    else VfatPrint( "  Auto-correcting.\n" );
-	    if (!interactive || get_key("12","?") == '1')
+	    if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1')
 		do_set = 1;
 	}
     }
     else {
 	VfatPrint( "Free cluster summary uninitialized (should be %ld)\n", free );
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1) Set it\n2) Leave it uninitialized\n" );
 	else VfatPrint( "  Auto-setting.\n" );
-	if (!interactive || get_key("12","?") == '1')
+	if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1')
 	    do_set = 1;
     }
 

@@ -173,13 +173,13 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 		vffree( part2 );
 		can_clear = 1;
 	    }
-	    if (interactive) {
+	    if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 		VfatPrint( "1: Delete previous LFN\n2: Leave it as it is.\n" );
 		if (can_clear)
 		    VfatPrint( "3: Clear start bit and concatenate LFNs\n" );
 	    }
 	    else VfatPrint( "  Not auto-correcting this.\n" );
-	    if (interactive) {
+	    if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 		switch( get_key( can_clear ? "123" : "12", "?" )) {
 		  case '1':
 		    clear_lfn_slots( 0, lfn_parts-1 );
@@ -210,12 +210,12 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	VfatPrint( "Long filename fragment \"%s\" found outside a LFN "
 		"sequence.\n  (Maybe the start bit is missing on the "
 		"last fragment)\n", part );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    VfatPrint( "1: Delete fragment\n2: Leave it as it is.\n"
 		    "3: Set start bit\n" );
 	}
 	else VfatPrint( "  Not auto-correcting this.\n" );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    switch( get_key( "123", "?" )) {
 	      case '1':
 		if (!lfn_offsets)
@@ -259,13 +259,13 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	    vffree( part2 );
 	    can_fix = 1;
 	}
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is (and ignore LFN so far)\n" );
 	    if (can_fix)
 		VfatPrint( "3: Correct sequence number\n" );
 	}
 	else VfatPrint( "  Not auto-correcting this.\n" );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    switch( get_key( can_fix ? "123" : "12", "?" )) {
 	      case '1':
 		lfn_offsets[lfn_parts++] = dir_offset;
@@ -291,12 +291,12 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	VfatPrint( "Checksum in long filename part wrong "
 		"(%02x vs. expected %02x).\n",
 		lfn->alias_checksum, lfn_checksum );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is.\n"
 		    "3: Correct checksum\n" );
 	}
 	else VfatPrint( "  Not auto-correcting this.\n" );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    switch( get_key( "123", "?" )) {
 	      case '1':
 		lfn_offsets[lfn_parts++] = dir_offset;
@@ -326,10 +326,10 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
     if (lfn->reserved != 0) {
 	VfatPrint( "Reserved field in VFAT long filename slot is not 0 "
 		"(but 0x%02x).\n", lfn->reserved );
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1: Fix.\n2: Leave it.\n" );
 	else VfatPrint( "Auto-setting to 0.\n" );
-	if (!interactive || get_key("12","?") == '1') {
+	if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1') {
 	    lfn->reserved = 0;
 	    fs_write( dir_offset+offsetof(LFN_ENT,reserved),
 		      sizeof(lfn->reserved), &lfn->reserved );
@@ -338,10 +338,10 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
     if (lfn->start != CT_LE_W(0)) {
 	VfatPrint( "Start cluster field in VFAT long filename slot is not 0 "
 		"(but 0x%04x).\n", lfn->start );
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1: Fix.\n2: Leave it.\n" );
 	else VfatPrint( "Auto-setting to 0.\n" );
-	if (!interactive || get_key("12","?") == '1') {
+	if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1') {
 	    lfn->start = CT_LE_W(0);
 	    fs_write( dir_offset+offsetof(LFN_ENT,start),
 		      sizeof(lfn->start),&lfn->start );
@@ -382,13 +382,13 @@ char *lfn_get( DIR_ENT *de )
 		"  (Start may have been overwritten by %s)\n",
 		long_name, short_name );
 	vffree( long_name );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is.\n"
 		    "3: Fix numbering (truncates long name and attaches "
 		    "it to short name %s)\n", short_name );
 	}
 	else VfatPrint( "  Not auto-correcting this.\n" );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    switch( get_key( "123", "?" )) {
 	      case '1':
 		clear_lfn_slots( 0, lfn_parts-1 );
@@ -422,13 +422,13 @@ char *lfn_get( DIR_ENT *de )
 		"  (Short name %s may have changed without updating the long name)\n",
 		long_name, short_name );
 	vffree( long_name );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is.\n"
 		    "3: Fix checksum (attaches to short name %s)\n",
 		    short_name );
 	}
 	else VfatPrint( "  Not auto-correcting this.\n" );
-	if (interactive) {
+	if (FsCheckFlags & FSCHECK_INTERACTIVE) {
 	    switch( get_key( "123", "?" )) {
 	      case '1':
 		clear_lfn_slots( 0, lfn_parts-1 );
@@ -461,10 +461,10 @@ void lfn_check_orphaned(void)
 
     long_name = CNV_PARTS_SO_FAR();
     VfatPrint("Orphaned long file name part \"%s\"\n", long_name);
-    if (interactive)
+    if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	VfatPrint( "1: Delete.\n2: Leave it.\n" );
     else VfatPrint( "  Auto-deleting.\n" );
-    if (!interactive || get_key("12","?") == '1') {
+    if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1') {
 	clear_lfn_slots(0, lfn_parts - 1);
     }
     lfn_reset();

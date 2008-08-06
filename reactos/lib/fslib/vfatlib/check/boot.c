@@ -119,10 +119,10 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
 	    VfatPrint( "And there is no space for creating one!\n" );
 	    return;
 	}
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1) Create one\n2) Do without a backup\n" );
 	else VfatPrint( "  Auto-creating backup boot block.\n" );
-	if (!interactive || get_key("12","?") == '1') {
+	if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1') {
 	    int bbs;
 	    /* The usual place for the backup boot sector is sector 6. Choose
 	     * that or the last reserved sector. */
@@ -167,12 +167,12 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
 	}
 	VfatPrint( "\n" );
 
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1) Copy original to backup\n"
 		    "2) Copy backup to original\n"
 		    "3) No action\n" );
 	else VfatPrint( "  Not automatically fixing this.\n" );
-	switch (interactive ? get_key("123","?") : '3') {
+	switch ((FsCheckFlags & FSCHECK_INTERACTIVE) ? get_key("123","?") : '3') {
 	  case '1':
 	    fs_write(fs->backupboot_start,sizeof(*b),b);
 	    break;
@@ -200,10 +200,10 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
 
     if (!b->info_sector) {
 	VfatPrint( "No FSINFO sector\n" );
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1) Create one\n2) Do without FSINFO\n" );
 	else VfatPrint( "  Not automatically creating it.\n" );
-	if (interactive && get_key("12","?") == '1') {
+	if ((FsCheckFlags & FSCHECK_INTERACTIVE) && get_key("12","?") == '1') {
 	    /* search for a free reserved sector (not boot sector and not
 	     * backup boot sector) */
 	    __u32 s;
@@ -248,10 +248,10 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
 	    VfatPrint( "  Offset %llu: 0x%04x != expected 0x%04x\n",
 		    (__u64)offsetof(struct info_sector,boot_sign),
 		    CF_LE_W(i.boot_sign),0xaa55);
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint( "1) Correct\n2) Don't correct (FSINFO invalid then)\n" );
 	else VfatPrint( "  Auto-correcting it.\n" );
-	if (!interactive || get_key("12","?") == '1') {
+	if (!(FsCheckFlags & FSCHECK_INTERACTIVE) || get_key("12","?") == '1') {
 	    init_fsinfo(&i);
 	    fs_write(fs->fsinfo_start,sizeof(i),&i);
 	}
@@ -280,7 +280,7 @@ void read_boot(DOS_FS *fs)
     fs->nfats = b.fats;
     sectors = GET_UNALIGNED_W(b.sectors);
     total_sectors = sectors ? sectors : CF_LE_L(b.total_sect);
-    if (verbose) VfatPrint("Checking we can access the last sector of the filesystem\n");
+    if (FsCheckFlags & FSCHECK_VERBOSE) VfatPrint("Checking we can access the last sector of the filesystem\n");
     /* Can't access last odd sector anyway, so round down */
     fs_test((loff_t)((total_sectors & ~1)-1)*(loff_t)logical_sector_size,
 	    logical_sector_size);
@@ -358,7 +358,7 @@ void read_boot(DOS_FS *fs)
     /* ++roman: On Atari, these two fields are often left uninitialized */
     if (!atari_format && (!b.secs_track || !b.heads))
 	die("Invalid disk format in boot sector.");
-    if (verbose) dump_boot(fs,&b,logical_sector_size);
+    if (FsCheckFlags & FSCHECK_VERBOSE) dump_boot(fs,&b,logical_sector_size);
 }
 
 /* Local Variables: */

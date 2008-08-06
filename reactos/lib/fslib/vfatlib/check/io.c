@@ -139,7 +139,7 @@ void fs_write(loff_t pos,int size,void *data)
     int did;
 
 #if 1 //SAE
-    if (write_immed) {
+    if (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE) {
         void *scratch;
         const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;
         const loff_t seekpos_aligned = pos - (pos % 512);
@@ -204,10 +204,10 @@ void fs_write(loff_t pos,int size,void *data)
 static void fs_flush(void)
 {
     CHANGE *this;
-    int old_write_immed = write_immed;
+    int old_write_immed = (FsCheckFlags & FSCHECK_IMMEDIATE_WRITE);
 
     /* Disable writes to the list now */
-    write_immed = 1;
+    FsCheckFlags |= FSCHECK_IMMEDIATE_WRITE;
 
     while (changes) {
 	this = changes;
@@ -220,7 +220,7 @@ static void fs_flush(void)
     }
 
     /* Restore values */
-    write_immed = old_write_immed;
+    if (!old_write_immed) FsCheckFlags ^= FSCHECK_IMMEDIATE_WRITE;
 }
 
 

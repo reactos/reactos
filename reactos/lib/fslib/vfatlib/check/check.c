@@ -267,7 +267,7 @@ static int bad_name(unsigned char *name)
     /* Only complain about too much suspicious chars in interactive mode,
      * never correct them automatically. The chars are all basically ok, so we
      * shouldn't auto-correct such names. */
-    if (interactive && suspicious > 6)
+    if ((FsCheckFlags & FSCHECK_INTERACTIVE) && suspicious > 6)
 	return 1;
     return 0;
 }
@@ -365,11 +365,11 @@ static int handle_dot(DOS_FS *fs,DOS_FILE *file,int dots)
     name = strncmp((char*)file->dir_ent.name,MSDOS_DOT,MSDOS_NAME) ? ".." : ".";
     if (!(file->dir_ent.attr & ATTR_DIR)) {
 	VfatPrint("%s\n  Is a non-directory.\n",path_name(file));
-	if (interactive)
+	if (FsCheckFlags & FSCHECK_INTERACTIVE)
 	    VfatPrint("1) Drop it\n2) Auto-rename\n3) Rename\n"
 	      "4) Convert to directory\n");
 	else VfatPrint("  Auto-renaming it.\n");
-	switch (interactive ? get_key("1234","?") : '2') {
+	switch ((FsCheckFlags & FSCHECK_INTERACTIVE) ? get_key("1234","?") : '2') {
 	    case '1':
 		drop_file(fs,file);
 		return 1;
@@ -483,7 +483,7 @@ static int check_file(DOS_FS *fs,DOS_FILE *file)
 			"is FAT32 root dir.\n", clusters*fs->cluster_size );
 		do_trunc = 1;
 	    }
-	    else if (interactive)
+	    else if (FsCheckFlags & FSCHECK_INTERACTIVE)
 		VfatPrint("1) Truncate first to %lu bytes%s\n"
 		  "2) Truncate second to %lu bytes\n",clusters*fs->cluster_size,
 		  restart ? " and restart" : "",clusters2*fs->cluster_size);
@@ -491,7 +491,7 @@ static int check_file(DOS_FS *fs,DOS_FILE *file)
 		  fs->cluster_size);
 	    if (do_trunc != 2 &&
 		(do_trunc == 1 ||
-		 (interactive && get_key("12","?") == '1'))) {
+		 ((FsCheckFlags & FSCHECK_INTERACTIVE) && get_key("12","?") == '1'))) {
 		prev = 0;
 		clusters = 0;
 		for (this = FSTART(owner,fs); this > 0 && this != -1; this =
@@ -561,7 +561,7 @@ static int check_dir(DOS_FS *fs,DOS_FILE **root,int dots)
 	VfatPrint("%s\n  Has a large number of bad entries. (%d/%d)\n",
 	  path_name(parent),bad,good+bad);
 	if (!dots) VfatPrint( "  Not dropping root directory.\n" );
-	else if (!interactive) VfatPrint("  Not dropping it in auto-mode.\n");
+	else if (!(FsCheckFlags & FSCHECK_INTERACTIVE)) VfatPrint("  Not dropping it in auto-mode.\n");
 	else if (get_key("yn","Drop directory ? (y/n)") == 'y') {
 	    truncate_file(fs,parent,0);
 	    MODIFY(parent,name[0],DELETED_FLAG);
@@ -584,11 +584,11 @@ static int check_dir(DOS_FS *fs,DOS_FILE **root,int dots)
 	if (!((*walk)->dir_ent.attr & ATTR_VOLUME) &&
 	    bad_name((*walk)->dir_ent.name)) {
 	    VfatPrint("%s\n  Bad file name.\n",path_name(*walk));
-	    if (interactive)
+	    if (FsCheckFlags & FSCHECK_INTERACTIVE)
 		VfatPrint("1) Drop file\n2) Rename file\n3) Auto-rename\n"
 		  "4) Keep it\n");
 	    else VfatPrint("  Auto-renaming it.\n");
-	    switch (interactive ? get_key("1234","?") : '3') {
+	    switch ((FsCheckFlags & FSCHECK_INTERACTIVE) ? get_key("1234","?") : '3') {
 		case '1':
 		    drop_file(fs,*walk);
 		    walk = &(*walk)->next;
@@ -616,12 +616,12 @@ static int check_dir(DOS_FS *fs,DOS_FILE **root,int dots)
 		    VfatPrint("%s\n  Duplicate directory entry.\n  First  %s\n",
 			   path_name(*walk),file_stat(*walk));
 		    VfatPrint("  Second %s\n",file_stat(*scan));
-		    if (interactive)
+		    if (FsCheckFlags & FSCHECK_INTERACTIVE)
 			VfatPrint("1) Drop first\n2) Drop second\n3) Rename first\n"
 			       "4) Rename second\n5) Auto-rename first\n"
 			       "6) Auto-rename second\n");
 		    else VfatPrint("  Auto-renaming second.\n");
-		    switch (interactive ? get_key("123456","?") : '6') {
+		    switch ((FsCheckFlags & FSCHECK_INTERACTIVE) ? get_key("123456","?") : '6') {
 		      case '1':
 			drop_file(fs,*walk);
 			*walk = (*walk)->next;
@@ -789,7 +789,7 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
     if (type == fdt_undelete) undelete(fs,new);
     **chain = new;
     *chain = &new->next;
-    if (list) {
+    if (FsCheckFlags & FSCHECK_LIST_FILES) {
 	VfatPrint("Checking file %s",path_name(new));
 	if (new->lfn)
 	    VfatPrint(" (%s)", file_name(new->dir_ent.name) );
@@ -799,7 +799,7 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
 	strncmp((char*)de.name,MSDOS_DOT,MSDOS_NAME) != 0 &&
 	strncmp((char*)de.name,MSDOS_DOTDOT,MSDOS_NAME) != 0)
 	++n_files;
-    test_file(fs,new,test);
+    test_file(fs,new,FsCheckFlags & FSCHECK_TEST_READ);
 }
 
 

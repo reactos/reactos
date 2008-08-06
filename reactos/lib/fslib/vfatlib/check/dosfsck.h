@@ -29,13 +29,6 @@ typedef __int64 ll_t;
 
 #endif
 
-#define _LINUX_STAT_H		/* hack to avoid inclusion of <linux/stat.h> */
-#define _LINUX_STRING_H_	/* hack to avoid inclusion of <linux/string.h>*/
-#define _LINUX_FS_H             /* hack to avoid inclusion of <linux/fs.h> */
-
-//#include <linux/version.h>
-//# include "types.h"
-
 #ifdef _M_IX86
 #include "byteorder.h"
 #endif
@@ -165,7 +158,13 @@ typedef struct {
 #define offsetof(t,e)	((int)&(((t *)0)->e))
 #endif
 
-extern int interactive,list,verbose,test,write_immed;
+#define FSCHECK_INTERACTIVE     0x01
+#define FSCHECK_LIST_FILES      0x02
+#define FSCHECK_TEST_READ       0x04
+#define FSCHECK_VERBOSE         0x08
+#define FSCHECK_IMMEDIATE_WRITE 0x10
+
+extern ULONG FsCheckFlags;
 extern int atari_format;
 extern unsigned n_files;
 extern void *mem_queue;
