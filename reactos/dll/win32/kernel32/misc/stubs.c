@@ -963,6 +963,7 @@ GetVolumePathNameW(
     )
 {
     STUB;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
 
