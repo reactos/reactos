@@ -512,7 +512,7 @@ GetCharABCWidthsFloatW(HDC hdc,
                        UINT LastChar,
                        LPABCFLOAT abcF)
 {
-DPRINT("GetCharABCWidthsFloatW\n");
+ DPRINT("GetCharABCWidthsFloatW\n");
  if ((!abcF) || (FirstChar > LastChar))
  {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -537,7 +537,7 @@ GetCharWidthFloatW(HDC hdc,
                    UINT iLastChar,
                    PFLOAT pxBuffer)
 {
-DPRINT("GetCharWidthsFloatW\n");
+ DPRINT("GetCharWidthsFloatW\n");
  if ((!pxBuffer) || (iFirstChar > iLastChar))
  {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -562,7 +562,7 @@ GetCharWidthW(HDC hdc,
               UINT iLastChar,
               LPINT lpBuffer)
 {
-DPRINT("GetCharWidthsW\n");
+ DPRINT("GetCharWidthsW\n");
  if ((!lpBuffer) || (iFirstChar > iLastChar))
  {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -587,7 +587,7 @@ GetCharWidth32W(HDC hdc,
                UINT iLastChar,
                LPINT lpBuffer)
 {
-DPRINT("GetCharWidths32W\n");
+ DPRINT("GetCharWidths32W\n");
  if ((!lpBuffer) || (iFirstChar > iLastChar))
  {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -613,7 +613,7 @@ GetCharABCWidthsW(HDC hdc,
                   UINT LastChar,
                   LPABC lpabc)
 {
-DPRINT("GetCharABCWidthsW\n");
+ DPRINT("GetCharABCWidthsW\n");
  if ((!lpabc) || (FirstChar > LastChar))
  {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -639,26 +639,35 @@ GetCharWidthA(
 	LPINT	lpBuffer
 	)
 {
-DPRINT("GetCharWidthsA\n");
     INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
+    DPRINT("GetCharWidthsA\n");
     if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-    for(i = 0; i < count; i++)
-	str[i] = (BYTE)(iFirstChar + i);
+    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    if (!str)
+        return FALSE;
 
-    wstr = FONT_mbtowc(NULL, str, count, &wlen, NULL);
+    for(i = 0; i < count; i++)
+        str[i] = (BYTE)(iFirstChar + i);
+    str[i] = '\0';
+
+    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    if (!wstr)
+    {
+        HeapFree(GetProcessHeap(), 0, str);
+        return FALSE;
+    }
 
     ret = NtGdiGetCharWidthW( hdc,
                           wstr[0],
-		    (ULONG) count,
-		    (PWCHAR) wstr,
-		      GCW_NOFLOAT,
-		  (PVOID) lpBuffer);
+                          (ULONG) count,
+                          (PWCHAR) wstr,
+                          GCW_NOFLOAT,
+                          (PVOID) lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -678,26 +687,34 @@ GetCharWidth32A(
 	LPINT	lpBuffer
 	)
 {
-DPRINT("GetCharWidths32A\n");
     INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
+    DPRINT("GetCharWidths32A\n");
     if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
+    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    if (!str)
+        return FALSE;
     for(i = 0; i < count; i++)
-	str[i] = (BYTE)(iFirstChar + i);
+        str[i] = (BYTE)(iFirstChar + i);
+    str[i] = '\0';
 
-    wstr = FONT_mbtowc(NULL, str, count, &wlen, NULL);
+    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    if (!wstr)
+    {
+        HeapFree(GetProcessHeap(), 0, str);
+        return FALSE;
+    }
 
     ret = NtGdiGetCharWidthW( hdc,
                           wstr[0],
-	            (ULONG) count,
-	            (PWCHAR) wstr,
-	    GCW_NOFLOAT|GCW_WIN32, 
-                 (PVOID) lpBuffer);
+                          (ULONG) count,
+                          (PWCHAR) wstr,
+                          GCW_NOFLOAT|GCW_WIN32, 
+                          (PVOID) lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -717,20 +734,27 @@ GetCharWidthFloatA(
 	PFLOAT	pxBuffer
 	)
 {
-DPRINT("GetCharWidthsFloatA\n");
     INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
+    DPRINT("GetCharWidthsFloatA\n");
     if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
+    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    if (!str)
+        return FALSE;
     for(i = 0; i < count; i++)
-	str[i] = (BYTE)(iFirstChar + i);
+        str[i] = (BYTE)(iFirstChar + i);
+    str[i] = '\0';
 
-    wstr = FONT_mbtowc(NULL, str, count, &wlen, NULL);
-
+    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    if (!wstr)
+    {
+        HeapFree(GetProcessHeap(), 0, str);
+        return FALSE;
+    }
     ret = NtGdiGetCharWidthW( hdc, wstr[0], (ULONG) count, (PWCHAR) wstr, 0, (PVOID) pxBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
@@ -751,26 +775,34 @@ GetCharABCWidthsA(
 	LPABC	lpabc
 	)
 {
-DPRINT("GetCharABCWidthsA\n");
     INT i, wlen, count = (INT)(uLastChar - uFirstChar + 1);
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
+    DPRINT("GetCharABCWidthsA\n");
     if(count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
+    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    if (!str)
+        return FALSE;
     for(i = 0; i < count; i++)
-	str[i] = (BYTE)(uFirstChar + i);
+        str[i] = (BYTE)(uFirstChar + i);
+    str[i] = '\0';
 
-     wstr = FONT_mbtowc(hdc, str, count, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
+    if (!wstr)
+    {
+        HeapFree(GetProcessHeap(), 0, str);
+        return FALSE;
+    }
 
     ret = NtGdiGetCharABCWidthsW( hdc, 
                               wstr[0],
-                         (ULONG)count,
-                         (PWCHAR)wstr,
-		       GCABCW_NOFLOAT,
-		         (PVOID)lpabc);
+                              (ULONG)count,
+                              (PWCHAR)wstr,
+                              GCABCW_NOFLOAT,
+                              (PVOID)lpabc);
 
     HeapFree(GetProcessHeap(), 0, str);
     HeapFree(GetProcessHeap(), 0, wstr);
@@ -790,21 +822,28 @@ GetCharABCWidthsFloatA(
 	LPABCFLOAT	lpABCF
 	)
 {
-DPRINT("GetCharABCWidthsFloatA\n");
     INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
 
+    DPRINT("GetCharABCWidthsFloatA\n");
     if (count <= 0) return FALSE;
 
-    str = HeapAlloc(GetProcessHeap(), 0, count);
+    str = HeapAlloc(GetProcessHeap(), 0, count+1);
+    if (!str)
+        return FALSE;
 
     for(i = 0; i < count; i++)
         str[i] = (BYTE)(iFirstChar + i);
+    str[i] = '\0';
 
-    wstr = FONT_mbtowc( hdc, str, count, &wlen, NULL );
-
+    wstr = FONT_mbtowc( hdc, str, count+1, &wlen, NULL );
+    if (!wstr)
+    {
+        HeapFree( GetProcessHeap(), 0, str );
+        return FALSE;
+    }
     ret = NtGdiGetCharABCWidthsW( hdc,wstr[0],(ULONG)count, (PWCHAR)wstr, 0, (PVOID)lpABCF);
 
     HeapFree( GetProcessHeap(), 0, str );
@@ -824,7 +863,7 @@ GetCharABCWidthsI(HDC hdc,
                   LPWORD pgi,
                   LPABC lpabc)
 {
-DPRINT("GetCharABCWidthsI\n");
+ DPRINT("GetCharABCWidthsI\n");
  return NtGdiGetCharABCWidthsW( hdc,
                             giFirst,
                         (ULONG) cgi,
@@ -845,7 +884,7 @@ GetCharWidthI(HDC hdc,
               LPINT lpBuffer
 )
 {
-DPRINT("GetCharWidthsI\n");
+ DPRINT("GetCharWidthsI\n");
  if (!lpBuffer || (!pgi && (giFirst == MAXUSHORT))) // Cannot be at max.
  {
     SetLastError(ERROR_INVALID_PARAMETER);
