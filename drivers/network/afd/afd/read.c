@@ -168,11 +168,8 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 				FCB, FCB->Recv.Content));
 	/*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
 
-	Status = STATUS_SUCCESS;
-
 	/* Try to clear some requests */
-	while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) &&
-	       NT_SUCCESS(Status) ) {
+	while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	    NextIrpEntry =
 		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
 	    NextIrp =
@@ -476,10 +473,14 @@ PacketSocketRecvComplete(
 	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
     } else Status = STATUS_NO_MEMORY;
 
+    if( !NT_SUCCESS( Status ) ) {
+	SocketStateUnlock( FCB );
+	return Status;
+    }
+
     /* Satisfy as many requests as we can */
 
-    while( NT_SUCCESS(Status) &&
-	   !IsListEmpty( &FCB->DatagramList ) &&
+    while( !IsListEmpty( &FCB->DatagramList ) &&
 	   !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 	AFD_DbgPrint(MID_TRACE,("Looping trying to satisfy request\n"));
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
