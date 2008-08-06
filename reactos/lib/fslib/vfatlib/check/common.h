@@ -17,8 +17,8 @@ void pdie(char *msg,...);
 
 /* Like die, but appends an error message according to the state of errno. */
 
-void *alloc(int size);
-void free(void *ptr);
+void *vfalloc(int size);
+void vffree(void *ptr);
 /* mallocs SIZE bytes and returns a pointer to the data. Terminates the program
    if malloc fails. */
 

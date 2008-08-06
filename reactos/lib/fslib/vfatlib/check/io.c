@@ -86,14 +86,14 @@ void fs_read(loff_t pos,int size,void *data)
  	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
  	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
 	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
-	char* tmpBuf = alloc(readsize_aligned);                                    // TMN:
+	char* tmpBuf = vfalloc(readsize_aligned);                                    // TMN:
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %I64d",pos);
     if ((got = read(fd,tmpBuf,readsize_aligned)) < 0) pdie("Read %d bytes at %I64d",size,pos);
 	assert(got >= size);
 	got = size;
 	assert(seek_delta + size <= readsize);
 	memcpy(data, tmpBuf+seek_delta, size);
-	free(tmpBuf);
+	vffree(tmpBuf);
 #else // TMN:
     if (llseek(fd,pos,0) != pos) pdie("Seek to %lld",pos);
     if ((got = read(fd,data,size)) < 0) pdie("Read %d bytes at %lld",size,pos);
@@ -119,15 +119,15 @@ int fs_test(loff_t pos,int size)
 #if 1 // TMN
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
 	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
-    scratch = alloc(readsize_aligned);
+    scratch = vfalloc(readsize_aligned);
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
     okay = read(fd,scratch,readsize_aligned) == (int)readsize_aligned;
-    free(scratch);
+    vffree(scratch);
 #else // TMN:
     if (llseek(fd,pos,0) != pos) pdie("Seek to %lld",pos);
-    scratch = alloc(size);
+    scratch = vfalloc(size);
     okay = read(fd,scratch,size) == size;
-    free(scratch);
+    vffree(scratch);
 #endif // TMN:
     return okay;
 }
@@ -148,7 +148,7 @@ void fs_write(loff_t pos,int size,void *data)
 
         /* Aloc temp buffer if write is not aligned */
         if (use_read)
-            scratch = alloc(readsize_aligned);
+            scratch = vfalloc(readsize_aligned);
         else
             scratch = data;
 
@@ -167,16 +167,16 @@ void fs_write(loff_t pos,int size,void *data)
         /* Write it back */
         if ((did = write(fd,scratch,readsize_aligned)) == (int)readsize_aligned)
         {
-            if (use_read) free(scratch);
+            if (use_read) vffree(scratch);
             return;
         }
         if (did < 0) pdie("Write %d bytes at %I64d",size,pos);
         die("Wrote %d bytes instead of %d at %I64d",did,size,pos);
     }
 
-    new = alloc(sizeof(CHANGE));
+    new = vfalloc(sizeof(CHANGE));
     new->pos = pos;
-    memcpy(new->data = alloc(new->size = size),data,size);
+    memcpy(new->data = vfalloc(new->size = size),data,size);
     new->next = NULL;
     if (last) last->next = new;
     else changes = new;
@@ -190,9 +190,9 @@ void fs_write(loff_t pos,int size,void *data)
 	if (did < 0) pdie("Write %d bytes at %lld",size,pos);
 	die("Wrote %d bytes instead of %d at %lld",did,size,pos);
     }
-    new = alloc(sizeof(CHANGE));
+    new = vfalloc(sizeof(CHANGE));
     new->pos = pos;
-    memcpy(new->data = alloc(new->size = size),data,size);
+    memcpy(new->data = vfalloc(new->size = size),data,size);
     new->next = NULL;
     if (last) last->next = new;
     else changes = new;
@@ -215,8 +215,8 @@ static void fs_flush(void)
 
     fs_write(this->pos, this->size, this->data);
 
-	free(this->data);
-	free(this);
+	vffree(this->data);
+	vffree(this);
     }
 
     /* Restore values */
@@ -233,8 +233,8 @@ int fs_close(int write)
     if (write) fs_flush();
     else while (changes) {
 	    next = changes->next;
-	    free(changes->data);
-	    free(changes);
+	    vffree(changes->data);
+	    vffree(changes);
 	    changes = next;
 	}
     if (close(fd) < 0) pdie("closing file system");

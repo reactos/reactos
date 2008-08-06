@@ -55,11 +55,11 @@ void read_fat(DOS_FS *fs)
 	if (eff_size % 512) {
 		eff_size += 512 - (eff_size % 512);
 	}
-    first = alloc(eff_size);
+    first = vfalloc(eff_size);
     fs_read(fs->fat_start,eff_size,first);
     use = first;
     if (fs->nfats > 1) {
-	second = alloc(eff_size);
+	second = vfalloc(eff_size);
 	fs_read(fs->fat_start+fs->fat_size,eff_size,second);
     }
     else
@@ -106,9 +106,9 @@ void read_fat(DOS_FS *fs)
 		   i-2,fs->fat[i].value,fs->clusters+2-1);
 	    set_fat(fs,i,-1);
 	}
-    free(first);
+    vffree(first);
     if (second)
-	free(second);
+	vffree(second);
 }
 
 

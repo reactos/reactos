@@ -130,7 +130,7 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	DIR_ENT *root;
 	int next_free = 0, scan;
 
-	root = alloc(fs->root_entries*sizeof(DIR_ENT));
+	root = vfalloc(fs->root_entries*sizeof(DIR_ENT));
 	fs_read(fs->root_start,fs->root_entries*sizeof(DIR_ENT),root);
 
 	while (next_free < (int)fs->root_entries)
@@ -151,7 +151,7 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	    if (scan == (int)fs->root_entries) break;
 	    if (++curr_num >= 10000) die("Unable to create unique name");
 	}
-	free(root);
+	vffree(root);
     }
     ++n_files;
     return offset;

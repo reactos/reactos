@@ -81,7 +81,7 @@ static char *cnv_unicode( const unsigned char *uni, int maxlen, int use_q )
 	else
 	    len += 4;
     }
-    cp = out = use_q ? qalloc( &mem_queue, len+1 ) : alloc( len+1 );
+    cp = out = use_q ? qalloc( &mem_queue, len+1 ) : vfalloc( len+1 );
 
     for( up = uni; (up-uni)/2 < maxlen && (up[0] || up[1]); up += 2 ) {
 	if (UNICODE_CONVERTABLE(up[0],up[1]))
@@ -132,10 +132,10 @@ static void clear_lfn_slots( int start, int end )
 void lfn_reset( void )
 {
     if (lfn_unicode)
-	free( lfn_unicode );
+	vffree( lfn_unicode );
     lfn_unicode = NULL;
     if (lfn_offsets)
-	free( lfn_offsets );
+	vffree( lfn_offsets );
     lfn_offsets = NULL;
     lfn_slot = -1;
 }
@@ -169,8 +169,8 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 		char *part2 = CNV_PARTS_SO_FAR();
 		VfatPrint( "  It could be that the LFN start bit is wrong here\n"
 			"  if \"%s\" seems to match \"%s\".\n", part1, part2 );
-		free( part1 );
-		free( part2 );
+		vffree( part1 );
+		vffree( part2 );
 		can_clear = 1;
 	    }
 	    if (interactive) {
@@ -197,8 +197,8 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	}
 	lfn_slot = lfn->id & LFN_ID_SLOTMASK;
 	lfn_checksum = lfn->alias_checksum;
-	lfn_unicode = alloc( (lfn_slot*CHARS_PER_LFN+1)*2 );
-	lfn_offsets = alloc( lfn_slot*sizeof(loff_t) );
+	lfn_unicode = vfalloc( (lfn_slot*CHARS_PER_LFN+1)*2 );
+	lfn_offsets = vfalloc( lfn_slot*sizeof(loff_t) );
 	lfn_parts = 0;
     }
     else if (lfn_slot == -1) {
@@ -219,7 +219,7 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	    switch( get_key( "123", "?" )) {
 	      case '1':
 		if (!lfn_offsets)
-		    lfn_offsets = alloc( sizeof(loff_t) );
+		    lfn_offsets = vfalloc( sizeof(loff_t) );
 		lfn_offsets[0] = dir_offset;
 		clear_lfn_slots( 0, 0 );
 		lfn_reset();
@@ -233,8 +233,8 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 			  sizeof(lfn->id), &lfn->id );
 		lfn_slot = lfn->id & LFN_ID_SLOTMASK;
 		lfn_checksum = lfn->alias_checksum;
-		lfn_unicode = alloc( (lfn_slot*CHARS_PER_LFN+1)*2 );
-		lfn_offsets = alloc( lfn_slot*sizeof(loff_t) );
+		lfn_unicode = vfalloc( (lfn_slot*CHARS_PER_LFN+1)*2 );
+		lfn_offsets = vfalloc( lfn_slot*sizeof(loff_t) );
 		lfn_parts = 0;
 		break;
 	    }
@@ -255,8 +255,8 @@ void lfn_add_slot( DIR_ENT *de, loff_t dir_offset )
 	    char *part2 = CNV_PARTS_SO_FAR();
 	    VfatPrint( "  It could be that just the number is wrong\n"
 		    "  if \"%s\" seems to match \"%s\".\n", part1, part2 );
-	    free( part1 );
-	    free( part2 );
+	    vffree( part1 );
+	    vffree( part2 );
 	    can_fix = 1;
 	}
 	if (interactive) {
@@ -381,7 +381,7 @@ char *lfn_get( DIR_ENT *de )
 	VfatPrint( "Unfinished long file name \"%s\".\n"
 		"  (Start may have been overwritten by %s)\n",
 		long_name, short_name );
-	free( long_name );
+	vffree( long_name );
 	if (interactive) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is.\n"
 		    "3: Fix numbering (truncates long name and attaches "
@@ -421,7 +421,7 @@ char *lfn_get( DIR_ENT *de )
 	VfatPrint( "Wrong checksum for long file name \"%s\".\n"
 		"  (Short name %s may have changed without updating the long name)\n",
 		long_name, short_name );
-	free( long_name );
+	vffree( long_name );
 	if (interactive) {
 	    VfatPrint( "1: Delete LFN\n2: Leave it as it is.\n"
 		    "3: Fix checksum (attaches to short name %s)\n",

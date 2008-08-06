@@ -44,7 +44,7 @@ void pdie(char *msg,...)
 }
 
 
-void *alloc(int size)
+void *vfalloc(int size)
 {
     void *ptr;
 
@@ -61,7 +61,7 @@ void *alloc(int size)
     return ptr;
 }
 
-void free(void *ptr)
+void vffree(void *ptr)
 {
     RtlFreeHeap(RtlGetProcessHeap(), 0, ptr);
 }
@@ -70,10 +70,10 @@ void *qalloc(void **root,int size)
 {
     LINK *link;
 
-    link = alloc(sizeof(LINK));
+    link = vfalloc(sizeof(LINK));
     link->next = *root;
     *root = link;
-    return link->data = alloc(size);
+    return link->data = vfalloc(size);
 }
 
 
@@ -84,8 +84,8 @@ void qfree(void **root)
     while (*root) {
 	this = (LINK *) *root;
 	*root = this->next;
-	free(this->data);
-	free(this);
+	vffree(this->data);
+	vffree(this);
     }
 }
 
