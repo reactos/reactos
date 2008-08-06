@@ -16,12 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window timers messages
- * FILE:             subsys/win32k/ntuser/timer.c
+ * FILE:             subsystems/win32/win32k/ntuser/timer.c
  * PROGRAMER:        Gunnar
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * REVISION HISTORY: 10/04/2003 Implemented System Timers
@@ -36,6 +35,8 @@
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
+
+static PTIMER FirstpTmr = NULL;
 
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   1024
@@ -148,20 +149,40 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 BOOL FASTCALL
 IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
+   PWINDOW_OBJECT Window = NULL;
+   
    DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
           Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
-   if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
-                      IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
+   if (Wnd)
    {
-      DPRINT1("Unable to locate timer in message queue\n");
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      Window = UserGetWindowObject(Wnd);
+   
+      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+                                IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
+      {
+         // Give it another chance to find the timer.
+         if (Window && !( MsqKillTimer(Window->MessageQueue, Wnd,
+                            IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER)))
+         {
+            DPRINT1("Unable to locate timer in message queue for Window.\n");
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+         }
+      }
    }
 
    /* window-less timer? */
    if ((Wnd == NULL) && ! SystemTimer)
    {
+      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+                                IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
+      {
+         DPRINT1("Unable to locate timer in message queue for Window-less timer.\n");
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+
       /* Release the id */
       IntLockWindowlessTimerBitmap();
 
@@ -194,6 +215,12 @@ InitTimerImpl(VOID)
 
    /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
+
+   if (!FirstpTmr)
+   {
+      FirstpTmr = ExAllocatePoolWithTag(PagedPool, sizeof(TIMER), TAG_TIMERBMP);
+      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
+   }
 
    return STATUS_SUCCESS;
 }

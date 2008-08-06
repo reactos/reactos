@@ -1131,7 +1131,7 @@ NtUserSetWindowsHookEx(
                                 ModuleName.MaximumLength);
       if (! NT_SUCCESS(Status))
       {
-	     ExFreePool(Hook->ModuleName.Buffer);
+         ExFreePool(Hook->ModuleName.Buffer);
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)
