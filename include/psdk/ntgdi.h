@@ -705,7 +705,7 @@ NtGdiDdSetOverlayPosition(
 );
 
 W32KAPI
-DWORD
+VOID
 APIENTRY
 NtGdiDdUnattachSurface(
     IN HANDLE hSurface,
@@ -801,7 +801,7 @@ NtGdiDdDestroyD3DBuffer(
 );
 
 W32KAPI
-BOOL
+DWORD
 APIENTRY
 NtGdiD3dContextCreate(
     IN HANDLE hDirectDrawLocal,

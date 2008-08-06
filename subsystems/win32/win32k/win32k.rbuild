@@ -47,7 +47,12 @@
 		<file>init.c</file>
 	</directory>
 	<directory name="ntddraw">
+		<file>d3d.c</file>
+		<file>dd.c</file>
 		<file>ddeng.c</file>
+		<file>ddsurf.c</file>
+		<file>dvp.c</file>
+		<file>mocomp.c</file>
 	</directory>
 	<directory name="ntgdi">
 		<file>gdifuncs.c</file>
