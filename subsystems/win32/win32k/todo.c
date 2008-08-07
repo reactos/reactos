@@ -9,8 +9,11 @@ Initialization -- Needs a total review for NT compatibility
     - Find out parameters and what we should do here.
 
 System calls:
-  -NtGdi compatible with 2003. Missing parameters only for NtGdiGetSpoolMessage.
-    - Add stubs in /ntgdi/ and /ntddraw/
+  -NtGdi:
+    - New layout mostly finished. Some cleanup left to do.
+    - Missing parameters for NtGdiGetSpoolMessage
+    - Missing APIENTRY for some functions!
+
   -NtUser: Functions need to be researched for parameters. 
            We miss quite a few and most of the functions which are compatible in name/parameter numbers probably have ros-specific parameters/behaviour.
 		   In short, a lot of research and review is needed.

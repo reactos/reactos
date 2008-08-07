@@ -55,8 +55,31 @@
 		<file>mocomp.c</file>
 	</directory>
 	<directory name="ntgdi">
-		<file>gdifuncs.c</file>
-		<file>gdistubs.c</file>
+		<file>gdiblt.c</file>
+		<file>gdibmp.c</file>
+		<file>gdibrush.c</file>
+		<file>gdiclip.c</file>
+		<file>gdicolor.c</file>
+		<file>gdicon.c</file>
+		<file>gdicoord.c</file>
+		<file>gdidc.c</file>
+		<file>gdieng.c</file>
+		<file>gdifill.c</file>
+		<file>gdifont.c</file>
+		<file>gdiinit.c</file>
+		<file>gdiline.c</file>
+		<file>gdimeta.c</file>
+		<file>gdipal.c</file>
+		<file>gdipath.c</file>
+		<file>gdipen.c</file>
+		<file>gdiprint.c</file>
+		<file>gdirect.c</file>
+		<file>gdirgn.c</file>
+		<file>gdistock.c</file>
+		<file>gdistrm.c</file>
+		<file>gditext.c</file>
+		<file>gdiwingl.c</file>
+		<file>gdixfer.c</file>
 	</directory>
 	<directory name="ntuser">
 		<file>usrfuncs.c</file>
