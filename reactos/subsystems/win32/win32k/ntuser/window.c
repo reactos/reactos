@@ -787,7 +787,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
          Menu = UserGetMenuObject(Window->SystemMenu);
          if(Menu)
          {
-            IntDestroyMenuObject(Menu, FALSE, TRUE);
+            IntDestroyMenuObject(Menu, TRUE, TRUE);
             Window->SystemMenu = (HMENU)0;
          }
       }
