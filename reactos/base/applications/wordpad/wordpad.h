@@ -193,6 +193,10 @@
 #define STRING_SAVE_LOSEFORMATTING 1704
 #define STRING_INVALID_NUMBER 1705
 #define STRING_OLE_STORAGE_NOT_SUPPORTED 1706
+#define STRING_WRITE_FAILED 1707
+#define STRING_WRITE_ACCESS_DENIED 1708
+#define STRING_OPEN_FAILED 1709
+#define STRING_OPEN_ACCESS_DENIED 1710
 
 LPWSTR file_basename(LPWSTR);
 
@@ -200,7 +204,7 @@ void dialog_printsetup(HWND);
 void dialog_print(HWND, LPWSTR);
 void target_device(HWND, DWORD);
 void print_quick(LPWSTR);
-LRESULT preview_command(HWND, WPARAM, LPARAM);
+LRESULT preview_command(HWND, WPARAM);
 void init_preview(HWND, LPWSTR);
 void close_preview(HWND);
 BOOL preview_isactive(void);

@@ -698,6 +698,22 @@ static void set_fileformat(WPARAM format)
     target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
 }
 
+static void ShowOpenError(DWORD Code)
+{
+    LPWSTR Message;
+
+    switch(Code)
+    {
+        case ERROR_ACCESS_DENIED:
+            Message = MAKEINTRESOURCEW(STRING_OPEN_ACCESS_DENIED);
+            break;
+
+        default:
+            Message = MAKEINTRESOURCEW(STRING_OPEN_FAILED);
+    }
+    MessageBoxW(hMainWnd, Message, wszAppTitle, MB_ICONEXCLAMATION | MB_OK);
+}
+
 static void DoOpenFile(LPCWSTR szOpenFileName)
 {
     HANDLE hFile;
@@ -709,7 +725,10 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
     hFile = CreateFileW(szOpenFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowOpenError(GetLastError());
         return;
+    }
 
     ReadFile(hFile, fileStart, 5, &readOut, NULL);
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
@@ -753,6 +772,22 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
     update_font_list();
 }
 
+static void ShowWriteError(DWORD Code)
+{
+    LPWSTR Message;
+
+    switch(Code)
+    {
+        case ERROR_ACCESS_DENIED:
+            Message = MAKEINTRESOURCEW(STRING_WRITE_ACCESS_DENIED);
+            break;
+
+        default:
+            Message = MAKEINTRESOURCEW(STRING_WRITE_FAILED);
+    }
+    MessageBoxW(hMainWnd, Message, wszAppTitle, MB_ICONEXCLAMATION | MB_OK);
+}
+
 static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
 {
     HANDLE hFile;
@@ -763,7 +798,10 @@ static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
         FILE_ATTRIBUTE_NORMAL, NULL);
 
     if(hFile == INVALID_HANDLE_VALUE)
+    {
+        ShowWriteError(GetLastError());
         return;
+    }
 
     if(format == (SF_TEXT | SF_UNICODE))
     {
@@ -2429,7 +2467,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
         if(preview_isactive())
         {
-            return preview_command( hWnd, wParam, lParam );
+            return preview_command( hWnd, wParam );
         }
 
         return OnCommand( hWnd, wParam, lParam );
@@ -2532,7 +2570,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     set_caption(NULL);
     set_bar_states();
     set_fileformat(SF_RTF);
-    SendMessageW(hEditorWnd, EM_EMPTYUNDOBUFFER, 0, 0);
     hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_POPUP));
     get_default_printer_opts();
     target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);

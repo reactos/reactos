@@ -1,5 +1,6 @@
 /*
  * Copyright 2006 by Hans Leidekker
+ * Copyright 2008 by Frans Kool
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,12 +25,12 @@ BEGIN
     BEGIN
         MENUITEM "&Nieuw...\tCtrl+N"      ID_FILE_NEW
         MENUITEM "&Openen...\tCtrl+O",    ID_FILE_OPEN
-        MENUITEM "O&pslaan\tCtrl+S",      ID_FILE_SAVE
+        MENUITEM "Op&slaan\tCtrl+S",      ID_FILE_SAVE
         MENUITEM "Ops&laan als...",       ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Print...\tCtrl+P",     ID_PRINT
-        MENUITEM "Print previe&w...",     ID_PREVIEW
-        MENUITEM "Pag&e setup...",        ID_PRINTSETUP
+        MENUITEM "Print &voorbeeld...",     ID_PREVIEW
+        MENUITEM "Pa&gina setup...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Afsluiten",    ID_FILE_EXIT
     END
@@ -44,9 +45,9 @@ BEGIN
         MENUITEM "&Verwijderen\tDel",           ID_EDIT_CLEAR
         MENUITEM "&Alles selecteren\tCtrl+A",   ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find...\tCrtl+F",            ID_FIND
-        MENUITEM "Find &next\tF3",              ID_FIND_NEXT
-        MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
+        MENUITEM "&Zoeken...\tCrtl+F",            ID_FIND
+        MENUITEM "Zoek vo&lgende\tF3",              ID_FIND_NEXT
+        MENUITEM "Ve&rvang...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Alleen &lezen",               ID_EDIT_READONLY
         MENUITEM "&Gewijzigd",                  ID_EDIT_MODIFIED
@@ -60,24 +61,24 @@ BEGIN
             MENUITEM "&Haal tekst",                  ID_EDIT_GETTEXT
         END
     END
-    POPUP "&View"
+    POPUP "&Bekijken"
     BEGIN
-        MENUITEM "&Toolbar",        ID_TOGGLE_TOOLBAR
-        MENUITEM "&Formatbar",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Ruler",          ID_TOGGLE_RULER
-        MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
+        MENUITEM "&Toolbalk",      ID_TOGGLE_TOOLBAR
+        MENUITEM "&Formaatbalk",   ID_TOGGLE_FORMATBAR
+        MENUITEM "&Lineaal",       ID_TOGGLE_RULER
+        MENUITEM "&Statusbalk",    ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Options...",     ID_VIEWPROPERTIES
+        MENUITEM "&Opties...",     ID_VIEWPROPERTIES
     END
-    POPUP "&Insert"
+    POPUP "&Invoegen"
     BEGIN
-        MENUITEM "&Date and time...",     ID_DATETIME
+        MENUITEM "&Datum en tijd...",     ID_DATETIME
     END
     POPUP "&Opmaak"
     BEGIN
-        MENUITEM "&Font...",                     ID_FONTSETTINGS
+        MENUITEM "&Lettertype...",               ID_FONTSETTINGS
         MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraph..."                 ID_PARAFORMAT
+        MENUITEM "&Paragraaf..."                 ID_PARAFORMAT
         MENUITEM "&Tabs..."                      ID_TABSTOPS
         POPUP "&Achtergrond"
         BEGIN
@@ -87,7 +88,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Over Wine Wordpad"       ID_ABOUT
     END
 END
 
@@ -100,48 +101,48 @@ BEGIN
         MENUITEM "&Plakken",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points"        ID_BULLET
-        MENUITEM "&Paragraph...",        ID_PARAFORMAT
+        MENUITEM "&Paragraaf...",        ID_PARAFORMAT
     END
 END
 
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Date and time"
+CAPTION "Datum en tijd"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Available formats",0,3,2,100,15
+    LTEXT        "Beschikbare formaten",0,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
-    PUSHBUTTON   "&Cancel",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "&Annuleren",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "New"
+CAPTION "Nieuw"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "New document type",0,3,2,100,15
+    LTEXT        "Nieuw document type",0,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
-    PUSHBUTTON   "&Cancel",IDCANCEL,97,26,40,12
+    PUSHBUTTON   "&Annuleren",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Paragraph format"
+Caption "Paragraaf formaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indentation", 0, 10, 10, 120, 68
-    LTEXT "Left", 0, 15, 22, 40, 13
+    LTEXT "Links", 0, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Right", 0, 15, 40, 40, 13
+    LTEXT "Rechts", 0, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "First line", 0, 15, 58, 40, 13
+    LTEXT "Eerste regel", 0, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Alignment", 0, 15, 87, 40, 13
+    LTEXT "Uitlijning", 0, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Cancel", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "&Annuleren", IDCANCEL, 137, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
@@ -151,11 +152,11 @@ FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tab stops", 0, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
-    DEFPUSHBUTTON "&Add", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "&Remove", ID_TAB_DEL, 72, 80, 45, 15
+    DEFPUSHBUTTON "&Toevoegen", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Verwijderen", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Cancel", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "Remove al&l", ID_TAB_EMPTY, 137, 51, 50, 15
+    PUSHBUTTON "&Annuleren", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "Verwijder al&len", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
 IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
@@ -163,59 +164,59 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Line wrapping", 0, 10, 10, 130, 85
-    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    GROUPBOX "Regel afbreken", 0, 10, 10, 130, 85
+    RADIOBUTTON "Breek tekst af bij &venster rand", IDC_PAGEFMT_WW, 18, 25, 117, 15
+    RADIOBUTTON "Breek tekst af bij de &marge", IDC_PAGEFMT_WM, 18, 45, 117, 15
     GROUPBOX "Toolbars", 0, 150, 10, 120, 85
-    CHECKBOX "&Toolbar", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "&Formatbar", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "&Statusbar", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    CHECKBOX "&Toolbalk", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX "&Formaatbalk", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX "&Lineaal", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "&Statusbalk", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Rich text format (*.rtf)"
-    STRING_TEXT_FILES_TXT,         "Text documents (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Unicode text document (*.txt)"
-    STRING_ALL_FILES,              "All documents (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "Rich text formaat (*.rtf)"
+    STRING_TEXT_FILES_TXT,         "Tekst documenten (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekst document (*.txt)"
+    STRING_ALL_FILES,              "Alle documenten (*.*)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_ALIGN_LEFT,            "Left"
-    STRING_ALIGN_RIGHT,           "Right"
-    STRING_ALIGN_CENTER,          "Center"
+    STRING_ALIGN_LEFT,            "Links"
+    STRING_ALIGN_RIGHT,           "Rechts"
+    STRING_ALIGN_CENTER,          "Gecentreerd"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Rich text document"
-    STRING_NEWFILE_TXT,          "Text document"
-    STRING_NEWFILE_TXT_UNICODE,  "Unicode text document"
+    STRING_NEWFILE_RICHTEXT,     "Rich tekst document"
+    STRING_NEWFILE_TXT,          "Tekst document"
+    STRING_NEWFILE_TXT_UNICODE,  "Unicode tekst document"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_PRINTER_FILES_PRN,        "Printer files (*.PRN)"
+    STRING_PRINTER_FILES_PRN,        "Printer bestanden (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_VIEWPROPS_TITLE,          "Options"
-    STRING_VIEWPROPS_TEXT,           "Text"
-    STRING_VIEWPROPS_RICHTEXT,       "Rich text"
+    STRING_VIEWPROPS_TITLE,          "Opties"
+    STRING_VIEWPROPS_TEXT,           "Tekst"
+    STRING_VIEWPROPS_RICHTEXT,       "Rich tekst"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "Print"
-    STRING_PREVIEW_NEXTPAGE,         "Next page"
-    STRING_PREVIEW_PREVPAGE,         "Previous page"
-    STRING_PREVIEW_TWOPAGES,         "Two pages"
-    STRING_PREVIEW_ONEPAGE,          "One page"
-    STRING_PREVIEW_CLOSE,            "Close"
+    STRING_PREVIEW_NEXTPAGE,         "Volgende pagina"
+    STRING_PREVIEW_PREVPAGE,         "Vorige pagina"
+    STRING_PREVIEW_TWOPAGES,         "Twee pagina's"
+    STRING_PREVIEW_ONEPAGE,          "Een pagina"
+    STRING_PREVIEW_CLOSE,            "Sluiten"
 END
 
 STRINGTABLE DISCARDABLE
@@ -226,12 +227,16 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Document"
-    STRING_PROMPT_SAVE_CHANGES,  "Save changes to '%s'?"
-    STRING_SEARCH_FINISHED,      "Finished searching the document."
-    STRING_LOAD_RICHED_FAILED,   "Failed to load the RichEdit library."
-    STRING_SAVE_LOSEFORMATTING,  "You have chosen to save in plain text format, " \
-                                 "which will cause all formatting to be lost. " \
-                                 "Are you sure that you wish to do this?"
-    STRING_INVALID_NUMBER,       "Invalid number format"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
+    STRING_PROMPT_SAVE_CHANGES,  "Wijzigingen opslaan van '%s'?"
+    STRING_SEARCH_FINISHED,      "Doorzoeken van document beeindigd."
+    STRING_LOAD_RICHED_FAILED,   "Laden van de RichEdit library is mislukt."
+    STRING_SAVE_LOSEFORMATTING,  "U koos voor opslaan in gewoon tekst formaat, " \
+                                 "waardoor alle formatering verloren zal gaan. " \
+                                 "Weet u zeker dat u dit wilt?"
+    STRING_INVALID_NUMBER,       "Foutief nummer formaat"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documenten zijn niet ondersteund"
+    STRING_WRITE_FAILED,         "Bestand kon niet opgeslagen worden."
+    STRING_WRITE_ACCESS_DENIED,  "Onvoldoende rechten om het bestand op te slaan."
+    STRING_OPEN_FAILED,          "Bestand kon niet geopend worden."
+    STRING_OPEN_ACCESS_DENIED,   "Onvoldoende rechten om het bestand te openen."
 END

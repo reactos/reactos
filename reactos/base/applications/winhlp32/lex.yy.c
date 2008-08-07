@@ -387,7 +387,7 @@ char *yytext;
  * Help Viewer
  *
  * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Eric Pouech
+ * Copyright 2002,2008 Eric Pouech
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -421,16 +421,22 @@ char *yytext;
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
-static LPCSTR  macroptr;
-static LPSTR   strptr;
-static int     quote_stack[32];
-static unsigned int quote_stk_idx = 0;
+struct lex_data {
+    LPCSTR   macroptr;
+    LPSTR    strptr;
+    int      quote_stack[32];
+    unsigned quote_stk_idx;
+    LPSTR    cache_string[32];
+    int      cache_used;
+};
+static struct lex_data* lex_data = NULL;
+
 struct lexret  yylval;
 
 #define YY_INPUT(buf,result,max_size)\
-  if ((result = *macroptr ? 1 : 0)) buf[0] = *macroptr++;
+  if ((result = *lex_data->macroptr ? 1 : 0)) buf[0] = *lex_data->macroptr++;
 
-#line 434 "lex.yy.c"
+#line 440 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -581,10 +587,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 49 "macro.lex.l"
+#line 55 "macro.lex.l"
 
 
-#line 588 "lex.yy.c"
+#line 594 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -669,92 +675,94 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 51 "macro.lex.l"
+#line 57 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 10);	return INTEGER;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 52 "macro.lex.l"
+#line 58 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 16);	return INTEGER;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 54 "macro.lex.l"
+#line 60 "macro.lex.l"
 return MACRO_Lookup(yytext, &yylval);
 	YY_BREAK
 case 4:
-#line 57 "macro.lex.l"
+#line 63 "macro.lex.l"
 case 5:
-#line 58 "macro.lex.l"
+#line 64 "macro.lex.l"
 case 6:
-#line 59 "macro.lex.l"
+#line 65 "macro.lex.l"
 case 7:
-#line 60 "macro.lex.l"
+#line 66 "macro.lex.l"
 case 8:
-#line 61 "macro.lex.l"
+#line 67 "macro.lex.l"
 case 9:
 YY_RULE_SETUP
-#line 61 "macro.lex.l"
+#line 67 "macro.lex.l"
 {
-    if (quote_stk_idx == 0 ||
-        (yytext[0] == '\"' && quote_stack[quote_stk_idx - 1] != '\"') ||
+    if (lex_data->quote_stk_idx == 0 ||
+        (yytext[0] == '\"' && lex_data->quote_stack[lex_data->quote_stk_idx - 1] != '\"') ||
         (yytext[0] == '`'))
     {
         /* opening a new one */
-        if (quote_stk_idx == 0)
+        if (lex_data->quote_stk_idx == 0)
         {
-            strptr = HeapAlloc(GetProcessHeap(), 0, strlen(macroptr) + 1);
-            yylval.string = strptr;
+            assert(lex_data->cache_used < sizeof(lex_data->cache_string) / sizeof(lex_data->cache_string[0]));
+            lex_data->strptr = lex_data->cache_string[lex_data->cache_used] = HeapAlloc(GetProcessHeap(), 0, strlen(lex_data->macroptr) + 1);
+            yylval.string = lex_data->strptr;
+            lex_data->cache_used++;
             BEGIN(quote);
         }
-        else *strptr++ = yytext[0];
-        quote_stack[quote_stk_idx++] = yytext[0];
-        assert(quote_stk_idx < sizeof(quote_stack) / sizeof(quote_stack[0]));
+        else *lex_data->strptr++ = yytext[0];
+        lex_data->quote_stack[lex_data->quote_stk_idx++] = yytext[0];
+        assert(lex_data->quote_stk_idx < sizeof(lex_data->quote_stack) / sizeof(lex_data->quote_stack[0]));
     }
     else
     {
         if (yytext[0] == '`') assert(0);
         /* close the current quote */
-        if (--quote_stk_idx == 0)
+        if (--lex_data->quote_stk_idx == 0)
         {
             BEGIN INITIAL;
-            *strptr++ = '\0';
+            *lex_data->strptr++ = '\0';
             return STRING;
         }
-        else *strptr++ = yytext[0];
+        else *lex_data->strptr++ = yytext[0];
     }
 }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 91 "macro.lex.l"
-*strptr++ = yytext[0];
+#line 99 "macro.lex.l"
+*lex_data->strptr++ = yytext[0];
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 92 "macro.lex.l"
-*strptr++ = yytext[1];
+#line 100 "macro.lex.l"
+*lex_data->strptr++ = yytext[1];
 	YY_BREAK
 case YY_STATE_EOF(quote):
-#line 93 "macro.lex.l"
+#line 101 "macro.lex.l"
 return 0;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 95 "macro.lex.l"
+#line 103 "macro.lex.l"
 
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 96 "macro.lex.l"
+#line 104 "macro.lex.l"
 return yytext[0];
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 97 "macro.lex.l"
+#line 105 "macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 758 "lex.yy.c"
+#line 766 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1640,7 +1648,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 97 "macro.lex.l"
+#line 105 "macro.lex.l"
 
 
 #if 0
@@ -1807,11 +1815,17 @@ static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
 
 BOOL MACRO_ExecuteMacro(LPCSTR macro)
 {
+    struct lex_data     curr_lex_data, *prev_lex_data;
+    BOOL ret = TRUE;
     int t;
 
     WINE_TRACE("%s\n", wine_dbgstr_a(macro));
 
-    macroptr = macro;
+    prev_lex_data = lex_data;
+    lex_data = &curr_lex_data;
+
+    memset(lex_data, 0, sizeof(*lex_data));
+    lex_data->macroptr = macro;
 
     while ((t = yylex()) != EMPTY)
     {
@@ -1830,17 +1844,18 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
         }
         switch (t = yylex())
         {
-        case EMPTY:     return 1;
+        case EMPTY:     goto done;
         case ';':       break;
-        default:        return 0;
+        default:        ret = FALSE; goto done;
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, strptr);
-    strptr = NULL;
-    quote_stk_idx = 0;
+done:
+    for (t = 0; t < lex_data->cache_used; t++)
+        HeapFree(GetProcessHeap(), 0, lex_data->cache_string[t]);
+    lex_data = prev_lex_data;
 
-    return 1;
+    return ret;
 }
 
 #ifndef yywrap

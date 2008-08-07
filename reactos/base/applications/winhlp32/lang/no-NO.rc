@@ -26,17 +26,17 @@ MAIN_MENU MENU LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
   MENUITEM "&Åpne", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Skriv &ut", MNID_FILE_PRINT
-  MENUITEM "Opp&sett av skriveren ...", MNID_FILE_SETUP
+  MENUITEM "Opp&sett av skriveren...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Avslutt", MNID_FILE_EXIT
  }
  POPUP "R&ediger" {
-   MENUITEM "&Kopier ...", MNID_EDIT_COPYDLG
+   MENUITEM "&Kopier...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "K&ommenter ...", MNID_EDIT_ANNOTATE
+   MENUITEM "K&ommenter...", MNID_EDIT_ANNOTATE
  }
  POPUP "&Bokmerke" {
-   MENUITEM "&Definer ...", MNID_BKMK_DEFINE
+   MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Innstillinger" {
    POPUP	"Synlighet"
@@ -58,7 +58,7 @@ MAIN_MENU MENU LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
    MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Informasjon ...", MNID_HELP_ABOUT
+   MENUITEM "&Informasjon...", MNID_HELP_ABOUT
 #ifdef WINELIB
    MENUITEM "&Om Wine", MNID_HELP_WINE
 #endif
@@ -71,8 +71,6 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Innhold"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
-    PUSHBUTTON "&Avbryt", IDCANCEL, 120, 170, 50, 12
 }
 
 /* Strings */
@@ -98,9 +96,9 @@ CONTEXT_MENU MENU LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Kommentar ...",       MNID_CTXT_ANNOTATE
+        MENUITEM "Kommentar...",       MNID_CTXT_ANNOTATE
         MENUITEM "Kopier",                MNID_CTXT_COPY
-        MENUITEM "Skriv ut ...",            MNID_CTXT_PRINT
+        MENUITEM "Skriv ut...",            MNID_CTXT_PRINT
         POPUP    "Skriftstørrelse"
         BEGIN
             MENUITEM "Liten",       MNID_CTXT_FONTS_SMALL

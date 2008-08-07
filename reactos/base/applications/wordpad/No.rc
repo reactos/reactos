@@ -234,4 +234,8 @@ BEGIN
                                  "sikker på at du vil fortsette?"
     STRING_INVALID_NUMBER,       "Ugyldig tallformat"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
+    STRING_WRITE_FAILED,              "Klarte ikke lagre filen."
+    STRING_WRITE_ACCESS_DENIED,       "Du har ikke tilgang til å lagre filen."
+    STRING_OPEN_FAILED,               "Klarte ikke åpne filen."
+    STRING_OPEN_ACCESS_DENIED,        "Du har ikke tilgang til å åpne filen."
 END

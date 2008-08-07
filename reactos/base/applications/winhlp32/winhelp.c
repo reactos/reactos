@@ -5,6 +5,7 @@
  *              2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *              2002, 2008 Eric Pouech <eric.pouech@wanadoo.fr>
  *              2004 Ken Belleau <jamez@ivic.qc.ca>
+ *              2008 Kirill K. Smirnov <lich@math.spbu.ru>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,7 +59,7 @@ static void    WINHELP_DeleteButtons(WINHELP_WINDOW*);
 static void    WINHELP_SetupText(HWND hWnd, WINHELP_WINDOW *win, ULONG relative);
 static void    WINHELP_DeletePageLinks(HLPFILE_PAGE* page);
 
-WINHELP_GLOBALS Globals = {3, NULL, TRUE, NULL, NULL, NULL, NULL, NULL, {{{NULL,NULL}},0}};
+WINHELP_GLOBALS Globals = {3, NULL, TRUE, NULL, NULL, NULL, NULL, NULL, {{{NULL,NULL}},0}, NULL};
 
 #define CTL_ID_BUTTON   0x700
 #define CTL_ID_TEXT     0x701
@@ -228,7 +229,10 @@ static HLPFILE_WINDOWINFO*     WINHELP_GetPopupWindowInfo(HLPFILE* hlpfile,
 
     wi.style = SW_SHOW;
     wi.win_style = WS_POPUP | WS_BORDER;
-    wi.sr_color = parent->info->sr_color;
+    if (parent->page->file->has_popup_color)
+        wi.sr_color = parent->page->file->popup_color;
+    else
+        wi.sr_color = parent->info->sr_color;
     wi.nsr_color = 0xFFFFFF;
 
     return &wi;
@@ -1098,6 +1102,8 @@ static DWORD CALLBACK WINHELP_RtfStreamIn(DWORD_PTR cookie, BYTE* buff,
 
 static void WINHELP_SetupText(HWND hTextWnd, WINHELP_WINDOW* win, ULONG relative)
 {
+    /* At first clear area - needed by EM_POSFROMCHAR/EM_SETSCROLLPOS */
+    SendMessage(hTextWnd, WM_SETTEXT, 0, (LPARAM)"");
     SendMessage(hTextWnd, WM_SETREDRAW, FALSE, 0);
     SendMessage(hTextWnd, EM_SETBKGNDCOLOR, 0, (LPARAM)win->info->sr_color);
     /* set word-wrap to window size (undocumented) */
@@ -1126,10 +1132,6 @@ static void WINHELP_SetupText(HWND hTextWnd, WINHELP_WINDOW* win, ULONG relative
         SendMessage(hTextWnd, EM_POSFROMCHAR, (WPARAM)&ptl, cp ? cp - 1 : 0);
         pt.x = 0; pt.y = ptl.y;
         SendMessage(hTextWnd, EM_SETSCROLLPOS, 0, (LPARAM)&pt);
-    }
-    else
-    {
-        SendMessage(hTextWnd, WM_SETTEXT, 0, (LPARAM)"");
     }
     SendMessage(hTextWnd, WM_SETREDRAW, TRUE, 0);
     InvalidateRect(hTextWnd, NULL, TRUE);
@@ -1169,10 +1171,21 @@ static LRESULT CALLBACK WINHELP_ButtonBoxWndProc(HWND hWnd, UINT msg, WPARAM wPa
                                             0, 0, 0, 0,
                                             hWnd, (HMENU) button->wParam,
                                             Globals.hInstance, 0);
-                if (button->hWnd) {
+                if (button->hWnd)
+                {
                     if (Globals.button_proc == NULL)
+                    {
+                        NONCLIENTMETRICSW ncm;
                         Globals.button_proc = (WNDPROC) GetWindowLongPtr(button->hWnd, GWLP_WNDPROC);
+
+                        ncm.cbSize = sizeof(NONCLIENTMETRICSW);
+                        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
+                                              sizeof(NONCLIENTMETRICSW), &ncm, 0);
+                        Globals.hButtonFont = CreateFontIndirectW(&ncm.lfMenuFont);
+                    }
                     SetWindowLongPtr(button->hWnd, GWLP_WNDPROC, (LONG_PTR) WINHELP_ButtonWndProc);
+                    if (Globals.hButtonFont)
+                        SendMessage(button->hWnd, WM_SETFONT, (WPARAM)Globals.hButtonFont, TRUE);
                 }
             }
             hDc = GetDC(button->hWnd);
@@ -1558,12 +1571,6 @@ struct index_data
 /**************************************************************************
  * WINHELP_IndexDlgProc
  *
- * Index dialog callback function.
- *
- * nResult passed to EndDialog:
- *   1: CANCEL button
- *  >1: valid offset value +2.
- *  EndDialog itself can return 0 (error).
  */
 INT_PTR CALLBACK WINHELP_IndexDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1579,6 +1586,15 @@ INT_PTR CALLBACK WINHELP_IndexDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         id->jump = FALSE;
         id->offset = 1;
         return TRUE;
+    case WM_COMMAND:
+        switch (HIWORD(wParam))
+        {
+        case LBN_DBLCLK:
+            if (LOWORD(wParam) == IDC_INDEXLIST)
+                SendMessage(GetParent(hWnd), PSM_PRESSBUTTON, PSBTN_OK, 0);
+            break;
+        }
+        break;
     case WM_NOTIFY:
 	switch (((NMHDR*)lParam)->code)
 	{
