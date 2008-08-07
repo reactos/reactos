@@ -75,7 +75,8 @@ static const struct {
 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
 #endif
 	{&CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
-    {&CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
+	{&CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
+	{&CLSID_FontsFolderShortcut, &ISF_Fonts_Constructor},
 	{&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
 	{&CLSID_OpenWith,       &SHEOW_Constructor},

@@ -717,4 +717,7 @@ BEGIN
 	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 
 	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
 END

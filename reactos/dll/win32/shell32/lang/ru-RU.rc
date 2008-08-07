@@ -709,4 +709,7 @@ BEGIN
 	IDS_PREVIEW_VERB            "Предпросмотр"
 
 	IDS_FILE_FOLDER             "%u файлов, %u папок"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
 END

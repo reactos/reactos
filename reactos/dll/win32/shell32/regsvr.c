@@ -602,24 +602,49 @@ static struct regsvr_coclass const coclass_list[] = {
     },
     {   &CLSID_Printers,
         "Printers & Fax",
-	0,
+        IDS_PRINTERS,
+        NULL,
+        "shell32.dll",
+        "Apartment",
+        SHELLFOLDER_ATTRIBUTES,
+        SFGAO_FOLDER,
+        0,
+        NULL,
+        NULL,
+        IDI_SHELL_PRINTER
+    },
+    {   &CLSID_MyComputer,
+        "My Computer",
+        IDS_MYCOMPUTER,
         NULL,
         "shell32.dll",
         "Apartment"
     },
-    {   &CLSID_MyComputer,
-	"My Computer",
-	IDS_MYCOMPUTER,
-	NULL,
-	"shell32.dll",
-	"Apartment"
-    },
     {   &CLSID_NetworkPlaces,
-	"My Network Places",
-	IDS_NETWORKPLACE,
-	NULL,
-	"shell32.dll",
-	"Apartment"
+        "My Network Places",
+        IDS_NETWORKPLACE,
+        NULL,
+        "shell32.dll",
+        "Apartment",
+        SHELLFOLDER_ATTRIBUTES,
+        SFGAO_FOLDER,
+        0,
+        NULL,
+        NULL,
+        IDI_SHELL_MY_NETWORK_PLACES
+    },
+    {  &CLSID_FontsFolderShortcut,
+       "Fonts",
+       IDS_FONTS,
+       NULL,
+       "shell32.dll", 
+       "Apartment",
+       SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_CALLFORATTRIBUTES,
+       SFGAO_FOLDER,
+       0,
+       NULL,
+       NULL,
+       IDI_SHELL_FONTS_FOLDER
     },
     {   &CLSID_Shortcut,
 	"Shortcut",
@@ -731,6 +756,8 @@ static const WCHAR wszMyComputer[] = { 'M','y','C','o','m','p','u','t','e','r',0
 static const WCHAR wszControlPanel[] = { 'C','o','n','t','r','o','l','P','a','n','e','l',0 };
 static const WCHAR wszFolderOptions[] = { 'F','o','l','d','e','r',' ','O','p','t','i','o','n','s',0 };
 static const WCHAR wszNethoodFolder[] = { 'N','e','t','h','o','o','d',' ','f','o','l','d','e','r',0};
+static const WCHAR wszPrinters[] = { 'P','r','i','n','t','e','r','s',0 };
+static const WCHAR wszFonts[] = { 'F','o','n','t','s',0 };
 
 const GUID CLSID_FolderOptions = { 0x6DFD7C5C, 0x2451, 0x11d3, {0xa2,0x99,0x00,0xC0,0x4F,0x8e,0xf6,0xaf} };
 
@@ -768,6 +795,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         wszFolderOptions
     },
 #if 0
+    {
+        &CLSID_FontsFolderShortcut,
+        wszControlPanel,
+        wszFonts
+    },
     {
         &CLSID_Printers,
         wszControlPanel,

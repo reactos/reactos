@@ -75,4 +75,5 @@
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
 	<file>shfldr_netplaces.c</file>
+	<file>shfldr_fonts.c</file>
 </module>

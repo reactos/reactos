@@ -712,4 +712,7 @@ BEGIN
 	IDS_PREVIEW_VERB            "Vorschau"
 
 	IDS_FILE_FOLDER             "%u Dateien, %u Ordner"
+	IDS_PRINTERS                "Drucker"
+	IDS_FONTS                   "Schriftarten"
+	IDS_INSTALLNEWFONT          "Neue Schriftart installieren..."
 END

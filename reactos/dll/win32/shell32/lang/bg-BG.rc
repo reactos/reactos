@@ -714,6 +714,9 @@ BEGIN
 	IDS_PREVIEW_VERB            "Preview"
 
 	IDS_FILE_FOLDER             "%u Files, %u Folders"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
 END
 
 

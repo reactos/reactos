@@ -255,7 +255,8 @@ LPITEMIDLIST	_ILCreateIExplore	(void);
 LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
-LPITEMIDLIST   _ILCreateNetHood     (void);
+LPITEMIDLIST	_ILCreateNetHood	(void);
+LPITEMIDLIST	_ILCreateFont		(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
 

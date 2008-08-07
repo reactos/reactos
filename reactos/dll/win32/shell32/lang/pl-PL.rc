@@ -717,4 +717,7 @@ BEGIN
 	IDS_PREVIEW_VERB            "Podgl¹d"
 
 	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
 END

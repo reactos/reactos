@@ -1643,6 +1643,11 @@ LPITEMIDLIST _ILCreateNetHood(void)
     return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
 }
 
+LPITEMIDLIST _ILCreateFont(void)
+{
+
+    return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
+}
 
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {

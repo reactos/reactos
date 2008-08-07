@@ -87,6 +87,8 @@
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
 #define IDS_NETWORKPLACE            75
+#define IDS_FONTS                   76
+#define IDS_PRINTERS                77
 
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
@@ -142,6 +144,7 @@
 #define IDS_PREVIEW_VERB            306
 #define IDS_FILE_FOLDER             307
 #define IDS_CREATELINK              308
+#define IDS_INSTALLNEWFONT          309
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

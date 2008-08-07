@@ -679,4 +679,17 @@ BEGIN
 	IDS_INI_FILE                "Konfigurasjon innstilling"
 	IDS_LNK_FILE                "Snarvei"
 	IDS_SYS_FILE                "Systemfil"
+
+	IDS_OPEN_VERB               "Open"
+	IDS_RUNAS_VERB              "Run as "
+	IDS_EDIT_VERB               "Edit"
+	IDS_FIND_VERB               "Find"
+	IDS_PRINT_VERB              "Print"
+	IDS_PLAY_VERB               "Play"
+	IDS_PREVIEW_VERB            "Preview"
+
+	IDS_FILE_FOLDER             "%u Files, %u Folders"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
 END
