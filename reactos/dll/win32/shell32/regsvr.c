@@ -639,7 +639,7 @@ static struct regsvr_coclass const coclass_list[] = {
        NULL,
        "shell32.dll", 
        "Apartment",
-       SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_CALLFORATTRIBUTES,
+       SHELLFOLDER_ATTRIBUTES,
        SFGAO_FOLDER,
        0,
        NULL,
@@ -794,12 +794,12 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         wszControlPanel,
         wszFolderOptions
     },
-#if 0
     {
         &CLSID_FontsFolderShortcut,
         wszControlPanel,
         wszFonts
     },
+#if 0
     {
         &CLSID_Printers,
         wszControlPanel,
