@@ -5514,6 +5514,18 @@ KeGetCurrentThread(
 #define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
 #define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
 
+#define SharedUserData ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedInterruptTime (&SharedUserData->InterruptTime)
+#define SharedSystemTime (&SharedUserData->SystemTime)
+#define SharedTickCount (&SharedUserData->TickCount)
+
+#define KeQueryInterruptTime() \
+    (*(volatile ULONG64*)SharedInterruptTime)
+#define KeQuerySystemTime(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedSystemTime
+#define KeQueryTickCount(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedTickCount
+
 typedef struct _KPCR
 {
     union
@@ -9634,12 +9646,6 @@ KePulseEvent(
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
 
-NTKERNELAPI
-ULONGLONG
-NTAPI
-KeQueryInterruptTime(
-  VOID);
-
 NTHALAPI
 LARGE_INTEGER
 NTAPI
@@ -9652,6 +9658,13 @@ NTAPI
 KeQueryPriorityThread(
   IN PRKTHREAD  Thread);
 
+#if !defined(_M_AMD64)
+NTKERNELAPI
+ULONGLONG
+NTAPI
+KeQueryInterruptTime(
+  VOID);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -9663,6 +9676,7 @@ VOID
 NTAPI
 KeQueryTickCount(
   OUT PLARGE_INTEGER  TickCount);
+#endif
 
 NTKERNELAPI
 ULONG

@@ -4,7 +4,6 @@
 ;
 EXPORTS
 ;
-KeQuerySystemTime
 KfAcquireSpinLock
 KfReleaseSpinLock
 KeRaiseIrql
@@ -14,8 +13,6 @@ KeInitializeSpinLock
 KeGetCurrentProcessorNumber
 RtlConvertUlongToLargeInteger
 RtlExtendedIntegerMultiply
-KeQueryTickCount
-KeQueryInterruptTime
 ;
 ; original:
 CcCanIWrite
