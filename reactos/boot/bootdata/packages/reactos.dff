@@ -15,7 +15,7 @@ Signature = "$ReactOS$"
 [Directories]
 1 = system32
 2 = system32\drivers
-3 = media\fonts
+3 = Fonts
 4 = 
 5 = system32\drivers\etc
 6 = inf

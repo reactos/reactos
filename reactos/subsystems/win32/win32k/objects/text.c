@@ -176,7 +176,7 @@ IntLoadSystemFonts(VOID)
    BOOLEAN bRestartScan = TRUE;
    NTSTATUS Status;
 
-   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\media\\fonts\\");
+   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\Fonts\\");
    /* FIXME: Add support for other font types */
    RtlInitUnicodeString(&SearchPattern, L"*.ttf");
 

@@ -8,7 +8,7 @@ Signature = "$ReactOS$"
 3 = system32\config
 4 = system32\drivers
 5 = media
-6 = media\fonts
+6 = Fonts
 7 = bin
 
 [SourceDisksFiles]
