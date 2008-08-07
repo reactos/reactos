@@ -72,11 +72,19 @@ static const IPersistFolder2Vtbl vt_NP_PersistFolder2;
 #define _IPersistFolder2_(This)	(IPersistFolder2*)&(This->lpVtblPersistFolder2)
 
 static shvheader FontsSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_COLUMN9, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10}
+    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN_FONTTYPE , SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN2, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN12, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
 };
 
-#define FontsSHELLVIEWCOLUMNS 2
+#define COLUMN_NAME     0
+#define COLUMN_TYPE     1
+#define COLUMN_SIZE     2
+#define COLUMN_FILENAME 3
+
+
+#define FontsSHELLVIEWCOLUMNS (4)
 
 /**************************************************************************
 *	ISF_Fonts_Constructor
@@ -516,6 +524,27 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
                LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS * psd)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    WCHAR buffer[MAX_PATH] = {0};
+    HRESULT hr = E_FAIL;
+
+    TRACE("(%p, %p, %d, %p)\n", This, pidl, iColumn, psd);
+
+    if (iColumn >= FontsSHELLVIEWCOLUMNS)
+        return E_FAIL;
+
+    psd->fmt = FontsSFHeader[iColumn].fmt;
+    psd->cxChar = FontsSFHeader[iColumn].cxChar;
+    if (pidl == NULL)
+    {
+        psd->str.uType = STRRET_WSTR;
+        if (LoadStringW(shell32_hInstance, FontsSFHeader[iColumn].colnameid, buffer, MAX_PATH))
+            hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+
+        return hr;
+    }
+
+    if (iColumn == COLUMN_NAME)
+        return IShellFolder2_GetDisplayNameOf(iface, pidl, SHGDN_NORMAL, &psd->str);
 
     FIXME ("(%p)->(%p %i %p)\n", This, pidl, iColumn, psd);
 

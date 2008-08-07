@@ -593,8 +593,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Примітка"
 	IDS_SHV_COLUMN10            "Власник"
 	IDS_SHV_COLUMN11            "Група"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Вихідне розташування"
 	IDS_SHV_COLUMN_DELDATE      "Дата видалення"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
 
 	/* special folders */
 	IDS_DESKTOP                 "Робочий стіл"

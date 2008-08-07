@@ -571,8 +571,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Kommentarer"
 	IDS_SHV_COLUMN10            "Eier"
 	IDS_SHV_COLUMN11            "Gruppe"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Opprinnelig plassering"
 	IDS_SHV_COLUMN_DELDATE      "Dato slettet"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
 
 	/* special folders */
 	IDS_DESKTOP                 "Skrivebord"

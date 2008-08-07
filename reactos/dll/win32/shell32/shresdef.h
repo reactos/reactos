@@ -145,6 +145,11 @@
 #define IDS_FILE_FOLDER             307
 #define IDS_CREATELINK              308
 #define IDS_INSTALLNEWFONT          309
+#define IDS_SHV_COLUMN_FONTTYPE     310
+#define IDS_SHV_COLUMN12            311
+#define IDS_SHV_COLUMN13            312
+#define IDS_SHV_COLUMN_WORKGROUP    313
+#define IDS_SHV_NETWORKLOCATION     314
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

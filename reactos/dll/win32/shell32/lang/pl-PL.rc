@@ -598,8 +598,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Komentarz"
 	IDS_SHV_COLUMN10            "W³aœciciel"
 	IDS_SHV_COLUMN11            "Grupa"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Lokacja oryginalna"
 	IDS_SHV_COLUMN_DELDATE      "Data usuniêcia"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
 
 	/* special folders */
 	IDS_DESKTOP                 "Pulpit"

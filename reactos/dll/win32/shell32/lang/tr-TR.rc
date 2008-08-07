@@ -592,8 +592,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Açýklamalar"
 	IDS_SHV_COLUMN10            "Sahip"
 	IDS_SHV_COLUMN11            "Grup"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Özgün konum"
 	IDS_SHV_COLUMN_DELDATE      "Silinme tarihi"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
 
 	/* special folders */
 	IDS_DESKTOP                 "Masaüstü"

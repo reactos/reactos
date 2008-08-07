@@ -45,6 +45,7 @@
 #include "wine/debug.h"
 #include "debughlp.h"
 #include "shfldr.h"
+#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -73,11 +74,18 @@ static const IPersistFolder2Vtbl vt_NP_PersistFolder2;
 #define _IPersistFolder2_(This)	(IPersistFolder2*)&(This->lpVtblPersistFolder2)
 
 static shvheader NetworkPlacesSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
-    {IDS_SHV_COLUMN9, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10}
+    {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+    {IDS_SHV_COLUMN13, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_WORKGROUP, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
+	{IDS_SHV_NETWORKLOCATION, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15}
 };
 
-#define NETWORKPLACESSHELLVIEWCOLUMNS 2
+#define COLUMN_NAME          0
+#define COLUMN_CATEGORY      1
+#define COLUMN_WORKGROUP     2
+#define COLUMN_NETLOCATION   3
+
+#define NETWORKPLACESSHELLVIEWCOLUMNS 4
 
 /**************************************************************************
 *	ISF_NetworkPlaces_Constructor
@@ -209,11 +217,11 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnEnumObjects (IShellFolder2 * iface,
     TRACE ("(%p)->(HWND=%p flags=0x%08x pplist=%p)\n", This,
             hwndOwner, dwFlags, ppEnumIDList);
 
-    *ppEnumIDList = IEnumIDList_Constructor();
+    *ppEnumIDList = NULL; //IEnumIDList_Constructor();
 
     TRACE ("-- (%p)->(new ID List: %p)\n", This, *ppEnumIDList);
-
-    return (*ppEnumIDList) ? S_OK : E_OUTOFMEMORY;
+ return S_FALSE;
+   // return (*ppEnumIDList) ? S_OK : E_OUTOFMEMORY;
 }
 
 /**************************************************************************
@@ -517,6 +525,25 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnGetDetailsOf (IShellFolder2 * iface,
                LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS * psd)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    WCHAR buffer[MAX_PATH] = {0};
+    HRESULT hr = E_FAIL;
+
+    if (iColumn >= NETWORKPLACESSHELLVIEWCOLUMNS)
+        return E_FAIL;
+
+    psd->fmt = NetworkPlacesSFHeader[iColumn].fmt;
+    psd->cxChar = NetworkPlacesSFHeader[iColumn].cxChar;
+    if (pidl == NULL)
+    {
+        psd->str.uType = STRRET_WSTR;
+        if (LoadStringW(shell32_hInstance, NetworkPlacesSFHeader[iColumn].colnameid, buffer, MAX_PATH))
+            hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+
+        return hr;
+    }
+
+    if (iColumn == COLUMN_NAME)
+        return IShellFolder2_GetDisplayNameOf(iface, pidl, SHGDN_NORMAL, &psd->str);
 
     FIXME ("(%p)->(%p %i %p)\n", This, pidl, iColumn, psd);
 

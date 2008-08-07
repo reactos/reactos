@@ -593,8 +593,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Commenti"
 	IDS_SHV_COLUMN10            "Proprietario"
 	IDS_SHV_COLUMN11            "Gruppo"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Posizione originale"
 	IDS_SHV_COLUMN_DELDATE      "Data di cancellazione"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
 
 	/* special folders */
 	IDS_DESKTOP                 "Desktop"
