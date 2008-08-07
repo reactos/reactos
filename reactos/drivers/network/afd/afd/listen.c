@@ -31,6 +31,8 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     FCB->RemoteAddress =
 	TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
@@ -69,6 +71,8 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
                             IPAddr->Address[0].Address[0].sin_port));
     AFD_DbgPrint(MID_TRACE,("IPAddr->Address[0].Address[0].sin_addr %x\n",
                             IPAddr->Address[0].Address[0].in_addr));
+
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 
     Irp->IoStatus.Information = ((PCHAR)&IPAddr[1]) - ((PCHAR)ListenReceive);
     Irp->IoStatus.Status = STATUS_SUCCESS;

@@ -85,8 +85,7 @@ static NTSTATUS NTAPI SendComplete
     FCB->Send.BytesUsed -= Irp->IoStatus.Information;
 
     if( !FCB->Send.BytesUsed &&
-	!IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) &&
-	NT_SUCCESS(Status) ) {
+	!IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	NextIrpEntry =
 	    RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	NextIrp =

@@ -286,7 +286,9 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; break;
         case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
         case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
+        case STATUS_INSUFFICIENT_RESOURCES: *Errno = WSA_NOT_ENOUGH_MEMORY; break;
         case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
+        case STATUS_REMOTE_NOT_LISTENING: *Errno = WSAECONNRESET; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
@@ -513,6 +515,7 @@ WSPBind(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}         
 	
 	/* Set up Socket Data */
@@ -522,7 +525,7 @@ WSPBind(
 	NtClose( SockEvent );
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 int 
@@ -566,6 +569,7 @@ WSPListen(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}         
 
 	/* Set to Listening */
@@ -574,7 +578,7 @@ WSPListen(
 	NtClose( SockEvent );
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1247,7 +1251,7 @@ WSPConnect(
 
 	NtClose( SockEvent );
     
-    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
+    return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
 int
 WSPAPI 
@@ -1310,13 +1314,14 @@ WSPShutdown(
 	/* Wait for return */
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
 	}
 
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 	NtClose( SockEvent );
 
-    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
+    return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1401,7 +1406,7 @@ WSPGetSockName(
 	}
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, 0, NULL );
+	    ( Status, lpErrno, 0, NULL );
 }
 
 
@@ -1486,7 +1491,7 @@ WSPGetPeerName(
 	}
 
 	return MsafdReturnWithErrno
-	    ( IOSB.Status, lpErrno, 0, NULL );    
+	    ( Status, lpErrno, 0, NULL );
 }
 
 INT
