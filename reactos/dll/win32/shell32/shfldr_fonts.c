@@ -205,6 +205,102 @@ static HRESULT WINAPI ISF_Fonts_fnParseDisplayName (IShellFolder2 * iface,
     return hr;
 }
 
+static LPITEMIDLIST _ILCreateFontItem(LPWSTR pszFont, LPWSTR pszFile)
+{
+    PIDLDATA tmp;
+    LPITEMIDLIST pidl;
+    PIDLFontStruct * p;
+    int size0 = (char*)&tmp.u.cfont.szName-(char*)&tmp.u.cfont;
+    int size = size0;
+
+    tmp.type = 0x00;
+    tmp.u.cfont.dummy = 0xFF;
+    tmp.u.cfont.offsFile = wcslen(pszFont) + 1;
+
+    size = (tmp.u.cfont.offsFile + wcslen(pszFile) + 1) * sizeof(WCHAR);
+
+    pidl = (LPITEMIDLIST)SHAlloc(size + 4);
+    if (!pidl)
+        return pidl;
+
+    pidl->mkid.cb = size+2;
+    memcpy(pidl->mkid.abID, &tmp, 2+size0);
+
+    p = &((PIDLDATA*)pidl->mkid.abID)->u.cfont;
+    wcscpy(p->szName, pszFont);
+    wcscpy(p->szName + tmp.u.cfont.offsFile, pszFile);
+
+    *(WORD*)((char*)pidl+(size+2)) = 0;
+    return pidl;
+}
+
+static PIDLFontStruct * _ILGetFontStruct(LPCITEMIDLIST pidl)
+{
+    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+
+    if (pdata && pdata->type==0x00)
+        return (PIDLFontStruct*)&(pdata->u.cfont);
+
+    return NULL;
+}
+
+
+
+/**************************************************************************
+ *  CreateFontsEnumListss()
+ */
+static BOOL CreateFontsEnumList(IEnumIDList *list, DWORD dwFlags)
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szName[LF_FACESIZE+20];
+    WCHAR szFile[MAX_PATH];
+    LPWSTR pszPath;
+    UINT Length;
+    LONG ret;
+    DWORD dwType, dwName, dwFile, dwIndex;
+    LPITEMIDLIST pidl;
+    HKEY hKey;
+
+    if (dwFlags & SHCONTF_NONFOLDERS)
+    {
+        if (!SHGetSpecialFolderPathW(NULL, szPath, CSIDL_FONTS, FALSE))
+            return FALSE;
+
+        pszPath = PathAddBackslashW(szPath);
+        if (!pszPath)
+            return FALSE;
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0, KEY_READ, &hKey)!= ERROR_SUCCESS)
+            return FALSE;
+
+        Length = pszPath - szPath;
+        dwIndex = 0;
+        do
+        {
+            dwName = sizeof(szName)/sizeof(WCHAR);
+            dwFile = sizeof(szFile)/sizeof(WCHAR);
+            ret = RegEnumValueW(hKey, dwIndex++, szName, &dwName, NULL, &dwType, (LPVOID)szFile, &dwFile);
+            if (ret == ERROR_SUCCESS)
+            {
+                szFile[(sizeof(szFile)/sizeof(WCHAR))-1] = L'\0';
+                if (dwType == REG_SZ && wcslen(szFile) + Length + 1< (sizeof(szPath)/sizeof(WCHAR)))
+                {
+                    wcscpy(&szPath[Length], szFile);
+                    pidl = _ILCreateFontItem(szName, szPath);
+                    TRACE("pidl %p name %s path %s\n", pidl, debugstr_w(szName), debugstr_w(szPath));
+                    if (pidl)
+                    {
+                        if (!AddToEnumList(list, pidl))
+                            SHFree(pidl);
+                    }
+                }
+            }
+        }while(ret != ERROR_NO_MORE_ITEMS);
+        RegCloseKey(hKey);
+
+    }
+    return TRUE;
+}
+
 /**************************************************************************
 *		ISF_Fonts_fnEnumObjects
 */
@@ -217,6 +313,8 @@ static HRESULT WINAPI ISF_Fonts_fnEnumObjects (IShellFolder2 * iface,
             hwndOwner, dwFlags, ppEnumIDList);
 
     *ppEnumIDList = IEnumIDList_Constructor();
+    if(*ppEnumIDList)
+        CreateFontsEnumList(*ppEnumIDList, dwFlags);
 
     TRACE ("-- (%p)->(new ID List: %p)\n", This, *ppEnumIDList);
 
@@ -436,14 +534,26 @@ static HRESULT WINAPI ISF_Fonts_fnGetDisplayNameOf (IShellFolder2 * iface,
                LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    PIDLFontStruct * pfont;
 
-    FIXME ("(%p)->(pidl=%p,0x%08x,%p)\n", This, pidl, dwFlags, strRet);
+    TRACE("ISF_Fonts_fnGetDisplayNameOf (%p)->(pidl=%p,0x%08x,%p)\n", This, pidl, dwFlags, strRet);
     pdump (pidl);
 
     if (!strRet)
         return E_INVALIDARG;
 
-    return E_NOTIMPL;
+    pfont = _ILGetFontStruct(pidl);
+    if (!pfont)
+        return E_INVALIDARG;
+
+    strRet->u.pOleStr = CoTaskMemAlloc((wcslen(pfont->szName)+1) * sizeof(WCHAR));
+    if (!strRet->u.pOleStr)
+        return E_OUTOFMEMORY;
+
+    wcscpy(strRet->u.pOleStr, pfont->szName);
+    strRet->uType = STRRET_WSTR;
+
+    return S_OK;
 }
 
 /**************************************************************************
@@ -526,6 +636,9 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;
+    PIDLFontStruct * pfont;
+    HANDLE hFile;
+    LARGE_INTEGER FileSize;
 
     TRACE("(%p, %p, %d, %p)\n", This, pidl, iColumn, psd);
 
@@ -544,7 +657,58 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
     }
 
     if (iColumn == COLUMN_NAME)
+    {
+        psd->str.uType = STRRET_WSTR;
         return IShellFolder2_GetDisplayNameOf(iface, pidl, SHGDN_NORMAL, &psd->str);
+    }
+
+    psd->str.uType = STRRET_CSTR;
+    psd->str.u.cStr[0] = '\0';
+
+    switch(iColumn)
+    {
+        case COLUMN_TYPE:
+            break;
+        case COLUMN_SIZE:
+            pfont = _ILGetFontStruct(pidl);
+            if (pfont)
+            {
+                hFile = CreateFileW(pfont->szName + pfont->offsFile, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+                if (hFile)
+                {
+                    if (GetFileSizeEx(hFile, &FileSize))
+                    {
+                        if (StrFormatByteSizeW(FileSize.QuadPart, buffer, sizeof(buffer)/sizeof(WCHAR)))
+                        {
+                            psd->str.u.pOleStr = CoTaskMemAlloc(wcslen(buffer) + 1);
+                            if (!psd->str.u.pOleStr)
+                                return E_OUTOFMEMORY;
+                            wcscpy(psd->str.u.pOleStr, buffer);
+                            psd->str.uType = STRRET_WSTR;
+                            CloseHandle(hFile);
+                            return S_OK;
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
+            }
+            break;
+        case COLUMN_FILENAME:
+            pfont = _ILGetFontStruct(pidl);
+            if (pfont)
+            {
+                psd->str.u.pOleStr = CoTaskMemAlloc((wcslen(pfont->szName + pfont->offsFile) + 1) * sizeof(WCHAR));
+                if (psd->str.u.pOleStr)
+                {
+                    psd->str.uType = STRRET_WSTR;
+                    wcscpy(psd->str.u.pOleStr, pfont->szName + pfont->offsFile);
+                    return S_OK;
+                }
+                else
+                    return E_OUTOFMEMORY;
+            }
+            break;
+     }
 
     FIXME ("(%p)->(%p %i %p)\n", This, pidl, iColumn, psd);
 
