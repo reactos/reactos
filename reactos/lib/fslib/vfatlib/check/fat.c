@@ -97,7 +97,7 @@ void read_fat(DOS_FS *fs)
 	    //exit(1);
 	}
     }
-    fs->fat = qalloc(&mem_queue,sizeof(FAT_ENTRY)*(fs->clusters+2));
+    fs->fat = qalloc(&FsCheckMemQueue,sizeof(FAT_ENTRY)*(fs->clusters+2));
     for (i = 2; i < fs->clusters+2; i++) get_fat(&fs->fat[i],use,i,fs);
     for (i = 2; i < fs->clusters+2; i++)
 	if (fs->fat[i].value >= fs->clusters+2 &&

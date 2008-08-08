@@ -81,7 +81,7 @@ static char *cnv_unicode( const unsigned char *uni, int maxlen, int use_q )
 	else
 	    len += 4;
     }
-    cp = out = use_q ? qalloc( &mem_queue, len+1 ) : vfalloc( len+1 );
+    cp = out = use_q ? qalloc( &FsCheckMemQueue, len+1 ) : vfalloc( len+1 );
 
     for( up = uni; (up-uni)/2 < maxlen && (up[0] || up[1]); up += 2 ) {
 	if (UNICODE_CONVERTABLE(up[0],up[1]))

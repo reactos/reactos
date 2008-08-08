@@ -165,18 +165,17 @@ typedef struct {
 #define FSCHECK_IMMEDIATE_WRITE 0x10
 
 extern ULONG FsCheckFlags;
-extern int atari_format;
-extern unsigned n_files;
-extern void *mem_queue;
+extern ULONG FsCheckTotalFiles;
+extern void *FsCheckMemQueue;
 
 /* value to use as end-of-file marker */
-#define FAT_EOF(fs)	((atari_format ? 0xfff : 0xff8) | FAT_EXTD(fs))
+#define FAT_EOF(fs)	(0xff8 | FAT_EXTD(fs))
 #define FAT_IS_EOF(fs,v) ((unsigned long)(v) >= (0xff8|FAT_EXTD(fs)))
 /* value to mark bad clusters */
 #define FAT_BAD(fs)	(0xff7 | FAT_EXTD(fs))
 /* range of values used for bad clusters */
-#define FAT_MIN_BAD(fs)	((atari_format ? 0xff0 : 0xff7) | FAT_EXTD(fs))
-#define FAT_MAX_BAD(fs)	((atari_format ? 0xff7 : 0xff7) | FAT_EXTD(fs))
+#define FAT_MIN_BAD(fs)	(0xff7 | FAT_EXTD(fs))
+#define FAT_MAX_BAD(fs)	(0xff7 | FAT_EXTD(fs))
 #define FAT_IS_BAD(fs,v) ((v) >= FAT_MIN_BAD(fs) && (v) <= FAT_MAX_BAD(fs))
 
 /* return -16 as a number with fs->fat_bits bits */

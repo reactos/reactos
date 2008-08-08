@@ -153,7 +153,7 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	}
 	vffree(root);
     }
-    ++n_files;
+    ++FsCheckTotalFiles;
     return offset;
 }
 
@@ -221,7 +221,7 @@ static char *file_stat(DOS_FILE *file)
 static int bad_name(unsigned char *name)
 {
     int i, spc, suspicious = 0;
-    char *bad_chars = atari_format ? "*?\\/:" : "*?<>|\"\\/:";
+    char *bad_chars = "*?<>|\"\\/:";
 
     /* Do not complain about (and auto-correct) the extended attribute files
      * of OS/2. */
@@ -260,10 +260,6 @@ static int bad_name(unsigned char *name)
 	    return 1;
     }
 
-    /* Under GEMDOS, chars >= 128 are never allowed. */
-    if (atari_format && suspicious)
-	return 1;
-
     /* Only complain about too much suspicious chars in interactive mode,
      * never correct them automatically. The chars are all basically ok, so we
      * shouldn't auto-correct such names. */
@@ -281,7 +277,7 @@ static void drop_file(DOS_FS *fs,DOS_FILE *file)
     for (cluster = FSTART(file,fs); cluster > 0 && cluster <
       fs->clusters+2; cluster = next_cluster(fs,cluster))
 	set_owner(fs,cluster,NULL);
-    --n_files;
+    --FsCheckTotalFiles;
 }
 
 
@@ -780,7 +776,7 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
 	lfn_add_slot(&de,offset);
 	return;
     }
-    new = qalloc(&mem_queue,sizeof(DOS_FILE));
+    new = qalloc(&FsCheckMemQueue,sizeof(DOS_FILE));
     new->lfn = lfn_get(&de);
     new->offset = offset;
     memcpy(&new->dir_ent,&de,sizeof(de));
@@ -798,7 +794,7 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
     if (offset &&
 	strncmp((char*)de.name,MSDOS_DOT,MSDOS_NAME) != 0 &&
 	strncmp((char*)de.name,MSDOS_DOTDOT,MSDOS_NAME) != 0)
-	++n_files;
+	++FsCheckTotalFiles;
     test_file(fs,new,FsCheckFlags & FSCHECK_TEST_READ);
 }
 
