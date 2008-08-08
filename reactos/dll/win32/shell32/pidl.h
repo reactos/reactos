@@ -107,6 +107,7 @@
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
+
 #include "pshpack1.h"
 typedef BYTE PIDLTYPE;
 
@@ -118,6 +119,14 @@ typedef struct tagPIDLCPanelStruct
     WORD offsComment;		/*08*/
     CHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
 } PIDLCPanelStruct;
+
+typedef struct tagPIDLFontStruct
+{
+    BYTE dummy;			
+    WORD offsFile;	
+    WCHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
+} PIDLFontStruct;
+
 
 typedef struct tagGUIDStruct
 {
@@ -180,6 +189,7 @@ typedef struct tagPIDLDATA
 	  } htmlhelp;
 	  struct tagPIDLCPanelStruct cpanel;
           struct tagValueW valueW;
+	  struct tagPIDLFontStruct cfont;
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"
