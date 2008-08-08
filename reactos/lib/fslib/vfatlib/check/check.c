@@ -749,12 +749,8 @@ static void add_file(DOS_FS *fs,DOS_FILE ***chain,DOS_FILE *parent,
     DIR_ENT de;
     FD_TYPE type;
 
-	char tmpBuffer[512]; // TMN:
-
     if (offset) {
-//	fs_read(offset,sizeof(DIR_ENT),&de);
-	fs_read(offset,sizeof(tmpBuffer),&tmpBuffer); // TMN:
-	memcpy(&de, tmpBuffer, sizeof(DIR_ENT));      // TMN:
+	fs_read(offset,sizeof(DIR_ENT),&de);
     } else {
 	memcpy(de.name,"           ",MSDOS_NAME);
 	de.attr = ATTR_DIR;
