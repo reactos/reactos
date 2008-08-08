@@ -35,6 +35,7 @@
 	<file>dataobject.c</file>
 	<file>dde.c</file>
 	<file>debughlp.c</file>
+	<file>desktop.c</file>
 	<file>dialogs.c</file>
 	<file>dragdrophelper.c</file>
 	<file>enumidlist.c</file>
