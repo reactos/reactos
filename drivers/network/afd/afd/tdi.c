@@ -1143,8 +1143,6 @@ NTSTATUS TdiDisconnect(
     KEVENT Event;
     PIRP Irp;
 
-    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
-
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
