@@ -59,7 +59,7 @@
  * CsrMoveSatisfiedWait        753E7909 20 - wait.c    - IMPLEMENTED
  * CsrNotifyWait               753E782F 21 - wait.c    - IMPLEMENTED
  * CsrPopulateDosDevices       753E37A5 22 - init.c    - IMPLEMENTED
- * CsrQueryApiPort             753E4E42 23 - api.c     - IMPLEMENTED
+ * CsrQueryApiPort             753E4E42 23 - api.c     - UNIMPLEMENTED
  * CsrReferenceThread          753E61E5 24 - thread.c  - IMPLEMENTED
  * CsrRevertToSelf             753E615A 25 - thread.c  - IMPLEMENTED
  * CsrServerInitialization     753E3D75 26 - server.c  - IMPLEMENTED
@@ -84,7 +84,7 @@
 /* Public SB API Interface Status (session.c)
  * CsrSbCreateSession                                  - IMPLEMENTED
  * CsrSbForeignSessionComplete                         - IMPLEMENTED
- * CsrSbTerminateSession                               - IMPLEMENTED
+ * CsrSbTerminateSession                               - UNIMPLEMENTED
  * CsrSbCreateProcess                                  - UNIMPLEMENTED
  */
 

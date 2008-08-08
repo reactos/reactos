@@ -80,7 +80,7 @@ _main(int argc,
                                      ProcessUserModeIOPL,
                                      NULL,
                                      0);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         /* Raise a hard error */
         DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
