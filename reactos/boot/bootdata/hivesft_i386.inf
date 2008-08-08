@@ -32,6 +32,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu","{208D2C60-3AEA-1069-A2D7-08002B30309D}",0x00010001,0x00000000
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Bitbucket",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Bitbucket\Volume",,0x00000012
 
 ; CMD Settings
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
