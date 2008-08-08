@@ -263,10 +263,10 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 			cmd_free (bc->raw_params);
 	}
 
-	ZeroMemory(bc->BatchFilePath, sizeof(bc->BatchFilePath));
+	GetFullPathName(fullname, sizeof(bc->BatchFilePath), bc->BatchFilePath, &tmp);
+	*tmp = '\0';
+
 	bc->hBatchFile = hFile;
-	tmp = _tcsrchr(fullname, '\\');
-	_tcsncpy(bc->BatchFilePath, fullname, ((_tcslen(fullname) - _tcslen(tmp)) + 1));
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
