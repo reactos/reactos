@@ -73,6 +73,7 @@
   <property name="BASEADDRESS_DESKMON" value="0x6d400000" />
   <property name="BASEADDRESS_DESKADP" value="0x6d410000" />
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
+  <property name="BASEADDRESS_SXS" value="0x6e160000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
