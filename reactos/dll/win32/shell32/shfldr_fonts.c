@@ -217,7 +217,7 @@ static LPITEMIDLIST _ILCreateFontItem(LPWSTR pszFont, LPWSTR pszFile)
     tmp.u.cfont.dummy = 0xFF;
     tmp.u.cfont.offsFile = wcslen(pszFont) + 1;
 
-    size = (tmp.u.cfont.offsFile + wcslen(pszFile) + 1) * sizeof(WCHAR);
+    size += (tmp.u.cfont.offsFile + wcslen(pszFile) + 1) * sizeof(WCHAR);
 
     pidl = (LPITEMIDLIST)SHAlloc(size + 4);
     if (!pidl)
@@ -639,6 +639,7 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
     PIDLFontStruct * pfont;
     HANDLE hFile;
     LARGE_INTEGER FileSize;
+    SHFILEINFOW fi;
 
     TRACE("(%p, %p, %d, %p)\n", This, pidl, iColumn, psd);
 
@@ -668,13 +669,26 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
     switch(iColumn)
     {
         case COLUMN_TYPE:
+            pfont = _ILGetFontStruct(pidl);
+            if (pfont)
+            {
+                if (SHGetFileInfoW(pfont->szName + pfont->offsFile, 0, &fi, sizeof(fi), SHGFI_TYPENAME))
+                {
+                    psd->str.u.pOleStr = CoTaskMemAlloc((wcslen(fi.szTypeName)+1) * sizeof(WCHAR));
+                    if (!psd->str.u.pOleStr)
+                        return E_OUTOFMEMORY;
+                    wcscpy(psd->str.u.pOleStr, fi.szTypeName);
+                    psd->str.uType = STRRET_WSTR;
+                    return S_OK;
+                }
+            }
             break;
         case COLUMN_SIZE:
             pfont = _ILGetFontStruct(pidl);
             if (pfont)
             {
-                hFile = CreateFileW(pfont->szName + pfont->offsFile, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
-                if (hFile)
+                hFile = CreateFileW(pfont->szName + pfont->offsFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE)
                 {
                     if (GetFileSizeEx(hFile, &FileSize))
                     {
