@@ -591,13 +591,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Комментарий"
 	IDS_SHV_COLUMN10            "Владелец"
 	IDS_SHV_COLUMN11            "Группа"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Имя файла"
+	IDS_SHV_COLUMN13            "Категория"
 	IDS_SHV_COLUMN_DELFROM      "Изначальное расположение"
 	IDS_SHV_COLUMN_DELDATE      "Дата удаления"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_COLUMN_FONTTYPE     "Тип шрифта"
+	IDS_SHV_COLUMN_WORKGROUP    "Рабочая группа"
+	IDS_SHV_NETWORKLOCATION     "Сетевое расположение"
 
 	/* special folders */
 	IDS_DESKTOP                 "Рабочий стол"
@@ -613,9 +613,9 @@ BEGIN
 	IDS_SELECT                  "&Выбрать"
 	IDS_OPEN                    "&Открыть"
 	IDS_CREATELINK              "Создать &ярлык"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
+	IDS_COPY                    "Копировать"
+	IDS_DELETE                  "Удалить"
+	IDS_PROPERTIES              "Свойства"
 
 	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
 	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"
@@ -717,7 +717,7 @@ BEGIN
 	IDS_PREVIEW_VERB            "Предпросмотр"
 
 	IDS_FILE_FOLDER             "%u файлов, %u папок"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_PRINTERS                "Принтеры"
+	IDS_FONTS                   "Шрифты"
+	IDS_INSTALLNEWFONT          "Установить новый шрифт..."
 END
