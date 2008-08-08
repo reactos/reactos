@@ -291,7 +291,11 @@ NTSTATUS TdiConnect(
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  assert(ConnectionObject);
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
   if (!DeviceObject) {
@@ -345,7 +349,10 @@ NTSTATUS TdiAssociateAddressFile(
   AFD_DbgPrint(MAX_TRACE, ("Called. AddressHandle (0x%X)  ConnectionObject (0x%X)\n",
     AddressHandle, ConnectionObject));
 
-  assert(ConnectionObject);
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
   if (!DeviceObject) {
@@ -399,7 +406,11 @@ NTSTATUS TdiListen
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  assert(ConnectionObject);
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
   if (!DeviceObject) {
@@ -465,7 +476,10 @@ NTSTATUS TdiSetEventHandler(
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  assert(FileObject);
+  if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(FileObject);
   if (!DeviceObject) {
@@ -527,7 +541,10 @@ NTSTATUS TdiQueryDeviceControl(
     KEVENT Event;
     PIRP Irp;
 
-    assert(FileObject);
+    if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
 
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     if (!DeviceObject) {
@@ -578,7 +595,10 @@ NTSTATUS TdiQueryInformation(
     KEVENT Event;
     PIRP Irp;
 
-    assert(FileObject);
+    if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
 
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     if (!DeviceObject) {
@@ -803,7 +823,11 @@ NTSTATUS TdiSend
     NTSTATUS Status = STATUS_SUCCESS;
     PMDL Mdl;
 
-    assert(TransportObject);
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -885,7 +909,11 @@ NTSTATUS TdiReceive(
     PDEVICE_OBJECT DeviceObject;
     PMDL Mdl;
 
-    assert(TransportObject);
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -986,7 +1014,11 @@ NTSTATUS TdiReceiveDatagram(
     NTSTATUS Status;
     PMDL Mdl;
 
-    assert(TransportObject);
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad tranport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -1077,7 +1109,11 @@ NTSTATUS TdiSendDatagram(
     NTSTATUS Status;
     PMDL Mdl;
 
-    assert(TransportObject);
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
 
@@ -1159,7 +1195,10 @@ NTSTATUS TdiDisconnect(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    assert(TransportObject);
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
 
