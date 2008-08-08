@@ -2231,8 +2231,7 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data);
 DWORD
 NTAPI
 NtUserSetRipFlags(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  DWORD Unknown);
 
 DWORD
 NTAPI
@@ -2533,8 +2532,7 @@ NtUserUserHandleGrantAccess(
 BOOL
 NTAPI
 NtUserValidateHandleSecure(
-  HANDLE hHdl,
-  BOOL Restricted);
+  HANDLE hHdl);
 
 BOOL
 NTAPI

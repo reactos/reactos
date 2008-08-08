@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS Win32K
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/ntuser/usrfuncs.c
- * PURPOSE:         User functions
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
+ * FILE:            subsystems/win32/win32k/ntuser/userinit.c
+ * PURPOSE:         Nt User Initialization
+ * PROGRAMMERS:     Stefan Ginsberg (stefan__100__@hotmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -15,12 +15,11 @@
 /* PUBLIC FUNCTIONS **********************************************************/
 
 DWORD
-NTAPI
-NtUserGetThreadState(DWORD ThreadState)
+APIENTRY
+NtUserInitialize(DWORD dwUnknown1,
+                 DWORD dwUnknown2,
+                 DWORD dwUnknown3)
 {
-    DPRINT1("NtUserGetThreadState() ThreadState %d\n", ThreadState);
-
-    /* TODO: A big switch-case for all possible threadstate requires */
+    UNIMPLEMENTED;
     return 0;
 }
-
