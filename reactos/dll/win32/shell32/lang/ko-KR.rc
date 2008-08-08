@@ -614,6 +614,9 @@ BEGIN
 	IDS_SELECT                  "Select"
 	IDS_OPEN                    "Open"
 	IDS_CREATELINK              "Create &Link"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
 	IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"

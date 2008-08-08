@@ -615,6 +615,9 @@ BEGIN
 	IDS_SELECT                  "Ви&брати"
 	IDS_OPEN                    "Ві&дкрити"
 	IDS_CREATELINK              "Створити &ярлик"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
 	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової папки"

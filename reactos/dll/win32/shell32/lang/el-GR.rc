@@ -614,6 +614,9 @@ BEGIN
 	IDS_SELECT                  "Επιλογή"
 	IDS_OPEN                    "’νοιγμα"
 	IDS_CREATELINK              "Δημιουργία &συντόμευσης"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
 	IDS_CREATEFOLDER_CAPTION    "Σφάλμα κατά την δημιουργία νέου φακέλου"

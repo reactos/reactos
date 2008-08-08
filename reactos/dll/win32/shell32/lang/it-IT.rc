@@ -615,6 +615,9 @@ BEGIN
 	IDS_SELECT                  "Selezione"
 	IDS_OPEN                    "Apri"
 	IDS_CREATELINK              "&Crea Collegamento"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"

@@ -616,6 +616,9 @@ BEGIN
 	IDS_SELECT                  "Seleccionar"
 	IDS_OPEN                    "Abrir"
 	IDS_CREATELINK              "C&rear acceso directo"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "No se puede crear nueva carpeta: Permiso denegado."
 	IDS_CREATEFOLDER_CAPTION    "Error durante la creación de una nueva carpeta"

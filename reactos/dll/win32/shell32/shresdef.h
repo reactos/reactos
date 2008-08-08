@@ -150,6 +150,9 @@
 #define IDS_SHV_COLUMN13            312
 #define IDS_SHV_COLUMN_WORKGROUP    313
 #define IDS_SHV_NETWORKLOCATION     314
+#define IDS_COPY                    315
+#define IDS_DELETE                  316
+#define IDS_PROPERTIES              317
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

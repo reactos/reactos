@@ -614,6 +614,9 @@ BEGIN
 	IDS_SELECT                  "選択"
 	IDS_OPEN                    "開く"
 	IDS_CREATELINK              "ショートカットの作成(&L)"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "新しいフォルダを作成できませんでした: アクセス権がありません。"
 	IDS_CREATEFOLDER_CAPTION    "新しいフォルダの作成中にエラーが発生しました"

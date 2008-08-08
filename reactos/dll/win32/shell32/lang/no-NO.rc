@@ -593,6 +593,9 @@ BEGIN
 	IDS_SELECT                  "Velg"
 	IDS_OPEN                    "Åpne"
 	IDS_CREATELINK              "&Opprett snarvei"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Kunne ikke opprette ny mappe: tilgang nektet."
 	IDS_CREATEFOLDER_CAPTION    "Klarte ikke opprette ny mappe"

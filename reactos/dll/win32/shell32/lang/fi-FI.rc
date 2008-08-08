@@ -614,6 +614,9 @@ BEGIN
 	IDS_SELECT                  "Valitse"
 	IDS_OPEN                    "Avaa"
 	IDS_CREATELINK              "Lu&o Linkki"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Uutta kansiota ei voitu luoda: Oikeudet eivät riitä."
 	IDS_CREATEFOLDER_CAPTION    "Virhe luotaessa uutta kansiota"

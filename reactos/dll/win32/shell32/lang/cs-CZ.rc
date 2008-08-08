@@ -616,6 +616,9 @@ BEGIN
 	IDS_SELECT                  "Vybrat"
 	IDS_OPEN                    "Otevøít"
         IDS_CREATELINK              "Vytvoøit zástupc&e"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Nelze vytvoøit novou složku, protože pøístup byl odepøen."
 	IDS_CREATEFOLDER_CAPTION    "Chyba pøi pokusu vytvoøit nový adresáø"

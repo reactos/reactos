@@ -617,6 +617,9 @@ BEGIN
 	IDS_SELECT                  "Kiválaszt"
 	IDS_OPEN                    "Megnyit"
 	IDS_CREATELINK               "Parancsikon létrehozása"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Nem hozható létre új mappa: Nincs hozzá engedélyed."
 	IDS_CREATEFOLDER_CAPTION    "Hiba a mappa létrehozásakor"

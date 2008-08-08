@@ -620,6 +620,9 @@ BEGIN
 	IDS_SELECT                  "Vybraù"
 	IDS_OPEN                    "Otvoriù"
 	IDS_CREATELINK              "Vytvoriù o&dkaz"
+	IDS_COPY                    "Copy"
+	IDS_DELETE                  "Delete"
+	IDS_PROPERTIES              "Properties"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"
