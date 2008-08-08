@@ -72,6 +72,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
 
 ; Font substitutes
 ; SysFontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes",,0x00000012
 
 ; Time zone settings
