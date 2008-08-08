@@ -16,7 +16,7 @@
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/
