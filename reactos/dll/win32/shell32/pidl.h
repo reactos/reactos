@@ -122,11 +122,18 @@ typedef struct tagPIDLCPanelStruct
 
 typedef struct tagPIDLFontStruct
 {
-    BYTE dummy;			
-    WORD offsFile;	
-    WCHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
+    BYTE dummy;
+    WORD offsFile;
+    WCHAR szName[1];
 } PIDLFontStruct;
 
+typedef struct tagPIDLPrinterStruct
+{
+    BYTE dummy;
+    DWORD Attributes;
+    WORD offsServer;
+    WCHAR szName[1];
+}PIDLPrinterStruct;
 
 typedef struct tagGUIDStruct
 {
@@ -190,6 +197,7 @@ typedef struct tagPIDLDATA
 	  struct tagPIDLCPanelStruct cpanel;
           struct tagValueW valueW;
 	  struct tagPIDLFontStruct cfont;
+	  struct tagPIDLPrinterStruct cprinter;
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"

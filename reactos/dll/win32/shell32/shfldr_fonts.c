@@ -732,9 +732,7 @@ static HRESULT WINAPI ISF_Fonts_fnGetDetailsOf (IShellFolder2 * iface,
             break;
      }
 
-    FIXME ("(%p)->(%p %i %p)\n", This, pidl, iColumn, psd);
-
-    return E_NOTIMPL;
+    return E_FAIL;
 }
 
 static HRESULT WINAPI ISF_Fonts_fnMapColumnToSCID (IShellFolder2 * iface,

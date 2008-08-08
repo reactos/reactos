@@ -601,6 +601,12 @@ BEGIN
 	IDS_SHV_COLUMN_FONTTYPE     "Schriftartentyp"
 	IDS_SHV_COLUMN_WORKGROUP    "Arbeitsgruppe"
 	IDS_SHV_NETWORKLOCATION     "Netzwerkstandort"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumente"
+	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_COMMENTS     "Kommentare"
+	IDS_SHV_COLUMN_LOCATION     "Ort"
+	IDS_SHV_COLUMN_MODEL        "Model"
+
 
 	/* special folders */
 	IDS_DESKTOP                 "Desktop"

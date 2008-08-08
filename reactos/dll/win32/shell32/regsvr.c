@@ -799,13 +799,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         wszControlPanel,
         wszFonts
     },
-#if 0
     {
         &CLSID_Printers,
         wszControlPanel,
         wszPrinters
     },
-#endif
     { NULL }
 };
 

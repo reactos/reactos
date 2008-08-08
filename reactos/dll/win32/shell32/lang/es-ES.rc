@@ -601,6 +601,11 @@ BEGIN
 	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
 	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
 	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_COMMENTS     "Comments"
+	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
 	IDS_DESKTOP                 "Escritorio"

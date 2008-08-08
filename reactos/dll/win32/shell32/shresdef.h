@@ -153,6 +153,11 @@
 #define IDS_COPY                    315
 #define IDS_DELETE                  316
 #define IDS_PROPERTIES              317
+#define IDS_SHV_COLUMN_DOCUMENTS    318
+#define IDS_SHV_COLUMN_STATUS       319
+#define IDS_SHV_COLUMN_COMMENTS     320
+#define IDS_SHV_COLUMN_LOCATION     321
+#define IDS_SHV_COLUMN_MODEL        322
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

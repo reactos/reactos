@@ -1387,21 +1387,7 @@ LPITEMIDLIST _ILCreateControlPanel(void)
 
 LPITEMIDLIST _ILCreatePrinters(void)
 {
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
-
-    TRACE("()\n");
-    if (parent)
-    {
-        LPITEMIDLIST printers = _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
-
-        if (printers)
-        {
-            ret = ILCombine(parent, printers);
-            SHFree(printers);
-        }
-        SHFree(parent);
-    }
-    return ret;
+    return _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
 }
 
 LPITEMIDLIST _ILCreateNetwork(void)
