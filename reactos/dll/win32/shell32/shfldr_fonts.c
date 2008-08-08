@@ -45,6 +45,7 @@
 #include "shfldr.h"
 #include "shlwapi.h"
 
+
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 /***********************************************************************
@@ -54,18 +55,22 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 typedef struct {
     const IShellFolder2Vtbl  *lpVtbl;
     LONG                       ref;
+    const IContextMenu2Vtbl *lpVtblContextMenuFontItem;
     const IPersistFolder2Vtbl *lpVtblPersistFolder2;
 
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
+    LPCITEMIDLIST apidl;    /* currently focused font item */
 } IGenericSFImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_NP_PersistFolder2;
-
+static const IContextMenu2Vtbl vt_ContextMenu2FontItem;
 
 #define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
+#define _IContextMenuFontItem_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblContextMenuFontItem)))
+#define _ICOM_THIS_From_IContextMenu2FontItem(class, name) class* This = (class*)(((char*)name)-_IContextMenuFontItem_Offset);
 
 #define _IUnknown_(This)	(IUnknown*)&(This->lpVtbl)
 #define _IShellFolder_(This)	(IShellFolder*)&(This->lpVtbl)
@@ -107,6 +112,7 @@ HRESULT WINAPI ISF_Fonts_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID 
     sf->ref = 0;
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_NP_PersistFolder2;
+    sf->lpVtblContextMenuFontItem = &vt_ContextMenu2FontItem;
     sf->pidlRoot = _ILCreateFont();	/* my qualified pidl */
 
     if (!SUCCEEDED (IUnknown_QueryInterface (_IUnknown_ (sf), riid, ppv)))
@@ -485,43 +491,45 @@ static HRESULT WINAPI ISF_Fonts_fnGetUIObjectOf (IShellFolder2 * iface,
     if (!ppvOut)
         return hr;
 
-	*ppvOut = NULL;
+    *ppvOut = NULL;
 
-	if (IsEqualIID (riid, &IID_IContextMenu) && (cidl >= 1))
+    if (IsEqualIID (riid, &IID_IContextMenu) && (cidl >= 1))
     {
-	    pObj = (LPUNKNOWN) ISvItemCm_Constructor ((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
-	}
+        pObj = (IUnknown*)(&This->lpVtblContextMenuFontItem);
+        This->apidl = apidl[0];
+        IUnknown_AddRef(pObj);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1))
     {
-	    pObj = (LPUNKNOWN) IDataObject_Constructor (hwndOwner, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
-	}
+        pObj = (LPUNKNOWN) IDataObject_Constructor (hwndOwner, This->pidlRoot, apidl, cidl);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, &IID_IExtractIconA) && (cidl == 1))
     {
-	    pidl = ILCombine (This->pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	}
+        pidl = ILCombine (This->pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, &IID_IExtractIconW) && (cidl == 1))
     {
-	    pidl = ILCombine (This->pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	}
+        pidl = ILCombine (This->pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
     else if (IsEqualIID (riid, &IID_IDropTarget) && (cidl >= 1))
     {
-	    hr = IShellFolder_QueryInterface (iface, &IID_IDropTarget, (LPVOID *) & pObj);
-	}
+        hr = IShellFolder_QueryInterface (iface, &IID_IDropTarget, (LPVOID *) & pObj);
+    }
     else
-	    hr = E_NOINTERFACE;
+        hr = E_NOINTERFACE;
 
-	if (SUCCEEDED(hr) && !pObj)
-	    hr = E_OUTOFMEMORY;
+    if (SUCCEEDED(hr) && !pObj)
+        hr = E_OUTOFMEMORY;
 
-	*ppvOut = pObj;
+    *ppvOut = pObj;
     TRACE ("(%p)->hr=0x%08x\n", This, hr);
     return hr;
 }
@@ -860,3 +868,208 @@ static const IPersistFolder2Vtbl vt_NP_PersistFolder2 =
     INPFldr_PersistFolder2_Initialize,
     INPFldr_PersistFolder2_GetCurFolder
 };
+
+/**************************************************************************
+* IContextMenu2 Implementation
+*/
+
+/************************************************************************
+ * ISF_Fonts_IContextMenu_QueryInterface
+ */
+static HRESULT WINAPI ISF_Fonts_IContextMenu2_QueryInterface(IContextMenu2 * iface, REFIID iid, LPVOID * ppvObject)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+    TRACE("(%p)\n", This);
+
+    return IUnknown_QueryInterface(_IUnknown_(This), iid, ppvObject);
+}
+
+/************************************************************************
+ * ISF_Fonts_IContextMenu_AddRef
+ */
+static ULONG WINAPI ISF_Fonts_IContextMenu2_AddRef(IContextMenu2 * iface)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->ref);
+
+    return IUnknown_AddRef(_IUnknown_(This));
+}
+
+/************************************************************************
+ * ISF_Fonts_IContextMenu_Release
+ */
+static ULONG WINAPI ISF_Fonts_IContextMenu2_Release(IContextMenu2  * iface)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->ref);
+
+    return IUnknown_Release(_IUnknown_(This));
+}
+
+/**************************************************************************
+* ISF_Fonts_IContextMenu_QueryContextMenu()
+*/
+static HRESULT WINAPI ISF_Fonts_IContextMenu2_QueryContextMenu(
+	IContextMenu2 *iface,
+	HMENU hMenu,
+	UINT indexMenu,
+	UINT idCmdFirst,
+	UINT idCmdLast,
+	UINT uFlags)
+{
+    char szBuffer[30] = {0};
+    ULONG Count = 1;
+
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+    TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
+          This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    if (LoadStringA(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        Count++;
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_COPY, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+}
+
+
+/**************************************************************************
+* ISF_Fonts_IContextMenu_InvokeCommand()
+*/
+static HRESULT WINAPI ISF_Fonts_IContextMenu2_InvokeCommand(
+	IContextMenu2 *iface,
+	LPCMINVOKECOMMANDINFO lpcmi)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+    SHELLEXECUTEINFOW sei;
+    PIDLFontStruct * pfont;
+    SHFILEOPSTRUCTW op;
+
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+
+    if (lpcmi->lpVerb == MAKEINTRESOURCE(1) || lpcmi->lpVerb == MAKEINTRESOURCE(2) || lpcmi->lpVerb == MAKEINTRESOURCE(7))
+    {
+        ZeroMemory(&sei, sizeof(sei));
+        sei.cbSize = sizeof(sei);
+        sei.hwnd = lpcmi->hwnd;
+        sei.nShow = SW_SHOWNORMAL;
+        if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+            sei.lpVerb = L"open";
+        else if (lpcmi->lpVerb == MAKEINTRESOURCE(2))
+            sei.lpVerb = L"print";
+        else if (lpcmi->lpVerb == MAKEINTRESOURCE(7))
+            sei.lpVerb = L"properties";
+
+        pfont = _ILGetFontStruct(This->apidl);
+        sei.lpFile = pfont->szName + pfont->offsFile;
+
+        ShellExecuteExW(&sei);
+        if (sei.hInstApp <= (HINSTANCE)32)
+           return E_FAIL;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCE(4))
+    {
+        FIXME("implement font copying\n");
+        return E_NOTIMPL;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCE(6))
+    {
+       ZeroMemory(&op, sizeof(op));
+       op.hwnd = lpcmi->hwnd;
+       op.wFunc = FO_DELETE;
+       op.fFlags = FOF_ALLOWUNDO;
+       pfont = _ILGetFontStruct(This->apidl);
+       op.pFrom = pfont->szName + pfont->offsFile;
+       SHFileOperationW(&op);
+    }
+
+    return S_OK;
+}
+
+/**************************************************************************
+ *  ISF_Fonts_IContextMenu_GetCommandString()
+ *
+ */
+static HRESULT WINAPI ISF_Fonts_IContextMenu2_GetCommandString(
+	IContextMenu2 *iface,
+	UINT_PTR idCommand,
+	UINT uFlags,
+	UINT* lpReserved,
+	LPSTR lpszName,
+	UINT uMaxNameLen)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+	TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+
+
+	return E_FAIL;
+}
+
+
+
+/**************************************************************************
+* ISF_Fonts_IContextMenu_HandleMenuMsg()
+*/
+static HRESULT WINAPI ISF_Fonts_IContextMenu2_HandleMenuMsg(
+	IContextMenu2 *iface,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
+
+    TRACE("ISF_Fonts_IContextMenu_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    return E_NOTIMPL;
+}
+
+static const IContextMenu2Vtbl vt_ContextMenu2FontItem =
+{
+	ISF_Fonts_IContextMenu2_QueryInterface,
+	ISF_Fonts_IContextMenu2_AddRef,
+	ISF_Fonts_IContextMenu2_Release,
+	ISF_Fonts_IContextMenu2_QueryContextMenu,
+	ISF_Fonts_IContextMenu2_InvokeCommand,
+	ISF_Fonts_IContextMenu2_GetCommandString,
+	ISF_Fonts_IContextMenu2_HandleMenuMsg
+};
+
+
+
+
+
+
