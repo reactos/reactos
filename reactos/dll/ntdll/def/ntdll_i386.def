@@ -1076,7 +1076,7 @@ toupper
 towlower
 towupper
 vsprintf
-vDbgPrintExWithPrefix
+vDbgPrintExWithPrefix@20
 wcscat
 wcschr
 wcscmp
