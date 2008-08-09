@@ -145,11 +145,11 @@ BEGIN
     IDS_TOOLS_COLUMN_NAME    "Название"
     IDS_TOOLS_COLUMN_DESCR   "Описание"
 
-    IDS_TOOLS_CMD_NAME       "Комндная строка"
+    IDS_TOOLS_CMD_NAME       "Командная строка"
     IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
-    IDS_TOOLS_INFO_NAME      "Version"
+    IDS_TOOLS_INFO_NAME      "О программе"
     IDS_TOOLS_INFO_DESCR     "Показать информацию о версии."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
