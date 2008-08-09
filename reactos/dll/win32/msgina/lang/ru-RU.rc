@@ -15,7 +15,7 @@ STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS
 CAPTION "Добро пожаловать в ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
-    LTEXT           "Нажите клавиши Control-Alt-Delete...",IDC_STATIC, 29, 22, 144, 14
+    LTEXT           "Нажмите клавиши Control-Alt-Delete...",IDC_STATIC, 29, 22, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
