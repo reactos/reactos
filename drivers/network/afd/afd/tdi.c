@@ -673,7 +673,6 @@ NTSTATUS TdiQueryInformationEx(
                                  OutputLength);                             /* Return information */
 }
 
-#if 0
 NTSTATUS TdiQueryAddress(
     PFILE_OBJECT FileObject,
     PULONG Address)
@@ -807,7 +806,6 @@ NTSTATUS TdiQueryAddress(
 
     return Status;
 }
-#endif
 
 NTSTATUS TdiSend
 ( PIRP *Irp,
