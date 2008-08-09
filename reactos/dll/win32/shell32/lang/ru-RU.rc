@@ -598,11 +598,11 @@ BEGIN
 	IDS_SHV_COLUMN_FONTTYPE     "Тип шрифта"
 	IDS_SHV_COLUMN_WORKGROUP    "Рабочая группа"
 	IDS_SHV_NETWORKLOCATION     "Сетевое расположение"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_DOCUMENTS    "Документы"
+	IDS_SHV_COLUMN_STATUS       "Состояние"
+	IDS_SHV_COLUMN_COMMENTS     "Коментарии"
+	IDS_SHV_COLUMN_LOCATION     "Расположение"
+	IDS_SHV_COLUMN_MODEL        "Модель"
 
 	/* special folders */
 	IDS_DESKTOP                 "Рабочий стол"
@@ -621,8 +621,8 @@ BEGIN
 	IDS_COPY                    "Копировать"
 	IDS_DELETE                  "Удалить"
 	IDS_PROPERTIES              "Свойства"
-	IDS_CUT                     "Cut"
-	IDS_RESTORE                 "Restore"
+	IDS_CUT                     "Вырезать"
+	IDS_RESTORE                 "Востановить"
 
 	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
 	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"
