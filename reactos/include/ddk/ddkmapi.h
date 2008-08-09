@@ -330,7 +330,7 @@ typedef struct _DDSETSKIPFIELD
 
 
 DXAPI
-DWORD
+DWORD PASCAL
 DxApi(IN DWORD dwFunctionNum,
       IN LPVOID lpvInBuffer,
       IN DWORD cbInBuffer,
