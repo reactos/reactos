@@ -22,7 +22,7 @@
     In summary, we just implement to satisfy the MME API (winmm) requirements.
 */
 
-LONG
+LONG WINAPI
 DriverProc(
     DWORD driver_id,
     HANDLE driver_handle,
