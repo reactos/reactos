@@ -356,7 +356,8 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 ULONG NTAPI
 MmAdjustWorkingSetSize (ULONG Unknown0,
                         ULONG Unknown1,
-                        ULONG Unknown2)
+                        ULONG Unknown2,
+                        ULONG Unknown3)
 {
    UNIMPLEMENTED;
    return (0);

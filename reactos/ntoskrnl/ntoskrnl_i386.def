@@ -720,7 +720,7 @@ LsaRegisterLogonProcess@12
 Mm64BitPhysicalAddress DATA
 MmAddPhysicalMemory@8
 MmAddVerifierThunks@8
-MmAdjustWorkingSetSize@12
+MmAdjustWorkingSetSize@16
 MmAdvanceMdl@8
 MmAllocateContiguousMemory@12
 MmAllocateContiguousMemorySpecifyCache@32
