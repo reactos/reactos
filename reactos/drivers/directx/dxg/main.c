@@ -25,7 +25,7 @@ const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
 
 
 
-NTSTATUS
+NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
@@ -117,6 +117,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 
 
 NTSTATUS
+APIENTRY
 DxDdCleanupDxGraphics()
 {
     DdHmgDestroy();
