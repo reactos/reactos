@@ -85,6 +85,7 @@ static VOID SignalSocket(
               PollReq->Handles[i].Status));
     }
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     AFD_DbgPrint(MID_TRACE,("Done\n"));
