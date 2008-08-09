@@ -57,13 +57,13 @@ BEGIN
     END
     POPUP "&Инструменты"
     BEGIN
-        MENUITEM "&Настройка",                      ID_TOOLS_OPTIONS
+        MENUITEM "&Параметры",                       ID_TOOLS_OPTIONS
     END
     POPUP "По&мощь"
     BEGIN
         MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
-        MENUITEM "О &Проводнике",            ID_ABOUT_EXPLORER
-        MENUITEM "О &ReactOS",                   ID_ABOUT_WINDOWS
+        MENUITEM "О &программе...",                  ID_ABOUT_EXPLORER
+        MENUITEM "О &ReactOS...",                    ID_ABOUT_WINDOWS
     END
 END
 
@@ -71,10 +71,10 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Настройки...",            ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Параметры...",            ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Диспетчер задач",         ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&О Проводнике",            ID_ABOUT_EXPLORER
+        MENUITEM "&О программе...",          ID_ABOUT_EXPLORER
     END
 END
 
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "&Настройка уведомлений...",   ID_CONFIG_NOTIFYAREA
         MENUITEM "Настройка даты/&времени",     ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&О Проводнике",            ID_ABOUT_EXPLORER
+        MENUITEM "&О программе...",             ID_ABOUT_EXPLORER
     END
 END
 
@@ -120,13 +120,13 @@ BEGIN
     END
     POPUP "&Инструменты"
     BEGIN
-        MENUITEM "&Опции",                      ID_TOOLS_OPTIONS
+        MENUITEM "&Параметры",                       ID_TOOLS_OPTIONS
     END
     POPUP "&Справка"
     BEGIN
         MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
-        MENUITEM "О &Проводнике",            ID_ABOUT_EXPLORER
-        MENUITEM "О &ReactOS",                   ID_ABOUT_WINDOWS
+        MENUITEM "О &Проводнике...",                 ID_ABOUT_EXPLORER
+        MENUITEM "О &ReactOS...",                    ID_ABOUT_WINDOWS
     END
 END
 
@@ -169,7 +169,7 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOGEX DISCARDABLE  0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства Рабочего стола"
+CAPTION "Свойства: Рабочий стол"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Выберите, наиболее предпочтительный для вас, \nспособ выравнивания значков",
@@ -339,7 +339,7 @@ BEGIN
     IDS_PROGRAMS            "Программы"
     IDS_SETTINGS            "Настройка"
     IDS_EXPLORE             "Обзор"
-    IDS_EMPTY               "(Пусто)"
+    IDS_EMPTY               "(пусто)"
     IDS_RECENT              "Недавние документы"
     IDS_ADMIN               "Администрирование"
 END
