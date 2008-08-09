@@ -621,6 +621,8 @@ BEGIN
 	IDS_COPY                    "Копировать"
 	IDS_DELETE                  "Удалить"
 	IDS_PROPERTIES              "Свойства"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
 	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"

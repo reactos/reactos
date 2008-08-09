@@ -628,6 +628,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."

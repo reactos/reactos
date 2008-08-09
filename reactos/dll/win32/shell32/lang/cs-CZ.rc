@@ -624,6 +624,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Nelze vytvoøit novou složku, protože pøístup byl odepøen."
 	IDS_CREATEFOLDER_CAPTION    "Chyba pøi pokusu vytvoøit nový adresáø"

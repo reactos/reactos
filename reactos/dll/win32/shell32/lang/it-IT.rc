@@ -623,6 +623,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"

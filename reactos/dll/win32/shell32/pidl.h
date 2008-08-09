@@ -135,6 +135,16 @@ typedef struct tagPIDLPrinterStruct
     WCHAR szName[1];
 }PIDLPrinterStruct;
 
+typedef struct tagPIDLRecycleStruct
+{
+	FILETIME LastModification;
+	FILETIME DeletionTime;
+	ULARGE_INTEGER FileSize;
+	ULARGE_INTEGER PhysicalFileSize;
+	DWORD Attributes;
+	WCHAR szName[1];
+}PIDLRecycleStruct;
+
 typedef struct tagGUIDStruct
 {
     BYTE dummy; /* offset 01 is unknown */
@@ -195,9 +205,10 @@ typedef struct tagPIDLDATA
 	    CHAR szName[1];	/*06*/ /* terminated by 0x00 0x00 */
 	  } htmlhelp;
 	  struct tagPIDLCPanelStruct cpanel;
-          struct tagValueW valueW;
+	  struct tagValueW valueW;
 	  struct tagPIDLFontStruct cfont;
 	  struct tagPIDLPrinterStruct cprinter;
+	  struct tagPIDLRecycleStruct crecycle;
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"

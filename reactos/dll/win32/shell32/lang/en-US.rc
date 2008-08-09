@@ -606,7 +606,6 @@ BEGIN
 	IDS_SHV_COLUMN_LOCATION     "Location"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
-
 	/* special folders */
 	IDS_DESKTOP                 "Desktop"
 	IDS_MYCOMPUTER              "My Computer"
@@ -624,6 +623,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
 	IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"

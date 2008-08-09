@@ -625,6 +625,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Създаването на нова папка е невъзможно: недостатъчни права."
 	IDS_CREATEFOLDER_CAPTION    "Грешка при създаване на нова папка"

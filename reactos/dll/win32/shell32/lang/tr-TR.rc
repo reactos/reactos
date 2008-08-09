@@ -622,6 +622,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
 	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"

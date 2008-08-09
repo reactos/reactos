@@ -158,6 +158,8 @@
 #define IDS_SHV_COLUMN_COMMENTS     320
 #define IDS_SHV_COLUMN_LOCATION     321
 #define IDS_SHV_COLUMN_MODEL        322
+#define IDS_CUT                     323
+#define IDS_RESTORE                 324
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

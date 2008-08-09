@@ -77,13 +77,13 @@ static const columninfo RecycleBinColumns[] =
 
 #define COLUMNS_COUNT  6
 
-static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME ft)
+static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
 {
     FILETIME lft;
     SYSTEMTIME time;
     int ret;
 
-    FileTimeToLocalFileTime(&ft, &lft);
+    FileTimeToLocalFileTime(ft, &lft);
     FileTimeToSystemTime(&lft, &time);
 
     ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, buffer, size);
@@ -105,8 +105,8 @@ typedef struct tagRecycleBin
 {
     const IShellFolder2Vtbl *lpVtbl;
     const IPersistFolder2Vtbl *lpPersistFolderVtbl;
-    const IContextMenuVtbl *lpCmt;
-	const IShellExtInitVtbl *lpSEI;
+    const IContextMenu2Vtbl *lpContextMenu2;
+    const IShellExtInitVtbl *lpSEI;
     LONG refCount;
 
     INT iIdOpen;
@@ -114,16 +114,18 @@ typedef struct tagRecycleBin
     INT iIdProperties;
 
     LPITEMIDLIST pidl;
+    LPCITEMIDLIST apidl;
 } RecycleBin;
 
-static const IContextMenuVtbl recycleBincmVtbl;
+static const IContextMenu2Vtbl recycleBincmVtblFolder;
+static const IContextMenu2Vtbl recycleBincmVtblBitbucketItem;
 static const IShellFolder2Vtbl recycleBinVtbl;
 static const IPersistFolder2Vtbl recycleBinPersistVtbl;
 static const IShellExtInitVtbl eivt;
 
-static RecycleBin *impl_from_IContextMenu(IContextMenu *iface)
+static RecycleBin *impl_from_IContextMenu2(IContextMenu2 *iface)
 {
-    return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpCmt));
+    return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpContextMenu2));
 }
 
 static RecycleBin *impl_from_IPersistFolder(IPersistFolder2 *iface)
@@ -150,9 +152,9 @@ HRESULT WINAPI RecycleBin_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *
         return E_OUTOFMEMORY;
     ZeroMemory(obj, sizeof(RecycleBin));
     obj->lpVtbl = &recycleBinVtbl;
-	obj->lpSEI = &eivt;
+    obj->lpSEI = &eivt;
     obj->lpPersistFolderVtbl = &recycleBinPersistVtbl;
-    obj->lpCmt = &recycleBincmVtbl;
+    obj->lpContextMenu2 = NULL;
     if (FAILED(ret = IUnknown_QueryInterface((IUnknown *)obj, riid, ppOutput)))
     {
         RecycleBin_Destructor(obj);
@@ -183,9 +185,11 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
             || IsEqualGUID(riid, &IID_IPersistFolder2))
         *ppvObject = &This->lpPersistFolderVtbl;
 
-    if (IsEqualIID(riid, &IID_IContextMenu))
-        *ppvObject = &This->lpCmt;
-    
+    if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualGUID(riid, &IID_IContextMenu2))
+    {
+        This->lpContextMenu2 = &recycleBincmVtblFolder;
+        *ppvObject = &This->lpContextMenu2;
+    }
     if(IsEqualIID(riid, &IID_IShellExtInit))
     {
         *ppvObject = &(This->lpSEI);
@@ -237,12 +241,48 @@ UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
     return (PDELETED_FILE_DETAILS_W)&pidl->mkid.abID;
 }
 
+static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
+{
+    PIDLDATA tmp;
+    LPITEMIDLIST pidl;
+    PIDLRecycleStruct * p;
+    int size0 = (char*)&tmp.u.crecycle.szName-(char*)&tmp.u.crecycle;
+    int size = size0;
+
+    tmp.type = 0x00;
+    size += (wcslen(pFileDetails->FileName) + 1) * sizeof(WCHAR);
+
+    pidl = (LPITEMIDLIST)SHAlloc(size + 4);
+    if (!pidl)
+        return pidl;
+
+    pidl->mkid.cb = size+2;
+    memcpy(pidl->mkid.abID, &tmp, 2+size0);
+
+    p = &((PIDLDATA*)pidl->mkid.abID)->u.crecycle;
+    RtlCopyMemory(p, pFileDetails, sizeof(DELETED_FILE_DETAILS_W));
+    wcscpy(p->szName, pFileDetails->FileName);
+    *(WORD*)((char*)pidl+(size+2)) = 0;
+    return pidl;
+}
+
+static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl)
+{
+    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+
+    if (pdata && pdata->type==0x00)
+        return (PIDLRecycleStruct*)&(pdata->u.crecycle);
+
+    return NULL;
+}
+
+
 BOOL
 WINAPI
 CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
 {
     PDELETED_FILE_DETAILS_W pFileDetails;
-    DWORD dwSize, dwTotalSize;
+    DWORD dwSize;
     LPITEMIDLIST pidl = NULL;
     BOOL ret;
 
@@ -256,17 +296,13 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
         ERR("GetDeletedFileDetailsW failed\n");
         return FALSE;
     }
-    dwTotalSize = FIELD_OFFSET(ITEMIDLIST, mkid.abID) + dwSize;
 
-    pidl = SHAlloc(dwTotalSize);
-    if (!pidl)
+    pFileDetails = SHAlloc(dwSize);
+    if (!pFileDetails)
     {
         ERR("No memory\n");
         return FALSE;
     }
-
-    pidl->mkid.cb = dwTotalSize;
-    pFileDetails = UnpackDetailsFromPidl(pidl);
 
     if (!GetDeletedFileDetailsW(hDeletedFile,
                                 dwSize,
@@ -274,11 +310,22 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
                                 NULL))
     {
         ERR("GetDeletedFileDetailsW failed\n");
-        SHFree(pidl);
+        SHFree(pFileDetails);
+        return FALSE;
+    }
+
+    pidl = _ILCreateRecycleItem(pFileDetails);
+    if (!pidl)
+    {
+        SHFree(pFileDetails);
         return FALSE;
     }
 
     ret = AddToEnumList((IEnumIDList*)Context, pidl);
+
+    if (!ret)
+        SHFree(pidl);
+    SHFree(pFileDetails);
     TRACE("Returning %d\n", ret);
     CloseRecycleBinHandle(hDeletedFile);
     return ret;
@@ -345,27 +392,42 @@ static HRESULT WINAPI RecycleBin_CompareIDs(IShellFolder2 *iface, LPARAM lParam,
 static HRESULT WINAPI RecycleBin_CreateViewObject(IShellFolder2 *iface, HWND hwndOwner, REFIID riid, void **ppv)
 {
     RecycleBin *This = (RecycleBin *)iface;
-    HRESULT ret;
+    LPSHELLVIEW pShellView;
+    HRESULT hr = E_NOINTERFACE;
+
     TRACE("(%p, %p, %s, %p)\n", This, hwndOwner, debugstr_guid(riid), ppv);
 
+    if (!ppv)
+        return hr;
+
     *ppv = NULL;
-    if (IsEqualGUID(riid, &IID_IShellView))
+
+    if (IsEqualIID (riid, &IID_IDropTarget))
     {
-        IShellView *tmp;
-        CSFV sfv;
-
-        ZeroMemory(&sfv, sizeof(sfv));
-        sfv.cbSize = sizeof(sfv);
-        sfv.pshf = (IShellFolder *)This;
-
-        TRACE("Calling SHCreateShellFolderViewEx\n");
-        ret = SHCreateShellFolderViewEx(&sfv, &tmp);
-        TRACE("Result: %08x, output: %p\n", (unsigned int)ret, tmp);
-        *ppv = tmp;
-        return ret;
+        WARN ("IDropTarget not implemented\n");
+        hr = E_NOTIMPL;
     }
+    else if (IsEqualIID (riid, &IID_IContextMenu) || IsEqualIID (riid, &IID_IContextMenu2))
+    {
+        This->lpContextMenu2 = &recycleBincmVtblFolder;
+        *ppv = &This->lpContextMenu2;
+        This->refCount++;
+        hr = S_OK;
+    }
+    else if (IsEqualIID (riid, &IID_IShellView))
+    {
+        pShellView = IShellView_Constructor ((IShellFolder *) iface);
+        if (pShellView)
+        {
+            hr = IShellView_QueryInterface (pShellView, riid, ppv);
+            IShellView_Release (pShellView);
+        }
+    }
+    else
+        return hr;
+    TRACE ("-- (%p)->(interface=%p)\n", This, ppv);
+    return hr;
 
-    return E_NOINTERFACE;
 }
 
 static HRESULT WINAPI RecycleBin_GetAttributesOf(IShellFolder2 *This, UINT cidl, LPCITEMIDLIST *apidl,
@@ -376,17 +438,49 @@ static HRESULT WINAPI RecycleBin_GetAttributesOf(IShellFolder2 *This, UINT cidl,
     return S_OK;
 }
 
-static HRESULT WINAPI RecycleBin_GetUIObjectOf(IShellFolder2 *This, HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
-                      REFIID riid, UINT *rgfReserved, void **ppv)
+static HRESULT WINAPI RecycleBin_GetUIObjectOf(IShellFolder2 *iface, HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl,
+                      REFIID riid, UINT *prgfInOut, void **ppv)
 {
-    FIXME("(%p, %p, %d, {%p, ...}, %s, %p, %p): stub!\n", This, hwndOwner, cidl, apidl[0], debugstr_guid(riid), rgfReserved, ppv);
+    IUnknown *pObj = NULL;
+    HRESULT hr = E_INVALIDARG;
+    RecycleBin * This = (RecycleBin*)iface;
+
+    TRACE ("(%p)->(%p,%u,apidl=%p, %p %p)\n", This,
+            hwndOwner, cidl, apidl, prgfInOut, ppv);
+
+    if (!ppv)
+        return hr;
+
     *ppv = NULL;
-    return E_NOTIMPL;
+
+    if ((IsEqualIID (riid, &IID_IContextMenu) || IsEqualIID(riid, &IID_IContextMenu2)) && (cidl >= 1))
+    {
+        This->lpContextMenu2 = &recycleBincmVtblBitbucketItem;
+        pObj = (IUnknown*)(&This->lpContextMenu2);
+        This->apidl = apidl[0];
+        IUnknown_AddRef(pObj);
+        hr = S_OK;
+    }
+    else if (IsEqualIID (riid, &IID_IDropTarget) && (cidl >= 1))
+    {
+        hr = IShellFolder_QueryInterface (iface, &IID_IDropTarget, (LPVOID *) & pObj);
+    }
+    else
+        hr = E_NOINTERFACE;
+
+    if (SUCCEEDED(hr) && !pObj)
+        hr = E_OUTOFMEMORY;
+
+    *ppv = pObj;
+    TRACE ("(%p)->hr=0x%08x\n", This, hr);
+    return hr;
 }
 
 static HRESULT WINAPI RecycleBin_GetDisplayNameOf(IShellFolder2 *This, LPCITEMIDLIST pidl, SHGDNF uFlags, STRRET *pName)
 {
-    PDELETED_FILE_DETAILS_W pFileDetails;
+    PIDLRecycleStruct *pFileDetails;
+    LPWSTR pFileName;
+
     TRACE("(%p, %p, %x, %p)\n", This, pidl, (unsigned int)uFlags, pName);
 
 
@@ -400,12 +494,27 @@ static HRESULT WINAPI RecycleBin_GetDisplayNameOf(IShellFolder2 *This, LPCITEMID
        return S_OK;
     }
 
-    pFileDetails = UnpackDetailsFromPidl(pidl);
-    pName->uType = STRRET_WSTR;
-    pName->u.pOleStr = StrDupW(&pFileDetails->FileName[0]);
+    pFileDetails = _ILGetRecycleStruct(pidl);
+    if (!pFileDetails)
+    {
+        pName->u.cStr[0] = 0;
+        pName->uType = STRRET_CSTR;
+        return E_INVALIDARG;
+    }
+
+    pFileName = wcsrchr(pFileDetails->szName, L'\\');
+    if (!pFileName)
+    {
+        pName->u.cStr[0] = 0;
+        pName->uType = STRRET_CSTR;
+        return E_UNEXPECTED;
+    }
+
+    pName->u.pOleStr = StrDupW(pFileName + 1);
     if (pName->u.pOleStr == NULL)
         return E_OUTOFMEMORY;
 
+    pName->uType = STRRET_WSTR;
     return S_OK;
 }
 
@@ -414,34 +523,6 @@ static HRESULT WINAPI RecycleBin_SetNameOf(IShellFolder2 *This, HWND hwnd, LPCIT
 {
     TRACE("\n");
     return E_FAIL; /* not supported */
-}
-
-static HRESULT WINAPI RecycleBin_GetClassID(IPersistFolder2 *This, CLSID *pClassID)
-{
-    TRACE("(%p, %p)\n", This, pClassID);
-    if (This == NULL || pClassID == NULL)
-        return E_INVALIDARG;
-    memcpy(pClassID, &CLSID_RecycleBin, sizeof(CLSID));
-    return S_OK;
-}
-
-static HRESULT WINAPI RecycleBin_Initialize(IPersistFolder2 *iface, LPCITEMIDLIST pidl)
-{
-    RecycleBin *This = impl_from_IPersistFolder(iface);
-    TRACE("(%p, %p)\n", This, pidl);
-
-    This->pidl = ILClone(pidl);
-    if (This->pidl == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
-}
-
-static HRESULT WINAPI RecycleBin_GetCurFolder(IPersistFolder2 *iface, LPITEMIDLIST *ppidl)
-{
-    RecycleBin *This = impl_from_IPersistFolder(iface);
-    TRACE("\n");
-    *ppidl = ILClone(This->pidl);
-    return S_OK;
 }
 
 static HRESULT WINAPI RecycleBin_GetDefaultSearchGUID(IShellFolder2 *iface, GUID *pguid)
@@ -485,8 +566,11 @@ static HRESULT WINAPI RecycleBin_GetDetailsEx(IShellFolder2 *iface, LPCITEMIDLIS
 static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
 {
     RecycleBin *This = (RecycleBin *)iface;
-    PDELETED_FILE_DETAILS_W pFileDetails;
+    PIDLRecycleStruct * pFileDetails;
     WCHAR buffer[MAX_PATH];
+    WCHAR szTypeName[100];
+    LPWSTR pszBackslash;
+    UINT Length;
 
     TRACE("(%p, %p, %d, %p)\n", This, pidl, iColumn, pDetails);
     if (iColumn >= COLUMNS_COUNT)
@@ -503,25 +587,38 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
     if (iColumn == COLUMN_NAME)
         return RecycleBin_GetDisplayNameOf(iface, pidl, SHGDN_NORMAL, &pDetails->str);
 
-    pFileDetails = UnpackDetailsFromPidl(pidl);
+    pFileDetails = _ILGetRecycleStruct(pidl);
     switch (iColumn)
     {
         case COLUMN_DATEDEL:
-            FormatDateTime(buffer, MAX_PATH, pFileDetails->DeletionTime);
+            FormatDateTime(buffer, MAX_PATH, &pFileDetails->DeletionTime);
             break;
         case COLUMN_DELFROM:
-            lstrcpyW(buffer, &pFileDetails->FileName[0]);
-            PathRemoveFileSpecW(buffer);
+            pszBackslash = wcsrchr(pFileDetails->szName, L'\\');
+            Length = (pszBackslash - pFileDetails->szName);
+            memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
+            buffer[Length] = L'\0';
             break;
         case COLUMN_SIZE:
             StrFormatKBSizeW(pFileDetails->FileSize.QuadPart, buffer, MAX_PATH);
             break;
         case COLUMN_MTIME:
-            FormatDateTime(buffer, MAX_PATH, pFileDetails->LastModification);
+            FormatDateTime(buffer, MAX_PATH, &pFileDetails->LastModification);
             break;
         case COLUMN_TYPE:
-            /* TODO */
-            buffer[0] = 0;
+            szTypeName[0] = L'\0';
+            lstrcpyW(buffer,PathFindExtensionW(pFileDetails->szName));
+            if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer)/sizeof(WCHAR), TRUE) &&
+                   HCR_MapTypeToValueW(buffer, szTypeName, sizeof(szTypeName)/sizeof(WCHAR), FALSE )))
+            {
+                lstrcpyW (szTypeName, PathFindExtensionW(pFileDetails->szName));
+                strcatW(szTypeName, L"-");
+                Length = wcslen(szTypeName);
+                if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName)/sizeof(WCHAR))- Length))
+                    szTypeName[(sizeof(szTypeName)/sizeof(WCHAR))-1] = L'\0';
+            }
+            pDetails->str.uType = STRRET_WSTR;
+            return SHStrDupW(szTypeName, &pDetails->str.u.pOleStr);
             break;
         default:
             return E_FAIL;
@@ -571,6 +668,34 @@ static const IShellFolder2Vtbl recycleBinVtbl =
     RecycleBin_MapColumnToSCID
 };
 
+static HRESULT WINAPI RecycleBin_IPersistFolder2_GetClassID(IPersistFolder2 *This, CLSID *pClassID)
+{
+    TRACE("(%p, %p)\n", This, pClassID);
+    if (This == NULL || pClassID == NULL)
+        return E_INVALIDARG;
+    memcpy(pClassID, &CLSID_RecycleBin, sizeof(CLSID));
+    return S_OK;
+}
+
+static HRESULT WINAPI RecycleBin_IPersistFolder2_Initialize(IPersistFolder2 *iface, LPCITEMIDLIST pidl)
+{
+    RecycleBin *This = impl_from_IPersistFolder(iface);
+    TRACE("(%p, %p)\n", This, pidl);
+
+    This->pidl = ILClone(pidl);
+    if (This->pidl == NULL)
+        return E_OUTOFMEMORY;
+    return S_OK;
+}
+
+static HRESULT WINAPI RecycleBin_IPersistFolder2_GetCurFolder(IPersistFolder2 *iface, LPITEMIDLIST *ppidl)
+{
+    RecycleBin *This = impl_from_IPersistFolder(iface);
+    TRACE("\n");
+    *ppidl = ILClone(This->pidl);
+    return S_OK;
+}
+
 static HRESULT WINAPI RecycleBin_IPersistFolder2_QueryInterface(IPersistFolder2 *This, REFIID riid, void **ppvObject)
 {
     return RecycleBin_QueryInterface((IShellFolder2 *)impl_from_IPersistFolder(This), riid, ppvObject);
@@ -594,23 +719,13 @@ static const IPersistFolder2Vtbl recycleBinPersistVtbl =
     RecycleBin_IPersistFolder2_Release,
 
     /* IPersist */
-    RecycleBin_GetClassID,
+    RecycleBin_IPersistFolder2_GetClassID,
     /* IPersistFolder */
-    RecycleBin_Initialize,
+    RecycleBin_IPersistFolder2_Initialize,
     /* IPersistFolder2 */
-    RecycleBin_GetCurFolder
+    RecycleBin_IPersistFolder2_GetCurFolder
 };
 
-/*************************************************************************
- * SHUpdateRecycleBinIcon                                [SHELL32.@]
- *
- * Undocumented
- */
-HRESULT WINAPI SHUpdateRecycleBinIcon(void)
-{
-    FIXME("stub\n");
-    return S_OK;
-}
 /*************************************************************************
  * BitBucket IShellExtInit interface
  */
@@ -659,31 +774,31 @@ static const IShellExtInitVtbl eivt =
  */
 
 static HRESULT WINAPI
-RecycleBin_IContextMenu_QueryInterface( IContextMenu* iface, REFIID riid, void** ppvObject )
+RecycleBin_IContextMenu2Folder_QueryInterface( IContextMenu2* iface, REFIID riid, void** ppvObject )
 {
-    return RecycleBin_QueryInterface((IShellFolder2 *)impl_from_IContextMenu(iface), riid, ppvObject);
+    return RecycleBin_QueryInterface((IShellFolder2 *)impl_from_IContextMenu2(iface), riid, ppvObject);
 }
 
 static ULONG WINAPI
-RecycleBin_IContextMenu_AddRef( IContextMenu* iface )
+RecycleBin_IContextMenu2Folder_AddRef( IContextMenu2* iface )
 {
-    return RecycleBin_AddRef((IShellFolder2 *)impl_from_IContextMenu(iface));
+    return RecycleBin_AddRef((IShellFolder2 *)impl_from_IContextMenu2(iface));
 }
 
 static ULONG WINAPI
-RecycleBin_IContextMenu_Release( IContextMenu* iface )
+RecycleBin_IContextMenu2Folder_Release( IContextMenu2* iface )
 {
-    return RecycleBin_Release((IShellFolder2 *)impl_from_IContextMenu(iface));
+    return RecycleBin_Release((IShellFolder2 *)impl_from_IContextMenu2(iface));
 }
 
 static HRESULT WINAPI
-RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
+RecycleBin_IContextMenu2Folder_QueryContextMenu( IContextMenu2* iface, HMENU hmenu, UINT indexMenu,
                             UINT idCmdFirst, UINT idCmdLast, UINT uFlags )
 {
     WCHAR szBuffer[100];
     MENUITEMINFOW mii;
     int id = 1;
-    RecycleBin * This = impl_from_IContextMenu(iface);
+    RecycleBin * This = impl_from_IContextMenu2(iface);
 
     TRACE("%p %p %u %u %u %u\n", This,
           hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
@@ -715,7 +830,7 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
     mii.wID = idCmdFirst + id++;
     if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
     {
-        TRACE("RecycleBin_IContextMenu_QueryContextMenu failed to insert item properties");
+        TRACE("RecycleBin_IContextMenu2Folder_QueryContextMenu failed to insert item properties");
         return E_FAIL;
     }
     This->iIdEmpty = 2;
@@ -723,13 +838,13 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
 }
 
 static HRESULT WINAPI
-RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
+RecycleBin_IContextMenu2Folder_InvokeCommand( IContextMenu2* iface, LPCMINVOKECOMMANDINFO lpici )
 {
     HRESULT hr;
     LPSHELLBROWSER	lpSB;
     LPSHELLVIEW lpSV = NULL;
 
-    RecycleBin * This = impl_from_IContextMenu(iface);
+    RecycleBin * This = impl_from_IContextMenu2(iface);
 
     TRACE("%p %p verb %p\n", This, lpici, lpici->lpVerb);
 
@@ -765,10 +880,10 @@ RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINF
 }
 
 static HRESULT WINAPI
-RecycleBin_IContextMenu_GetCommandString( IContextMenu* iface, UINT_PTR idCmd, UINT uType,
+RecycleBin_IContextMenu2Folder_GetCommandString( IContextMenu2* iface, UINT_PTR idCmd, UINT uType,
                             UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
-    RecycleBin * This = impl_from_IContextMenu(iface);
+    RecycleBin * This = impl_from_IContextMenu2(iface);
 
     FIXME("%p %lu %u %p %p %u\n", This,
           idCmd, uType, pwReserved, pszName, cchMax );
@@ -776,15 +891,189 @@ RecycleBin_IContextMenu_GetCommandString( IContextMenu* iface, UINT_PTR idCmd, U
     return E_NOTIMPL;
 }
 
-static const IContextMenuVtbl recycleBincmVtbl =
+/**************************************************************************
+* RecycleBin_IContextMenu2Item_HandleMenuMsg()
+*/
+static HRESULT WINAPI RecycleBin_IContextMenu2Folder_HandleMenuMsg(
+	IContextMenu2 *iface,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
 {
-    RecycleBin_IContextMenu_QueryInterface,
-    RecycleBin_IContextMenu_AddRef,
-    RecycleBin_IContextMenu_Release,
-    RecycleBin_IContextMenu_QueryContextMenu,
-    RecycleBin_IContextMenu_InvokeCommand,
-    RecycleBin_IContextMenu_GetCommandString
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("RecycleBin_IContextMenu2Item_IContextMenu2Folder_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    return E_NOTIMPL;
+}
+
+
+static const IContextMenu2Vtbl recycleBincmVtblFolder =
+{
+    RecycleBin_IContextMenu2Folder_QueryInterface,
+    RecycleBin_IContextMenu2Folder_AddRef,
+    RecycleBin_IContextMenu2Folder_Release,
+    RecycleBin_IContextMenu2Folder_QueryContextMenu,
+    RecycleBin_IContextMenu2Folder_InvokeCommand,
+    RecycleBin_IContextMenu2Folder_GetCommandString,
+    RecycleBin_IContextMenu2Folder_HandleMenuMsg
 };
+
+
+/**************************************************************************
+* IContextMenu2 Bitbucket Item Implementation
+*/
+
+/************************************************************************
+ * RecycleBin_IContextMenu2Item_QueryInterface
+ */
+static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryInterface(IContextMenu2 * iface, REFIID iid, LPVOID * ppvObject)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("(%p)\n", This);
+
+    return RecycleBin_QueryInterface((IShellFolder2*)This, iid, ppvObject);
+}
+
+/************************************************************************
+ * RecycleBin_IContextMenu2Item_AddRef
+ */
+static ULONG WINAPI RecycleBin_IContextMenu2Item_AddRef(IContextMenu2 * iface)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->refCount);
+
+    return RecycleBin_AddRef((IShellFolder2*)This);
+}
+
+/************************************************************************
+ * RecycleBin_IContextMenu2Item_Release
+ */
+static ULONG WINAPI RecycleBin_IContextMenu2Item_Release(IContextMenu2  * iface)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("(%p)->(count=%u)\n", This, This->refCount);
+
+    return RecycleBin_Release((IShellFolder2*)This);
+}
+
+/**************************************************************************
+* RecycleBin_IContextMenu2Item_QueryContextMenu()
+*/
+static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryContextMenu(
+	IContextMenu2 *iface,
+	HMENU hMenu,
+	UINT indexMenu,
+	UINT idCmdFirst,
+	UINT idCmdLast,
+	UINT uFlags)
+{
+    char szBuffer[30] = {0};
+    ULONG Count = 1;
+
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
+          This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    if (LoadStringA(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        Count++;
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+    }
+
+    if (LoadStringA(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    {
+        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+    }
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+}
+
+
+/**************************************************************************
+* RecycleBin_IContextMenu2Item_InvokeCommand()
+*/
+static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
+	IContextMenu2 *iface,
+	LPCMINVOKECOMMANDINFO lpcmi)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+
+    return S_OK;
+}
+
+/**************************************************************************
+ *  RecycleBin_IContextMenu2Item_GetCommandString()
+ *
+ */
+static HRESULT WINAPI RecycleBin_IContextMenu2Item_GetCommandString(
+	IContextMenu2 *iface,
+	UINT_PTR idCommand,
+	UINT uFlags,
+	UINT* lpReserved,
+	LPSTR lpszName,
+	UINT uMaxNameLen)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+	TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+
+
+	return E_FAIL;
+}
+
+
+
+/**************************************************************************
+* RecycleBin_IContextMenu2Item_HandleMenuMsg()
+*/
+static HRESULT WINAPI RecycleBin_IContextMenu2Item_HandleMenuMsg(
+	IContextMenu2 *iface,
+	UINT uMsg,
+	WPARAM wParam,
+	LPARAM lParam)
+{
+    RecycleBin * This = impl_from_IContextMenu2(iface);
+
+    TRACE("RecycleBin_IContextMenu2Item_HandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    return E_NOTIMPL;
+}
+
+static const IContextMenu2Vtbl recycleBincmVtblBitbucketItem =
+{
+	RecycleBin_IContextMenu2Item_QueryInterface,
+	RecycleBin_IContextMenu2Item_AddRef,
+	RecycleBin_IContextMenu2Item_Release,
+	RecycleBin_IContextMenu2Item_QueryContextMenu,
+	RecycleBin_IContextMenu2Item_InvokeCommand,
+	RecycleBin_IContextMenu2Item_GetCommandString,
+	RecycleBin_IContextMenu2Item_HandleMenuMsg
+};
+
 
 void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
 {
@@ -989,58 +1278,78 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
 BOOL
 TRASH_CanTrashFile(LPCWSTR wszPath)
 {
-   LONG res;
+   LONG ret;
+   DWORD dwNukeOnDelete, dwType, VolSerialNumber, MaxComponentLength;
+   DWORD FileSystemFlags, dwSize, dwDisposition;
    HKEY hKey;
-   DWORD RegSerial, dwNukeOnDelete, dwType;
-   DWORD dwLength;
+   WCHAR szBuffer[10];
+   WCHAR szKey[150] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\";
 
-
-   static WCHAR szKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\c";
    if (wszPath[1] != L':')
    {
-     /* path is UNC */
-     return FALSE;
-   }
-
-   szKey[62] = wszPath[0];
-   res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hKey);
-   if (res != ERROR_SUCCESS)
-   {
-      FIXME("Failed to open registry path\n");
-      return FALSE;
-   }
-   dwLength = sizeof(RegSerial);
-   res = RegQueryValueExW(hKey, L"VolumeSerialNumber", NULL, &dwType, (LPBYTE)&RegSerial, &dwLength);
-   if (res == ERROR_SUCCESS)
-   {
-       DWORD FileSystemFlags, MaxComponentLength, VolSerialNumber;
-       
-       GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0);
-       if (VolSerialNumber != RegSerial)
-       {
-           /* FIXME
-            * the current volume was mounted on a different path
-            */
-           FIXME("mismatched serial volume number\n");
-           RegCloseKey(hKey);
-           return FALSE;
-       }
-   }
-   
-   dwLength = sizeof(dwNukeOnDelete);
-   res = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwLength);
-   if (res == ERROR_SUCCESS && dwNukeOnDelete == 0x0)
-   {
-       RegCloseKey(hKey);
+       /* path is UNC */
        return FALSE;
    }
 
-   /* FIXME
-    * check if trash is already full 
-    */
+   if (GetDriveTypeW(wszPath) != DRIVE_FIXED)
+   {
+       /* no bitbucket on removable media */
+       return FALSE;
+   }
 
-   RegCloseKey(hKey);
-   return TRUE;
+   if (!GetVolumeInformationW(wszPath, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
+   {
+       ERR("GetVolumeInformationW failed with %u\n", GetLastError());
+       return FALSE;
+   }
+
+   sprintfW(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
+   wcscat(szKey, szBuffer);
+
+   if (RegCreateKeyExW(HKEY_CURRENT_USER, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+   {
+       ERR("RegCreateKeyExW failed\n");
+       return FALSE;
+   }
+
+   if (dwDisposition  & REG_CREATED_NEW_KEY)
+   {
+       /* per default move to bitbucket */
+       dwNukeOnDelete = 0;
+       RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
+       /* per default unlimited size */
+       dwSize = -1;
+       RegSetValueExW(hKey, L"MaxSize", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
+       RegCloseKey(hKey);
+       return TRUE;
+   }
+   else 
+   {
+       dwSize = sizeof(dwNukeOnDelete);
+       ret = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwSize);
+       if (ret != ERROR_SUCCESS)
+       {
+           sprintfW(szBuffer, L"ret %u\n", ret);
+           MessageBoxW(NULL, szBuffer, NULL, MB_OK);
+           RegCloseKey(hKey);
+           if (ret ==  ERROR_FILE_NOT_FOUND)
+           {
+               /* restore key and enable bitbucket */
+               dwNukeOnDelete = 0;
+               RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
+           }
+           return TRUE;
+       }
+       else if (dwNukeOnDelete)
+       {
+           /* do not delete to bitbucket */
+           return FALSE;
+       }
+       /* FIXME 
+        * check if bitbucket is full
+        */
+       return TRUE;
+   }
 }
 
 BOOL
@@ -1048,4 +1357,15 @@ TRASH_TrashFile(LPCWSTR wszPath)
 {
    TRACE("(%s)\n", debugstr_w(wszPath));
    return DeleteFileToRecycleBinW(wszPath);
+}
+
+/*************************************************************************
+ * SHUpdateRecycleBinIcon                                [SHELL32.@]
+ *
+ * Undocumented
+ */
+HRESULT WINAPI SHUpdateRecycleBinIcon(void)
+{
+    FIXME("stub\n");
+    return S_OK;
 }

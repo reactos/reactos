@@ -601,6 +601,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Kunne ikke opprette ny mappe: tilgang nektet."
 	IDS_CREATEFOLDER_CAPTION    "Klarte ikke opprette ny mappe"

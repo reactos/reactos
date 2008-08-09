@@ -626,6 +626,8 @@ BEGIN
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
+	IDS_CUT                     "Cut"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"
