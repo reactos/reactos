@@ -1,16 +1,13 @@
-LIBRARY ntmarta.dll
-
-EXPORTS
-AccFreeIndexArray
-AccGetInheritanceSource
+@ stdcall AccFreeIndexArray(ptr long ptr)
+@ stdcall AccGetInheritanceSource(wstr long long long ptr long ptr ptr ptr ptr)
 ;AccProvHandleGrantAccessRights
-AccRewriteGetExplicitEntriesFromAcl
-AccRewriteGetHandleRights
-AccRewriteGetNamedRights
-AccRewriteSetEntriesInAcl
-AccRewriteSetHandleRights
-AccRewriteSetNamedRights
-AccTreeResetNamedSecurityInfo
+@ stdcall AccRewriteGetExplicitEntriesFromAcl(ptr ptr ptr)
+@ stdcall AccRewriteGetHandleRights(ptr long long ptr ptr ptr ptr ptr)
+@ stdcall AccRewriteGetNamedRights(wstr long long ptr ptr ptr ptr ptr)
+@ stdcall AccRewriteSetEntriesInAcl(long ptr ptr ptr)
+@ stdcall AccRewriteSetHandleRights(ptr long long ptr)
+@ stdcall AccRewriteSetNamedRights(wstr long long ptr)
+@ stdcall AccTreeResetNamedSecurityInfo(wstr long long ptr ptr ptr ptr long ptr ptr ptr)
 ;AccConvertAccessMaskToActrlAccess
 ;AccConvertAccessToSD
 ;AccConvertAccessToSecurityDescriptor
@@ -43,5 +40,3 @@ AccTreeResetNamedSecurityInfo
 ;AccSetEntriesInAList
 ;EventGuidToName
 ;EventNameFree
-
-; EOF

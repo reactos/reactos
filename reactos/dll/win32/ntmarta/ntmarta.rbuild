@@ -1,5 +1,5 @@
 <module name="ntmarta" type="win32dll" baseaddress="${BASEADDRESS_NTMARTA}" installbase="system32" installname="ntmarta.dll" unicode="yes">
-	<importlibrary definition="ntmarta.def" />
+	<importlibrary definition="ntmarta.spec.def" />
 	<include base="ntmarta">.</include>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x600</define>
@@ -10,5 +10,6 @@
 	<library>user32</library>
 	<file>ntmarta.c</file>
 	<file>ntmarta.rc</file>
+	<file>ntmarta.spec</file>
 	<pch>ntmarta.h</pch>
 </module>
