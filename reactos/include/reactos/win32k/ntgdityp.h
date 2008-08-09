@@ -101,6 +101,9 @@ typedef enum _TRANSFORMTYPE
 enum
 {
     MX_SCALE = 1,
+    MX_IDENTITYSCALE = 2,
+    MX_INTEGER = 4,
+    MX_NOTRANSLATE = 8,
 };
 
 typedef enum GDIObjType
@@ -355,6 +358,19 @@ typedef struct _MATRIX_S
     FIX fxDy;
     FLONG flAccel;
 } MATRIX_S;
+
+typedef struct _MATRIX
+{
+    FLOATOBJ efM11;
+    FLOATOBJ efM12;
+    FLOATOBJ efM21;
+    FLOATOBJ efM22;
+    FLOATOBJ efDx;
+    FLOATOBJ efDy;
+    FIX fxDx;
+    FIX fxDy;
+    FLONG flAccel;
+} MATRIX, *PMATRIX;
 
 /* Gdi XForm storage union */
 typedef union
