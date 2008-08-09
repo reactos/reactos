@@ -75,6 +75,7 @@ PSLIST_ENTRY
 FASTCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
                             IN PSLIST_ENTRY ListEntry)
+                            IN PKSPIN_LOCK Lock)
 {
     return InterlockedPushEntrySList(ListHead, ListEntry);
 }
