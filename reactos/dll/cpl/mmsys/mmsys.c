@@ -76,7 +76,7 @@ ShowDriverSettingsAfterForkW(HWND hwnd,
 VOID WINAPI
 ShowDriverSettingsAfterForkA(HWND hwnd,
                              HINSTANCE hInstance,
-                             LPTSTR lpszCmd,
+                             LPSTR lpszCmd,
                              int nCmdShow)
 {
     DPRINT1("ShowDriverSettingsAfterForkA() stubs\n");
@@ -85,7 +85,7 @@ ShowDriverSettingsAfterForkA(HWND hwnd,
 VOID WINAPI
 ShowDriverSettingsAfterFork(HWND hwnd,
                             HINSTANCE hInstance,
-                            LPTSTR lpszCmd,
+                            LPSTR lpszCmd,
                             int nCmdShow)
 {
     DPRINT1("ShowDriverSettingsAfterFork() stubs\n");
@@ -93,9 +93,9 @@ ShowDriverSettingsAfterFork(HWND hwnd,
 
 BOOL WINAPI
 ShowMMCPLPropertySheet(HWND hwnd,
-                       LPCTSTR pszPropSheet,
-                       LPTSTR pszName,
-                       LPTSTR pszCaption)
+                       LPCSTR pszPropSheet,
+                       LPSTR pszName,
+                       LPSTR pszCaption)
 {
     DPRINT1("ShowMMCPLPropertySheet() stubs\n");
     return TRUE;
@@ -122,7 +122,7 @@ mmseRunOnceW(HWND hwnd,
 VOID WINAPI
 mmseRunOnceA(HWND hwnd,
              HINSTANCE hInstance,
-             LPTSTR lpszCmd,
+             LPSTR lpszCmd,
              int nCmdShow)
 {
     DPRINT1("mmseRunOnceA() stubs\n");
@@ -149,7 +149,7 @@ MediaPropPageProvider(LPVOID Info,
 VOID WINAPI
 ShowFullControlPanel(HWND hwnd,
                      HINSTANCE hInstance,
-                     LPTSTR lpszCmd,
+                     LPSTR lpszCmd,
                      int nCmdShow)
 {
     DPRINT1("ShowFullControlPanel() stubs\n");
