@@ -1,5 +1,3 @@
-LIBRARY samsrv
-EXPORTS
 ;SamIAccountRestrictions
 ;SamIConnect
 ;SamICreateAccountByRid
@@ -18,12 +16,12 @@ EXPORTS
 ;SamIFree_SAMPR_USER_INFO_BUFFER
 ;SamIGetPrivateData
 ;SamIGetSerialNumberDomain
-SamIInitialize
+@ stdcall SamIInitialize()
 ;SamINotifyDelta
 ;SamISetAuditingInformation
 ;SamISetPrivateData
 ;SamISetSerialNumberDomain
-SampInitializeRegistry
+@ stdcall SampInitializeRegistry()
 ;SampRtlConvertUlongToUnicodeString
 ;SamrAddMemberToAlias
 ;SamrAddMemberToGroup
