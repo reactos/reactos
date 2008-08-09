@@ -3346,6 +3346,7 @@ IntGdiGetCharSet(HDC  hDC)
 
 
 DWORD
+APIENTRY
 NtGdiGetCharSet(HDC hDC)
 {
   PDC Dc;
