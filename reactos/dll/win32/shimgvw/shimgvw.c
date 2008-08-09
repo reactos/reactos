@@ -403,7 +403,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, Message, wParam, lParam);
 }
 
-LONG
+LONG WINAPI
 ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -464,19 +464,19 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     return -1;
 }
 
-VOID
+VOID WINAPI
 ImageView_FullscreenW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
     ImageView_CreateWindow(hwnd, (LPWSTR)path);
 }
 
-VOID
+VOID WINAPI
 ImageView_Fullscreen(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
     ImageView_CreateWindow(hwnd, (LPWSTR)path);
 }
 
-VOID
+VOID WINAPI
 ImageView_FullscreenA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
 {
     WCHAR szFile[MAX_PATH];
@@ -487,25 +487,25 @@ ImageView_FullscreenA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
     }
 }
 
-VOID
+VOID WINAPI
 ImageView_PrintTo(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
     DPRINT("ImageView_PrintTo() not implemented\n");
 }
 
-VOID
+VOID WINAPI
 ImageView_PrintToA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
 {
     DPRINT("ImageView_PrintToA() not implemented\n");
 }
 
-VOID
+VOID WINAPI
 ImageView_PrintToW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
     DPRINT("ImageView_PrintToW() not implemented\n");
 }
 
-VOID
+VOID WINAPI
 imageview_fullscreenW(HWND hwnd, HINSTANCE hInst, LPCWSTR path, int nShow)
 {
     DPRINT("ImageView_fullscreenW() not implemented\n");
