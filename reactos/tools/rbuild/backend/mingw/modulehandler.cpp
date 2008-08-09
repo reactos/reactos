@@ -1937,7 +1937,8 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 		fprintf (
 			fMakefile,
-			"%s_LFLAGS += $(PROJECT_LFLAGS) -g\n",
+			"%s_LFLAGS := $(PROJECT_LFLAGS) -g $(%s_LFLAGS)\n",
+			module.name.c_str (),
 			module.name.c_str () );
 	}
 	else
