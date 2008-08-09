@@ -28,6 +28,9 @@
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #endif
 
+#define IOCTL_TCP_QUERY_INFORMATION_EX \
+	CTL_CODE(FILE_DEVICE_NETWORK, 0, METHOD_NEITHER, FILE_ANY_ACCESS)
+
 #define SOCKET_STATE_INVALID_TRANSITION ((DWORD)-1)
 #define SOCKET_STATE_CREATED            0
 #define SOCKET_STATE_BOUND              1

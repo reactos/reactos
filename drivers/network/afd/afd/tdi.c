@@ -631,7 +631,6 @@ NTSTATUS TdiQueryInformation(
     return Status;
 }
 
-#if 0
 NTSTATUS TdiQueryInformationEx(
     PFILE_OBJECT FileObject,
     ULONG Entity,
@@ -674,6 +673,7 @@ NTSTATUS TdiQueryInformationEx(
                                  OutputLength);                             /* Return information */
 }
 
+#if 0
 NTSTATUS TdiQueryAddress(
     PFILE_OBJECT FileObject,
     PULONG Address)
