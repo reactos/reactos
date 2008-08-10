@@ -30,7 +30,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -39,8 +39,16 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
                       IN LONGLONG Lbn,
                       IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(Mcb->FastMutex);
+    Result = FsRtlAddBaseMcbEntry(&(Mcb->BaseMcb),
+                                  Vbn,
+                                  Lbn,
+                                  SectorCount);
+    ExReleaseFastMutex(Mcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -62,7 +70,7 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -72,11 +80,17 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
                           OUT PLONGLONG Lbn,
                           OUT PLONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
-    *Vbn = 0;
-    *Lbn = 0;
-    *SectorCount= 0;
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(Mcb->FastMutex);
+    Result = FsRtlGetNextBaseMcbEntry(&(Mcb->BaseMcb),
+                                      RunIndex,
+                                      Vbn,
+                                      Lbn,
+                                      SectorCount);
+    ExReleaseFastMutex(Mcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -121,7 +135,7 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -133,10 +147,19 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                          OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
                          OUT PULONG Index OPTIONAL)
 {
-    KEBUGCHECK(0);
-    *Lbn = 0;
-    *SectorCountFromLbn = 0;
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(Mcb->FastMutex);
+    Result = FsRtlLookupBaseMcbEntry(&(Mcb->BaseMcb),
+                                     Vbn,
+                                     Lbn,
+                                     SectorCountFromLbn,
+                                     StartingLbn,
+                                     SectorCountFromStartingLbn,
+                                     Index);
+    ExReleaseFastMutex(Mcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -157,7 +180,7 @@ FsRtlLookupLastBaseMcbEntryAndIndex(IN PBASE_MCB OpaqueMcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -166,11 +189,16 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
                                      OUT PLONGLONG LargeLbn,
                                      OUT PULONG Index)
 {
-    KEBUGCHECK(0);
-    *LargeVbn = 0;
-    *LargeLbn = 0;
-    *Index = 0;
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(OpaqueMcb->FastMutex);
+    Result = FsRtlLookupLastBaseMcbEntryAndIndex(&(OpaqueMcb->BaseMcb),
+                                                 LargeVbn,
+                                                 LargeLbn,
+                                                 Index);
+    ExReleaseFastMutex(OpaqueMcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -187,7 +215,7 @@ FsRtlLookupLastBaseMcbEntry(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -195,8 +223,15 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
                              OUT PLONGLONG Vbn,
                              OUT PLONGLONG Lbn)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(Mcb->FastMutex);
+    Result = FsRtlLookupLastBaseMcbEntry(&(Mcb->BaseMcb),
+                                         Vbn,
+                                         Lbn);
+    ExReleaseFastMutex(Mcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -242,7 +277,7 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -250,28 +285,41 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    ExAcquireFastMutex(Mcb->FastMutex);
+    FsRtlRemoveBaseMcbEntry(&(Mcb->BaseMcb),
+                            Vbn,
+                            SectorCount);
+    ExReleaseFastMutex(Mcb->FastMutex);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlResetBaseMcb(IN PBASE_MCB Mcb)
 {
-    KEBUGCHECK(0);
+    Mcb->PairCount = 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlResetLargeMcb(IN PLARGE_MCB Mcb,
                    IN BOOLEAN SelfSynchronized)
 {
-    KEBUGCHECK(0);
+    if (!SelfSynchronized)
+    {
+        ExAcquireFastMutex(Mcb->FastMutex);
+        Mcb->BaseMcb.PairCount = 0;
+        ExReleaseFastMutex(Mcb->FastMutex);
+    }
+    else
+    {
+        Mcb->BaseMcb.PairCount = 0;
+    }
 }
 
 /*
@@ -288,7 +336,7 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
@@ -296,8 +344,15 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
                    IN LONGLONG Vbn,
                    IN LONGLONG Amount)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    BOOLEAN Result;
+
+    ExAcquireFastMutex(Mcb->FastMutex);
+    Result = FsRtlSplitBaseMcb(&(Mcb->BaseMcb),
+                               Vbn,
+                               Amount);
+    ExReleaseFastMutex(Mcb->FastMutex);
+
+    return Result;
 }
 
 /*
@@ -312,14 +367,17 @@ FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
-    KEBUGCHECK(0);
+    ExAcquireFastMutex(Mcb->FastMutex);
+    FsRtlTruncateBaseMcb(&(Mcb->BaseMcb),
+                         Vbn);
+    ExReleaseFastMutex(Mcb->FastMutex);
 }
 
 /*
