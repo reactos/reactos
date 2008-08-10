@@ -88,7 +88,15 @@ namespace TechBot.Library
             m_IrcClient.Connect(hostname, port);
             
             m_IrcClient.Register(botname, password, null);
-            Console.WriteLine("Registered as {0}...", botname);
+            Console.WriteLine("Registered as {0}...", m_IrcClient.Nickname);
+
+            /* Did we get the nick we wanted? */
+            if (m_IrcClient.Nickname != botname)
+            {
+                /* there must have been an existing one, kill it */
+                m_IrcClient.GhostNick(botname, password);;
+            }
+
             JoinChannels();
 
             while (!isStopped)
@@ -279,7 +287,7 @@ namespace TechBot.Library
 						                                injectMessage,
 						                                GetMessageSource(context)));
 						InjectMessage(context,
-						                      injectMessage);
+						              injectMessage);
 					}
 					else
 					{

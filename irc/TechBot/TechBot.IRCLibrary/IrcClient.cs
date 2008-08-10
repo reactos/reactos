@@ -191,6 +191,7 @@ namespace TechBot.IRCLibrary
 
 		#region Private fields
 		private bool firstPingReceived = false;
+		private bool awaitingGhostDeath = false;
 		private System.Text.Encoding encoding = System.Text.Encoding.UTF8;
 		private TcpClient tcpClient;
 		private NetworkStream networkStream;
@@ -198,6 +199,9 @@ namespace TechBot.IRCLibrary
 		private LineBuffer messageStream;
 		private ArrayList ircCommandEventRegistrations = new ArrayList();
 		private ArrayList channels = new ArrayList();
+		private string reqNickname;
+		private string curNickname;
+		private string password;
 		#endregion
 
 		#region Public events
@@ -240,6 +244,16 @@ namespace TechBot.IRCLibrary
 			}
 		}
 
+		/// <summary>
+		/// Nickname for the bot.
+		/// </summary>
+		public string Nickname
+		{
+			get
+			{
+				return curNickname;
+			}
+		}
 		#endregion
 
 		#region Private methods
@@ -361,6 +375,24 @@ namespace TechBot.IRCLibrary
 			firstPingReceived = true;
 		}
 
+			/// <summary>
+		/// Send a PONG message when a PING message is received.
+		/// </summary>
+		/// <param name="message">Received IRC message.</param>
+		private void NoticeMessageReceived(IrcMessage message)
+		{
+			if (awaitingGhostDeath)
+			{
+				string str = string.Format("{0} has been ghosted", reqNickname);
+				if (message.Parameters.Contains(str))
+				{
+					ChangeNick(reqNickname);
+					SubmitPassword(password);
+					awaitingGhostDeath = false;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Process RPL_NAMREPLY message.
 		/// </summary>
@@ -472,6 +504,31 @@ namespace TechBot.IRCLibrary
 			}
 		}
 
+		/// <summary>
+		/// Process ERR_NICKNAMEINUSE message.
+		/// </summary>
+		/// <param name="message">Received IRC message.</param>
+		private void ERR_NICKNAMEINUSEMessageReceived(IrcMessage message)
+		{
+			try
+			{
+				if (message.Parameters == null)
+				{
+					System.Diagnostics.Debug.WriteLine(String.Format("Message has no parameters."));
+					return;
+				}
+				
+				/* Connect with a different name */
+				string[] parameters = message.Parameters.Split(new char[] { ' ' });
+				string nickname = parameters[1];
+				ChangeNick(nickname + "__");
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine(String.Format("Ex. {0}", ex));
+			}
+		}
+
 		#endregion
 
 		/// <summary>
@@ -500,10 +557,14 @@ namespace TechBot.IRCLibrary
 				}
 				/* Install PING message handler */
 				MonitorCommand(IRC.PING, new MessageReceivedHandler(PingMessageReceived));
+				/* Install NOTICE message handler */
+				MonitorCommand(IRC.NOTICE, new MessageReceivedHandler(NoticeMessageReceived));
 				/* Install RPL_NAMREPLY message handler */
 				MonitorCommand(IRC.RPL_NAMREPLY, new MessageReceivedHandler(RPL_NAMREPLYMessageReceived));
 				/* Install RPL_ENDOFNAMES message handler */
 				MonitorCommand(IRC.RPL_ENDOFNAMES, new MessageReceivedHandler(RPL_ENDOFNAMESMessageReceived));
+				/* Install ERR_NICKNAMEINUSE message handler */
+				MonitorCommand(IRC.ERR_NICKNAMEINUSE, new MessageReceivedHandler(ERR_NICKNAMEINUSEMessageReceived));
 				/* Start receiving data */
 				Receive();
 			}
@@ -520,8 +581,6 @@ namespace TechBot.IRCLibrary
 			}
 			else
 			{
-				
-
 				connected = false;
 				tcpClient.Close();
 				tcpClient = null;
@@ -606,9 +665,31 @@ namespace TechBot.IRCLibrary
 			if (nickname == null)
 				throw new ArgumentNullException("nickname", "Nickname cannot be null.");
 
+			Console.WriteLine("Changing nick to {0}\n", nickname);
+			curNickname = nickname;
+
 			/* NICK <nickname> [ <hopcount> ] */
 			SendMessage(new IrcMessage(IRC.NICK, nickname));
 		}
+
+        /// <summary>
+        /// Ghost nickname.
+        /// </summary>
+        /// <param name="nickname">Nickname.</param>
+        public void GhostNick(string nickname,
+                              string password)
+        {
+            if (nickname == null)
+                throw new ArgumentNullException("nickname", "Nickname cannot be null.");
+
+            if (password == null)
+                throw new ArgumentNullException("password", "Password cannot be null.");
+
+            awaitingGhostDeath = true;
+
+            /* GHOST <nickname> <password> */
+            SendMessage(new IrcMessage(IRC.GHOST, nickname + " " + password));
+        }
 
 		/// <summary>
 		/// Submit password to identify user.
@@ -618,6 +699,8 @@ namespace TechBot.IRCLibrary
 		{
 			if (password == null)
 				throw new ArgumentNullException("password", "Password cannot be null.");
+
+			this.password = password;
 
 			/* PASS <password> */
 			SendMessage(new IrcMessage(IRC.PASS, password));
@@ -635,12 +718,10 @@ namespace TechBot.IRCLibrary
 		{
 			if (nickname == null)
 				throw new ArgumentNullException("nickname", "Nickname cannot be null.");
+			reqNickname = nickname;
 			firstPingReceived = false;
 			if (password != null)
 			{
-				/* First ghost ourself and then register */
-				if (nickname != null)
-					SendMessage(new IrcMessage(IRC.GHOST, nickname + " " + password));
 				SubmitPassword(password);
 			}
 			ChangeNick(nickname);

@@ -17,10 +17,12 @@ namespace TechBot.IRCLibrary
 		public const string PRIVMSG = "PRIVMSG";
 		public const string USER = "USER";
 		public const string PASS = "PASS";
-		public const string GHOST = "MSG NICKSERV GHOST";
+		public const string GHOST = "NICKSERV GHOST";
+		public const string NOTICE = "NOTICE";
 
 		public const string RPL_NAMREPLY = "353";
 		public const string RPL_ENDOFNAMES = "366";
+		public const string ERR_NICKNAMEINUSE = "433";
 
 		#endregion
 
