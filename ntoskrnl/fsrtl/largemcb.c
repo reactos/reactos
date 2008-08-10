@@ -220,9 +220,9 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
     ULONG NumberOfRuns;
 
     /* Read the number of runs while holding the MCB lock */
-    KeAcquireGuardedMutex(Mcb->GuardedMutex);
+    ExAcquireFastMutex(Mcb->FastMutex);
     NumberOfRuns = Mcb->BaseMcb.PairCount;
-    KeReleaseGuardedMutex(Mcb->GuardedMutex);
+    ExReleaseFastMutex(Mcb->FastMutex);
 
     /* Return the count */
     return NumberOfRuns;

@@ -1384,7 +1384,7 @@ typedef struct _BASE_MCB
 
 typedef struct _LARGE_MCB
 {
-    PKGUARDED_MUTEX GuardedMutex;
+    PFAST_MUTEX FastMutex;
     BASE_MCB BaseMcb;
 } LARGE_MCB, *PLARGE_MCB;
 
