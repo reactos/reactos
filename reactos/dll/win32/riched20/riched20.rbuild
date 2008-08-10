@@ -8,6 +8,7 @@
 	<define name="__WINESRC__" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<file>caret.c</file>
 	<file>clipboard.c</file>
 	<file>context.c</file>
