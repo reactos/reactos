@@ -392,6 +392,11 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     /* Take care of any event select signalling */
     FCB = (PAFD_FCB)FileObject->FsContext;
 
+    if( !FCB ) {
+	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+	return;
+    }
+
     /* Not sure if i can do this at DISPATCH_LEVEL ... try it at passive */
     AFD_DbgPrint(MID_TRACE,("Current State: %x, Events Fired: %x, "
 			    "Select Triggers %x\n",
@@ -400,11 +405,6 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     if( FCB->PollState & ~FCB->EventsFired & FCB->EventSelectTriggers ) {
 	FCB->EventsFired |= FCB->PollState;
 	EventSelect = FCB->EventSelect;
-    }
-
-    if( !FCB ) {
-	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
-	return;
     }
 
     /* Now signal normal select irps */
