@@ -182,6 +182,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ASSERT(((UINT_PTR)FileHeader % TYPE_ALIGNMENT(IMAGE_DOS_HEADER)) == 0);
 
 #define DIE(ARGS_) { DPRINT ARGS_; goto l_Return; }
+#define GASP(CODE,ARGS_) { nStatus = CODE; DPRINT ARGS_; goto l_Return; }
 
     pBuffer = NULL;
     pidhDosHeader = FileHeader;
@@ -199,7 +200,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
 
     /* not a Windows executable */
     if(pidhDosHeader->e_lfanew <= 0)
-	DIE(("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
+	GASP(STATUS_INVALID_IMAGE_NE_FORMAT,("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));
 
     /* NT HEADER */
     nStatus = STATUS_INVALID_IMAGE_FORMAT;
@@ -567,7 +568,7 @@ l_ReadHeaderFromFile:
     if(!AlignUp(&nPrevVirtualEndOfSegment, cbHeadersSize, nSectionAlignment))
 	DIE(("Cannot align the size of the section headers\n"));
 
-    pssSegments[0].FileOffset = 0;
+    pssSegments[0].FileOffset.QuadPart = 0;
     pssSegments[0].Protection = PAGE_READONLY;
     pssSegments[0].Length = nPrevVirtualEndOfSegment;
     pssSegments[0].RawLength = nFileSizeOfHeaders;
@@ -609,16 +610,16 @@ l_ReadHeaderFromFile:
 //		DIE(("PointerToRawData[%u] is not aligned\n", i));
 
 	    /* conversion */
-	    pssSegments[i].FileOffset = pishSectionHeaders[i].PointerToRawData;
+	    pssSegments[i].FileOffset.QuadPart = pishSectionHeaders[i].PointerToRawData;
 	    pssSegments[i].RawLength = pishSectionHeaders[i].SizeOfRawData;
 	}
 	else
 	{
-	    ASSERT(pssSegments[i].FileOffset == 0);
+	    ASSERT(pssSegments[i].FileOffset.QuadPart == 0);
 	    ASSERT(pssSegments[i].RawLength == 0);
 	}
 
-	ASSERT(Intsafe_CanAddLong64(pssSegments[i].FileOffset, pssSegments[i].RawLength));
+	ASSERT(Intsafe_CanAddLong64(pssSegments[i].FileOffset.QuadPart, pssSegments[i].RawLength));
 
 	nCharacteristics = pishSectionHeaders[i].Characteristics;
 

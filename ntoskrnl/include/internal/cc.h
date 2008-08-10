@@ -102,6 +102,7 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
     LONG ActivePrefetches;
 } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
 
+#if 0
 typedef struct _BCB
 {
     LIST_ENTRY BcbSegmentListHead;
@@ -120,49 +121,38 @@ typedef struct _BCB
 	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
 #endif
 } BCB, *PBCB;
+#endif
 
-typedef struct _CACHE_SEGMENT
+typedef struct _NOCC_BCB
 {
-    /* Base address of the region where the cache segment data is mapped. */
-    PVOID BaseAddress;
-    /*
-     * Memory area representing the region where the cache segment data is
-     * mapped.
-     */
-    struct _MEMORY_AREA* MemoryArea;
-    /* Are the contents of the cache segment data valid. */
-    BOOLEAN Valid;
-    /* Are the contents of the cache segment data newer than those on disk. */
-    BOOLEAN Dirty;
-    /* Page out in progress */
-    BOOLEAN PageOut;
-    ULONG MappedCount;
-    /* Entry in the list of segments for this BCB. */
-    LIST_ENTRY BcbSegmentListEntry;
-    /* Entry in the list of segments which are dirty. */
-    LIST_ENTRY DirtySegmentListEntry;
-    /* Entry in the list of segments. */
-    LIST_ENTRY CacheSegmentListEntry;
-    LIST_ENTRY CacheSegmentLRUListEntry;
-    /* Offset in the file which this cache segment maps. */
-    ULONG FileOffset;
-    /* Lock. */
-    EX_PUSH_LOCK Lock;
-    /* Number of references. */
-    ULONG ReferenceCount;
-    /* Pointer to the BCB for the file which this cache segment maps data for. */
-    PBCB Bcb;
-    /* Pointer to the next cache segment in a chain. */
-    struct _CACHE_SEGMENT* NextInChain;
-} CACHE_SEGMENT, *PCACHE_SEGMENT;
+    /* Public part */
+    PUBLIC_BCB Bcb;
 
-typedef struct _INTERNAL_BCB
+    /* So we know the initial request that was made */
+    PFILE_OBJECT FileObject;
+	PSECTION_OBJECT SectionObject;
+	LARGE_INTEGER FileOffset;
+	ULONG Length;
+	PVOID BaseAddress;
+	BOOLEAN Dirty;
+	PVOID OwnerPointer;
+
+	/* Reference counts */
+	ULONG RefCount;
+
+	LIST_ENTRY ThisFileList;
+
+	KEVENT ExclusiveWait;
+	BOOLEAN Exclusive;
+	ULONG ExclusiveWaiter;
+} NOCC_BCB, *PNOCC_BCB;
+
+typedef struct _NOCC_CACHE_MAP
 {
-    PUBLIC_BCB PFCB;
-    PCACHE_SEGMENT CacheSegment;
-    BOOLEAN Dirty;
-    CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
-} INTERNAL_BCB, *PINTERNAL_BCB;
+	LIST_ENTRY AssociatedBcb;
+	PFILE_OBJECT FileObject;
+	ULONG NumberOfMaps;
+} NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID
 NTAPI
@@ -185,78 +175,17 @@ CcMdlWriteComplete2(
     IN PMDL MdlChain
 );
 
-NTSTATUS
-NTAPI
-CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);
-
-NTSTATUS
-NTAPI
-CcRosGetCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset,
-    PULONG BaseOffset,
-    PVOID *BaseAddress,
-    PBOOLEAN UptoDate,
-    PCACHE_SEGMENT *CacheSeg
-);
-
 VOID
 NTAPI
 CcInitView(VOID);
-
-NTSTATUS
-NTAPI
-CcRosFreeCacheSegment(
-    PBCB,
-    PCACHE_SEGMENT
-);
-
-NTSTATUS
-NTAPI
-ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
-
-NTSTATUS
-NTAPI
-WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID);
 
-NTSTATUS
-NTAPI
-CcRosUnmapCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset,
-    BOOLEAN NowDirty
-);
-
-PCACHE_SEGMENT
-NTAPI
-CcRosLookupCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset
-);
-
-NTSTATUS
-NTAPI
-CcRosGetCacheSegmentChain(
-    PBCB Bcb,
-    ULONG FileOffset,
-    ULONG Length,
-    PCACHE_SEGMENT* CacheSeg
-);
-
 VOID
 NTAPI
 CcInitCacheZeroPage(VOID);
-
-NTSTATUS
-NTAPI
-CcRosMarkDirtyCacheSegment(
-    PBCB Bcb,
-    ULONG FileOffset
-);
 
 NTSTATUS
 NTAPI
@@ -279,26 +208,6 @@ CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
 NTAPI
-CcRosReleaseCacheSegment(
-    BCB* Bcb,
-    CACHE_SEGMENT *CacheSeg,
-    BOOLEAN Valid,
-    BOOLEAN Dirty,
-    BOOLEAN Mapped
-);
-
-NTSTATUS
-NTAPI
-CcRosRequestCacheSegment(
-    BCB *Bcb,
-    ULONG FileOffset,
-    PVOID* BaseAddress,
-    PBOOLEAN UptoDate,
-    CACHE_SEGMENT **CacheSeg
-);
-
-NTSTATUS
-NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 /*
@@ -309,5 +218,30 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
     KEBUGCHECKEX(CACHE_MANAGER, \
     (*(ULONG*)(__FILE__ + sizeof(__FILE__) - 4) << 16) | \
     (__LINE__ & 0xFFFF), 0, 0, 0)
+
+/* Private data */
+
+#define CACHE_SINGLE_FILE_MAX (16)
+#define CACHE_OVERALL_SIZE (32 * 1024 * 1024)
+#define CACHE_STRIPE VACB_MAPPING_GRANULARITY
+#define CACHE_SHIFT 18
+#define CACHE_NUM_SECTIONS (CACHE_OVERALL_SIZE / CACHE_STRIPE)
+#define CACHE_ROUND_UP(x) (((x) + (CACHE_STRIPE-1)) & ~(CACHE_STRIPE-1))
+#define CACHE_ROUND_DOWN(x) ((x) & ~(CACHE_STRIPE-1))
+#define CACHE_NEED_SECTIONS(OFFSET,LENGTH) \
+	((CACHE_ROUND_UP((OFFSET)->QuadPart + (LENGTH)) -		\
+	  CACHE_ROUND_DOWN((OFFSET)->QuadPart)) >> CACHE_SHIFT)
+#define INVALID_CACHE ((ULONG)~0)
+
+extern NOCC_BCB CcCacheSections[CACHE_NUM_SECTIONS];
+extern PRTL_BITMAP CcCacheBitmap;
+extern KGUARDED_MUTEX CcMutex;
+extern KEVENT CcDeleteEvent;
+extern ULONG CcCacheClockHand;
+extern LIST_ENTRY CcPendingUnmap;
+
+extern VOID CcpLock();
+extern VOID CcpUnlock();
+extern VOID CcpDereferenceCache(ULONG Sector);
 
 #endif

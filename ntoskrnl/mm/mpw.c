@@ -81,14 +81,10 @@ MmMpwThreadMain(PVOID Ignored)
       }
 
       PagesWritten = 0;
-#if 0
       /*
        *  FIXME: MmWriteDirtyPages doesn't work correctly.
        */
       MmWriteDirtyPages(128, &PagesWritten);
-#endif
-
-      CcRosFlushDirtyPages(128, &PagesWritten);
    }
 }
 

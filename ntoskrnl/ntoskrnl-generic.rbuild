@@ -112,14 +112,28 @@
 		<file>timerobj.c</file>
 		<file>wait.c</file>
 	</directory>
-	<directory name="cc">
-		<file>cacheman.c</file>
-		<file>copy.c</file>
-		<file>fs.c</file>
-		<file>mdl.c</file>
-		<file>pin.c</file>
-		<file>view.c</file>
-	</directory>
+	<if property="CC" value="1">
+		<directory name="cc">
+			<file>cacheman.c</file>
+			<file>copy.c</file>
+			<file>fs.c</file>
+			<file>mdl.c</file>
+			<file>pin.c</file>
+			<file>view.c</file>
+		</directory>
+	</if>
+	<if property="CC" value="0">
+		<directory name="cache">
+			<file>cachesub.c</file>
+			<file>copysup.c</file>
+			<file>fssup.c</file>
+			<file>lazyrite.c</file>
+			<file>logsup.c</file>
+			<file>mdlsup.c</file>
+			<file>pinsup.c</file>
+			<file>vacbsup.c</file>
+		</directory>
+	</if>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

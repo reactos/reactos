@@ -245,7 +245,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
       Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-             + MemoryArea->Data.SectionData.ViewOffset;;
+             + MemoryArea->Data.SectionData.ViewOffset;
 
       /*
        * Get or create a pageop

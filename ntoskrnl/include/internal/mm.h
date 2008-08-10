@@ -176,7 +176,7 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONG FileOffset;		/* start offset into the file for image sections */
+    LARGE_INTEGER FileOffset;		/* start offset into the file for image sections */
     ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
     ULONG RawLength;		/* length of the segment which is part of the mapped file */
     ULONG Length;			/* absolute length of the segment */
@@ -1478,6 +1478,13 @@ MmAccessFaultSectionView(
 VOID
 NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
+
+NTSTATUS STDCALL
+MmMapViewInSystemSpaceAtOffset
+(IN PVOID SectionObject,
+ OUT PVOID *MappedBase,
+ PLARGE_INTEGER FileOffset,
+ IN OUT PULONG ViewSize);
 
 /* mpw.c *********************************************************************/
 
