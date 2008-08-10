@@ -227,9 +227,9 @@ SkipTick:
     ret 4
 .endfunc
 
-.globl _KeUpdateSystemTime@12
-.func KeUpdateSystemTime@12
-_KeUpdateSystemTime@12:
+.globl _KeUpdateSystemTime@0
+.func KeUpdateSystemTime@0
+_KeUpdateSystemTime@0:
 
     /* Check if this tick is getting skipped */
     cmp byte ptr fs:[KPCR_PRCB_SKIP_TICK], 0

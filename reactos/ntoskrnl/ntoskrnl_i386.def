@@ -685,7 +685,7 @@ KeTickCount DATA
 @KeTryToAcquireSpinLockAtDpcLevel@4
 KeUnstackDetachProcess@4
 KeUpdateRunTime
-KeUpdateSystemTime
+KeUpdateSystemTime@0
 KeUserModeCallback@20
 KeWaitForMultipleObjects@32
 KeWaitForMutexObject@20=KeWaitForSingleObject@20
