@@ -2,7 +2,12 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl_$(ARCH).def" />
+	<ifnot property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl.spec.def" />
+	</ifnot>
+	<if property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl_arm.def" />
+	</if>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -465,5 +470,6 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
+	<file>ntoskrnl.spec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>
