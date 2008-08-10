@@ -19,7 +19,7 @@
 
 ULONG KiISRTimeout = 55;
 USHORT KiISROverflow = 30000;
-extern ULONG KiChainedDispatch2ndLvl;
+extern ULONG NTAPI KiChainedDispatch2ndLvl(VOID);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
