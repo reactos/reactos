@@ -226,6 +226,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                             NULL, NULL,
                                             FALSE, FALSE );
 
+	if( !SendReq->BufferArray ) {
+	    return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                           Irp, 0, NULL );
+	}
+
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
         SocketCalloutEnter( FCB );
@@ -286,6 +291,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					    SendReq->BufferCount,
 					    NULL, NULL,
 					    FALSE, FALSE );
+
+        if( !SendReq->BufferArray ) {
+            return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                           Irp, 0, NULL );
+        }
 
 	for( i = 0; FCB->Send.BytesUsed < FCB->Send.Size &&
 		 i < SendReq->BufferCount; i++ ) {
