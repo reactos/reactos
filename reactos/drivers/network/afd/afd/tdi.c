@@ -631,7 +631,6 @@ NTSTATUS TdiQueryInformation(
     return Status;
 }
 
-#if 0
 NTSTATUS TdiQueryInformationEx(
     PFILE_OBJECT FileObject,
     ULONG Entity,
@@ -807,7 +806,6 @@ NTSTATUS TdiQueryAddress(
 
     return Status;
 }
-#endif
 
 NTSTATUS TdiSend
 ( PIRP *Irp,
