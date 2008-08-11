@@ -116,6 +116,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
 	if( Map[i].Mdl ) {
 	    MmUnlockPages( Map[i].Mdl );
 	    IoFreeMdl( Map[i].Mdl );
+	    Map[i].Mdl = NULL;
 	}
     }
 
