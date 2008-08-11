@@ -573,18 +573,18 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
 
-    RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray,
-					RecvReq->BufferCount,
-					RecvReq->Address,
-					RecvReq->AddressLength,
-					TRUE, TRUE );
-
-    if( !RecvReq->BufferArray ) { /* access violation in userspace */
-	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL );
-    }
-
     if( !IsListEmpty( &FCB->DatagramList ) ) {
+        RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray,
+	       				    RecvReq->BufferCount,
+					    RecvReq->Address,
+					    RecvReq->AddressLength,
+					    TRUE, TRUE );
+
+        if( !RecvReq->BufferArray ) { /* access violation in userspace */
+	    return UnlockAndMaybeComplete
+	           ( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL );
+        }
+
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
 	DatagramRecv = CONTAINING_RECORD
 	    ( ListEntry, AFD_STORED_DATAGRAM, ListEntry );
