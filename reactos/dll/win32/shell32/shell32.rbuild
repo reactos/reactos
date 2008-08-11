@@ -71,7 +71,7 @@
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
-	<file>recyclebin.c</file>
+	<file>shfldr_recyclebin.c</file>
 	<file>she_ocmenu.c</file>
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
