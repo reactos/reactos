@@ -304,6 +304,10 @@ typedef struct _SHNAMEMAPPINGW {
 } SHNAMEMAPPINGW, *LPSHNAMEMAPPINGW;
 #include <poppack.h>
 
+#define SHERB_NOCONFIRMATION 0x1
+#define SHERB_NOPROGRESSUI   0x2
+#define SHERB_NOSOUND        0x4
+
 LPWSTR * WINAPI CommandLineToArgvW(LPCWSTR,int*);
 void WINAPI DragAcceptFiles(HWND,BOOL);
 void WINAPI DragFinish(HDROP);
