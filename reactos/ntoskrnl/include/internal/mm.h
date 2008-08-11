@@ -1275,14 +1275,14 @@ NTAPI
 MmCreateProcessAddressSpace(
     IN ULONG MinWs,
     IN PEPROCESS Dest,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
     IN PEPROCESS Process,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 

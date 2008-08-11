@@ -115,7 +115,7 @@ NTAPI
 KeInitializeProcess(IN OUT PKPROCESS Process,
                     IN KPRIORITY Priority,
                     IN KAFFINITY Affinity,
-                    IN PLARGE_INTEGER DirectoryTableBase,
+                    IN PULONG DirectoryTableBase,
                     IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP
@@ -134,7 +134,8 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->Affinity = Affinity;
     Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
-    Process->DirectoryTableBase = *DirectoryTableBase;
+    Process->DirectoryTableBase[0] = DirectoryTableBase[0];
+    Process->DirectoryTableBase[1] = DirectoryTableBase[1];
     Process->AutoAlignment = Enable;
 #if defined(_M_IX86)
     Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);

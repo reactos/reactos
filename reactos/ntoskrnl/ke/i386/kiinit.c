@@ -391,7 +391,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 {
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
-    LARGE_INTEGER PageDirectory;
+    ULONG PageDirectory[2];
     PVOID DpcStack;
     ULONG Vendor[3];
 
@@ -503,11 +503,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
         /* Initialize the Idle Process and the Process Listhead */
         InitializeListHead(&KiProcessListHead);
-        PageDirectory.QuadPart = 0;
+        PageDirectory[0] = 0;
+        PageDirectory[1] = 0;
         KeInitializeProcess(InitProcess,
                             0,
                             0xFFFFFFFF,
-                            &PageDirectory,
+                            PageDirectory,
                             FALSE);
         InitProcess->QuantumReset = MAXCHAR;
     }

@@ -162,7 +162,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
         ExFreePool((PVOID) LdtBase);
     }
     
-    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
+    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
     {
         if (PageDir[i] != 0)
@@ -173,16 +173,11 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
     }
     MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
     MmDeleteHyperspaceMapping(PageDir);
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
-    
-#if defined(__GNUC__)
-    
-    Process->Pcb.DirectoryTableBase.QuadPart = 0LL;
-#else
-    
-    Process->Pcb.DirectoryTableBase.QuadPart = 0;
-#endif
-    
+    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+
+    Process->Pcb.DirectoryTableBase[0] = 0;
+    Process->Pcb.DirectoryTableBase[1] = 0;
+
     DPRINT("Finished Mmi386ReleaseMmInfo()\n");
     return(STATUS_SUCCESS);
 }
@@ -190,15 +185,16 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
+                             IN PULONG DirectoryTableBase)
 {
     /* Share the directory base with the idle process */
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
-    
+    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
+    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
+
     /* Initialize the Addresss Space */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
     Process->VadRoot.BalancedRoot.u1.Parent = NULL;
-    
+
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;
     return STATUS_SUCCESS;
@@ -208,7 +204,7 @@ BOOLEAN
 STDCALL
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+                            IN PULONG DirectoryTableBase)
 {
     NTSTATUS Status;
     ULONG i, j;
@@ -243,8 +239,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     
     MmDeleteHyperspaceMapping(PageDirectory);
     
-    DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
-    DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
+    DirectoryTableBase[0] = PFN_TO_PTE(Pfn[0]);
+    DirectoryTableBase[1] = 0;
+    DPRINT("Finished MmCopyMmInfo(): 0x%x\n", DirectoryTableBase[0]);
     return TRUE;
 }
 
@@ -329,7 +326,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     
     if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
     {
-        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.LowPart));
+        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
         if (PageDir == NULL)
         {
             KEBUGCHECK(0);
@@ -1286,7 +1283,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
+        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     }
     else
     {
