@@ -867,14 +867,14 @@ BOOLEAN NTAPI
 RtlTestBit(PRTL_BITMAP BitMapHeader,
 	   ULONG BitNumber)
 {
-  PULONG Ptr;
+  PUCHAR Ptr;
 
   if (BitNumber >= BitMapHeader->SizeOfBitMap)
     return FALSE;
 
-  Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
+  Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
 
-  return (BOOLEAN)(*Ptr & (1 << (BitNumber % 32)));
+  return (BOOLEAN)(*Ptr & (1 << (BitNumber % 8)));
 }
 
 /*
