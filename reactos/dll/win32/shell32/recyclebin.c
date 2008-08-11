@@ -77,26 +77,6 @@ static const columninfo RecycleBinColumns[] =
 
 #define COLUMNS_COUNT  6
 
-static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
-{
-    FILETIME lft;
-    SYSTEMTIME time;
-    int ret;
-
-    FileTimeToLocalFileTime(ft, &lft);
-    FileTimeToSystemTime(&lft, &time);
-
-    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, buffer, size);
-    if (ret>0 && ret<size)
-    {
-        /* Append space + time without seconds */
-        buffer[ret-1] = ' ';
-        GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &buffer[ret], size - ret);
-    }
-
-    return (ret!=0 ? E_FAIL : S_OK);
-}
-
 /*
  * Recycle Bin folder
  */
@@ -116,6 +96,21 @@ typedef struct tagRecycleBin
     LPITEMIDLIST pidl;
     LPCITEMIDLIST apidl;
 } RecycleBin;
+
+typedef struct
+{
+    PIDLRecycleStruct *pFileDetails;
+    HANDLE hDeletedFile;
+    BOOL bFound;
+}SEARCH_CONTEXT, *PSEARCH_CONTEXT;
+
+typedef struct
+{
+    DWORD dwNukeOnDelete;
+    DWORD dwSerial;
+    DWORD dwMaxCapacity;
+}DRIVE_ITEM_CONTEXT, *PDRIVE_ITEM_CONTEXT;
+
 
 static const IContextMenu2Vtbl recycleBincmVtblFolder;
 static const IContextMenu2Vtbl recycleBincmVtblBitbucketItem;
@@ -276,6 +271,57 @@ static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl)
     return NULL;
 }
 
+BOOL
+WINAPI
+CBSearchBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
+{
+    PSEARCH_CONTEXT pContext = (PSEARCH_CONTEXT)Context;
+
+    PDELETED_FILE_DETAILS_W pFileDetails;
+    DWORD dwSize;
+    BOOL ret;
+
+    if (!GetDeletedFileDetailsW(hDeletedFile,
+                                0,
+                                NULL,
+                                &dwSize) &&
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
+        ERR("GetDeletedFileDetailsW failed\n");
+        return FALSE;
+    }
+
+    pFileDetails = SHAlloc(dwSize);
+    if (!pFileDetails)
+    {
+        ERR("No memory\n");
+        return FALSE;
+    }
+
+    if (!GetDeletedFileDetailsW(hDeletedFile,
+                                dwSize,
+                                pFileDetails,
+                                NULL))
+    {
+        ERR("GetDeletedFileDetailsW failed\n");
+        SHFree(pFileDetails);
+        return FALSE;
+    }
+
+    ret = memcmp(pFileDetails, pContext->pFileDetails, dwSize);
+    if (!ret)
+    {
+        pContext->hDeletedFile = hDeletedFile;
+        pContext->bFound = TRUE;
+    }
+    else
+        CloseRecycleBinHandle(hDeletedFile);
+
+    SHFree(pFileDetails);
+    return ret;
+}
+
+
 
 BOOL
 WINAPI
@@ -286,7 +332,6 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
     LPITEMIDLIST pidl = NULL;
     BOOL ret;
 
-    TRACE("CBEnumBitBucket entered\n");
     if (!GetDeletedFileDetailsW(hDeletedFile,
                                 0,
                                 NULL,
@@ -561,6 +606,26 @@ static HRESULT WINAPI RecycleBin_GetDetailsEx(IShellFolder2 *iface, LPCITEMIDLIS
 {
     FIXME("stub\n");
     return E_NOTIMPL;
+}
+
+static HRESULT FormatDateTime(LPWSTR buffer, int size, FILETIME * ft)
+{
+    FILETIME lft;
+    SYSTEMTIME time;
+    int ret;
+
+    FileTimeToLocalFileTime(ft, &lft);
+    FileTimeToSystemTime(&lft, &time);
+
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, buffer, size);
+    if (ret>0 && ret<size)
+    {
+        /* Append space + time without seconds */
+        buffer[ret-1] = ' ';
+        GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &buffer[ret], size - ret);
+    }
+
+    return (ret!=0 ? E_FAIL : S_OK);
 }
 
 static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIST pidl, UINT iColumn, LPSHELLDETAILS pDetails)
@@ -1018,9 +1083,47 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
 	IContextMenu2 *iface,
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
+	
+    SEARCH_CONTEXT Context;
     RecycleBin * This = impl_from_IContextMenu2(iface);
+    static LPCWSTR szDrive = L"C:\\";
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+
+    if (lpcmi->lpVerb == MAKEINTRESOURCE(1) || lpcmi->lpVerb == MAKEINTRESOURCE(5)) 
+    {
+        Context.pFileDetails = _ILGetRecycleStruct(This->apidl);
+        Context.bFound = FALSE;
+
+        EnumerateRecycleBinW(szDrive, CBSearchBitBucket, (PVOID)&Context);
+        if (!Context.bFound)
+            return E_FAIL;
+
+        if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+        {
+            /* restore file */
+            if (RestoreFile(Context.hDeletedFile))
+                return S_OK;
+            else
+                return E_FAIL;
+        }
+        else
+        {
+            FIXME("implement delete\n");
+            CloseRecycleBinHandle(Context.hDeletedFile);
+            return E_NOTIMPL;
+        }
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCE(3)) 
+    {
+        FIXME("implement cut\n");
+        return E_NOTIMPL;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCE(7))
+    {
+        FIXME("implement properties\n");
+        return E_NOTIMPL;
+    }
 
     return S_OK;
 }
@@ -1098,9 +1201,10 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
    WCHAR CurDrive = L'A';
    WCHAR szDrive[] = L"A:\\";
    DWORD dwDrives;
-   WCHAR szName[30];
+   WCHAR szName[100];
    WCHAR szVolume[100];
    DWORD MaxComponent, Flags;
+   DWORD dwSerial;
    LVCOLUMNW lc;
    HWND hDlgCtrl;
    LVITEMW li;
@@ -1109,7 +1213,8 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
    RECT rect;
    int columnSize;
    int defIndex = 0;
-   DWORD dwNukeOnDelete, dwSize;
+   DWORD dwSize;
+   PDRIVE_ITEM_CONTEXT pItem = NULL, pDefault = NULL, pFirst = NULL;
 
    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
 
@@ -1147,23 +1252,45 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
         UINT Type = GetDriveTypeW(szDrive);
         if (Type == DRIVE_FIXED) //FIXME
         {
-            if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), NULL, &MaxComponent, &Flags, NULL, 0))
+            if (!GetVolumeInformationW(szDrive, szName, sizeof(szName) / sizeof(WCHAR), &dwSerial, &MaxComponent, &Flags, NULL, 0))
             {
                 szName[0] = 0;
+                dwSerial = -1;
             }
+
             sprintfW(szVolume, L"%s (%c)", szName, szDrive[0]);
             memset(&li, 0x0, sizeof(LVITEMW));
             li.mask = LVIF_TEXT | LVIF_PARAM;
             li.iSubItem = 0;
             li.pszText = szVolume;
             li.iItem = itemCount;
-            li.lParam = CurDrive;
             (void)ListView_InsertItemW(hDlgCtrl, &li);
             if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
             {
                 if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
                 {
-                    memset(&li, 0x0, sizeof(LVITEMW));
+
+                    pItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
+                    if (pItem)
+                    {
+                        sprintfW(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
+                        dwSize = sizeof(DWORD);
+                        RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
+                        dwSize = sizeof(DWORD);
+                        RegGetValueW(HKEY_CURRENT_USER, szName, L"NukeOnDelete", RRF_RT_DWORD, NULL, &pItem->dwNukeOnDelete, &dwSize);
+                        pItem->dwSerial = dwSerial;
+                        li.mask = LVIF_PARAM;
+                        li.lParam = (LPARAM)pItem;
+                        (void)ListView_SetItemW(hDlgCtrl, &li);
+                        if (CurDrive == DefaultDrive)
+                        {
+                            defIndex = itemCount;
+                            pDefault = pItem;
+                        }
+                    }
+                    if (!pFirst)
+                        pFirst = pItem;
+
                     li.mask = LVIF_TEXT;
                     li.iSubItem = 1;
                     li.pszText = szVolume;
@@ -1171,12 +1298,6 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
                     (void)ListView_SetItemW(hDlgCtrl, &li);
                 }
             }
-
-            if (CurDrive == DefaultDrive)
-            {
-                defIndex = itemCount;
-            }
-
             itemCount++;
         }
      }
@@ -1185,25 +1306,112 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
      dwDrives = (dwDrives >> 1);
    }while(dwDrives);
 
+   if (!pDefault)
+       pDefault = pFirst;
+   if (pDefault)
+   {
+       toggleNukeOnDeleteOption(hwndDlg, pDefault->dwNukeOnDelete);
+       SetDlgItemInt(hwndDlg, 14002, pDefault->dwMaxCapacity, FALSE);
+   }
+   ZeroMemory(&li, sizeof(li));
    li.mask = LVIF_STATE;
-   li.state = LVIS_FOCUSED;
+   li.stateMask = (UINT)-1;
+   li.state = LVIS_FOCUSED|LVIS_SELECTED;
    li.iItem = defIndex;
    (void)ListView_SetItemW(hDlgCtrl, &li);
 
-   wcscpy(szVolume, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\c");
-   szVolume[62] = DefaultDrive;
+}
 
-   dwSize = sizeof(dwNukeOnDelete);
-   if (RegGetValueW(HKEY_LOCAL_MACHINE, szVolume, L"NukeOnDelete", RRF_RT_REG_DWORD, NULL, &dwNukeOnDelete, &dwSize) == ERROR_SUCCESS)
+static BOOL StoreDriveSettings(HWND hwndDlg)
+{
+   int iCount, iIndex;
+   HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+   LVITEMW li;
+   PDRIVE_ITEM_CONTEXT pItem;
+   HKEY hKey, hSubKey;
+   WCHAR szSerial[20];
+   DWORD dwSize;
+
+
+   if (RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+      return FALSE;
+
+   iCount = ListView_GetItemCount(hDlgCtrl);
+
+   ZeroMemory(&li, sizeof(li));
+   li.mask = LVIF_PARAM;
+
+   for(iIndex = 0; iIndex < iCount; iIndex++)
    {
-       toggleNukeOnDeleteOption(hwndDlg, dwNukeOnDelete);
+       li.iItem = iIndex;
+       if (ListView_GetItemW(hDlgCtrl, &li))
+       {
+           pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
+           sprintfW(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
+           if (RegCreateKeyExW(hKey, szSerial, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+           {
+               dwSize = sizeof(DWORD);
+               RegSetValueExW(hSubKey, L"NukeOnDelete", 0, REG_DWORD, (LPVOID)&pItem->dwNukeOnDelete, dwSize);
+               dwSize = sizeof(DWORD);
+               RegSetValueExW(hSubKey, L"MaxCapacity", 0, REG_DWORD, (LPVOID)&pItem->dwMaxCapacity, dwSize);
+               RegCloseKey(hSubKey);
+           }
+       }
    }
-   else
+   RegCloseKey(hKey);
+   return TRUE;
+
+}
+
+static VOID FreeDriveItemContext(HWND hwndDlg)
+{
+   int iCount, iIndex;
+   HWND hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+   LVITEMW li;
+
+   iCount = ListView_GetItemCount(hDlgCtrl);
+
+   ZeroMemory(&li, sizeof(li));
+   li.mask = LVIF_PARAM;
+
+   for(iIndex = 0; iIndex < iCount; iIndex++)
    {
-       /* default to NukeOnDelete 
-        */
-       toggleNukeOnDeleteOption(hwndDlg, TRUE);
+       li.iItem = iIndex;
+       if (ListView_GetItemW(hDlgCtrl, &li))
+       {
+           HeapFree(GetProcessHeap(), 0, (LPVOID)li.lParam);
+       }
    }
+}
+
+INT
+GetDefaultItem(HWND hwndDlg, LVITEMW * li)
+{
+   HWND hDlgCtrl;
+   UINT iItemCount, iIndex;
+
+   hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+   if (!hDlgCtrl)
+       return -1;
+
+   iItemCount = ListView_GetItemCount(hDlgCtrl);
+   if (!iItemCount)
+       return -1;
+   
+   ZeroMemory(li, sizeof(LVITEMW));
+   li->mask = LVIF_PARAM | LVIF_STATE;
+   li->stateMask = (UINT)-1;
+   for (iIndex = 0; iIndex < iItemCount; iIndex++)
+   {
+       li->iItem = iIndex;
+       if (ListView_GetItemW(hDlgCtrl, li))
+       {
+           if (li->state & LVIS_SELECTED)
+               return iIndex;
+       }
+   }
+   return -1;
+
 }
 
 INT_PTR
@@ -1215,12 +1423,23 @@ BitBucketDlg(
     LPARAM lParam
 )
 {
+    LPPSHNOTIFY lppsn;
+    LPNMLISTVIEW lppl;
+    LVITEMW li;
+    PDRIVE_ITEM_CONTEXT pItem;
+    BOOL bSuccess;
+    UINT uResult;
+
     switch(uMsg)
     {
     case WM_INITDIALOG:
         InitializeBitBucketDlg(hwndDlg, (WCHAR)lParam);
+        if (GetDlgCtrlID((HWND)wParam) != 14000)
+        {
+            SetFocus(GetDlgItem(hwndDlg, 14000));
+            return FALSE;
+        }
         return TRUE;
-
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
@@ -1237,6 +1456,67 @@ BitBucketDlg(
             break;
         }
         break;
+       case WM_NOTIFY:
+            lppsn = (LPPSHNOTIFY) lParam;
+            lppl = (LPNMLISTVIEW) lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                if (GetDefaultItem(hwndDlg, &li) > -1)
+                {
+                    pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
+                    if (pItem)
+                    {
+                        uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
+                        if (bSuccess)
+                            pItem->dwMaxCapacity = uResult;
+                        if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                            pItem->dwNukeOnDelete = TRUE;
+                        else
+                            pItem->dwNukeOnDelete = FALSE;
+                    }
+                }
+                if (StoreDriveSettings(hwndDlg))
+                {
+                    SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                    return TRUE;
+                }
+            }
+            else if (lppl->hdr.code == LVN_ITEMCHANGING)
+            {
+                    ZeroMemory(&li, sizeof(li));
+                    li.mask = LVIF_PARAM;
+                    li.iItem = lppl->iItem;
+                    if (!ListView_GetItemW(lppl->hdr.hwndFrom, &li))
+                        return TRUE;
+
+                    pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
+                    if (!pItem)
+                        return TRUE;
+
+                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                    {
+                        /* new focused item */
+                        toggleNukeOnDeleteOption(lppl->hdr.hwndFrom, pItem->dwNukeOnDelete);
+                        SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                    }
+                    else if ((lppl->uOldState & LVIS_FOCUSED) && !(lppl->uNewState & LVIS_FOCUSED))
+                    {
+                        /* kill focus */
+                        uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
+                        if (bSuccess)
+                            pItem->dwMaxCapacity = uResult;
+                        if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                            pItem->dwNukeOnDelete = TRUE;
+                        else
+                            pItem->dwNukeOnDelete = FALSE;
+                    }
+                    return TRUE;
+
+            }
+            break;
+       case WM_DESTROY:
+            FreeDriveItemContext(hwndDlg);
+            break;
     }
     return FALSE;
 }
@@ -1306,7 +1586,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
    sprintfW(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
    wcscat(szKey, szBuffer);
 
-   if (RegCreateKeyExW(HKEY_CURRENT_USER, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
+   if (RegCreateKeyExW(HKEY_CURRENT_USER, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)
    {
        ERR("RegCreateKeyExW failed\n");
        return FALSE;
@@ -1319,7 +1599,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
        RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
        /* per default unlimited size */
        dwSize = -1;
-       RegSetValueExW(hKey, L"MaxSize", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
+       RegSetValueExW(hKey, L"MaxCapacity", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
        RegCloseKey(hKey);
        return TRUE;
    }
@@ -1329,25 +1609,25 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
        ret = RegQueryValueExW(hKey, L"NukeOnDelete", NULL, &dwType, (LPBYTE)&dwNukeOnDelete, &dwSize);
        if (ret != ERROR_SUCCESS)
        {
-           sprintfW(szBuffer, L"ret %u\n", ret);
-           MessageBoxW(NULL, szBuffer, NULL, MB_OK);
-           RegCloseKey(hKey);
            if (ret ==  ERROR_FILE_NOT_FOUND)
            {
                /* restore key and enable bitbucket */
                dwNukeOnDelete = 0;
                RegSetValueExW(hKey, L"NukeOnDelete", 0, REG_DWORD, (LPBYTE)&dwNukeOnDelete, sizeof(DWORD));
            }
+           RegCloseKey(hKey);
            return TRUE;
        }
        else if (dwNukeOnDelete)
        {
            /* do not delete to bitbucket */
+           RegCloseKey(hKey);
            return FALSE;
        }
        /* FIXME 
         * check if bitbucket is full
         */
+       RegCloseKey(hKey);
        return TRUE;
    }
 }
