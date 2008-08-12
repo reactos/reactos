@@ -89,8 +89,6 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 	TCHAR* position;
 	LPTSTR Token;
 	LPTSTR tmp;
-	LPTSTR ip, cp;
-	BOOL   bModeSetA = FALSE;
 
 	tmp = cmd_alloc(maxlen);
 	if (!tmp)
@@ -135,27 +133,6 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 	{
 		_tcscpy(cmd, buffer);
 	}
-
-	ip = cp = cmd;
-
-	while (*ip)
-	{
-		if ( (*ip == _T('%')) || (*ip == _T('!')) )
-		{
-			UINT envNameLen;
-			LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
-			if ( envVal )
-			{
-				ip += envNameLen;
-				cp = _stpcpy ( cp, envVal );
-			}
-		}
-
-		if (*ip != _T('\0') && (_istcntrl (*ip)))
-			*ip = _T(' ');
-		*cp++ = *ip++;
-	}
-	*cp = _T('\0');
 
 	cmd_free(buffer);
 	cmd_free(tmp);
