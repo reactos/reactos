@@ -233,21 +233,23 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
-        SocketCalloutEnter( FCB );
+	if( TargetAddress ) {
+            SocketCalloutEnter( FCB );
 
-        Status = TdiSendDatagram
-            ( &FCB->SendIrp.InFlightRequest,
-              FCB->AddressFile.Object,
-              SendReq->BufferArray[0].buf,
-              SendReq->BufferArray[0].len,
-              TargetAddress,
-              &FCB->SendIrp.Iosb,
-              PacketSocketSendComplete,
-              FCB );
+            Status = TdiSendDatagram
+                ( &FCB->SendIrp.InFlightRequest,
+                  FCB->AddressFile.Object,
+                  SendReq->BufferArray[0].buf,
+                  SendReq->BufferArray[0].len,
+                  TargetAddress,
+                  &FCB->SendIrp.Iosb,
+                  PacketSocketSendComplete,
+                  FCB );
 
-        SocketCalloutLeave( FCB );
+           SocketCalloutLeave( FCB );
 
-        ExFreePool( TargetAddress );
+           ExFreePool( TargetAddress );
+	} else Status = STATUS_NO_MEMORY;
 
         if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 

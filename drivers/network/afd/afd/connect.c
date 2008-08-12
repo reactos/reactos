@@ -33,26 +33,32 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
-    NTSTATUS Status = STATUS_NO_MEMORY;
+    NTSTATUS Status;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
 	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+
+    if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
+
     FCB->Send.Window =
 	ExAllocatePool( NonPagedPool, FCB->Send.Size );
 
+    if( !FCB->Send.Window ) {
+	ExFreePool( FCB->Recv.Window );	
+	return STATUS_NO_MEMORY;
+    }
+
     FCB->State = SOCKET_STATE_CONNECTED;
 
-    if( FCB->Recv.Window ) {
-	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-			     FCB->Connection.Object,
-			     TDI_RECEIVE_NORMAL,
-			     FCB->Recv.Window,
-			     FCB->Recv.Size,
-			     &FCB->ReceiveIrp.Iosb,
-			     ReceiveComplete,
-			     FCB );
-    }
+    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+			 FCB->Connection.Object,
+			 TDI_RECEIVE_NORMAL,
+			 FCB->Recv.Window,
+			 FCB->Recv.Size,
+			 &FCB->ReceiveIrp.Iosb,
+			 ReceiveComplete,
+			 FCB );
 
     return Status;
 }
@@ -102,8 +108,9 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
     if( NT_SUCCESS(Status) ) {
 	Status = MakeSocketIntoConnection( FCB );
 
-	if( FCB->Send.Window &&
-	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+	if( !NT_SUCCESS(Status) ) return Status;
+
+	if( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP,
 					Tail.Overlay.ListEntry);
@@ -158,7 +165,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_CONNECTING:
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
-    case SOCKET_STATE_CREATED: {
+    case SOCKET_STATE_CREATED:
 	FCB->LocalAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -182,7 +189,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	} else
 	    return UnlockAndMaybeComplete
 		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
-    } /* Drop through to SOCKET_STATE_BOUND */
+    
+    /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
 	FCB->RemoteAddress =
