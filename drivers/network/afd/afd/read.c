@@ -602,8 +602,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
+
 	    return UnlockAndMaybeComplete
-		( FCB, Status, Irp, RecvReq->BufferArray[0].len, NULL );
+		( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
 	} else {
 	    Status = SatisfyPacketRecvRequest
 		( FCB, Irp, DatagramRecv,
@@ -615,6 +617,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		FCB->PollState |= AFD_EVENT_RECEIVE;
 
 	    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
