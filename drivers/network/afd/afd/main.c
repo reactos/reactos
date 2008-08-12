@@ -114,9 +114,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
 	FCB->TdiDeviceName.Buffer =
 	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
 
 	if( !FCB->TdiDeviceName.Buffer ) {
 	    ExFreePool(FCB);
@@ -125,6 +122,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	    return STATUS_NO_MEMORY;
 	}
+
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
 	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
 				EaInfo->EaName, &FCB->TdiDeviceName));
@@ -192,6 +193,9 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = STATUS_CANCELLED;
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
 	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	    InFlightRequest[i]->InFlightRequest = NULL;
+	    if( InFlightRequest[i]->ConnectionCallInfo ) ExFreePool( InFlightRequest[i]->ConnectionCallInfo );
+	    if( InFlightRequest[i]->ConnectionReturnInfo ) ExFreePool( InFlightRequest[i]->ConnectionReturnInfo );
 	}
     }
 
