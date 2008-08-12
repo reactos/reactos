@@ -1086,7 +1086,7 @@ PsTerminateSystemThread(IN NTSTATUS ExitStatus)
     PETHREAD Thread = PsGetCurrentThread();
 
     /* Make sure this is a system thread */
-    if (!Thread->SystemThread) return STATUS_INVALID_PARAMETER;
+    if (Thread->SystemThread) return STATUS_INVALID_PARAMETER;
 
     /* Terminate it for real */
     return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);
