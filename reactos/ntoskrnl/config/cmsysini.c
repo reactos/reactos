@@ -120,7 +120,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 IN KPROCESSOR_MODE PreviousMode)
 {
     DPRINT1("CmpQueryKeyName() called\n");
-    while (TRUE);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
