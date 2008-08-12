@@ -1266,7 +1266,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
    if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
    {
       Entry = PsActiveProcessHead.Flink;
-      if (Entry == &PsActiveProcessHead)
+      if (!Entry || Entry == &PsActiveProcessHead)
       {
          KdbpPrint("No processes in the system!\n");
          return TRUE;
