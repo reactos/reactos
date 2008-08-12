@@ -864,16 +864,11 @@ NTSTATUS TdiSend
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
-
-    if( !NT_SUCCESS(Status) ) {
-	IoFreeIrp(*Irp);
-	*Irp = NULL;
-	return Status;
-    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -952,16 +947,11 @@ NTSTATUS TdiReceive(
         AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
 	*Irp = NULL;
-	Status = STATUS_INSUFFICIENT_RESOURCES;
+	_SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
-
-    if( !NT_SUCCESS(Status) ) {
-	IoFreeIrp(*Irp);
-	*Irp = NULL;
-	return Status;
-    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -1055,6 +1045,7 @@ NTSTATUS TdiReceiveDatagram(
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
         _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
@@ -1153,6 +1144,7 @@ NTSTATUS TdiSendDatagram(
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
         _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
