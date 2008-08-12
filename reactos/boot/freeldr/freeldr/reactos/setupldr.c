@@ -153,6 +153,8 @@ VOID RunLoader(VOID)
 	if (!InfGetDataField (&InfContext, 1, &DbgLoadOptions))
 	    DbgLoadOptions = "";
     }
+#else
+    DbgLoadOptions = "";
 #endif
   if (!strlen(DbgLoadOptions) && !InfFindFirstLine (InfHandle,
 			 "SetupData",
