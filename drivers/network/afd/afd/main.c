@@ -207,6 +207,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->AddressFrom );
     if( FCB->LocalAddress )
 	ExFreePool( FCB->LocalAddress );
+    if( FCB->RemoteAddress )
+	ExFreePool( FCB->RemoteAddress );
 
     ExFreePool(FCB->TdiDeviceName.Buffer);
 
