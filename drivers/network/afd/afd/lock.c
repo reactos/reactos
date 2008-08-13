@@ -112,6 +112,8 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
     PAFD_MAPBUF Map = (PAFD_MAPBUF)(Buf + Count + Lock);
     UINT i;
 
+    if( !Buf ) return;
+
     for( i = 0; i < Count + Lock; i++ ) {
 	if( Map[i].Mdl ) {
 	    MmUnlockPages( Map[i].Mdl );
