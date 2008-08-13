@@ -239,10 +239,6 @@
 		<file>find.c</file>
 		<file>fmode.c</file>
 		<file>lnx_sprintf.c</file>
-		<file>lnx_vfprintf.c</file>
-		<file>lnx_vfwprint.c</file>
-		<file>lnx_vsprintf.c</file>
-		<file>lnx_vswprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
 		<file>waccess.c</file>
