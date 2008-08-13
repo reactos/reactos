@@ -1109,8 +1109,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
         }
         else
         {
-            FIXME("implement delete\n");
-            CloseRecycleBinHandle(Context.hDeletedFile);
+            DeleteFileHandleToRecycleBin(Context.hDeletedFile);
             return E_NOTIMPL;
         }
     }
@@ -1647,5 +1646,8 @@ TRASH_TrashFile(LPCWSTR wszPath)
 HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 {
     FIXME("stub\n");
+
+
+
     return S_OK;
 }
