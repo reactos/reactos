@@ -226,23 +226,30 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                             NULL, NULL,
                                             FALSE, FALSE );
 
+	if( !SendReq->BufferArray ) {
+	    return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                           Irp, 0, NULL );
+	}
+
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
-        SocketCalloutEnter( FCB );
+	if( TargetAddress ) {
+            SocketCalloutEnter( FCB );
 
-        Status = TdiSendDatagram
-            ( &FCB->SendIrp.InFlightRequest,
-              FCB->AddressFile.Object,
-              SendReq->BufferArray[0].buf,
-              SendReq->BufferArray[0].len,
-              TargetAddress,
-              &FCB->SendIrp.Iosb,
-              PacketSocketSendComplete,
-              FCB );
+            Status = TdiSendDatagram
+                ( &FCB->SendIrp.InFlightRequest,
+                  FCB->AddressFile.Object,
+                  SendReq->BufferArray[0].buf,
+                  SendReq->BufferArray[0].len,
+                  TargetAddress,
+                  &FCB->SendIrp.Iosb,
+                  PacketSocketSendComplete,
+                  FCB );
 
-        SocketCalloutLeave( FCB );
+           SocketCalloutLeave( FCB );
 
-        ExFreePool( TargetAddress );
+           ExFreePool( TargetAddress );
+	} else Status = STATUS_NO_MEMORY;
 
         if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
@@ -277,6 +284,11 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					SendReq->BufferCount,
 					NULL, NULL,
 					FALSE, FALSE );
+
+    if( !SendReq->BufferArray ) {
+        return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                       Irp, 0, NULL );
+    }
 
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n",
 			    FCB->Send.BytesUsed));

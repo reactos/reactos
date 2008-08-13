@@ -142,6 +142,8 @@ static NTSTATUS NTAPI ListenComplete
 				 ListEntry ) );
     }
 
+    if( FCB->ListenIrp.ConnectionCallInfo ) ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
+    if( FCB->ListenIrp.ConnectionReturnInfo ) ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
     FCB->NeedsNewListen = TRUE;
 
     /* Trigger a select return if appropriate */
@@ -182,9 +184,11 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     Status = WarmSocketForConnection( FCB );
 
-    FCB->State = SOCKET_STATE_LISTENING;
-
     AFD_DbgPrint(MID_TRACE,("Status from warmsocket %x\n", Status));
+
+    if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+
+    FCB->State = SOCKET_STATE_LISTENING;
 
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionCallInfo,
@@ -275,7 +279,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				&FCB->ListenIrp.Iosb,
 				ListenComplete,
 				FCB );
-	}
+	} else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 	FCB->NeedsNewListen = FALSE;
     }
 

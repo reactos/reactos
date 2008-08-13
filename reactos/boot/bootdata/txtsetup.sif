@@ -49,8 +49,8 @@ Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+OsLoadOptions = "/NOGUIBOOT /NODEBUG /DEBUGPORT=COM1 /KDSERIAL"
+DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1 /KDSERIAL"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 

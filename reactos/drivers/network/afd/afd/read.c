@@ -574,14 +574,14 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
 
     RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray,
-					RecvReq->BufferCount,
+	       				RecvReq->BufferCount,
 					RecvReq->Address,
 					RecvReq->AddressLength,
 					TRUE, TRUE );
 
     if( !RecvReq->BufferArray ) { /* access violation in userspace */
-	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL );
+	    return UnlockAndMaybeComplete
+	           ( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL );
     }
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
@@ -602,8 +602,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
+
 	    return UnlockAndMaybeComplete
-		( FCB, Status, Irp, RecvReq->BufferArray[0].len, NULL );
+		( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
 	} else {
 	    Status = SatisfyPacketRecvRequest
 		( FCB, Irp, DatagramRecv,
@@ -615,6 +617,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		FCB->PollState |= AFD_EVENT_RECEIVE;
 
 	    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
+	    UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
 	    return UnlockAndMaybeComplete
 		( FCB, Status, Irp, Irp->IoStatus.Information, NULL );
