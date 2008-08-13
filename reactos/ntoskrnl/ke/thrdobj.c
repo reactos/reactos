@@ -813,7 +813,8 @@ KeInitThread(IN OUT PKTHREAD Thread,
     /* Make sure that we are in the right page directory */
     MiSyncThreadProcessViews(Process,
                              (PVOID)Thread->StackLimit,
-                             KERNEL_STACK_SIZE);
+                             Thread->LargeStack ?
+                             KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
     MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
     /* Enter SEH to avoid crashes due to user mode */
