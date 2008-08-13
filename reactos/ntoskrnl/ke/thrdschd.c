@@ -719,6 +719,15 @@ NtYieldExecution(VOID)
             /* Sanity check */
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
+            /* REACTOS Mm Hack of Doom */
+            MiSyncThreadProcessViews(PsGetCurrentProcess(),
+                                     ((PETHREAD)NextThread)->ThreadsProcess,
+                                     sizeof(EPROCESS));
+            MiSyncThreadProcessViews(PsGetCurrentProcess(),
+                                     (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
+                                     NextThread->LargeStack ?
+                                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+
             /* Swap to new thread */
             KiSwapContext(Thread, NextThread);
             Status = STATUS_SUCCESS;
@@ -735,5 +744,3 @@ NtYieldExecution(VOID)
     KeLowerIrql(OldIrql);
     return Status;
 }
-
-
