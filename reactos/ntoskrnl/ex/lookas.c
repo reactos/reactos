@@ -74,16 +74,23 @@ ExInitPoolLookasidePointers(VOID)
         InitializeSListHead(&Entry->ListHead);
 
         /* Bind to PRCB */
+#ifdef _M_AMD64
+ // FIXME
+#else
         Prcb->PPNPagedLookasideList[i].P = Entry;
         Prcb->PPNPagedLookasideList[i].L = Entry;
-
+#endif
         /* Initialize the paged list */
         Entry = &ExpSmallPagedPoolLookasideLists[i];
         InitializeSListHead(&Entry->ListHead);
 
         /* Bind to PRCB */
+#ifdef _M_AMD64
+ // FIXME
+#else
         Prcb->PPPagedLookasideList[i].P = Entry;
         Prcb->PPPagedLookasideList[i].L = Entry;
+#endif
     }
 }
 

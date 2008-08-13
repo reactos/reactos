@@ -456,10 +456,10 @@ KiRetireDpcList(IN PKPRCB Prcb)
 
                 /* Decrease the queue depth */
                 DpcData->DpcQueueDepth--;
-
+#ifndef _M_AMD64
                 /* Clear DPC Time */
                 Prcb->DebugDpcTime = 0;
-
+#endif
                 /* Release the lock */
                 KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
 

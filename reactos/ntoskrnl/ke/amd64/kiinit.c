@@ -656,6 +656,9 @@ VOID
 NTAPI
 KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+	FrLdrDbgPrint("Enter KiSystemStartupReal()\n");
+	for(;;);
+
 #if 0
     ULONG Cpu;
     PKTHREAD InitialThread;

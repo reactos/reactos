@@ -350,7 +350,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_M_IX86)
     /* Check if this is the NPX Thread */
     if (KeGetCurrentPrcb()->NpxThread == Thread)
     {

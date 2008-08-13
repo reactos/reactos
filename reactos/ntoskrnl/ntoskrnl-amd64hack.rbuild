@@ -296,7 +296,7 @@
 			<if property="KDBG" value="1">
 				<!-- file>kdb.c</file -->
 				<!-- file>kdb_cli.c</file -->
-				<file>kdb_expr.c</file>
+				<!-- file>kdb_expr.c</file -->
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
 			</if>
