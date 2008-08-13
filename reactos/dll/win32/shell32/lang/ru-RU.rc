@@ -727,4 +727,6 @@ BEGIN
 	IDS_PRINTERS                "Принтеры"
 	IDS_FONTS                   "Шрифты"
 	IDS_INSTALLNEWFONT          "Установить новый шрифт..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

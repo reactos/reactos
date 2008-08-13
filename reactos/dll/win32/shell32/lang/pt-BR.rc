@@ -731,4 +731,6 @@ BEGIN
 	IDS_PRINTERS                "Printers"
 	IDS_FONTS                   "Fonts"
 	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

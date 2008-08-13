@@ -547,7 +547,7 @@ END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Formatieren"
+CAPTION "Formatieren von"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Starten", IDOK, 53, 198, 60, 14
@@ -731,4 +731,6 @@ BEGIN
 	IDS_PRINTERS                "Drucker"
 	IDS_FONTS                   "Schriftarten"
 	IDS_INSTALLNEWFONT          "Neue Schriftart installieren..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Standardgröße"
 END
