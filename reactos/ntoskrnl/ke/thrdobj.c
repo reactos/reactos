@@ -858,7 +858,7 @@ KeInitializeThread(IN PKPROCESS Process,
                    IN PVOID Teb,
                    IN PVOID KernelStack)
 {
-    /* Initailize and start the thread on success */
+    /* Initialize and start the thread on success */
     if (NT_SUCCESS(KeInitThread(Thread,
                                 KernelStack,
                                 SystemRoutine,
