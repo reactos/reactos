@@ -45,7 +45,7 @@ BEGIN
            /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n \
            /setclassid  Endrer klasse-IDene for DHCP.\n \
     \n \
-    Standardverdien er å bare vise IP-addressen, nettverksmasken og
+    Standardverdien er å bare vise IP-addressen, nettverksmasken og\n \
     standard gatewayen for hver kort knyttet til TCP/IP.\n \
     \n \
     For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n \
