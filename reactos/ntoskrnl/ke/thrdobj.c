@@ -742,7 +742,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
 
     /* Set swap settings */
-    Thread->EnableStackSwap = FALSE;//TRUE;
+    Thread->EnableStackSwap = TRUE;
     Thread->IdealProcessor = 1;
     Thread->SwapBusy = FALSE;
     Thread->KernelStackResident = TRUE;
