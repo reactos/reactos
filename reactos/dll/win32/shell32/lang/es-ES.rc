@@ -2,6 +2,7 @@
  * Copyright 1998 Juergen Schmied
  * Copyright 2003,2004 José Manuel Ferrer Ortiz
  * Actualizado Javier Remacha 2008
+ * ACtualizado Victor Martinez 2008
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -621,11 +622,11 @@ BEGIN
 	IDS_SELECT                  "Seleccionar"
 	IDS_OPEN                    "Abrir"
 	IDS_CREATELINK              "C&rear acceso directo"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
-	IDS_RESTORE                 "Restore"
+	IDS_COPY                    "&Copiar"
+	IDS_DELETE                  "&Eliminar"
+	IDS_PROPERTIES              "&Propiedades"
+	IDS_CUT                     "C&ortar"
+	IDS_RESTORE                 "Restaurar"
 
 	IDS_CREATEFOLDER_DENIED     "No se puede crear nueva carpeta: Permiso denegado."
 	IDS_CREATEFOLDER_CAPTION    "Error durante la creación de una nueva carpeta"
