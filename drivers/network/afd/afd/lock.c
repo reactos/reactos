@@ -123,6 +123,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
     }
 
     ExFreePool( Buf );
+    Buf = NULL;
 }
 
 /* Produce a kernel-land handle array with handles replaced by object
