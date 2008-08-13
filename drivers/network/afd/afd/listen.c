@@ -142,6 +142,8 @@ static NTSTATUS NTAPI ListenComplete
 				 ListEntry ) );
     }
 
+    if( FCB->ListenIrp.ConnectionCallInfo ) ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
+    if( FCB->ListenIrp.ConnectionReturnInfo ) ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
     FCB->NeedsNewListen = TRUE;
 
     /* Trigger a select return if appropriate */

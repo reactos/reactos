@@ -193,9 +193,6 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = STATUS_CANCELLED;
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
 	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
-	    InFlightRequest[i]->InFlightRequest = NULL;
-	    if( InFlightRequest[i]->ConnectionCallInfo ) ExFreePool( InFlightRequest[i]->ConnectionCallInfo );
-	    if( InFlightRequest[i]->ConnectionReturnInfo ) ExFreePool( InFlightRequest[i]->ConnectionReturnInfo );
 	}
     }
 
