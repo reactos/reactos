@@ -550,7 +550,7 @@ VOID
 InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
     WCHAR szFs[100] = {0};
-    WCHAR szDrive[3] = { L'C', '\\', 0 };
+	WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
     INT iSelIndex;
     ULARGE_INTEGER FreeBytesAvailableUser, TotalNumberOfBytes;
     DWORD ClusterSize;
@@ -566,12 +566,13 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         return;
 
     szFs[(sizeof(szFs)/sizeof(WCHAR))-1] = L'\0';
-    szDrive[0] = pContext->Drive;
+    szDrive[0] = pContext->Drive + 'A';
 
     if (!GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailableUser, &TotalNumberOfBytes, NULL))
         return;
 
-    if (!wcsicmp(szFs, L"FAT16"))
+    if (!wcsicmp(szFs, L"FAT16") ||
+        !wcsicmp(szFs, L"FAT")) //REACTOS HACK
     {
         if (TotalNumberOfBytes.QuadPart <= (16 * 1024 * 1024))
             ClusterSize = 2048;
@@ -597,7 +598,6 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
-
         if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, szFs, sizeof(szFs)/sizeof(WCHAR)))
         {
             hDlgCtrl = GetDlgItem(hwndDlg, 28680);
@@ -606,6 +606,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szFs);
             if (lIndex != CB_ERR)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
     }
     else if (!wcsicmp(szFs, L"FAT32"))
@@ -628,6 +629,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
+
         if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, szFs, sizeof(szFs)/sizeof(WCHAR)))
         {
             hDlgCtrl = GetDlgItem(hwndDlg, 28680);
@@ -636,6 +638,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szFs);
             if (lIndex != CB_ERR)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
     }
     else if (!wcsicmp(szFs, L"NTFS"))
@@ -649,14 +652,15 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         else
             ClusterSize = 2048;
 
+        hDlgCtrl = GetDlgItem(hwndDlg, 28680);
         if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, szFs, sizeof(szFs)/sizeof(WCHAR)))
         {
-            hDlgCtrl = GetDlgItem(hwndDlg, 28680);
             szFs[(sizeof(szFs)/sizeof(WCHAR))-1] = L'\0';
             SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
             lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szFs);
             if (lIndex != CB_ERR)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
         ClusterSize = 512;
         for (lIndex = 0; lIndex < 4; lIndex++)
@@ -671,13 +675,19 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             ClusterSize *= 2;
         }
     }
+    else
+    {
+        FIXME("unknown fs\n");
+        SendDlgItemMessageW(hwndDlg, 28680, CB_RESETCONTENT, iSelIndex, 0);
+        return;
+    }
 }
 
 VOID
 InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
     WCHAR szText[120];
-    WCHAR szDrive[3] = { L'C', '\\', 0 };
+    WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
     WCHAR szFs[30] = {0};
     INT Length, TempLength;
     DWORD dwSerial, dwMaxComp, dwFileSys;
@@ -688,7 +698,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     HWND hDlgCtrl;
 
     Length = GetWindowTextW(hwndDlg, szText, sizeof(szText)/sizeof(WCHAR));
-    szDrive[0] = pContext->Drive;
+    szDrive[0] = pContext->Drive + L'A';
     if (GetVolumeInformationW(szDrive, &szText[Length+1], (sizeof(szText)/sizeof(WCHAR))- Length - 2, &dwSerial, &dwMaxComp, &dwFileSys, szFs, sizeof(szFs)/sizeof(WCHAR)))
     {
         szText[Length] = L' ';
@@ -707,6 +717,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         }
         Length += TempLength + 1;
     }
+
     if (Length + 4 < (sizeof(szText)/sizeof(WCHAR)))
     {
         szText[Length] = L' ';
@@ -730,7 +741,8 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         {
             /* add drive capacity */
             szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
-            SendDlgItemMessageW(hwndDlg, 28673, LB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, 28673, CB_ADDSTRING, 0, (LPARAM)szText);
+            SendDlgItemMessageW(hwndDlg, 28673, CB_SETCURSEL, 0, (LPARAM)0);
         }
     }
 
@@ -744,6 +756,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     dwIndex = 0;
     dwDefault = 0;
     hDlgCtrl = GetDlgItem(hwndDlg, 28677);
+
     while(pContext->QueryAvailableFileSystemFormat(dwIndex, szText, &uMajor, &uMinor, &Latest))
     {
         szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
@@ -761,7 +774,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
 
     /* select default filesys */
-    SendMessageW(hDlgCtrl, CB_SETCURSEL, dwIndex, 0);
+    SendMessageW(hDlgCtrl, CB_SETCURSEL, dwDefault, 0);
     /* setup cluster combo */
     InsertDefaultClusterSizeForFs(hwndDlg, pContext);
     /* hide progress control */
@@ -814,7 +827,7 @@ FormatExCB(
 VOID
 FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
-    WCHAR szDrive[3] = { L'C', '\\', 0 };
+	WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
     WCHAR szFileSys[40] = {0};
     WCHAR szLabel[40] = {0};
     INT iSelIndex;
