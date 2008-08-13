@@ -451,7 +451,7 @@ KeAttachProcess(IN PKPROCESS Process)
     MiSyncThreadProcessViews(Process,
                              (PVOID)Thread->StackLimit,
                              Thread->LargeStack ?
-                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
+                             KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
     MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
     /* Check if we're already in that process */
@@ -581,7 +581,7 @@ KeStackAttachProcess(IN PKPROCESS Process,
     MiSyncThreadProcessViews(Process,
                              (PVOID)Thread->StackLimit,
                              Thread->LargeStack ?
-                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
+                             KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
     MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
     /* Crash system if DPC is being executed! */

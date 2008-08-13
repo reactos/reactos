@@ -347,6 +347,10 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     MiSyncThreadProcessViews(PsGetCurrentProcess(),
                              ((PETHREAD)NextThread)->ThreadsProcess,
                              sizeof(EPROCESS));
+    MiSyncThreadProcessViews(PsGetCurrentProcess(),
+                             (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
+                             NextThread->LargeStack ?
+                             KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
 
     /* Swap contexts */
     ApcState = KiSwapContext(CurrentThread, NextThread);
