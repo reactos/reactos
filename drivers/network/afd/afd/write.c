@@ -280,6 +280,16 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("We already have %d bytes waiting.\n",
 			    FCB->Send.BytesUsed));
 
+    SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
+					SendReq->BufferCount,
+					NULL, NULL,
+					FALSE, FALSE );
+
+    if( !SendReq->BufferArray ) {
+        return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
+                                       Irp, 0, NULL );
+    }
+
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n",
 			    FCB->Send.BytesUsed));
 
@@ -288,16 +298,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	AFD_DbgPrint(MID_TRACE,("We can accept %d bytes\n",
 				SpaceAvail));
-
-        SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
-					    SendReq->BufferCount,
-					    NULL, NULL,
-					    FALSE, FALSE );
-
-        if( !SendReq->BufferArray ) {
-            return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
-                                           Irp, 0, NULL );
-        }
 
 	for( i = 0; FCB->Send.BytesUsed < FCB->Send.Size &&
 		 i < SendReq->BufferCount; i++ ) {
