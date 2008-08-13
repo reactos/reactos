@@ -25,33 +25,33 @@ BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
   IDS_USAGE
     "\nUSAGE:\n \
-        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
+        ipconfig [/? | /all | /renew [kort] | /release [kort] |\n \
                   /flushdns | /displaydns | /registerdns |\n \
-                  /showclassid adapter |\n \
-                  /setclassid adapter [classid] ]\n \
+                  /showclassid kort |\n \
+                  /setclassid kort [classid] ]\n \
     \n \
-    where\n \
-        adapter         Connection name\n \
-                       (wildcard characters * and ? allowed, see examples)\n \
+    der\n \
+        kort         Tilkoblingsnavn\n \
+                       (jokertegnene * og ? er tillatt, se eksemplene)\n \
     \n \
         Eksempler:\n \
-           /?           Vis denne hjelp meldingen\n \
-           /all         Vis detaljert informasjon.\n \
-           /release     Release the IP address for the specified adapter.\n \
+           /?           Viser denne hjelpe meldingen\n \
+           /all         Viser detaljert informasjon.\n \
+           /release     Frigir IP addressen for det angitte kortet.\n \
            /renew       Forny alle IP addresser for alle valgte kort.\n \
-           /flushdns    Purges the DNS Resolver cache.\n \
-           /registerdns Refreshes all DHCP leases and re-registers DNS names.\n \
-           /displaydns  Display the contents of the DNS Resolver Cache.\n \
-           /showclassid Displays all the dhcp class IDs allowed for adapter.\n \
-           /setclassid  Modifies the dhcp class id.\n \
+           /flushdns    Tømmer DNS Resolver-bufferen.\n \
+           /registerdns Oppdaterer alle DHCP leieavtaler og registerer DNS navn på nytt.\n \
+           /displaydns  Viser innhold av DNS Resolver-bufferen.\n \
+           /showclassid Viser alle klasse IDene for DHCP som er tillatt for kortet.\n \
+           /setclassid  Endrer klasse-IDene for DHCP.\n \
     \n \
-    The default is to display only the IP address, subnet mask and\n \
-    default gateway for each adapter bound to TCP/IP.\n \
+    Standardverdien er å bare vise IP-addressen, nettverksmasken og
+    standard gatewayen for hver kort knyttet til TCP/IP.\n \
     \n \
-    For Release and Renew, if no adapter name is specified, then the IP address\n \
-    leases for all adapters bound to TCP/IP will be released or renewed.\n \
+    For Release og Renew, hvis ingen kortnavn er angitt, vil IP addressen\n \
+    for alle kort knyttet til TCP/IP frigis eller fornyes hvis det ikke angis et kortnavn.\n \
     \n \
-    For Setclassid, if no ClassId is specified, then the ClassId is removed.\n \
+    For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n \
     \n \
     Examples:\n \
         > ipconfig                   ... Vis informasjon.\n \
@@ -60,6 +60,6 @@ BEGIN
         > ipconfig /renew EL*        ... Forny alle kort med navn som\n \
                                          begynner med EL\n \
         > ipconfig /release *Til*    ... Frigi alle samsvarende tilkoblinger,\n \
-                                         for eksempel ""Lokal tilkobling 1"" or\n \
+                                         for eksempel ""Lokal tilkobling 1"" eller\n \
                                              ""Lokaltilkobling 2""\n"
 END

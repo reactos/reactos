@@ -203,33 +203,33 @@ BEGIN
     IDS_CMT_CALC        "Start Kalkulator"
     IDS_CMT_CMD         "Åpne command prompt"
     IDS_CMT_EXPLORER    "Start Explorer"
-    IDS_CMT_NOTEPAD     "Start Tekst Editor"
-    IDS_CMT_REGEDIT     "Start Register Editor"
-    IDS_CMT_WORDPAD     "Start Dokument Editor"
+    IDS_CMT_NOTEPAD     "Start Tekstredigering"
+    IDS_CMT_REGEDIT     "Start Registerredigering"
+    IDS_CMT_WORDPAD     "Start Dokument redigering"
     IDS_CMT_SCREENSHOT  "Ta skjermbilde"
     IDS_CMT_DEVMGMT     "Start Enhetsbehandler"
     IDS_CMT_SERVMAN     "Start Tjenestebehandler"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Start Ekstern skrivebord"
 END
 
 STRINGTABLE
 BEGIN
     IDS_GAMES		    "Spill"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
+    IDS_CMT_SOLITAIRE	"Kabal"
+    IDS_CMT_WINEMINE	"Minnesveiper"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_SYS_TOOLS        "System verktøy"
+	IDS_CMT_CHARMAP      "Tegnkart"
+	IDS_CMT_KBSWITCH     "Endre tastatur valg"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Tilgjengelighet"
+	IDS_CMT_MAGNIFY      	     "Forstørrelse"
 END
 
 STRINGTABLE
