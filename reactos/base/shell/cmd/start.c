@@ -48,10 +48,9 @@ static void StripQuotes(TCHAR *in)
 INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[CMDLINE_LENGTH];
-	TCHAR *rest = NULL;
+	TCHAR rest[CMDLINE_LENGTH];
 	TCHAR *param = NULL;
 	TCHAR *dot;
-	TCHAR RestWithoutArgs[CMDLINE_LENGTH];
 	INT size;
 	LPTSTR comspec;
 	BOOL bWait = FALSE;
@@ -90,6 +89,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			else if (_totupper(*option) == _T('D'))
 			{
 				lpDirectory = option + 1;
+				if (!*lpDirectory)
+				{
+					while (_istspace(*Rest))
+						Rest++;
+					lpDirectory = GetParameter(&Rest);
+				}
 				StripQuotes(lpDirectory);
 			}
 			else if (!_tcsicmp(option, _T("MIN")))
@@ -124,9 +129,15 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			{
 				Priority = BELOW_NORMAL_PRIORITY_CLASS;
 			}
-			else if (!_tcsicmp(option, _T("WAIT")))
+			else if (!_tcsicmp(option, _T("W")) ||
+			         !_tcsicmp(option, _T("WAIT")))
 			{
 				bWait = TRUE;
+			}
+			else
+			{
+				ConErrResPrintf(STRING_TYPE_ERROR1, option);
+				return 0;
 			}
 		}
 		else
@@ -136,7 +147,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			break;
 		}
 	}
-	_tcscpy(RestWithoutArgs, Rest);
+	_tcscpy(rest, Rest);
 
 	/* get comspec */
 	comspec = cmd_alloc ( MAX_PATH * sizeof(TCHAR));
@@ -149,10 +160,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, MAX_PATH);
 	if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
 	{
-		RestWithoutArgs[0] = _T('c');
-		RestWithoutArgs[1] = _T('m');
-		RestWithoutArgs[2] = _T('d');
-		RestWithoutArgs[3] = _T('\0');
+		_tcscpy(comspec, _T("cmd"));
 	}
 	else
 	{
@@ -169,80 +177,31 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	nErrorLevel = 0;
 
-	if(!_tcslen(RestWithoutArgs))
+	if(!*rest)
 	{
-		_tcscpy(RestWithoutArgs,_T("\""));
-		_tcscat(RestWithoutArgs,comspec);
-		_tcscat(RestWithoutArgs,_T("\""));
+		_tcscpy(rest,_T("\""));
+		_tcscat(rest,comspec);
+		_tcscat(rest,_T("\""));
 	}
-
-	rest = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR));
-	if (rest == NULL)
-	{
-	 if(comspec != NULL)
-		cmd_free(comspec);
-	 error_out_of_memory();
-	 return 1;
-	}
-
-	param = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR));
-	if (param == NULL)
-	{
-	 if(comspec != NULL)
-		cmd_free(comspec);
-	 cmd_free(rest);
-	 error_out_of_memory();
-	 return 1;
-	}
-
-	param[0] = _T('\0');
-
-
-	_tcscpy(rest,RestWithoutArgs);
 
 	/* Parsing the command that gets called by start, and it's parameters */
-	if(!_tcschr(rest,_T('\"')))
 	{
-		INT count = _tcslen(rest);
-
-		/* find the end of the command and start of the args */
-		for(i = 0; i < count; i++)
-		{
-			if(rest[i] == _T(' '))
-			{
-
-				_tcscpy(param,&rest[i+1]);
-				rest[i] = _T('\0');
-				break;
-			}
-		}
-	}
-	else
-	{
-		INT count = _tcslen(rest);
 		BOOL bInside = FALSE;
 
 		/* find the end of the command and put the arguments in param */
-		for(i = 0; i < count; i++)
+		for(i = 0; rest[i]; i++)
 		{
 			if(rest[i] == _T('\"'))
 				bInside = !bInside;
 			if((rest[i] == _T(' ')) && !bInside)
 			{
-				_tcscpy(param,&rest[i+1]);
+				param = &rest[i+1];
 				rest[i] = _T('\0');
 				break;
 			}
 		}
-		i = 0;
 		/* remove any slashes */
-		while(i < count)
-		{
-			if(rest[i] == _T('\"'))
-				memmove(&rest[i],&rest[i + 1], _tcslen(&rest[i]) * sizeof(TCHAR));
-			else
-				i++;
-		}
+		StripQuotes(rest);
 	}
 
 	/* check for a drive change */
@@ -258,13 +217,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (szPath[0] != (TCHAR)_totupper (*rest))
 			ConErrResPuts (STRING_FREE_ERROR1);
 
-		if (rest != NULL)
-		    cmd_free(rest);
-
-	    if (param != NULL)
-		    cmd_free(param);
-		 if (comspec != NULL)
-			 cmd_free(comspec);
+		cmd_free(comspec);
 		return 0;
 	}
 
@@ -274,14 +227,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	{
 		error_bad_command ();
 
-		if (rest != NULL)
-		    cmd_free(rest);
-
-	    if (param != NULL)
-		    cmd_free(param);
-
-		 if (comspec != NULL)
-			 cmd_free(comspec);
+		cmd_free(comspec);
 		return 1;
 	}
 
@@ -291,25 +237,13 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
 		bBat = TRUE;
-		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
-
-
-		_tcscpy(szFullCmdLine,comspec);
-
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));
-		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR));
-        szFullCmdLine[0] = _T('\"');
-        szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
-	}
-
+		_stprintf(szFullCmdLine, _T("\"%s\" /K \"%s\""), comspec, szFullName);
 		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
-
-
+	}
+	else
+	{
 		TRACE ("[EXEC: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
 		/* build command line for CreateProcess() */
-		if (bBat == FALSE)
-		{
 		  _tcscpy (szFullCmdLine, rest);
 		  if( param != NULL )
 		  {
@@ -317,7 +251,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
-		}
+	}
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -359,14 +293,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 
 
-	if (rest != NULL)
-	    cmd_free(rest);
-
-    if (param != NULL)
-	    cmd_free(param);
-
-	 if (comspec != NULL)
-		 cmd_free(comspec);
+	cmd_free(comspec);
 	return 0;
 }
 
