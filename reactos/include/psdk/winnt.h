@@ -2002,6 +2002,38 @@ typedef struct _ACL_SIZE_INFORMATION {
 	DWORD   AclBytesFree;
 } ACL_SIZE_INFORMATION;
 
+#ifndef _LDT_ENTRY_DEFINED
+#define _LDT_ENTRY_DEFINED
+typedef struct _LDT_ENTRY
+{
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union
+    {
+        struct
+        {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct
+        {
+            ULONG BaseMid:8;
+            ULONG Type:5;
+            ULONG Dpl:2;
+            ULONG Pres:1;
+            ULONG LimitHi:4;
+            ULONG Sys:1;
+            ULONG Reserved_0:1;
+            ULONG Default_Big:1;
+            ULONG Granularity:1;
+            ULONG BaseHi:8;
+        } Bits;
+    } HighWord;
+} LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
+#endif
+
 /* FIXME: add more machines */
 #if defined(__i386__) && !defined(__PowerPC__)
 #define SIZE_OF_80387_REGISTERS	80
