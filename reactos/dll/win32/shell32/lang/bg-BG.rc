@@ -613,6 +613,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Моят компютър"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошче"
 	IDS_CONTROLPANEL            "Крило за управление"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	// context menus 
 	IDS_VIEW_LARGE              "&Големи значета"

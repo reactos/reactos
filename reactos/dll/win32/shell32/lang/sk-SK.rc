@@ -616,6 +616,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Tento poèítaè"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kôš"
 	IDS_CONTROLPANEL            "Ovládací panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Ve¾ké ikony"

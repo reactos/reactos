@@ -599,6 +599,7 @@ BEGIN
 	IDS_MYCOMPUTER              "我的电脑"
 	IDS_RECYCLEBIN_FOLDER_NAME  "回收站"
 	IDS_CONTROLPANEL            "控制面板"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "大图标(&G)"

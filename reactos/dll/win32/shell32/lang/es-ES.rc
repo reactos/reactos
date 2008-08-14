@@ -612,6 +612,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Mi PC"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papelera de reciclaje"
 	IDS_CONTROLPANEL            "Panel de control"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Iconos &grandes"

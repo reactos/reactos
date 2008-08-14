@@ -610,6 +610,7 @@ BEGIN
 	IDS_MYCOMPUTER              "My Computer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Lar&ge Icons"

@@ -589,6 +589,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Min datamaskin"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papirkurv"
 	IDS_CONTROLPANEL            "Kontrollpanel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Store ikoner"

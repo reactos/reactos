@@ -610,6 +610,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Ο υπολογιστής μου"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Κάδος ανακύκλωσης"
 	IDS_CONTROLPANEL            "Πίνακας ελέγχου"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Μεγάλα εικονίδια"

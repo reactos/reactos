@@ -613,6 +613,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Arbeitsplatz"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papierkorb"
 	IDS_CONTROLPANEL            "Systemsteuerung"
+	IDS_ADMINISTRATIVETOOLS     "Verwaltung"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Groﬂe Symbole"

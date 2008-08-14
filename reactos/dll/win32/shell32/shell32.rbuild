@@ -57,6 +57,7 @@
 	<file>shfldr_mycomp.c</file>
 	<file>shfldr_mydocuments.c</file>
 	<file>shfldr_printers.c</file>
+	<file>shfldr_admintools.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>

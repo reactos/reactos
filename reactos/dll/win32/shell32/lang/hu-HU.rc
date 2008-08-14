@@ -613,6 +613,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Számítógép"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Nagy képek"

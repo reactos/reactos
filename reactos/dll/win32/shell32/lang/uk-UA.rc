@@ -611,6 +611,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 	IDS_CONTROLPANEL            "Панель керування"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"

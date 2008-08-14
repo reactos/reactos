@@ -611,6 +611,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Risorse del Computer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Cestino"
 	IDS_CONTROLPANEL            "Pannello di controllo"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Icone Grandi"
