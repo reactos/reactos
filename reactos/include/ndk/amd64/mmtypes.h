@@ -14,7 +14,7 @@ Abstract:
 Author:
 
     Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
-    Timo Kreuzer (timo.kreuzer@reactos.com)   29-Jul-2008
+    Timo Kreuzer (timo.kreuzer@reactos.com)   15-Aug-2008
 
 --*/
 
@@ -47,109 +47,169 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 // Page Table Entry Definitions
 //
-typedef struct _HARDWARE_PTE_AMD64
+typedef struct _HARDWARE_PTE
 {
-    ULONGLONG Valid:1;
-    ULONGLONG Write:1;
-    ULONGLONG Owner:1;
-    ULONGLONG WriteThrough:1;
-    ULONGLONG CacheDisable:1;
-    ULONGLONG Accessed:1;
-    ULONGLONG Dirty:1;
-    ULONGLONG LargePage:1;
-    ULONGLONG Global:1;
-    ULONGLONG CopyOnWrite:1;
-    ULONGLONG Prototype: 1;
-    ULONGLONG reserved1: 1;
-    ULONGLONG PageFrameNumber:40;
-    ULONGLONG reserved2:11;
-    ULONGLONG NoExecute:1;
-} HARDWARE_PTE_AMD64, *PHARDWARE_PTE_AMD64;
+   ULONG64 Valid:1;
+   ULONG64 Write:1;
+   ULONG64 Owner:1;
+   ULONG64 WriteThrough:1;
+   ULONG64 CacheDisable:1;
+   ULONG64 Accessed:1;
+   ULONG64 Dirty:1;
+   ULONG64 LargePage:1;
+   ULONG64 Global:1;
+   ULONG64 CopyOnWrite:1;
+   ULONG64 Prototype:1;
+   ULONG64 reserved0:1;
+   ULONG64 PageFrameNumber:28;
+   ULONG64 reserved1:12;
+   ULONG64 SoftwareWsIndex:11;
+   ULONG64 NoExecute:1;
+} HARDWARE_PTE, *PHARDWARE_PTE;
 
 typedef struct _MMPTE_SOFTWARE
 {
-    ULONG Valid:1;
-    ULONG PageFileLow:4;
-    ULONG Protection:5;
-    ULONG Prototype:1;
-    ULONG Transition:1;
-    ULONG PageFileHigh:20;
-} MMPTE_SOFTWARE;
+    ULONG64 Valid:1;
+    ULONG64 PageFileLow:4;
+    ULONG64 Protection:5;
+    ULONG64 Prototype:1;
+    ULONG64 Transition:1;
+    ULONG64 UsedPageTableEntries:10;
+    ULONG64 Reserved:10;
+    ULONG64 PageFileHigh:32;
+} MMPTE_SOFTWARE, *PMMPTE_SOFTWARE;
 
 typedef struct _MMPTE_TRANSITION
 {
-    ULONG Valid:1;
-    ULONG Write:1;
-    ULONG Owner:1;
-    ULONG WriteThrough:1;
-    ULONG CacheDisable:1;
-    ULONG Protection:5;
-    ULONG Prototype:1;
-    ULONG Transition:1;
-    ULONG PageFrameNumber:20;
+    ULONG64 Valid:1;
+    ULONG64 Write:1;
+    ULONG64 Owner:1;
+    ULONG64 WriteThrough:1;
+    ULONG64 CacheDisable:1;
+    ULONG64 Protection:5;
+    ULONG64 Prototype:1;
+    ULONG64 Transition:1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 PageFrameNumber:36;
+    ULONG64 Unused:16;
+#else
+    ULONG64 PageFrameNumber:28;
+    ULONG64 Unused:24;
+#endif
 } MMPTE_TRANSITION;
 
 typedef struct _MMPTE_PROTOTYPE
 {
-    ULONG Valid:1;
-    ULONG ProtoAddressLow:7;
-    ULONG ReadOnly:1;
-    ULONG WhichPool:1;
-    ULONG Prototype:1;
-    ULONG ProtoAddressHigh:21;
+    ULONG64 Valid:1;
+    ULONG64 Unused0:7;
+    ULONG64 ReadOnly:1;
+    ULONG64 Unused1:1;
+    ULONG64 Prototype:1;
+    ULONG64 Protection:5;
+    LONG64 ProtoAddress:48;
 } MMPTE_PROTOTYPE;
 
 typedef struct _MMPTE_SUBSECTION
 {
-    ULONG Valid:1;
-    ULONG SubsectionAddressLow:4;
-    ULONG Protection:5;
-    ULONG Prototype:1;
-    ULONG SubsectionAddressHigh:20;
-    ULONG WhichPool:1;
+    ULONG64 Valid:1;
+    ULONG64 Unused0:4;
+    ULONG64 Protection:5;
+    ULONG64 Prototype:1;
+    ULONG64 Unused1:5;
+    LONG64 SubsectionAddress:48;
 } MMPTE_SUBSECTION;
 
 typedef struct _MMPTE_LIST
 {
-    ULONG Valid:1;
-    ULONG OneEntry:1;
-    ULONG filler0:8;
-    ULONG NextEntry:20;
-    ULONG Prototype:1;
-    ULONG filler1:1;
+    ULONG64 Valid:1;
+    ULONG64 OneEntry:1;
+    ULONG64 filler0:3;
+    ULONG64 Protection:5;
+    ULONG64 Prototype:1;
+    ULONG64 Transition:1;
+    ULONG64 filler1:20;
+    ULONG64 NextEntry:32;
 } MMPTE_LIST;
 
 #ifndef CONFIG_SMP
 
 typedef struct _MMPTE_HARDWARE
 {
-    ULONGLONG Valid:1;
-    ULONGLONG Write:1;
-    ULONGLONG Owner:1;
-    ULONGLONG WriteThrough:1;
-    ULONGLONG CacheDisable:1;
-    ULONGLONG Accessed:1;
-    ULONGLONG Dirty:1;
-    ULONGLONG LargePage:1;
-    ULONGLONG Global:1;
-    ULONGLONG CopyOnWrite:1;
-    ULONGLONG Prototype: 1;
-    ULONGLONG reserved1: 1;
-    ULONGLONG PageFrameNumber:40;
-    ULONGLONG reserved2:11;
-    ULONGLONG NoExecute:1;
+    ULONG64 Valid:1;
+    ULONG64 Write:1;
+    ULONG64 Owner:1;
+    ULONG64 WriteThrough:1;
+    ULONG64 CacheDisable:1;
+    ULONG64 Accessed:1;
+    ULONG64 Dirty:1;
+    ULONG64 LargePage:1;
+    ULONG64 Global:1;
+    ULONG64 CopyOnWrite:1;
+    ULONG64 Prototype:1;
+    ULONG64 reserved0:1;
+    ULONG64 PageFrameNumber:28;
+    ULONG64 reserved1:12;
+    ULONG64 SoftwareWsIndex:11;
+    ULONG64 NoExecute:1;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 #else
 
-#error MMPTE_HARDWARE undeclared
+typedef struct _MMPTE_HARDWARE
+{
+    ULONG64 Valid:1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 Dirty1:1;
+#else
+    ULONG64 Writable:1;
+#endif
+    ULONG64 Owner:1;
+    ULONG64 WriteThrough:1;
+    ULONG64 CacheDisable:1;
+    ULONG64 Accessed:1;
+    ULONG64 Dirty:1;
+    ULONG64 LargePage:1;
+    ULONG64 Global:1;
+    ULONG64 CopyOnWrite:1;
+    ULONG64 Prototype:1;
+    ULONG64 Write:1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 PageFrameNumber:36;
+    ULONG64 reserved1:4;
+#else
+    ULONG64 PageFrameNumber:28;
+    ULONG64 reserved1:12;
+#endif
+    ULONG64 SoftwareWsIndex:11;
+    ULONG64 NoExecute:1;
+} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 #endif
 
-//
-// Use the right PTE structure
-//
-#define HARDWARE_PTE        HARDWARE_PTE_AMD64
-#define PHARDWARE_PTE       PHARDWARE_PTE_AMD64
-
+typedef struct _MMPTE_HARDWARE_LARGEPAGE
+{
+    ULONG64 Valid:1;
+    ULONG64 Write:1;
+    ULONG64 Owner:1;
+    ULONG64 WriteThrough:1;
+    ULONG64 CacheDisable:1;
+    ULONG64 Accessed:1;
+    ULONG64 Dirty:1;
+    ULONG64 LargePage:1;
+    ULONG64 Global:1;
+    ULONG64 CopyOnWrite:1;
+    ULONG64 Prototype:1;
+    ULONG64 reserved0:1;
+    ULONG64 PAT:1;
+    ULONG64 reserved1:8;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG64 PageFrameNumber:27;
+    ULONG64 reserved2:16;
+#else
+    ULONG64 PageFrameNumber:19;
+    ULONG64 reserved2:24;
 #endif
+} MMPTE_HARDWARE_LARGEPAGE, *PMMPTE_HARDWARE_LARGEPAGE;
+
+
+#endif // !AMD64_MMTYPES_H
