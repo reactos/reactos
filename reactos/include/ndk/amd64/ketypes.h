@@ -254,34 +254,42 @@ typedef struct _LDT_ENTRY
 //
 // GDT Entry Definition
 //
-typedef struct _KGDTENTRY
+typedef union _KGDTENTRY64
 {
-    USHORT LimitLow;
-    USHORT BaseLow;
-    union
+    struct
     {
-        struct
+        USHORT LimitLow;
+        USHORT BaseLow;
+        union
         {
-            UCHAR BaseMid;
-            UCHAR Flags1;
-            UCHAR Flags2;
-            UCHAR BaseHi;
-        } Bytes;
-        struct
-        {
-            ULONG BaseMid:8;
-            ULONG Type:5;
-            ULONG Dpl:2;
-            ULONG Pres:1;
-            ULONG LimitHi:4;
-            ULONG Sys:1;
-            ULONG Reserved_0:1;
-            ULONG Default_Big:1;
-            ULONG Granularity:1;
-            ULONG BaseHi:8;
-        } Bits;
-    } HighWord;
-} KGDTENTRY, *PKGDTENTRY;
+            struct
+            {
+                UCHAR BaseMiddle;
+                UCHAR Flags1;
+                UCHAR Flags2;
+                UCHAR BaseHigh;
+            } Bytes;
+            struct
+            {
+                ULONG BaseMiddle:8;
+                ULONG Type:5;
+                ULONG Dpl:2;
+                ULONG Present:1;
+                ULONG LimitHigh:4;
+                ULONG System:1;
+                ULONG LongMode:1;
+                ULONG DefaultBig:1;
+                ULONG Granularity:1;
+                ULONG BaseHigh:8;
+            } Bits;
+        };
+        ULONG BaseUpper;
+        ULONG MustBeZero;
+    };
+    UINT64 Alignment;
+} KGDTENTRY64, *PKGDTENTRY64;
+#define KGDTENTRY KGDTENTRY64
+#define PKGDTENTRY PKGDTENTRY64
 
 //
 // IDT Entry Access Definition
@@ -305,13 +313,25 @@ typedef struct _KIDT_ACCESS
 //
 // IDT Entry Definition
 //
-typedef struct _KIDTENTRY
+typedef union _KIDTENTRY64
 {
-    USHORT Offset;
-    USHORT Selector;
-    USHORT Access;
-    USHORT ExtendedOffset;
-} KIDTENTRY, *PKIDTENTRY;
+    struct
+    {
+        USHORT OffsetLow;
+        USHORT Selector;
+        USHORT IstIndex:3;
+        USHORT Reserved0:5;
+        USHORT Type:5;
+        USHORT Dpl:2;
+        USHORT Present:1;
+        USHORT OffsetMiddle;
+        ULONG OffsetHigh;
+        ULONG Reserved1;
+    };
+    UINT64 Alignment;
+} KIDTENTRY64, *PKIDTENTRY64;
+#define KIDTENTRY KIDTENTRY64
+#define PKIDTENTRY PKIDTENTRY64
 
 typedef struct _KDESCRIPTOR
 {
@@ -321,50 +341,6 @@ typedef struct _KDESCRIPTOR
 } KDESCRIPTOR, *PKDESCRIPTOR;
 
 #ifndef NTOS_MODE_USER
-
-//
-// FN/FX (FPU) Save Area Structures
-//
-typedef struct _FNSAVE_FORMAT
-{
-    ULONG ControlWord;
-    ULONG StatusWord;
-    ULONG TagWord;
-    ULONG ErrorOffset;
-    ULONG ErrorSelector;
-    ULONG DataOffset;
-    ULONG DataSelector;
-    UCHAR RegisterArea[80];
-} FNSAVE_FORMAT, *PFNSAVE_FORMAT;
-
-typedef struct _FXSAVE_FORMAT
-{
-    USHORT ControlWord;
-    USHORT StatusWord;
-    USHORT TagWord;
-    USHORT ErrorOpcode;
-    ULONG ErrorOffset;
-    ULONG ErrorSelector;
-    ULONG DataOffset;
-    ULONG DataSelector;
-    ULONG MXCsr;
-    ULONG MXCsrMask;
-    UCHAR RegisterArea[128];
-    UCHAR Reserved3[128];
-    UCHAR Reserved4[224];
-    UCHAR Align16Byte[8];
-} FXSAVE_FORMAT, *PFXSAVE_FORMAT;
-
-typedef struct _FX_SAVE_AREA
-{
-    union
-    {
-        FNSAVE_FORMAT FnArea;
-        FXSAVE_FORMAT FxArea;
-    } U;
-    ULONG NpxSavedCpu;
-    ULONG Cr0NpxState;
-} FX_SAVE_AREA, *PFX_SAVE_AREA;
 
 //
 // Special Registers Structure (outside of CONTEXT)
