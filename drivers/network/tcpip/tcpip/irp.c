@@ -27,14 +27,14 @@ NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
     UntrackFL( __FILE__, __LINE__, Irp );
 #endif
 
-    (void)IoSetCancelRoutine( Irp, NULL );
+    Irp->IoStatus.Status = Status;
 
     if( Status == STATUS_PENDING )
 	IoMarkIrpPending( Irp );
     else {
-	Irp->IoStatus.Status = Status;
 	Irql = KeGetCurrentIrql();
 
+	(void)IoSetCancelRoutine( Irp, NULL );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	if (KeGetCurrentIrql() != Irql) {
 	    DbgPrint("WARNING: IO COMPLETION RETURNED AT WRONG IRQL:\n");
