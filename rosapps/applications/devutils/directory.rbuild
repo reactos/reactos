@@ -20,6 +20,10 @@
 		<xi:include href="syscalldump/syscalldump.rbuild" />
 	</directory>
 
+	<directory name="symdump">
+		<xi:include href="symdump/symdump.rbuild" />
+	</directory>
+
 	<directory name="vgafontedit">
 		<xi:include href="vgafontedit/vgafontedit.rbuild" />
 	</directory>
