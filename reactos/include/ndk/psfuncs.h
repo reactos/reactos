@@ -315,6 +315,11 @@ NtCurrentTeb(VOID)
     return ret;
 #endif
 }
+#elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
+{
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+}
 #endif
 #else
 struct _TEB * NtCurrentTeb(void);
