@@ -107,6 +107,7 @@
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
+
 #include "pshpack1.h"
 typedef BYTE PIDLTYPE;
 
@@ -118,6 +119,31 @@ typedef struct tagPIDLCPanelStruct
     WORD offsComment;		/*08*/
     CHAR szName[1];		/*10*/ /* terminated by 0x00, followed by display name and comment string */
 } PIDLCPanelStruct;
+
+typedef struct tagPIDLFontStruct
+{
+    BYTE dummy;
+    WORD offsFile;
+    WCHAR szName[1];
+} PIDLFontStruct;
+
+typedef struct tagPIDLPrinterStruct
+{
+    BYTE dummy;
+    DWORD Attributes;
+    WORD offsServer;
+    WCHAR szName[1];
+}PIDLPrinterStruct;
+
+typedef struct tagPIDLRecycleStruct
+{
+	FILETIME LastModification;
+	FILETIME DeletionTime;
+	ULARGE_INTEGER FileSize;
+	ULARGE_INTEGER PhysicalFileSize;
+	DWORD Attributes;
+	WCHAR szName[1];
+}PIDLRecycleStruct;
 
 typedef struct tagGUIDStruct
 {
@@ -179,7 +205,10 @@ typedef struct tagPIDLDATA
 	    CHAR szName[1];	/*06*/ /* terminated by 0x00 0x00 */
 	  } htmlhelp;
 	  struct tagPIDLCPanelStruct cpanel;
-          struct tagValueW valueW;
+	  struct tagValueW valueW;
+	  struct tagPIDLFontStruct cfont;
+	  struct tagPIDLPrinterStruct cprinter;
+	  struct tagPIDLRecycleStruct crecycle;
 	}u;
 } PIDLDATA, *LPPIDLDATA;
 #include "poppack.h"
@@ -207,6 +236,7 @@ BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl);
 BOOL    _ILIsMyDocuments       (LPCITEMIDLIST pidl);
 BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
 BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);
+BOOL	_ILIsAdminTools (LPCITEMIDLIST pidl);
 BOOL    _ILIsNetHood      (LPCITEMIDLIST pidl);
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl);
 BOOL	_ILIsFolder		(LPCITEMIDLIST pidl);
@@ -255,7 +285,9 @@ LPITEMIDLIST	_ILCreateIExplore	(void);
 LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
-LPITEMIDLIST   _ILCreateNetHood     (void);
+LPITEMIDLIST	_ILCreateNetHood	(void);
+LPITEMIDLIST	_ILCreateAdminTools	(void);
+LPITEMIDLIST	_ILCreateFont		(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
 

@@ -234,4 +234,8 @@ BEGIN
                                  "Are you sure that you wish to do this?"
     STRING_INVALID_NUMBER,       "Invalid number format"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
+    STRING_WRITE_FAILED,              "Could not save the file."
+    STRING_WRITE_ACCESS_DENIED,       "You do not have access to save the file."
+    STRING_OPEN_FAILED,               "Could not open the file."
+    STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
 END

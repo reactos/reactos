@@ -66,10 +66,6 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
   ULONG h = (ULONG)Handle >> 2;
   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
-  if (ProcessData == NULL)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
   if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
       || (*Object = ProcessData->HandleTable[h].Object) == NULL
@@ -117,10 +113,6 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
   ULONG h = (ULONG)Handle >> 2;
   Object_t *Object;
 
-  if (ProcessData == NULL)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
   if (h >= ProcessData->HandleTableSize
       || (Object = ProcessData->HandleTable[h].Object) == NULL)
@@ -142,11 +134,6 @@ NTSTATUS STDCALL CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 {
    ULONG i;
    PVOID* Block;
-
-   if (ProcessData == NULL)
-   {
-      return STATUS_INVALID_PARAMETER;
-   }
 
    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -188,9 +175,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
 {
     ULONG i;
 
-    if (SourceProcessData == NULL ||
-        TargetProcessData == NULL ||
-        TargetProcessData->HandleTableSize)
+    if (TargetProcessData->HandleTableSize)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -225,10 +210,6 @@ NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle
 {
   ULONG h = (ULONG)Handle >> 2;
 
-  if (ProcessData == NULL)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
   if (h >= ProcessData->HandleTableSize
       || ProcessData->HandleTable[h].Object == NULL)
     {

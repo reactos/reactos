@@ -770,7 +770,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
    PWINDOW_OBJECT Window = NULL;
    PAINTSTRUCT Ps;
-   PROSRGNDATA Rgn;
    NTSTATUS Status;
    DECLARE_RETURN(HDC);
    USER_REFERENCE_ENTRY Ref;
@@ -816,23 +815,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
-      Rgn = REGION_LockRgn(Window->UpdateRegion);
-      if (NULL != Rgn)
-      {
-         REGION_GetRgnBox(Rgn, &Ps.rcPaint);
-         REGION_UnlockRgn(Rgn);
-         IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->Wnd->ClientRect);
-         if (! IntGdiIsEmptyRect(&Ps.rcPaint))
-         {
-            IntGdiOffsetRect(&Ps.rcPaint,
-                             -Window->Wnd->ClientRect.left,
-                             -Window->Wnd->ClientRect.top);
-         }
-      }
-      else
-      {
-         IntGetClientRect(Window, &Ps.rcPaint);
-      }
+      GdiGetClipBox(Ps.hdc, &Ps.rcPaint);
       GDIOBJ_SetOwnership(Window->UpdateRegion, PsGetCurrentProcess());
       /* The region is part of the dc now and belongs to the process! */
       Window->UpdateRegion = NULL;

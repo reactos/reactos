@@ -28,6 +28,55 @@
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #endif
 
+#define IOCTL_TCP_QUERY_INFORMATION_EX \
+	CTL_CODE(FILE_DEVICE_NETWORK, 0, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+#define TL_INSTANCE 0
+#define	IP_MIB_STATS_ID 1
+#define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
+
+typedef struct IPSNMP_INFO {
+	ULONG Forwarding;
+	ULONG DefaultTTL;
+	ULONG InReceives;
+	ULONG InHdrErrors;
+	ULONG InAddrErrors;
+	ULONG ForwDatagrams;
+	ULONG InUnknownProtos;
+	ULONG InDiscards;
+	ULONG InDelivers;
+	ULONG OutRequests;
+	ULONG RoutingDiscards;
+	ULONG OutDiscards;
+	ULONG OutNoRoutes;
+	ULONG ReasmTimeout;
+	ULONG ReasmReqds;
+	ULONG ReasmOks;
+	ULONG ReasmFails;
+	ULONG FragOks;
+	ULONG FragFails;
+	ULONG FragCreates;
+	ULONG NumIf;
+	ULONG NumAddr;
+	ULONG NumRoutes;
+} IPSNMP_INFO, *PIPSNMP_INFO;
+
+typedef struct IPADDR_ENTRY {
+	ULONG  Addr;
+	ULONG  Index;
+	ULONG  Mask;
+	ULONG  BcastAddr;
+	ULONG  ReasmSize;
+	USHORT Context;
+	USHORT Pad;
+} IPADDR_ENTRY, *PIPADDR_ENTRY;
+
+#define DN2H(dw) \
+    ((((dw) & 0xFF000000L) >> 24) | \
+	 (((dw) & 0x00FF0000L) >> 8) | \
+	 (((dw) & 0x0000FF00L) << 8) | \
+	 (((dw) & 0x000000FFL) << 24))
+
 #define SOCKET_STATE_INVALID_TRANSITION ((DWORD)-1)
 #define SOCKET_STATE_CREATED            0
 #define SOCKET_STATE_BOUND              1
@@ -206,10 +255,9 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
-  PIO_COMPLETION_ROUTINE Completion,
-  BOOL ShouldUnlockIrp );
+  PIO_COMPLETION_ROUTINE Completion );
 VOID SocketStateUnlock( PAFD_FCB FCB );
-NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp );
+NTSTATUS LostSocket( PIRP Irp );
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );

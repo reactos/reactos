@@ -143,6 +143,7 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
   ULONG_PTR Address, LastFunctionAddress;
   int First = 1;
   char *Name;
+  ULONG NameLen;
   char FuncName[256];
   PROSSYM_ENTRY Current;
 
@@ -220,18 +221,16 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                 Current->Address = Address;
                 Current->FileOffset = Current[-1].FileOffset;
               }
-            if (sizeof(FuncName) <= strlen((char *) StabStringsBase + StabEntry[i].n_strx))
+            Name = (char *) StabStringsBase + StabEntry[i].n_strx;
+            NameLen = strcspn(Name, ":");
+            if (sizeof(FuncName) <= NameLen)
               {
                 free(*SymbolsBase);
                 fprintf(stderr, "Function name too long\n");
                 return 1;
               }
-            strcpy(FuncName, (char *) StabStringsBase + StabEntry[i].n_strx);
-            Name = strchr(FuncName, ':');
-            if (NULL != Name)
-              {
-                *Name = '\0';
-              }
+            memcpy(FuncName, Name, NameLen);
+            FuncName[NameLen] = '\0';
             Current->FunctionOffset = FindOrAddString(FuncName,
                                                       StringsLength,
                                                       StringsBase);

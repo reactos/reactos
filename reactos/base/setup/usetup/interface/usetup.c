@@ -3081,35 +3081,39 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                 TRUE,
                                                 MUIGetString(STRING_SETUPCOPYINGFILES));
 
+    // fit memory bars to screen width, distribute them uniform
+    unsigned int mem_bar_width = (xScreen - 26) / 5;
+    mem_bar_width -= mem_bar_width % 2;  // make even
+    /* ATTENTION: The following progress bars are debug stuff, which should not be translated!! */
     /* Create the paged pool progress bar */
     CopyContext.MemoryBars[0] = CreateProgressBar(13,
                                                   40,
-                                                  18,
+						  13 + mem_bar_width,
                                                   43,
-                                                  10,
+						  13,
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_PAGEDMEM));
+                                                  "Paged Memory");
 
     /* Create the non paged pool progress bar */
-    CopyContext.MemoryBars[1] = CreateProgressBar(28,
+    CopyContext.MemoryBars[1] = CreateProgressBar((xScreen / 2)- (mem_bar_width / 2),
                                                   40,
-                                                  33,
+						  (xScreen / 2) + (mem_bar_width / 2),
                                                   43,
-                                                  24,
+                                                  (xScreen / 2)- (mem_bar_width / 2),
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_NONPAGEDMEM));
+                                                  "Nonpaged Memory");
 
     /* Create the global memory progress bar */
-    CopyContext.MemoryBars[2] = CreateProgressBar(43,
+    CopyContext.MemoryBars[2] = CreateProgressBar(xScreen - 13 - mem_bar_width,
                                                   40,
-                                                  48,
+						  xScreen - 13,
                                                   43,
-                                                  40,
+						  xScreen - 13 - mem_bar_width,
                                                   44,
                                                   FALSE,
-                                                  MUIGetString(STRING_FREEMEM));
+                                                  "Free Memory");
 
     /* Do the file copying */
     SetupCommitFileQueueW(NULL,

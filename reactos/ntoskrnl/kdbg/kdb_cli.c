@@ -1266,7 +1266,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
    if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
    {
       Entry = PsActiveProcessHead.Flink;
-      if (Entry == &PsActiveProcessHead)
+      if (!Entry || Entry == &PsActiveProcessHead)
       {
          KdbpPrint("No processes in the system!\n");
          return TRUE;
@@ -1395,8 +1395,10 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
    {
       if (!KdbpSymFindModuleByIndex(0, &Info))
       {
-         KdbpPrint("No modules.\n");
-         return TRUE;
+		  ULONG_PTR ntoskrnlBase = ((ULONG_PTR)KdbpCmdMod) & 0xfff00000;
+		  KdbpPrint("  Base      Size      Name\n");
+		  KdbpPrint("  %08x  %08x  %s\n", ntoskrnlBase, 0, "ntoskrnl.exe");
+		  return TRUE;
       }
       i = 1;
    }
@@ -1915,6 +1917,8 @@ KdbpPrint(
 
       TerminalInitialized = TRUE;
       Length = 0;
+	  KeStallExecutionProcessor(100000);
+
       for (;;)
       {
          c = KdbpTryGetCharSerial(5000);
@@ -1937,6 +1941,7 @@ KdbpPrint(
       {
          /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
          TerminalReportsSize = FALSE;
+		 KeStallExecutionProcessor(100000);
          DbgPrint("\x1b[18t");
          c = KdbpTryGetCharSerial(5000);
          if (c == KEY_ESC)
@@ -1968,6 +1973,8 @@ KdbpPrint(
                   }
                }
             }
+			/* Clear further characters */
+			while ((c = KdbpTryGetCharSerial(5000)) != -1);
          }
       }
 
@@ -2066,7 +2073,7 @@ KdbpPrint(
          }
       }
 
-      DbgPrint("%s", p);
+	  DbgPrint("%s", p);
 
       if (c != '\0')
          p[i + 1] = c;
@@ -2229,13 +2236,14 @@ KdbpReadCommand(
          /* Read the next char - this is to throw away a \n which most clients should
           * send after \r.
           */
+		 KeStallExecutionProcessor(100000);
          if (KdbDebugState & KD_DEBUG_KDSERIAL)
             NextKey = KdbpTryGetCharSerial(5);
          else
             NextKey = KdbpTryGetCharKeyboard(&ScanCode, 5);
          if (NextKey == '\n' || NextKey == -1) /* \n or no response at all */
             NextKey = '\0';
-         DbgPrint("\n");
+         KdbpPrint("\n");
 	 /*
 	  * Repeat the last command if the user presses enter. Reduces the
 	  * risk of RSI when single-stepping.
@@ -2260,9 +2268,9 @@ KdbpReadCommand(
             Buffer--;
             *Buffer = 0;
             if (EchoOn)
-               DbgPrint("%c %c", KEY_BS, KEY_BS);
+               KdbpPrint("%c %c", KEY_BS, KEY_BS);
 	    else
-               DbgPrint(" %c", KEY_BS);
+               KdbpPrint(" %c", KEY_BS);
          }
       }
       else if (ScanCode == KEY_SCAN_UP)
@@ -2287,15 +2295,15 @@ KdbpReadCommand(
                Buffer--;
                *Buffer = 0;
                if (EchoOn)
-                  DbgPrint("%c %c", KEY_BS, KEY_BS);
+                  KdbpPrint("%c %c", KEY_BS, KEY_BS);
                else
-                  DbgPrint(" %c", KEY_BS);
+                  KdbpPrint(" %c", KEY_BS);
             }
             i = min(strlen(KdbCommandHistory[CmdHistIndex]), Size - 1);
             memcpy(Orig, KdbCommandHistory[CmdHistIndex], i);
             Orig[i] = '\0';
             Buffer = Orig + i;
-            DbgPrint("%s", Orig);
+            KdbpPrint("%s", Orig);
          }
       }
       else if (ScanCode == KEY_SCAN_DOWN)
@@ -2313,22 +2321,22 @@ KdbpReadCommand(
                   Buffer--;
                   *Buffer = 0;
                   if (EchoOn)
-                     DbgPrint("%c %c", KEY_BS, KEY_BS);
+                     KdbpPrint("%c %c", KEY_BS, KEY_BS);
                   else
-                     DbgPrint(" %c", KEY_BS);
+                     KdbpPrint(" %c", KEY_BS);
                }
                i = min(strlen(KdbCommandHistory[CmdHistIndex]), Size - 1);
                memcpy(Orig, KdbCommandHistory[CmdHistIndex], i);
                Orig[i] = '\0';
                Buffer = Orig + i;
-               DbgPrint("%s", Orig);
+               KdbpPrint("%s", Orig);
             }
          }
       }
       else
       {
          if (EchoOn)
-            DbgPrint("%c", Key);
+            KdbpPrint("%c", Key);
 
          *Buffer = Key;
          Buffer++;
@@ -2406,14 +2414,14 @@ KdbpCliMainLoop(
    {
       if (!KdbSymPrintAddress((PVOID)KdbCurrentTrapFrame->Tf.Eip))
       {
-         DbgPrint("<%x>", KdbCurrentTrapFrame->Tf.Eip);
+         KdbpPrint("<%x>", KdbCurrentTrapFrame->Tf.Eip);
       }
-      DbgPrint(": ");
+      KdbpPrint(": ");
       if (KdbpDisassemble(KdbCurrentTrapFrame->Tf.Eip, KdbUseIntelSyntax) < 0)
       {
-         DbgPrint("<INVALID>");
+         KdbpPrint("<INVALID>");
       }
-      DbgPrint("\n");
+      KdbpPrint("\n");
    }
 
    /* Flush the input buffer */
@@ -2431,7 +2439,7 @@ KdbpCliMainLoop(
    do
    {
       /* Print the prompt */
-      DbgPrint("kdb:> ");
+      KdbpPrint("kdb:> ");
 
       /* Read a command and remember it */
       KdbpReadCommand(Command, sizeof (Command));
@@ -2456,7 +2464,7 @@ KdbpCliModuleLoaded(IN PUNICODE_STRING Name)
    if (!KdbBreakOnModuleLoad)
       return;
 
-   DbgPrint("Module %wZ loaded.\n", Name);
+   KdbpPrint("Module %wZ loaded.\n", Name);
    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 }
 

@@ -15,8 +15,8 @@
 @ stub FindFileInPath
 @ stub FindFileInSearchPath
 @ stdcall GetTimestampForLoadedLibrary(long)
-@ stdcall ImageDirectoryEntryToData(ptr long long ptr) ntdll.RtlImageDirectoryEntryToData
-@ stub ImageDirectoryEntryToDataEx
+@ stdcall ImageDirectoryEntryToData(ptr long long ptr)
+@ stdcall ImageDirectoryEntryToDataEx(ptr long long ptr ptr)
 @ stdcall ImageNtHeader(ptr) ntdll.RtlImageNtHeader
 @ stdcall ImageRvaToSection(ptr ptr long) ntdll.RtlImageRvaToSection
 @ stdcall ImageRvaToVa(ptr ptr long ptr) ntdll.RtlImageRvaToVa
@@ -40,15 +40,15 @@
 @ stub SymEnumSym
 @ stdcall SymEnumSymbols(ptr double str ptr ptr)
 @ stdcall SymEnumSymbolsW(ptr double wstr ptr ptr)
-@ stub SymEnumSymbolsForAddr
-@ stub SymEnumSymbolsForAddrW
+@ stdcall SymEnumSymbolsForAddr (ptr double ptr ptr)
+@ stdcall SymEnumSymbolsForAddrW (ptr double ptr ptr)
 @ stdcall SymEnumTypes(ptr double ptr ptr)
 @ stdcall SymEnumTypesW(ptr double ptr ptr)
 @ stdcall SymEnumerateModules(long ptr ptr)
 @ stdcall SymEnumerateModules64(long ptr ptr)
 @ stdcall SymEnumerateModulesW64(long ptr ptr)
 @ stdcall SymEnumerateSymbols(long long ptr ptr)
-@ stub SymEnumerateSymbols64
+@ stdcall SymEnumerateSymbols64(long double ptr ptr)
 @ stub SymEnumerateSymbolsW
 @ stub SymEnumerateSymbolsW64
 @ stub SymFindDebugInfoFile

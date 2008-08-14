@@ -57,8 +57,7 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 	HDC hDC;
 	PSETTINGS_ENTRY Current;
 	DWORD bpp, xres, yres, checkbpp;
-    DWORD curDispFreq;
-
+	DWORD curDispFreq;
 
 	/* Get current settings */
 	*CurrentSettings = NULL;
@@ -80,12 +79,12 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 
 	while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
 	{
-        if ((devmode.dmBitsPerPel==4 ||
-             devmode.dmBitsPerPel==8 ||
-			 devmode.dmBitsPerPel==16 ||
-			 devmode.dmBitsPerPel==24 ||
-			 devmode.dmBitsPerPel==32) &&
-			 devmode.dmDisplayFrequency==curDispFreq)
+		if ((devmode.dmBitsPerPel == 4 ||
+		     devmode.dmBitsPerPel == 8 ||
+		     devmode.dmBitsPerPel == 16 ||
+		     devmode.dmBitsPerPel == 24 ||
+		     devmode.dmBitsPerPel == 32) &&
+		     devmode.dmDisplayFrequency == curDispFreq)
 		{
 			checkbpp=1;
 		}
@@ -286,7 +285,7 @@ OnInitDialog(IN HWND hwndDlg)
 	BITMAP bitmap;
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
-    INT i;
+	INT i;
 	DISPLAY_DEVICE displayDevice;
 	PGLOBAL_DATA pGlobalData;
 
@@ -365,44 +364,52 @@ OnInitDialog(IN HWND hwndDlg)
 	}
 
 	/* Initialize the color spectrum bitmaps */
-    for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
-    {
-        pGlobalData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
+	{
+		pGlobalData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-        if (pGlobalData->hSpectrumBitmaps[i] != NULL)
-        {
-            GetObjectW(pGlobalData->hSpectrumBitmaps[i], sizeof(BITMAP), &bitmap);
-
-            pGlobalData->cxSource[i] = bitmap.bmWidth;
-            pGlobalData->cySource[i] = bitmap.bmHeight;
-        }
-    }
+		if (pGlobalData->hSpectrumBitmaps[i] != NULL)
+		{
+			if (GetObjectW(pGlobalData->hSpectrumBitmaps[i], sizeof(BITMAP), &bitmap) != 0)
+			{
+				pGlobalData->cxSource[i] = bitmap.bmWidth;
+				pGlobalData->cySource[i] = bitmap.bmHeight;
+			}
+			else
+			{
+				pGlobalData->cxSource[i] = 0;
+				pGlobalData->cySource[i] = 0;
+			}
+		}
+	}
 }
 
 /* Get the ID for GLOBAL_DATA::hSpectrumBitmaps */
 static VOID
 ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_DATA pGlobalData)
 {
-    HDC hdcMem;
-    hdcMem = CreateCompatibleDC(hDC);
+	HDC hdcMem;
+	INT iBitmap;
 
-    if (hdcMem)
-    {
-        INT iBitmap;
+	hdcMem = CreateCompatibleDC(hDC);
 
-        switch(BitsPerPel)
-        {
-            case 4:  iBitmap = 0; break;
-            case 8:  iBitmap = 1; break;
-            default: iBitmap = 2;
-        }
+	if (!hdcMem)
+		return;
 
-        SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]);
-        StretchBlt(hDC, client->left, client->top, client->right - client->left,
-                   client->bottom - client->top, hdcMem, 0, 0,
-                   pGlobalData->cxSource[iBitmap], pGlobalData->cySource[iBitmap], SRCCOPY);
-        DeleteDC(hdcMem);
-    }
+	switch(BitsPerPel)
+	{
+		case 4:  iBitmap = 0; break;
+		case 8:  iBitmap = 1; break;
+		default: iBitmap = 2;
+	}
+
+	SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]);
+	StretchBlt(hDC,
+	           client->left, client->top, client->right - client->left, client->bottom - client->top,
+	           hdcMem, 0, 0,
+	           pGlobalData->cxSource[iBitmap],
+	           pGlobalData->cySource[iBitmap], SRCCOPY);
+	DeleteDC(hdcMem);
 }
 
 static VOID
@@ -415,18 +422,18 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 	PSETTINGS_ENTRY Current;
 	DWORD dmNewBitsPerPel;
 	DWORD index;
-    HDC  hSpectrumDC;
-    HWND hSpectrumControl;
-    RECT client;
+	HDC hSpectrumDC;
+	HWND hSpectrumControl;
+	RECT client;
 
 	index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETCURSEL, 0, 0);
 	dmNewBitsPerPel = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETITEMDATA, index, 0);
 
-    /* Show a new spectrum bitmap */
-    hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
-    hSpectrumDC = GetDC(hSpectrumControl);
-    GetClientRect(hSpectrumControl, &client);
-    ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pGlobalData);
+	/* Show a new spectrum bitmap */
+	hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
+	hSpectrumDC = GetDC(hSpectrumControl);
+	GetClientRect(hSpectrumControl, &client);
+	ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pGlobalData);
 
 	/* find if new parameters are valid */
 	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings;
@@ -588,20 +595,20 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 UINT CALLBACK
 SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
 {
-    UINT Ret = 0;
+	UINT Ret = 0;
 
-    switch (uMsg)
-    {
-        case PSPCB_CREATE:
-            Ret = RegisterMonitorSelectionControl(hApplet);
-            break;
+	switch (uMsg)
+	{
+		case PSPCB_CREATE:
+			Ret = RegisterMonitorSelectionControl(hApplet);
+			break;
 
-        case PSPCB_RELEASE:
-            UnregisterMonitorSelectionControl(hApplet);
-            break;
-    }
+		case PSPCB_RELEASE:
+			UnregisterMonitorSelectionControl(hApplet);
+			break;
+	}
 
-    return Ret;
+	return Ret;
 }
 
 /* Property page dialog callback */
@@ -612,7 +619,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-	
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
@@ -625,8 +631,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			LPDRAWITEMSTRUCT lpDrawItem;
 			lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
 
-			if(lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
-                ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
+			if (lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
+				ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
 
 			break;
 		}
@@ -711,111 +717,111 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			break;
 		}
 
-        case WM_CONTEXTMENU:
-        {
-            HWND hwndMonSel;
-            HMENU hPopup;
-            UINT uiCmd;
-            POINT pt, ptClient;
-            INT Index;
+		case WM_CONTEXTMENU:
+		{
+			HWND hwndMonSel;
+			HMENU hPopup;
+			UINT uiCmd;
+			POINT pt, ptClient;
+			INT Index;
 
-            pt.x = (SHORT)LOWORD(lParam);
-            pt.y = (SHORT)HIWORD(lParam);
+			pt.x = (SHORT)LOWORD(lParam);
+			pt.y = (SHORT)HIWORD(lParam);
 
-            hwndMonSel = GetDlgItem(hwndDlg,
-                                    IDC_SETTINGS_MONSEL);
-            if ((HWND)wParam == hwndMonSel)
-            {
-                if (pt.x == -1 && pt.y == -1)
-                {
-                    RECT rcMon;
+			hwndMonSel = GetDlgItem(hwndDlg,
+			                        IDC_SETTINGS_MONSEL);
+			if ((HWND)wParam == hwndMonSel)
+			{
+				if (pt.x == -1 && pt.y == -1)
+				{
+					RECT rcMon;
 
-                    Index = (INT)SendMessage(hwndMonSel,
-                                             MSLM_GETCURSEL,
-                                             0,
-                                             0);
+					Index = (INT)SendMessage(hwndMonSel,
+					                         MSLM_GETCURSEL,
+					                         0,
+					                         0);
 
-                    if (Index >= 0 &&
-                        (INT)SendMessage(hwndMonSel,
-                                         MSLM_GETMONITORRECT,
-                                         Index,
-                                         (LPARAM)&rcMon) > 0)
-                    {
-                        pt.x = rcMon.left + ((rcMon.right - rcMon.left) / 2);
-                        pt.y = rcMon.top + ((rcMon.bottom - rcMon.top) / 2);
-                    }
-                    else
-                        pt.x = pt.y = 0;
+					if (Index >= 0 &&
+					    (INT)SendMessage(hwndMonSel,
+					                     MSLM_GETMONITORRECT,
+					                     Index,
+					                     (LPARAM)&rcMon) > 0)
+					{
+						pt.x = rcMon.left + ((rcMon.right - rcMon.left) / 2);
+						pt.y = rcMon.top + ((rcMon.bottom - rcMon.top) / 2);
+					}
+					else
+						pt.x = pt.y = 0;
+	
+					MapWindowPoints(hwndMonSel,
+					                NULL,
+					                &pt,
+					                1);
+				}
+				else
+				{
+					ptClient = pt;
+					MapWindowPoints(NULL,
+					                hwndMonSel,
+					                &ptClient,
+					                1);
 
-                    MapWindowPoints(hwndMonSel,
-                                    NULL,
-                                    &pt,
-                                    1);
-                }
-                else
-                {
-                    ptClient = pt;
-                    MapWindowPoints(NULL,
-                                    hwndMonSel,
-                                    &ptClient,
-                                    1);
+					Index = (INT)SendMessage(hwndMonSel,
+					                         MSLM_HITTEST,
+					                         (WPARAM)&ptClient,
+					                         0);
+				}
 
-                    Index = (INT)SendMessage(hwndMonSel,
-                                             MSLM_HITTEST,
-                                             (WPARAM)&ptClient,
-                                             0);
-                }
+				if (Index >= 0)
+				{
+					hPopup = LoadPopupMenu(hApplet,
+					                       MAKEINTRESOURCE(IDM_MONITOR_MENU));
+					if (hPopup != NULL)
+					{
+						/* FIXME: Enable/Disable menu items */
+						EnableMenuItem(hPopup,
+						               ID_MENU_ATTACHED,
+						               MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+						EnableMenuItem(hPopup,
+						               ID_MENU_PRIMARY,
+						               MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+						EnableMenuItem(hPopup,
+						               ID_MENU_IDENTIFY,
+						               MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+						EnableMenuItem(hPopup,
+						               ID_MENU_PROPERTIES,
+						               MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 
-                if (Index >= 0)
-                {
-                    hPopup = LoadPopupMenu(hApplet,
-                                           MAKEINTRESOURCE(IDM_MONITOR_MENU));
-                    if (hPopup != NULL)
-                    {
-                        /* FIXME: Enable/Disable menu items */
-                        EnableMenuItem(hPopup,
-                                       ID_MENU_ATTACHED,
-                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-                        EnableMenuItem(hPopup,
-                                       ID_MENU_PRIMARY,
-                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-                        EnableMenuItem(hPopup,
-                                       ID_MENU_IDENTIFY,
-                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-                        EnableMenuItem(hPopup,
-                                       ID_MENU_PROPERTIES,
-                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+						uiCmd = (UINT)TrackPopupMenu(hPopup,
+						                             TPM_RETURNCMD | TPM_RIGHTBUTTON,
+						                             pt.x,
+						                             pt.y,
+						                             0,
+						                             hwndDlg,
+						                             NULL);
 
-                        uiCmd = (UINT)TrackPopupMenu(hPopup,
-                                                     TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                                                     pt.x,
-                                                     pt.y,
-                                                     0,
-                                                     hwndDlg,
-                                                     NULL);
+						switch (uiCmd)
+						{
+							case ID_MENU_ATTACHED:
+							case ID_MENU_PRIMARY:
+							case ID_MENU_IDENTIFY:
+							case ID_MENU_PROPERTIES:
+								/* FIXME: Implement */
+								break;
+						}
 
-                        switch (uiCmd)
-                        {
-                            case ID_MENU_ATTACHED:
-                            case ID_MENU_PRIMARY:
-                            case ID_MENU_IDENTIFY:
-                            case ID_MENU_PROPERTIES:
-                                /* FIXME: Implement */
-                                break;
-                        }
-
-                        DestroyMenu(hPopup);
-                    }
-                }
-            }
-            break;
-        }
+						DestroyMenu(hPopup);
+					}
+				}
+			}
+			break;
+		}
 
 		case WM_DESTROY:
 		{
-            INT i;
-
+			INT i;
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
+
 			while (Current != NULL)
 			{
 				PDISPLAY_DEVICE_ENTRY Next = Current->Flink;
@@ -832,11 +838,11 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			HeapFree(GetProcessHeap(), 0, pGlobalData);
 
-            for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
-            {
-                if(pGlobalData->hSpectrumBitmaps[i])
-                    DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
-            }
+			for (i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
+			{
+				if (pGlobalData->hSpectrumBitmaps[i])
+					DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
+			}
 		}
 	}
 	return FALSE;

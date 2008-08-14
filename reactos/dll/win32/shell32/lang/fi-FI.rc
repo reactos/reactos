@@ -199,6 +199,27 @@ BEGIN
 	PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
+SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Type of file:", 14004, 8, 35, 50, 10
+	LTEXT "Folder", 14005, 68, 35, 160, 10
+	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 315, 10
+	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+END
+
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
@@ -337,7 +358,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Open With"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -543,6 +564,20 @@ BEGIN
 	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Change Icon"
@@ -571,14 +606,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Kommentit"
 	IDS_SHV_COLUMN10            "Omistaja"
 	IDS_SHV_COLUMN11            "Ryhmä"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Original location"
 	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_COMMENTS     "Comments"
+	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
 	IDS_DESKTOP                 "Työpöytä"
 	IDS_MYCOMPUTER              "Oma Tietokone"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Suuret Kuvakkeet"
@@ -587,6 +633,12 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Tiedot"
 	IDS_SELECT                  "Valitse"
 	IDS_OPEN                    "Avaa"
+	IDS_CREATELINK              "Lu&o Linkki"
+	IDS_COPY                    "&Kopioi"
+	IDS_DELETE                  "&Poista"
+	IDS_PROPERTIES              "&Ominaisuudet"
+	IDS_CUT                     "&Leikkaa"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Uutta kansiota ei voitu luoda: Oikeudet eivät riitä."
 	IDS_CREATEFOLDER_CAPTION    "Virhe luotaessa uutta kansiota"
@@ -687,4 +739,11 @@ BEGIN
 	IDS_PRINT_VERB              "Print"
 	IDS_PLAY_VERB               "Play"
 	IDS_PREVIEW_VERB            "Preview"
+
+	IDS_FILE_FOLDER             "%u Files, %u Folders"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

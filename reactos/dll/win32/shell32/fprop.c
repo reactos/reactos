@@ -778,8 +778,7 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
 
     if (PathIsDirectoryW(wFileName))
     {
-        FIXME("directory resources are missing\n");
-        return FALSE;
+        return SH_ShowFolderProperties(wFileName);
     }
 
     if (wcslen(wFileName) == 3)

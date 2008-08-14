@@ -22,6 +22,8 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  * its debugging information)
  */
 static BOOL pe_load_stabs(const struct process* pcs, struct module* module, 
-                          const void* mapping, IMAGE_NT_HEADERS* nth)
+                          void* mapping, IMAGE_NT_HEADERS* nth)
 {
     IMAGE_SECTION_HEADER*       section;
     int                         i, stabsize = 0, stabstrsize = 0;
@@ -67,11 +69,13 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module,
     {
         ret = stabs_parse(module, 
                           module->module.BaseOfImage - nth->OptionalHeader.ImageBase, 
-                          RtlImageRvaToVa(nth, (void*)mapping, stabs, NULL),
+                          RtlImageRvaToVa(nth, mapping, stabs, NULL),
                           stabsize,
-                          RtlImageRvaToVa(nth, (void*)mapping, stabstr, NULL),
+                          RtlImageRvaToVa(nth, mapping, stabstr, NULL),
                           stabstrsize);
     }
+
+    TRACE("%s the STABS debug info\n", ret ? "successfully loaded" : "failed to load");
     return ret;
 }
 
@@ -96,7 +100,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
     const IMAGE_DEBUG_DIRECTORY*        dbg;
     BOOL                                ret = FALSE;
 
-    WINE_TRACE("Processing DBG file %s\n", dbg_name);
+    WINE_TRACE("Processing DBG file %s\n", debugstr_a(dbg_name));
 
     if (SymFindFileInPath(pcs->handle, NULL, dbg_name, NULL, 0, 0, 0, tmp, dbg_match, NULL) &&
         (hFile = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -108,7 +112,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
         if (hdr->TimeDateStamp != timestamp)
         {
             WINE_ERR("Warning - %s has incorrect internal timestamp\n",
-                     dbg_name);
+                     debugstr_a(dbg_name));
             /*
              * Well, sometimes this happens to DBG files which ARE REALLY the
              * right .DBG files but nonetheless this check fails. Anyway,
@@ -136,7 +140,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
             ERR("Wrong signature in .DBG file %s\n", debugstr_a(tmp));
     }
     else
-        WINE_ERR("-Unable to peruse .DBG file %s (%s)\n", dbg_name, debugstr_a(tmp));
+        WINE_ERR("-Unable to peruse .DBG file %s (%s)\n", debugstr_a(dbg_name), debugstr_a(tmp));
 
     if (dbg_mapping) UnmapViewOfFile(dbg_mapping);
     if (hMap) CloseHandle(hMap);
@@ -151,7 +155,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
  */
 static BOOL pe_load_msc_debug_info(const struct process* pcs, 
                                    struct module* module,
-                                   const void* mapping, IMAGE_NT_HEADERS* nth)
+                                   void* mapping, IMAGE_NT_HEADERS* nth)
 {
     BOOL                        ret = FALSE;
     const IMAGE_DATA_DIRECTORY* dir;
@@ -163,7 +167,7 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs,
     nDbg = dir->Size / sizeof(IMAGE_DEBUG_DIRECTORY);
     if (!nDbg) return FALSE;
 
-    dbg = RtlImageRvaToVa(nth, (void*)mapping, dir->VirtualAddress, NULL);
+    dbg = RtlImageRvaToVa(nth, mapping, dir->VirtualAddress, NULL);
 
     /* Parse debug directory */
     if (nth->FileHeader.Characteristics & IMAGE_FILE_DEBUG_STRIPPED)
@@ -199,7 +203,7 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs,
  */
 static BOOL pe_load_export_debug_info(const struct process* pcs, 
                                       struct module* module, 
-                                      const void* mapping, IMAGE_NT_HEADERS* nth)
+                                      void* mapping, IMAGE_NT_HEADERS* nth)
 {
     unsigned int 		        i;
     const IMAGE_EXPORT_DIRECTORY* 	exports;
@@ -229,13 +233,13 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
     for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
     {
 	symt_new_public(module, NULL, section->Name, 
-                        RtlImageRvaToVa(nth, (void*)mapping, section->VirtualAddress, NULL), 
+                        RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 
                         1, TRUE /* FIXME */, TRUE /* FIXME */);
     }
 #endif
 
     /* Add exported functions */
-    if ((exports = RtlImageDirectoryEntryToData((void*)mapping, FALSE,
+    if ((exports = RtlImageDirectoryEntryToData(mapping, FALSE,
                                                 IMAGE_DIRECTORY_ENTRY_EXPORT, &size)))
     {
         const WORD*             ordinals = NULL;
@@ -244,9 +248,9 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
         unsigned int		j;
         char			buffer[16];
 
-        functions = RtlImageRvaToVa(nth, (void*)mapping, exports->AddressOfFunctions, NULL);
-        ordinals  = RtlImageRvaToVa(nth, (void*)mapping, exports->AddressOfNameOrdinals, NULL);
-        names     = RtlImageRvaToVa(nth, (void*)mapping, exports->AddressOfNames, NULL);
+        functions = RtlImageRvaToVa(nth, mapping, exports->AddressOfFunctions, NULL);
+        ordinals  = RtlImageRvaToVa(nth, mapping, exports->AddressOfNameOrdinals, NULL);
+        names     = RtlImageRvaToVa(nth, mapping, exports->AddressOfNames, NULL);
 
         if (functions && ordinals && names)
         {
@@ -254,7 +258,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
             {
                 if (!names[i]) continue;
                 symt_new_public(module, NULL,
-                                RtlImageRvaToVa(nth, (void*)mapping, names[i], NULL),
+                                RtlImageRvaToVa(nth, mapping, names[i], NULL),
                                 base + functions[ordinals[i]],
                                 1, TRUE /* FIXME */, TRUE /* FIXME */);
             }
@@ -369,6 +373,8 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
                     else
                         pe_load_debug_info(pcs, module);
                 }
+                else
+                    ERR("could not load the module '%s'\n", debugstr_w(loaded_name));
             }
             UnmapViewOfFile(mapping);
         }
@@ -416,4 +422,51 @@ struct module* pe_load_builtin_module(struct process* pcs, const WCHAR* name,
         }
     }
     return module;
+}
+
+/***********************************************************************
+ *           ImageDirectoryEntryToDataEx (DBGHELP.@)
+ *
+ * Search for specified directory in PE image
+ *
+ * PARAMS
+ *
+ *   base    [in]  Image base address
+ *   image   [in]  TRUE - image has been loaded by loader, FALSE - raw file image
+ *   dir     [in]  Target directory index
+ *   size    [out] Receives directory size
+ *   section [out] Receives pointer to section header of section containing directory data
+ *
+ * RETURNS
+ *   Success: pointer to directory data
+ *   Failure: NULL
+ *
+ */
+PVOID WINAPI ImageDirectoryEntryToDataEx( PVOID base, BOOLEAN image, USHORT dir, PULONG size, PIMAGE_SECTION_HEADER *section )
+{
+    const IMAGE_NT_HEADERS *nt;
+    DWORD addr;
+
+    *size = 0;
+    if (section) *section = NULL;
+
+    if (!(nt = RtlImageNtHeader( base ))) return NULL;
+    if (dir >= nt->OptionalHeader.NumberOfRvaAndSizes) return NULL;
+    if (!(addr = nt->OptionalHeader.DataDirectory[dir].VirtualAddress)) return NULL;
+
+    *size = nt->OptionalHeader.DataDirectory[dir].Size;
+    if (image || addr < nt->OptionalHeader.SizeOfHeaders) return (char *)base + addr;
+
+    return RtlImageRvaToVa( nt, (HMODULE)base, addr, section );
+}
+
+/***********************************************************************
+ *         ImageDirectoryEntryToData   (DBGHELP.@)
+ *
+ * NOTES
+ *   See ImageDirectoryEntryToDataEx
+ */
+PVOID WINAPI ImageDirectoryEntryToData( PVOID base, BOOLEAN image, USHORT dir, PULONG size )
+{
+    return ImageDirectoryEntryToDataEx( base, image, dir, size, NULL );
 }

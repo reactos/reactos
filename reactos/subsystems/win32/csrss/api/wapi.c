@@ -70,7 +70,6 @@ FASTCALL
 CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                   PCSR_API_MESSAGE Request)
 {
-  BOOL Found = FALSE;
   unsigned DefIndex;
   ULONG Type;
 
@@ -79,7 +78,7 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
 
   /* FIXME: Extract DefIndex instead of looping */
-  for (DefIndex = 0; ! Found && DefIndex < ApiDefinitionsCount; DefIndex++)
+  for (DefIndex = 0; DefIndex < ApiDefinitionsCount; DefIndex++)
     {
       if (ApiDefinitions[DefIndex].Type == Type)
         {
@@ -92,18 +91,15 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
             }
           else
             {
-              (ApiDefinitions[DefIndex].Handler)(ProcessData, Request);
-              Found = TRUE;
+              Request->Status = (ApiDefinitions[DefIndex].Handler)(ProcessData, Request);
             }
+          return;
         }
     }
-  if (! Found)
-    {
-      DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-      Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-      Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
-    }
+  DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
+  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+  Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
 }
 
 BOOL

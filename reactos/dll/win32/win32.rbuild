@@ -313,6 +313,9 @@
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
 </directory>
+<directory name="sxs">
+	<xi:include href="sxs/sxs.rbuild" />
+</directory>
 <directory name="syssetup">
 	<xi:include href="syssetup/syssetup.rbuild" />
 </directory>

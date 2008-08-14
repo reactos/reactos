@@ -3174,12 +3174,8 @@ NtGdiGetRegionData(
     _SEH_TRY
     {
         ProbeForWrite(rgndata, count, 1);
-        RtlCopyMemory(rgndata,
-                      obj,
-                      sizeof(RGNDATAHEADER));
-        RtlCopyMemory((PVOID)((ULONG_PTR)rgndata + (ULONG_PTR)sizeof(RGNDATAHEADER)),
-                      obj->Buffer,
-                      size);
+        RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
+        RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
     }
     _SEH_HANDLE
     {

@@ -1205,9 +1205,9 @@ KdbpInternalEnter()
    Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
    Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-   /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase);*/
+   /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/
 
-   KdbpStackSwitchAndCall(Thread->Tcb.KernelStack, KdbpCallMainLoop);
+   KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
 
    Thread->Tcb.InitialStack = SavedInitialStack;
    Thread->Tcb.StackBase = SavedStackBase;
@@ -1332,7 +1332,7 @@ KdbEnterDebuggerException(
          if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address,
                                                   BreakPoint->Data.SavedInstruction, NULL)))
          {
-            DbgPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
+            KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
             KEBUGCHECK(0);
          }
       }
@@ -1363,7 +1363,7 @@ KdbEnterDebuggerException(
             if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               TrapFrame->EFlags |= X86_EFLAGS_TF;
+               Context->EFlags |= X86_EFLAGS_TF;
             }
             goto continue_execution; /* return */
          }
@@ -1379,7 +1379,7 @@ KdbEnterDebuggerException(
                BreakPoint->Type == KdbBreakPointTemporary)
       {
          ASSERT(ExceptionCode == STATUS_BREAKPOINT);
-         TrapFrame->EFlags |= X86_EFLAGS_TF;
+         Context->EFlags |= X86_EFLAGS_TF;
          KdbBreakPointToReenable = BreakPoint;
       }
 
@@ -1412,12 +1412,12 @@ KdbEnterDebuggerException(
 
       if (BreakPoint->Type == KdbBreakPointSoftware)
       {
-         DbgPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+         KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
                   KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
       }
       else if (BreakPoint->Type == KdbBreakPointHardware)
       {
-         DbgPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
+         KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
                   KdbLastBreakPointNr,
                   (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
                   ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
@@ -1446,36 +1446,38 @@ KdbEnterDebuggerException(
          if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address, 0xCC,
                                                   &BreakPoint->Data.SavedInstruction)))
          {
-            DbgPrint("Warning: Couldn't reenable breakpoint %d\n",
+            KdbpPrint("Warning: Couldn't reenable breakpoint %d\n",
                      BreakPoint - KdbBreakPoints);
          }
 
          /* Unset TF if we are no longer single stepping. */
          if (KdbNumSingleSteps == 0)
-            TrapFrame->EFlags &= ~X86_EFLAGS_TF;
+            Context->EFlags &= ~X86_EFLAGS_TF;
          goto continue_execution; /* return */
       }
 
       /* Check if we expect a single step */
       if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
       {
-         /*ASSERT((TrapFrame->Eflags & X86_EFLAGS_TF) != 0);*/
+         /*ASSERT((Context->Eflags & X86_EFLAGS_TF) != 0);*/
          if (--KdbNumSingleSteps > 0)
          {
             if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               TrapFrame->EFlags &= ~X86_EFLAGS_TF;
+               Context->EFlags &= ~X86_EFLAGS_TF;
             }
             else
             {
-               TrapFrame->EFlags |= X86_EFLAGS_TF;
+               Context->EFlags |= X86_EFLAGS_TF;
             }
-            goto continue_execution; /* return */
+			goto continue_execution; /* return */
          }
-
-         TrapFrame->EFlags &= ~X86_EFLAGS_TF;
-         KdbEnteredOnSingleStep = TRUE;
+		 else 
+		 {
+			 Context->EFlags &= ~X86_EFLAGS_TF;
+			 KdbEnteredOnSingleStep = TRUE;
+		 }
       }
       else
       {
@@ -1483,7 +1485,7 @@ KdbEnterDebuggerException(
          {
             return kdHandleException;
          }
-         DbgPrint("Entered debugger on unexpected debug trap!\n");
+         KdbpPrint("Entered debugger on unexpected debug trap!\n");
       }
    }
    else if (ExceptionCode == STATUS_BREAKPOINT)
@@ -1498,7 +1500,7 @@ KdbEnterDebuggerException(
          return kdHandleException;
       }
 
-      DbgPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+      KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
                TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
    }
    else
@@ -1512,7 +1514,7 @@ KdbEnterDebuggerException(
          return ContinueType;
       }
 
-      DbgPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
+      KdbpPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
                FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
       if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
           ExceptionRecord != NULL && ExceptionRecord->NumberParameters != 0)
@@ -1530,15 +1532,15 @@ KdbEnterDebuggerException(
 #endif
 
          Err = TrapFrame->ErrCode;
-         DbgPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
+         KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
          if ((Err & (1 << 0)) == 0)
-            DbgPrint("Page not present.\n");
+            KdbpPrint("Page not present.\n");
          else
          {
             if ((Err & (1 << 3)) != 0)
-               DbgPrint("Reserved bits in page directory set.\n");
+               KdbpPrint("Reserved bits in page directory set.\n");
             else
-               DbgPrint("Page protection violation.\n");
+               KdbpPrint("Page protection violation.\n");
          }
       }
    }
@@ -1579,7 +1581,7 @@ KdbEnterDebuggerException(
       }
       else
       {
-         KdbCurrentTrapFrame->Tf.EFlags |= X86_EFLAGS_TF;
+         Context->EFlags |= X86_EFLAGS_TF;
       }
    }
 
@@ -1603,7 +1605,7 @@ KdbEnterDebuggerException(
 
 continue_execution:
    /* Clear debug status */
-   if (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
+   if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
    {
       /* Set the RF flag so we don't trigger the same breakpoint again. */
       if (Resume)

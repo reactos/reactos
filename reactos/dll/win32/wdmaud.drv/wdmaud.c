@@ -216,7 +216,7 @@ modMessage(UINT uDevice,
     return MMSYSERR_NOTSUPPORTED;
 }
 
-LRESULT
+LRESULT APIENTRY
 DriverProc(DWORD dwDriverID,
            HDRVR hDriver,
            UINT uiMessage,

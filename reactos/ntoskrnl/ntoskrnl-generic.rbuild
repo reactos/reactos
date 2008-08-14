@@ -2,7 +2,12 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl_$(ARCH).def" />
+	<ifnot property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl.spec.def" />
+	</ifnot>
+	<if property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl_arm.def" />
+	</if>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -272,13 +277,13 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<if property="DBG" value="1">
-		<directory name="kd">
+	<directory name="kd">
+		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>kdmemsup.c</file>
 			</directory>
-		</directory>
-	</if>
+		</if>
+	</directory>
 	<if property="_WINKD_" value="0">
 		<directory name="kdbg">
 			<if property="ARCH" value="i386">
@@ -443,7 +448,6 @@
 		</if>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
-		<file>strtok.c</file>
 	</directory>
 	<directory name="se">
 		<file>access.c</file>
@@ -466,5 +470,6 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
+	<file>ntoskrnl.spec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>

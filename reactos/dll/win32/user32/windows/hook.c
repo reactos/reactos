@@ -524,7 +524,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 //      FIXME("UHOOK Memory: %x: %x\n",Common, Msg);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) Msg);
       break;
+    case WH_FOREGROUNDIDLE:
     case WH_KEYBOARD:
+    case WH_SHELL:
       Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);
       break;
     default:

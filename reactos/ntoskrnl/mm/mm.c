@@ -24,6 +24,20 @@ MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+FASTCALL
+MiSyncThreadProcessViews(IN PKTHREAD NextThread)
+{
+    /* Hack Sync because Mm is broken  */
+    MmUpdatePageDir(PsGetCurrentProcess(),
+                    ((PETHREAD)NextThread)->ThreadsProcess,
+                    sizeof(EPROCESS));
+    MmUpdatePageDir(PsGetCurrentProcess(),
+                    (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
+                    NextThread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
 /*
  * @implemented
  */
@@ -356,7 +370,8 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 ULONG NTAPI
 MmAdjustWorkingSetSize (ULONG Unknown0,
                         ULONG Unknown1,
-                        ULONG Unknown2)
+                        ULONG Unknown2,
+                        ULONG Unknown3)
 {
    UNIMPLEMENTED;
    return (0);

@@ -1,6 +1,6 @@
 /*
  *Spanish Language resource file
- * Traducido por: Javier Remacha 2007-12-31
+ * Traducido por: Javier Remacha 2008
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -240,16 +240,16 @@ CAPTION "ReactOS Calculator"
 MENU IDR_MENU_STANDARD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON      "Convert",IDC_BUTTON_CONVERT,35,105,76,17
+    PUSHBUTTON      "Convertir",IDC_BUTTON_CONVERT,35,105,76,17
     COMBOBOX        IDC_COMBO_CATEGORY,4,31,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Category:",IDC_STATIC,4,20,56,8
+    LTEXT           "Categoría:",IDC_STATIC,4,20,56,8
     COMBOBOX        IDC_COMBO_FROM,4,60,140,168,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert from:",IDC_STATIC,4,49,56,8
+    LTEXT           "Convertir de:",IDC_STATIC,4,49,56,8
     COMBOBOX        IDC_COMBO_TO,4,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP | CBS_SORT
-    LTEXT           "Convert to:",IDC_STATIC,4,76,56,8
+    LTEXT           "Convertir a:",IDC_STATIC,4,76,56,8
     CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER | 
                     BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
     CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER | 
@@ -449,50 +449,50 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_AREA           "Area"
-    IDS_CONV_CONSUMPTION    "Consumption (engines)"
-    IDS_CONV_CURRENCY       "Currencies"
-    IDS_CONV_ENERGY         "Energy"
-    IDS_CONV_LENGTH         "Lenghts"
-    IDS_CONV_POWER          "Power"
-    IDS_CONV_PRESSURE       "Pressure"
-    IDS_CONV_TEMPERATURE    "Temperature"
-    IDS_CONV_VELOCITY       "Velocity"
-    IDS_CONV_VOLUME         "Volume"
-    IDS_CONV_WEIGHT         "Weights"
+    IDS_CONV_AREA           "Área"
+    IDS_CONV_CONSUMPTION    "Consumo (motores)"
+    IDS_CONV_CURRENCY       "Monedas"
+    IDS_CONV_ENERGY         "Energía"
+    IDS_CONV_LENGTH         "Longitud"
+    IDS_CONV_POWER          "Potencia"
+    IDS_CONV_PRESSURE       "Presión"
+    IDS_CONV_TEMPERATURE    "Temperatura"
+    IDS_CONV_VELOCITY       "Velocidad"
+    IDS_CONV_VOLUME         "Volumen"
+    IDS_CONV_WEIGHT         "Peso"
 END
 
 // TYPES OF AREAS
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AREA_ACRES                  "Acres"
-    IDS_AREA_ACRES_BRAZIL           "Acres (Brazil)"
-    IDS_AREA_ACRES_FRANCE           "Acres (France)"
-    IDS_AREA_ACRES_SCOTS            "Acres (Scots)"
+    IDS_AREA_ACRES_BRAZIL           "Acres (Brasil)"
+    IDS_AREA_ACRES_FRANCE           "Acres (Francia)"
+    IDS_AREA_ACRES_SCOTS            "Acres (Escocia)"
     IDS_AREA_ACRES_US               "Acres (US)"
-    IDS_AREA_ARES                   "Ares"
+    IDS_AREA_ARES                   "Área"
     IDS_AREA_CHOU                   "Chou"
     IDS_AREA_DANBO                  "Danbo"
-    IDS_AREA_HECTARES               "Hectares"
+    IDS_AREA_HECTARES               "Hectárias"
     IDS_AREA_JEONGBO                "Jeongbo"
-    IDS_AREA_MORGEN_HUNGARY         "Morgen (Hungary)"
+    IDS_AREA_MORGEN_HUNGARY         "Morgen (Hungría)"
     IDS_AREA_MU                     "Mu"
     IDS_AREA_PING                   "Ping"
     IDS_AREA_PYEONG                 "Pyeong"
     IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
     IDS_AREA_RAI                    "Rai"
     IDS_AREA_SE                     "Se"
-    IDS_AREA_SQUARE_CENTIMETERS     "Square centimeters"
+    IDS_AREA_SQUARE_CENTIMETERS     "Centímetros cuadrados"
     IDS_AREA_SQUARE_CHR             "Square chr"
-    IDS_AREA_SQUARE_FATHOMS         "Square fathoms"
-    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Square fathoms (Hungary)"
-    IDS_AREA_SQUARE_FEET            "Square feet"
-    IDS_AREA_SQUARE_INCHES          "Square inches"
-    IDS_AREA_SQUARE_KILOMETERS      "Square kilometers"
+    IDS_AREA_SQUARE_FATHOMS         "Braza cuadrada"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Braza cuadrada (Hungría)"
+    IDS_AREA_SQUARE_FEET            "Pies cuadrados"
+    IDS_AREA_SQUARE_INCHES          "Pulgadas cuadradas"
+    IDS_AREA_SQUARE_KILOMETERS      "Kilómetros cuadrados"
     IDS_AREA_SQUARE_LAR             "Square lar"
-    IDS_AREA_SQUARE_METER           "Square meter"
-    IDS_AREA_SQUARE_MILES           "Square miles"
-    IDS_AREA_SQUARE_MILLIMETERS     "Square millimeters"
+    IDS_AREA_SQUARE_METER           "Metros cuadrado"
+    IDS_AREA_SQUARE_MILES           "Millas cuadradas"
+    IDS_AREA_SQUARE_MILLIMETERS     "Milímetros cuadrados"
     IDS_AREA_SQUARE_SHAKU           "Square shaku"
     IDS_AREA_SQUARE_TSUEN           "Square tsuen"
     IDS_AREA_SQUARE_VA              "Square va"
@@ -504,44 +504,44 @@ END
 // TYPES OF COMSUMPTIONS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONSUMPTION_KM_PER_L        "Kilometer/liter"
-    IDS_CONSUMPTION_L_PER_100_KM    "Liters/100 kilometers"
-    IDS_CONSUMPTION_MILES_GALLON_UK "Miles/gallon (UK)"
-    IDS_CONSUMPTION_MILES_GALLON_US "Miles/gallon (US)"
+    IDS_CONSUMPTION_KM_PER_L        "Kilometros/litro"
+    IDS_CONSUMPTION_L_PER_100_KM    "Litros/100 kilometros"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Millas/galón (UK)"
+    IDS_CONSUMPTION_MILES_GALLON_US "Millas/galón (US)"
 END
 
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
-    IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
-    IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
-    IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
-    IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Schilling Austriaco"
+    IDS_CURRENCY_BELGIAN_FRANC      "Franco Belga"
+    IDS_CURRENCY_CYPRIOT_POUND      "Libra Chipriota"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Marco Alemán"
+    IDS_CURRENCY_DUTCH_GUILDER      "Florín Neerlandés"
     IDS_CURRENCY_EURO               "Euro"
-    IDS_CURRENCY_FINNISH_MARKKA     "Finnish markka"
-    IDS_CURRENCY_FRENCH_FRANC       "French franc"
-    IDS_CURRENCY_GREEK_DRACHMA      "Greek Drachma"
-    IDS_CURRENCY_IRISH_POUND        "Irish pound"
-    IDS_CURRENCY_ITALIAN_LIRA       "Italian lira"
-    IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
-    IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
-    IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
-    IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
+    IDS_CURRENCY_FINNISH_MARKKA     "Marco Finlandés"
+    IDS_CURRENCY_FRENCH_FRANC       "Franco Frances"
+    IDS_CURRENCY_GREEK_DRACHMA      "Drachma Griego"
+    IDS_CURRENCY_IRISH_POUND        "Libra Irlandesa"
+    IDS_CURRENCY_ITALIAN_LIRA       "Lira Italiana"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Franco Luxemburgués"
+    IDS_CURRENCY_MALTESE_LIRA       "Lira Maltesa"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo Portugués"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "Tolar Esloveno"
+    IDS_CURRENCY_SPANISH_PESETA     "Peseta Española"
 END
 
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C calories"
-    IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_IT_CALORIES          "International Table calories"
-    IDS_ENERGY_JOULES               "Joules"
-    IDS_ENERGY_KILOJOULES           "Kilojoules"
-    IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
-    IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calories"
-    IDS_ENERGY_TH_CALORIES          "Thermochemical calorie"
+    IDS_ENERGY_15_C_CALORIES        "15 ^C calorías"
+    IDS_ENERGY_ERGS                 "Ergios"
+    IDS_ENERGY_IT_CALORIES          "Tabla internacional de calorías"
+    IDS_ENERGY_JOULES               "Julios"
+    IDS_ENERGY_KILOJOULES           "Kilojulios"
+    IDS_ENERGY_KILOWATT_HOURS       "Kilowatios hora"
+    IDS_ENERGY_NUTRITION_CALORIES   "Calorías nutricionales"
+    IDS_ENERGY_TH_CALORIES          "Calorías termoquímicas"
 END
 
 // TYPES OF LENGTHS
@@ -550,33 +550,33 @@ BEGIN
     IDS_LENGTH_ANGSTROMS            "Angstroms"
     IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
     IDS_LENGTH_BARLEYCORNS          "Barleycorns"
-    IDS_LENGTH_CENTIMETERS          "Centimeters"
-    IDS_LENGTH_CHAINS_UK            "Chains (UK)"
+    IDS_LENGTH_CENTIMETERS          "Centímetros"
+    IDS_LENGTH_CHAINS_UK            "Cadenas (UK)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"
     IDS_LENGTH_CHR                  "Chr"
     IDS_LENGTH_CUN                  "Cun"
     IDS_LENGTH_FATHOMS              "Fathoms"
     IDS_LENGTH_FATHOMS_HUNGARY      "Fathoms (Hungary)"
-    IDS_LENGTH_FEET                 "Feet"
+    IDS_LENGTH_FEET                 "Pies"
     IDS_LENGTH_FURLONGS             "Furlongs"
     IDS_LENGTH_GAN                  "Gan"
     IDS_LENGTH_HANDS                "Hands"
     IDS_LENGTH_HUNH                 "Hunh"
-    IDS_LENGTH_INCHES               "Inches"
+    IDS_LENGTH_INCHES               "Pulgadas"
     IDS_LENGTH_JA                   "Ja"
     IDS_LENGTH_JEONG                "Jeong"
     IDS_LENGTH_KABIET               "Kabiet"
     IDS_LENGTH_KEN                  "Ken"
     IDS_LENGTH_KEUB                 "Keub"
-    IDS_LENGTH_KILOMETERS           "Kilometers"
+    IDS_LENGTH_KILOMETERS           "Kilometros"
     IDS_LENGTH_LAR                  "Lar"
-    IDS_LENGTH_LIGHT_YEARS          "Light years"
+    IDS_LENGTH_LIGHT_YEARS          "Años luz"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
-    IDS_LENGTH_METERS               "Meters"
-    IDS_LENGTH_MILES                "Miles"
-    IDS_LENGTH_MILLIMETERS          "Millimeters"
-    IDS_LENGTH_NAUTICAL_MILES       "Nautical miles"
+    IDS_LENGTH_METERS               "Metros"
+    IDS_LENGTH_MILES                "Millas"
+    IDS_LENGTH_MILLIMETERS          "Milímetros"
+    IDS_LENGTH_NAUTICAL_MILES       "Millas nauticas"
     IDS_LENGTH_NIEU                 "Nieu"
     IDS_LENGTH_PARSECS              "Parsecs"
     IDS_LENGTH_PICAS                "Picas"
@@ -597,20 +597,20 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_HORSEPOWER            "Horsepower"
-    IDS_POWER_KILOWATTS             "Kilowatts"
-    IDS_POWER_MEGAWATTS             "Megawatts"
-    IDS_POWER_WATTS                 "Watts"
+    IDS_POWER_HORSEPOWER            "Caballos de vapor"
+    IDS_POWER_KILOWATTS             "Kilowatios"
+    IDS_POWER_MEGAWATTS             "Megawatios"
+    IDS_POWER_WATTS                 "Watios"
 END
 
 // TYPE OF PRESSURES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PRESSURE_ATMOSPHERES        "Atmospheres"
-    IDS_PRESSURE_BARS               "Bars"
-    IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
-    IDS_PRESSURE_PASCALS            "Pascals"
-    IDS_PRESSURE_PSI                "Pounds-force per square inch"
+    IDS_PRESSURE_ATMOSPHERES        "Atmósferas"
+    IDS_PRESSURE_BARS               "Bares"
+    IDS_PRESSURE_MM_OF_MERCURY      "Milímetros de mercurio"
+    IDS_PRESSURE_PASCALS            "Pascales"
+    IDS_PRESSURE_PSI                "Libras fuerza por pulgada cuadrada"
 END
 
 // TYPES OF TEMPERATURES
@@ -625,46 +625,46 @@ END
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VELOCITY_FEET_HOUR          "Feet/hour"
-    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometers/hour"
+    IDS_VELOCITY_FEET_HOUR          "Pies/hora"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Kilometros/hora"
     IDS_VELOCITY_KNOTS              "Knots"
     IDS_VELOCITY_MACH               "Mach"
-    IDS_VELOCITY_METERS_SECOND      "Meters/second"
-    IDS_VELOCITY_MILES_HOUR         "Miles/hour"
+    IDS_VELOCITY_METERS_SECOND      "Metros/segundo"
+    IDS_VELOCITY_MILES_HOUR         "Millas/hora"
 END
 
 // TYPES OF VOLUMES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_VOLUME_BARRELS_UK           "Barrels (UK)"
-    IDS_VOLUME_BARRELS_OIL          "Barrels oil"
+    IDS_VOLUME_BARRELS_UK           "Barriles (UK)"
+    IDS_VOLUME_BARRELS_OIL          "Barriles de petroleo"
     IDS_VOLUME_BUN                  "Bun"
-    IDS_VOLUME_BUSHELS_UK           "Bushels (UK)"
-    IDS_VOLUME_BUSHELS_US           "Bushels (US)"
-    IDS_VOLUME_CUBIC_CENTIMETERS    "Cubic centimeters"
-    IDS_VOLUME_CUBIC_FEET           "Cubic feet"
-    IDS_VOLUME_CUBIC_INCHES         "Cubic inches"
-    IDS_VOLUME_CUBIC_METERS         "Cubic meters"
-    IDS_VOLUME_CUBIC_YARDS          "Cubic yards"
+    IDS_VOLUME_BUSHELS_UK           "Celemín (UK)"
+    IDS_VOLUME_BUSHELS_US           "Celemín (US)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "Centímetros cúbicos"
+    IDS_VOLUME_CUBIC_FEET           "Píes cúbicos"
+    IDS_VOLUME_CUBIC_INCHES         "Pulgadas cúbicas"
+    IDS_VOLUME_CUBIC_METERS         "Metros cúbicos"
+    IDS_VOLUME_CUBIC_YARDS          "Yardas cúbicas"
     IDS_VOLUME_DOE                  "Doe"
-    IDS_VOLUME_FLUID_OUNCES_UK      "Fluid ounces (UK)"
-    IDS_VOLUME_FLUID_OUNCES_US      "Fluid ounces (US)"
-    IDS_VOLUME_GALLONS_UK           "Gallons (UK)"
-    IDS_VOLUME_GALLONS_DRY_US       "Gallons, dry (US)"
-    IDS_VOLUME_GALLONS_LIQUID_US    "Gallons, liquid (US)"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Onza líquida (UK)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Onza líquida (US)"
+    IDS_VOLUME_GALLONS_UK           "Galones (UK)"
+    IDS_VOLUME_GALLONS_DRY_US       "Galones, dry (US)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Galones, liquid (US)"
     IDS_VOLUME_GOU                  "Gou"
     IDS_VOLUME_HOP                  "Hop"
     IDS_VOLUME_ICCE                 "Icce"
     IDS_VOLUME_KWIAN                "Kwian"
-    IDS_VOLUME_LITERS               "Liters"
+    IDS_VOLUME_LITERS               "Litros"
     IDS_VOLUME_MAL                  "Mal"
-    IDS_VOLUME_MILLILITERS          "Milliliters"
-    IDS_VOLUME_PINTS_UK             "Pints (UK)"
-    IDS_VOLUME_PINTS_DRY_US         "Pints, dry (US)"
-    IDS_VOLUME_PINTS_LIQUID_US      "Pints, liquid (US)"
-    IDS_VOLUME_QUARTS_UK            "Quarts (UK)"
-    IDS_VOLUME_QUARTS_DRY_US        "Quarts, dry (US)"
-    IDS_VOLUME_QUARTS_LIQUID_US     "Quarts, liquid (US)"
+    IDS_VOLUME_MILLILITERS          "Mililitros"
+    IDS_VOLUME_PINTS_UK             "Pintas (UK)"
+    IDS_VOLUME_PINTS_DRY_US         "Pintas, dry (US)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pintas, liquid (US)"
+    IDS_VOLUME_QUARTS_UK            "Cuartos (UK)"
+    IDS_VOLUME_QUARTS_DRY_US        "Cuartos, dry (US)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "Cuartos, liquid (US)"
     IDS_VOLUME_SEKI                 "Seki"
     IDS_VOLUME_SYOU                 "Syou"
     IDS_VOLUME_TANANLOUNG           "Tananloung"
@@ -676,29 +676,29 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_WEIGHT_BAHT                 "Baht"
-    IDS_WEIGHT_CARATS               "Carats"
+    IDS_WEIGHT_CARATS               "Quilates"
     IDS_WEIGHT_CHUNG                "Chung"
     IDS_WEIGHT_DON                  "Don"
     IDS_WEIGHT_GEUN                 "Geun"
-    IDS_WEIGHT_GRAMS                "Grams"
+    IDS_WEIGHT_GRAMS                "Gramos"
     IDS_WEIGHT_GWAN                 "Gwan"
     IDS_WEIGHT_HARB                 "Harb"
     IDS_WEIGHT_JIN_CHINA            "Jin (China)"
     IDS_WEIGHT_JIN_TAIWAN           "Jin (Taiwan)"
     IDS_WEIGHT_KAN                  "Kan"
-    IDS_WEIGHT_KILOGRAMS            "Kilograms"
+    IDS_WEIGHT_KILOGRAMS            "Kilogramos"
     IDS_WEIGHT_KIN                  "Kin"
     IDS_WEIGHT_LIANG_CHINA          "Liang (China)"
     IDS_WEIGHT_LIANG_TAIWAN         "Liang (Taiwan)"
     IDS_WEIGHT_MONME                "Monme"
-    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Ounces, avoirdupois"
-    IDS_WEIGHT_OUNCES_TROY          "Ounces, troy"
-    IDS_WEIGHT_POUNDS               "Pounds"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Onza, avoirdupois"
+    IDS_WEIGHT_OUNCES_TROY          "Onza, troy"
+    IDS_WEIGHT_POUNDS               "Libras"
     IDS_WEIGHT_QUINTAL_METRIC       "Quintal (metric)"
     IDS_WEIGHT_SALOUNG              "Saloung"
     IDS_WEIGHT_STONES               "Stones"
     IDS_WEIGHT_TAMLUNG              "Tamlung"
-    IDS_WEIGHT_TONNES               "Tonnes"
-    IDS_WEIGHT_TONS_UK              "Tons (UK)"
-    IDS_WEIGHT_TONS_US              "Tons (US)"
+    IDS_WEIGHT_TONNES               "Toneladas"
+    IDS_WEIGHT_TONS_UK              "Toneladas (UK)"
+    IDS_WEIGHT_TONS_US              "Toneladas (US)"
 END

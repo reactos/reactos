@@ -18,15 +18,15 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Программы", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Избранное", IDM_FAVORITES
         BEGIN
-            MENUITEM "(Пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Документы", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Пусто)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Настройки", IDM_SETTINGS
         BEGIN

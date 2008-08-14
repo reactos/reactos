@@ -684,24 +684,52 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         }
         else if (_ILIsDrive(pidl))
         {
-            _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
 
+            _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
             /* long view "lw_name (C:)" */
             if (!(dwFlags & SHGDN_FORPARSING))
             {
-                DWORD dwVolumeSerialNumber, dwMaximumComponetLength, dwFileSystemFlags;
                 WCHAR wszDrive[18] = {0};
+                DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
                 static const WCHAR wszOpenBracket[] = {' ','(',0};
                 static const WCHAR wszCloseBracket[] = {')',0};
 
-                GetVolumeInformationW (pszPath, wszDrive,
-                           sizeof(wszDrive)/sizeof(wszDrive[0]) - 6,
+                lstrcpynW(wszDrive, pszPath, 4);
+                pszPath[0] = L'\0';
+                GetVolumeInformationW (wszDrive, pszPath,
+                           MAX_PATH - 7,
                            &dwVolumeSerialNumber,
-                           &dwMaximumComponetLength, &dwFileSystemFlags, NULL, 0);
-                strcatW (wszDrive, wszOpenBracket);
-                lstrcpynW (wszDrive + strlenW(wszDrive), pszPath, 3);
-                strcatW (wszDrive, wszCloseBracket);
-                strcpyW (pszPath, wszDrive);
+                           &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+                pszPath[MAX_PATH-1] = L'\0';
+                if (!wcslen(pszPath))
+                {
+                    UINT DriveType, ResourceId;
+                    DriveType = GetDriveTypeW(wszDrive);
+                    switch(DriveType)
+                    {
+                        case DRIVE_FIXED:
+                            ResourceId = IDS_DRIVE_FIXED;
+                            break;
+                        case DRIVE_REMOTE:
+                            ResourceId = IDS_DRIVE_NETWORK;
+                            break;
+                        case DRIVE_CDROM:
+                            ResourceId = IDS_DRIVE_CDROM;
+                            break;
+                        default:
+                            ResourceId = 0;
+                    }
+                    if (ResourceId)
+                    {
+                        dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
+                        if (dwFileSystemFlags > MAX_PATH - 7)
+                            pszPath[MAX_PATH-7] = L'\0';
+                    }
+                }
+                strcatW (pszPath, wszOpenBracket);
+                wszDrive[2] = L'\0';
+                strcatW (pszPath, wszDrive);
+                strcatW (pszPath, wszCloseBracket);
             }
         }
         else

@@ -57,9 +57,9 @@ _KiComputeTimerTableIndex@8:
     ret 8
 .endfunc
 
-.globl _KeUpdateRunTime@4
-.func KeUpdateRunTime@4
-_KeUpdateRunTime@4:
+.globl _KeUpdateRunTime@8
+.func KeUpdateRunTime@8
+_KeUpdateRunTime@8:
 
     /* Get KPCR */
     mov eax, [fs:KPCR_SELF]
@@ -355,7 +355,7 @@ NoDebug:
 
     /* Update system run time */
     push [esp]
-    call _KeUpdateRunTime@4
+    call _KeUpdateRunTime@8
     jmp Done
 
 IncompleteTick2:

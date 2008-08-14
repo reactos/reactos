@@ -156,7 +156,7 @@ BEGIN
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Propriétés système"
-    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des information à propos de l'ordinateur."
+    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des informations à propos de l'ordinateur."
     IDS_TOOLS_SYSDM_CMD      "control.exe"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 

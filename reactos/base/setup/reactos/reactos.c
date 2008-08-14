@@ -26,9 +26,11 @@
  */
 
 #include <windows.h>
+#include <windowsx.h>
 #include <commctrl.h>
 #include <tchar.h>
 #include <setupapi.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
 
@@ -36,19 +38,40 @@
 
 HFONT hTitleFont;
 
+typedef struct _LANG
+{
+    TCHAR LangId[9];
+    TCHAR LangName[128];
+    LONG DefaultKBLayout;
+} LANG, *PLANG;
+
+typedef struct _KBLAYOUT
+{
+    TCHAR LayoutId[9];
+    TCHAR LayoutName[128];
+    TCHAR DllName[128];
+} KBLAYOUT, *PKBLAYOUT;
+
 struct
 {
+	// Settings
 	LONG DestDiskNumber; // physical disk
 	LONG DestPartNumber; // partition on disk
 	LONG DestPartSize; // if partition doesn't exist, size of partition
 	LONG FSType; // file system type on partition 
 	LONG MBRInstallType; // install bootloader
 	LONG FormatPart; // type of format the partition
-	WCHAR SelectedLangId[4]; // selected language
+	TCHAR SelectedLangId[9]; // selected language
+	TCHAR SelectedKBLayout[9]; // selected kayboard layout
 	WCHAR InstallationDirectory[MAX_PATH]; // installation directory on hdd
-	WCHAR DefaultLang[20]; // default language
-	WCHAR DefaultKBLayout[20]; // default keyboard layout
 	BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
+	// txtsetup.sif data
+	TCHAR DefaultLang[20]; // default language
+	TCHAR DefaultKBLayout[20]; // default keyboard layout
+	PLANG pLanguages;
+	LONG LangCount;
+	PKBLAYOUT pKbLayouts;
+	LONG KbLayoutCount;
 } SetupData;
 
 typedef struct _IMGINFO
@@ -201,6 +224,7 @@ LangSelDlgProc(HWND hwndDlg,
                LPARAM lParam)
 {
   PIMGINFO pImgInfo;
+  LONG i;
   pImgInfo = (PIMGINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
   switch (uMsg)
   {
@@ -210,9 +234,6 @@ LangSelDlgProc(HWND hwndDlg,
 		DWORD dwStyle;
 
           	hwndControl = GetParent(hwndDlg);
-
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
 
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -238,6 +259,10 @@ LangSelDlgProc(HWND hwndDlg,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
+		for (i=0; i< SetupData.LangCount;i++)
+			(void)ComboBox_AddString(GetDlgItem(hwndDlg,IDC_LANGUAGES),SetupData.pLanguages[i].LangName);
+		for (i=0; i< SetupData.KbLayoutCount;i++)
+			(void)ComboBox_AddString(GetDlgItem(hwndDlg,IDC_KEYLAYOUT),SetupData.pKbLayouts[i].LayoutName);
           }
 	  break;
           case WM_DRAWITEM:
@@ -309,9 +334,6 @@ TypeDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -364,9 +386,6 @@ DeviceDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -416,9 +435,6 @@ DriveDlgProc(HWND hwndDlg,
 		DWORD dwStyle;
 
           	hwndControl = GetParent(hwndDlg);
-
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
 
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -471,9 +487,6 @@ ProcessDlgProc(HWND hwndDlg,
 
           	hwndControl = GetParent(hwndDlg);
 
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
-
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
@@ -524,9 +537,6 @@ RestartDlgProc(HWND hwndDlg,
 		DWORD dwStyle;
 
           	hwndControl = GetParent(hwndDlg);
-
-		/* Center the wizard window */
-                CenterWindow (hwndControl);
 
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
@@ -583,9 +593,76 @@ RestartDlgProc(HWND hwndDlg,
   return FALSE;
 }
 
+void LoadSetupData()
+{
+	WCHAR szPath[MAX_PATH];
+	WCHAR *ch;
+	HINF hTxtsetupSif;
+	INFCONTEXT InfContext;
+	//TCHAR szValue[MAX_PATH];
+	DWORD LineLength;
+	LONG Count;
+	//HKEY hKey;
+
+	GetModuleFileNameW(NULL,szPath,MAX_PATH);
+	ch = strrchrW(szPath,L'\\');
+	if (ch != NULL)
+		*ch = L'\0';
+
+	wcscat(szPath, L"\\txtsetup.sif");
+	hTxtsetupSif = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
+	if (hTxtsetupSif != INVALID_HANDLE_VALUE)
+	{
+		// get language list
+		Count = SetupGetLineCount(hTxtsetupSif, _T("Language"));
+		if (Count > 0)
+		{
+			// TODO: alloc memory for all entries and read entries
+                	SetupData.pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * Count);
+			if (SetupData.pLanguages != NULL)
+			{
+				SetupData.LangCount = Count;
+				Count = 0;
+				if (SetupFindFirstLine(hTxtsetupSif, _T("Language"),
+				NULL,&InfContext))
+					do
+					{
+						SetupGetStringField(&InfContext, 0, SetupData.pLanguages[Count].LangId, sizeof(SetupData.pLanguages[Count].LangId) / sizeof(TCHAR), &LineLength);
+						SetupGetStringField(&InfContext, 1, SetupData.pLanguages[Count].LangName, sizeof(SetupData.pLanguages[Count].LangName) / sizeof(TCHAR), &LineLength);
+						++Count;
+					}
+					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
+			}
+		}
+    		// get keyboard layout list
+		Count = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
+		if (Count > 0)
+		{
+			// TODO: alloc memory for all entries and read entries
+                	SetupData.pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * Count);
+			if (SetupData.pKbLayouts != NULL)
+			{
+				SetupData.KbLayoutCount = Count;
+				Count = 0;
+				if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"),
+				NULL,&InfContext))
+					do
+					{
+						SetupGetStringField(&InfContext, 0, SetupData.pKbLayouts[Count].LayoutId, sizeof(SetupData.pKbLayouts[Count].LayoutId) / sizeof(TCHAR), &LineLength);
+						SetupGetStringField(&InfContext, 1, SetupData.pKbLayouts[Count].LayoutName, sizeof(SetupData.pKbLayouts[Count].LayoutName) / sizeof(TCHAR), &LineLength);
+						++Count;
+					}
+					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
+			}
+		}
+		SetupCloseInfFile(hTxtsetupSif);
+  	}
+}
+
 BOOL isUnattendSetup()
 {
 	WCHAR szPath[MAX_PATH];
+	WCHAR *ch;
 	HINF hUnattendedInf;
 	INFCONTEXT InfContext;
 	TCHAR szValue[MAX_PATH];
@@ -593,7 +670,10 @@ BOOL isUnattendSetup()
 	//HKEY hKey;
 	BOOL result = 0;
 
-	GetCurrentDirectoryW(MAX_PATH, szPath); // FIXME
+	GetModuleFileNameW(NULL,szPath,MAX_PATH);
+	ch = strrchrW(szPath,L'\\');
+	if (ch != NULL)
+		*ch = L'\0';
 
 	wcscat(szPath, L"\\unattend.inf");
 	hUnattendedInf = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
@@ -633,6 +713,8 @@ WinMain(HINSTANCE hInst,
 
   LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
   LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
+
+  LoadSetupData();
 
   /* Create the Start page, until setup is working */
   psp.dwSize = sizeof(PROPSHEETPAGE);

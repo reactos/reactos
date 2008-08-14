@@ -40,9 +40,9 @@ BEGIN
   IDES_REFRESHRATEFMT "%d Гц"
   IDS_4BPP "16 цветов"
   IDS_8BPP "256 цветов"
-  IDS_15BPP "High Color (15 бит)"
-  IDS_16BPP "High Color (16 бит)"
-  IDS_24BPP "True Color (24 бита)"
-  IDS_32BPP "True Color (32 бита)"
+  IDS_15BPP "Высокое (15 бит)"
+  IDS_16BPP "Высокое (16 бит)"
+  IDS_24BPP "Самое высокое (24 бита)"
+  IDS_32BPP "Самое высокое (32 бита)"
 END
 

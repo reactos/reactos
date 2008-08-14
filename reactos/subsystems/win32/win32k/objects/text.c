@@ -176,7 +176,7 @@ IntLoadSystemFonts(VOID)
    BOOLEAN bRestartScan = TRUE;
    NTSTATUS Status;
 
-   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\media\\fonts\\");
+   RtlInitUnicodeString(&Directory, L"\\SystemRoot\\Fonts\\");
    /* FIXME: Add support for other font types */
    RtlInitUnicodeString(&SearchPattern, L"*.ttf");
 
@@ -268,7 +268,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 {
    FONTGDI *FontGDI;
    NTSTATUS Status;
-   HANDLE FileHandle;
+   HANDLE FileHandle, KeyHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    PVOID Buffer = NULL;
    IO_STATUS_BLOCK Iosb;
@@ -279,6 +279,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
    FT_Fixed XScale, YScale;
+   UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
    /* Open the font file */
 
@@ -384,7 +385,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
 
 
-   DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
+   DPRINT1("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
 
    /* Add this font resource to the font table */
@@ -405,9 +406,20 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    {
       IntLockGlobalFonts;
       InsertTailList(&FontListHead, &Entry->ListEntry);
+      InitializeObjectAttributes(&ObjectAttributes, &FontRegPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+      Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
+      if (NT_SUCCESS(Status))
+      {
+         LPWSTR pName = wcsrchr(FileName->Buffer, L'\\');
+         if (pName)
+         {
+            pName++;
+            ZwSetValueKey(KeyHandle, &Entry->FaceName, 0, REG_SZ, pName, (wcslen(pName) + 1) * sizeof(WCHAR));
+         }
+         ZwClose(KeyHandle);
+      }
       IntUnLockGlobalFonts;
    }
-
    return 1;
 }
 
@@ -3334,6 +3346,7 @@ IntGdiGetCharSet(HDC  hDC)
 
 
 DWORD
+APIENTRY
 NtGdiGetCharSet(HDC hDC)
 {
   PDC Dc;

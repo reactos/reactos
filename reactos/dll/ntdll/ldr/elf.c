@@ -1,6 +1,3 @@
-/* $Id$
-*/
-
 /*
  * REACTOS ELF LOADER
  *
@@ -35,6 +32,7 @@
  *
  * $FreeBSD: src/libexec/rtld-elf/rtld.c,v 1.101 2004/11/02 09:42:21 ssouhlal Exp $
  */
+
 
 /*
  * Dynamic linker for ELF.

@@ -44,7 +44,7 @@ reactos/dll/win32/crypt32         # Synced to Wine-1_0-rc1
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
-reactos/dll/win32/dbghelp         # Synced to Wine-20080106
+reactos/dll/win32/dbghelp         # Synced to Wine-20080802
 reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
@@ -94,6 +94,7 @@ reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
 reactos/dll/win32/stdole2.tlb     # Autosync
+reactos/dll/win32/sxs             # Autosync
 reactos/dll/win32/tapi32          # Autosync
 reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Autosync

@@ -16,7 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * translation updated by Caemyr - Olaf Siejka (Jan,Mar,Apr,Jul 2008)
+ * ReactOS shell32 fork translation updated by Caemyr -
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -205,6 +206,27 @@ BEGIN
 	PUSHBUTTON "Przerwij", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
+SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ogólne"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Rozszerzenie:", 14004, 8, 35, 50, 10
+	LTEXT "Katalog", 14005, 68, 35, 160, 10
+	LTEXT "Lokalizacja:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 315, 10
+	LTEXT "Rozmiar:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Zawiera:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Utworzony:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	AUTOCHECKBOX "&Tylko-do-odczytu", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Ukryty", 14022, 126, 150, 50, 10
+END
+
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
@@ -343,14 +365,14 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Otwórz za pomoc¹"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
 	LTEXT "Wybierz program, którego chcesz u¿yæ do otwarcia tego pliku:", -1, 44, 12, 211, 10
 	LTEXT "Plik:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programs", -1, 7, 42, 249, 187
+	GROUPBOX "&Programy", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Zawsze u¿ywaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Przegl¹daj", 14004, 198, 207, 50, 14
@@ -549,6 +571,20 @@ BEGIN
 	AUTOCHECKBOX "&W³¹cz kompresjê", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zmiana Ikony"
@@ -577,14 +613,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Komentarz"
 	IDS_SHV_COLUMN10            "W³aœciciel"
 	IDS_SHV_COLUMN11            "Grupa"
-	IDS_SHV_COLUMN_DELFROM      "Lokacja oryginalna"
+	IDS_SHV_COLUMN12            "Nazwa pliku"
+	IDS_SHV_COLUMN13            "Kategoria"
+	IDS_SHV_COLUMN_DELFROM      "Lokalizacja oryginalna"
 	IDS_SHV_COLUMN_DELDATE      "Data usuniêcia"
+	IDS_SHV_COLUMN_FONTTYPE     "Czcionka"
+	IDS_SHV_COLUMN_WORKGROUP    "Grupa Robocza"
+	IDS_SHV_NETWORKLOCATION     "Lokalizacja Sieciowa"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
+	IDS_SHV_COLUMN_STATUS       "Stan"
+	IDS_SHV_COLUMN_COMMENTS     "Komentarze"
+	IDS_SHV_COLUMN_LOCATION     "Lokalizacja"
+	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
 	IDS_DESKTOP                 "Pulpit"
 	IDS_MYCOMPUTER              "Mój komputer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kosz"
 	IDS_CONTROLPANEL            "Panel Sterowania"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Du¿e Ikony"
@@ -593,6 +640,12 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Szczegó³y"
 	IDS_SELECT                  "Zaznacz"
 	IDS_OPEN                    "Otwórz"
+	IDS_CREATELINK	            "Utwórz &Skrót"
+	IDS_COPY                    "Kopiuj"
+	IDS_DELETE                  "Usuñ"
+	IDS_PROPERTIES              "W³aœciwoœci"
+	IDS_CUT                     "Wytnij"
+	IDS_RESTORE                 "Przywróæ"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."
@@ -693,4 +746,11 @@ BEGIN
 	IDS_PRINT_VERB              "Drukuj"
 	IDS_PLAY_VERB               "Odtwórz"
 	IDS_PREVIEW_VERB            "Podgl¹d"
+
+	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
+	IDS_PRINTERS                "Drukarki"
+	IDS_FONTS                   "Czcionki"
+	IDS_INSTALLNEWFONT          "Zainstaluj Now¹ Czcionkê..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

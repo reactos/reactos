@@ -2035,7 +2035,7 @@ typedef struct _LDT_ENTRY
 #endif
 
 /* FIXME: add more machines */
-#if defined(__i386__) && !defined(__PowerPC__)
+#if defined(_X86_) && !defined(__PowerPC__)
 #define SIZE_OF_80387_REGISTERS	80
 #define CONTEXT_i386	0x10000
 #define CONTEXT_i486	0x10000

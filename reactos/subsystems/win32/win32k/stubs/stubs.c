@@ -1607,6 +1607,7 @@ NtGdiRemoveMergeFont(
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiAddRemoteMMInstanceToDC(
     IN HDC hdc,
     IN DOWNLOADDESIGNVECTOR *pddv,
@@ -2149,6 +2150,7 @@ NtGdiGetMonitorID(
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiGetRealizationInfo(
     IN HDC hdc,
     OUT PREALIZATION_INFO pri,
@@ -2268,6 +2270,7 @@ NtGdiQueryFontAssocInfo(
  * @unimplemented
  */
 DWORD
+APIENTRY
 NtGdiGetFontUnicodeRanges(
     IN HDC hdc,
     OUT OPTIONAL LPGLYPHSET pgs)
@@ -2971,8 +2974,7 @@ ULONGLONG
 APIENTRY
 EngGetTickCount(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
+ return ((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
 }
  
 BOOLEAN

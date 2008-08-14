@@ -1022,9 +1022,6 @@ NTSTATUS DispTdiSendDatagram(
 
         if (Status != STATUS_PENDING) {
             DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
-            /* Return STATUS_PENDING because DispPrepareIrpForCancel
-               marks Irp as pending */
-            Status = STATUS_PENDING;
         } else
 	    IoMarkIrpPending( Irp );
     }

@@ -28,11 +28,15 @@
 // We are very lazy on ARM -- we just import intrinsics
 // Question: Why wasn't this done for x86 too? (see fastintrlck.asm)
 //
-#define InterlockedDecrement        _InterlockedDecrement
-#define InterlockedIncrement        _InterlockedIncrement
-#define InterlockedCompareExchange  _InterlockedCompareExchange
-#define InterlockedExchange         _InterlockedExchange
-#define InterlockedExchangeAdd      _InterlockedExchangeAdd
+#define InterlockedDecrement         _InterlockedDecrement
+#define InterlockedDecrement16       _InterlockedDecrement16
+#define InterlockedIncrement         _InterlockedIncrement
+#define InterlockedIncrement16       _InterlockedIncrement16
+#define InterlockedCompareExchange   _InterlockedCompareExchange
+#define InterlockedCompareExchange16 _InterlockedCompareExchange16
+#define InterlockedCompareExchange64 _InterlockedCompareExchange64
+#define InterlockedExchange          _InterlockedExchange
+#define InterlockedExchangeAdd       _InterlockedExchangeAdd
 
 #include "ke.h"
 #ifdef _M_AMD64

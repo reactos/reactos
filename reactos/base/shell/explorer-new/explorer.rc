@@ -12,6 +12,7 @@ IDI_START ICON DISCARDABLE res/start.ico
 IDB_STARTMENU BITMAP DISCARDABLE res/logov.bmp
 
 #include "lang/bg-BG.rc"
+#include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
@@ -19,6 +20,7 @@ IDB_STARTMENU BITMAP DISCARDABLE res/logov.bmp
 #include "lang/it-IT.rc"
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
+#include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"

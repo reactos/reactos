@@ -412,7 +412,8 @@ typedef struct _FIRMWARE_INFORMATION_LOADER_BLOCK
 {
     ULONG FirmwareTypeEfi:1;
     ULONG Reserved:31;
-    union {
+    union
+    {
         EFI_FIRMWARE_INFORMATION EfiInformation;
         PCAT_FIRMWARE_INFORMATION PcatInformation;
     } u;
@@ -447,7 +448,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     {
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
-        IA64_LOADER_BLOCK Ia64;
+        IA64_LOADER_BLOCK IA64;
         PPC_LOADER_BLOCK PowerPC;
         ARM_LOADER_BLOCK Arm;
     } u;

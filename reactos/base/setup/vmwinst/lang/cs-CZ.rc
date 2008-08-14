@@ -95,7 +95,7 @@ BEGIN
   IDS_FAILEDTOSELVGADRIVER "Nepodaøilo se zaktivovat ReactOS VGA ovladaè!"
   IDS_FAILEDTOSELVBEDRIVER "Nepodaøilo se zaktivovat ReactOS VBE ovladaè!"
   IDS_UNINSTNOTICE "Podpùrné soubory VMware(r) SVGA ovladaèe nebyly odstranìny.\nSmažte je, prosím, po restarování systému."
-  IDS_FAILEDTOADDREGENTRIES "Failed to create registry entries for the VMware(r) SVGA driver!"
+  IDS_FAILEDTOADDREGENTRIES "Nepodaøilo se vytvoøit v registru zápis pro VMware(r) SVGA ovladaè!"
 END
 
 STRINGTABLE

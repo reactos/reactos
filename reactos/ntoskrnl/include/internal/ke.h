@@ -537,7 +537,7 @@ KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
     KAFFINITY Affinity,
-    PLARGE_INTEGER DirectoryTableBase,
+    PULONG DirectoryTableBase,
     IN BOOLEAN Enable
 );
 

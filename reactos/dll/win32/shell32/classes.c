@@ -386,6 +386,11 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	    if(LoadStringW(shell32_hInstance, IDS_CONTROLPANEL, szDest, buflen))
 	      ret = TRUE;
 	  }
+	  else if (IsEqualIID(riid, &CLSID_AdminFolderShortcut))
+	  {
+	    if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
+	      ret = TRUE;
+	  }
 
 	}
 	TRACE("-- %s\n", debugstr_w(szDest));

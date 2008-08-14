@@ -712,11 +712,6 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 	TRACE ("ParseCommandLine: (\'%s\')\n", debugstr_aw(s));
 
-#ifdef FEATURE_ALIASES
-	/* expand all aliases */
-	ExpandAlias (s, CMDLINE_LENGTH);
-#endif /* FEATURE_ALIAS */
-
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
 	Length = GetTempPath (MAX_PATH, szTempPath);
@@ -1092,57 +1087,20 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
 	UINT size;
-	TCHAR varNameFixed[MAX_PATH];
-	TCHAR ReturnValue[MAX_PATH];
-	LPTSTR position;
-	LPTSTR Token;
-	SIZE_T i = 0;
-	INT StringPart[1] = {0};
-	
-	position = _tcsstr(varName, _T(":~"));
-	if (position)
-		_tcsncpy(varNameFixed, varName, (int) (position - varName));
-	else
-		_tcscpy(varNameFixed, varName);
 
-	size = GetEnvironmentVariable ( varNameFixed, ret, retlen );
+	size = GetEnvironmentVariable ( varName, ret, retlen );
 	if ( size > retlen )
 	{
 		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
 			return NULL;
-		size = GetEnvironmentVariable ( varNameFixed, ret, retlen );
+		size = GetEnvironmentVariable ( varName, ret, retlen );
 	}
 	if ( size )
-	{
-		if (position)
-		{
-			position += 2;
-			if (_tcschr(position, _T(',')) != NULL)
-			{
-				Token = _tcstok(position, _T(","));
-				while ((Token != NULL) && (i < 2))
-				{
-					StringPart[i] = _ttoi(Token);
-					i++;
-					Token = _tcstok (NULL, _T(","));
-				}
-				if (i > 0)
-				{
-					if (StringPart[1] < 0)
-						StringPart[1] = _tcslen(ret + StringPart[0]) + StringPart[1];
-					_tcsncpy(ReturnValue, ret + StringPart[0], StringPart[1]);
-					_tcscpy(ret, ReturnValue);
-				}
-			}
-			return ret;
-		}
-		else
-			return ret;
-	}
+		return ret;
 
 	/* env var doesn't exist, look for a "special" one */
 	/* %CD% */
-	if (_tcsicmp(varNameFixed,_T("cd")) ==0)
+	if (_tcsicmp(varName,_T("cd")) ==0)
 	{
 		size = GetCurrentDirectory ( retlen, ret );
 		if ( size > retlen )
@@ -1156,7 +1114,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 	/* %TIME% */
-	else if (_tcsicmp(varNameFixed,_T("time")) ==0)
+	else if (_tcsicmp(varName,_T("time")) ==0)
 	{
 		SYSTEMTIME t;
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
@@ -1168,7 +1126,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 	/* %DATE% */
-	else if (_tcsicmp(varNameFixed,_T("date")) ==0)
+	else if (_tcsicmp(varName,_T("date")) ==0)
 	{
 
 		if ( !GrowIfNecessary ( GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, NULL, 0), &ret, &retlen ) )
@@ -1182,7 +1140,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %RANDOM% */
-	else if (_tcsicmp(varNameFixed,_T("random")) ==0)
+	else if (_tcsicmp(varName,_T("random")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1192,13 +1150,13 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %CMDCMDLINE% */
-	else if (_tcsicmp(varNameFixed,_T("cmdcmdline")) ==0)
+	else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
 	{
 		return GetCommandLine();
 	}
 
 	/* %CMDEXTVERSION% */
-	else if (_tcsicmp(varNameFixed,_T("cmdextversion")) ==0)
+	else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1208,7 +1166,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	}
 
 	/* %ERRORLEVEL% */
-	else if (_tcsicmp(varNameFixed,_T("errorlevel")) ==0)
+	else if (_tcsicmp(varName,_T("errorlevel")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1216,30 +1174,17 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 
-	GrowIfNecessary(_tcslen(varNameFixed) + 3, &ret, &retlen);
-	_stprintf(ret,_T("%%%s%%"),varNameFixed);
-	return ret; /* not found - return orginal string */
+	return NULL;
 }
 
 LPCTSTR
-GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
+GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 {
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
-	LPTSTR p, tmp;
-	UINT size;
-	TCHAR c;
 
 	if ( varNameLen )
-		*varNameLen = 0;
-	SetLastError(0);
-	c = *varName;
-
-	if ( (*varName != '!') && (*varName++ != '%') )
-		return NULL;
-
-	if (c == _T('!'))
-		varName++;
+		*varNameLen = 1;
 
 	switch ( *varName )
 	{
@@ -1248,7 +1193,7 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		if (_tcsncicmp(varName, _T("dp0"), 3) == 0)
 		{
 			if ( varNameLen )
-				*varNameLen = 5;
+				*varNameLen = 4;
 			return bc->BatchFilePath;
 		}
 	case _T('0'):
@@ -1261,60 +1206,16 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 	case _T('7'):
 	case _T('8'):
 	case _T('9'):
-		if ((tmp = FindArg (*varName - _T('0'))))
-		{
-			if ( varNameLen )
-				*varNameLen = 2;
-			if ( !*tmp )
-				return _T("");
-			if ( !GrowIfNecessary ( _tcslen(tmp)+1, &ret, &retlen ) )
-				return NULL;
-			_tcscpy ( ret, tmp );
-			return ret;
-		}
-		if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
-			return NULL;
-		ret[0] = _T('%');
-		ret[1] = *varName;
-		ret[2] = 0;
-		if ( varNameLen )
-			*varNameLen = 2;
-		return ret;
+		return FindArg(*varName - _T('0'));
 
     case _T('*'):
-        if(bc == NULL)
-        {
-            //
-            // No batch file to see here, move along
-            //
-            if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
-                return NULL;
-            ret[0] = _T('%');
-            ret[1] = _T('*');
-            ret[2] = 0;
-            if ( varNameLen )
-                *varNameLen = 2;
-            return ret;
-        }
-
         //
         // Copy over the raw params(not including the batch file name
         //
-        if ( !GrowIfNecessary ( _tcslen(bc->raw_params)+1, &ret, &retlen ) )
-            return NULL;
-        if ( varNameLen )
-            *varNameLen = 2;
-        _tcscpy ( ret, bc->raw_params );
-        return ret;
+        return bc->raw_params;
 
 	case _T('%'):
-		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
-			return NULL;
-		ret[0] = _T('%');
-		ret[1] = 0;
-		if ( varNameLen )
-			*varNameLen = 2;
-		return ret;
+		return _T("%");
 
 	case _T('?'):
 		/* TODO FIXME 10 is only max size for 32-bit */
@@ -1323,34 +1224,163 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
 		ret[retlen-1] = 0;
 		if ( varNameLen )
-			*varNameLen = 2;
-		return ret;
-	}
-	if ( ModeSetA )
-	{
-		/* HACK for set/a */
-		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
-			return NULL;
-		ret[0] = _T('%');
-		ret[1] = 0;
-		if ( varNameLen )
 			*varNameLen = 1;
 		return ret;
 	}
-	p = _tcschr ( varName, c );
-	if ( !p )
+	return NULL;
+}
+
+BOOL
+SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim, BOOL bIsBatch)
+{
+#define APPEND(From, Length) { \
+	if (Dest + (Length) > DestEnd) \
+		goto too_long; \
+	memcpy(Dest, From, (Length) * sizeof(TCHAR)); \
+	Dest += Length; }
+#define APPEND1(Char) { \
+	if (Dest >= DestEnd) \
+		goto too_long; \
+	*Dest++ = Char; }
+
+	TCHAR *DestEnd = Dest + CMDLINE_LENGTH - 1;
+	const TCHAR *Var;
+	int VarLength;
+	TCHAR *SubstStart;
+	TCHAR EndChr;
+	while (*Src)
 	{
-		SetLastError ( ERROR_INVALID_PARAMETER );
-		return NULL;
+		if (*Src != Delim)
+		{
+			APPEND1(*Src++)
+			continue;
+		}
+
+		Src++;
+		if (bIsBatch && Delim == _T('%'))
+		{
+			UINT NameLen;
+			Var = GetBatchVar(Src, &NameLen);
+			if (Var != NULL)
+			{
+				VarLength = _tcslen(Var);
+				APPEND(Var, VarLength)
+				Src += NameLen;
+				continue;
+			}
+		}
+
+		/* Find the end of the variable name. A colon (:) will usually
+		 * end the name and begin the optional modifier, but not if it
+		 * is immediately followed by the delimiter (%VAR:%). */
+		SubstStart = Src;
+		while (*Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
+		{
+			if (!*Src)
+				goto bad_subst;
+			Src++;
+		}
+
+		EndChr = *Src;
+		*Src = _T('\0');
+		Var = GetEnvVarOrSpecial(SubstStart);
+		*Src++ = EndChr;
+		if (Var == NULL)
+		{
+			/* In a batch file, %NONEXISTENT% "expands" to an empty string */
+			if (bIsBatch)
+				continue;
+			goto bad_subst;
+		}
+		VarLength = _tcslen(Var);
+
+		if (EndChr == Delim)
+		{
+			/* %VAR% - use as-is */
+			APPEND(Var, VarLength)
+		}
+		else if (*Src == _T('~'))
+		{
+			/* %VAR:~[start][,length]% - substring
+			 * Negative values are offsets from the end */
+			int Start = _tcstol(Src + 1, &Src, 0);
+			int End = VarLength;
+			if (Start < 0)
+				Start += VarLength;
+			Start = max(Start, 0);
+			Start = min(Start, VarLength);
+			if (*Src == _T(','))
+			{
+				End = _tcstol(Src + 1, &Src, 0);
+				End += (End < 0) ? VarLength : Start;
+				End = max(End, Start);
+				End = min(End, VarLength);
+			}
+			if (*Src++ != Delim)
+				goto bad_subst;
+			APPEND(&Var[Start], End - Start);
+		}
+		else
+		{
+			/* %VAR:old=new% - replace all occurrences of old with new
+			 * %VAR:*old=new% - replace first occurrence only,
+			 *                  and remove everything before it */
+			TCHAR *Old, *New;
+			DWORD OldLength, NewLength;
+			BOOL Star = FALSE;
+			int LastMatch = 0, i = 0;
+
+			if (*Src == _T('*'))
+			{
+				Star = TRUE;
+				Src++;
+			}
+
+			/* the string to replace may contain the delimiter */
+			Src = _tcschr(Old = Src, _T('='));
+			if (Src == NULL)
+				goto bad_subst;
+			OldLength = Src++ - Old;
+			if (OldLength == 0)
+				goto bad_subst;
+
+			Src = _tcschr(New = Src, Delim);
+			if (Src == NULL)
+				goto bad_subst;
+			NewLength = Src++ - New;
+
+			while (i < VarLength)
+			{
+				if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
+				{
+					if (!Star)
+						APPEND(&Var[LastMatch], i - LastMatch)
+					APPEND(New, NewLength)
+					i += OldLength;
+					LastMatch = i;
+					if (Star)
+						break;
+					continue;
+				}
+				i++;
+			}
+			APPEND(&Var[LastMatch], VarLength - LastMatch)
+		}
+		continue;
+
+	bad_subst:
+		Src = SubstStart;
+		if (!bIsBatch)
+			APPEND1(Delim)
 	}
-	size = p-varName;
-	if ( varNameLen )
-		*varNameLen = size + 2;
-	p = alloca ( (size+1) * sizeof(TCHAR) );
-	memmove ( p, varName, size * sizeof(TCHAR) );
-	p[size] = 0;
-	varName = p;
-	return GetEnvVarOrSpecial ( varName );
+	*Dest = _T('\0');
+	return TRUE;
+too_long:
+	ConOutResPrintf(STRING_ALIAS_ERROR);
+	nErrorLevel = 9023;
+	return FALSE;
+#undef APPEND
+#undef APPEND1
 }
 
 
@@ -1365,10 +1395,7 @@ ProcessInput (BOOL bFlag)
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR readline[CMDLINE_LENGTH];
 	LPTSTR ip;
-	LPTSTR cp;
-	LPCTSTR tmp;
 	BOOL bEchoThisLine;
-	BOOL bModeSetA;
     BOOL bIsBatch;
 
 	do
@@ -1393,94 +1420,8 @@ ProcessInput (BOOL bFlag)
 		while ( _istspace(*ip) )
 			++ip;
 
-		cp = commandline;
-		bModeSetA = FALSE;
-		while (*ip)
-		{
-			if ( (*ip == _T('%')) || (*ip == _T('!')) )
-			{
-				UINT envNameLen;
-				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
-				if ( envVal )
-				{
-					ip += envNameLen;
-					cp = _stpcpy ( cp, envVal );
-				}
-			}
-
-			if (*ip != _T('\0') && (_istcntrl (*ip)))
-				*ip = _T(' ');
-			*cp++ = *ip++;
-
-			/* HACK HACK HACK check whether bModeSetA needs to be toggled */
-			*cp = 0;
-			tmp = commandline;
-			tmp += _tcsspn(tmp,_T(" \t"));
-			/* first we find and skip and pre-redirections... */
-			while (( tmp ) &&
-				( _tcschr(_T("<>"),*tmp)
-				|| !_tcsncmp(tmp,_T("1>"),2)
-				|| !_tcsncmp(tmp,_T("2>"),2) ))
-			{
-				if ( _istdigit(*tmp) )
-					tmp += 2;
-				else
-					tmp++;
-				tmp += _tcsspn(tmp,_T(" \t"));
-				if ( *tmp == _T('\"') )
-				{
-					tmp = _tcschr(tmp+1,_T('\"'));
-					if ( tmp )
-						++tmp;
-				}
-				else
-					tmp = _tcspbrk(tmp,_T(" \t"));
-				if ( tmp )
-					tmp += _tcsspn(tmp,_T(" \t"));
-			}
-			/* we should now be pointing to the actual command
-			 * (if there is one yet)*/
-			if ( tmp )
-			{
-				/* if we're currently substituting ( which is default )
-				 * check to see if we've parsed out a set/a. if so, we
-				 * need to disable substitution until we come across a
-				 * redirection */
-				if ( !bModeSetA )
-				{
-					/* look for set /a */
-					if ( !_tcsnicmp(tmp,_T("set"),3) )
-					{
-						tmp += 3;
-						tmp += _tcsspn(tmp,_T(" \t"));
-						if ( !_tcsnicmp(tmp,_T("/a"),2) )
-							bModeSetA = TRUE;
-					}
-				}
-				/* if we're not currently substituting, it means we're
-				 * already inside a set /a. now we need to look for
-				 * a redirection in order to turn redirection back on */
-				else
-				{
-					/* look for redirector of some kind after the command */
-					while ( (tmp = _tcspbrk ( tmp, _T("^<>|") )) )
-					{
-						if ( *tmp == _T('^') )
-						{
-							if ( _tcschr(_T("<>|&"), *++tmp ) && *tmp )
-								++tmp;
-						}
-						else
-						{
-							bModeSetA = FALSE;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		*cp = _T('\0');
+		if (!SubstituteVars(ip, commandline, _T('%'), bIsBatch))
+			continue;
 
 		/* JPP 19980807 */
 		/* Echo batch file line */
@@ -1489,6 +1430,11 @@ ProcessInput (BOOL bFlag)
 			PrintPrompt ();
 			ConOutPuts (commandline);
 		}
+
+		/* FIXME: !vars! should be substituted later, after parsing. */
+		if (!SubstituteVars(commandline, readline, _T('!'), bIsBatch))
+			continue;
+		_tcscpy(commandline, readline);
 
 		if (!CheckCtrlBreak(BREAK_INPUT) && *commandline)
 		{

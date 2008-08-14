@@ -4,8 +4,14 @@
 #define NDEBUG
 #include <debug.h>
 
-//static PEVENTTABLE GlobalEvents;
+typedef struct _EVENTPACK
+{
+  PEVENTHOOK pEH; 
+  LONG idObject;
+  LONG idChild;
+} EVENTPACK, *PEVENTPACK;
 
+static PEVENTTABLE GlobalEvents = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -43,13 +49,90 @@ GetMaskFromEvent(DWORD Event)
   return Ret;
 }
 
+static
+VOID
+FASTCALL
+IntSetSrvEventMask( UINT EventMin, UINT EventMax)
+{
+   UINT event;
+   DPRINT("SetSrvEventMask 1\n");
+   for ( event = EventMin; event <= EventMax; event++)
+   {
+      if ((event >= EVENT_SYSTEM_SOUND && event <= EVENT_SYSTEM_MINIMIZEEND) ||
+          (event >= EVENT_CONSOLE_CARET && event <= EVENT_CONSOLE_END_APPLICATION) ||
+          (event >= EVENT_OBJECT_CREATE && event <= EVENT_OBJECT_ACCELERATORCHANGE))
+      {
+         gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+      }
+      if (event > EVENT_SYSTEM_MINIMIZEEND && event < EVENT_CONSOLE_CARET)
+      {
+          event = EVENT_CONSOLE_CARET-1;
+          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+      }
+      if (event > EVENT_CONSOLE_END_APPLICATION && event < EVENT_OBJECT_CREATE )
+      {
+          event = EVENT_OBJECT_CREATE-1;
+          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+      }
+      if (event > EVENT_OBJECT_ACCELERATORCHANGE && event < EVENT_MAX)
+      {
+          event = EVENT_MAX-1;
+          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          break;
+      }      
+   }
+   if (!gpsi->SrvEventActivity)
+      gpsi->SrvEventActivity |= SRV_EVENT_RUNNING; // Set something.
+   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->SrvEventActivity);
+}
 
 static
-DWORD
+LRESULT
 FASTCALL
-TimeStamp(VOID)
+IntCallLowLevelEvent( PEVENTHOOK pEH,
+                         DWORD event,
+                           HWND hwnd, 
+                       LONG idObject,
+                        LONG idChild)
 {
- return (DWORD)((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
+   NTSTATUS Status;
+   ULONG_PTR uResult;
+   EVENTPACK EP;
+
+   EP.pEH = pEH;
+   EP.idObject = idObject;
+   EP.idChild = idChild;
+
+   /* FIXME should get timeout from
+    * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
+   Status = co_MsqSendMessage(((PW32THREAD)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
+                                           hwnd,
+                                          event,
+                                              0,
+                                    (LPARAM)&EP,
+                                           5000,
+                                           TRUE,
+                                    MSQ_ISEVENT,
+                                       &uResult);
+
+   return NT_SUCCESS(Status) ? uResult : 0;
+}
+
+
+static
+BOOL
+FASTCALL
+IntRemoveEvent(PEVENTHOOK pEH)
+{
+   if (pEH)
+   {
+      RemoveEntryList(&pEH->Chain);
+      GlobalEvents->Counts--;
+      if (!GlobalEvents->Counts) gpsi->SrvEventActivity = 0;
+      UserDeleteObject(pEH->Self, otEvent);
+      return TRUE;
+   }
+   return FALSE;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -61,22 +144,73 @@ co_EVENT_CallEvents( DWORD event,
                    LONG idObject,
                     LONG idChild)
 {
+   PEVENTHOOK pEH;
+   LRESULT Result;
+   PEVENTPACK pEP = (PEVENTPACK)idChild;
 
-   PEVENTHOOK peh = UserHeapAlloc(sizeof(EVENTHOOK));
-
-   if ((gpsi->SrvEventActivity & GetMaskFromEvent(event))) return 0; // No events to run.
-
-   LRESULT Result = co_IntCallEventProc(peh->Self,
-                                            event,
-                                             hwnd,
-                                         idObject,
-                                          idChild,
-        (DWORD)(NtCurrentTeb()->Cid).UniqueThread,
-                                      TimeStamp(),
-                                        peh->Proc);
+   pEH = pEP->pEH;
+   
+   Result = co_IntCallEventProc( pEH->Self,
+                                     event,
+                                      hwnd,
+                             pEP->idObject,
+                              pEP->idChild,
+ (DWORD)(NtCurrentTeb()->Cid).UniqueThread,
+                  (DWORD)EngGetTickCount(),
+                                 pEH->Proc);
    return Result;
 }
 
+VOID
+FASTCALL
+IntNotifyWinEvent(
+   DWORD Event,
+   PWINDOW_OBJECT Window,
+   LONG  idObject,
+   LONG  idChild)
+{
+   PEVENTHOOK pEH;
+   LRESULT Result;
+
+   if (!GlobalEvents->Counts) return;
+
+   pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
+
+   do
+   { 
+     UserReferenceObject(pEH);
+     // Must be inside the event window.
+     if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
+     {
+        if ((pEH->Thread != PsGetCurrentThread()) && (pEH->Thread != NULL))
+        { // if all process || all thread || other thread same process
+           if (!(pEH->idProcess) || !(pEH->idThread) || 
+               ((DWORD)(NtCurrentTeb()->Cid).UniqueProcess == pEH->idProcess))
+           {
+              Result = IntCallLowLevelEvent(pEH, Event, Window->hSelf, idObject, idChild);
+           }
+        }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
+        else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
+                   ( ((pEH->idProcess &&
+              (DWORD)(NtCurrentTeb()->Cid).UniqueProcess == pEH->idProcess) &&
+                     !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
+                     !pEH->idProcess ) )
+        {
+           Result = co_IntCallEventProc( pEH->Self,
+                                             Event,
+                                     Window->hSelf,
+                                          idObject,
+                                           idChild,
+         (DWORD)(NtCurrentTeb()->Cid).UniqueThread,
+                          (DWORD)EngGetTickCount(),
+                                         pEH->Proc);
+        }
+     }
+     UserDereferenceObject(pEH);
+
+     pEH = (PEVENTHOOK)pEH->Chain.Flink;
+   } while (pEH != (PEVENTHOOK)&GlobalEvents->Events.Flink);
+}            
 
 VOID
 STDCALL
@@ -86,7 +220,23 @@ NtUserNotifyWinEvent(
    LONG  idObject,
    LONG  idChild)
 {
-   UNIMPLEMENTED
+   PWINDOW_OBJECT Window = NULL;
+   USER_REFERENCE_ENTRY Ref;
+   UserEnterExclusive();
+
+   /* Validate input */
+   if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
+   {
+      return;
+   }   
+   
+   if (gpsi->SrvEventActivity & GetMaskFromEvent(Event))
+   {
+      UserRefObjectCo(Window, &Ref);
+      IntNotifyWinEvent( Event, Window, idObject, idChild);
+      UserDerefObjectCo(Window);
+   }
+   UserLeave();
 }
 
 HWINEVENTHOOK
@@ -101,23 +251,147 @@ NtUserSetWinEventHook(
    DWORD idThread,
    UINT dwflags)
 {
-   gpsi->SrvEventActivity |= GetMaskFromEvent(eventMin);
-   gpsi->SrvEventActivity &= ~GetMaskFromEvent(eventMin);
+   PEVENTHOOK pEH;
+   HWINEVENTHOOK Ret = NULL;
+   UNICODE_STRING ModuleName;
+   NTSTATUS Status;
+   HANDLE Handle;
+   PETHREAD Thread = NULL;
 
-   UNIMPLEMENTED
+   UserEnterExclusive();
 
-   return 0;
+   if ( !GlobalEvents )
+   {
+      GlobalEvents = ExAllocatePoolWithTag(PagedPool, sizeof(EVENTTABLE), TAG_HOOK);
+      GlobalEvents->Counts = 0;      
+      InitializeListHead(&GlobalEvents->Events);
+   }
+
+   if (eventMin > eventMax)
+   {
+      SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
+      goto SetEventExit;
+   }
+
+   if (!lpfnWinEventProc)
+   {
+      SetLastWin32Error(ERROR_INVALID_FILTER_PROC);
+      goto SetEventExit;
+   }
+
+   if ((dwflags & WINEVENT_INCONTEXT) && !hmodWinEventProc)
+   {
+      SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+      goto SetEventExit;
+   }
+
+   if (idThread)
+   {
+      Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
+      if (!NT_SUCCESS(Status))
+      {   
+         SetLastWin32Error(ERROR_INVALID_THREAD_ID);
+         goto SetEventExit;
+      }
+   }
+
+   pEH = UserCreateObject(gHandleTable, &Handle, otEvent, sizeof(EVENTHOOK));
+   if (pEH)
+   {
+      InsertTailList(&GlobalEvents->Events, &pEH->Chain);
+      GlobalEvents->Counts++;
+
+      pEH->Self      = Handle;
+      if (Thread)
+         pEH->Thread = Thread;
+      else
+         pEH->Thread = PsGetCurrentThread();
+      pEH->eventMin  = eventMin;
+      pEH->eventMax  = eventMax;
+      pEH->idProcess = idProcess;
+      pEH->idThread  = idThread;
+      pEH->Ansi      = FALSE;
+      pEH->Flags     = dwflags;
+
+
+      if (NULL != hmodWinEventProc)
+      {
+         Status = MmCopyFromCaller(&ModuleName,
+                                      puString,
+                        sizeof(UNICODE_STRING));
+
+         if (! NT_SUCCESS(Status))
+         {
+            UserDereferenceObject(pEH);
+            IntRemoveEvent(pEH);
+            SetLastNtError(Status);
+            goto SetEventExit;
+         }
+
+         pEH->ModuleName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                   ModuleName.MaximumLength,
+                                   TAG_HOOK);
+
+         if (NULL == pEH->ModuleName.Buffer)
+         {
+            UserDereferenceObject(pEH);
+            IntRemoveEvent(pEH);
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            goto SetEventExit;
+          }
+
+         pEH->ModuleName.MaximumLength = ModuleName.MaximumLength;
+
+         Status = MmCopyFromCaller(pEH->ModuleName.Buffer,
+                                   ModuleName.Buffer,
+                                   ModuleName.MaximumLength);
+
+         if (! NT_SUCCESS(Status))
+         {
+            ExFreePool(pEH->ModuleName.Buffer);
+            UserDereferenceObject(pEH);
+            IntRemoveEvent(pEH);
+            SetLastNtError(Status);
+            goto SetEventExit;
+         }
+
+         pEH->ModuleName.Length = ModuleName.Length;
+
+         pEH->Proc = (void *)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
+      }
+      else
+         pEH->Proc = lpfnWinEventProc;
+
+      UserDereferenceObject(pEH);
+
+      Ret = Handle;
+      IntSetSrvEventMask( eventMin, eventMax);
+   }
+
+SetEventExit:
+   if (Thread) ObDereferenceObject(Thread);
+   UserLeave();
+   return Ret;
 }
-
 
 BOOL
 STDCALL
 NtUserUnhookWinEvent(
    HWINEVENTHOOK hWinEventHook)
 {
-   UNIMPLEMENTED
+   PEVENTHOOK pEH;
+   BOOL Ret = FALSE;
 
-   return FALSE;
+   UserEnterExclusive();
+
+   pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, otEvent);
+   if (pEH) 
+   {
+      Ret = IntRemoveEvent(pEH);
+   }
+
+   UserLeave();
+   return Ret;
 }
 
 /* EOF */

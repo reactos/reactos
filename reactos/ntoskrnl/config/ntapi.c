@@ -930,7 +930,7 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 NTSTATUS
 NTAPI
 NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
-                   IN ULONG HandleCount)
+                   OUT PULONG HandleCount)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

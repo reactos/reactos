@@ -5,9 +5,10 @@
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<library>lsa_server</library>
-	<library>ntdll</library>
+	<library>wine</library>
 	<library>kernel32</library>
 	<library>rpcrt4</library>
+	<library>ntdll</library>
 	<library>pseh</library>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>

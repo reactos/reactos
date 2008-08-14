@@ -739,9 +739,8 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
                      lpSize);
   if(Ret)
   {
-    NameW.Length = (*lpSize) * sizeof(WCHAR);
+    NameW.Length = (*lpSize - 1) * sizeof(WCHAR);
     RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
-    NameA.Buffer[NameA.Length] = '\0';
 
     *lpSize = NameA.Length + 1;
   }
@@ -791,6 +790,7 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
   if ( !tu_buf )
   {
     SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+    CloseHandle ( hToken );
     return FALSE;
   }
   if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, 36, &tu_len ) || tu_len > 36 )
@@ -800,6 +800,7 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
     if ( !tu_buf )
     {
       SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+      CloseHandle ( hToken );
       return FALSE;
     }
     if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, tu_len, &tu_len ) )
@@ -811,6 +812,7 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
       return FALSE;
     }
   }
+  CloseHandle ( hToken );
   token_user = (TOKEN_USER*)tu_buf;
 
   an_len = *lpSize;
@@ -836,27 +838,21 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
         return FALSE;
       }
     }
+    an_len = *lpSize;
     if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu ) )
     {
       /* don't call SetLastError(),
          as LookupAccountSid() ought to have set one */
       LocalFree ( domain_name );
-      CloseHandle ( hToken );
+      LocalFree ( tu_buf );
+      *lpSize = an_len;
       return FALSE;
     }
   }
 
   LocalFree ( domain_name );
   LocalFree ( tu_buf );
-  CloseHandle ( hToken );
-
-  if ( an_len > *lpSize )
-  {
-    *lpSize = an_len;
-    SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    return FALSE;
-  }
-
+  *lpSize = an_len + 1;
   return TRUE;
 }
 

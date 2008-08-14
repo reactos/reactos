@@ -66,7 +66,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
+                             IN PULONG_PTR DirectoryTableBase)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -76,7 +76,7 @@ BOOLEAN
 STDCALL
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+                            IN PULONG_PTR DirectoryTableBase)
 {
     UNIMPLEMENTED;
     return 0;

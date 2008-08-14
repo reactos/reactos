@@ -72,9 +72,9 @@ typedef struct _EDD_SURFACE_LOCAL
 } EDD_SURFACE_LOCAL, *PEDD_SURFACE_LOCAL;
 
 /* exported functions */
-NTSTATUS DriverEntry(IN PVOID Context1, IN PVOID Context2);
-NTSTATUS GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
-NTSTATUS DxDdCleanupDxGraphics();
+NTSTATUS NTAPI DriverEntry(IN PVOID Context1, IN PVOID Context2);
+NTSTATUS NTAPI GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
+NTSTATUS APIENTRY DxDdCleanupDxGraphics();
 
 /* Global pointers */
 extern ULONG gcSizeDdHmgr;

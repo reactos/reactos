@@ -115,7 +115,7 @@ NTAPI
 KeInitializeProcess(IN OUT PKPROCESS Process,
                     IN KPRIORITY Priority,
                     IN KAFFINITY Affinity,
-                    IN PLARGE_INTEGER DirectoryTableBase,
+                    IN PULONG DirectoryTableBase,
                     IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP
@@ -134,7 +134,8 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->Affinity = Affinity;
     Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
-    Process->DirectoryTableBase = *DirectoryTableBase;
+    Process->DirectoryTableBase[0] = DirectoryTableBase[0];
+    Process->DirectoryTableBase[1] = DirectoryTableBase[1];
     Process->AutoAlignment = Enable;
 #if defined(_M_IX86)
     Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
@@ -446,12 +447,8 @@ KeAttachProcess(IN PKPROCESS Process)
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Make sure that we are in the right page directory */
-    MiSyncThreadProcessViews(Process,
-                             (PVOID)Thread->StackLimit,
-                             Thread->LargeStack ?
-                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
-    MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
+    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
+    MiSyncThreadProcessViews(Thread);
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;
@@ -576,12 +573,8 @@ KeStackAttachProcess(IN PKPROCESS Process,
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Make sure that we are in the right page directory */
-    MiSyncThreadProcessViews(Process,
-                             (PVOID)Thread->StackLimit,
-                             Thread->LargeStack ?
-                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
-    MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
+    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
+    MiSyncThreadProcessViews(Thread);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc())

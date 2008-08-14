@@ -374,21 +374,21 @@ struct symt_block* symt_close_func_block(struct module* module,
         GET_ENTRY(block->container, struct symt_block, symt) : NULL;
 }
 
-struct symt_function_point* symt_add_function_point(struct module* module, 
-                                                    struct symt_function* func,
-                                                    enum SymTagEnum point, 
-                                                    const struct location* loc,
-                                                    const char* name)
+struct symt_hierarchy_point* symt_add_function_point(struct module* module,
+                                                     struct symt_function* func,
+                                                     enum SymTagEnum point,
+                                                     const struct location* loc,
+                                                     const char* name)
 {
-    struct symt_function_point* sym;
+    struct symt_hierarchy_point*sym;
     struct symt**               p;
 
     if ((sym = pool_alloc(&module->pool, sizeof(*sym))))
     {
         sym->symt.tag = point;
-        sym->parent   = func;
+        sym->parent   = &func->symt;
         sym->loc      = *loc;
-        sym->name     = name ? pool_strdup(&module->pool, name) : NULL;
+        sym->hash_elt.name = name ? pool_strdup(&module->pool, name) : NULL;
         p = vector_add(&func->vchildren, &module->pool);
         *p = &sym->symt;
     }
@@ -468,6 +468,34 @@ struct symt_data* symt_new_constant(struct module* module,
         sym->container     = compiland ? &compiland->symt : NULL;
         sym->type          = type;
         sym->u.value       = *v;
+        if (compiland)
+        {
+            struct symt**       p;
+            p = vector_add(&compiland->vchildren, &module->pool);
+            *p = &sym->symt;
+        }
+    }
+    return sym;
+}
+
+struct symt_hierarchy_point* symt_new_label(struct module* module,
+                                            struct symt_compiland* compiland,
+                                            const char* name, unsigned long address)
+{
+    struct symt_hierarchy_point*        sym;
+
+    TRACE_(dbghelp_symt)("Adding global label value %s:%s\n",
+                         debugstr_w(module->module.ModuleName), name);
+
+    if ((sym = pool_alloc(&module->pool, sizeof(*sym))))
+    {
+        sym->symt.tag      = SymTagLabel;
+        sym->hash_elt.name = pool_strdup(&module->pool, name);
+        hash_table_add(&module->ht_symbols, &sym->hash_elt);
+        module->sortlist_valid = FALSE;
+        sym->loc.kind      = loc_absolute;
+        sym->loc.offset    = address;
+        sym->parent        = compiland ? &compiland->symt : NULL;
         if (compiland)
         {
             struct symt**       p;
@@ -589,8 +617,8 @@ static void symt_fill_sym_info(const struct module_pair* pair,
     if (sym_info->MaxNameLen)
     {
         if (sym->tag != SymTagPublicSymbol || !(dbghelp_options & SYMOPT_UNDNAME) ||
-            (sym_info->NameLen = UnDecorateSymbolName(name, sym_info->Name, 
-                                                      sym_info->MaxNameLen, UNDNAME_COMPLETE) == 0))
+            (sym_info->NameLen = UnDecorateSymbolName(name, sym_info->Name,
+                                                      sym_info->MaxNameLen, UNDNAME_NAME_ONLY) == 0))
         {
             sym_info->NameLen = min(strlen(name), sym_info->MaxNameLen - 1);
             memcpy(sym_info->Name, name, sym_info->NameLen);
@@ -972,6 +1000,30 @@ static BOOL CALLBACK sym_enumW(PSYMBOL_INFO si, ULONG size, PVOID ctx)
 }
 
 /******************************************************************
+ *		SymEnumSymbolsForAddrW (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymEnumSymbolsForAddrW(HANDLE hProcess, DWORD64 Address, 
+                                   PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
+                                   PVOID UserContext)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymEnumSymbolsForAddr (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymEnumSymbolsForAddr(HANDLE hProcess, DWORD64 Address,
+                                  PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
+                                  PVOID UserContext)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/******************************************************************
  *		SymEnumSymbolsW (DBGHELP.@)
  *
  */
@@ -1025,6 +1077,33 @@ BOOL WINAPI SymEnumerateSymbols(HANDLE hProcess, DWORD BaseOfDll,
     se.cb  = EnumSymbolsCallback;
     
     return SymEnumSymbols(hProcess, BaseOfDll, NULL, sym_enumerate_cb, &se);
+}
+
+struct sym_enumerate64
+{
+    void*                       ctx;
+    PSYM_ENUMSYMBOLS_CALLBACK64 cb;
+};
+
+static BOOL CALLBACK sym_enumerate_cb64(PSYMBOL_INFO syminfo, ULONG size, void* ctx)
+{
+    struct sym_enumerate64*     se = (struct sym_enumerate64*)ctx;
+    return (se->cb)(syminfo->Name, syminfo->Address, syminfo->Size, se->ctx);
+}
+
+/***********************************************************************
+ *              SymEnumerateSymbols64 (DBGHELP.@)
+ */
+BOOL WINAPI SymEnumerateSymbols64(HANDLE hProcess, DWORD64 BaseOfDll,
+                                  PSYM_ENUMSYMBOLS_CALLBACK64 EnumSymbolsCallback,
+                                  PVOID UserContext)
+{
+    struct sym_enumerate64      se;
+
+    se.ctx = UserContext;
+    se.cb  = EnumSymbolsCallback;
+
+    return SymEnumSymbols(hProcess, BaseOfDll, NULL, sym_enumerate_cb64, &se);
 }
 
 /******************************************************************

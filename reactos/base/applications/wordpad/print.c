@@ -814,7 +814,7 @@ void update_preview(HWND hWnd)
     InvalidateRect(hWnd, &rc, TRUE);
 }
 
-LRESULT preview_command(HWND hWnd, WPARAM wParam, LPARAM lParam)
+LRESULT preview_command(HWND hWnd, WPARAM wParam)
 {
     switch(LOWORD(wParam))
     {

@@ -929,12 +929,19 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    InsertTailList(&MessageQueue->LocalDispatchingMessagesHead,
                   &Message->ListEntry);
 
-   if (Message->HookMessage)
+   if (Message->HookMessage == MSQ_ISHOOK)
    {
       Result = co_HOOK_CallHooks(Message->Msg.message,
                                  (INT)(INT_PTR)Message->Msg.hwnd,
                                  Message->Msg.wParam,
                                  Message->Msg.lParam);
+   }
+   else if (Message->HookMessage == MSQ_ISEVENT)
+   {
+      Result = co_EVENT_CallEvents( Message->Msg.message,
+                                    Message->Msg.hwnd,
+                             (LONG) Message->Msg.wParam,
+                             (LONG) Message->Msg.lParam);                                  
    }
    else
    {
@@ -1090,7 +1097,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 NTSTATUS FASTCALL
 co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
-                  UINT uTimeout, BOOL Block, BOOL HookMessage,
+                  UINT uTimeout, BOOL Block, INT HookMessage,
                   ULONG_PTR *uResult)
 {
    PUSER_SENT_MESSAGE Message;

@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  21-06-2008
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR :  21-06-2008
+ * LAST CHANGE:  28-07-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -39,8 +40,8 @@ CAPTION "»o je ZobrazovaË udalostÌ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "ZobrazovaË udalostÌ systÈmu ReactOS, verzia programu 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-	LTEXT           "AutorskÈ pr·va (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+	LTEXT           "ZobrazovaË udalostÌ systÈmu ReactOS, verzia 1.0",IDC_STATIC,49,10,167,8,SS_NOPREFIX
+	LTEXT           "AutorskÈ pr·va (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,167,22
 	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
 END
 
@@ -59,7 +60,7 @@ CAPTION "Podrobnosti o udalosti"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 	DEFPUSHBUTTON   "&Zavrieù",IDOK,12,258,50,14
-	PUSHBUTTON      "&Predch·dzaj˙ca",IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "&Predoöl·",IDPREVIOUS,78,258,50,14
 	PUSHBUTTON      "&Nasleduj˙ca",IDNEXT,144,258,50,14
 	PUSHBUTTON      "&PomocnÌk",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
@@ -93,8 +94,8 @@ BEGIN
 	IDC_EVENTLOG_ERROR_TYPE        "Chyba"
 	IDC_EVENTLOG_WARNING_TYPE      "Upozornenie"
 	IDC_EVENTLOG_INFORMATION_TYPE  "Inform·cia"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
-	IDC_EVENTLOG_SUCCESS           "Success"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Kontrola uspeön·"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Kontrola zlyhala"
+	IDC_EVENTLOG_SUCCESS           "⁄spech" //Success
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Nezn·ma udalosù"
 END

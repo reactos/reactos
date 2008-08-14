@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  07-07-2008
+ * LAST CHANGE:  30-07-2008
  */   
 
 /*
@@ -205,6 +205,27 @@ BEGIN
 	PUSHBUTTON "Preruöiù", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
+SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "VöeobecnÈ"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Typ:", 14004, 8, 35, 50, 10
+	LTEXT "PrieËinok", 14005, 68, 35, 160, 10
+	LTEXT "Umiestnenie:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 315, 10
+	LTEXT "Veækosù:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Obsahuje:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	AUTOCHECKBOX "&Iba na ËÌtanie", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Skryt˝", 14022, 126, 150, 50, 10
+END
+
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "VöeobecnÈ"
@@ -220,15 +241,15 @@ BEGIN
 	LTEXT "", 14009, 68, 72, 315, 10
 	LTEXT "Veækosù:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "VytvorenÈ:", 14014, 8, 118, 45, 10
+	LTEXT "Vytvoren˝:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	LTEXT "ZmenenÈ:", 14016, 8, 140, 45, 10
+	LTEXT "Zmenen˝:", 14016, 8, 140, 45, 10
 	LTEXT "", 14017, 68, 140, 160, 10
-	LTEXT "OtvorenÈ:", 14018, 8, 160, 45, 10
+	LTEXT "Otvoren˝:", 14018, 8, 160, 45, 10
 	LTEXT "", 14019, 68, 160, 160, 10
 	LTEXT "Atrib˙ty:", 14020, 8, 189, 45, 10
 	CHECKBOX "&Iba na ËÌtanie", 14021, 58, 189, 67, 10
-	CHECKBOX "S&kryt˝", 14022, 126, 189, 50, 10
+	CHECKBOX "&Skryt˝", 14022, 126, 189, 50, 10
 	CHECKBOX "&ArchÌvny", 14023, 181, 189, 49, 10
 END
 
@@ -278,10 +299,10 @@ BEGIN
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Jednotka %s", 14010, 100, 170, 40, 10
+	LTEXT "Jednotka %s", 14010, 100, 170, 45, 10
 	PUSHBUTTON "&»istenie disku", 14011, 180, 175, 50, 15, WS_TABSTOP
 	CHECKBOX "Uöetriù miesto na disku &kompresiou jednotky", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 15, 220, 200, 10, WS_DISABLED
+	CHECKBOX "&Povoliù indexovanie pre tento disk, a zr˝chliù tak hæadanie s˙borov", 14012, 15, 220, 220, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -339,11 +360,11 @@ BEGIN
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
 	LTEXT "&Maxim·lna veækosù (MB):", -1, 20, 105, 70, 10
 	RADIOBUTTON "S˙bory nepremiestÚovaù do &koöa. ZmazanÈ s˙bory hneÔ odstr·niù.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "Zobrazovaù &dialÛgovÈ okno potvrdenia odstr·nenia", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "Zobrazovaù &dialÛgovÈ okno potvrdenia odstr·nenia", 14004, 20, 155, 196, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Otvoriù v programe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -549,6 +570,20 @@ BEGIN
 	AUTOCHECKBOX "Z&apn˙ù kompresiu", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zmena ikony"
@@ -577,14 +612,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Pozn·mky" //Comments
 	IDS_SHV_COLUMN10            "VlastnÌk"
 	IDS_SHV_COLUMN11            "Skupina"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "PÙvod" //PÙvodnÈ umiestnenie
 	IDS_SHV_COLUMN_DELDATE      "Odstr·nen˝" //D·tum zmazania
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_COMMENTS     "Comments"
+	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
 	IDS_DESKTOP                 "Pracovn· plocha"
 	IDS_MYCOMPUTER              "Tento poËÌtaË"
 	IDS_RECYCLEBIN_FOLDER_NAME  "KÙö"
 	IDS_CONTROLPANEL            "Ovl·dacÌ panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&VeækÈ ikony"
@@ -593,6 +639,12 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Podrobnosti"
 	IDS_SELECT                  "Vybraù"
 	IDS_OPEN                    "Otvoriù"
+	IDS_CREATELINK              "Vytvoriù o&dkaz"
+	IDS_COPY                    "&KopÌrova"
+	IDS_DELETE                  "&Odstr·ni"
+	IDS_PROPERTIES              "Vl&astnosti"
+	IDS_CUT                     "&Vystrihn˙ù"
+	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"
@@ -693,4 +745,11 @@ BEGIN
 	IDS_PRINT_VERB              "TlaËiù"
 	IDS_PLAY_VERB               "Prehraù"
 	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
+
+	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

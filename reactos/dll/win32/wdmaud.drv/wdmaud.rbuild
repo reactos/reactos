@@ -1,5 +1,5 @@
 <module name="wdmaud.drv" type="win32dll" baseaddress="${BASEADDRESS_WDMAUD}" installbase="system32" installname="wdmaud.drv">
-	<importlibrary definition="wdmaud.def" />
+	<importlibrary definition="wdmaud.spec.def" />
 	<include base="wdmaud.drv">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>advapi32</library>
@@ -9,4 +9,5 @@
 	<library>winmm</library>
 	<file>wdmaud.c</file>
 	<file>wdmaud.rc</file>
+	<file>wdmaud.spec</file>
 </module>

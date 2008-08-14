@@ -1,6 +1,6 @@
 /* FILE:        base/applications/calc/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-28
+ * UPDATED:     2008-07-27
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -368,7 +368,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Seskupování èíslic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Nápovìda"
     BEGIN
         MENUITEM "Témata nápovìdy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -401,7 +401,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Seskupování èíslic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Nápovìda"
     BEGIN
         MENUITEM "Témata nápovìdy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -416,19 +416,19 @@ BEGIN
         MENUITEM "Kopírovat\tCTRL-C",           IDM_EDIT_COPY
         MENUITEM "Vložit\tCTRL-V",              IDM_EDIT_PASTE
     END
-    POPUP "View"
+    POPUP "Zobrazit"
     BEGIN
         MENUITEM "Standardní",                  IDM_VIEW_STANDARD, CHECKED
         MENUITEM "Vìdecká",                     IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "Pøevody",                     IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Seskupování èíslic",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Seskupování èíslic",          IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Help"
+    POPUP "Nápovìda"
     BEGIN
-        MENUITEM "Témata nápovìdy",                 IDM_HELP_HELP
+        MENUITEM "Témata nápovìdy",             IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O ReactOS kalkulaèce",          IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkulaèce",        IDM_HELP_ABOUT
     END
 END
 

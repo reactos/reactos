@@ -1,3 +1,9 @@
+/* FILE:        dll/cpl/ncpa/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * THANKS TO:   potapnik, who translated major part of this file 
+ * UPDATED:     2008-07-27
+ */
+ 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_PROPPAGENETWORK DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -37,7 +43,7 @@ CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Spojení", -1, 9, 8, 182, 58, BS_GROUPBOX
- LTEXT "Status:", -1, 19, 20, 60, 8
+ LTEXT "Stav:", -1, 19, 20, 60, 8
  LTEXT "Doba pøipojení:", -1, 19, 34, 60, 8
  LTEXT "Rychlost:", -1, 19, 48, 60, 8
  GROUPBOX "Aktivita", -1, 9, 74, 182, 70, BS_GROUPBOX
@@ -46,7 +52,7 @@ BEGIN
  ICON IDI_NETSTAT, -1, 110, 85, 18, 20
  ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
  LTEXT "Pøijato", -1, 149, 90, 37, 8
- LTEXT "Bytes:", -1, 17, 115, 32, 8
+ LTEXT "Bytù:", -1, 17, 115, 32, 8
  RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
  ICON IDI_VERTICAL, -1, 110, 108, 18, 20
  RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
@@ -59,21 +65,21 @@ END
 
 IDD_CARDSUPPORT DIALOGEX DISCARDABLE  0, 0, 200,180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Support"
+CAPTION "Podpora"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Address type:", -1, 22, 20, 80, 8
- LTEXT "IP address:", -1, 22, 34, 80, 8
- LTEXT "SubNet mask:", -1, 22, 48, 80, 8
- LTEXT "Default gateway:", -1, 22, 62, 80, 8
+ GROUPBOX "Stav pøipojení", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Typ adresy:", -1, 22, 20, 80, 8
+ LTEXT "IP adresa:", -1, 22, 34, 80, 8
+ LTEXT "Maska podsítì:", -1, 22, 48, 80, 8
+ LTEXT "Výchozí brána:", -1, 22, 62, 80, 8
 
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
- PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
+ PUSHBUTTON "&Detaily...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_TCPIPPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -110,26 +116,26 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_ASSIGNED_DHCP "Assigned by DHCP"
-  IDS_ASSIGNED_MANUAL "Manually configured"
+  IDS_ASSIGNED_DHCP "Pøiøazeno DHCP"
+  IDS_ASSIGNED_MANUAL "Ruènì nastaveno"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_ERROR "Error"
-  IDS_ENTER_VALID_IPADDRESS "You must enter a valid IP address"
-  IDS_ENTER_VALID_SUBNET "You must enter a valid subnet mask"
-  IDS_CANNOT_LOAD_CONFIG "Unable to load current config data"
-  IDS_CANNOT_CREATE_PROPSHEET "Unable to create property sheet"
-  IDS_OUT_OF_MEMORY "Out of memory"
-  IDS_CANNOT_SAVE_CHANGES "Unable to save the changes you made"
-  IDS_STATUS_NON_OPERATIONAL "Non-operational"
-  IDS_STATUS_UNREACHABLE "No WAN adapter found"
-  IDS_STATUS_DISCONNECTED "Disconnected"
-  IDS_STATUS_CONNECTING "Connecting"
-  IDS_STATUS_CONNECTED "Connected"
-  IDS_STATUS_OPERATIONAL "Connected"
+  IDS_ERROR "Chyba"
+  IDS_ENTER_VALID_IPADDRESS "Je nutné zadat platnou IP adresu"
+  IDS_ENTER_VALID_SUBNET "Je nutné zadat platnou masku podsítì"
+  IDS_CANNOT_LOAD_CONFIG "Nelze naèíst souèasné nastavení"
+  IDS_CANNOT_CREATE_PROPSHEET "Nelze vytvoøit list vlastností"
+  IDS_OUT_OF_MEMORY "Nedostatek pamìti"
+  IDS_CANNOT_SAVE_CHANGES "Nelze uložit provedené zmìny"
+  IDS_STATUS_NON_OPERATIONAL "Nefunkèní"
+  IDS_STATUS_UNREACHABLE "Nebyl nalezen WAN adaptér"
+  IDS_STATUS_DISCONNECTED "Odpojeno"
+  IDS_STATUS_CONNECTING "Pøipojuji"
+  IDS_STATUS_CONNECTED "Pøipojeno"
+  IDS_STATUS_OPERATIONAL "Pøipojeno"
   IDS_SPEED_MBPS "%d Mbps"
-  IDS_DURATION_DAY "%d day %s"
-  IDS_DURATION_DAYS "%d days %s"
+  IDS_DURATION_DAY "%d den %s"
+  IDS_DURATION_DAYS "%d dnù %s"
 END

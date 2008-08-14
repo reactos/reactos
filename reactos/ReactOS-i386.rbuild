@@ -38,6 +38,6 @@
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<linkerflag>-disable-stdcall-fixup</linkerflag>
 
 </project>

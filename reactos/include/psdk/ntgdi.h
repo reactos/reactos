@@ -2843,6 +2843,7 @@ NtGdiFullscreenControl(
 
 W32KAPI
 DWORD
+APIENTRY
 NtGdiGetCharSet(
     IN HDC hdc
 );
@@ -2897,6 +2898,7 @@ NtGdiQueryFontAssocInfo(
 #if (_WIN32_WINNT >= 0x0500)
 W32KAPI
 DWORD
+APIENTRY
 NtGdiGetFontUnicodeRanges(
     IN HDC hdc,
     OUT OPTIONAL LPGLYPHSET pgs
@@ -2906,6 +2908,7 @@ NtGdiGetFontUnicodeRanges(
 #ifdef LANGPACK
 W32KAPI
 BOOL
+APIENTRY
 NtGdiGetRealizationInfo(
     IN HDC hdc,
     OUT PREALIZATION_INFO pri,
@@ -2915,6 +2918,7 @@ NtGdiGetRealizationInfo(
 
 W32KAPI
 BOOL
+APIENTRY
 NtGdiAddRemoteMMInstanceToDC(
     IN HDC hdc,
     IN DOWNLOADDESIGNVECTOR *pddv,
@@ -3518,6 +3522,7 @@ NtGdiEngCheckAbort(
 
 W32KAPI
 DHPDEV
+APIENTRY
 NtGdiGetDhpdev(
     IN HDEV hdev
 );

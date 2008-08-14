@@ -84,7 +84,7 @@ GetKeyDescription(LPWSTR szKeyName, LPWSTR szResult)
   dwError = RegGetValueW(hKey,NULL,NULL, RRF_RT_REG_SZ,NULL,szDesc,&dwDesc);
   if(dwError == ERROR_SUCCESS)
   {
-     if (wcsncmp(szDesc, szKeyName, dwDesc / sizeof(WCHAR)))
+     if (wcsncmp(szKeyName, szDesc, dwDesc / sizeof(WCHAR)))
      {
         /* recurse for to a linked key */
         if (!GetKeyDescription(szDesc, szResult))
@@ -576,7 +576,7 @@ static inline INewMenuImpl *impl_from_IShellExtInit( IShellExtInit *iface )
 }
 #endif
 
-static inline INewMenuImpl *impl_from_IContextMenu( IContextMenu2 *iface )
+static __inline INewMenuImpl * impl_from_IContextMenu( IContextMenu2 *iface )
 {
     return (INewMenuImpl *)((char*)iface - FIELD_OFFSET(INewMenuImpl, lpVtblContextMenu));
 }
@@ -717,6 +717,7 @@ INewItem_IContextMenu_fnInvokeCommand( IContextMenu2* iface,
     if (LOWORD(lpici->lpVerb) == 0)
     {
         DoNewFolder(This, lpSV);
+        return S_OK;
     }
 
     hr = DoShellNewCmd(This, lpici);

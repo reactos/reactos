@@ -16,6 +16,8 @@
 	<library>advapi32</library>
 	<library>psapi</library>
 	<library>msvcrt</library>
+	<library>psapi</library>
+	<library>shell32</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
 	<file>conio.c</file>
@@ -24,5 +26,6 @@
 	<file>exitros.c</file>
 	<file>guiconsole.c</file>
 	<file>tuiconsole.c</file>
+	<file>appswitch.c</file>
 	<file>win32csr.rc</file>
 </module>

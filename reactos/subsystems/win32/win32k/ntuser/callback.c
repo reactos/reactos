@@ -393,8 +393,9 @@ co_IntCallHookProc(INT HookId,
       case WH_GETMESSAGE:
          ArgumentLength += sizeof(MSG);
          break;
+      case WH_FOREGROUNDIDLE:
       case WH_KEYBOARD:
-//      case WH_SHELL:
+      case WH_SHELL:
          break;
       default:
          DPRINT1("Trying to call unsupported window hook %d\n", HookId);
@@ -473,10 +474,9 @@ co_IntCallHookProc(INT HookId,
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
 //         DPRINT1("KHOOK Memory: %x\n",Common);
          break;
+      case WH_FOREGROUNDIDLE:
       case WH_KEYBOARD:
-         break;
-//      case WH_SHELL:
-//         Extra = lParam;
+      case WH_SHELL:
          break;         
    }
 

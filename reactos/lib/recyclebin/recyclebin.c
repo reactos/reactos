@@ -94,6 +94,26 @@ cleanup:
 }
 
 BOOL WINAPI
+DeleteFileHandleToRecycleBin(
+	IN HANDLE hDeletedFile)
+{
+	IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
+	HRESULT hr;
+
+	TRACE("(%p)\n", hDeletedFile);
+
+	hr = IRecycleBinFile_Delete(rbf);
+
+	if (SUCCEEDED(hr))
+		return TRUE;
+	if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+		SetLastError(HRESULT_CODE(hr));
+	else
+		SetLastError(ERROR_GEN_FAILURE);
+	return FALSE;
+}
+
+BOOL WINAPI
 EmptyRecycleBinA(
 	IN LPCSTR pszRoot OPTIONAL)
 {
@@ -331,6 +351,18 @@ cleanup:
 		SetLastError(HRESULT_CODE(hr));
 	else
 		SetLastError(ERROR_GEN_FAILURE);
+	return FALSE;
+}
+
+BOOL WINAPI
+GetRecycleBinDetails(
+	IN LPCWSTR pszVolume OPTIONAL,
+	OUT ULARGE_INTEGER *pulTotalItems,
+	OUT ULARGE_INTEGER *pulTotalSize)
+{
+	pulTotalItems->QuadPart = 0;
+	pulTotalSize->QuadPart = 0;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 

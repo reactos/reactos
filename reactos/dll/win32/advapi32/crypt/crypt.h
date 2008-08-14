@@ -113,6 +113,7 @@ VOID WINAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len 
 VOID WINAPI MD4Final(MD4_CTX *ctx);
 void arc4_init(arc4_info *a4i, const BYTE *key, unsigned int keyLen);
 void arc4_ProcessString(arc4_info *a4i, BYTE *inoutString, unsigned int length);
+NTSTATUS WINAPI SystemFunction032(struct ustring *data, struct ustring *key);
 
 
 #endif /* __WINE_CRYPT_H_ */

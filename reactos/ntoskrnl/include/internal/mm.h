@@ -1009,6 +1009,22 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
+FORCEINLINE
+KIRQL
+NTAPI
+MmAcquirePageListLock()
+{
+	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
+}
+
+FORCEINLINE
+VOID
+NTAPI
+MmReleasePageListLock(KIRQL oldIrql)
+{
+	KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+}
+
 VOID
 NTAPI
 MmInitializePageList(
@@ -1259,14 +1275,14 @@ NTAPI
 MmCreateProcessAddressSpace(
     IN ULONG MinWs,
     IN PEPROCESS Dest,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG_PTR DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
     IN PEPROCESS Process,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG_PTR DirectoryTableBase
 );
 
 
@@ -1536,16 +1552,12 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
-FORCEINLINE
+/* ReactOS Mm Hack */
 VOID
-NTAPI
-MiSyncThreadProcessViews(IN PVOID Process,
-                         IN PVOID Address,
-                         IN ULONG Size)
-{
-    MmUpdatePageDir((PEPROCESS)Process, Address, Size);
-}
-
+FASTCALL
+MiSyncThreadProcessViews(
+    IN PKTHREAD NextThread
+);
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;
 

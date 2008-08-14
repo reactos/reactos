@@ -114,9 +114,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
 	FCB->TdiDeviceName.Buffer =
 	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
 
 	if( !FCB->TdiDeviceName.Buffer ) {
 	    ExFreePool(FCB);
@@ -125,6 +122,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	    return STATUS_NO_MEMORY;
 	}
+
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
 	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
 				EaInfo->EaName, &FCB->TdiDeviceName));
@@ -165,16 +166,19 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
+    InFlightRequest[3] = &FCB->ConnectIrp;
 
     /* Return early here because we might be called in the mean time. */
     if( FCB->Critical ||
 	FCB->ListenIrp.InFlightRequest ||
 	FCB->ReceiveIrp.InFlightRequest ||
-	FCB->SendIrp.InFlightRequest ) {
-	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
+	FCB->SendIrp.InFlightRequest ||
+	FCB->ConnectIrp.InFlightRequest ) {
+	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x %x)\n",
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
-				FCB->SendIrp.InFlightRequest));
+				FCB->SendIrp.InFlightRequest,
+				FCB->ConnectIrp.InFlightRequest));
         ReturnEarly = TRUE;
     }
 
@@ -183,11 +187,10 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	NTSTATUS Status = STATUS_NO_SUCH_FILE;
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
+	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = STATUS_CANCELLED;
 	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
 	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
 	}
@@ -205,6 +208,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->AddressFrom );
     if( FCB->LocalAddress )
 	ExFreePool( FCB->LocalAddress );
+    if( FCB->RemoteAddress )
+	ExFreePool( FCB->RemoteAddress );
 
     ExFreePool(FCB->TdiDeviceName.Buffer);
 
@@ -255,11 +260,11 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status;
     USHORT Flags = 0;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !(DisReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, FALSE );
+				       Irp, 0, NULL );
 
     if (NULL == FCB->RemoteAddress)
       {
@@ -272,7 +277,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !NT_SUCCESS(Status) || !ConnInfo )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-					   Irp, 0, NULL, TRUE );
+					   Irp, 0, NULL );
       }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
@@ -292,7 +297,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
 static NTSTATUS STDCALL
@@ -310,6 +315,8 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				FileObject, IrpSp->FileObject));
 	ASSERT(FileObject == IrpSp->FileObject);
     }
+
+    Irp->IoStatus.Information = 0;
 
     switch(IrpSp->MajorFunction)
     {
@@ -455,7 +462,6 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	default:
 	    Status = STATUS_NOT_IMPLEMENTED;
-	    Irp->IoStatus.Information = 0;
 	    AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%x)\n",
 				     IrpSp->Parameters.DeviceIoControl.
 				     IoControlCode));

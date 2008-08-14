@@ -255,7 +255,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                     PreviousMode))
         {
             /* Failed, dereference */
-            if (TokenHandle) ObDereferenceObject(Token);
+            if (TokenHandle) ObDereferenceObject(NewToken);
             return STATUS_PRIVILEGE_NOT_HELD;
         }
     }
@@ -311,13 +311,10 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                        STANDARD_RIGHTS_ALL |
                                        PROCESS_SET_QUOTA);
         }
-
-        /* Dereference the process */
-        ObDereferenceObject(Process);
     }
 
     /* Dereference the token */
-    if (Token) ObDereferenceObject(NewToken);
+    if (TokenHandle) ObDereferenceObject(NewToken);
     return Status;
 }
 

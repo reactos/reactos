@@ -308,7 +308,7 @@ BOOL module_get_debug(struct module_pair* pair)
             idslW64.CheckSum = pair->effective->module.CheckSum;
             idslW64.TimeDateStamp = pair->effective->module.TimeDateStamp;
             memcpy(idslW64.FileName, pair->effective->module.ImageName,
-                   sizeof(idslW64.FileName));
+                   sizeof(pair->effective->module.ImageName));
             idslW64.Reparse = FALSE;
             idslW64.hFile = INVALID_HANDLE_VALUE;
 
@@ -555,7 +555,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (wModuleName)
         module_set_module(module, wModuleName);
     lstrcpynW(module->module.ImageName, wImageName,
-              sizeof(module->module.ImageName) / sizeof(CHAR));
+              sizeof(module->module.ImageName) / sizeof(WCHAR));
 
     return module->module.BaseOfImage;
 }
@@ -895,7 +895,12 @@ BOOL  WINAPI SymGetModuleInfo64(HANDLE hProcess, DWORD64 dwAddr,
     IMAGEHLP_MODULE64   mi64;
     IMAGEHLP_MODULEW64  miw64;
 
-    if (sizeof(mi64) < ModuleInfo->SizeOfStruct) FIXME("Wrong size\n");
+    if (sizeof(mi64) < ModuleInfo->SizeOfStruct)
+    {
+        SetLastError(ERROR_MOD_NOT_FOUND); /* NOTE: native returns this error */
+        WARN("Wrong size %u\n", ModuleInfo->SizeOfStruct);
+        return FALSE;
+    }
 
     miw64.SizeOfStruct = sizeof(miw64);
     if (!SymGetModuleInfoW64(hProcess, dwAddr, &miw64)) return FALSE;

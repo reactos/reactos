@@ -291,9 +291,18 @@ NTSTATUS TdiConnect(
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  assert(ConnectionObject);
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
+  if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
+        return STATUS_INVALID_PARAMETER;
+  }
 
   *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,             /* Sub function */
 					  DeviceObject,            /* Device object */
@@ -340,9 +349,16 @@ NTSTATUS TdiAssociateAddressFile(
   AFD_DbgPrint(MAX_TRACE, ("Called. AddressHandle (0x%X)  ConnectionObject (0x%X)\n",
     AddressHandle, ConnectionObject));
 
-  assert(ConnectionObject);
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
+  if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+  }
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -390,7 +406,18 @@ NTSTATUS TdiListen
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
+  if (!ConnectionObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+  }
+
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
+  if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
+        return STATUS_INVALID_PARAMETER;
+  }
 
   Status = TdiBuildNullConnectionInfo(RequestConnectionInfo,
 				      TDI_ADDRESS_TYPE_IP);
@@ -449,9 +476,16 @@ NTSTATUS TdiSetEventHandler(
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  assert(FileObject);
+  if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+  }
 
   DeviceObject = IoGetRelatedDeviceObject(FileObject);
+  if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+  }
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -507,7 +541,16 @@ NTSTATUS TdiQueryDeviceControl(
     KEVENT Event;
     PIRP Irp;
 
+    if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
+
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -552,7 +595,16 @@ NTSTATUS TdiQueryInformation(
     KEVENT Event;
     PIRP Irp;
 
+    if (!FileObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad file object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
+
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -579,7 +631,6 @@ NTSTATUS TdiQueryInformation(
     return Status;
 }
 
-#if 0
 NTSTATUS TdiQueryInformationEx(
     PFILE_OBJECT FileObject,
     ULONG Entity,
@@ -755,7 +806,6 @@ NTSTATUS TdiQueryAddress(
 
     return Status;
 }
-#endif
 
 NTSTATUS TdiSend
 ( PIRP *Irp,
@@ -771,9 +821,16 @@ NTSTATUS TdiSend
     NTSTATUS Status = STATUS_SUCCESS;
     PMDL Mdl;
 
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
+
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -799,6 +856,7 @@ NTSTATUS TdiSend
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -806,14 +864,11 @@ NTSTATUS TdiSend
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        *Irp = NULL;
+        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
-
-    if( !NT_SUCCESS(Status) ) {
-	IoFreeIrp(*Irp);
-	return Status;
-    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -847,9 +902,16 @@ NTSTATUS TdiReceive(
     PDEVICE_OBJECT DeviceObject;
     PMDL Mdl;
 
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
+
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -875,6 +937,7 @@ NTSTATUS TdiReceive(
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -884,14 +947,11 @@ NTSTATUS TdiReceive(
         AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
-	Status = STATUS_INSUFFICIENT_RESOURCES;
+	*Irp = NULL;
+	_SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
-
-    if( !NT_SUCCESS(Status) ) {
-	IoFreeIrp(*Irp);
-	return Status;
-    }
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -942,9 +1002,16 @@ NTSTATUS TdiReceiveDatagram(
     NTSTATUS Status;
     PMDL Mdl;
 
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad tranport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
+
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -970,6 +1037,7 @@ NTSTATUS TdiReceiveDatagram(
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -977,7 +1045,9 @@ NTSTATUS TdiReceiveDatagram(
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
 
@@ -1028,11 +1098,18 @@ NTSTATUS TdiSendDatagram(
     NTSTATUS Status;
     PMDL Mdl;
 
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	*Irp = NULL;
+	return STATUS_INVALID_PARAMETER;
+    }
+
     AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        *Irp = NULL;
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1059,6 +1136,7 @@ NTSTATUS TdiSendDatagram(
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1066,7 +1144,9 @@ NTSTATUS TdiSendDatagram(
         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
+        *Irp = NULL;
         _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH_END;
 
@@ -1103,9 +1183,12 @@ NTSTATUS TdiDisconnect(
     KEVENT Event;
     PIRP Irp;
 
-    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
-
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    if (!TransportObject) {
+	AFD_DbgPrint(MIN_TRACE, ("Bad transport object.\n"));
+	return STATUS_INVALID_PARAMETER;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
 

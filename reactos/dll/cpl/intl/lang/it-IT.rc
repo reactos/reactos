@@ -15,7 +15,7 @@ BEGIN
     LTEXT "Esempi", -1, 14, 73, 70, 10
     LTEXT "Numero:", -1, 16, 86, 48, 10
     LTEXT "Valuta:", -1, 16, 101, 48, 10
-    LTEXT "Ota:", -1, 16, 116, 48, 10
+    LTEXT "Ora:", -1, 16, 116, 48, 10
     LTEXT "Data breve:", -1, 16, 131, 48, 10
     LTEXT "Data estesa:", -1, 16, 146, 48, 10
     EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -23,7 +23,7 @@ BEGIN
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "Ubicazione geografica", -1, 5, 172, 234, 55
+    GROUPBOX "Posizione geografica", -1, 5, 172, 234, 55
     LTEXT "Per ottenere informazioni locali, come notizie e previsioni meteo, selezionare la località corrente:", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END

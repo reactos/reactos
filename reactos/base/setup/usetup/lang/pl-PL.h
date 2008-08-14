@@ -621,7 +621,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         8,
-        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© ¾e w Nap©dzie A: nie ma dyskietki i",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1622,12 +1622,6 @@ MUI_STRING plPLStrings[] =
      "\xB3 Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalator kopiuje pliki..."},
-    {STRING_PAGEDMEM,
-     "Stronicowanej"},
-    {STRING_NONPAGEDMEM,
-     "Niestronicowanej"},
-    {STRING_FREEMEM,
-     " Dost©pnej"},
     {STRING_REGHIVEUPDATE,
     "   Uaktualnianie..."},
     {STRING_IMPORTFILE,

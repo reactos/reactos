@@ -33,26 +33,32 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
-    NTSTATUS Status = STATUS_NO_MEMORY;
+    NTSTATUS Status;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
 	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+
+    if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
+
     FCB->Send.Window =
 	ExAllocatePool( NonPagedPool, FCB->Send.Size );
 
+    if( !FCB->Send.Window ) {
+	ExFreePool( FCB->Recv.Window );	
+	return STATUS_NO_MEMORY;
+    }
+
     FCB->State = SOCKET_STATE_CONNECTED;
 
-    if( FCB->Recv.Window ) {
-	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-			     FCB->Connection.Object,
-			     TDI_RECEIVE_NORMAL,
-			     FCB->Recv.Window,
-			     FCB->Recv.Size,
-			     &FCB->ReceiveIrp.Iosb,
-			     ReceiveComplete,
-			     FCB );
-    }
+    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+			 FCB->Connection.Object,
+			 TDI_RECEIVE_NORMAL,
+			 FCB->Recv.Window,
+			 FCB->Recv.Size,
+			 &FCB->ReceiveIrp.Iosb,
+			 ReceiveComplete,
+			 FCB );
 
     return Status;
 }
@@ -71,7 +77,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
@@ -95,14 +101,16 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
 	NextIrp->IoStatus.Status = Status;
 	NextIrp->IoStatus.Information = 0;
+	if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
     }
 
     if( NT_SUCCESS(Status) ) {
 	Status = MakeSocketIntoConnection( FCB );
 
-	if( FCB->Send.Window &&
-	    !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+	if( !NT_SUCCESS(Status) ) return Status;
+
+	if( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	    NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP,
 					Tail.Overlay.ListEntry);
@@ -137,10 +145,10 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_CONNECT_INFO ConnectReq;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
     if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL, FALSE );
+				       0, NULL );
 
     AFD_DbgPrint(MID_TRACE,("Connect request:\n"));
 #if 0
@@ -157,7 +165,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_CONNECTING:
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
-    case SOCKET_STATE_CREATED: {
+    case SOCKET_STATE_CREATED:
 	FCB->LocalAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -177,12 +185,12 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    if( NT_SUCCESS(Status) )
 		FCB->State = SOCKET_STATE_BOUND;
 	    else
-		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL,
-					       TRUE );
+		return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 	} else
 	    return UnlockAndMaybeComplete
-		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, TRUE );
-    } /* Drop through to SOCKET_STATE_BOUND */
+		( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+    
+    /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
 	FCB->RemoteAddress =
@@ -228,5 +236,5 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
     }
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }

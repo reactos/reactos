@@ -87,6 +87,8 @@
 #define IDS_DRIVE_CDROM             73
 #define IDS_DRIVE_NETWORK           74
 #define IDS_NETWORKPLACE            75
+#define IDS_FONTS                   76
+#define IDS_PRINTERS                77
 
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
@@ -140,6 +142,26 @@
 #define IDS_PRINT_VERB              304
 #define IDS_PLAY_VERB               305
 #define IDS_PREVIEW_VERB            306
+#define IDS_FILE_FOLDER             307
+#define IDS_CREATELINK              308
+#define IDS_INSTALLNEWFONT          309
+#define IDS_SHV_COLUMN_FONTTYPE     310
+#define IDS_SHV_COLUMN12            311
+#define IDS_SHV_COLUMN13            312
+#define IDS_SHV_COLUMN_WORKGROUP    313
+#define IDS_SHV_NETWORKLOCATION     314
+#define IDS_COPY                    315
+#define IDS_DELETE                  316
+#define IDS_PROPERTIES              317
+#define IDS_SHV_COLUMN_DOCUMENTS    318
+#define IDS_SHV_COLUMN_STATUS       319
+#define IDS_SHV_COLUMN_COMMENTS     320
+#define IDS_SHV_COLUMN_LOCATION     321
+#define IDS_SHV_COLUMN_MODEL        322
+#define IDS_CUT                     323
+#define IDS_RESTORE                 324
+#define IDS_DEFAULT_CLUSTER_SIZE    325
+#define IDS_ADMINISTRATIVETOOLS     326
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -215,6 +237,7 @@
 #define IDI_SHELL_CONFIRM_DELETE   161
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_CONTROL_PANEL1   330
+#define IDI_SHELL_ADMINTOOLS       328
 /*
 AVI resources, windows shell32 has 14 of them: 150-152 and 160-170
 FIXME: Need to add them, but for now just let them use the same: searching.avi

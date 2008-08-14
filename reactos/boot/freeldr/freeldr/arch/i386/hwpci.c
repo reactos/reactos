@@ -173,7 +173,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
          2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->Size;
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
           DbgPrint((DPRINT_HWDETECT,
@@ -203,7 +203,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(TableKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
     }
 }
 
@@ -246,7 +246,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                           PartialDescriptors);
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
           DbgPrint((DPRINT_HWDETECT,
@@ -259,7 +259,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(BiosKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
 
       DetectPciIrqRoutingTable(BiosKey);
 
@@ -288,7 +288,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                   PartialDescriptors) +
                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                      sizeof(PCI_REGISTRY_INFO);
-              PartialResourceList = MmAllocateMemory(Size);
+              PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
                   DbgPrint((DPRINT_HWDETECT,
@@ -311,14 +311,14 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
               /* Set 'Configuration Data' value */
               FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmFreeMemory(PartialResourceList);
+              MmHeapFree(PartialResourceList);
           }
           else
           {
               /* Set 'Configuration Data' value */
               Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                                   PartialDescriptors);
-              PartialResourceList = MmAllocateMemory(Size);
+              PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
                   DbgPrint((DPRINT_HWDETECT,
@@ -331,7 +331,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
               /* Set 'Configuration Data' value */
               FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmFreeMemory(PartialResourceList);
+              MmHeapFree(PartialResourceList);
           }
 
           /* Increment bus number */

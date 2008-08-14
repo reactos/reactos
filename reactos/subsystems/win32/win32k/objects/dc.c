@@ -3480,6 +3480,7 @@ NtGdiSetBoundsRect(
  * @implemented
  */
 DHPDEV
+APIENTRY
 NtGdiGetDhpdev(
     IN HDEV hdev)
 {

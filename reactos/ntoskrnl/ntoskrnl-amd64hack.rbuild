@@ -448,7 +448,6 @@
 		</if>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
-		<file>strtok.c</file>
 	</directory>
 	<directory name="se">
 		<file>access.c</file>

@@ -8,7 +8,7 @@
 #include "lang/fr-FR.rc"
 #include "lang/ko-KR.rc"
 #include "lang/lt-LT.rc"
-#include "lang/nb-NO.rc"
+#include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"

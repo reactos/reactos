@@ -1052,7 +1052,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     //
     // Allocate the ARM Shared Heap
     //
-    ArmSharedHeap = MmAllocateMemory(PAGE_SIZE);
+    ArmSharedHeap = MmAllocateMemoryWithType(PAGE_SIZE, LoaderOsloaderHeap);
     ArmSharedHeapSize = 0;
     if (!ArmSharedHeap) return;
     

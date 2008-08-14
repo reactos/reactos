@@ -18,7 +18,10 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
 		                   PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
 
-    if( !SocketAcquireStateLock( FCB ) ) return;
+    if( !SocketAcquireStateLock( FCB ) ) { 
+        LostSocket( Irp );
+        return;
+    }
 
     /* Transfer the connection to the new socket, launch the opening read */
     AFD_DbgPrint(MID_TRACE,("Completing a real accept (FCB %x)\n", FCB));
@@ -27,6 +30,8 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     FCB->Connection = Qelt->Object;
     FCB->RemoteAddress =
 	TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
+
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -66,6 +71,8 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
                             IPAddr->Address[0].Address[0].sin_port));
     AFD_DbgPrint(MID_TRACE,("IPAddr->Address[0].Address[0].sin_addr %x\n",
                             IPAddr->Address[0].Address[0].in_addr));
+
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 
     Irp->IoStatus.Information = ((PCHAR)&IPAddr[1]) - ((PCHAR)ListenReceive);
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -135,6 +142,8 @@ static NTSTATUS NTAPI ListenComplete
 				 ListEntry ) );
     }
 
+    if( FCB->ListenIrp.ConnectionCallInfo ) ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
+    if( FCB->ListenIrp.ConnectionReturnInfo ) ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
     FCB->NeedsNewListen = TRUE;
 
     /* Trigger a select return if appropriate */
@@ -157,16 +166,16 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !(ListenReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
-				       0, NULL, FALSE );
+				       0, NULL );
 
     if( FCB->State != SOCKET_STATE_BOUND ) {
 	Status = STATUS_UNSUCCESSFUL;
 	AFD_DbgPrint(MID_TRACE,("Could not listen an unbound socket\n"));
-	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
     }
 
     FCB->DelayedAccept = ListenReq->UseDelayedAcceptance;
@@ -175,9 +184,11 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     Status = WarmSocketForConnection( FCB );
 
-    FCB->State = SOCKET_STATE_LISTENING;
-
     AFD_DbgPrint(MID_TRACE,("Status from warmsocket %x\n", Status));
+
+    if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
+
+    FCB->State = SOCKET_STATE_LISTENING;
 
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionCallInfo,
@@ -198,7 +209,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -209,7 +220,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
 	PLIST_ENTRY PendingConn = FCB->PendingConnections.Flink;
@@ -246,7 +257,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     FCB->EventsFired &= ~AFD_EVENT_ACCEPT;
 
@@ -268,7 +279,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				&FCB->ListenIrp.Iosb,
 				ListenComplete,
 				FCB );
-	}
+	} else return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 	FCB->NeedsNewListen = FALSE;
     }
 

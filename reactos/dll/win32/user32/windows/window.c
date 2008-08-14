@@ -46,8 +46,13 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 BOOL STDCALL
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+  static BOOL show_message = TRUE;
+  if (show_message)
+  {  
+    UNIMPLEMENTED;
+    show_message = FALSE;
+  } 
+  return TRUE;
 }
 
 

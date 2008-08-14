@@ -12,7 +12,7 @@
 
 #include "dxapi_driver.h"
 
-NTSTATUS
+NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
@@ -23,7 +23,7 @@ DriverEntry(IN PVOID Context1,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS NTAPI
 GsDriverEntry(IN PVOID Context1,
               IN PVOID Context2)
 {
@@ -45,7 +45,8 @@ GsDriverEntry(IN PVOID Context1,
 * none
 *
 *--*/
-ULONG
+DXAPI
+ULONG PASCAL
 DxApiGetVersion()
 {
     /* MSDN say this always return Direct Sound version 4.02 */
@@ -98,7 +99,7 @@ DxApiGetVersion()
 *--*/
 
 DXAPI
-DWORD
+DWORD PASCAL
 DxApi(IN DWORD dwFunctionNum,
       IN LPVOID lpvInBuffer,
       IN DWORD cbInBuffer,

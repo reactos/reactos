@@ -267,15 +267,22 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
 }
 
 static LRESULT FASTCALL
-IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Hook)
+IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
 {
    NTSTATUS Status;
    ULONG_PTR uResult;
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue, (HWND)(INT_PTR) Code, HookId,
-                              wParam, lParam, 5000, TRUE, TRUE, &uResult);
+   Status = co_MsqSendMessage(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
+                               (HWND)(UINT_PTR)Code,
+                                   Hook->HookId,
+                                         wParam,
+                                         lParam,
+                                           5000,
+                                           TRUE,
+                                     MSQ_ISHOOK,
+                                       &uResult);
 
    return NT_SUCCESS(Status) ? uResult : 0;
 }
@@ -317,17 +324,10 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       }
    }
 
-   if (Hook->Thread != PsGetCurrentThread()
-         && (WH_KEYBOARD_LL == HookId || WH_MOUSE_LL == HookId))
-   {
-      DPRINT("Calling hook in owning thread\n");
-      return IntCallLowLevelHook(HookId, Code, wParam, lParam, Hook);
-   }
-
    if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
    {
-      DPRINT1("Calling hooks in other threads not implemented yet");
-      return 0;
+      // Post it in message queue.
+      return IntCallLowLevelHook(Hook, Code, wParam, lParam);
    }
 
    Table->Counts[HOOKID_TO_INDEX(HookId)]++;
@@ -340,8 +340,13 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
    SaveHook = ClientInfo->phkCurrent;
    ClientInfo->phkCurrent = Hook;     // Load the call.
 
-   Result = co_IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
-                               Hook->Ansi, &Hook->ModuleName);
+   Result = co_IntCallHookProc( HookId,
+                                  Code,
+                                wParam,
+                                lParam,
+                            Hook->Proc,
+                            Hook->Ansi,
+                     &Hook->ModuleName);
 
    ClientInfo->phkCurrent = SaveHook;
 
@@ -413,9 +418,19 @@ static LRESULT
 FASTCALL
 co_HOOK_CallHookNext(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
 {
+   if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
+   {
+      DPRINT1("CALLING HOOK from another Thread. %d\n",Hook->HookId);
+      return IntCallLowLevelHook(Hook, Code, wParam, lParam);
+   }
    DPRINT("CALLING HOOK %d\n",Hook->HookId);
-   return co_IntCallHookProc(Hook->HookId, Code, wParam, lParam, Hook->Proc,
-                                  Hook->Ansi, &Hook->ModuleName);
+   return co_IntCallHookProc(Hook->HookId,
+                                     Code,
+                                   wParam,
+                                   lParam,
+                               Hook->Proc,
+                               Hook->Ansi,
+                        &Hook->ModuleName);
 }
 
 
@@ -959,9 +974,15 @@ NtUserSetWindowsHookEx(
    DPRINT("Enter NtUserSetWindowsHookEx\n");
    UserEnterExclusive();
 
-   if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId || NULL == HookProc)
+   if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      RETURN( NULL);
+   }
+
+   if (!HookProc)
+   {
+      SetLastWin32Error(ERROR_INVALID_FILTER_PROC);
       RETURN( NULL);
    }
 
@@ -1014,7 +1035,7 @@ NtUserSetWindowsHookEx(
       }
       else if (NULL ==  Mod)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
          RETURN( NULL);
       }
       else
@@ -1024,15 +1045,10 @@ NtUserSetWindowsHookEx(
       Global = TRUE;
    }
 
-   /* We only (partially) support local WH_CBT hooks and
-    * WH_KEYBOARD_LL, WH_MOUSE_LL and WH_GETMESSAGE hooks for now 
-    */
-   if  (Global ||
+   if  ( Global ||
         WH_DEBUG == HookId ||
         WH_JOURNALPLAYBACK == HookId ||
-        WH_JOURNALRECORD == HookId ||
-        WH_FOREGROUNDIDLE == HookId ||
-        WH_SHELL == HookId)
+        WH_JOURNALRECORD == HookId)
    {
 #if 0 /* Removed to get winEmbed working again */
       UNIMPLEMENTED
@@ -1115,7 +1131,7 @@ NtUserSetWindowsHookEx(
                                 ModuleName.MaximumLength);
       if (! NT_SUCCESS(Status))
       {
-	     ExFreePool(Hook->ModuleName.Buffer);
+         ExFreePool(Hook->ModuleName.Buffer);
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)
@@ -1127,9 +1143,12 @@ NtUserSetWindowsHookEx(
          RETURN( NULL);
       }
       Hook->ModuleName.Length = ModuleName.Length;
+      /* make proc relative to the module base */
+      Hook->Proc = (void *)((char *)HookProc - (char *)Mod);
    }
+   else
+     Hook->Proc = HookProc;
 
-   Hook->Proc = HookProc;
    Hook->Ansi = Ansi;
    Handle = Hook->Self;
 

@@ -8,7 +8,7 @@ Signature = "$ReactOS$"
 3 = system32\config
 4 = system32\drivers
 5 = media
-6 = media\fonts
+6 = Fonts
 7 = bin
 
 [SourceDisksFiles]
@@ -32,8 +32,8 @@ ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,,,,,,,4
-fastfat.sys=,,,,,,,,,,,,4
-ext2.sys=,,,,,,,,,,,,4
+fastfat.sys=,,,,,,x,,,,,,4
+ext2.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
 *PNP0C08 = acpi

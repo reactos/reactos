@@ -1286,7 +1286,7 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
           Region->Protect == PAGE_EXECUTE_READWRITE)))
    {
       DPRINT("Address 0x%.8X\n", Address);
-      return(STATUS_UNSUCCESSFUL);
+      return(STATUS_ACCESS_VIOLATION);
    }
 
    if (IS_SWAP_FROM_SSE(Entry) ||

@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+PFMIFSCALLBACK ChkdskCallback = NULL;
+PVOID FsCheckMemQueue;
+ULONG FsCheckFlags;
+ULONG FsCheckTotalFiles;
+
 NTSTATUS NTAPI
 VfatFormat (PUNICODE_STRING DriveRoot,
 	    FMIFS_MEDIA_FLAG MediaFlag,
@@ -50,7 +55,7 @@ VfatFormat (PUNICODE_STRING DriveRoot,
     FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtOpenFile() failed with status 0x%.08x\n", Status);
+      DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
       return Status;
     }
 
@@ -203,6 +208,25 @@ UpdateProgress (PFORMAT_CONTEXT Context,
     }
 }
 
+VOID
+VfatPrint(PCHAR Format, ...)
+{
+    TEXTOUTPUT TextOut;
+    CHAR TextBuf[512];
+    va_list valist;
+
+    va_start(valist, Format);
+    _vsnprintf(TextBuf, sizeof(TextBuf), Format, valist);
+    va_end(valist);
+
+    /* Prepare parameters */
+    TextOut.Lines = 1;
+    TextOut.Output = TextBuf;
+
+    /* Do the callback */
+    if (ChkdskCallback) ChkdskCallback(OUTPUT, 0, &TextOut);
+}
+
 NTSTATUS WINAPI
 VfatChkdsk(
 	IN PUNICODE_STRING DriveRoot,
@@ -212,8 +236,74 @@ VfatChkdsk(
 	IN BOOLEAN ScanDrive,
 	IN PFMIFSCALLBACK Callback)
 {
-	UNIMPLEMENTED;
-	return STATUS_SUCCESS;
+    BOOLEAN verify, salvage_files;
+    //ULONG free_clusters;
+    //DOS_FS fs;
+
+    /* Store callback pointer */
+    ChkdskCallback = Callback;
+    FsCheckMemQueue = NULL;
+
+    /* Set parameters */
+    FsCheckFlags = 0;
+    if (Verbose) FsCheckFlags |= FSCHECK_VERBOSE;
+
+    FsCheckTotalFiles = 0;
+
+    verify = TRUE;
+    salvage_files = TRUE;
+#if 0
+    /* Open filesystem */
+    fs_open(DriveRoot,FixErrors);
+
+    if (CheckOnlyIfDirty && !fs_isdirty(DriveRoot))
+    {
+        /* No need to check FS */
+        return fs_close(FALSE);
+    }
+
+    read_boot(&fs);
+    if (verify) VfatPrint("Starting check/repair pass.\n");
+    while (read_fat(&fs), scan_root(&fs)) qfree(&FsCheckMemQueue);
+    if (ScanDrive) fix_bad(&fs);
+    if (salvage_files)
+        reclaim_file(&fs);
+    else
+        reclaim_free(&fs);
+    free_clusters = update_free(&fs);
+    file_unused();
+    qfree(&FsCheckMemQueue);
+    if (verify)
+    {
+        VfatPrint("Starting verification pass.\n");
+        read_fat(&fs);
+        scan_root(&fs);
+        reclaim_free(&fs);
+        qfree(&FsCheckMemQueue);
+    }
+
+    if (fs_changed())
+    {
+        if (FixErrors)
+        {
+            if (FsCheckFlags & FSCHECK_INTERACTIVE)
+                FixErrors = get_key("yn","Perform changes ? (y/n)") == 'y';
+            else
+                VfatPrint("Performing changes.\n");
+        }
+        else
+        {
+            VfatPrint("Leaving file system unchanged.\n");
+        }
+    }
+
+    VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
+        FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters );
+
+    return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+#else
+    return STATUS_SUCCESS;
+#endif
 }
 
 /* EOF */

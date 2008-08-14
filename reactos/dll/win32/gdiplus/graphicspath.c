@@ -196,6 +196,206 @@ GpStatus WINGDIPAPI GdipAddPathBeziersI(GpPath *path, GDIPCONST GpPoint *points,
     return ret;
 }
 
+GpStatus WINGDIPAPI GdipAddPathClosedCurve(GpPath *path, GDIPCONST GpPointF *points,
+    INT count)
+{
+    return GdipAddPathClosedCurve2(path, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipAddPathClosedCurveI(GpPath *path, GDIPCONST GpPoint *points,
+    INT count)
+{
+    return GdipAddPathClosedCurve2I(path, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipAddPathClosedCurve2(GpPath *path, GDIPCONST GpPointF *points,
+    INT count, REAL tension)
+{
+    INT i, len_pt = (count + 1)*3-2;
+    GpPointF *pt;
+    GpPointF *pts;
+    REAL x1, x2, y1, y2;
+    GpStatus stat;
+
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+    pt = GdipAlloc(len_pt * sizeof(GpPointF));
+    pts = GdipAlloc((count + 1)*sizeof(GpPointF));
+    if(!pt || !pts){
+        GdipFree(pt);
+        GdipFree(pts);
+        return OutOfMemory;
+    }
+
+    /* copy source points to extend with the last one */
+    memcpy(pts, points, sizeof(GpPointF)*count);
+    pts[count] = pts[0];
+
+    tension = tension * TENSION_CONST;
+
+    for(i = 0; i < count-1; i++){
+        calc_curve_bezier(&(pts[i]), tension, &x1, &y1, &x2, &y2);
+
+        pt[3*i+2].X = x1;
+        pt[3*i+2].Y = y1;
+        pt[3*i+3].X = pts[i+1].X;
+        pt[3*i+3].Y = pts[i+1].Y;
+        pt[3*i+4].X = x2;
+        pt[3*i+4].Y = y2;
+    }
+
+    /* points [len_pt-2] and [0] are calculated
+       separetely to connect splines properly */
+    pts[0] = points[count-1];
+    pts[1] = points[0]; /* equals to start and end of a resulting path */
+    pts[2] = points[1];
+
+    calc_curve_bezier(pts, tension, &x1, &y1, &x2, &y2);
+    pt[len_pt-2].X = x1;
+    pt[len_pt-2].Y = y1;
+    pt[0].X = pts[1].X;
+    pt[0].Y = pts[1].Y;
+    pt[1].X = x2;
+    pt[1].Y = y2;
+    /* close path */
+    pt[len_pt-1].X = pt[0].X;
+    pt[len_pt-1].Y = pt[0].Y;
+
+    stat = GdipAddPathBeziers(path, pt, len_pt);
+
+    /* close figure */
+    if(stat == Ok){
+        INT count = path->pathdata.Count;
+        path->pathdata.Types[count - 1] |= PathPointTypeCloseSubpath;
+        path->newfigure = TRUE;
+    }
+
+    GdipFree(pts);
+    GdipFree(pt);
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipAddPathClosedCurve2I(GpPath *path, GDIPCONST GpPoint *points,
+    INT count, REAL tension)
+{
+    GpPointF *ptf;
+    INT i;
+    GpStatus stat;
+
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+    ptf = GdipAlloc(sizeof(GpPointF)*count);
+    if(!ptf)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        ptf[i].X = (REAL)points[i].X;
+        ptf[i].Y = (REAL)points[i].Y;
+    }
+
+    stat = GdipAddPathClosedCurve2(path, ptf, count, tension);
+
+    GdipFree(ptf);
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurve(GpPath *path, GDIPCONST GpPointF *points, INT count)
+{
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+   return GdipAddPathCurve2(path, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurveI(GpPath *path, GDIPCONST GpPoint *points, INT count)
+{
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+   return GdipAddPathCurve2I(path, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurve2(GpPath *path, GDIPCONST GpPointF *points, INT count,
+    REAL tension)
+{
+    INT i, len_pt = count*3-2;
+    GpPointF *pt;
+    REAL x1, x2, y1, y2;
+    GpStatus stat;
+
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+    pt = GdipAlloc(len_pt * sizeof(GpPointF));
+    if(!pt)
+        return OutOfMemory;
+
+    tension = tension * TENSION_CONST;
+
+    calc_curve_bezier_endp(points[0].X, points[0].Y, points[1].X, points[1].Y,
+        tension, &x1, &y1);
+
+    pt[0].X = points[0].X;
+    pt[0].Y = points[0].Y;
+    pt[1].X = x1;
+    pt[1].Y = y1;
+
+    for(i = 0; i < count-2; i++){
+        calc_curve_bezier(&(points[i]), tension, &x1, &y1, &x2, &y2);
+
+        pt[3*i+2].X = x1;
+        pt[3*i+2].Y = y1;
+        pt[3*i+3].X = points[i+1].X;
+        pt[3*i+3].Y = points[i+1].Y;
+        pt[3*i+4].X = x2;
+        pt[3*i+4].Y = y2;
+    }
+
+    calc_curve_bezier_endp(points[count-1].X, points[count-1].Y,
+        points[count-2].X, points[count-2].Y, tension, &x1, &y1);
+
+    pt[len_pt-2].X = x1;
+    pt[len_pt-2].Y = y1;
+    pt[len_pt-1].X = points[count-1].X;
+    pt[len_pt-1].Y = points[count-1].Y;
+
+    stat = GdipAddPathBeziers(path, pt, len_pt);
+
+    GdipFree(pt);
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurve2I(GpPath *path, GDIPCONST GpPoint *points,
+    INT count, REAL tension)
+{
+    GpPointF *ptf;
+    INT i;
+    GpStatus stat;
+
+    if(!path || !points || count <= 1)
+        return InvalidParameter;
+
+    ptf = GdipAlloc(sizeof(GpPointF)*count);
+    if(!ptf)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        ptf[i].X = (REAL)points[i].X;
+        ptf[i].Y = (REAL)points[i].Y;
+    }
+
+    stat = GdipAddPathCurve2(path, ptf, count, tension);
+
+    GdipFree(ptf);
+
+    return stat;
+}
+
 GpStatus WINGDIPAPI GdipAddPathEllipse(GpPath *path, REAL x, REAL y, REAL width,
     REAL height)
 {
@@ -730,10 +930,33 @@ GpStatus WINGDIPAPI GdipGetPointCount(GpPath *path, INT *count)
 GpStatus WINGDIPAPI GdipIsOutlineVisiblePathPointI(GpPath* path, INT x, INT y,
     GpPen *pen, GpGraphics *graphics, BOOL *result)
 {
+    return GdipIsOutlineVisiblePathPoint(path, x, y, pen, graphics, result);
+}
+
+GpStatus WINGDIPAPI GdipIsOutlineVisiblePathPoint(GpPath* path, REAL x, REAL y,
+    GpPen *pen, GpGraphics *graphics, BOOL *result)
+{
     static int calls;
 
     if(!path || !pen)
         return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipIsVisiblePathPointI(GpPath* path, INT x, INT y, GpGraphics *graphics, BOOL *result)
+{
+    return GdipIsVisiblePathPoint(path, x, y, graphics, result);
+}
+
+GpStatus WINGDIPAPI GdipIsVisiblePathPoint(GpPath* path, REAL x, REAL y, GpGraphics *graphics, BOOL *result)
+{
+    static int calls;
+
+    if(!path) return InvalidParameter;
 
     if(!(calls++))
         FIXME("not implemented\n");

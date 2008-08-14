@@ -554,6 +554,9 @@ SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
           idResource = IDS_PLAY_VERB;
        else if (!wcsicmp(curEntry->szVerb, L"preview"))
           idResource = IDS_PREVIEW_VERB;
+       else if (!wcsicmp(curEntry->szVerb, L"cplopen"))
+          idResource = IDS_OPEN_VERB;
+
        else
           idResource = 0;
 
@@ -857,7 +860,6 @@ static void DoProperties(
         ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
         return;
     }
-#if 0
     else if (_ILIsDrive(This->apidl[0]))
     {
        WCHAR buffer[111];
@@ -865,7 +867,14 @@ static void DoProperties(
        SH_ShowDriveProperties(buffer);
        return;
     }
-#endif
+    else if (_ILIsNetHood(This->apidl[0]))
+    {
+       /* FIXME
+        * implement nethood properties
+        */
+       FIXME("implement nethood property dialog\n");
+       return;
+    }
     else if (_ILIsBitBucket(This->apidl[0]))
     {
        ///FIXME

@@ -166,4 +166,7 @@ typedef enum _ARM_DOMAIN
 #define PDE_BASE    0xC1000000
 #define HYPER_SPACE 0xC1100000
 
+struct _EPROCESS;
+PULONG MmGetPageDirectory(VOID);
+
 #endif

@@ -952,10 +952,10 @@ typedef struct _KPROCESS
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG DirectoryTableBase;
-    ULONG Unused0;
+    ULONG_PTR DirectoryTableBase;
+    ULONG_PTR Unused0;
 #else
-    LARGE_INTEGER DirectoryTableBase;
+    ULONG_PTR DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;

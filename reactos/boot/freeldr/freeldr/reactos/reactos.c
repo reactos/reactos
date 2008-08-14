@@ -189,7 +189,7 @@ FrLdrLoadImage(IN PCHAR szFileName,
     return LoadBase;
 }
 
-static BOOLEAN
+BOOLEAN
 FrLdrLoadNlsFile(PCSTR szFileName,
                  PCSTR szModuleName)
 {

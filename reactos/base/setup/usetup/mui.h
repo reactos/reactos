@@ -96,9 +96,6 @@ MUIGetString(ULONG Number);
 #define STRING_TXTSETUPFAILED            14
 #define STRING_COPYING                   15
 #define STRING_SETUPCOPYINGFILES         16
-#define STRING_PAGEDMEM                  17
-#define STRING_NONPAGEDMEM               18
-#define STRING_FREEMEM                   19
 #define STRING_REGHIVEUPDATE             20
 #define STRING_IMPORTFILE                21
 #define STRING_DISPLAYETTINGSUPDATE      22

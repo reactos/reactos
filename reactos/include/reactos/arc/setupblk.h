@@ -2,6 +2,12 @@
 #define _SETUPBLK_
 
 //
+// Setup Flags
+//
+#define SETUPLDR_TEXT_MODE    0x1
+#define SETUPLDR_REMOTE_BOOT  0x2
+
+//
 // Type of file described in DETECTED_DEVICE_FILE
 //
 typedef enum

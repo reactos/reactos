@@ -1426,9 +1426,9 @@ typedef struct _EJOB
     ULONG PeakProcessMemoryUsed;
     ULONG PeakJobMemoryUsed;
     ULONG CurrentJobMemoryUsed;
-#if (NTDDI_VERSION == NTDDI_WINXP)
+#if (NTDDI_VERSION >= NTDDI_WINXP) && (NTDDI_VERSION < NTDDI_WS03)
     FAST_MUTEX MemoryLimitsLock;
-#elif (NTDDI_VERSION == NTDDI_WS03)
+#elif (NTDDI_VERSION >= NTDDI_WS03) && (NTDDI_VERSION < NTDDI_LONGHORN)
     KGUARDED_MUTEX MemoryLimitsLock;
 #elif (NTDDI_VERSION >= NTDDI_LONGHORN)
     EX_PUSH_LOCK MemoryLimitsLock;

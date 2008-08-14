@@ -73,6 +73,7 @@
   <property name="BASEADDRESS_DESKMON" value="0x6d400000" />
   <property name="BASEADDRESS_DESKADP" value="0x6d410000" />
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
+  <property name="BASEADDRESS_SXS" value="0x6e160000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
@@ -184,6 +185,7 @@
   <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
+  <property name="BASEADDRESS_SXS" value="0x7e690000" />
   <property name="BASEADDRESS_BEEPMIDI" value="0x7ef0000" />
   <property name="BASEADDRESS_FREETYPE" value="0x7f000000" />
 </group>

@@ -209,7 +209,10 @@ RtlCreateUserThread(IN HANDLE ProcessHandle,
     else
     {
         /* Return thread data */
-        if (ThreadHandle) *ThreadHandle = Handle;
+        if (ThreadHandle)
+            *ThreadHandle = Handle;
+        else
+            NtClose(Handle);
         if (ClientId) *ClientId = ThreadCid;
     }
 

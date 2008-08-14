@@ -1831,7 +1831,11 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
           hKey, debugstr_w(pszSubKey), debugstr_w(pszValue), dwFlags, pdwType,
           pvData, pcbData, cbData);
 
-    if ((dwFlags & RRF_RT_REG_EXPAND_SZ) && !(dwFlags & RRF_NOEXPAND))
+    if (pvData && !pcbData)
+        return ERROR_INVALID_PARAMETER;
+
+    if ((dwFlags & RRF_RT_REG_EXPAND_SZ) && !(dwFlags & RRF_NOEXPAND) &&
+            ((dwFlags & RRF_RT_ANY) != RRF_RT_ANY))
         return ERROR_INVALID_PARAMETER;
 
     if (pszSubKey && pszSubKey[0])
@@ -1849,7 +1853,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
         (dwType == REG_EXPAND_SZ && !(dwFlags & RRF_NOEXPAND)))
     {
         do {
-            if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
+            HeapFree(GetProcessHeap(), 0, pvBuf);
 
             pvBuf = HeapAlloc(GetProcessHeap(), 0, cbData);
             if (!pvBuf)
@@ -1858,7 +1862,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
                 break;
             }
 
-            if (ret == ERROR_MORE_DATA)
+            if (ret == ERROR_MORE_DATA || !pvData)
                 ret = RegQueryValueExW(hKey, pszValue, NULL,
                                        &dwType, pvBuf, &cbData);
             else
@@ -1876,19 +1880,20 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
 
         if (ret == ERROR_SUCCESS)
         {
+            /* Recheck dwType in case it changed since the first call */
             if (dwType == REG_EXPAND_SZ)
             {
                 cbData = ExpandEnvironmentStringsW(pvBuf, pvData,
-                                                   pcbData ? *pcbData : 0);
+                                                   pcbData ? *pcbData : 0) * sizeof(WCHAR);
                 dwType = REG_SZ;
-                if(pcbData && cbData > *pcbData)
+                if(pvData && pcbData && cbData > *pcbData)
                     ret = ERROR_MORE_DATA;
             }
-            else if (pcbData)
+            else if (pvData)
                 CopyMemory(pvData, pvBuf, *pcbData);
         }
 
-        if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
+        HeapFree(GetProcessHeap(), 0, pvBuf);
     }
 
     if (pszSubKey && pszSubKey[0])
@@ -1896,7 +1901,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
 
     RegpApplyRestrictions(dwFlags, dwType, cbData, &ret);
 
-    if (pcbData && ret != ERROR_SUCCESS && (dwFlags & RRF_ZEROONFAILURE))
+    if (pvData && ret != ERROR_SUCCESS && (dwFlags & RRF_ZEROONFAILURE))
         ZeroMemory(pvData, *pcbData);
 
     if (pdwType) *pdwType = dwType;
@@ -1924,7 +1929,11 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
           hKey, pszSubKey, pszValue, dwFlags, pdwType, pvData, pcbData,
           cbData);
 
-    if ((dwFlags & RRF_RT_REG_EXPAND_SZ) && !(dwFlags & RRF_NOEXPAND))
+    if (pvData && !pcbData)
+        return ERROR_INVALID_PARAMETER;
+
+    if ((dwFlags & RRF_RT_REG_EXPAND_SZ) && !(dwFlags & RRF_NOEXPAND) &&
+            ((dwFlags & RRF_RT_ANY) != RRF_RT_ANY))
         return ERROR_INVALID_PARAMETER;
 
     if (pszSubKey && pszSubKey[0])
@@ -1942,7 +1951,7 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
         (dwType == REG_EXPAND_SZ && !(dwFlags & RRF_NOEXPAND)))
     {
         do {
-            if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
+            HeapFree(GetProcessHeap(), 0, pvBuf);
 
             pvBuf = HeapAlloc(GetProcessHeap(), 0, cbData);
             if (!pvBuf)
@@ -1951,7 +1960,7 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
                 break;
             }
 
-            if (ret == ERROR_MORE_DATA)
+            if (ret == ERROR_MORE_DATA || !pvData)
                 ret = RegQueryValueExA(hKey, pszValue, NULL,
                                        &dwType, pvBuf, &cbData);
             else
@@ -1969,19 +1978,20 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
 
         if (ret == ERROR_SUCCESS)
         {
+            /* Recheck dwType in case it changed since the first call */
             if (dwType == REG_EXPAND_SZ)
             {
                 cbData = ExpandEnvironmentStringsA(pvBuf, pvData,
                                                    pcbData ? *pcbData : 0);
                 dwType = REG_SZ;
-                if(pcbData && cbData > *pcbData)
+                if(pvData && pcbData && cbData > *pcbData)
                     ret = ERROR_MORE_DATA;
             }
-            else if (pcbData)
+            else if (pvData)
                 CopyMemory(pvData, pvBuf, *pcbData);
         }
 
-        if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
+        HeapFree(GetProcessHeap(), 0, pvBuf);
     }
 
     if (pszSubKey && pszSubKey[0])
@@ -1989,7 +1999,7 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
 
     RegpApplyRestrictions(dwFlags, dwType, cbData, &ret);
 
-    if (pcbData && ret != ERROR_SUCCESS && (dwFlags & RRF_ZEROONFAILURE))
+    if (pvData && ret != ERROR_SUCCESS && (dwFlags & RRF_ZEROONFAILURE))
         ZeroMemory(pvData, *pcbData);
 
     if (pdwType) *pdwType = dwType;

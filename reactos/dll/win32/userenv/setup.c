@@ -305,7 +305,7 @@ InitializeProfiles (VOID)
 
   /* Set 'Fonts' folder path */
   GetWindowsDirectoryW(szBuffer, MAX_PATH);
-  wcscat(szBuffer, L"\\media\\fonts");
+  wcscat(szBuffer, L"\\fonts");
 
   dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
   Error = RegSetValueExW(hKey,

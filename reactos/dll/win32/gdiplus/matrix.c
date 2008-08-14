@@ -50,6 +50,11 @@ static void matrix_multiply(GDIPCONST REAL * left, GDIPCONST REAL * right, REAL 
     memcpy(out, temp, 6 * sizeof(REAL));
 }
 
+static REAL matrix_det(GDIPCONST GpMatrix *matrix)
+{
+    return matrix->matrix[0]*matrix->matrix[3] - matrix->matrix[1]*matrix->matrix[2];
+}
+
 GpStatus WINGDIPAPI GdipCreateMatrix2(REAL m11, REAL m12, REAL m21, REAL m22,
     REAL dx, REAL dy, GpMatrix **matrix)
 {
@@ -158,6 +163,43 @@ GpStatus WINGDIPAPI GdipGetMatrixElements(GDIPCONST GpMatrix *matrix,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipInvertMatrix(GpMatrix *matrix)
+{
+    GpMatrix copy;
+    REAL det;
+    BOOL invertible;
+
+    if(!matrix)
+        return InvalidParameter;
+
+    GdipIsMatrixInvertible(matrix, &invertible);
+    if(!invertible)
+        return InvalidParameter;
+
+    det = matrix_det(matrix);
+
+    copy = *matrix;
+    /* store result */
+    matrix->matrix[0] =   copy.matrix[3] / det;
+    matrix->matrix[1] =  -copy.matrix[1] / det;
+    matrix->matrix[2] =  -copy.matrix[2] / det;
+    matrix->matrix[3] =   copy.matrix[0] / det;
+    matrix->matrix[4] =  (copy.matrix[2]*copy.matrix[5]-copy.matrix[3]*copy.matrix[4]) / det;
+    matrix->matrix[5] = -(copy.matrix[0]*copy.matrix[5]-copy.matrix[1]*copy.matrix[4]) / det;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipIsMatrixInvertible(GDIPCONST GpMatrix *matrix, BOOL *result)
+{
+    if(!matrix || !result)
+        return InvalidParameter;
+
+    *result = (fabs(matrix_det(matrix)) >= 1e-5);
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipMultiplyMatrix(GpMatrix *matrix, GpMatrix* matrix2,
     GpMatrixOrder order)
 {
@@ -234,6 +276,30 @@ GpStatus WINGDIPAPI GdipSetMatrixElements(GpMatrix *matrix, REAL m11, REAL m12,
     matrix->matrix[3] = m22;
     matrix->matrix[4] = dx;
     matrix->matrix[5] = dy;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipShearMatrix(GpMatrix *matrix, REAL shearX, REAL shearY,
+    GpMatrixOrder order)
+{
+    REAL shear[6];
+
+    if(!matrix)
+        return InvalidParameter;
+
+    /* prepare transformation matrix */
+    shear[0] = 1.0;
+    shear[1] = shearY;
+    shear[2] = shearX;
+    shear[3] = 1.0;
+    shear[4] = 0.0;
+    shear[5] = 0.0;
+
+    if(order == MatrixOrderAppend)
+        matrix_multiply(matrix->matrix, shear, matrix->matrix);
+    else
+        matrix_multiply(shear, matrix->matrix, matrix->matrix);
 
     return Ok;
 }

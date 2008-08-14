@@ -391,11 +391,12 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PVOID Base, Address;
     ULONG i, j;
     ULONG NrPages;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PFN_TYPE Page;
     PEPROCESS CurrentProcess;
     PETHREAD Thread;
     PMM_AVL_TABLE AddressSpace;
+	KIRQL OldIrql = KeGetCurrentIrql();
     DPRINT("Probing MDL: %p\n", Mdl);
     
     /* Sanity checks */
@@ -486,7 +487,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
     /*
      * Lock the pages
      */
-    MmLockAddressSpace(AddressSpace);
+	if (OldIrql < DISPATCH_LEVEL)
+		MmLockAddressSpace(AddressSpace);
+	else
+		MmAcquirePageListLock(&OldIrql);
     
     for (i = 0; i < NrPages; i++)
     {
@@ -500,8 +504,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             Status = MmAccessFault(FALSE, Address, AccessMode, NULL);
             if (!NT_SUCCESS(Status))
             {
-                MmUnlockAddressSpace(AddressSpace);
-                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+				goto cleanup;
             }
         }
         else
@@ -524,8 +527,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         MmDereferencePage(Page);
                     }
                 }
-                MmUnlockAddressSpace(AddressSpace);
-                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+				goto cleanup;
             }
         }
         Page = MmGetPfnForProcess(NULL, Address);
@@ -539,9 +541,17 @@ MmProbeAndLockPages(IN PMDL Mdl,
             MmReferencePage(Page);
         }
     }
-    
-    MmUnlockAddressSpace(AddressSpace);
+
+cleanup:
+	if (OldIrql < DISPATCH_LEVEL)
+		MmUnlockAddressSpace(AddressSpace);
+	else
+		MmReleasePageListLock(OldIrql);
+
+	if (!NT_SUCCESS(Status))
+		ExRaiseStatus(STATUS_ACCESS_VIOLATION);
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+	return;
 }
 
 /*
@@ -603,6 +613,22 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
     Mdl->ByteCount = (ULONG)(NumberOfPagesAllocated * PAGE_SIZE);
     return Mdl;
+}
+
+/*
+ * @unimplemented
+ */
+PMDL
+NTAPI
+MmAllocatePagesForMdlEx(IN PHYSICAL_ADDRESS LowAddress,
+                        IN PHYSICAL_ADDRESS HighAddress,
+                        IN PHYSICAL_ADDRESS SkipBytes,
+                        IN SIZE_T Totalbytes,
+                        IN MEMORY_CACHING_TYPE CacheType,
+                        IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*

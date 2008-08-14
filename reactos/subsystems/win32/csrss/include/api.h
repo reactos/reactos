@@ -48,6 +48,7 @@ typedef struct _CSRSS_PROCESS_DATA
   ULONG HandleTableSize;
   PCSRSS_HANDLE HandleTable;
   HANDLE ProcessId;
+  DWORD ProcessGroup;
   HANDLE Process;
   ULONG ShutdownLevel;
   ULONG ShutdownFlags;

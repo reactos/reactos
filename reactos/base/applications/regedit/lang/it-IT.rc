@@ -86,7 +86,7 @@ BEGIN
 	    MENUITEM "Valore stringa &espandibile",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Permissions...",			ID_EDIT_PERMISSIONS
+        MENUITEM "&Permessi...",			ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Elimina\tDel",                	ID_EDIT_DELETE
         MENUITEM "&Rinomina",                     	ID_EDIT_RENAME

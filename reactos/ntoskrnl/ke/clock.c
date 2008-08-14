@@ -17,7 +17,6 @@
 LARGE_INTEGER KeBootTime;
 ULONGLONG KeBootTimeBias;
 volatile KSYSTEM_TIME KeTickCount = {0};
-volatile ULONG KiRawTicks = 0;
 ULONG KeMaximumIncrement;
 ULONG KeMinimumIncrement;
 ULONG KeTimeAdjustment;
@@ -95,7 +94,7 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
             Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
             NextEntry = NextEntry->Flink;
 
-            /* Is is absolute? */
+            /* Is it absolute? */
             if (Timer->Header.Absolute)
             {
                 /* Remove it from the timer list */

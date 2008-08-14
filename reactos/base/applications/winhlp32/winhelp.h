@@ -137,6 +137,7 @@ typedef struct
     WNDPROC             button_proc;
     WINHELP_DLL*        dlls;
     WINHELP_PAGESET     history;
+    HFONT               hButtonFont;
 } WINHELP_GLOBALS;
 
 extern WINHELP_GLOBALS Globals;

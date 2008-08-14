@@ -4,8 +4,8 @@
 	<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
 		<importlibrary definition="def/ntdll_$(ARCH).def" />
-		<include base="ntdll">inc</include>
-		<include base="ntdll" root="intermediate">def</include>
+		<include base="ntdll">include</include>
+		<include base="ntdll" root="intermediate"></include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<define name="__NTDLL__" />
 		<define name="_DISABLE_TIDENTS" />
@@ -25,11 +25,7 @@
 		<directory name="dbg">
 			<file>dbgui.c</file>
 		</directory>
-		<directory name="ldr">
-			<file>startup.c</file>
-			<file>utils.c</file>
-		</directory>
-		<directory name="main">
+		<directory name="dispatch">
 			<if property="ARCH" value="i386">
 				<directory name="i386">
 					<file>dispatch.S</file>
@@ -44,15 +40,19 @@
 				<file>dispatch.c</file>
 			</ifnot>
 		</directory>
+		<directory name="include">
+			<pch>ntdll.h</pch>
+		</directory>
+		<directory name="ldr">
+			<file>startup.c</file>
+			<file>utils.c</file>
+		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>
 			<file>version.c</file>
 		</directory>
 		<directory name="def">
 			<file>ntdll.rc</file>
-		</directory>
-		<directory name="inc">
-			<pch>ntdll.h</pch>
 		</directory>
 	</module>
 </group>

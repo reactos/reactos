@@ -525,6 +525,9 @@ IoAllocateIrp(IN CCHAR StackSize,
     PNPAGED_LOOKASIDE_LIST List = NULL;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
 
+    /* Set Charge Quota Flag */
+    if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
+
     /* Figure out which Lookaside List to use */
     if ((StackSize <= 8) && (ChargeQuota == FALSE))
     {
@@ -586,11 +589,11 @@ IoAllocateIrp(IN CCHAR StackSize,
     else
     {
         /* We have an IRP from Lookaside */
-        Flags |= IRP_LOOKASIDE_ALLOCATION;
-    }
+        if (ChargeQuota) Flags |= IRP_LOOKASIDE_ALLOCATION;
 
-    /* Set Flag */
-    if (ChargeQuota) Flags |= IRP_QUOTA_CHARGED;
+        /* In this case there is no charge quota */
+        Flags &= ~IRP_QUOTA_CHARGED;
+    }
 
     /* Now Initialize it */
     IoInitializeIrp(Irp, Size, StackSize);
@@ -682,31 +685,24 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
                 return NULL;
             }
 
-			if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+			/* Probe and Lock */
+			_SEH_TRY
 			{
-				MmBuildMdlForNonPagedPool(Irp->MdlAddress);
+				/* Do the probe */
+				MmProbeAndLockPages(Irp->MdlAddress,
+									KernelMode,
+									MajorFunction == IRP_MJ_READ ?
+									IoWriteAccess : IoReadAccess);
 			}
-			else
+			_SEH_HANDLE
 			{
-				/* Probe and Lock */
-				_SEH_TRY
-				{
-					/* Do the probe */
-					MmProbeAndLockPages(Irp->MdlAddress,
-										KernelMode,
-										MajorFunction == IRP_MJ_READ ?
-										IoWriteAccess : IoReadAccess);
-				}
-				_SEH_HANDLE
-				{
-					/* Free the IRP and its MDL */
-					IoFreeMdl(Irp->MdlAddress);
-					IoFreeIrp(Irp);
-					Irp = NULL;
-				}
-				_SEH_END;
+				/* Free the IRP and its MDL */
+				IoFreeMdl(Irp->MdlAddress);
+				IoFreeIrp(Irp);
+				Irp = NULL;
 			}
-
+			_SEH_END;
+		
             /* This is how we know if we failed during the probe */
             if (!Irp) return NULL;
         }
@@ -1536,6 +1532,19 @@ IoFreeIrp(IN PIRP Irp)
                                      (PSINGLE_LIST_ENTRY)Irp);
         }
     }
+}
+
+/*
+ * @unimplemented
+ */
+IO_PAGING_PRIORITY
+NTAPI
+IoGetPagingIoPriority(IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+
+    /* Lie and say this isn't a paging IRP -- FIXME! */
+    return IoPagingPriorityInvalid;
 }
 
 /*

@@ -368,13 +368,13 @@ NTAPI
 MmInit1(VOID)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    LARGE_INTEGER Dummy;
+    ULONG_PTR Dummy[2];
     
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
     /* Set the page directory */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = (ULONG_PTR)MmGetPageDirectory();
 
     /* Get the size of FreeLDR's image allocations */
     MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
@@ -396,7 +396,7 @@ MmInit1(VOID)
     DbgPrint("Used memory %dKb\n", (MmNumberOfPhysicalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
-    MmInitializeHandBuiltProcess(PsGetCurrentProcess(), &Dummy);
+    MmInitializeHandBuiltProcess(PsGetCurrentProcess(), Dummy);
     MmKernelAddressSpace = MmGetCurrentAddressSpace();
     MmInitGlobalKernelPageDirectory();
     

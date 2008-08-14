@@ -93,7 +93,7 @@ LsaClose(LSA_HANDLE ObjectHandle)
     LSAHandleBind();
 
     return LsarClose(LSABindingHandle,
-                     (ULONG_PTR)ObjectHandle);
+                     (unsigned long *)&ObjectHandle);
 }
 
 

@@ -206,27 +206,9 @@ IntGetMenuObject(HMENU hMenu)
 }
 
 BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
-                BOOL RemoveFromList, BOOL bRecurse)
+IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, BOOL bRecurse)
 {
    FreeMenuText(MenuItem);
-   if(RemoveFromList)
-   {
-      PMENU_ITEM CurItem = Menu->MenuItemList;
-      while(CurItem)
-      {
-         if (CurItem->Next == MenuItem)
-         {
-            CurItem->Next = MenuItem->Next;
-            break;
-         }
-         else
-         {
-            CurItem = CurItem->Next;
-         }
-      }
-      Menu->MenuInfo.MenuItemCount--;
-   }
    if(bRecurse && MenuItem->hSubMenu)
    {
       PMENU_OBJECT SubMenu;
@@ -249,7 +231,7 @@ IntRemoveMenuItem(PMENU_OBJECT Menu, UINT uPosition, UINT uFlags,
                   BOOL bRecurse)
 {
    PMENU_ITEM PrevMenuItem, MenuItem;
-   if(IntGetMenuItemByFlag(Menu, uPosition, uFlags, NULL, &MenuItem,
+   if(IntGetMenuItemByFlag(Menu, uPosition, uFlags, &Menu, &MenuItem,
                            &PrevMenuItem) > -1)
    {
       if(MenuItem)
@@ -260,7 +242,8 @@ IntRemoveMenuItem(PMENU_OBJECT Menu, UINT uPosition, UINT uFlags,
          {
             Menu->MenuItemList = MenuItem->Next;
          }
-         return IntFreeMenuItem(Menu, MenuItem, TRUE, bRecurse);
+         Menu->MenuInfo.MenuItemCount--;
+         return IntFreeMenuItem(Menu, MenuItem, bRecurse);
       }
    }
    return FALSE;
@@ -275,7 +258,7 @@ IntDeleteMenuItems(PMENU_OBJECT Menu, BOOL bRecurse)
    while(CurItem)
    {
       NextItem = CurItem->Next;
-      IntFreeMenuItem(Menu, CurItem, FALSE, bRecurse);
+      IntFreeMenuItem(Menu, CurItem, bRecurse);
       CurItem = NextItem;
       res++;
    }
@@ -651,56 +634,25 @@ IntInsertMenuItemToList(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, int pos)
    UINT npos = 0;
 
    CurItem = Menu->MenuItemList;
-   if(pos <= -1)
+   while(CurItem && (pos != 0))
    {
-      while(CurItem)
-      {
-         LastItem = CurItem;
-         CurItem = CurItem->Next;
-         npos++;
-      }
-   }
-   else
-   {
-      while(CurItem && (pos > 0))
-      {
-         LastItem = CurItem;
-         CurItem = CurItem->Next;
-         pos--;
-         npos++;
-      }
+      LastItem = CurItem;
+      CurItem = CurItem->Next;
+      pos--;
+      npos++;
    }
 
-   if(CurItem)
+   if(LastItem)
    {
-      if(LastItem)
-      {
-         /* insert the item before CurItem */
-         MenuItem->Next = LastItem->Next;
-         LastItem->Next = MenuItem;
-      }
-      else
-      {
-         /* insert at the beginning */
-         Menu->MenuItemList = MenuItem;
-         MenuItem->Next = CurItem;
-      }
+      /* insert the item after LastItem */
+      LastItem->Next = MenuItem;
    }
    else
    {
-      if(LastItem)
-      {
-         /* append item */
-         LastItem->Next = MenuItem;
-         MenuItem->Next = NULL;
-      }
-      else
-      {
-         /* insert first item */
-         Menu->MenuItemList = MenuItem;
-         MenuItem->Next = NULL;
-      }
+      /* insert at the beginning */
+      Menu->MenuItemList = MenuItem;
    }
+   MenuItem->Next = CurItem;
    Menu->MenuInfo.MenuItemCount++;
 
    return npos;
@@ -1011,29 +963,18 @@ IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable)
 
    if(uEnable & MF_DISABLED)
    {
-      if(!(MenuItem->fState & MF_DISABLED))
-         MenuItem->fState |= MF_DISABLED;
-      if(uEnable & MF_GRAYED)
-      {
-         if(!(MenuItem->fState & MF_GRAYED))
-            MenuItem->fState |= MF_GRAYED;
-      }
+      MenuItem->fState |= MF_DISABLED;
+      MenuItem->fState |= uEnable & MF_GRAYED;
    }
    else
    {
       if(uEnable & MF_GRAYED)
       {
-         if(!(MenuItem->fState & MF_GRAYED))
-            MenuItem->fState |= MF_GRAYED;
-         if(!(MenuItem->fState & MF_DISABLED))
-            MenuItem->fState |= MF_DISABLED;
+         MenuItem->fState |= (MF_GRAYED | MF_DISABLED);
       }
       else
       {
-         if(MenuItem->fState & MF_DISABLED)
-            MenuItem->fState ^= MF_DISABLED;
-         if(MenuItem->fState & MF_GRAYED)
-            MenuItem->fState ^= MF_GRAYED;
+         MenuItem->fState &= ~(MF_DISABLED | MF_GRAYED);
       }
    }
 
@@ -1155,13 +1096,11 @@ IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
    res = (DWORD)(MenuItem->fState & MF_CHECKED);
    if(uCheck & MF_CHECKED)
    {
-      if(!(MenuItem->fState & MF_CHECKED))
-         MenuItem->fState |= MF_CHECKED;
+      MenuItem->fState |= MF_CHECKED;
    }
    else
    {
-      if(MenuItem->fState & MF_CHECKED)
-         MenuItem->fState ^= MF_CHECKED;
+      MenuItem->fState &= ~MF_CHECKED;
    }
 
    return (DWORD)res;
@@ -1180,13 +1119,11 @@ IntHiliteMenuItem(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject,
 
    if(uHilite & MF_HILITE)
    {
-      if(!(MenuItem->fState & MF_HILITE))
-         MenuItem->fState |= MF_HILITE;
+      MenuItem->fState |= MF_HILITE;
    }
    else
    {
-      if(MenuItem->fState & MF_HILITE)
-         MenuItem->fState ^= MF_HILITE;
+      MenuItem->fState &= ~MF_HILITE;
    }
 
    /* FIXME - update the window's menu */
@@ -1204,8 +1141,7 @@ UserSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
    {
       while(MenuItem)
       {
-         if(MenuItem->fState & MFS_DEFAULT)
-            MenuItem->fState ^= MFS_DEFAULT;
+         MenuItem->fState &= ~MFS_DEFAULT;
          MenuItem = MenuItem->Next;
       }
       return TRUE;
@@ -1218,14 +1154,12 @@ UserSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
       {
          if(pos == uItem)
          {
-            if(!(MenuItem->fState & MFS_DEFAULT))
-               MenuItem->fState |= MFS_DEFAULT;
+            MenuItem->fState |= MFS_DEFAULT;
             ret = TRUE;
          }
          else
          {
-            if(MenuItem->fState & MFS_DEFAULT)
-               MenuItem->fState ^= MFS_DEFAULT;
+            MenuItem->fState &= ~MFS_DEFAULT;
          }
          pos++;
          MenuItem = MenuItem->Next;
@@ -1237,14 +1171,12 @@ UserSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
       {
          if(!ret && (MenuItem->wID == uItem))
          {
-            if(!(MenuItem->fState & MFS_DEFAULT))
-               MenuItem->fState |= MFS_DEFAULT;
+            MenuItem->fState |= MFS_DEFAULT;
             ret = TRUE;
          }
          else
          {
-            if(MenuItem->fState & MFS_DEFAULT)
-               MenuItem->fState ^= MFS_DEFAULT;
+            MenuItem->fState &= ~MFS_DEFAULT;
          }
          MenuItem = MenuItem->Next;
       }

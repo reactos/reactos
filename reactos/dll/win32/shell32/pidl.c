@@ -1387,21 +1387,7 @@ LPITEMIDLIST _ILCreateControlPanel(void)
 
 LPITEMIDLIST _ILCreatePrinters(void)
 {
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
-
-    TRACE("()\n");
-    if (parent)
-    {
-        LPITEMIDLIST printers = _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
-
-        if (printers)
-        {
-            ret = ILCombine(parent, printers);
-            SHFree(printers);
-        }
-        SHFree(parent);
-    }
-    return ret;
+    return _ILCreateGuid(PT_YAGUID, &CLSID_Printers);
 }
 
 LPITEMIDLIST _ILCreateNetwork(void)
@@ -1414,6 +1400,12 @@ LPITEMIDLIST _ILCreateBitBucket(void)
 {
     TRACE("()\n");
     return _ILCreateGuid(PT_GUID, &CLSID_RecycleBin);
+}
+
+LPITEMIDLIST _ILCreateAdminTools(void)
+{
+    TRACE("()\n");
+    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut);
 }
 
 LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
@@ -1643,6 +1635,11 @@ LPITEMIDLIST _ILCreateNetHood(void)
     return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
 }
 
+LPITEMIDLIST _ILCreateFont(void)
+{
+
+    return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
+}
 
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {
@@ -1664,6 +1661,18 @@ BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
     if (iid)
         return IsEqualIID(iid, &CLSID_RecycleBin);
     return FALSE;
+}
+
+BOOL _ILIsAdminTools(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_AdminFolderShortcut);
+    else
+        return FALSE;
 }
 
 BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)

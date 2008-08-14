@@ -742,7 +742,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
 
     /* Set swap settings */
-    Thread->EnableStackSwap = FALSE;//TRUE;
+    Thread->EnableStackSwap = TRUE;
     Thread->IdealProcessor = 1;
     Thread->SwapBusy = FALSE;
     Thread->KernelStackResident = TRUE;
@@ -810,11 +810,8 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 
-    /* Make sure that we are in the right page directory */
-    MiSyncThreadProcessViews(Process,
-                             (PVOID)Thread->StackLimit,
-                             KERNEL_STACK_SIZE);
-    MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
+    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
+    MiSyncThreadProcessViews(Thread);
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
@@ -858,7 +855,7 @@ KeInitializeThread(IN PKPROCESS Process,
                    IN PVOID Teb,
                    IN PVOID KernelStack)
 {
-    /* Initailize and start the thread on success */
+    /* Initialize and start the thread on success */
     if (NT_SUCCESS(KeInitThread(Thread,
                                 KernelStack,
                                 SystemRoutine,

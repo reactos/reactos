@@ -33,6 +33,8 @@ typedef struct tagEVENTHOOK
   PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;
   UINT           eventMax; 
+  DWORD          idProcess;
+  DWORD          idThread;
   WINEVENTPROC   Proc;       /* Event function */
   BOOLEAN        Ansi;       /* Is it an Ansi event? */
   ULONG          Flags;      /* Some internal flags */

@@ -295,6 +295,53 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
    return STATUS_INVALID_PARAMETER;
 }
 
+static
+VOID
+FASTCALL
+IntCallWndProc
+( PWINDOW_OBJECT Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+   BOOL SameThread = FALSE;
+
+   if (Window->ti == PsGetCurrentThreadWin32Thread()->ThreadInfo)
+      SameThread = TRUE;
+
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
+   {
+      CWPSTRUCT CWP;
+      CWP.hwnd    = hWnd;
+      CWP.message = Msg;
+      CWP.wParam  = wParam;
+      CWP.lParam  = lParam;
+      co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
+   }
+}
+static
+VOID
+FASTCALL
+IntCallWndProcRet
+( PWINDOW_OBJECT Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *uResult)
+{
+   BOOL SameThread = FALSE;
+
+   if (Window->ti == PsGetCurrentThreadWin32Thread()->ThreadInfo)
+      SameThread = TRUE;
+
+   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
+        (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
+   {
+      CWPRETSTRUCT CWPR;
+      CWPR.hwnd    = hWnd;
+      CWPR.message = Msg;
+      CWPR.wParam  = wParam;
+      CWPR.lParam  = lParam;
+      CWPR.lResult = *uResult;
+      co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
+   }
+}
+
+
 BOOL
 STDCALL
 NtUserCallMsgFilter(
@@ -1429,7 +1476,6 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    PW32THREAD Win32Thread;
    DECLARE_RETURN(LRESULT);
    USER_REFERENCE_ENTRY Ref;
-   BOOL SameThread = FALSE;
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
@@ -1440,20 +1486,8 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
 
-   if (Window->ti == Win32Thread->ThreadInfo)
-      SameThread = TRUE;
+   IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
-   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
-        (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
-   {
-      CWPSTRUCT CWP;
-      CWP.hwnd    = hWnd;
-      CWP.message = Msg;
-      CWP.wParam  = wParam;
-      CWP.lParam  = lParam;
-      co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
-   }
-   
    if (NULL != Win32Thread &&
        Window->MessageQueue == Win32Thread->MessageQueue)
    {
@@ -1488,17 +1522,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          *uResult = Result;
       }
 
-      if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
-           (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
-      {
-         CWPRETSTRUCT CWPR;
-         CWPR.hwnd    = hWnd;
-         CWPR.message = Msg;
-         CWPR.wParam  = wParam;
-         CWPR.lParam  = lParam;
-         CWPR.lResult = Result;
-         co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
-      }
+      IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
       {
@@ -1531,24 +1555,14 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
                                                 lParam,
                                               uTimeout,
                                  (uFlags & SMTO_BLOCK),
-                                                 FALSE,
+                                            MSQ_NORMAL,
                                                uResult);
    }
    while ((STATUS_TIMEOUT == Status) &&
           (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
           !MsqIsHung(Window->MessageQueue));
 
-   if ((!SameThread && (Window->ti->Hooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
-        (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
-   {
-      CWPRETSTRUCT CWPR;
-      CWPR.hwnd    = hWnd;
-      CWPR.message = Msg;
-      CWPR.wParam  = wParam;
-      CWPR.lParam  = lParam;
-      CWPR.lResult = *uResult;
-      co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
-   }
+   IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
    if (STATUS_TIMEOUT == Status)
    {
@@ -1703,6 +1717,8 @@ co_IntDoSendMessage(HWND hWnd,
          Info.Ansi = ! Window->Wnd->Unicode;
       }
 
+      IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
       if (Window->Wnd->IsSystem)
       {
           Info.Proc = (!Info.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
@@ -1712,6 +1728,9 @@ co_IntDoSendMessage(HWND hWnd,
           Info.Ansi = !Window->Wnd->Unicode;
           Info.Proc = Window->Wnd->WndProc;
       }
+
+      IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, &Result);
+
    }
    else
    {

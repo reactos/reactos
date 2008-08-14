@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id$
+/* $Id: ntmarta.c 31176 2007-12-12 07:04:12Z weiden $
  *
  * PROJECT:         ReactOS MARTA provider
  * FILE:            lib/ntmarta/ntmarta.c

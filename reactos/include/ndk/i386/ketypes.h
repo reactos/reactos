@@ -654,7 +654,7 @@ typedef struct _KIPCR
     USHORT MinorVersion;
     KAFFINITY SetMember;
     ULONG StallScaleFactor;
-    UCHAR SparedUnused;
+    UCHAR SpareUnused;
     UCHAR Number;
     UCHAR Reserved;
     UCHAR L2CacheAssociativity;

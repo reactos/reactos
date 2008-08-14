@@ -42,7 +42,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 /* looks-right constants */
-#define TENSION_CONST (0.3)
 #define ANCHOR_WIDTH (2.0)
 #define MAX_ITERS (50)
 
@@ -192,34 +191,6 @@ static void draw_pie(GpGraphics *graphics, REAL x, REAL y, REAL width,
 
     Pie(graphics->hdc, pti[0].x, pti[0].y, pti[1].x, pti[1].y, pti[2].x,
         pti[2].y, pti[3].x, pti[3].y);
-}
-
-/* GdipDrawCurve helper function.
- * Calculates Bezier points from cardinal spline points. */
-static void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
-    REAL *y1, REAL *x2, REAL *y2)
-{
-    REAL xdiff, ydiff;
-
-    /* calculate tangent */
-    xdiff = pts[2].X - pts[0].X;
-    ydiff = pts[2].Y - pts[0].Y;
-
-    /* apply tangent to get control points */
-    *x1 = pts[1].X - tension * xdiff;
-    *y1 = pts[1].Y - tension * ydiff;
-    *x2 = pts[1].X + tension * xdiff;
-    *y2 = pts[1].Y + tension * ydiff;
-}
-
-/* GdipDrawCurve helper function.
- * Calculates Bezier points from cardinal spline endpoints. */
-static void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
-    REAL tension, REAL *x, REAL *y)
-{
-    /* tangent at endpoints is the line from the endpoint to the adjacent point */
-    *x = roundr(tension * (xadj - xend) + xend);
-    *y = roundr(tension * (yadj - yend) + yend);
 }
 
 /* Draws the linecap the specified color and size on the hdc.  The linecap is in
@@ -881,6 +852,18 @@ err:
     return retval;
 }
 
+GpStatus WINGDIPAPI GdipCreateMetafileFromWmfFile(GDIPCONST WCHAR *file,
+    GDIPCONST WmfPlaceableFileHeader * placeable, GpMetafile **metafile)
+{
+    HMETAFILE hmf = GetMetaFileW(file);
+
+    TRACE("(%s, %p, %p)\n", debugstr_w(file), placeable, metafile);
+
+    if(!hmf) return InvalidParameter;
+
+    return GdipCreateMetafileFromWmf(hmf, TRUE, placeable, metafile);
+}
+
 GpStatus WINGDIPAPI GdipCreateStreamOnFile(GDIPCONST WCHAR * filename,
     UINT access, IStream **stream)
 {
@@ -1043,6 +1026,69 @@ GpStatus WINGDIPAPI GdipDrawBeziersI(GpGraphics *graphics, GpPen *pen,
     GdipFree(pts);
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipDrawClosedCurve(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPointF *points, INT count)
+{
+    return GdipDrawClosedCurve2(graphics, pen, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipDrawClosedCurveI(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPoint *points, INT count)
+{
+    return GdipDrawClosedCurve2I(graphics, pen, points, count, 1.0);
+}
+
+GpStatus WINGDIPAPI GdipDrawClosedCurve2(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPointF *points, INT count, REAL tension)
+{
+    GpPointF *ptf;
+    GpStatus stat;
+
+    if(!graphics || !pen || !points || count <= 0)
+        return InvalidParameter;
+
+    /* make a full points copy.. */
+    ptf = GdipAlloc(sizeof(GpPointF)*(count+1));
+    if(!ptf)
+        return OutOfMemory;
+    memcpy(ptf, points, sizeof(GpPointF)*count);
+
+    /* ..and add a first point as a last one */
+    ptf[count] = ptf[0];
+
+    stat = GdipDrawCurve2(graphics, pen, ptf, count + 1, tension);
+
+    GdipFree(ptf);
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipDrawClosedCurve2I(GpGraphics *graphics, GpPen *pen,
+    GDIPCONST GpPoint *points, INT count, REAL tension)
+{
+    GpPointF *ptf;
+    GpStatus stat;
+    INT i;
+
+    if(!points || count <= 0)
+        return InvalidParameter;
+
+    ptf = GdipAlloc(sizeof(GpPointF)*count);
+    if(!ptf)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        ptf[i].X = (REAL)points[i].X;
+        ptf[i].Y = (REAL)points[i].Y;
+    }
+
+    stat = GdipDrawClosedCurve2(graphics, pen, ptf, count, tension);
+
+    GdipFree(ptf);
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipDrawCurve(GpGraphics *graphics, GpPen *pen,
@@ -1929,6 +1975,18 @@ end:
     return retval;
 }
 
+GpStatus WINGDIPAPI GdipFillPolygon2(GpGraphics *graphics, GpBrush *brush,
+    GDIPCONST GpPointF *points, INT count)
+{
+    return GdipFillPolygon(graphics, brush, points, count, FillModeAlternate);
+}
+
+GpStatus WINGDIPAPI GdipFillPolygon2I(GpGraphics *graphics, GpBrush *brush,
+    GDIPCONST GpPoint *points, INT count)
+{
+    return GdipFillPolygonI(graphics, brush, points, count, FillModeAlternate);
+}
+
 GpStatus WINGDIPAPI GdipFillRectangle(GpGraphics *graphics, GpBrush *brush,
     REAL x, REAL y, REAL width, REAL height)
 {
@@ -2037,6 +2095,17 @@ GpStatus WINGDIPAPI GdipFillRectanglesI(GpGraphics *graphics, GpBrush *brush, GD
     GdipFree(rectsF);
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
+        GpRegion* region)
+{
+    if (!(graphics && brush && region))
+        return InvalidParameter;
+
+    FIXME("(%p, %p, %p): stub\n", graphics, brush, region);
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
@@ -2150,6 +2219,20 @@ GpStatus WINGDIPAPI GdipGetWorldTransform(GpGraphics *graphics, GpMatrix *matrix
 
     *matrix = *graphics->worldtrans;
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
+        GDIPCONST WCHAR* string, INT length, GDIPCONST GpFont* font,
+        GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat *stringFormat,
+        INT regionCount, GpRegion** regions)
+{
+    if (!(graphics && string && font && layoutRect && stringFormat && regions))
+        return InvalidParameter;
+
+    FIXME("stub: %p %s %d %p %p %p %d %p\n", graphics, debugstr_w(string),
+            length, font, layoutRect, stringFormat, regionCount, regions);
+
+    return NotImplemented;
 }
 
 /* Find the smallest rectangle that bounds the text when it is printed in rect
@@ -2543,4 +2626,20 @@ GpStatus WINGDIPAPI GdipGetClip(GpGraphics *graphics, GpRegion *region)
    FIXME("(%p, %p): stub\n", graphics, region);
 
    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTransformPoints(GpGraphics *graphics, GpCoordinateSpace dst_space,
+                                        GpCoordinateSpace src_space, GpPointF *points, INT count)
+{
+    FIXME("(%p, %d, %d, %p, %d): stub\n", graphics, dst_space, src_space, points, count);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTransformPointsI(GpGraphics *graphics, GpCoordinateSpace dst_space,
+                                         GpCoordinateSpace src_space, GpPoint *points, INT count)
+{
+    FIXME("(%p, %d, %d, %p, %d): stub\n", graphics, dst_space, src_space, points, count);
+
+    return NotImplemented;
 }

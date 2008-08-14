@@ -37,12 +37,20 @@
 #define MAX_DASHLEN (16) /* this is a limitation of gdi */
 #define INCH_HIMETRIC (2540)
 
+#define VERSION_MAGIC 0xdbc01001
+#define TENSION_CONST (0.3)
+
 COLORREF ARGB2COLORREF(ARGB color);
 extern INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle);
 extern REAL gdiplus_atan2(REAL dy, REAL dx);
 extern GpStatus hresult_to_status(HRESULT res);
 extern REAL convert_unit(HDC hdc, GpUnit unit);
+
+extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
+    REAL *y1, REAL *x2, REAL *y2);
+extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
+    REAL tension, REAL *x, REAL *y);
 
 static inline INT roundr(REAL x)
 {
@@ -70,6 +78,7 @@ struct GpPen{
     INT numdashes;
     REAL offset;    /* dash offset */
     GpBrush *brush;
+    GpPenAlignment align;
 };
 
 struct GpGraphics{
@@ -105,6 +114,9 @@ struct GpPathGradient{
     BOOL gamma;
     GpPointF center;
     GpPointF focus;
+    REAL* blendfac;  /* blend factors */
+    REAL* blendpos;  /* blend positions */
+    INT blendcount;
 };
 
 struct GpLineGradient{
@@ -144,6 +156,8 @@ struct GpCustomLineCap{
     BOOL fill;      /* TRUE for fill, FALSE for stroke */
     GpLineCap cap;  /* as far as I can tell, this value is ignored */
     REAL inset;     /* how much to adjust the end of the line */
+    GpLineJoin join;
+    REAL scale;
 };
 
 struct GpImage{
@@ -181,10 +195,15 @@ struct GpFont{
 struct GpStringFormat{
     INT attr;
     LANGID lang;
+    LANGID digitlang;
     StringAlignment align;
     StringTrimming trimming;
     HotkeyPrefix hkprefix;
     StringAlignment vertalign;
+    StringDigitSubstitute digitsub;
+    INT tabcount;
+    REAL firsttab;
+    REAL *tabs;
 };
 
 struct GpFontCollection{
@@ -192,8 +211,44 @@ struct GpFontCollection{
 };
 
 struct GpFontFamily{
-    TEXTMETRICW tmw;
-    WCHAR* FamilyName;
+    NEWTEXTMETRICW tmw;
+    WCHAR FamilyName[LF_FACESIZE];
+};
+
+typedef struct region_element
+{
+    DWORD type; /* Rectangle, Path, SpecialRectangle, or CombineMode */
+    union
+    {
+        GpRectF rect;
+        struct
+        {
+            GpPath* path;
+            struct
+            {
+                DWORD size;
+                DWORD magic;
+                DWORD count;
+                DWORD flags;
+            } pathheader;
+        } pathdata;
+        struct
+        {
+            struct region_element *left;  /* the original region */
+            struct region_element *right; /* what *left was combined with */
+        } combine;
+    } elementdata;
+} region_element;
+
+struct GpRegion{
+    struct
+    {
+        DWORD size;
+        DWORD checksum;
+        DWORD magic;
+        DWORD num_children;
+    } header;
+    region_element node;
 };
 
 #endif

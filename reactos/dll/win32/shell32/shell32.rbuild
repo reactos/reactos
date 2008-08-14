@@ -24,6 +24,7 @@
 	<library>version</library>
 	<library>devmgr</library>
 	<library>winspool</library>
+	<library>winmm</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
@@ -35,6 +36,7 @@
 	<file>dataobject.c</file>
 	<file>dde.c</file>
 	<file>debughlp.c</file>
+	<file>desktop.c</file>
 	<file>dialogs.c</file>
 	<file>dragdrophelper.c</file>
 	<file>enumidlist.c</file>
@@ -53,8 +55,9 @@
 	<file>shfldr_desktop.c</file>
 	<file>shfldr_fs.c</file>
 	<file>shfldr_mycomp.c</file>
-	<file>shlfldr_mydocuments.c</file>
+	<file>shfldr_mydocuments.c</file>
 	<file>shfldr_printers.c</file>
+	<file>shfldr_admintools.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>
@@ -70,9 +73,10 @@
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
-	<file>recyclebin.c</file>
+	<file>shfldr_recyclebin.c</file>
 	<file>she_ocmenu.c</file>
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
 	<file>shfldr_netplaces.c</file>
+	<file>shfldr_fonts.c</file>
 </module>

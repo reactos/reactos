@@ -26,9 +26,9 @@ HMODULE hCurrentModule = NULL;
 HANDLE hBaseDir = NULL;
 PPEB Peb;
 ULONG SessionId;
+BOOL ConsoleInitialized = FALSE;
 
 static BOOL DllInitialized = FALSE;
-static BOOL ConsoleInitialized = FALSE;
 
 BOOL STDCALL
 DllMain(HANDLE hInst,
@@ -374,6 +374,7 @@ DllMain(HANDLE hDll,
                 /* Delete DLL critical section */
                 if (ConsoleInitialized == TRUE)
                 {
+                    ConsoleInitialized = FALSE;
                     RtlDeleteCriticalSection (&ConsoleLock);
                 }
                 RtlDeleteCriticalSection (&DllLock);

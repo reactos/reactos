@@ -587,4 +587,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	while (!bReturn);
 
 	SetCursorType (bInsert, TRUE);
+
+#ifdef FEATURE_ALIASES
+	/* expand all aliases */
+	ExpandAlias (str, maxlen);
+#endif /* FEATURE_ALIAS */
 }

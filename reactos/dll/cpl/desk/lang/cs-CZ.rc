@@ -1,7 +1,7 @@
 /* FILE:        dll/cpl/desk/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-04-21
- * THANKS TO:   Unknown translator, who translated major part of this file
+ * UPDATED:     2008-07-27
+ * THANKS TO:   potapnik, who translated major part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -156,6 +156,13 @@ BEGIN
         MENUITEM "&Identifikovat",   ID_MENU_IDENTIFY
         MENUITEM "&Vlastnosti", ID_MENU_PROPERTIES
     END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MULTIPLEMONITORS "(Nìkolik monitorù)"
+    IDS_UNKNOWNMONITOR "(Neznámý monitor)"
+    IDS_ADVANCEDTITLEFMT "%s a %s"
 END
 
 STRINGTABLE

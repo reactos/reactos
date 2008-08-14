@@ -163,7 +163,7 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
-   CHAR Attrib;
+   WORD Attrib;
 } CSRSS_SET_ATTRIB, *PCSRSS_SET_ATTRIB;
 
 typedef struct
@@ -460,6 +460,12 @@ typedef struct
   DWORD Length;
 } CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
 
+typedef struct
+{
+  DWORD Event;
+  DWORD ProcessGroup;
+} CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
+
 
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
@@ -537,6 +543,7 @@ typedef struct
 #define GET_ALL_CONSOLE_ALIASES_LENGTH (0x3B)
 #define GET_CONSOLE_ALIASES_EXES      (0x3C)
 #define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
+#define GENERATE_CTRL_EVENT           (0x3E)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -608,6 +615,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
         CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
+        CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
