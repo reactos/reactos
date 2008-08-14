@@ -28,12 +28,14 @@ VOID
 FASTCALL
 MiSyncThreadProcessViews(IN PKTHREAD NextThread)
 {
+    PVOID Process = PsGetCurrentProcess();
+    PETHREAD Thread = CONTAINING_RECORD(NextThread, ETHREAD, Tcb);
+
     /* Hack Sync because Mm is broken  */
-    MmUpdatePageDir(PsGetCurrentProcess(),
-                    ((PETHREAD)NextThread)->ThreadsProcess,
-                    sizeof(EPROCESS));
-    MmUpdatePageDir(PsGetCurrentProcess(),
-                    (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
+    MmUpdatePageDir(Process, Thread, sizeof(ETHREAD));
+    MmUpdatePageDir(Process, Thread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->Tcb.StackLimit,
                     NextThread->LargeStack ?
                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
 }
