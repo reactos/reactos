@@ -634,10 +634,10 @@ BEGIN
 	IDS_SELECT                  "Select"
 	IDS_OPEN                    "Open"
 	IDS_CREATELINK              "Create &Link"
-	IDS_COPY                    "Copy"
+	IDS_COPY                    "&Copy"
 	IDS_DELETE                  "Delete"
 	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
+	IDS_CUT                     "C&ut"
 	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."

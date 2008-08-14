@@ -16,7 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * translation updated by Caemyr - Olaf Siejka (Jan,Mar,Apr,Jul 2008)
+ * ReactOS shell32 fork translation updated by Caemyr -
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -371,7 +372,7 @@ BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
 	LTEXT "Wybierz program, którego chcesz u¿yæ do otwarcia tego pliku:", -1, 44, 12, 211, 10
 	LTEXT "Plik:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programs", -1, 7, 42, 249, 187
+	GROUPBOX "&Programy", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Zawsze u¿ywaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Przegl¹daj", 14004, 198, 207, 50, 14
@@ -612,17 +613,17 @@ BEGIN
 	IDS_SHV_COLUMN9             "Komentarz"
 	IDS_SHV_COLUMN10            "W³aœciciel"
 	IDS_SHV_COLUMN11            "Grupa"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
-	IDS_SHV_COLUMN_DELFROM      "Lokacja oryginalna"
+	IDS_SHV_COLUMN12            "Nazwa pliku"
+	IDS_SHV_COLUMN13            "Kategoria"
+	IDS_SHV_COLUMN_DELFROM      "Lokalizacja oryginalna"
 	IDS_SHV_COLUMN_DELDATE      "Data usuniêcia"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_FONTTYPE     "Czcionka"
+	IDS_SHV_COLUMN_WORKGROUP    "Grupa Robocza"
+	IDS_SHV_NETWORKLOCATION     "Lokalizacja Sieciowa"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
+	IDS_SHV_COLUMN_STATUS       "Stan"
+	IDS_SHV_COLUMN_COMMENTS     "Komentarze"
+	IDS_SHV_COLUMN_LOCATION     "Lokalizacja"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
@@ -640,11 +641,11 @@ BEGIN
 	IDS_SELECT                  "Zaznacz"
 	IDS_OPEN                    "Otwórz"
 	IDS_CREATELINK	            "Utwórz &Skrót"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
-	IDS_RESTORE                 "Restore"
+	IDS_COPY                    "Kopiuj"
+	IDS_DELETE                  "Usuñ"
+	IDS_PROPERTIES              "W³aœciwoœci"
+	IDS_CUT                     "Wytnij"
+	IDS_RESTORE                 "Przywróæ"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."
@@ -747,9 +748,9 @@ BEGIN
 	IDS_PREVIEW_VERB            "Podgl¹d"
 
 	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_PRINTERS                "Drukarki"
+	IDS_FONTS                   "Czcionki"
+	IDS_INSTALLNEWFONT          "Zainstaluj Now¹ Czcionkê..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END
