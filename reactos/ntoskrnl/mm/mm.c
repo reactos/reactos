@@ -24,6 +24,20 @@ MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+FASTCALL
+MiSyncThreadProcessViews(IN PKTHREAD NextThread)
+{
+    /* Hack Sync because Mm is broken  */
+    MmUpdatePageDir(PsGetCurrentProcess(),
+                    ((PETHREAD)NextThread)->ThreadsProcess,
+                    sizeof(EPROCESS));
+    MmUpdatePageDir(PsGetCurrentProcess(),
+                    (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
+                    NextThread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
 /*
  * @implemented
  */

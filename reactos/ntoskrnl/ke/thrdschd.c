@@ -344,13 +344,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     WaitIrql = CurrentThread->WaitIrql;
 
     /* REACTOS Mm Hack of Doom */
-    MiSyncThreadProcessViews(PsGetCurrentProcess(),
-                             ((PETHREAD)NextThread)->ThreadsProcess,
-                             sizeof(EPROCESS));
-    MiSyncThreadProcessViews(PsGetCurrentProcess(),
-                             (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
-                             NextThread->LargeStack ?
-                             KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+    MiSyncThreadProcessViews(NextThread);
 
     /* Swap contexts */
     ApcState = KiSwapContext(CurrentThread, NextThread);
@@ -720,13 +714,7 @@ NtYieldExecution(VOID)
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
             /* REACTOS Mm Hack of Doom */
-            MiSyncThreadProcessViews(PsGetCurrentProcess(),
-                                     ((PETHREAD)NextThread)->ThreadsProcess,
-                                     sizeof(EPROCESS));
-            MiSyncThreadProcessViews(PsGetCurrentProcess(),
-                                     (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
-                                     NextThread->LargeStack ?
-                                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+            MiSyncThreadProcessViews(NextThread);
 
             /* Swap to new thread */
             KiSwapContext(Thread, NextThread);

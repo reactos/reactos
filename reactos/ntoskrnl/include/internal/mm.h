@@ -1552,16 +1552,12 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
-FORCEINLINE
+/* ReactOS Mm Hack */
 VOID
-NTAPI
-MiSyncThreadProcessViews(IN PVOID Process,
-                         IN PVOID Address,
-                         IN ULONG Size)
-{
-    MmUpdatePageDir((PEPROCESS)Process, Address, Size);
-}
-
+FASTCALL
+MiSyncThreadProcessViews(
+    IN PKTHREAD NextThread
+);
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;
 
