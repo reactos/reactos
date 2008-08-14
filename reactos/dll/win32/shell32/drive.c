@@ -92,6 +92,20 @@ VOID
 	IN PFMIFSCALLBACK Callback
 );
 
+typedef
+VOID 
+(NTAPI *CHKDSK)(
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Format,
+	IN BOOLEAN CorrectErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PVOID Unused2,
+	IN PVOID Unused3,
+	IN PFMIFSCALLBACK Callback
+);
+
 
 typedef struct
 {
@@ -101,8 +115,12 @@ typedef struct
     QUERY_AVAILABLEFSFORMAT QueryAvailableFileSystemFormat;
     FORMAT_EX FormatEx;
     ENABLEVOLUMECOMPRESSION EnableVolumeCompression;
+    CHKDSK Chkdsk;
     UINT Result;
 }FORMAT_DRIVE_CONTEXT, *PFORMAT_DRIVE_CONTEXT;
+
+BOOL InitializeFmifsLibrary(PFORMAT_DRIVE_CONTEXT pContext);
+BOOL GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNumberOfBytes);
 
 HWND WINAPI
 DeviceCreateHardwarePageEx(HWND hWndParent,
@@ -115,6 +133,172 @@ HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM
 #define DRIVE_PROPERTY_PAGES (3)
 
 extern HINSTANCE shell32_hInstance;
+
+VOID
+GetDriveNameWithLetter(LPWSTR szText, UINT Length, WCHAR Drive)
+{
+   WCHAR szDrive[] = {'C',':','\\', 0};
+   DWORD dwMaxComp, dwFileSys, TempLength = 0;
+
+    szDrive[0] = Drive;
+    if (GetVolumeInformationW(szDrive, szText, Length, NULL, &dwMaxComp, &dwFileSys, NULL, 0))
+    {
+        szText[Length-1] = L'\0';
+        TempLength = wcslen(szText);
+        if (!TempLength)
+        {
+            /* load default volume label */
+            TempLength = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, &szText[Length+1], (sizeof(szText)/sizeof(WCHAR))- Length - 2);
+        }
+    }
+    if (TempLength + 4 < Length)
+    {
+        szText[TempLength] = L' ';
+        szText[TempLength+1] = L'(';
+        szText[TempLength+2] = szDrive[0];
+        szText[TempLength+3] = L')';
+        TempLength +=4;
+    }
+
+    if (TempLength < Length)
+        szText[TempLength] = L'\0';
+    else
+        szText[Length-1] = L'\0';
+}
+
+
+VOID
+InitializeChkDskDialog(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
+{
+    WCHAR szText[100];
+    UINT Length;
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pContext);
+
+    Length = GetWindowTextW(hwndDlg, szText, sizeof(szText)/sizeof(WCHAR));
+
+    GetDriveNameWithLetter(&szText[Length +1], (sizeof(szText)/sizeof(WCHAR))-Length-1, pContext->Drive);
+    szText[Length] = L' ';
+    szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
+    SetWindowText(hwndDlg, szText);
+}
+
+HWND ChkdskDrvDialog = NULL;
+BOOLEAN bChkdskSuccess = FALSE;
+
+BOOLEAN
+NTAPI
+ChkdskCallback(
+	IN CALLBACKCOMMAND Command,
+	IN ULONG SubAction,
+	IN PVOID ActionInfo)
+{
+    PDWORD Progress;
+    PBOOLEAN pSuccess;
+    switch(Command)
+    {
+        case PROGRESS:
+            Progress = (PDWORD)ActionInfo;
+            SendDlgItemMessageW(ChkdskDrvDialog, 14002, PBM_SETPOS, (WPARAM)*Progress, 0);
+            break;
+        case DONE:
+            pSuccess = (PBOOLEAN)ActionInfo;
+            bChkdskSuccess = (*pSuccess);
+            break;
+
+        case VOLUMEINUSE:
+        case INSUFFICIENTRIGHTS:
+        case FSNOTSUPPORTED:
+        case CLUSTERSIZETOOSMALL:
+            bChkdskSuccess = FALSE;
+            FIXME("\n");
+            break;
+
+        default:
+            break;
+    }
+
+    return TRUE;
+}
+
+VOID
+ChkDskNow(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
+{
+    DWORD ClusterSize = 0, dwMaxComponentLength, FileSystemFlags;
+    WCHAR szFs[30];
+    WCHAR szDrive[] = {'C',':','\\', 0};
+    WCHAR szVolumeLabel[40];
+    ULARGE_INTEGER TotalNumberOfFreeBytes, FreeBytesAvailableUser;
+    BOOLEAN bCorrectErrors = FALSE, bScanDrive = FALSE;
+
+    szDrive[0] = pContext->Drive;
+    if(!GetVolumeInformationW(szDrive, szVolumeLabel, sizeof(szVolumeLabel)/sizeof(WCHAR), NULL, &dwMaxComponentLength, &FileSystemFlags, szFs, sizeof(szFs)/sizeof(WCHAR)))
+    {
+        FIXME("failed to get drive fs type\n");
+        return;
+    }
+
+    if (!GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailableUser, &TotalNumberOfFreeBytes, NULL))
+    {
+        FIXME("failed to get drive space type\n");
+        return;
+    }
+
+    if (!GetDefaultClusterSize(szFs, &ClusterSize, &TotalNumberOfFreeBytes))
+    {
+        FIXME("invalid cluster size\n");
+        return;
+    }
+
+    if (SendDlgItemMessageW(hwndDlg, 14000, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        bCorrectErrors = TRUE;
+
+    if (SendDlgItemMessageW(hwndDlg, 14001, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        bScanDrive = TRUE;
+
+    ChkdskDrvDialog = hwndDlg;
+    bChkdskSuccess = FALSE;
+    SendDlgItemMessageW(hwndDlg, 14002, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+    pContext->Chkdsk(szDrive, szFs, bCorrectErrors, TRUE, FALSE, bScanDrive, NULL, NULL, ChkdskCallback);
+    
+    ChkdskDrvDialog = NULL;
+    pContext->Result = bChkdskSuccess;
+    bChkdskSuccess = FALSE;
+
+}
+
+INT_PTR
+CALLBACK
+ChkDskDlg(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    PFORMAT_DRIVE_CONTEXT pContext;
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
+            InitializeChkDskDialog(hwndDlg, (PFORMAT_DRIVE_CONTEXT)lParam);
+            return TRUE;
+       case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDCANCEL:
+                    EndDialog(hwndDlg, 0);
+                    break;
+                case IDOK:
+                    pContext = (PFORMAT_DRIVE_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
+                    ChkDskNow(hwndDlg, pContext);
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
 
 static
 LARGE_INTEGER
@@ -365,11 +549,12 @@ DriveExtraDlg(
 {
    STARTUPINFOW si;
    PROCESS_INFORMATION pi;
-   WCHAR szPath[MAX_PATH];
+   WCHAR szPath[MAX_PATH + 10];
    WCHAR szArg[MAX_PATH];
    WCHAR * szDrive;
-   UINT length;
    LPPROPSHEETPAGEW ppsp;
+   DWORD dwSize;
+   FORMAT_DRIVE_CONTEXT Context;
 
    switch (uMsg)
    {
@@ -381,38 +566,58 @@ DriveExtraDlg(
       ZeroMemory( &si, sizeof(si) );
       si.cb = sizeof(si);
       ZeroMemory( &pi, sizeof(pi) );
-      if (!GetSystemDirectoryW(szPath, MAX_PATH))
-          break;
+
       szDrive = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
       switch(LOWORD(wParam))
       {
          case 14000:
-            ///
-            /// FIXME
-            /// show checkdsk dialog
-            ///
+            if (InitializeFmifsLibrary(&Context))
+            {
+                Context.Drive = szDrive[0];
+                DialogBoxParamW(shell32_hInstance, L"CHKDSK_DLG", hwndDlg, ChkDskDlg, (LPARAM)&Context);
+                FreeLibrary(Context.hLibrary);
+            }
             break;
          case 14001:
-            szArg[0] = L'"';
-            wcscpy(&szArg[1], szPath);
-            wcscat(szPath, L"\\mmc.exe");
-            wcscat(szArg, L"\\dfrg.msc\" ");
-            length = wcslen(szArg);
-            szArg[length] = szDrive[0];
-            szArg[length+1] = L':';
-            szArg[length+2] = L'\0';
-            if (CreateProcessW(szPath, szArg, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            dwSize = sizeof(szPath);
+            if (RegGetValueW(HKEY_LOCAL_MACHINE, 
+                             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\DefragPath",
+                             NULL,
+                             RRF_RT_REG_EXPAND_SZ,
+                             NULL,
+                             (PVOID)szPath,
+                             &dwSize) == S_OK)
             {
-               CloseHandle(pi.hProcess);
-               CloseHandle(pi.hThread);
+                swprintf(szArg, szPath, szDrive[0]);
+               if (!GetSystemDirectoryW(szPath, MAX_PATH))
+                   break;
+               szDrive = PathAddBackslashW(szPath);
+               if (!szDrive)
+                   break;
+
+               wcscat(szDrive, L"mmc.exe");
+               if (CreateProcessW(szPath, szArg, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+               {
+                  CloseHandle(pi.hProcess);
+                  CloseHandle(pi.hThread);
+               }
             }
             break;
          case 14002:
-            wcscat(szPath, L"\\ntbackup.exe");
-            if (CreateProcessW(szPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            dwSize = sizeof(szPath);
+            if (RegGetValueW(HKEY_LOCAL_MACHINE, 
+                             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\BackupPath",
+                             NULL,
+                             RRF_RT_REG_EXPAND_SZ,
+                             NULL,
+                             (PVOID)szPath,
+                             &dwSize) == S_OK)
             {
-               CloseHandle(pi.hProcess);
-               CloseHandle(pi.hThread);
+               if (CreateProcessW(szPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+               {
+                  CloseHandle(pi.hProcess);
+                  CloseHandle(pi.hThread);
+               }
             }
       }
       break;
@@ -542,15 +747,76 @@ SH_ShowDriveProperties(WCHAR * drive)
        return TRUE;
 }
 
+BOOL
+GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNumberOfBytes)
+{
+    DWORD ClusterSize;
 
+    if (!wcsicmp(szFs, L"FAT16") ||
+        !wcsicmp(szFs, L"FAT")) //REACTOS HACK
+    {
+        if (TotalNumberOfBytes->QuadPart <= (16 * 1024 * 1024))
+            ClusterSize = 2048;
+        else if (TotalNumberOfBytes->QuadPart <= (32 * 1024 * 1024))
+            ClusterSize = 512;
+        else if (TotalNumberOfBytes->QuadPart <= (64 * 1024 * 1024))
+            ClusterSize = 1024;
+        else if (TotalNumberOfBytes->QuadPart <= (128 * 1024 * 1024))
+            ClusterSize = 2048;
+        else if (TotalNumberOfBytes->QuadPart <= (256 * 1024 * 1024))
+            ClusterSize = 4096;
+        else if (TotalNumberOfBytes->QuadPart <= (512 * 1024 * 1024))
+            ClusterSize = 8192;
+        else if (TotalNumberOfBytes->QuadPart <= (1024 * 1024 * 1024))
+            ClusterSize = 16384;
+        else if (TotalNumberOfBytes->QuadPart <= (2048LL * 1024LL * 1024LL))
+            ClusterSize = 32768;
+        else if (TotalNumberOfBytes->QuadPart <= (4096LL * 1024LL * 1024LL))
+            ClusterSize = 8192;
+        else 
+            return FALSE;
+    }
+    else if (!wcsicmp(szFs, L"FAT32"))
+    {
+        if (TotalNumberOfBytes->QuadPart <=(64 * 1024 * 1024))
+            ClusterSize = 512;
+        else if (TotalNumberOfBytes->QuadPart <= (128   * 1024 * 1024))
+            ClusterSize = 1024;
+        else if (TotalNumberOfBytes->QuadPart <= (256   * 1024 * 1024))
+            ClusterSize = 2048;
+        else if (TotalNumberOfBytes->QuadPart <= (8192LL  * 1024LL * 1024LL))
+            ClusterSize = 2048;
+        else if (TotalNumberOfBytes->QuadPart <= (16384LL * 1024LL * 1024LL))
+            ClusterSize = 8192;
+        else if (TotalNumberOfBytes->QuadPart <= (32768LL * 1024LL * 1024LL))
+            ClusterSize = 16384;
+        else 
+            return FALSE;
+   }
+    else if (!wcsicmp(szFs, L"NTFS"))
+    {
+        if (TotalNumberOfBytes->QuadPart <=(512 * 1024 * 1024))
+            ClusterSize = 512;
+        else if (TotalNumberOfBytes->QuadPart <= (1024 * 1024 * 1024))
+            ClusterSize = 1024;
+        else if (TotalNumberOfBytes->QuadPart <= (2048LL * 1024LL * 1024LL))
+            ClusterSize = 2048;
+        else
+            ClusterSize = 2048;
+   }
+   else
+        return FALSE;
 
+   *pClusterSize = ClusterSize;
+   return TRUE;
+}
 
 
 VOID
 InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {
     WCHAR szFs[100] = {0};
-	WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
+    WCHAR szDrive[4] = { L'C', ':', '\\', 0 };
     INT iSelIndex;
     ULARGE_INTEGER FreeBytesAvailableUser, TotalNumberOfBytes;
     DWORD ClusterSize;
@@ -574,30 +840,13 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     if (!wcsicmp(szFs, L"FAT16") ||
         !wcsicmp(szFs, L"FAT")) //REACTOS HACK
     {
-        if (TotalNumberOfBytes.QuadPart <= (16 * 1024 * 1024))
-            ClusterSize = 2048;
-        else if (TotalNumberOfBytes.QuadPart <= (32 * 1024 * 1024))
-            ClusterSize = 512;
-        else if (TotalNumberOfBytes.QuadPart <= (64 * 1024 * 1024))
-            ClusterSize = 1024;
-        else if (TotalNumberOfBytes.QuadPart <= (128 * 1024 * 1024))
-            ClusterSize = 2048;
-        else if (TotalNumberOfBytes.QuadPart <= (256 * 1024 * 1024))
-            ClusterSize = 4096;
-        else if (TotalNumberOfBytes.QuadPart <= (512 * 1024 * 1024))
-            ClusterSize = 8192;
-        else if (TotalNumberOfBytes.QuadPart <= (1024 * 1024 * 1024))
-            ClusterSize = 16384;
-        else if (TotalNumberOfBytes.QuadPart <= (2048LL * 1024LL * 1024LL))
-            ClusterSize = 32768;
-        else if (TotalNumberOfBytes.QuadPart <= (4096LL * 1024LL * 1024LL))
-            ClusterSize = 8192;
-        else 
+        if (!GetDefaultClusterSize(szFs, &ClusterSize, &TotalNumberOfBytes))
         {
             TRACE("FAT16 is not supported on hdd larger than 4G current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
+
         if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, szFs, sizeof(szFs)/sizeof(WCHAR)))
         {
             hDlgCtrl = GetDlgItem(hwndDlg, 28680);
@@ -611,19 +860,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
     else if (!wcsicmp(szFs, L"FAT32"))
     {
-        if (TotalNumberOfBytes.QuadPart <=(64 * 1024 * 1024))
-            ClusterSize = 512;
-        else if (TotalNumberOfBytes.QuadPart <= (128   * 1024 * 1024))
-            ClusterSize = 1024;
-        else if (TotalNumberOfBytes.QuadPart <= (256   * 1024 * 1024))
-            ClusterSize = 2048;
-        else if (TotalNumberOfBytes.QuadPart <= (8192LL  * 1024LL * 1024LL))
-            ClusterSize = 2048;
-        else if (TotalNumberOfBytes.QuadPart <= (16384LL * 1024LL * 1024LL))
-            ClusterSize = 8192;
-        else if (TotalNumberOfBytes.QuadPart <= (32768LL * 1024LL * 1024LL))
-            ClusterSize = 16384;
-        else 
+        if (!GetDefaultClusterSize(szFs, &ClusterSize, &TotalNumberOfBytes))
         {
             TRACE("FAT32 is not supported on hdd larger than 32G current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
@@ -643,14 +880,12 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
     else if (!wcsicmp(szFs, L"NTFS"))
     {
-        if (TotalNumberOfBytes.QuadPart <=(512 * 1024 * 1024))
-            ClusterSize = 512;
-        else if (TotalNumberOfBytes.QuadPart <= (1024 * 1024 * 1024))
-            ClusterSize = 1024;
-        else if (TotalNumberOfBytes.QuadPart <= (2048LL * 1024LL * 1024LL))
-            ClusterSize = 2048;
-        else
-            ClusterSize = 2048;
+        if (!GetDefaultClusterSize(szFs, &ClusterSize, &TotalNumberOfBytes))
+        {
+            TRACE("NTFS is not supported on hdd larger than 2TB current %lu\n", TotalNumberOfBytes.QuadPart);
+            SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
+            return;
+        }
 
         hDlgCtrl = GetDlgItem(hwndDlg, 28680);
         if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, szFs, sizeof(szFs)/sizeof(WCHAR)))
@@ -1012,6 +1247,14 @@ InitializeFmifsLibrary(PFORMAT_DRIVE_CONTEXT pContext)
     if (!pContext->FormatEx)
     {
         ERR("EnableVolumeCompression export is missing\n");
+        FreeLibrary(hLibrary);
+        return FALSE;
+    }
+
+    pContext->Chkdsk = (CHKDSK) GetProcAddress(hLibrary, "Chkdsk");
+    if (!pContext->Chkdsk)
+    {
+        ERR("Chkdsk export is missing\n");
         FreeLibrary(hLibrary);
         return FALSE;
     }
