@@ -124,7 +124,7 @@ ObInit2(VOID)
 BOOLEAN
 INIT_FUNCTION
 NTAPI
-ObInit(VOID)
+ObInitSystem(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;

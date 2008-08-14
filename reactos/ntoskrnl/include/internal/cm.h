@@ -521,6 +521,21 @@ NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argu
 ///////////////////////////////////////////////////////////////////////////////
 
 //
+// Startup and Shutdown Functions
+//
+BOOLEAN
+NTAPI
+CmInitSystem1(
+    VOID
+);
+
+VOID
+NTAPI
+CmShutdownSystem(
+    VOID
+);
+
+//
 // Mapped View Hive Functions
 //
 VOID

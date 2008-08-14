@@ -1203,7 +1203,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Create the Basic Object Manager Types to allow new Object Types */
-    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
     if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
@@ -1516,7 +1516,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(5);
 
     /* Call OB initialization again */
-    if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
     if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 1, 0);
