@@ -26,12 +26,12 @@ MM_STATS MmStats;
 
 VOID
 FASTCALL
-MiSyncThreadProcessViews(IN PKTHREAD NextThread)
+MiSyncThreadProcessViews(IN PKTHREAD NextThread,
+                         IN PEPROCESS Process)
 {
-    PVOID Process = PsGetCurrentProcess();
     PETHREAD Thread = CONTAINING_RECORD(NextThread, ETHREAD, Tcb);
 
-    /* Hack Sync because Mm is broken  */
+    /* Hack Sync because Mm is broken */
     MmUpdatePageDir(Process, Thread, sizeof(ETHREAD));
     MmUpdatePageDir(Process, Thread->ThreadsProcess, sizeof(EPROCESS));
     MmUpdatePageDir(Process,

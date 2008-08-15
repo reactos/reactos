@@ -1556,7 +1556,8 @@ MmCheckSystemImage(
 VOID
 FASTCALL
 MiSyncThreadProcessViews(
-    IN PKTHREAD NextThread
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
 );
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;

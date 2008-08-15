@@ -811,7 +811,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->KernelStackResident = TRUE;
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread);
+    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;

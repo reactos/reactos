@@ -344,7 +344,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     WaitIrql = CurrentThread->WaitIrql;
 
     /* REACTOS Mm Hack of Doom */
-    MiSyncThreadProcessViews(NextThread);
+    MiSyncThreadProcessViews(NextThread, PsGetCurrentProcess());
 
     /* Swap contexts */
     ApcState = KiSwapContext(CurrentThread, NextThread);
@@ -714,7 +714,7 @@ NtYieldExecution(VOID)
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
             /* REACTOS Mm Hack of Doom */
-            MiSyncThreadProcessViews(NextThread);
+            MiSyncThreadProcessViews(NextThread, PsGetCurrentProcess());
 
             /* Swap to new thread */
             KiSwapContext(Thread, NextThread);
