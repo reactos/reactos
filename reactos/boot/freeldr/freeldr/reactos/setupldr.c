@@ -289,17 +289,6 @@ VOID RunLoader(VOID)
       return;
     }
 
-  /* Load fastfat.sys (could be loaded by the setup prog!) */
-  if (!LoadDriver(SourcePath, "fastfat.sys"))
-    return;
-
-  /* Load ext2.sys (could be loaded by the setup prog!) */
-  if (!LoadDriver(SourcePath, "ext2.sys"))
-  {
-      DbgPrint((DPRINT_WARNING, "Could not load ext2\n"));
-//    return;
-  }
-
     /* Load additional files specified in txtsetup.inf */
     if (InfFindFirstLine(InfHandle,
                          "SourceDisksFiles",
