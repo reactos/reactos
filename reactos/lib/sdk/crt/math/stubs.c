@@ -1,134 +1,138 @@
 #include <precomp.h>
 #include <math.h>
 
-double	_CIsin(double x);
-double	_CIcos(double x);
-double	_CItan(double x);
-double	_CIsinh(double x);
-double	_CIcosh(double x);
-double	_CItanh(double x);
-double	_CIasin(double x);
-double	_CIacos(double x);
-double	_CIatan(double x);
-double	_CIatan2(double y, double x);
-double	_CIexp(double x);
-double	_CIlog(double x);
-double	_CIlog10(double x);
-double	_CIpow(double x, double y);
-double	_CIsqrt(double x);
-double	_CIfmod(double x, double y);
-
+#define FPU_DOUBLE(var) double var; \
+	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var) : )
+#define FPU_DOUBLES(var1,var2) double var1,var2; \
+	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var2) : ); \
+	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var1) : )
 
 /*
  * @implemented
  */
-double	_CIsin(double x)
+double	CDECL	_CIsin(void)
 {
+	FPU_DOUBLE(x);
 	return sin(x);
 }
 /*
  * @implemented
  */
-double	_CIcos(double x)
+double	CDECL	_CIcos(void)
 {
+	FPU_DOUBLE(x);
 	return cos(x);
 }
 /*
  * @implemented
  */
-double	_CItan(double x)
+double	CDECL	_CItan(void)
 {
+	FPU_DOUBLE(x);
 	return tan(x);
 }
 /*
  * @implemented
  */
-double	_CIsinh(double x)
+double	CDECL	_CIsinh(void)
 {
+	FPU_DOUBLE(x);
 	return sinh(x);
 }
 /*
  * @implemented
  */
-double	_CIcosh(double x)
+double	CDECL	_CIcosh(void)
 {
+	FPU_DOUBLE(x);
 	return cosh(x);
 }
 /*
  * @implemented
  */
-double	_CItanh(double x)
+double	CDECL	_CItanh(void)
 {
+	FPU_DOUBLE(x);
 	return tanh(x);
 }
 /*
  * @implemented
  */
-double	_CIasin(double x)
+double	CDECL	_CIasin(void)
 {
+	FPU_DOUBLE(x);
 	return asin(x);
 }
 /*
  * @implemented
  */
-double	_CIacos(double x)
+double	CDECL	_CIacos(void)
 {
+	FPU_DOUBLE(x);
 	return acos(x);
 }
 /*
  * @implemented
  */
-double	_CIatan(double x)
+double	CDECL	_CIatan(void)
 {
+	FPU_DOUBLE(x);
 	return atan(x);
 }
 /*
  * @implemented
  */
-double	_CIatan2(double y, double x)
+double	CDECL	_CIatan2(void)
 {
-	return atan2(y, x);
+	FPU_DOUBLES(x, y);
+	return atan2(x, y);
 }
 /*
  * @implemented
  */
-double	_CIexp(double x)
+double	CDECL	_CIexp(void)
 {
+	FPU_DOUBLE(x);
 	return exp(x);
 }
 /*
  * @implemented
  */
-double	_CIlog(double x)
+double	CDECL	_CIlog(void)
 {
+	FPU_DOUBLE(x);
 	return log(x);
 }
 /*
  * @implemented
  */
-double	_CIlog10(double x)
+double	CDECL	_CIlog10(void)
 {
+	FPU_DOUBLE(x);
 	return log10(x);
 }
 /*
  * @implemented
  */
-double	_CIpow(double x, double y)
+double	CDECL	_CIpow(void)
 {
+	FPU_DOUBLES(x, y);
 	return pow(x, y);
 }
 /*
  * @implemented
  */
-double	_CIsqrt(double x)
+double	CDECL	_CIsqrt(void)
 {
+	FPU_DOUBLE(x);
 	return sqrt(x);
 }
 /*
  * @implemented
  */
-double	_CIfmod(double x, double y)
+double	CDECL	_CIfmod(void)
 {
+	FPU_DOUBLES(x, y);
 	return fmod(x, y);
 }
 
