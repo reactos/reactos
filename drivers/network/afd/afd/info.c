@@ -113,7 +113,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
-                if( !NT_SUCCESS
+                if( NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
                       ( &ConnInfo,
                         FCB->LocalAddress->Address[0].AddressType ) ) ) {
