@@ -96,7 +96,7 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Parcourir pour un dossier"
+CAPTION "Rechercher un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
@@ -308,7 +308,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Outils"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Vérifcation-d'erreurs", -1, 5, 5, 230, 60
+	GROUPBOX "Vérification d'erreurs", -1, 5, 5, 230, 60
 	LTEXT "Cette option vérifiera le volume pour éviter les\nerreurs.", -1, 40, 25, 160, 20
 	PUSHBUTTON "Vérifier maintenant...", 14000, 130, 45, 90, 15, WS_TABSTOP
 	GROUPBOX "Défragmentation", -1, 5, 65, 230, 60
@@ -349,7 +349,7 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Proprétés de la corbeille"
+CAPTION "Propriétés de la corbeille"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
@@ -609,18 +609,18 @@ BEGIN
 	IDS_SHV_COLUMN9             "Commentaires"
 	IDS_SHV_COLUMN10            "Propriétaire"
 	IDS_SHV_COLUMN11            "Groupe"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Nom de fichier"
+	IDS_SHV_COLUMN13            "Catégorie"
 	IDS_SHV_COLUMN_DELFROM      "Localisation d'origine"
 	IDS_SHV_COLUMN_DELDATE      "Date de suppression"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_FONTTYPE     "Type de police"
 	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_NETWORKLOCATION     "Emplacement réseau"
 	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_STATUS       "État"
+	IDS_SHV_COLUMN_COMMENTS     "Commentaires"
+	IDS_SHV_COLUMN_LOCATION     "Emplacement"
+	IDS_SHV_COLUMN_MODEL        "Modèle"
 
 	/* special folders */
 	IDS_DESKTOP                 "Bureau"
@@ -641,7 +641,7 @@ BEGIN
 	IDS_DELETE                  "&Supprimer"
 	IDS_PROPERTIES              "&Propriétés"
 	IDS_CUT                     "C&ouper"
-	IDS_RESTORE                 "Restore"
+	IDS_RESTORE                 "Res&taurer"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"
@@ -714,7 +714,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Options du dossier"
 	IDS_RECYCLEBIN_LOCATION     "Emplacement de la corbeille"
 	IDS_RECYCLEBIN_DISKSPACE    "Espace disponible"
-	IDS_EMPTY_BITBUCKET         "Corbeille vide"
+	IDS_EMPTY_BITBUCKET         "Vider la Corbeille"
 	IDS_PICK_ICON_TITLE         "Choisir une icône"
 	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Fichiers exécutables\0*.exe\0"
@@ -743,10 +743,10 @@ BEGIN
 	IDS_PLAY_VERB               "Lire"
 	IDS_PREVIEW_VERB            "Apercevoir"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u fichiers, %u répertoires"
+	IDS_PRINTERS                "Imprimantes"
+	IDS_FONTS                   "Polices"
+	IDS_INSTALLNEWFONT          "Installer une nouvelle police..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Taille d'allocation par défaut"
 END
