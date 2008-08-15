@@ -385,6 +385,7 @@ typedef struct _KPROCESSOR_STATE
     CONTEXT ContextFrame;
 } KPROCESSOR_STATE, *PKPROCESSOR_STATE;
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
 typedef struct _GENERAL_LOOKASIDE_POOL
 {
     union
@@ -428,6 +429,9 @@ typedef struct _GENERAL_LOOKASIDE_POOL
     };
     ULONG Future[2];
 } GENERAL_LOOKASIDE_POOL, *PGENERAL_LOOKASIDE_POOL;
+#else
+#define GENERAL_LOOKASIDE_POOL PP_LOOKASIDE_LIST
+#endif
 
 typedef struct _KREQUEST_PACKET
 {
@@ -449,39 +453,72 @@ typedef struct _REQUEST_MAILBOX
 typedef struct _KPRCB
 {
     ULONG MxCsr;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     USHORT Number;
+#else
+    UCHAR Number;
+    UCHAR NestingLevel;
+#endif
     UCHAR InterruptRequest;
     UCHAR IdleHalt;
     struct _KTHREAD *CurrentThread;
     struct _KTHREAD *NextThread;
     struct _KTHREAD *IdleThread;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UCHAR NestingLevel;
     UCHAR Group;
     UCHAR PrcbPad00[6];
+#else
+    UINT64 UserRsp;
+#endif
     UINT64 RspBase;
     UINT64 PrcbLock;
     UINT64 SetMember;
     KPROCESSOR_STATE ProcessorState;
-    UCHAR CpuType;
-    UCHAR CpuID;
+    CHAR CpuType;
+    CHAR CpuID;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        USHORT CpuStep;
+        struct
+        {
+            UCHAR CpuStepping;
+            UCHAR CpuModel;
+        };
+    };
+#else
     USHORT CpuStep;
-    UCHAR CpuStepping;
-    UCHAR CpuModel;
+#endif
     ULONG MHz;
     UINT64 HalReserved[8];
     USHORT MinorVersion;
     USHORT MajorVersion;
     UCHAR BuildType;
     UCHAR CpuVendor;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UCHAR CoresPerPhysicalProcessor;
     UCHAR LogicalProcessorsPerCore;
+#else
+    UCHAR InitialApicId;
+    UCHAR LogicalProcessorsPerPhysicalProcessor;
+#endif
     ULONG ApicMask;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG CFlushSize;
+#else
+    UCHAR CFlushSize;
+    UCHAR PrcbPad0x[3];
+#endif
     PVOID AcpiReserved;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG InitialApicId;
     ULONG Stride;
     UINT64 PrcbPad01[3];
-    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
+#else
+    UINT64 PrcbPad00[4];
+#endif
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock]; // 2003: 33, vista:49
     PP_LOOKASIDE_LIST PPLookasideList[16];
     GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[32];
     GENERAL_LOOKASIDE_POOL PPPagedLookasideList[32];
@@ -490,13 +527,21 @@ typedef struct _KPRCB
     LONG MmPageFaultCount;
     LONG MmCopyOnWriteCount;
     LONG MmTransitionCount;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    LONG MmCacheTransitionCount;
+#endif
     LONG MmDemandZeroCount;
     LONG MmPageReadCount;
     LONG MmPageReadIoCount;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    LONG MmCacheReadCount;
+    LONG MmCacheIoCount;
+#endif
     LONG MmDirtyPagesWriteCount;
     LONG MmDirtyWriteIoCount;
     LONG MmMappedPagesWriteCount;
     LONG MmMappedWriteIoCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG KeSystemCalls;
     ULONG KeContextSwitches;
     ULONG CcFastReadNoWait;
@@ -506,12 +551,20 @@ typedef struct _KPRCB
     ULONG CcCopyReadWait;
     ULONG CcCopyReadNoWaitMiss;
     LONG LookasideIrpFloat;
+#else
+    LONG LookasideIrpFloat;
+    ULONG KeSystemCalls;
+#endif
     LONG IoReadOperationCount;
     LONG IoWriteOperationCount;
     LONG IoOtherOperationCount;
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    ULONG KeContextSwitches;
+    UCHAR PrcbPad2[12];
+#endif
     UINT64 TargetSet;
     ULONG IpiFrozen;
     UCHAR PrcbPad3[116];
@@ -520,7 +573,11 @@ typedef struct _KPRCB
     UCHAR PrcbPad4[120];
     KDPC_DATA DpcData[2];
     PVOID DpcStack;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PVOID SparePtr0;
+#else
+    PVOID SavedRsp;
+#endif
     LONG MaximumDpcQueueDepth;
     ULONG DpcRequestRate;
     ULONG MinimumDpcRate;
@@ -538,10 +595,18 @@ typedef struct _KPRCB
     UCHAR PrcbPad50;
     UCHAR IdleSchedule;
     LONG DpcSetEventRequest;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG KeExceptionDispatchCount;
+#else
+    LONG PrcbPad40;
+    PVOID DpcThread;
+#endif
     KEVENT DpcEvent;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PVOID PrcbPad51;
+#endif
     KDPC CallDpc;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     LONG ClockKeepAlive;
     UCHAR ClockCheckSlot;
     UCHAR ClockPollCycle;
@@ -549,11 +614,18 @@ typedef struct _KPRCB
     LONG DpcWatchdogPeriod;
     LONG DpcWatchdogCount;
     UINT64 PrcbPad70[2];
+#else
+    UINT64 PrcbPad7[4];
+#endif
     LIST_ENTRY WaitListHead;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UINT64 WaitLock;
+#endif
     ULONG ReadySummary;
     ULONG QueueIndex;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UINT64 PrcbPad71[12];
+#endif
     LIST_ENTRY DispatcherReadyListHead[32];
     ULONG InterruptCount;
     ULONG KernelTime;
@@ -564,22 +636,29 @@ typedef struct _KPRCB
     UCHAR SkipTick;
     UCHAR DebuggerSavedIRQL;
     UCHAR PollSlot;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UCHAR PrcbPad80[5];
     ULONG DpcTimeCount;
     ULONG DpcTimeLimit;
     ULONG PeriodicCount;
     ULONG PeriodicBias;
     UINT64 PrcbPad81[2];
+#else
+    UCHAR PrcbPad8[13];
+#endif
     struct _KNODE *ParentNode;
     UINT64 MultiThreadProcessorSet;
     struct _KPRCB *MultiThreadSetMaster;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UINT64 StartCycles;
     LONG MmSpinLockOrdering;
     ULONG PageColor;
     ULONG NodeColor;
     ULONG NodeShiftedColor;
     ULONG SecondaryColorMask;
+#endif
     LONG Sleeping;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     UINT64 CycleTime;
     ULONG CcFastMdlReadNoWait;
     ULONG CcFastMdlReadWait;
@@ -635,6 +714,35 @@ typedef struct _KPRCB
     UINT64 CacheProcessorMask[5];
     UINT64 PackageProcessorSet;
     UINT64 CoreProcessorSet;
+#else
+    ULONG PrcbPad90[1];
+    ULONG DebugDpcTime;
+    ULONG PageColor;
+    ULONG NodeColor;
+    ULONG NodeShiftedColor;
+    ULONG SecondaryColorMask;
+    UCHAR PrcbPad9[12];
+    ULONG CcFastReadNoWait;
+    ULONG CcFastReadWait;
+    ULONG CcFastReadNotPossible;
+    ULONG CcCopyReadNoWait;
+    ULONG CcCopyReadWait;
+    ULONG CcCopyReadNoWaitMiss;
+    ULONG KeAlignmentFixupCount;
+    ULONG KeDcacheFlushCount;
+    ULONG KeExceptionDispatchCount;
+    ULONG KeFirstLevelTbFills;
+    ULONG KeFloatingEmulationCount;
+    ULONG KeIcacheFlushCount;
+    ULONG KeSecondLevelTbFills;
+    UCHAR VendorString[13];
+    UCHAR PrcbPad10[2];
+    ULONG FeatureBits;
+    LARGE_INTEGER UpdateSignature;
+    PROCESSOR_POWER_STATE PowerState;
+    CACHE_DESCRIPTOR Cache[5];
+    ULONG CacheCount;
+#endif
 }
  KPRCB, *PKPRCB;
 
