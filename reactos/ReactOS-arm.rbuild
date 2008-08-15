@@ -68,7 +68,7 @@
 	<define name="__MSVCRT__"/>
 	<compilerflag>-Wno-attributes</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
-	<linkerflag>-s</linkerflag>
+	<linkerflag>--strip-debug</linkerflag>
 	<linkerflag>-static</linkerflag>
 	
 	<directory name="media">
