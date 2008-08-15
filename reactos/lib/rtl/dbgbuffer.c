@@ -234,7 +234,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN OUT PRTL_DEBUG_INFORMATION Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Pid = (ULONG_PTR) NtCurrentTeb()->Cid.UniqueProcess;
+   ULONG Pid = (ULONG_PTR) NtCurrentTeb()->ClientId.UniqueProcess;
 
    Buf->Flags = DebugInfoMask;
    Buf->OffsetFree = sizeof(RTL_DEBUG_INFORMATION);

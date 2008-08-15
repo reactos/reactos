@@ -48,7 +48,7 @@ GdiProcessSetup (VOID)
     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
     GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
     GdiDevCaps = &GdiSharedHandleTable->DevCaps;
-    CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+    CurrentProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
     GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
     GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
 }
