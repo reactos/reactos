@@ -576,16 +576,22 @@ typedef struct _PEB
     UCHAR ReadImageFileExecOptions;
     UCHAR BeingDebugged;
 #if (NTDDI_VERSION >= NTDDI_WS03)
-    struct
+    union
     {
-        UCHAR ImageUsesLargePages:1;
+        UCHAR BitField;
+        struct
+        {
+            UCHAR ImageUsesLargePages:1;
     #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        UCHAR IsProtectedProcess:1;
-        UCHAR IsLegacyProcess:1;
-        UCHAR SpareBits:5;
+            UCHAR IsProtectedProcess:1;
+            UCHAR IsLegacyProcess:1;
+            UCHAR IsImageDynamicallyRelocated:1;
+            UCHAR SkipPatchingUser32Forwarders:1;
+            UCHAR SpareBits:3;
     #else
-        UCHAR SpareBits:7;
+            UCHAR SpareBits:7;
     #endif
+        };
     };
 #else
     BOOLEAN SpareBool;
@@ -600,7 +606,18 @@ typedef struct _PEB
     struct _RTL_CRITICAL_SECTION *FastPebLock;
     PVOID AltThunkSListPtr;
     PVOID IFEOKey;
-    ULONG Spare;
+    union
+    {
+        ULONG CrossProcessFlags;
+        struct
+        {
+            ULONG ProcessInJob:1;
+            ULONG ProcessInitializing:1;
+            ULONG ProcessUsingVEH:1;
+            ULONG ProcessUsingVCH:1;
+            ULONG ReservedBits0:28;
+        };
+    };
     union
     {
         PVOID* KernelCallbackTable;
@@ -608,6 +625,7 @@ typedef struct _PEB
     };
     ULONG SystemReserved[1];
     ULONG SpareUlong;
+    ULONG_PTR SparePebPtr0;
 #else
     PVOID FastPebLock;
     PPEBLOCKROUTINE FastPebLockRoutine;
@@ -616,13 +634,17 @@ typedef struct _PEB
     PVOID* KernelCallbackTable;
     PVOID EventLogSection;
     PVOID EventLog;
-#endif
     PPEB_FREE_BLOCK FreeList;
+#endif
     ULONG TlsExpansionCounter;
     PVOID TlsBitmap;
     ULONG TlsBitmapBits[0x2];
     PVOID ReadOnlySharedMemoryBase;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID HotpatchInformation;
+#else
     PVOID ReadOnlySharedMemoryHeap;
+#endif
     PVOID* ReadOnlyStaticServerData;
     PVOID AnsiCodePageData;
     PVOID OemCodePageData;
@@ -630,10 +652,10 @@ typedef struct _PEB
     ULONG NumberOfProcessors;
     ULONG NtGlobalFlag;
     LARGE_INTEGER CriticalSectionTimeout;
-    ULONG HeapSegmentReserve;
-    ULONG HeapSegmentCommit;
-    ULONG HeapDeCommitTotalFreeThreshold;
-    ULONG HeapDeCommitFreeBlockThreshold;
+    ULONG_PTR HeapSegmentReserve;
+    ULONG_PTR HeapSegmentCommit;
+    ULONG_PTR HeapDeCommitTotalFreeThreshold;
+    ULONG_PTR HeapDeCommitFreeBlockThreshold;
     ULONG NumberOfHeaps;
     ULONG MaximumNumberOfHeaps;
     PVOID* ProcessHeaps;
@@ -654,7 +676,11 @@ typedef struct _PEB
     ULONG ImageSubSystemMajorVersion;
     ULONG ImageSubSystemMinorVersion;
     ULONG ImageProcessAffinityMask;
+#ifdef _WIN64
+    ULONG GdiHandleBuffer[0x3c];
+#else
     ULONG GdiHandleBuffer[0x22];
+#endif
     PPOST_PROCESS_INIT_ROUTINE PostProcessInitRoutine;
     struct _RTL_BITMAP *TlsExpansionBitmap;
     ULONG TlsExpansionBitmapBits[0x20];
@@ -669,7 +695,7 @@ typedef struct _PEB
     struct _ASSEMBLY_STORAGE_MAP *ProcessAssemblyStorageMap;
     struct _ACTIVATION_CONTEXT_DATA *SystemDefaultActivationContextData;
     struct _ASSEMBLY_STORAGE_MAP *SystemAssemblyStorageMap;
-    ULONG MinimumStackCommit;
+    ULONG_PTR MinimumStackCommit;
 #endif
 #if (NTDDI_VERSION >= NTDDI_WS03)
     PVOID *FlsCallback;
