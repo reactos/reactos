@@ -541,6 +541,7 @@ static BOOL Ping(VOID)
     }
     if (Status == SOCKET_ERROR)
     {
+        LostCount++;
         if (WSAGetLastError() == WSAEHOSTUNREACH)
             printf("Destination host unreachable.\n");
         else
@@ -567,6 +568,8 @@ static BOOL Ping(VOID)
         printf("\n");
 #endif /* !NDEBUG */
     }
+    else
+        LostCount++;
     if (Status == SOCKET_ERROR)
     {
         if (WSAGetLastError() != WSAETIMEDOUT)
@@ -581,7 +584,6 @@ static BOOL Ping(VOID)
     if (Status == 0)
     {
         printf("Request timed out.\n");
-        LostCount++;
         GlobalFree(Buffer);
         return TRUE;
     }
