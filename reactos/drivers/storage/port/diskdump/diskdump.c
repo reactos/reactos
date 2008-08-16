@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
+/* $Id: diskdump.c 29690 2007-10-19 23:21:45Z dreimer $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
