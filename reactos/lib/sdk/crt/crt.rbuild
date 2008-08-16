@@ -104,6 +104,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>atan2.c</file>
+				<file>ci.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>ldexp.c</file>
