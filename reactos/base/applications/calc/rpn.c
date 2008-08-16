@@ -310,6 +310,8 @@ void run_operator(calc_node_t *result,
             operator_list[operation].op_p(&dc, &da, &db);
         } else
             operator_list[operation].op_f(&dc, &da, &db);
+        if (_finite(dc.f) == 0)
+            calc.is_nan = TRUE;
     } else {
         operator_list[operation].op_i(&dc, &da, &db);
         /* apply final limitator to result */
@@ -331,7 +333,6 @@ static void evalStack(calc_number_t *number)
     stack_node_t *op, ip;
     unsigned int prec;
 
-    percent_mode = FALSE;
     op = pop();
     ip = *op;
     prec = operator_list[ip.node.operation].prec;
@@ -372,6 +373,9 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
             return 1;
         return 0;
     }
+
+    if (func == RPN_OPERATOR_PERCENT)
+        percent_mode = TRUE;
 
     tmp.node.number = *number;
     tmp.node.base = calc.base;

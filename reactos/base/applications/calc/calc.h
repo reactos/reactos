@@ -42,7 +42,9 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
-#define CALC_VERSION        TEXT("1.09")
+#define CALC_VERSION        TEXT("1.10")
+
+#define MAX_CALC_SIZE       256
 
 /*#define USE_KEYBOARD_HOOK*/
 
@@ -144,7 +146,8 @@ typedef struct {
 #endif
     HWND          hWnd;
     DWORD         layout;
-    TCHAR         buffer[256];
+    TCHAR         buffer[MAX_CALC_SIZE];
+    TCHAR         source[MAX_CALC_SIZE];
     TCHAR        *ptr;
     calc_number_t code;
     calc_number_t prev;

@@ -1,3 +1,14 @@
+1.10 (20080813)
+=======================
+* Added Norvegian and Korean translations.
+* Fixed Polish and Slovak translations.
+* Fixed percent mode.
+* Fixed some unsignaled overflow errors.
+* Fixed conversion method, now scientific notation is recognized too.
+* Added compilation for UNICODE executables.
+* Plain MINGW toolchain do not support wWinMain function, so I switched to old WinMain if it is not under ReactOS' build tree.
+* Detect error if UNICODE version is launched into Win9x (avoid the lock).
+
 1.09 (20080630)
 =======================
 * Fixed bug with Conversion function: "Category" type must be found like "from" and "to" because the combobox sorts its items alphabetically.
