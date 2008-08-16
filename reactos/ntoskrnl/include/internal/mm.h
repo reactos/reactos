@@ -164,6 +164,13 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+
+#define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
+    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+
+#define InterlockedExchangePte(PointerPte, Value) \
+    InterlockedExchange((PLONG)(PointerPte), Value)
+
 typedef struct
 {
     ULONG Entry[NR_SECTION_PAGE_ENTRIES];
