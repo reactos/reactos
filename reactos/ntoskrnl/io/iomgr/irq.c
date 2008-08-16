@@ -35,7 +35,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     PKINTERRUPT InterruptUsed;
     PIO_INTERRUPT IoInterrupt;
     PKSPIN_LOCK SpinLockUsed;
-    BOOLEAN FirstRun = TRUE;
+    BOOLEAN FirstRun;
     CCHAR Count = 0;
     KAFFINITY Affinity;
     PAGED_CODE();
