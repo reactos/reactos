@@ -784,9 +784,8 @@ typedef struct _KIPCR
     PVOID KdVersionBlock; // 0x108
     PVOID Unused3;
     ULONG PcrAlign1[24];
-
-    ULONG Fill2; // 0x178
-    KPRCB Prcb;
+    ULONG Fill2[2]; // 0x178
+    KPRCB Prcb; // 0x180
 
     // hack:
     ULONG ContextSwitches;
