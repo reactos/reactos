@@ -148,6 +148,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );
+                if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
             }
 	}
 
