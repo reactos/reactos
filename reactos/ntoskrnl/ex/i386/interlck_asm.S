@@ -556,24 +556,5 @@ _Exi386InterlockedExchangeUlong@12:
 
     /* Return */
     ret 8
-
-/* Ugly hack: Use InterlockedExchange64 */
-.att_syntax
-.global @ExfpInterlockedExchange64@8
-@ExfpInterlockedExchange64@8:
-	pushl %ebx
-	pushl %esi
-	movl %ecx,%esi
-	movl (%edx),%ebx
-	movl 4(%edx),%ecx
-1:
-	movl (%esi),%eax
-	movl 4(%esi),%edx
-	LOCK
-	cmpxchg8b (%esi)
-	jnz 1b
-	popl %esi
-	popl %ebx
-	ret
 	
 /* EOF */
