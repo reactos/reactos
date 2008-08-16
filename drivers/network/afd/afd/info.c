@@ -150,10 +150,9 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 if( SysMdl ) IoFreeMdl( SysMdl );
                 if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
             }
+	  /* MmUnlockPages( Mdl ); */
 	}
-
-	/* MmUnlockPages( Mdl ); */
-	/* IoFreeMdl( Mdl ); */
+    /* IoFreeMdl( Mdl ); */
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }
