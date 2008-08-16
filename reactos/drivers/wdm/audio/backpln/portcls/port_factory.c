@@ -48,7 +48,7 @@ PcNewPort(
     {
         DPRINT("Calling KoCreateInstance\n");
         /* Call KS.SYS's Kernel-mode COM function */
-        status = KoCreateInstance(ClassId, NULL, CLSCTX_KERNEL_SERVER, &IID_IPort, &new_port);
+        status = KoCreateInstance(ClassId, NULL, CLSCTX_KERNEL_SERVER, &IID_IPort, (PVOID*)&new_port);
     }
     else
     {
