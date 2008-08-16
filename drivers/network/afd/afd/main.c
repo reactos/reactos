@@ -114,9 +114,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
 	FCB->TdiDeviceName.Buffer =
 	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
 
 	if( !FCB->TdiDeviceName.Buffer ) {
 	    ExFreePool(FCB);
@@ -125,6 +122,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	    return STATUS_NO_MEMORY;
 	}
+
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
 	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
 				EaInfo->EaName, &FCB->TdiDeviceName));
@@ -207,6 +208,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->AddressFrom );
     if( FCB->LocalAddress )
 	ExFreePool( FCB->LocalAddress );
+    if( FCB->RemoteAddress )
+	ExFreePool( FCB->RemoteAddress );
 
     ExFreePool(FCB->TdiDeviceName.Buffer);
 

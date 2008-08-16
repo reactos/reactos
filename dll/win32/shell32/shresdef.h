@@ -160,6 +160,8 @@
 #define IDS_SHV_COLUMN_MODEL        322
 #define IDS_CUT                     323
 #define IDS_RESTORE                 324
+#define IDS_DEFAULT_CLUSTER_SIZE    325
+#define IDS_ADMINISTRATIVETOOLS     326
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -235,6 +237,16 @@
 #define IDI_SHELL_CONFIRM_DELETE   161
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_CONTROL_PANEL1   330
+#define IDI_SHELL_ADMINTOOLS       328
+
+// Icons for Folder Options (ID's identical to Windows XP SP3)
+#define IDI_SHELL_SHOW_COMMON_TASKS    182
+#define IDI_SHELL_CLASSIC_FOLDERS      183
+#define IDI_SHELL_OPEN_IN_SOME_WINDOW  184
+#define IDI_SHELL_OPEN_IN_NEW_WINDOW   185
+#define IDI_SHELL_SINGLE_CLICK_TO_OPEN 186
+#define IDI_SHELL_DOUBLE_CLICK_TO_OPEN 187
+
 /*
 AVI resources, windows shell32 has 14 of them: 150-152 and 160-170
 FIXME: Need to add them, but for now just let them use the same: searching.avi

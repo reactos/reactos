@@ -33,7 +33,7 @@
 			</if>
 			<if property="ARCH" value="arm">
 				<directory name="arm">
-					<file>stubs_asm.S</file>
+					<file>stubs_asm.s</file>
 				</directory>
 			</if>
 			<ifnot property="ARCH" value="i386">

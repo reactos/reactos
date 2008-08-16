@@ -1962,14 +1962,18 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
     return FALSE;
 }
-
+/*************************************************************************
+ *              SHStartNetConnectionDialog (SHELL32.@)
+ */
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
 }
-
+/*************************************************************************
+ *              SHEmptyRecycleBinA (SHELL32.@)
+ */
 HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 {
     LPWSTR szRootPathW = NULL;
@@ -2001,24 +2005,56 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    BOOL ret;
+	WCHAR szPath[MAX_PATH] = {0};
+    DWORD dwSize, dwType;
+    LONG ret;
 
     TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
-    FIXME("0x%08x flags ignored\n", dwFlags);
 
-    ret = EmptyRecycleBinW(pszRootPath);
+    if (!(dwFlags & SHERB_NOCONFIRMATION))
+    {
+        /* FIXME
+         * enumerate available files 
+         * show confirmation dialog 
+         */
+        FIXME("show confirmation dialog\n");
+    }
+
+    if (dwFlags & SHERB_NOPROGRESSUI)
+    {
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+    else
+    {
+       /* FIXME
+        * show a progress dialog
+        */
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+
     if (!ret)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    /* FIXME: update icon? */
+    if (!(dwFlags & SHERB_NOSOUND))
+    {
+        dwSize = sizeof(szPath);
+        ret = RegGetValueW(HKEY_CURRENT_USER, 
+                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
+                           NULL,
+                           RRF_RT_REG_EXPAND_SZ,
+                           &dwType,
+                           (PVOID)szPath,
+                           &dwSize);
+        if (ret != ERROR_SUCCESS)
+            return S_OK;
+
+        if (dwType != REG_EXPAND_SZ) /* type dismatch */
+            return S_OK;
+
+        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        PlaySoundW(szPath, NULL, SND_FILENAME);
+    }
     return S_OK;
-}
-
-DWORD WINAPI SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
-{
-    FIXME("%p, 0x%08x, 0x%08x, 0x%08x - stub\n", hwnd, drive, fmtID, options);
-
-    return SHFMT_NOFORMAT;
 }
 
 HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)

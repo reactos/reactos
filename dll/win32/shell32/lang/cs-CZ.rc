@@ -380,22 +380,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Obecné"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Úkoly", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "&Zobrazit bìžné operace ve složkách", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Použít klas&ické složky ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Procházení složek", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Otevírat každou složku ve stejné&m oknì", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním oknì", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Klikání na položky", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "Jedno kliknutí k &otevøení položky (vybrat ukázáním)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeèe", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Podtrhávat názvy ikon jen &pøi ukázání na nì", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Dvojkliknutí k otevøení položky (vybrat kliknutím)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "O&bnovit výchozí", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Úkoly", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Zobrazit bìžné operace ve složkách", 14001, 40, 25, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Použít klas&ické složky ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	GROUPBOX "Procházení složek", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Otevírat každou složku ve stejné&m oknì", 14004, 40, 70, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním oknì", 14005, 40, 82, 140, 10, WS_TABSTOP
+	GROUPBOX "Klikání na položky", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Jedno kliknutí k &otevøení položky (vybrat ukázáním)", 14007, 40, 120, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeèe", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Podtrhávat názvy ikon jen &pøi ukázání na nì", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Dvojkliknutí k otevøení položky (vybrat kliknutím)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	PUSHBUTTON "O&bnovit výchozí", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -566,6 +565,20 @@ BEGIN
 	AUTOCHECKBOX "&Aktivovat kompresi", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zmìnit ikonu"
@@ -612,6 +625,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Tento poèítaè"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Koš"
 	IDS_CONTROLPANEL            "Ovládací panely"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Vedle sebe"
@@ -621,10 +635,10 @@ BEGIN
 	IDS_SELECT                  "Vybrat"
 	IDS_OPEN                    "Otevøít"
         IDS_CREATELINK              "Vytvoøit zástupc&e"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
+	IDS_COPY                    "&Kopírovat"
+	IDS_DELETE                  "O&dstranit"
+	IDS_PROPERTIES              "&Vlastnosti"
+	IDS_CUT                     "Vyj&mout"
 	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Nelze vytvoøit novou složku, protože pøístup byl odepøen."
@@ -730,4 +744,6 @@ BEGIN
 	IDS_PRINTERS                "Printers"
 	IDS_FONTS                   "Fonts"
 	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

@@ -38,133 +38,16 @@ extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
+extern BOOLEAN FrLdrLoadNlsFile(PCSTR szFileName, PCSTR szModuleName);
 
 #define USE_UI
 
-BOOLEAN
-NTAPI
-static FrLdrLoadKernel(IN PCHAR szFileName,
-                       IN INT nPos)
-{
-    PFILE FilePointer;
-    PCHAR szShortName;
-    CHAR szBuffer[256];
-    PVOID LoadBase;
-    PIMAGE_NT_HEADERS NtHeader;
-
-    /* Extract Kernel filename without path */
-    szShortName = strrchr(szFileName, '\\');
-    if (!szShortName)
-    {
-        /* No path, leave it alone */
-        szShortName = szFileName;
-    }
-    else
-    {
-        /* Skip the path */
-        szShortName = szShortName + 1;
-    }
-
-    /* Open the Kernel */
-    FilePointer = FsOpenFile(szFileName);
-    if (!FilePointer)
-    {
-        /* Return failure on the short name */
-        strcpy(szBuffer, szShortName);
-        strcat(szBuffer, " not found.");
-        UiMessageBox(szBuffer);
-        return FALSE;
-    }
-
-    /* Update the status bar with the current file */
-    strcpy(szBuffer, "Reading ");
-    strcat(szBuffer, szShortName);
-    UiDrawStatusText(szBuffer);
-
-    /* Do the actual loading */
-    LoadBase = FrLdrReadAndMapImage(FilePointer, szShortName, 1);
-
-    /* Get the NT header, kernel base and kernel entry */
-    NtHeader = RtlImageNtHeader(LoadBase);
-    KernelBase = NtHeader->OptionalHeader.ImageBase;
-    KernelEntryPoint = (ROS_KERNEL_ENTRY_POINT)(KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint);
-    LoaderBlock.KernelBase = KernelBase;
-
-    /* Update Processbar and return success */
-    return TRUE;
-}
-
-static BOOLEAN
-LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
-{
-    return FrLdrLoadDriver((PCHAR)szFileName, 0);
-}
-
-
-static BOOLEAN
-LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
-{
-  CHAR szFullName[256];
-  CHAR szBuffer[80];
-  PFILE FilePointer;
-  PCSTR szShortName;
-
-  if (szSourcePath[0] != '\\')
-    {
-      strcpy(szFullName, "\\");
-      strcat(szFullName, szSourcePath);
-    }
-  else
-    {
-      strcpy(szFullName, szSourcePath);
-    }
-
-  if (szFullName[strlen(szFullName)] != '\\')
-    {
-      strcat(szFullName, "\\");
-    }
-
-  if (szFileName[0] != '\\')
-    {
-      strcat(szFullName, szFileName);
-    }
-  else
-    {
-      strcat(szFullName, szFileName + 1);
-    }
-
-  szShortName = strrchr(szFileName, '\\');
-  if (szShortName == NULL)
-    szShortName = szFileName;
-  else
-    szShortName = szShortName + 1;
-
-
-  FilePointer = FsOpenFile(szFullName);
-  if (FilePointer == NULL)
-    {
-      printf("Could not find %s\n", szFileName);
-      return(FALSE);
-    }
-
-  /*
-   * Update the status bar with the current file
-   */
-  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
-  UiDrawStatusText(szBuffer);
-
-  /* Load the driver */
-  FrLdrLoadModule(FilePointer, szModuleName, NULL);
-
-  return(TRUE);
-}
-
 VOID RunLoader(VOID)
 {
-  ULONG i;
-  const char *SourcePath;
-  const char *LoadOptions = "", *DbgLoadOptions = "";
-  const char *sourcePaths[] = {
+    ULONG i;
+    LPCSTR SourcePath;
+    LPCSTR LoadOptions, DbgLoadOptions;
+    LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
       "\\I386",
@@ -175,11 +58,13 @@ VOID RunLoader(VOID)
 #endif
       "\\reactos",
       NULL };
-  char szKernelName[256];
+    CHAR FileName[256];
 
   HINF InfHandle;
   ULONG ErrorLine;
   INFCONTEXT InfContext;
+    PIMAGE_NT_HEADERS NtHeader;
+    PVOID LoadBase;
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
@@ -226,9 +111,6 @@ VOID RunLoader(VOID)
     extern BOOLEAN FrLdrBootType;
     FrLdrBootType = TRUE;
 
-  /* Initialize registry */
-  RegInitializeRegistry();
-
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");
   LoaderBlock.ArchExtra = (ULONG)MachHwDetect();
@@ -244,6 +126,7 @@ VOID RunLoader(VOID)
       return;
     }
 
+  UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
   for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
   {
@@ -253,9 +136,8 @@ VOID RunLoader(VOID)
       printf("Failed to open 'txtsetup.sif'\n");
       return;
     }
-    strcpy(szKernelName, SourcePath);
-    strcat(szKernelName, "\\txtsetup.sif");
-    if (InfOpenFile (&InfHandle, szKernelName, &ErrorLine))
+    sprintf(FileName,"%s\\txtsetup.sif", SourcePath);
+    if (InfOpenFile (&InfHandle, FileName, &ErrorLine))
       break;
   }
   if (!*SourcePath)
@@ -271,6 +153,8 @@ VOID RunLoader(VOID)
 	if (!InfGetDataField (&InfContext, 1, &DbgLoadOptions))
 	    DbgLoadOptions = "";
     }
+#else
+    DbgLoadOptions = "";
 #endif
   if (!strlen(DbgLoadOptions) && !InfFindFirstLine (InfHandle,
 			 "SetupData",
@@ -294,20 +178,22 @@ VOID RunLoader(VOID)
   strcat(strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
 		LoadOptions), DbgLoadOptions);
 
-  strcpy(SystemRoot, SourcePath);
-  strcat(SystemRoot, "\\");
-
     /* Setup the boot path and kernel path */
     strcpy(szBootPath, SourcePath);
-    strcpy(szKernelName, szBootPath);
-    strcat(szKernelName, "\\ntoskrnl.exe");
 
-    /* Setup the HAL path */
-    strcpy(szHalName, szBootPath);
-    strcat(szHalName, "\\hal.dll");
+    sprintf(SystemRoot,"%s\\", SourcePath);
+    sprintf(FileName,"%s\\ntoskrnl.exe", SourcePath);
+    sprintf(szHalName,"%s\\hal.dll", SourcePath);
 
     /* Load the kernel */
-    if (!FrLdrLoadKernel(szKernelName, 5)) return;
+    LoadBase = FrLdrLoadImage(FileName, 5, 1);
+    if (!LoadBase) return;
+
+    /* Get the NT header, kernel base and kernel entry */
+    NtHeader = RtlImageNtHeader(LoadBase);
+    KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
+    KernelEntryPoint = (ROS_KERNEL_ENTRY_POINT)(KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint));
+    LoaderBlock.KernelBase = KernelBase;
 
   /* Insert boot disk 2 */
   if (MachDiskBootingFromFloppy())
@@ -343,8 +229,9 @@ VOID RunLoader(VOID)
       return;
     }
 
+  sprintf(FileName,"%s\\%s", SourcePath,LoadOptions);
   /* Load ANSI codepage file */
-  if (!LoadNlsFile(SourcePath, LoadOptions, "ansi.nls"))
+  if (!FrLdrLoadNlsFile(FileName, "ansi.nls"))
     {
       UiMessageBox("Failed to load the ANSI codepage file.");
       return;
@@ -368,8 +255,9 @@ VOID RunLoader(VOID)
       return;
     }
 
+    sprintf(FileName,"%s\\%s", SourcePath,LoadOptions);
   /* Load OEM codepage file */
-  if (!LoadNlsFile(SourcePath, LoadOptions, "oem.nls"))
+  if (!FrLdrLoadNlsFile(FileName, "oem.nls"))
     {
       UiMessageBox("Failed to load the OEM codepage file.");
       return;
@@ -393,20 +281,13 @@ VOID RunLoader(VOID)
       return;
     }
 
+    sprintf(FileName,"%s\\%s", SourcePath,LoadOptions);
   /* Load Unicode casemap file */
-  if (!LoadNlsFile(SourcePath, LoadOptions, "casemap.nls"))
+  if (!FrLdrLoadNlsFile(FileName, "casemap.nls"))
     {
       UiMessageBox("Failed to load the Unicode casemap file.");
       return;
     }
-
-  /* Load fastfat.sys (could be loaded by the setup prog!) */
-  if (!LoadDriver(SourcePath, "fastfat.sys"))
-    return;
-
-  /* Load ext2.sys (could be loaded by the setup prog!) */
-  if (!LoadDriver(SourcePath, "ext2.sys"))
-    return;
 
     /* Load additional files specified in txtsetup.inf */
     if (InfFindFirstLine(InfHandle,
@@ -422,7 +303,7 @@ VOID RunLoader(VOID)
             {
                 if (strcmp(Media, "x") == 0)
                 {
-                    if (!LoadDriver(SourcePath, DriverName))
+                    if (!FrLdrLoadDriver((PCHAR)DriverName,0))
                         return;
                 }
             }

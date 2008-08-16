@@ -57,8 +57,8 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Benvenuti!"
     IDS_LOCKEDSAS "Il computer al momento è bloccato."
-    IDS_PRESSCTRLALTDELETE "Premere Ctrl+Alt+Canc per accedre."
+    IDS_PRESSCTRLALTDELETE "Premere Ctrl+Alt+Canc per accedere."
     IDS_ASKFORUSER "Nome utente: "
     IDS_ASKFORPASSWORD "Password: "
-    IDS_FORCELOGOFF "Questo terminerà la sessione dell'utente attuale e verranno persi tutti i dati non salvati.  Volete procedere?"
+    IDS_FORCELOGOFF "Verrà terminata la sessione dell'utente attuale e tutti i dati non salvati verranno persi.  Volete procedere?"
 END

@@ -112,14 +112,18 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
     PAFD_MAPBUF Map = (PAFD_MAPBUF)(Buf + Count + Lock);
     UINT i;
 
+    if( !Buf ) return;
+
     for( i = 0; i < Count + Lock; i++ ) {
 	if( Map[i].Mdl ) {
 	    MmUnlockPages( Map[i].Mdl );
 	    IoFreeMdl( Map[i].Mdl );
+	    Map[i].Mdl = NULL;
 	}
     }
 
     ExFreePool( Buf );
+    Buf = NULL;
 }
 
 /* Produce a kernel-land handle array with handles replaced by object

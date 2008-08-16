@@ -379,22 +379,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Завдання", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Завдання", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP
+	GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP
+	PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -565,6 +564,20 @@ BEGIN
 	AUTOCHECKBOX "&Використовувати стискання", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Зміна значка"
@@ -611,6 +624,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 	IDS_CONTROLPANEL            "Панель керування"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"
@@ -620,10 +634,10 @@ BEGIN
 	IDS_SELECT                  "Ви&брати"
 	IDS_OPEN                    "Ві&дкрити"
 	IDS_CREATELINK              "Створити &ярлик"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
+	IDS_COPY                    "&Копіювати"
+	IDS_DELETE                  "В&идалити"
+	IDS_PROPERTIES              "В&ластивості"
+	IDS_CUT                     "&Вирізати"
 	IDS_RESTORE                 "Restore"
 
 	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
@@ -730,4 +744,6 @@ BEGIN
 	IDS_PRINTERS                "Printers"
 	IDS_FONTS                   "Fonts"
 	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

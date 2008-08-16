@@ -8,6 +8,7 @@
  * 20040708 Created
  */
 #include <afd.h>
+#include <pseh/pseh.h>
 #include "debug.h"
 #include "tdiconn.h"
 
@@ -126,9 +127,11 @@ NTSTATUS TdiBuildNullConnectionInfo
 
   Status = TdiBuildNullConnectionInfoInPlace( ConnInfo, Type );
 
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status)) {
       ExFreePool( ConnInfo );
-  else
+      *ConnectionInfo = NULL;
+      return Status;
+  } else
       *ConnectionInfo = ConnInfo;
 
   ConnInfo->RemoteAddress = (PTA_ADDRESS)&ConnInfo[1];
@@ -144,9 +147,13 @@ TdiBuildConnectionInfoInPlace
   PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    RtlCopyMemory( ConnectionInfo->RemoteAddress,
-		   Address,
-		   ConnectionInfo->RemoteAddressLength );
+    _SEH_TRY {
+    	RtlCopyMemory( ConnectionInfo->RemoteAddress,
+		       Address,
+		       ConnectionInfo->RemoteAddressLength );
+    } _SEH_HANDLE {
+	Status = _SEH_GetExceptionCode();
+    } _SEH_END;
 
     return Status;
 }

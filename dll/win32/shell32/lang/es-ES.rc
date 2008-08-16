@@ -2,6 +2,7 @@
  * Copyright 1998 Juergen Schmied
  * Copyright 2003,2004 José Manuel Ferrer Ortiz
  * Actualizado Javier Remacha 2008
+ * ACtualizado Victor Martinez 2008
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -380,22 +381,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Tareas", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Tareas", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
+	GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -566,6 +566,20 @@ BEGIN
 	AUTOCHECKBOX "&Habilitar compresión", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Cambiar Icono"
@@ -612,6 +626,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Mi PC"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papelera de reciclaje"
 	IDS_CONTROLPANEL            "Panel de control"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Iconos &grandes"
@@ -621,11 +636,11 @@ BEGIN
 	IDS_SELECT                  "Seleccionar"
 	IDS_OPEN                    "Abrir"
 	IDS_CREATELINK              "C&rear acceso directo"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
-	IDS_RESTORE                 "Restore"
+	IDS_COPY                    "&Copiar"
+	IDS_DELETE                  "&Eliminar"
+	IDS_PROPERTIES              "&Propiedades"
+	IDS_CUT                     "C&ortar"
+	IDS_RESTORE                 "Restaurar"
 
 	IDS_CREATEFOLDER_DENIED     "No se puede crear nueva carpeta: Permiso denegado."
 	IDS_CREATEFOLDER_CAPTION    "Error durante la creación de una nueva carpeta"
@@ -731,4 +746,6 @@ BEGIN
 	IDS_PRINTERS                "Printers"
 	IDS_FONTS                   "Fonts"
 	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

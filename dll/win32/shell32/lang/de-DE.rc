@@ -382,15 +382,15 @@ CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
-	//ICON
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP
 	AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10, WS_TABSTOP
 	GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
-	//ICON
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP
 	AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10, WS_TABSTOP
 	GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
-	//ICON
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP
 	AUTORADIOBUTTON "Symbolunerschriften wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10, WS_TABSTOP
 	AUTORADIOBUTTON "Symbolunerschriften nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10, WS_TABSTOP
@@ -547,7 +547,7 @@ END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Formatieren"
+CAPTION "Formatieren von"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Starten", IDOK, 53, 198, 60, 14
@@ -565,6 +565,21 @@ BEGIN
 	AUTOCHECKBOX "Sch&nellformatierung", 28674, 16, 135, 155, 10
 	AUTOCHECKBOX "&Komprimierung aktivieren", 28675, 16, 152, 155, 10
 END
+
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Überprüfen des Datenträgers"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Starten", IDOK, 53, 100, 60, 14
+	GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 50
+	PUSHBUTTON "S&chließen", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "&Dateisystemfehler automatisch korrigieren", 14000, 16, 15, 165, 10
+	AUTOCHECKBOX "&Fehlerhafte Sektoren suchen/wiederherstellen", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 0, 7, 60, 179, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
@@ -613,6 +628,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Arbeitsplatz"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papierkorb"
 	IDS_CONTROLPANEL            "Systemsteuerung"
+	IDS_ADMINISTRATIVETOOLS     "Verwaltung"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Große Symbole"
@@ -731,4 +747,6 @@ BEGIN
 	IDS_PRINTERS                "Drucker"
 	IDS_FONTS                   "Schriftarten"
 	IDS_INSTALLNEWFONT          "Neue Schriftart installieren..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Standardgröße"
 END

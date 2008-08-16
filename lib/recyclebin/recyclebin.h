@@ -72,6 +72,15 @@ DeleteFileToRecycleBinW(
 #define DeleteFileToRecycleBin DeleteFileToRecycleBinA
 #endif
 
+/* Moves a file to the recycle bin.
+ * hDeletedFile: handle of the deleted file to delete
+ * Returns TRUE if operation succeeded, FALSE otherwise.
+ * Remark: The handle is obtained in the PENUMERATE_RECYCLEBIN_CALLBACK callback
+ */
+BOOL WINAPI
+DeleteFileHandleToRecycleBin(
+	IN HANDLE hDeletedFile);
+
 /* Removes all elements contained in a recycle bin
  * pszRoot: the name of the drive containing the recycle bin
  * Returns TRUE if operation succeeded, FALSE otherwise.
@@ -137,6 +146,17 @@ GetDeletedFileDetailsW(
 #else
 #define GetDeletedFileDetails GetDeletedFileDetailsA
 #endif
+
+/* Get details about a whole recycle bin
+ * pszVolume:
+ * pulTotalItems:
+ * pulTotalSize
+ */
+BOOL WINAPI
+GetRecycleBinDetails(
+	IN LPCWSTR pszVolume OPTIONAL,
+	OUT ULARGE_INTEGER *pulTotalItems,
+	OUT ULARGE_INTEGER *pulTotalSize);
 
 /* Restores a deleted file
  * hDeletedFile: handle of the deleted file to restore

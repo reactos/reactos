@@ -1402,6 +1402,12 @@ LPITEMIDLIST _ILCreateBitBucket(void)
     return _ILCreateGuid(PT_GUID, &CLSID_RecycleBin);
 }
 
+LPITEMIDLIST _ILCreateAdminTools(void)
+{
+    TRACE("()\n");
+    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut);
+}
+
 LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
 {
     LPITEMIDLIST pidlOut;
@@ -1655,6 +1661,18 @@ BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
     if (iid)
         return IsEqualIID(iid, &CLSID_RecycleBin);
     return FALSE;
+}
+
+BOOL _ILIsAdminTools(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_AdminFolderShortcut);
+    else
+        return FALSE;
 }
 
 BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)

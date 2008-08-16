@@ -16,7 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * translation updated by Caemyr - Olaf Siejka (Jan,Mar,Apr,Jul 2008)
+ * ReactOS shell32 fork translation updated by Caemyr -
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -371,7 +372,7 @@ BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
 	LTEXT "Wybierz program, którego chcesz u¿yæ do otwarcia tego pliku:", -1, 44, 12, 211, 10
 	LTEXT "Plik:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programs", -1, 7, 42, 249, 187
+	GROUPBOX "&Programy", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Zawsze u¿ywaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Przegl¹daj", 14004, 198, 207, 50, 14
@@ -384,22 +385,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Zadania", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "Poka¿ podstawowe zadania w &katalogach", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "U¿yj klasycznych katalogów &ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Przegl¹daj katalogi", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Otwórz ka¿dy katalog w tym &samym oknie", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Otwórz ka¿dy katalog w &osobnym oknie", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Dzia³anie przycisków myszki", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "&Pojedyncze klikniêcie by otworzyæ cel (najechanie by wskazaæ)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Po&dwójne klikniêcie by otworzyæ (pojedyncze klikniêcie by wskazaæ)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Ustawienia domyœlne", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Zadania", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Poka¿ podstawowe zadania w &katalogach", 14001, 40, 25, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "U¿yj klasycznych katalogów &ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	GROUPBOX "Przegl¹daj katalogi", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Otwórz ka¿dy katalog w tym &samym oknie", 14004, 40, 70, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Otwórz ka¿dy katalog w &osobnym oknie", 14005, 40, 82, 140, 10, WS_TABSTOP
+	GROUPBOX "Dzia³anie przycisków myszki", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Pojedyncze klikniêcie by otworzyæ cel (najechanie by wskazaæ)", 14007, 40, 120, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Po&dwójne klikniêcie by otworzyæ (pojedyncze klikniêcie by wskazaæ)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	PUSHBUTTON "&Ustawienia domyœlne", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -570,6 +570,20 @@ BEGIN
 	AUTOCHECKBOX "&W³¹cz kompresjê", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zmiana Ikony"
@@ -598,17 +612,17 @@ BEGIN
 	IDS_SHV_COLUMN9             "Komentarz"
 	IDS_SHV_COLUMN10            "W³aœciciel"
 	IDS_SHV_COLUMN11            "Grupa"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
-	IDS_SHV_COLUMN_DELFROM      "Lokacja oryginalna"
+	IDS_SHV_COLUMN12            "Nazwa pliku"
+	IDS_SHV_COLUMN13            "Kategoria"
+	IDS_SHV_COLUMN_DELFROM      "Lokalizacja oryginalna"
 	IDS_SHV_COLUMN_DELDATE      "Data usuniêcia"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_FONTTYPE     "Czcionka"
+	IDS_SHV_COLUMN_WORKGROUP    "Grupa Robocza"
+	IDS_SHV_NETWORKLOCATION     "Lokalizacja Sieciowa"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
+	IDS_SHV_COLUMN_STATUS       "Stan"
+	IDS_SHV_COLUMN_COMMENTS     "Komentarze"
+	IDS_SHV_COLUMN_LOCATION     "Lokalizacja"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
@@ -616,6 +630,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Mój komputer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kosz"
 	IDS_CONTROLPANEL            "Panel Sterowania"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Du¿e Ikony"
@@ -625,11 +640,11 @@ BEGIN
 	IDS_SELECT                  "Zaznacz"
 	IDS_OPEN                    "Otwórz"
 	IDS_CREATELINK	            "Utwórz &Skrót"
-	IDS_COPY                    "Copy"
-	IDS_DELETE                  "Delete"
-	IDS_PROPERTIES              "Properties"
-	IDS_CUT                     "Cut"
-	IDS_RESTORE                 "Restore"
+	IDS_COPY                    "Kopiuj"
+	IDS_DELETE                  "Usuñ"
+	IDS_PROPERTIES              "W³aœciwoœci"
+	IDS_CUT                     "Wytnij"
+	IDS_RESTORE                 "Przywróæ"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."
@@ -732,7 +747,9 @@ BEGIN
 	IDS_PREVIEW_VERB            "Podgl¹d"
 
 	IDS_FILE_FOLDER             "%u Plików, %u Katalogów"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_PRINTERS                "Drukarki"
+	IDS_FONTS                   "Czcionki"
+	IDS_INSTALLNEWFONT          "Zainstaluj Now¹ Czcionkê..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

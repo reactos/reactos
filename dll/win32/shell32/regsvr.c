@@ -646,6 +646,19 @@ static struct regsvr_coclass const coclass_list[] = {
        NULL,
        IDI_SHELL_FONTS_FOLDER
     },
+    {  &CLSID_AdminFolderShortcut,
+       "Administrative Tools",
+       IDS_ADMINISTRATIVETOOLS,
+       NULL,
+       "shell32.dll", 
+       "Apartment",
+       SHELLFOLDER_ATTRIBUTES,
+       SFGAO_FOLDER,
+       0,
+       NULL,
+       NULL,
+       IDI_SHELL_ADMINTOOLS //FIXME
+    },
     {   &CLSID_Shortcut,
 	"Shortcut",
 	0,
@@ -758,7 +771,7 @@ static const WCHAR wszFolderOptions[] = { 'F','o','l','d','e','r',' ','O','p','t
 static const WCHAR wszNethoodFolder[] = { 'N','e','t','h','o','o','d',' ','f','o','l','d','e','r',0};
 static const WCHAR wszPrinters[] = { 'P','r','i','n','t','e','r','s',0 };
 static const WCHAR wszFonts[] = { 'F','o','n','t','s',0 };
-
+static const WCHAR wszAdminTools[] = { 'A','d','m','i','n','T','o','o','l','s',0 };
 const GUID CLSID_FolderOptions = { 0x6DFD7C5C, 0x2451, 0x11d3, {0xa2,0x99,0x00,0xC0,0x4F,0x8e,0xf6,0xaf} };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
@@ -803,6 +816,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         &CLSID_Printers,
         wszControlPanel,
         wszPrinters
+    },
+    {
+        &CLSID_AdminFolderShortcut,
+        wszControlPanel,
+        wszAdminTools
     },
     { NULL }
 };

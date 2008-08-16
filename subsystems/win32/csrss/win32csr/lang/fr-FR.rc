@@ -47,7 +47,7 @@ BEGIN
   IDS_SCROLL "Défiler"
   IDS_FIND "Trouver..."
   IDS_DEFAULTS "Défauts"
-  IDS_PROPERTIES "Proprietés"
+  IDS_PROPERTIES "Propriétés"
   IDS_SCROLLHERE "Défiler ici"
   IDS_SCROLLTOP "Défiler tout en haut"
   IDS_SCROLLBOTTOM "Défiler tout en bas"
