@@ -117,7 +117,7 @@ FrLdrGetOrCreatePageDir(PPAGE_DIRECTORY_AMD64 pDir, ULONG Index)
 		if (!pSubDir)
 			return NULL;
 		RtlZeroMemory(pSubDir, PAGE_SIZE);
-		pDir->Pde[Index].PageFrameNumber = (ULONGLONG)pSubDir / PAGE_SIZE;
+		pDir->Pde[Index].PageFrameNumber = PtrToPfn(pSubDir);
 		pDir->Pde[Index].Valid = 1;
 		pDir->Pde[Index].Write = 1;
 	}
@@ -196,7 +196,7 @@ FrLdrSetupPageDirectory(VOID)
 	ULONG KernelPages;
 
 	/* Allocate a Page for the PML4 */
-	pPML4 = MmAllocateMemoryWithType(4096, LoaderSpecialMemory);
+	pPML4 = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
 
 	ASSERT(pPML4);
 
@@ -205,7 +205,7 @@ FrLdrSetupPageDirectory(VOID)
 	 * virtual address 0xfffff6fb7dbedf68 */
 	pPML4->Pde[VAtoPXI(PXE_BASE)].Valid = 1;
 	pPML4->Pde[VAtoPXI(PXE_BASE)].Write = 1;
-	pPML4->Pde[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(PXE_BASE);
+	pPML4->Pde[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(pPML4);
 
 	/* Setup low memory pages */
 	if (FrLdrMapRangeOfPages(0, 0, 1024) < 1024)
