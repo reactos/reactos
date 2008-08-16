@@ -4,7 +4,7 @@
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>
-	<importlibrary definition="ks.def" />
+	<importlibrary definition="ks.spec.def" />
 	<library>ntoskrnl</library>
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />
@@ -21,4 +21,5 @@
 	<file>topology.c</file>
 	<file>worker.c</file>
 	<file>kcom.c</file>
+	<file>ks.spec</file>
 </module>
