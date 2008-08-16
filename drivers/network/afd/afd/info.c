@@ -24,12 +24,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
 			    InfoReq ? InfoReq->InformationClass : 0));
 
-    _SEH_TRY {
-	if( !SocketAcquireStateLock( FCB ) ) {
-	    Status = LostSocket( Irp );
-	    _SEH_YIELD(return Status);
-	}
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    _SEH_TRY {
 	switch( InfoReq->InformationClass ) {
 	case AFD_INFO_RECEIVE_WINDOW_SIZE:
 	    InfoReq->Information.Ulong = FCB->Recv.Size;
