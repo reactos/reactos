@@ -644,9 +644,13 @@ int main(int argc, char* argv[])
         printf("\nPing statistics for %s:\n", TargetIP);
         printf("    Packets: Sent = %d, Received = %d, Lost = %d (%d%% loss),\n",
             SentCount, SentCount - LostCount, LostCount, Count);
-        printf("Approximate round trip times in milli-seconds:\n");
-        printf("    Minimum = %s, Maximum = %s, Average = %s\n",
-            MinTime, MaxTime, AvgTime);
+        /* Print approximate times or NO approximate times if 100% loss */
+        if ((SentCount - LostCount) > 0)
+        {
+            printf("Approximate round trip times in milli-seconds:\n");
+            printf("    Minimum = %s, Maximum = %s, Average = %s\n",
+                MinTime, MaxTime, AvgTime);
+        }
     }
     return 0;
 }
