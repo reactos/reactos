@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="vgaddi" type="kernelmodedll" entrypoint="DrvEnableDriver@12" installbase="system32" installname="vgaddi.dll">
-	<importlibrary definition="vgaddi.def" />
+	<importlibrary definition="vgaddi.spec.def" />
 	<include base="vgaddi">.</include>
 	<library>libcntpr</library>
 	<library>win32k</library>
@@ -22,4 +22,5 @@
 		<file>vgavideo.c</file>
 	</directory>
 	<file>vgaddi.rc</file>
+	<file>vgaddi.spec</file>
 </module>
