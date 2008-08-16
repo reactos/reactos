@@ -188,14 +188,17 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 
-    FCB->State = SOCKET_STATE_LISTENING;
-
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionCallInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionReturnInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
+
+    if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
+    FCB->State = SOCKET_STATE_LISTENING;
 
     Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 			FCB->Connection.Object,
@@ -271,6 +274,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		( &FCB->ListenIrp.ConnectionReturnInfo,
 		  FCB->LocalAddress->Address[0].AddressType );
 
+	    if( !FCB->ListenIrp.ConnectionReturnInfo ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
 	    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 				FCB->Connection.Object,
 				&FCB->ListenIrp.ConnectionCallInfo,
@@ -304,6 +309,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		  KernelMode,
 		  (PVOID *)&NewFileObject,
 		  NULL );
+
+            if( !NT_SUCCESS(Status) ) UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 
             ASSERT(NewFileObject != FileObject);
             ASSERT(NewFileObject->FsContext != FCB);
