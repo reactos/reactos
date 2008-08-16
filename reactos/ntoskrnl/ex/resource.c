@@ -6,14 +6,6 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/*
- * WARNING:
- * This implementation is the Windows NT 5.x one.
- * Vista has optimized the OwnerThread entry array and the internals of
- * ExpFindEntryForThread and ExpFindFreeEntry probably need to be modified
- * accordingly in order to support the WDK.
- */
-
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>

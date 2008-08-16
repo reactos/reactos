@@ -226,7 +226,7 @@
     cmp eax, ecx
     je 2f
 
-    /* Get the next entry and do the deletion*/
+    /* Get the next entry and do the deletion */
 #ifdef CONFIG_SMP
     push ebx
     mov ebx, [eax]
@@ -569,7 +569,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     push ebx
     push ebp
 
-    /* Get desination pointer, exchange value and comperand value/address */
+    /* Get destination pointer, exchange value and comperand value/address */
     mov ebp, ecx
     mov ebx, [edx]
     mov ecx, [edx+4]
@@ -601,7 +601,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     push ebp
     push ebp
 
-    /* Get desination pointer, exchange value and comperand value/address */
+    /* Get destination pointer, exchange value and comperand value/address */
     mov ebp, ecx
     mov ebx, [edx]
     mov ecx, [edx+4]
@@ -730,7 +730,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     push ebp
     push ebp
 
-    /* Get desination pointer, exchange value and comperand value/address */
+    /* Get destination pointer, exchange value and comperand value/address */
     mov ebp, ecx
     mov ebx, [edx]
     mov ecx, [edx+4]

@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/dirobj.c
+ * FILE:            ntoskrnl/ob/obdir.c
  * PURPOSE:         Manages the Object Manager's Directory Implementation,
  *                  such as functions for addition, deletion and lookup into
  *                  the Object Manager's namespace. These routines are separate

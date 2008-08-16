@@ -239,7 +239,7 @@ _ExInterlockedInsertTailList@12:
     /* Restore flags */
     popfd
 
-    /* check if the list was empty and return NULL */
+    /* Check if the list was empty and return NULL */
     xor eax, edx
     jz 2f
 

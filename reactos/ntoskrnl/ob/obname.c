@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/namespce.c
+ * FILE:            ntoskrnl/ob/obname.c
  * PURPOSE:         Manages all functions related to the Object Manager name-
  *                  space, such as finding objects or querying their names.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
