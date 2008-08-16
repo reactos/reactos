@@ -467,6 +467,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
          Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
       }
+      if (!Dce) return NULL;
 
       Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
    }
