@@ -617,8 +617,8 @@ i8042PnpStartDevice(
 		}
 		default:
 		{
-			ERR_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
-			ASSERT(FALSE);
+			WARN_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
+			ASSERT(!(PortDeviceExtension->Flags & KEYBOARD_CONNECTED) || !(PortDeviceExtension->Flags & MOUSE_CONNECTED));
 			Status = STATUS_INVALID_DEVICE_REQUEST;
 		}
 	}
