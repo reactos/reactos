@@ -252,6 +252,14 @@ Ext2MountVolume (
 		Ext2PerformVerifyDiskRead ( TargetDeviceObject,
 			BootSector, StartingOffset, NumberOfBytesToRead );
 
+		// Reject a volume that contains fat artifacts
+		
+		DebugTrace(DEBUG_TRACE_MOUNT, "OEM[%s]", BootSector->Oem);
+		if (BootSector->Oem[0])
+		{
+		    try_return (STATUS_WRONG_VOLUME);
+		}
+
 		//	Allocating memory for reading in Super Block...
 		
 		SuperBlock = Ext2AllocatePool( PagedPool, NumberOfBytesToRead  );
