@@ -37,14 +37,6 @@ VOID RunLoader(VOID)
 		return;
 	}
 
-	//
-	// Check if we have a virtual RAM disk
-	// This is for x86 emulation -- on real hardware, the RAM disk will be
-	// located in one of the hardware memory descriptors as well as on the 
-	// freeldr command-line
-	//
-	RamDiskCheckForVirtualFile();
-
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");

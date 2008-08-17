@@ -40,7 +40,7 @@ char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
 CHAR szHalName[255];
 CHAR szBootPath[255];
 CHAR SystemRoot[255];
-static CHAR szLoadingMsg[] = "Loading ReactOS...";
+static CHAR szLoadingMsg[] = "ReactOS is loading files...";
 BOOLEAN FrLdrBootType;
 ULONG_PTR KernelBase;
 ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
@@ -576,6 +576,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     PVOID LoadBase;
 	ULONG_PTR Base;
 	ULONG Size;
+    
+    //
+    // Backdrop
+    //
+    UiDrawBackdrop();
 
 	//
 	// Open the operating system section
@@ -588,13 +593,40 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		return;
 	}
 
-	UiDrawBackdrop();
-	UiDrawStatusText("Detecting Hardware...");
-    UiDrawProgressBarCenter(1, 100, szLoadingMsg);
+    //
+    // Read the command line
+    //
+	if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
+	{
+        //
+        // Check if a ramdisk file was given
+        //
+        PCHAR File;
+        File = strstr(value, "/RDIMAGEPATH=");
+        if (File)
+        {
+            //
+            // Copy the file name and everything else after it
+            //
+            strcpy(szFileName, File + 13);
+            
+            //
+            // Null-terminate
+            //
+            *strstr(szFileName, " ") = ANSI_NULL;
+            
+            //
+            // Load the ramdisk
+            //
+            RamDiskLoadVirtualFile(szFileName);
+        }
+	}
 
 	/*
 	 * Setup multiboot information structure
 	 */
+    UiDrawProgressBarCenter(1, 100, szLoadingMsg);
+	UiDrawStatusText("Detecting Hardware...");
 	LoaderBlock.CommandLine = reactos_kernel_cmdline;
 	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
 	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;

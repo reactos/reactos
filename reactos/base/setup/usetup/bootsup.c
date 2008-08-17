@@ -387,6 +387,13 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"ReactOS_WinLdr",
 		    L"\"ReactOS (WinLdr)\"");
+    
+  /* ReactOS_Ram="ReactOS (RAM Disk)" */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"ReactOS_Ram",
+                    L"\"ReactOS (RAM Disk)\"");
 #endif
 
   /* Create "ReactOS" section */
@@ -444,7 +451,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS_WinLdr");
 
-  /* BootType=ReactOS */
+  /* BootType=Windows2003 */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
@@ -464,6 +471,31 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
+    
+  /* Create "ReactOS_WinLdr" section */
+  IniSection = IniCacheAppendSection(IniCache,
+                                     L"ReactOS_Ram");
+    
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"BootType",
+                    L"ReactOS");
+    
+  /* SystemPath=ramdisk(0)\\ReactOS */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"SystemPath",
+                    L"ramdisk(0)\\ReactOS");
+    
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256*/
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"Options",
+                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
 #endif
 
   /* Save the ini file */
