@@ -442,6 +442,11 @@
 				<file>rtlexcpt.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>stack.S</file>
+			</directory>
+		</if>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
 	</directory>
