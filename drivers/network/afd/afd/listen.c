@@ -83,19 +83,18 @@ static NTSTATUS NTAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status = STATUS_FILE_CLOSED;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-
-    if ( Irp->Cancel ) {
-	/* FIXME: is this anything else we need to do? */
-	FCB->ListenIrp.InFlightRequest = NULL;
-	return STATUS_SUCCESS;
-    }
 
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ListenIrp.InFlightRequest = NULL;
+
+    if( Irp->Cancel ) {
+	SocketStateUnlock( FCB );
+	return STATUS_SUCCESS;
+    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
