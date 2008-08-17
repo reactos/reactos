@@ -220,9 +220,10 @@ ULONG CcpAllocateCacheSections
 	PNOCC_BCB Bcb;
 	
 	DPRINT("AllocateCacheSections: FileObject %x\n", FileObject);
-	DPRINT
-	    ("AllocateCacheSections: FileObject->SectionObjectPointer: %x\n", 
-	     FileObject->SectionObjectPointer);
+	
+	if (!FileObject->SectionObjectPointer)
+	    return INVALID_CACHE;
+
 	Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
 
 	if (!Map)
