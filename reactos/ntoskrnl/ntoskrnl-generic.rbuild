@@ -379,8 +379,6 @@
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pagfault.c</file>
-		<file>paging.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
 		<file>pool.c</file>

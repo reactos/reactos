@@ -367,6 +367,31 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 /* Miscellanea functions: they may fit somewhere else */
 
 /*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+MmIsRecursiveIoFault (VOID)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+
+    return (Thread->DisablePageFaultClustering | Thread->ForwardClusterOnly);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmMapUserAddressesToPage(IN PVOID BaseAddress,
+                         IN SIZE_T NumberOfBytes,
+                         IN PVOID PageAddress)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
  * @unimplemented
  */
 ULONG NTAPI
