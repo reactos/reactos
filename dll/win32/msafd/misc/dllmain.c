@@ -286,11 +286,11 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; break;
         case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
 	case STATUS_BUFFER_TOO_SMALL: /* Fall through to STATUS_BUFFER_OVERFLOW */
-        case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
+        case STATUS_BUFFER_OVERFLOW: DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n"); *Errno = WSAEMSGSIZE; break;
 	case STATUS_NO_MEMORY: /* Fall through to STATUS_INSUFFICIENT_RESOURCES */
-        case STATUS_INSUFFICIENT_RESOURCES: *Errno = WSA_NOT_ENOUGH_MEMORY; break;
-        case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
-        case STATUS_REMOTE_NOT_LISTENING: *Errno = WSAECONNRESET; break;
+        case STATUS_INSUFFICIENT_RESOURCES: DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n"); *Errno = WSA_NOT_ENOUGH_MEMORY; break;
+        case STATUS_INVALID_CONNECTION: DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n"); *Errno = WSAEAFNOSUPPORT; break;
+        case STATUS_REMOTE_NOT_LISTENING: DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n"); *Errno = WSAECONNRESET; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
