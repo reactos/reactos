@@ -17,9 +17,11 @@
 
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
 extern LONG CcOutstandingDeletes;
+extern KEVENT CcpLazyWriteEvent;
 extern VOID STDCALL CcpUnmapThread(PVOID Unused);
-HANDLE CcUnmapThreadHandle;
-CLIENT_ID CcUnmapThreadId;
+extern VOID STDCALL CcpLazyWriteThread(PVOID Unused);
+HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
+CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -38,6 +40,7 @@ CcInitializeCacheManager(VOID)
 	}
 
 	KeInitializeEvent(&CcDeleteEvent, SynchronizationEvent, FALSE);
+	KeInitializeEvent(&CcpLazyWriteEvent, SynchronizationEvent, FALSE);
 	CcCacheBitmap->Buffer = ((PULONG)&CcCacheBitmap[1]);
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
@@ -50,6 +53,20 @@ CcInitializeCacheManager(VOID)
 		 &CcUnmapThreadId,
 		 (PKSTART_ROUTINE) CcpUnmapThread,
 		 NULL);
+
+	if (!NT_SUCCESS(Status))
+	{
+		KEBUGCHECK(0);
+	}
+
+	Status = PsCreateSystemThread
+	    (&CcLazyWriteThreadHandle,
+	     THREAD_ALL_ACCESS,
+	     NULL,
+	     NULL,
+	     &CcLazyWriteThreadId,
+	     (PKSTART_ROUTINE) CcpLazyWriteThread,
+	     NULL);
 
 	if (!NT_SUCCESS(Status))
 	{
@@ -173,18 +190,15 @@ PFILE_OBJECT
 NTAPI
 CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointer)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
+    return ((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap)->FileObject;
 }
 
 PFILE_OBJECT
 NTAPI
 CcGetFileObjectFromBcb(IN PVOID Bcb)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
+    PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
+    return RealBcb->FileObject;
 }
 
 /* EOF */

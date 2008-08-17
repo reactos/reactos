@@ -10,7 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -29,9 +29,11 @@ LONG CcOutstandingDeletes;
 
 typedef struct _NOCC_UNMAP_CHAIN
 {
-	PVOID Buffer;
-	PVOID SectionObject;
-	PVOID FileObject;
+    PVOID Buffer;
+    PSECTION_OBJECT SectionObject;
+    PFILE_OBJECT FileObject;
+    LARGE_INTEGER FileOffset;
+    ULONG Length;
 } NOCC_UNMAP_CHAIN, *PNOCC_UNMAP_CHAIN;
 NOCC_UNMAP_CHAIN CcUnmapChain[CACHE_NUM_SECTIONS];
 
@@ -60,6 +62,7 @@ VOID CcpLock()
 VOID CcpPerformUnmapWork()
 {
 	NOCC_UNMAP_CHAIN WorkingOn;
+	IO_STATUS_BLOCK IoStatus;
 	ULONG NumElements;
 
 	KeAcquireGuardedMutex(&CcMutex);
@@ -70,6 +73,12 @@ VOID CcpPerformUnmapWork()
 		WorkingOn = CcUnmapChain[0];
 		RtlMoveMemory(&CcUnmapChain[0], &CcUnmapChain[1], NumElements * sizeof(NOCC_UNMAP_CHAIN));
 		KeReleaseGuardedMutex(&CcMutex);
+		CcFlushCache
+		    (WorkingOn.FileObject->SectionObjectPointer,
+		     &WorkingOn.FileOffset,
+		     WorkingOn.Length,
+		     &IoStatus);
+		DPRINT1("Status result from flush: %08x\n", IoStatus.Status);
 		MmUnmapViewInSystemSpace(WorkingOn.Buffer);
 		ObDereferenceObject(WorkingOn.SectionObject);
 		DPRINT1("Done unmapping\n");
@@ -110,7 +119,8 @@ VOID CcpUnmapSegment(ULONG Segment)
 	UnmapWork->Buffer = Bcb->BaseAddress;
 	UnmapWork->SectionObject = Bcb->SectionObject;
 	UnmapWork->FileObject = Bcb->FileObject;
-
+	UnmapWork->FileOffset = Bcb->FileOffset;
+	UnmapWork->Length = Bcb->Length;
 	Bcb->BaseAddress = NULL;
 	Bcb->Length = 0;
 	Bcb->FileOffset.QuadPart = 0;
@@ -206,9 +216,18 @@ ULONG CcpAllocateCacheSections
  PLARGE_INTEGER FileOffset)
 {
 	ULONG i = INVALID_CACHE;
-	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	PNOCC_CACHE_MAP Map;
 	PNOCC_BCB Bcb;
 	
+	DPRINT("AllocateCacheSections: FileObject %x\n", FileObject);
+	DPRINT
+	    ("AllocateCacheSections: FileObject->SectionObjectPointer: %x\n", 
+	     FileObject->SectionObjectPointer);
+	Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+
+	if (!Map)
+	    return INVALID_CACHE;
+
 	DPRINT("Allocating Cache Section (File already has %d sections)\n", Map->NumberOfMaps);
 
 	i = RtlFindClearBitsAndSet
@@ -217,6 +236,8 @@ ULONG CcpAllocateCacheSections
 
 	if (i != INVALID_CACHE)
 	{
+		DPRINT("Setting up Bcb #%x\n", i);
+
 		Bcb = &CcCacheSections[i];
 		
 		ASSERT(Bcb->RefCount < 2);
@@ -229,7 +250,7 @@ ULONG CcpAllocateCacheSections
 		ASSERT(!Bcb->RefCount);
 
 		Bcb->RefCount = 1;
-		//DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
+		DPRINT("Bcb #%x RefCount %d\n", Bcb - CcCacheSections, Bcb->RefCount);
 		ObReferenceObject(SectionObject);
 		
 		Bcb->FileObject = FileObject;
@@ -239,7 +260,11 @@ ULONG CcpAllocateCacheSections
 		Map->NumberOfMaps++;
 
 		InsertTailList(&Map->AssociatedBcb, &Bcb->ThisFileList);
-		
+
+		if (!RtlTestBit(CcCacheBitmap, i))
+		{
+			DPRINT("Somebody stoeled BCB #%x\n", i);
+		}
 		ASSERT(RtlTestBit(CcCacheBitmap, i));
 		
 		DPRINT("Allocated #%x\n", i);

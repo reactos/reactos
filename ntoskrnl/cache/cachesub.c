@@ -10,7 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -21,6 +21,10 @@ PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
 
+BOOLEAN
+NTAPI
+MmIsCOWAddress(PEPROCESS Process, PVOID Address);
+
 NTSTATUS
 NTAPI
 CcpSimpleWrite
@@ -29,60 +33,85 @@ CcpSimpleWrite
  PVOID Buffer,
  PIO_STATUS_BLOCK ReadStatus)
 {
-	NTSTATUS Status;
-	PIRP Irp = NULL;
-	KEVENT ReadWait;
-	PDEVICE_OBJECT 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
-	PIO_STACK_LOCATION IrpSp;
+    ULONG Length = PAGE_SIZE;
+    NTSTATUS Status;
+    PIRP Irp = NULL;
+    KEVENT ReadWait;
+    PDEVICE_OBJECT DeviceObject = MmGetDeviceObjectForFile(FileObject);
+    PIO_STACK_LOCATION IrpSp;
+    KIRQL OldIrql;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    if (MmIsDirtyPage(PsInitialSystemProcess, Buffer) && 
+	!MmIsCOWAddress(PsInitialSystemProcess, Buffer))
+    {
+	DPRINT1
+	    ("PAGING WRITE (FLUSH) File %wZ Offset %x Length %d\n", 
+	     &FileObject->FileName, 
+	     FileOffset->u.LowPart,
+	     Length);
+
+	MmSetCleanPage(PsInitialSystemProcess, Buffer);
 	
+	KeLowerIrql(OldIrql);
+
 	KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
 	
 	Irp = IoBuildAsynchronousFsdRequest
-		(IRP_MJ_WRITE,
-		 DeviceObject,
-		 Buffer,
-		 PAGE_SIZE,
-		 FileOffset,
-		 ReadStatus);
+	    (IRP_MJ_WRITE,
+	     DeviceObject,
+	     Buffer,
+	     Length,
+	     FileOffset,
+	     ReadStatus);
 	
 	if (!Irp)
 	{
-		return STATUS_NO_MEMORY;
+	    return STATUS_NO_MEMORY;
 	}
 	
 	Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
-
+	
 	ObReferenceObject(FileObject);
-
+	
 	Irp->UserEvent = &ReadWait;
 	Irp->Tail.Overlay.OriginalFileObject = FileObject;
 	Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 	IrpSp = IoGetNextIrpStackLocation(Irp);
 	IrpSp->FileObject = FileObject;
-
+	
 	Status = IoCallDriver(DeviceObject, Irp);
 	if (Status == STATUS_PENDING)
 	{
-		if (!NT_SUCCESS
-			(KeWaitForSingleObject
-			 (&ReadWait, 
-			  Suspended, 
-			  KernelMode, 
-			  FALSE, 
-			  NULL)))
-		{
-			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-			ASSERT(FALSE);
-			ObDereferenceObject(FileObject);
-			return Status;
-		}
+	    if (!NT_SUCCESS
+		(KeWaitForSingleObject
+		 (&ReadWait, 
+		  Suspended, 
+		  KernelMode, 
+		  FALSE, 
+		  NULL)))
+	    {
+		DPRINT1("Warning: Failed to wait for synchronous IRP\n");
+		ASSERT(FALSE);
+		ObDereferenceObject(FileObject);
+		return Status;
+	    }
 	}
-
+	
 	ObDereferenceObject(FileObject);
+	MmDeleteHyperspaceMapping(Buffer);
 
 	DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-
-	return ReadStatus->Status;
+    }
+    else
+    {
+	ReadStatus->Status = STATUS_SUCCESS;
+	ReadStatus->Information = PAGE_SIZE;
+	KeLowerIrql(OldIrql);
+    }
+    
+    return ReadStatus->Status;
 }
 
 VOID
@@ -156,6 +185,8 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	LARGE_INTEGER ToWrite = *FileOffset;
 	IO_STATUS_BLOCK IOSB;
 
+	DPRINT("CcFlushCache\n");
+
 	BOOLEAN Result = CcpMapData
 		((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap,
 		 FileOffset,
@@ -170,11 +201,18 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	ToWrite.LowPart = PAGE_ROUND_DOWN(FileOffset->LowPart);
 
 	for (BufPage = BufStart;
-		 BufPage < BufStart + PAGE_ROUND_UP(Length);
-		 BufPage += PAGE_SIZE)
+	     BufPage < BufStart + PAGE_ROUND_UP(Length);
+	     BufPage += PAGE_SIZE)
 	{
-		CcpSimpleWrite(Bcb->FileObject, &ToWrite, BufPage, &IOSB);
-		ToWrite.QuadPart += PAGE_SIZE;
+	    DPRINT
+		("CcpSimpleWrite: [%wZ] %x:%d\n", 
+		 &Bcb->FileObject->FileName,
+		 Bcb->FileOffset.LowPart,
+		 Bcb->Length);
+	    CcpSimpleWrite(Bcb->FileObject, &ToWrite, BufPage, &IOSB);
+	    DPRINT
+		("Page Write: %08x\n", IOSB.Status);
+	    ToWrite.QuadPart += PAGE_SIZE;
 	}
 
 	CcUnpinData(Bcb);
@@ -189,15 +227,15 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 		IoStatus->Status = IOSB.Status;
 		IoStatus->Information = 0;
 	}
+	DPRINT("CcFlushCache -> %08x\n", IOSB.Status);
 }
 
+// Always succeeds for us
 PVOID
 NTAPI
 CcRemapBcb(IN PVOID Bcb)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return NULL;
+    return Bcb;
 }
 
 
@@ -205,8 +243,14 @@ VOID
 NTAPI
 CcRepinBcb(IN PVOID Bcb)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    PVOID TheBcb;
+    PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
+    CcPinMappedData
+	(RealBcb->FileObject, 
+	 &RealBcb->FileOffset,
+	 RealBcb->Length,
+	 PIN_WAIT,
+	 &TheBcb);
 }
 
 VOID
@@ -215,8 +259,18 @@ CcUnpinRepinnedBcb(IN PVOID Bcb,
                    IN BOOLEAN WriteThrough,
                    OUT PIO_STATUS_BLOCK IoStatus)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    PNOCC_BCB RealBcb = (PNOCC_BCB)RealBcb;
+
+    CcUnpinData(Bcb);
+
+    if (WriteThrough)
+    {
+	CcFlushCache
+	    (RealBcb->FileObject->SectionObjectPointer,
+	     &RealBcb->FileOffset,
+	     RealBcb->Length,
+	     IoStatus);
+    }
 }
 
 /* EOF */

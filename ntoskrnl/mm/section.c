@@ -161,6 +161,12 @@ MiSimpleRead
 	PDEVICE_OBJECT 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
 	PIO_STACK_LOCATION IrpSp;
 
+	DPRINT1
+	    ("PAGING READ File %wZ Offset %x Length %d\n", 
+	     &FileObject->FileName, 
+	     FileOffset->u.LowPart,
+	     Length);
+
 	KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
 	
 	Irp = IoBuildAsynchronousFsdRequest
@@ -226,6 +232,12 @@ MiSimpleWrite
 	PDEVICE_OBJECT 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
 	PIO_STACK_LOCATION IrpSp;
 	
+	DPRINT1
+	    ("PAGING WRITE File %wZ Offset %x Length %d\n", 
+	     &FileObject->FileName, 
+	     FileOffset->u.LowPart,
+	     Length);
+
 	KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
 	
 	Irp = IoBuildAsynchronousFsdRequest
@@ -333,6 +345,21 @@ MmGetFileNameForAddress(IN PVOID Address,
      */
     RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
     return STATUS_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+MmIsCOWAddress(IN PEPROCESS Process, IN PVOID Address)
+{
+    BOOLEAN IsCow = TRUE; /* Don't write unless we're sure */
+    PMEMORY_AREA MemoryArea;
+
+    MmLockAddressSpace(&Process->VadRoot);
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->VadRoot, Address);
+    ASSERT(MemoryArea);
+    IsCow = MemoryArea->Data.SectionData.WriteCopyView;
+    MmUnlockAddressSpace(&Process->VadRoot);
+    return IsCow;
 }
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
@@ -3788,7 +3815,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    return(Status);
 }
 
-VOID static
+VOID
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {

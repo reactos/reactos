@@ -239,9 +239,19 @@ extern KGUARDED_MUTEX CcMutex;
 extern KEVENT CcDeleteEvent;
 extern ULONG CcCacheClockHand;
 extern LIST_ENTRY CcPendingUnmap;
+extern KEVENT CcpLazyWriteEvent;
 
 extern VOID CcpLock();
 extern VOID CcpUnlock();
 extern VOID CcpDereferenceCache(ULONG Sector);
+BOOLEAN
+NTAPI
+CcpMapData
+(IN PNOCC_CACHE_MAP Map,
+ IN PLARGE_INTEGER FileOffset,
+ IN ULONG Length,
+ IN ULONG Flags,
+ OUT PVOID *BcbResult,
+ OUT PVOID *Buffer);
 
 #endif

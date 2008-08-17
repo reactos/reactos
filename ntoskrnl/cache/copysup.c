@@ -26,45 +26,6 @@ ULONG CcFastReadResourceMiss;
 
 /* FUNCTIONS ******************************************************************/
 
-NTSTATUS
-NTAPI
-DoDeviceRead(PFILE_OBJECT FileObject,
-             LARGE_INTEGER SectorBase,
-             PCHAR SystemBuffer,
-             ULONG AlignSize,
-             ULONG *LengthRead)
-{
-    IO_STATUS_BLOCK IoStatusBlock = {{0}};
-    NTSTATUS Status;
-    KEVENT Event;
-    PMDL Mdl;
-
-    /* Create an MDL for the transfer */
-    Mdl = IoAllocateMdl(SystemBuffer, AlignSize, TRUE, FALSE, NULL);
-    MmBuildMdlForNonPagedPool(Mdl),
-    Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
-
-    /* Setup the event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Read the page */
-    Status = IoPageRead(FileObject, Mdl, &SectorBase, &Event, &IoStatusBlock);
-    if (Status == STATUS_PENDING)
-    {
-        /* Do the wait */
-        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    /* Free the MDL */
-    IoFreeMdl(Mdl);
-
-    /* Save how much we read, if needed */
-    if (LengthRead) *LengthRead = IoStatusBlock.Information;
-
-    return Status;
-}
-
 BOOLEAN
 NTAPI
 CcCopyRead(IN PFILE_OBJECT FileObject,
