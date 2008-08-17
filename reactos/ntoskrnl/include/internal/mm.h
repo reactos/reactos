@@ -1063,13 +1063,6 @@ MmCreateHyperspaceMapping(PFN_TYPE Page);
 
 PFN_TYPE
 NTAPI
-MmChangeHyperspaceMapping(
-    PVOID Address,
-    PFN_TYPE Page
-);
-
-PFN_TYPE
-NTAPI
 MmDeleteHyperspaceMapping(PVOID Address);
 
 NTSTATUS
@@ -1218,13 +1211,6 @@ MmReferencePage(PFN_TYPE Page);
 VOID
 NTAPI
 MmReferencePageUnsafe(PFN_TYPE Page);
-
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
 
 ULONG
 NTAPI

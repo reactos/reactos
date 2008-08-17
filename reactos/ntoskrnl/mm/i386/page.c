@@ -62,25 +62,6 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 
 BOOLEAN MmUnmapPageTable(PULONG Pt);
 
-ULONG_PTR
-NTAPI
-MiFlushTlbIpiRoutine(ULONG_PTR Address)
-{
-    if (Address == (ULONG_PTR)-1)
-    {
-        KeFlushCurrentTb();
-    }
-    else if (Address == (ULONG_PTR)-2)
-    {
-        KeFlushCurrentTb();
-    }
-    else
-    {
-        __invlpg((PVOID)Address);
-    }
-    return 0;
-}
-
 VOID
 MiFlushTlb(PULONG Pt, PVOID Address)
 {
@@ -89,8 +70,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
         __invlpg(Address);
     }
 }
-
-
 
 PULONG
 MmGetPageDirectory(VOID)
@@ -264,50 +243,6 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
     {
         KEBUGCHECK(0);
         //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-    }
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeDetachProcess();
-    }
-}
-
-VOID
-NTAPI
-MmFreePageTable(PEPROCESS Process, PVOID Address)
-{
-    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-    ULONG i;
-    PFN_TYPE Pfn;
-    PULONG PageTable;
-    
-    DPRINT("ProcessId %d, Address %x\n", Process->UniqueProcessId, Address);
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeAttachProcess(&Process->Pcb);
-    }
-    
-    PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)MiAddressToPte(Address));
-    for (i = 0; i < 1024; i++)
-    {
-        if (PageTable[i] != 0)
-        {
-            DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
-                     ((ULONG)Address / (4*1024*1024)), i, PageTable[i]);
-            KEBUGCHECK(0);
-        }
-    }
-    Pfn = MiAddressToPde(Address)->u.Hard.PageFrameNumber;
-    MiAddressToPde(Address)->u.Long = 0;
-    MiFlushTlb((PULONG)MiAddressToPde(Address), MiAddressToPte(Address));
-    
-    if (Address >= MmSystemRangeStart)
-    {
-        //    MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-        KEBUGCHECK(0);
-    }
-    else
-    {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
     }
     if (Process != NULL && Process != CurrentProcess)
     {
@@ -635,42 +570,6 @@ NTAPI
 MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 {
     return MmGetPageEntryForProcess(Process, Address) & PA_DIRTY ? TRUE : FALSE;
-}
-
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
-{
-    PULONG Pt;
-    ULONG Pte;
-    
-    if (Address < MmSystemRangeStart && Process == NULL)
-    {
-        DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
-        KEBUGCHECK(0);
-    }
-    
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (Pt == NULL)
-    {
-        KEBUGCHECK(0);
-    }
-    
-    do
-    {
-        Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_ACCESSED, Pte));
-    
-    if (Pte & PA_ACCESSED)
-    {
-        MiFlushTlb(Pt, Address);
-        return TRUE;
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-        return FALSE;
-    }
 }
 
 VOID
@@ -1232,22 +1131,6 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
     Address = (PVOID)((ULONG_PTR)HYPERSPACE + i * PAGE_SIZE);
     __invlpg(Address);
     return Address;
-}
-
-PFN_TYPE
-NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
-{
-    PFN_TYPE Pfn;
-    ULONG Entry;
-    
-    ASSERT (IS_HYPERSPACE(Address));
-    
-    Entry = InterlockedExchangePte(MiAddressToPte(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
-    Pfn = PTE_TO_PFN(Entry);
-    
-    __invlpg(Address);
-    return Pfn;
 }
 
 PFN_TYPE
