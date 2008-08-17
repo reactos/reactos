@@ -2,7 +2,12 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl_$(ARCH).def" />
+	<ifnot property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl.spec.def" />
+	</ifnot>
+	<if property="ARCH" value="arm">
+		<importlibrary definition="ntoskrnl_arm.def" />
+	</if>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -112,28 +117,16 @@
 		<file>timerobj.c</file>
 		<file>wait.c</file>
 	</directory>
-	<if property="CC" value="1">
-		<directory name="cc">
-			<file>cacheman.c</file>
-			<file>copy.c</file>
-			<file>fs.c</file>
-			<file>mdl.c</file>
-			<file>pin.c</file>
-			<file>view.c</file>
-		</directory>
-	</if>
-	<if property="CC" value="0">
-		<directory name="cache">
-			<file>cachesub.c</file>
-			<file>copysup.c</file>
-			<file>fssup.c</file>
-			<file>lazyrite.c</file>
-			<file>logsup.c</file>
-			<file>mdlsup.c</file>
-			<file>pinsup.c</file>
-			<file>vacbsup.c</file>
-		</directory>
-	</if>
+	<directory name="cache">
+		<file>cachesub.c</file>
+		<file>copysup.c</file>
+		<file>fssup.c</file>
+		<file>lazyrite.c</file>
+		<file>logsup.c</file>
+		<file>mdlsup.c</file>
+		<file>pinsup.c</file>
+		<file>vacbsup.c</file>
+	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -479,5 +472,6 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
+	<file>ntoskrnl.spec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>
