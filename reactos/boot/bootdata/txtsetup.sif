@@ -33,6 +33,7 @@ pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
+ramdisk.sys=,,,,,,x,,,,,,4
 ext2.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
