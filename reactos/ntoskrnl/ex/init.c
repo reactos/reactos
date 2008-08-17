@@ -1206,7 +1206,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     if (!ObInitSystem()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
-    if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
     if (!PsInitSystem(LoaderBlock)) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
@@ -1532,7 +1532,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Initialize the SRM in Phase 1 */
-    if (!SeInit()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
     /* Update the progress bar */
     InbvUpdateProgressBar(10);
