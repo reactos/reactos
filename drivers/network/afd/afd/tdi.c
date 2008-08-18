@@ -608,7 +608,7 @@ NTSTATUS TdiQueryInformation(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(IOCTL_TCP_QUERY_INFORMATION, /* Sub function */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_QUERY_INFORMATION,       /* Sub function */
                                            DeviceObject,                /* Device object */
                                            ConnectionObject,            /* File object */
                                            &Event,                      /* Event */
