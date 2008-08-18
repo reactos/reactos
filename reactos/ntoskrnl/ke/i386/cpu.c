@@ -12,12 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: Local EFLAGS defines not used anywhere else */
-#define EFLAGS_IOPL     0x3000
-#define EFLAGS_NF       0x4000
-#define EFLAGS_RF       0x10000
-#define EFLAGS_ID       0x200000
-
 /* GLOBALS *******************************************************************/
 
 /* The Boot TSS */
@@ -133,7 +127,7 @@ KiSetProcessorType(VOID)
     Ke386SaveFlags(EFlags);
 
     /* XOR out the ID bit and update EFlags */
-    NewEFlags = EFlags ^ EFLAGS_ID;
+    NewEFlags = EFlags ^ X86_EFLAGS_ID;
     Ke386RestoreFlags(NewEFlags);
 
     /* Get them back and see if they were modified */
@@ -141,7 +135,7 @@ KiSetProcessorType(VOID)
     if (NewEFlags != EFlags)
     {
         /* The modification worked, so CPUID exists. Set the ID Bit again. */
-        EFlags |= EFLAGS_ID;
+        EFlags |= X86_EFLAGS_ID;
         Ke386RestoreFlags(EFlags);
 
         /* Peform CPUID 0 to see if CPUID 1 is supported */
