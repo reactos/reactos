@@ -127,7 +127,7 @@ KiSetProcessorType(VOID)
     Ke386SaveFlags(EFlags);
 
     /* XOR out the ID bit and update EFlags */
-    NewEFlags = EFlags ^ X86_EFLAGS_ID;
+    NewEFlags = EFlags ^ EFLAGS_ID;
     Ke386RestoreFlags(NewEFlags);
 
     /* Get them back and see if they were modified */
@@ -135,7 +135,7 @@ KiSetProcessorType(VOID)
     if (NewEFlags != EFlags)
     {
         /* The modification worked, so CPUID exists. Set the ID Bit again. */
-        EFlags |= X86_EFLAGS_ID;
+        EFlags |= EFLAGS_ID;
         Ke386RestoreFlags(EFlags);
 
         /* Peform CPUID 0 to see if CPUID 1 is supported */
