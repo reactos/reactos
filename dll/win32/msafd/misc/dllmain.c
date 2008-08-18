@@ -291,6 +291,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_INSUFFICIENT_RESOURCES: DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n"); *Errno = WSA_NOT_ENOUGH_MEMORY; break;
         case STATUS_INVALID_CONNECTION: DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n"); *Errno = WSAEAFNOSUPPORT; break;
         case STATUS_REMOTE_NOT_LISTENING: DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n"); *Errno = WSAECONNRESET; break;
+	case STATUS_FILE_CLOSED: DbgPrint("MSAFD: STATUS_FILE_CLOSED\n"); *Errno = WSAENOTSOCK; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
