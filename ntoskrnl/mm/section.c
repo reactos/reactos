@@ -105,8 +105,8 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
     }
     else
     {
-		return IoGetRelatedDeviceObject(FileObject);
-	}
+	return IoGetRelatedDeviceObject(FileObject);
+    }
 }
 
 PFILE_OBJECT
@@ -229,13 +229,22 @@ MiSimpleWrite
 	NTSTATUS Status;
 	PIRP Irp = NULL;
 	KEVENT ReadWait;
-	PDEVICE_OBJECT 	DeviceObject = MmGetDeviceObjectForFile(FileObject);
+	PDEVICE_OBJECT DeviceObject;
 	PIO_STACK_LOCATION IrpSp;
 	
+	ASSERT(FileObject);
+	ASSERT(FileOffset);
+	ASSERT(Buffer);
+	ASSERT(ReadStatus);
+
+	DeviceObject = MmGetDeviceObjectForFile(FileObject);
+
+	ASSERT(DeviceObject);
+
 	DPRINT1
-	    ("PAGING WRITE File %wZ Offset %x Length %d\n", 
-	     &FileObject->FileName, 
-	     FileOffset->u.LowPart,
+	    ("PAGING WRITE: FileObject %x Offset %x Length %d\n", 
+	     &FileObject, 
+	     FileOffset->LowPart,
 	     Length);
 
 	KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
@@ -591,7 +600,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                                  BOOLEAN PageOut)
 {
    ULONG Entry;
-   BOOLEAN IsDirectMapped = FALSE;
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
    if (Entry == 0)
@@ -627,16 +635,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 
       Page = PFN_FROM_SSE(Entry);
       FileObject = Section->FileObject;
-      if (FileObject != NULL &&
-            !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-      {
-
-		  if ((FileOffset.QuadPart % PAGE_SIZE) == 0 &&
-               (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
-         {
-            IsDirectMapped = TRUE;
-         }
-      }
 
       SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
       if (SavedSwapEntry == 0)
@@ -657,10 +655,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
          else
          {
             MmSetPageEntrySectionSegment(Segment, Offset, 0);
-            if (!IsDirectMapped)
-            {
-               MmReleasePageMemoryConsumer(MC_USER, Page);
-            }
          }
       }
       else
@@ -1542,7 +1536,6 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
    LARGE_INTEGER FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
     
@@ -1561,22 +1554,6 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
    FileObject = Context.Section->FileObject;
-   DirectMapped = FALSE;
-   if (FileObject != NULL &&
-       !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-   {
-      /*
-       * If the file system is letting us go directly to the cache and the
-       * memory area was mapped at an offset in the file which is page aligned
-       * then note this is a direct mapped page.
-       */
-      if ((FileOffset.QuadPart % PAGE_SIZE) == 0 &&
-            (Context.Offset + PAGE_SIZE <= Context.Segment->RawLength || !IsImageSection))
-      {
-         DirectMapped = TRUE;
-      }
-   }
-
 
    /*
     * This should never happen since mappings of physical memory are never
@@ -1616,14 +1593,6 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
    else
    {
       Context.Private = FALSE;
-   }
-
-   /*
-    * Take an additional reference to the page or the cache segment.
-    */
-   if (!(DirectMapped && !Context.Private))
-   {
-      MmReferencePage(Page);
    }
 
    MmDeleteAllRmaps(Page, (PVOID)&Context, MmPageOutDeleteMapping);
@@ -1687,31 +1656,6 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
          MmspCompleteAndReleasePageOp(PageOp);
          return(STATUS_SUCCESS);
       }
-   }
-   else if (!Context.Private && DirectMapped)
-   {
-      if (SwapEntry != 0)
-      {
-         DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
-                 Address);
-         KEBUGCHECK(0);
-      }
-      PageOp->Status = STATUS_SUCCESS;
-      MmspCompleteAndReleasePageOp(PageOp);
-      return(STATUS_SUCCESS);
-   }
-   else if (!Context.WasDirty && !DirectMapped && !Context.Private)
-   {
-      if (SwapEntry != 0)
-      {
-         DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %x)\n",
-                 Address);
-         KEBUGCHECK(0);
-      }
-      MmReleasePageMemoryConsumer(MC_USER, Page);
-      PageOp->Status = STATUS_SUCCESS;
-      MmspCompleteAndReleasePageOp(PageOp);
-      return(STATUS_SUCCESS);
    }
    else if (!Context.WasDirty && Context.Private && SwapEntry != 0)
    {
@@ -1881,7 +1825,6 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
    BOOLEAN Private;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
@@ -1898,21 +1841,6 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
    IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
    FileObject = Section->FileObject;
-   DirectMapped = FALSE;
-   if (FileObject != NULL &&
-         !(Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
-   {
-      /*
-       * If the file system is letting us go directly to the cache and the
-       * memory area was mapped at an offset in the file which is page aligned
-       * then note this is a direct mapped page.
-       */
-      if (((Offset + Segment->FileOffset.QuadPart) % PAGE_SIZE) == 0 &&
-            (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
-      {
-         DirectMapped = TRUE;
-      }
-   }
 
    /*
     * This should never happen since mappings of physical memory are never
@@ -1957,39 +1885,6 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
     * Speculatively set all mappings of the page to clean.
     */
    MmSetCleanAllRmaps(Page);
-
-   /*
-    * If this page was direct mapped from the cache then the cache manager
-    * will take care of writing it back to disk.
-    */
-   if (DirectMapped && !Private)
-   {
-	   LONG RemainingLength;
-	   NTSTATUS Status;
-	   LARGE_INTEGER FileOffset;
-	   IO_STATUS_BLOCK ReadStatus;
-	   
-	   FileOffset.QuadPart = Offset;
-	   
-	   RemainingLength = min(PAGE_SIZE, Segment->FileOffset.QuadPart + Segment->Length - FileOffset.QuadPart);
-	   DPRINT("Writing no more than %d bytes\n", RemainingLength);
-
-	   if (RemainingLength > 0)
-	   {
-		   Status = MiSimpleWrite
-			   (Section->FileObject, 
-				&FileOffset,
-				Address,
-				RemainingLength,
-				&ReadStatus);
-	   } else
-		   Status = STATUS_SUCCESS;
-
-	   PageOp->Status = Status;
-	   MmspCompleteAndReleasePageOp(PageOp);
-
-	   return(Status);
-   }
 
    /*
     * If necessary, allocate an entry in the paging file for this page

@@ -153,7 +153,7 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
 
 	Count = i;
 
-	DPRINT("Copying %d bytes for Read\n", Length);
+	DPRINT("Copying %d bytes for Write\n", Length);
 
 	for (WriteBuf = (PCHAR)Buffer, WriteLen = Length, i = 0;
 		 WriteLen > 0;

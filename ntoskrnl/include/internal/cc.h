@@ -130,21 +130,22 @@ typedef struct _NOCC_BCB
 
     /* So we know the initial request that was made */
     PFILE_OBJECT FileObject;
-	PSECTION_OBJECT SectionObject;
-	LARGE_INTEGER FileOffset;
-	ULONG Length;
-	PVOID BaseAddress;
-	BOOLEAN Dirty;
-	PVOID OwnerPointer;
-
-	/* Reference counts */
-	ULONG RefCount;
-
-	LIST_ENTRY ThisFileList;
-
-	KEVENT ExclusiveWait;
-	BOOLEAN Exclusive;
-	ULONG ExclusiveWaiter;
+    PSECTION_OBJECT SectionObject;
+    LARGE_INTEGER FileOffset;
+    ULONG Length;
+    PVOID BaseAddress;
+    BOOLEAN Dirty;
+    PVOID OwnerPointer;
+    PMDL Pinned;
+    
+    /* Reference counts */
+    ULONG RefCount;
+    
+    LIST_ENTRY ThisFileList;
+    
+    KEVENT ExclusiveWait;
+    ULONG ExclusiveWaiter;
+    BOOLEAN Exclusive;
 } NOCC_BCB, *PNOCC_BCB;
 
 typedef struct _NOCC_CACHE_MAP

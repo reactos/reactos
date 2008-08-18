@@ -37,7 +37,7 @@ CcpSimpleWrite
     NTSTATUS Status;
     PIRP Irp = NULL;
     KEVENT ReadWait;
-    PDEVICE_OBJECT DeviceObject = MmGetDeviceObjectForFile(FileObject);
+    PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION IrpSp;
     KIRQL OldIrql;
 
@@ -47,11 +47,11 @@ CcpSimpleWrite
 	!MmIsCOWAddress(PsInitialSystemProcess, Buffer))
     {
 	DPRINT1
-	    ("PAGING WRITE (FLUSH) File %wZ Offset %x Length %d\n", 
-	     &FileObject->FileName, 
+	    ("PAGING WRITE (FLUSH) Offset %x Length %d\n", 
 	     FileOffset->u.LowPart,
 	     Length);
 
+	DeviceObject = MmGetDeviceObjectForFile(FileObject);
 	MmSetCleanPage(PsInitialSystemProcess, Buffer);
 	
 	KeLowerIrql(OldIrql);
@@ -185,8 +185,6 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	LARGE_INTEGER ToWrite = *FileOffset;
 	IO_STATUS_BLOCK IOSB;
 
-	DPRINT("CcFlushCache\n");
-
 	BOOLEAN Result = CcpMapData
 		((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap,
 		 FileOffset,
@@ -200,20 +198,22 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	BufStart = (PCHAR)PAGE_ROUND_DOWN(((ULONG_PTR)Buffer));
 	ToWrite.LowPart = PAGE_ROUND_DOWN(FileOffset->LowPart);
 
+	DPRINT
+	    ("CcpSimpleWrite: [%wZ] %x:%d\n", 
+	     &Bcb->FileObject->FileName,
+	     Buffer,
+	     Bcb->Length);
+
 	for (BufPage = BufStart;
 	     BufPage < BufStart + PAGE_ROUND_UP(Length);
 	     BufPage += PAGE_SIZE)
 	{
-	    DPRINT
-		("CcpSimpleWrite: [%wZ] %x:%d\n", 
-		 &Bcb->FileObject->FileName,
-		 Bcb->FileOffset.LowPart,
-		 Bcb->Length);
 	    CcpSimpleWrite(Bcb->FileObject, &ToWrite, BufPage, &IOSB);
-	    DPRINT
-		("Page Write: %08x\n", IOSB.Status);
 	    ToWrite.QuadPart += PAGE_SIZE;
 	}
+
+	DPRINT
+	    ("Page Write: %08x\n", IOSB.Status);
 
 	CcUnpinData(Bcb);
 
@@ -227,7 +227,6 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 		IoStatus->Status = IOSB.Status;
 		IoStatus->Information = 0;
 	}
-	DPRINT("CcFlushCache -> %08x\n", IOSB.Status);
 }
 
 // Always succeeds for us
