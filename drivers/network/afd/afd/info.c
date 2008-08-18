@@ -125,12 +125,20 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
 
                 if( SysMdl ) {
-                    MmBuildMdlForNonPagedPool( SysMdl );
+                    _SEH_TRY {
+                        MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
+                    } _SEH_HANDLE {
+	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	                Status = _SEH_GetExceptionCode();
+                    } _SEH_END;
+                } else Status = STATUS_NO_MEMORY;
+
+                if( NT_SUCCESS(Status) ) {
                     Status = TdiQueryInformation
                         ( FCB->AddressFile.Object,
                           TDI_QUERY_CONNECTION_INFO,
                           SysMdl );
-                } else Status = STATUS_NO_MEMORY;
+                }
 
                 if( NT_SUCCESS(Status) ) {
                     TransAddr =
