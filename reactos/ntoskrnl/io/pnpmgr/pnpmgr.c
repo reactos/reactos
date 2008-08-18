@@ -1,17 +1,15 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/pnpmgr.c
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/pnpmgr/pnpmgr.c
  * PURPOSE:         Initializes the PnP manager
- *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -224,7 +222,7 @@ IopStartDevice(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                            PDEVICE_CAPABILITIES DeviceCaps)
 {
@@ -265,466 +263,6 @@ IopAsynchronousInvalidateDeviceRelations(
     ExFreePool(Data);
 }
 
-/*
- * @implemented
- */
-VOID
-NTAPI
-IoInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type)
-{
-    PIO_WORKITEM WorkItem;
-    PINVALIDATE_DEVICE_RELATION_DATA Data;
-
-    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
-    if (!Data)
-        return;
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        ExFreePool(Data);
-        return;
-    }
-
-    ObReferenceObject(DeviceObject);
-    Data->DeviceObject = DeviceObject;
-    Data->Type = Type;
-    Data->WorkItem = WorkItem;
-
-    IoQueueWorkItem(
-        WorkItem,
-        IopAsynchronousInvalidateDeviceRelations,
-        DelayedWorkQueue,
-        Data);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
-                    IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
-                    IN ULONG BufferLength,
-                    OUT PVOID PropertyBuffer,
-                    OUT PULONG ResultLength)
-{
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-    DEVICE_CAPABILITIES DeviceCaps;
-    ULONG Length;
-    PVOID Data = NULL;
-    PWSTR Ptr;
-    NTSTATUS Status;
-
-    DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
-
-    *ResultLength = 0;
-
-    if (DeviceNode == NULL)
-        return STATUS_INVALID_DEVICE_REQUEST;
-
-    switch (DeviceProperty)
-    {
-    case DevicePropertyBusNumber:
-        Length = sizeof(ULONG);
-        Data = &DeviceNode->ChildBusNumber;
-        break;
-
-        /* Complete, untested */
-    case DevicePropertyBusTypeGuid:
-        /* Sanity check */
-        if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
-            (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
-        {
-            /* Return the GUID */
-            *ResultLength = sizeof(GUID);
-
-            /* Check if the buffer given was large enough */
-            if (BufferLength < *ResultLength)
-            {
-                return STATUS_BUFFER_TOO_SMALL;
-            }
-
-            /* Copy the GUID */
-            RtlCopyMemory(PropertyBuffer,
-                &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
-                sizeof(GUID));
-            return STATUS_SUCCESS;
-        }
-        else
-        {
-            return STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        break;
-
-    case DevicePropertyLegacyBusType:
-        Length = sizeof(INTERFACE_TYPE);
-        Data = &DeviceNode->ChildInterfaceType;
-        break;
-
-    case DevicePropertyAddress:
-        /* Query the device caps */
-        Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
-        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
-        {
-            /* Return length */
-            *ResultLength = sizeof(ULONG);
-
-            /* Check if the buffer given was large enough */
-            if (BufferLength < *ResultLength)
-            {
-                return STATUS_BUFFER_TOO_SMALL;
-            }
-
-            /* Return address */
-            *(PULONG)PropertyBuffer = DeviceCaps.Address;
-            return STATUS_SUCCESS;
-        }
-        else
-        {
-            return STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        break;
-
-//    case DevicePropertyUINumber:
-//      if (DeviceNode->CapabilityFlags == NULL)
-//         return STATUS_INVALID_DEVICE_REQUEST;
-//      Length = sizeof(ULONG);
-//      Data = &DeviceNode->CapabilityFlags->UINumber;
-//      break;
-
-    case DevicePropertyClassName:
-    case DevicePropertyClassGuid:
-    case DevicePropertyDriverKeyName:
-    case DevicePropertyManufacturer:
-    case DevicePropertyFriendlyName:
-    case DevicePropertyHardwareID:
-    case DevicePropertyCompatibleIDs:
-    case DevicePropertyDeviceDescription:
-    case DevicePropertyLocationInformation:
-    case DevicePropertyUINumber:
-        {
-            LPCWSTR RegistryPropertyName;
-            UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
-            UNICODE_STRING ValueName;
-            KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
-            ULONG ValueInformationLength;
-            HANDLE KeyHandle, EnumRootHandle;
-            NTSTATUS Status;
-
-            switch (DeviceProperty)
-            {
-            case DevicePropertyClassName:
-                RegistryPropertyName = L"Class"; break;
-            case DevicePropertyClassGuid:
-                RegistryPropertyName = L"ClassGuid"; break;
-            case DevicePropertyDriverKeyName:
-                RegistryPropertyName = L"Driver"; break;
-            case DevicePropertyManufacturer:
-                RegistryPropertyName = L"Mfg"; break;
-            case DevicePropertyFriendlyName:
-                RegistryPropertyName = L"FriendlyName"; break;
-            case DevicePropertyHardwareID:
-                RegistryPropertyName = L"HardwareID"; break;
-            case DevicePropertyCompatibleIDs:
-                RegistryPropertyName = L"CompatibleIDs"; break;
-            case DevicePropertyDeviceDescription:
-                RegistryPropertyName = L"DeviceDesc"; break;
-            case DevicePropertyLocationInformation:
-                RegistryPropertyName = L"LocationInformation"; break;
-            case DevicePropertyUINumber:
-                RegistryPropertyName = L"UINumber"; break;
-            default:
-                /* Should not happen */
-                ASSERT(FALSE);
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            DPRINT("Registry property %S\n", RegistryPropertyName);
-
-            /* Open Enum key */
-            Status = IopOpenRegistryKeyEx(&EnumRootHandle, NULL,
-                &EnumRoot, KEY_READ);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Error opening ENUM_ROOT, Status=0x%08x\n", Status);
-                return Status;
-            }
-
-            /* Open instance key */
-            Status = IopOpenRegistryKeyEx(&KeyHandle, EnumRootHandle,
-                &DeviceNode->InstancePath, KEY_READ);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Error opening InstancePath, Status=0x%08x\n", Status);
-                ZwClose(EnumRootHandle);
-                return Status;
-            }
-
-            /* Allocate buffer to read as much data as required by the caller */
-            ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                Data[0]) + BufferLength;
-            ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
-            if (!ValueInformation)
-            {
-                ZwClose(KeyHandle);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            /* Read the value */
-            RtlInitUnicodeString(&ValueName, RegistryPropertyName);
-            Status = ZwQueryValueKey(KeyHandle, &ValueName,
-                KeyValuePartialInformation, ValueInformation,
-                ValueInformationLength,
-                &ValueInformationLength);
-            ZwClose(KeyHandle);
-
-            /* Return data */
-            *ResultLength = ValueInformation->DataLength;
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Problem: Status=0x%08x, ResultLength = %d\n", Status, *ResultLength);
-                ExFreePool(ValueInformation);
-                if (Status == STATUS_BUFFER_OVERFLOW)
-                    return STATUS_BUFFER_TOO_SMALL;
-                else
-                    return Status;
-            }
-
-            /* FIXME: Verify the value (NULL-terminated, correct format). */
-            RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
-                ValueInformation->DataLength);
-            ExFreePool(ValueInformation);
-
-            return STATUS_SUCCESS;
-        }
-
-    case DevicePropertyBootConfiguration:
-        Length = 0;
-        if (DeviceNode->BootResources->Count != 0)
-        {
-            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
-        }
-        Data = &DeviceNode->BootResources;
-        break;
-
-        /* FIXME: use a translated boot configuration instead */
-    case DevicePropertyBootConfigurationTranslated:
-        Length = 0;
-        if (DeviceNode->BootResources->Count != 0)
-        {
-            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
-        }
-        Data = &DeviceNode->BootResources;
-        break;
-
-    case DevicePropertyEnumeratorName:
-        /* A buffer overflow can't happen here, since InstancePath
-        * always contains the enumerator name followed by \\ */
-        Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
-        ASSERT(Ptr);
-        Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
-        Data = DeviceNode->InstancePath.Buffer;
-        break;
-
-    case DevicePropertyPhysicalDeviceObjectName:
-        /* InstancePath buffer is NULL terminated, so we can do this */
-        Length = DeviceNode->InstancePath.MaximumLength;
-        Data = DeviceNode->InstancePath.Buffer;
-        break;
-
-    default:
-        return STATUS_INVALID_PARAMETER_2;
-    }
-
-    /* Prepare returned values */
-    *ResultLength = Length;
-    if (BufferLength < Length)
-        return STATUS_BUFFER_TOO_SMALL;
-    RtlCopyMemory(PropertyBuffer, Data, Length);
-
-    /* NULL terminate the string (if required) */
-    if (DeviceProperty == DevicePropertyEnumeratorName)
-        ((LPWSTR)PropertyBuffer)[Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
-{
-    UNIMPLEMENTED;
-}
-
-/**
- * @name IoOpenDeviceRegistryKey
- *
- * Open a registry key unique for a specified driver or device instance.
- *
- * @param DeviceObject   Device to get the registry key for.
- * @param DevInstKeyType Type of the key to return.
- * @param DesiredAccess  Access mask (eg. KEY_READ | KEY_WRITE).
- * @param DevInstRegKey  Handle to the opened registry key on
- *                       successful return.
- *
- * @return Status.
- *
- * @implemented
- */
-NTSTATUS
-STDCALL
-IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
-                        IN ULONG DevInstKeyType,
-                        IN ACCESS_MASK DesiredAccess,
-                        OUT PHANDLE DevInstRegKey)
-{
-   static WCHAR RootKeyName[] =
-      L"\\Registry\\Machine\\System\\CurrentControlSet\\";
-   static WCHAR ProfileKeyName[] =
-      L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-   static WCHAR ClassKeyName[] = L"Control\\Class\\";
-   static WCHAR EnumKeyName[] = L"Enum\\";
-   static WCHAR DeviceParametersKeyName[] = L"Device Parameters";
-   ULONG KeyNameLength;
-   LPWSTR KeyNameBuffer;
-   UNICODE_STRING KeyName;
-   ULONG DriverKeyLength;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   PDEVICE_NODE DeviceNode = NULL;
-   NTSTATUS Status;
-
-   DPRINT("IoOpenDeviceRegistryKey() called\n");
-
-   if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
-   {
-       DPRINT1("IoOpenDeviceRegistryKey(): got wrong params, exiting... \n");
-       return STATUS_INVALID_PARAMETER;
-   }
-
-   /*
-    * Calculate the length of the base key name. This is the full
-    * name for driver key or the name excluding "Device Parameters"
-    * subkey for device key.
-    */
-
-   KeyNameLength = sizeof(RootKeyName);
-   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
-      KeyNameLength += sizeof(ProfileKeyName) - sizeof(UNICODE_NULL);
-   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
-   {
-      KeyNameLength += sizeof(ClassKeyName) - sizeof(UNICODE_NULL);
-      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
-                                   0, NULL, &DriverKeyLength);
-      if (Status != STATUS_BUFFER_TOO_SMALL)
-         return Status;
-      KeyNameLength += DriverKeyLength;
-   }
-   else
-   {
-      DeviceNode = IopGetDeviceNode(DeviceObject);
-      KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
-                       DeviceNode->InstancePath.Length;
-   }
-
-   /*
-    * Now allocate the buffer for the key name...
-    */
-
-   KeyNameBuffer = ExAllocatePool(PagedPool, KeyNameLength);
-   if (KeyNameBuffer == NULL)
-      return STATUS_INSUFFICIENT_RESOURCES;
-
-   KeyName.Length = 0;
-   KeyName.MaximumLength = (USHORT)KeyNameLength;
-   KeyName.Buffer = KeyNameBuffer;
-
-   /*
-    * ...and build the key name.
-    */
-
-   KeyName.Length += sizeof(RootKeyName) - sizeof(UNICODE_NULL);
-   RtlCopyMemory(KeyNameBuffer, RootKeyName, KeyName.Length);
-
-   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
-      RtlAppendUnicodeToString(&KeyName, ProfileKeyName);
-
-   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
-   {
-      RtlAppendUnicodeToString(&KeyName, ClassKeyName);
-      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
-                                   DriverKeyLength, KeyNameBuffer +
-                                   (KeyName.Length / sizeof(WCHAR)),
-                                   &DriverKeyLength);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("Call to IoGetDeviceProperty() failed with Status 0x%08lx\n", Status);
-         ExFreePool(KeyNameBuffer);
-         return Status;
-      }
-      KeyName.Length += (USHORT)DriverKeyLength - sizeof(UNICODE_NULL);
-   }
-   else
-   {
-      RtlAppendUnicodeToString(&KeyName, EnumKeyName);
-      Status = RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->InstancePath);
-      if (DeviceNode->InstancePath.Length == 0)
-      {
-         ExFreePool(KeyNameBuffer);
-         return Status;
-      }
-   }
-
-   /*
-    * Open the base key.
-    */
-   Status = IopOpenRegistryKeyEx(DevInstRegKey, NULL, &KeyName, DesiredAccess);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("IoOpenDeviceRegistryKey(%wZ): Base key doesn't exist, exiting... (Status 0x%08lx)\n", &KeyName, Status);
-      ExFreePool(KeyNameBuffer);
-      return Status;
-   }
-   ExFreePool(KeyNameBuffer);
-
-   /*
-    * For driver key we're done now.
-    */
-
-   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
-      return Status;
-
-   /*
-    * Let's go further. For device key we must open "Device Parameters"
-    * subkey and create it if it doesn't exist yet.
-    */
-
-   RtlInitUnicodeString(&KeyName, DeviceParametersKeyName);
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
-                              OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
-   Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
-                        0, NULL, REG_OPTION_NON_VOLATILE, NULL);
-   ZwClose(ObjectAttributes.RootDirectory);
-
-   return Status;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
-{
-   UNIMPLEMENTED;
-}
-
-
 NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 {
@@ -743,7 +281,7 @@ IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 }
 
 USHORT
-STDCALL
+NTAPI
 IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
 {
    USHORT i = 0, FoundIndex = 0xFFFF;
@@ -2137,158 +1675,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 }
 
 /*
- * @implemented
- */
-VOID
-NTAPI
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type)
-{
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-    DEVICETREE_TRAVERSE_CONTEXT Context;
-    PDEVICE_RELATIONS DeviceRelations;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PDEVICE_NODE ChildDeviceNode;
-    IO_STACK_LOCATION Stack;
-    BOOLEAN BootDrivers;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-    HANDLE Handle;
-    NTSTATUS Status;
-    ULONG i;
-
-    DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
-
-    Stack.Parameters.QueryDeviceRelations.Type = Type;
-
-    Status = IopInitiatePnpIrp(
-        DeviceObject,
-        &IoStatusBlock,
-        IRP_MN_QUERY_DEVICE_RELATIONS,
-        &Stack);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-
-    if (!DeviceRelations || DeviceRelations->Count <= 0)
-    {
-        DPRINT("No PDOs\n");
-        if (DeviceRelations)
-        {
-            ExFreePool(DeviceRelations);
-        }
-        return;
-    }
-
-    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
-
-    /*
-     * Create device nodes for all discovered devices
-     */
-    for (i = 0; i < DeviceRelations->Count; i++)
-    {
-        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
-        {
-            ObDereferenceObject(DeviceRelations->Objects[i]);
-            continue;
-        }
-        Status = IopCreateDeviceNode(
-            DeviceNode,
-            DeviceRelations->Objects[i],
-            NULL,
-            &ChildDeviceNode);
-        DeviceNode->Flags |= DNF_ENUMERATED;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("No resources\n");
-            for (i = 0; i < DeviceRelations->Count; i++)
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            ExFreePool(DeviceRelations);
-            return;
-        }
-    }
-    ExFreePool(DeviceRelations);
-
-    /*
-     * Retrieve information about all discovered children from the bus driver
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionInterrogateDeviceStack,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    /*
-     * Retrieve configuration from the registry for discovered children
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionConfigureChildServices,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    /*
-     * Get the state of the system boot. If the \\SystemRoot link isn't
-     * created yet, we will assume that it's possible to load only boot
-     * drivers.
-     */
-    InitializeObjectAttributes(
-        &ObjectAttributes,
-        &LinkName,
-        0,
-        NULL,
-        NULL);
-    Status = ZwOpenFile(
-        &Handle,
-        FILE_ALL_ACCESS,
-        &ObjectAttributes,
-        &IoStatusBlock,
-        0,
-        0);
-     if (NT_SUCCESS(Status))
-     {
-         BootDrivers = FALSE;
-         ZwClose(Handle);
-     }
-     else
-         BootDrivers = TRUE;
-
-    /*
-     * Initialize services for discovered children. Only boot drivers will
-     * be loaded from boot driver!
-     */
-    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    DPRINT("IopInvalidateDeviceRelations() finished\n");
-}
-
-/*
  * IopActionConfigureChildServices
  *
  * Retrieve configuration for all (direct) child nodes of a parent node.
@@ -3476,4 +2862,615 @@ PpInitSystem(VOID)
     }
 }
 
-/* EOF */
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
+                    IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
+                    IN ULONG BufferLength,
+                    OUT PVOID PropertyBuffer,
+                    OUT PULONG ResultLength)
+{
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    DEVICE_CAPABILITIES DeviceCaps;
+    ULONG Length;
+    PVOID Data = NULL;
+    PWSTR Ptr;
+    NTSTATUS Status;
+
+    DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
+
+    *ResultLength = 0;
+
+    if (DeviceNode == NULL)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    switch (DeviceProperty)
+    {
+    case DevicePropertyBusNumber:
+        Length = sizeof(ULONG);
+        Data = &DeviceNode->ChildBusNumber;
+        break;
+
+        /* Complete, untested */
+    case DevicePropertyBusTypeGuid:
+        /* Sanity check */
+        if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
+            (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
+        {
+            /* Return the GUID */
+            *ResultLength = sizeof(GUID);
+
+            /* Check if the buffer given was large enough */
+            if (BufferLength < *ResultLength)
+            {
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Copy the GUID */
+            RtlCopyMemory(PropertyBuffer,
+                &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
+                sizeof(GUID));
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        break;
+
+    case DevicePropertyLegacyBusType:
+        Length = sizeof(INTERFACE_TYPE);
+        Data = &DeviceNode->ChildInterfaceType;
+        break;
+
+    case DevicePropertyAddress:
+        /* Query the device caps */
+        Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
+        {
+            /* Return length */
+            *ResultLength = sizeof(ULONG);
+
+            /* Check if the buffer given was large enough */
+            if (BufferLength < *ResultLength)
+            {
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+
+            /* Return address */
+            *(PULONG)PropertyBuffer = DeviceCaps.Address;
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        break;
+
+//    case DevicePropertyUINumber:
+//      if (DeviceNode->CapabilityFlags == NULL)
+//         return STATUS_INVALID_DEVICE_REQUEST;
+//      Length = sizeof(ULONG);
+//      Data = &DeviceNode->CapabilityFlags->UINumber;
+//      break;
+
+    case DevicePropertyClassName:
+    case DevicePropertyClassGuid:
+    case DevicePropertyDriverKeyName:
+    case DevicePropertyManufacturer:
+    case DevicePropertyFriendlyName:
+    case DevicePropertyHardwareID:
+    case DevicePropertyCompatibleIDs:
+    case DevicePropertyDeviceDescription:
+    case DevicePropertyLocationInformation:
+    case DevicePropertyUINumber:
+        {
+            LPCWSTR RegistryPropertyName;
+            UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+            UNICODE_STRING ValueName;
+            KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
+            ULONG ValueInformationLength;
+            HANDLE KeyHandle, EnumRootHandle;
+            NTSTATUS Status;
+
+            switch (DeviceProperty)
+            {
+            case DevicePropertyClassName:
+                RegistryPropertyName = L"Class"; break;
+            case DevicePropertyClassGuid:
+                RegistryPropertyName = L"ClassGuid"; break;
+            case DevicePropertyDriverKeyName:
+                RegistryPropertyName = L"Driver"; break;
+            case DevicePropertyManufacturer:
+                RegistryPropertyName = L"Mfg"; break;
+            case DevicePropertyFriendlyName:
+                RegistryPropertyName = L"FriendlyName"; break;
+            case DevicePropertyHardwareID:
+                RegistryPropertyName = L"HardwareID"; break;
+            case DevicePropertyCompatibleIDs:
+                RegistryPropertyName = L"CompatibleIDs"; break;
+            case DevicePropertyDeviceDescription:
+                RegistryPropertyName = L"DeviceDesc"; break;
+            case DevicePropertyLocationInformation:
+                RegistryPropertyName = L"LocationInformation"; break;
+            case DevicePropertyUINumber:
+                RegistryPropertyName = L"UINumber"; break;
+            default:
+                /* Should not happen */
+                ASSERT(FALSE);
+                return STATUS_UNSUCCESSFUL;
+            }
+
+            DPRINT("Registry property %S\n", RegistryPropertyName);
+
+            /* Open Enum key */
+            Status = IopOpenRegistryKeyEx(&EnumRootHandle, NULL,
+                &EnumRoot, KEY_READ);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error opening ENUM_ROOT, Status=0x%08x\n", Status);
+                return Status;
+            }
+
+            /* Open instance key */
+            Status = IopOpenRegistryKeyEx(&KeyHandle, EnumRootHandle,
+                &DeviceNode->InstancePath, KEY_READ);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error opening InstancePath, Status=0x%08x\n", Status);
+                ZwClose(EnumRootHandle);
+                return Status;
+            }
+
+            /* Allocate buffer to read as much data as required by the caller */
+            ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                Data[0]) + BufferLength;
+            ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
+            if (!ValueInformation)
+            {
+                ZwClose(KeyHandle);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            /* Read the value */
+            RtlInitUnicodeString(&ValueName, RegistryPropertyName);
+            Status = ZwQueryValueKey(KeyHandle, &ValueName,
+                KeyValuePartialInformation, ValueInformation,
+                ValueInformationLength,
+                &ValueInformationLength);
+            ZwClose(KeyHandle);
+
+            /* Return data */
+            *ResultLength = ValueInformation->DataLength;
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Problem: Status=0x%08x, ResultLength = %d\n", Status, *ResultLength);
+                ExFreePool(ValueInformation);
+                if (Status == STATUS_BUFFER_OVERFLOW)
+                    return STATUS_BUFFER_TOO_SMALL;
+                else
+                    return Status;
+            }
+
+            /* FIXME: Verify the value (NULL-terminated, correct format). */
+            RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
+                ValueInformation->DataLength);
+            ExFreePool(ValueInformation);
+
+            return STATUS_SUCCESS;
+        }
+
+    case DevicePropertyBootConfiguration:
+        Length = 0;
+        if (DeviceNode->BootResources->Count != 0)
+        {
+            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
+        }
+        Data = &DeviceNode->BootResources;
+        break;
+
+        /* FIXME: use a translated boot configuration instead */
+    case DevicePropertyBootConfigurationTranslated:
+        Length = 0;
+        if (DeviceNode->BootResources->Count != 0)
+        {
+            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
+        }
+        Data = &DeviceNode->BootResources;
+        break;
+
+    case DevicePropertyEnumeratorName:
+        /* A buffer overflow can't happen here, since InstancePath
+        * always contains the enumerator name followed by \\ */
+        Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
+        ASSERT(Ptr);
+        Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
+        Data = DeviceNode->InstancePath.Buffer;
+        break;
+
+    case DevicePropertyPhysicalDeviceObjectName:
+        /* InstancePath buffer is NULL terminated, so we can do this */
+        Length = DeviceNode->InstancePath.MaximumLength;
+        Data = DeviceNode->InstancePath.Buffer;
+        break;
+
+    default:
+        return STATUS_INVALID_PARAMETER_2;
+    }
+
+    /* Prepare returned values */
+    *ResultLength = Length;
+    if (BufferLength < Length)
+        return STATUS_BUFFER_TOO_SMALL;
+    RtlCopyMemory(PropertyBuffer, Data, Length);
+
+    /* NULL terminate the string (if required) */
+    if (DeviceProperty == DevicePropertyEnumeratorName)
+        ((LPWSTR)PropertyBuffer)[Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    UNIMPLEMENTED;
+}
+
+/**
+ * @name IoOpenDeviceRegistryKey
+ *
+ * Open a registry key unique for a specified driver or device instance.
+ *
+ * @param DeviceObject   Device to get the registry key for.
+ * @param DevInstKeyType Type of the key to return.
+ * @param DesiredAccess  Access mask (eg. KEY_READ | KEY_WRITE).
+ * @param DevInstRegKey  Handle to the opened registry key on
+ *                       successful return.
+ *
+ * @return Status.
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
+                        IN ULONG DevInstKeyType,
+                        IN ACCESS_MASK DesiredAccess,
+                        OUT PHANDLE DevInstRegKey)
+{
+   static WCHAR RootKeyName[] =
+      L"\\Registry\\Machine\\System\\CurrentControlSet\\";
+   static WCHAR ProfileKeyName[] =
+      L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+   static WCHAR ClassKeyName[] = L"Control\\Class\\";
+   static WCHAR EnumKeyName[] = L"Enum\\";
+   static WCHAR DeviceParametersKeyName[] = L"Device Parameters";
+   ULONG KeyNameLength;
+   LPWSTR KeyNameBuffer;
+   UNICODE_STRING KeyName;
+   ULONG DriverKeyLength;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   PDEVICE_NODE DeviceNode = NULL;
+   NTSTATUS Status;
+
+   DPRINT("IoOpenDeviceRegistryKey() called\n");
+
+   if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
+   {
+       DPRINT1("IoOpenDeviceRegistryKey(): got wrong params, exiting... \n");
+       return STATUS_INVALID_PARAMETER;
+   }
+
+   /*
+    * Calculate the length of the base key name. This is the full
+    * name for driver key or the name excluding "Device Parameters"
+    * subkey for device key.
+    */
+
+   KeyNameLength = sizeof(RootKeyName);
+   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
+      KeyNameLength += sizeof(ProfileKeyName) - sizeof(UNICODE_NULL);
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
+   {
+      KeyNameLength += sizeof(ClassKeyName) - sizeof(UNICODE_NULL);
+      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                   0, NULL, &DriverKeyLength);
+      if (Status != STATUS_BUFFER_TOO_SMALL)
+         return Status;
+      KeyNameLength += DriverKeyLength;
+   }
+   else
+   {
+      DeviceNode = IopGetDeviceNode(DeviceObject);
+      KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
+                       DeviceNode->InstancePath.Length;
+   }
+
+   /*
+    * Now allocate the buffer for the key name...
+    */
+
+   KeyNameBuffer = ExAllocatePool(PagedPool, KeyNameLength);
+   if (KeyNameBuffer == NULL)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+   KeyName.Length = 0;
+   KeyName.MaximumLength = (USHORT)KeyNameLength;
+   KeyName.Buffer = KeyNameBuffer;
+
+   /*
+    * ...and build the key name.
+    */
+
+   KeyName.Length += sizeof(RootKeyName) - sizeof(UNICODE_NULL);
+   RtlCopyMemory(KeyNameBuffer, RootKeyName, KeyName.Length);
+
+   if (DevInstKeyType & PLUGPLAY_REGKEY_CURRENT_HWPROFILE)
+      RtlAppendUnicodeToString(&KeyName, ProfileKeyName);
+
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
+   {
+      RtlAppendUnicodeToString(&KeyName, ClassKeyName);
+      Status = IoGetDeviceProperty(DeviceObject, DevicePropertyDriverKeyName,
+                                   DriverKeyLength, KeyNameBuffer +
+                                   (KeyName.Length / sizeof(WCHAR)),
+                                   &DriverKeyLength);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("Call to IoGetDeviceProperty() failed with Status 0x%08lx\n", Status);
+         ExFreePool(KeyNameBuffer);
+         return Status;
+      }
+      KeyName.Length += (USHORT)DriverKeyLength - sizeof(UNICODE_NULL);
+   }
+   else
+   {
+      RtlAppendUnicodeToString(&KeyName, EnumKeyName);
+      Status = RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->InstancePath);
+      if (DeviceNode->InstancePath.Length == 0)
+      {
+         ExFreePool(KeyNameBuffer);
+         return Status;
+      }
+   }
+
+   /*
+    * Open the base key.
+    */
+   Status = IopOpenRegistryKeyEx(DevInstRegKey, NULL, &KeyName, DesiredAccess);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("IoOpenDeviceRegistryKey(%wZ): Base key doesn't exist, exiting... (Status 0x%08lx)\n", &KeyName, Status);
+      ExFreePool(KeyNameBuffer);
+      return Status;
+   }
+   ExFreePool(KeyNameBuffer);
+
+   /*
+    * For driver key we're done now.
+    */
+
+   if (DevInstKeyType & PLUGPLAY_REGKEY_DRIVER)
+      return Status;
+
+   /*
+    * Let's go further. For device key we must open "Device Parameters"
+    * subkey and create it if it doesn't exist yet.
+    */
+
+   RtlInitUnicodeString(&KeyName, DeviceParametersKeyName);
+   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                              OBJ_CASE_INSENSITIVE, *DevInstRegKey, NULL);
+   Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
+                        0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+   ZwClose(ObjectAttributes.RootDirectory);
+
+   return Status;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+   UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type)
+{
+    PIO_WORKITEM WorkItem;
+    PINVALIDATE_DEVICE_RELATION_DATA Data;
+
+    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
+    if (!Data)
+        return;
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkItem)
+    {
+        ExFreePool(Data);
+        return;
+    }
+
+    ObReferenceObject(DeviceObject);
+    Data->DeviceObject = DeviceObject;
+    Data->Type = Type;
+    Data->WorkItem = WorkItem;
+
+    IoQueueWorkItem(
+        WorkItem,
+        IopAsynchronousInvalidateDeviceRelations,
+        DelayedWorkQueue,
+        Data);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type)
+{
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    PDEVICE_RELATIONS DeviceRelations;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_NODE ChildDeviceNode;
+    IO_STACK_LOCATION Stack;
+    BOOLEAN BootDrivers;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    HANDLE Handle;
+    NTSTATUS Status;
+    ULONG i;
+
+    DPRINT("DeviceObject 0x%p\n", DeviceObject);
+
+    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
+
+    Stack.Parameters.QueryDeviceRelations.Type = Type;
+
+    Status = IopInitiatePnpIrp(
+        DeviceObject,
+        &IoStatusBlock,
+        IRP_MN_QUERY_DEVICE_RELATIONS,
+        &Stack);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+
+    if (!DeviceRelations || DeviceRelations->Count <= 0)
+    {
+        DPRINT("No PDOs\n");
+        if (DeviceRelations)
+        {
+            ExFreePool(DeviceRelations);
+        }
+        return;
+    }
+
+    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+
+    /*
+     * Create device nodes for all discovered devices
+     */
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
+        {
+            ObDereferenceObject(DeviceRelations->Objects[i]);
+            continue;
+        }
+        Status = IopCreateDeviceNode(
+            DeviceNode,
+            DeviceRelations->Objects[i],
+            NULL,
+            &ChildDeviceNode);
+        DeviceNode->Flags |= DNF_ENUMERATED;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("No resources\n");
+            for (i = 0; i < DeviceRelations->Count; i++)
+                ObDereferenceObject(DeviceRelations->Objects[i]);
+            ExFreePool(DeviceRelations);
+            return;
+        }
+    }
+    ExFreePool(DeviceRelations);
+
+    /*
+     * Retrieve information about all discovered children from the bus driver
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionInterrogateDeviceStack,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    /*
+     * Retrieve configuration from the registry for discovered children
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionConfigureChildServices,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    /*
+     * Get the state of the system boot. If the \\SystemRoot link isn't
+     * created yet, we will assume that it's possible to load only boot
+     * drivers.
+     */
+    InitializeObjectAttributes(
+        &ObjectAttributes,
+        &LinkName,
+        0,
+        NULL,
+        NULL);
+    Status = ZwOpenFile(
+        &Handle,
+        FILE_ALL_ACCESS,
+        &ObjectAttributes,
+        &IoStatusBlock,
+        0,
+        0);
+     if (NT_SUCCESS(Status))
+     {
+         BootDrivers = FALSE;
+         ZwClose(Handle);
+     }
+     else
+         BootDrivers = TRUE;
+
+    /*
+     * Initialize services for discovered children. Only boot drivers will
+     * be loaded from boot driver!
+     */
+    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    DPRINT("IopInvalidateDeviceRelations() finished\n");
+}
