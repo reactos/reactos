@@ -1,24 +1,38 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/po/events.c
  * PURPOSE:         Power Manager
- *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
-extern PCALLBACK_OBJECT SetSystemTimeCallback;
+/* GLOBALS *******************************************************************/
+
+typedef struct _SYS_BUTTON_CONTEXT
+{
+	PDEVICE_OBJECT DeviceObject;
+	PIO_WORKITEM WorkItem;
+	KEVENT Event;
+	IO_STATUS_BLOCK IoStatusBlock;
+	ULONG SysButton;
+} SYS_BUTTON_CONTEXT, *PSYS_BUTTON_CONTEXT;
 
 static VOID
 NTAPI
 PopGetSysButton(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID Context);
+
+PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
+extern PCALLBACK_OBJECT SetSystemTimeCallback;
+
+/* FUNCTIONS *****************************************************************/
 
 VOID
 NTAPI
@@ -39,15 +53,6 @@ PoNotifySystemTimeSet(VOID)
         KeLowerIrql(OldIrql);
     }
 }
-
-typedef struct _SYS_BUTTON_CONTEXT
-{
-	PDEVICE_OBJECT DeviceObject;
-	PIO_WORKITEM WorkItem;
-	KEVENT Event;
-	IO_STATUS_BLOCK IoStatusBlock;
-	ULONG SysButton;
-} SYS_BUTTON_CONTEXT, *PSYS_BUTTON_CONTEXT;
 
 static NTSTATUS
 NTAPI
@@ -137,9 +142,8 @@ PopGetSysButton(
 
 NTSTATUS
 NTAPI
-PopAddRemoveSysCapsCallback(
-	IN PVOID NotificationStructure,
-	IN PVOID Context)
+PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
+                            IN PVOID Context)
 {
 	PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification;
 	PSYS_BUTTON_CONTEXT SysButtonContext;

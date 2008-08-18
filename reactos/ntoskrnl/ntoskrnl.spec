@@ -909,7 +909,6 @@
 @ stdcall PoRequestPowerIrp(ptr long long ptr ptr ptr)
 ;PoRequestShutdownEvent
 ;PoSetHiberRange
-@ stdcall PoSetDeviceBusy(ptr)
 @ stdcall PoSetPowerState(ptr long long)
 @ stdcall PoSetSystemState(long)
 ;PoShutdownBugCheck

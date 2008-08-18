@@ -10948,6 +10948,9 @@ NTAPI
 PoSetDeviceBusy(
   PULONG  IdlePointer);
 
+#define PoSetDeviceBusy(IdlePointer) \
+ ((void)(*(IdlePointer) = 0))
+
 NTKERNELAPI
 POWER_STATE
 NTAPI
