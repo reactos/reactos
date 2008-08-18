@@ -1062,7 +1062,7 @@ PnpRootPnpControl(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PnpRootAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
