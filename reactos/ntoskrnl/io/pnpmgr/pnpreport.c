@@ -119,27 +119,8 @@ NTAPI
 IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
                            IN PVOID NotificationStructure)
 {
-    KEVENT Event;
-    NTSTATUS Status;
-
-    /* Initialize the event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Call the asynchronous version */
-    Status = IoReportTargetDeviceChangeAsynchronous(PhysicalDeviceObject,
-                                                    NotificationStructure,
-                                                    IopSetEvent,
-                                                    &Event);
-
-    /* Only wait if we succeeded */
-    if (NT_SUCCESS(Status))
-    {
-        /* Wait for it to complete */
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    }
-
-    /* Return status */
-    return Status;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
