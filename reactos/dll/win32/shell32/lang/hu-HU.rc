@@ -641,6 +641,9 @@ BEGIN
 	IDS_PROPERTIES              "Tulajdonságok"
 	IDS_CUT                     "Kivágás"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Nem hozható létre új mappa: Nincs hozzá engedélyed."
 	IDS_CREATEFOLDER_CAPTION    "Hiba a mappa létrehozásakor"

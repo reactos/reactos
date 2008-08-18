@@ -644,6 +644,9 @@ BEGIN
 	IDS_PROPERTIES              "Vl&astnosti"
 	IDS_CUT                     "&Vystrihn˙ù"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"

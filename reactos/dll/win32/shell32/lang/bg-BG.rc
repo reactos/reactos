@@ -641,6 +641,9 @@ BEGIN
 	IDS_PROPERTIES              "&Свойства"
 	IDS_CUT                     "Из&рязване"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Създаването на нова папка е невъзможно: недостатъчни права."
 	IDS_CREATEFOLDER_CAPTION    "Грешка при създаване на нова папка"

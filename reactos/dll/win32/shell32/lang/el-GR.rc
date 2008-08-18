@@ -639,6 +639,9 @@ BEGIN
 	IDS_PROPERTIES              "&Ιδιότητες"
 	IDS_CUT                     "Α&ποκοπή"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
 	IDS_CREATEFOLDER_CAPTION    "Σφάλμα κατά την δημιουργία νέου φακέλου"

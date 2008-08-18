@@ -645,6 +645,9 @@ BEGIN
 	IDS_PROPERTIES              "W³aœciwoœci"
 	IDS_CUT                     "Wytnij"
 	IDS_RESTORE                 "Przywróæ"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."

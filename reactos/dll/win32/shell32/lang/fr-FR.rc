@@ -642,6 +642,9 @@ BEGIN
 	IDS_PROPERTIES              "&Propriétés"
 	IDS_CUT                     "C&ouper"
 	IDS_RESTORE                 "Res&taurer"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"

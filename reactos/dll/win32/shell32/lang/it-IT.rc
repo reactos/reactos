@@ -639,6 +639,9 @@ BEGIN
 	IDS_PROPERTIES              "&Proprietà"
 	IDS_CUT                     "&Taglia"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"

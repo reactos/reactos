@@ -638,6 +638,9 @@ BEGIN
 	IDS_PROPERTIES              "Properties"
 	IDS_CUT                     "Cut"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "新しいフォルダを作成できませんでした: アクセス権がありません。"
 	IDS_CREATEFOLDER_CAPTION    "新しいフォルダの作成中にエラーが発生しました"
