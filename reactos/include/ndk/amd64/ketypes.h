@@ -58,16 +58,13 @@ Author:
 //
 #define RPL_MASK                0x0003
 #define MODE_MASK               0x0001
-#define KGDT_R0_CODE            0x8
-#define KGDT_R0_DATA            0x10
-#define KGDT_R3_CODE            0x18
-#define KGDT_R3_DATA            0x20
-#define KGDT_TSS                0x28
-#define KGDT_R0_PCR             0x30
-#define KGDT_R3_TEB             0x38
-#define KGDT_LDT                0x48
-#define KGDT_DF_TSS             0x50
-#define KGDT_NMI_TSS            0x58
+#define KGDT_64_R0_CODE         0x0010
+#define KGDT_64_R0_SS           0x0018
+#define KGDT_64_DATA            0x0028 // 2b
+#define KGDT_64_R3_CODE         0x0030 // 33
+#define KGDT_32_R3_TEB          0x0050 // 53
+
+#define KGDT_TSS 0x0038 // ??
 
 //
 // CR4
@@ -216,40 +213,6 @@ typedef struct _KTRAP_FRAME
     LONG CodePatchCycle;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
-//
-// LDT Entry Definition
-//
-#ifndef _LDT_ENTRY_DEFINED
-#define _LDT_ENTRY_DEFINED
-typedef struct _LDT_ENTRY
-{
-    USHORT LimitLow;
-    USHORT BaseLow;
-    union
-    {
-        struct
-        {
-            UCHAR BaseMid;
-            UCHAR Flags1;
-            UCHAR Flags2;
-            UCHAR BaseHi;
-        } Bytes;
-        struct
-        {
-            ULONG BaseMid:8;
-            ULONG Type:5;
-            ULONG Dpl:2;
-            ULONG Pres:1;
-            ULONG LimitHi:4;
-            ULONG Sys:1;
-            ULONG Reserved_0:1;
-            ULONG Default_Big:1;
-            ULONG Granularity:1;
-            ULONG BaseHi:8;
-        } Bits;
-    } HighWord;
-} LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
-#endif
 
 //
 // GDT Entry Definition
@@ -802,44 +765,22 @@ typedef struct _KiIoAccessMap
     UCHAR IoMap[8196];
 } KIIO_ACCESS_MAP;
 
-typedef struct _KTSS
+
+#pragma pack(push,4)
+typedef struct _KTSS64
 {
-    USHORT Backlink;
-    USHORT Reserved0;
-    ULONG Esp0;
-    USHORT Ss0;
-    USHORT Reserved1;
-    ULONG NotUsed1[4];
-    ULONG CR3;
-    ULONG Eip;
-    ULONG EFlags;
-    ULONG Eax;
-    ULONG Ecx;
-    ULONG Edx;
-    ULONG Ebx;
-    ULONG Esp;
-    ULONG Ebp;
-    ULONG Esi;
-    ULONG Edi;
-    USHORT Es;
-    USHORT Reserved2;
-    USHORT Cs;
-    USHORT Reserved3;
-    USHORT Ss;
-    USHORT Reserved4;
-    USHORT Ds;
-    USHORT Reserved5;
-    USHORT Fs;
-    USHORT Reserved6;
-    USHORT Gs;
-    USHORT Reserved7;
-    USHORT LDT;
-    USHORT Reserved8;
-    USHORT Flags;
-    USHORT IoMapBase;
-    KIIO_ACCESS_MAP IoMaps[1];
-    UCHAR IntDirectionMap[32];
-} KTSS, *PKTSS;
+ /* 000 */  ULONG Reserved0;
+ /* 004 */  UINT64 Rsp0;
+ /* 00c */  UINT64 Rsp1;
+ /* 014 */  UINT64 Rsp2;
+ /* 01c */  UINT64 Ist[8];
+ /* 05c */  UINT64 Reserved1;
+ /* 064 */  USHORT Reserved2;
+ /* 066 */  USHORT IoMapBase;
+} KTSS64, *PKTSS64;
+#pragma pack(pop)
+#define KTSS KTSS64
+#define PKTSS PKTSS64
 
 //
 // i386 CPUs don't have exception frames
