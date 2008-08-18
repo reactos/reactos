@@ -128,7 +128,7 @@ IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
     /* Call the asynchronous version */
     Status = IoReportTargetDeviceChangeAsynchronous(PhysicalDeviceObject,
                                                     NotificationStructure,
-                                                    IopClearEvent,
+                                                    IopSetEvent,
                                                     &Event);
 
     /* Only wait if we succeeded */
