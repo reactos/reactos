@@ -15,6 +15,8 @@
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    BOOLEAN LockFailed = FALSE;
+
     Irp->MdlAddress =
 	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
@@ -22,9 +24,27 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 		       FALSE,
 		       NULL );
     if( Irp->MdlAddress ) {
-	MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	_SEH_TRY {
+	    MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	} _SEH_HANDLE {
+	    LockFailed = TRUE;
+	} _SEH_END;
+
+	if( LockFailed ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}
+
 	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
 	    MmMapLockedPages( Irp->MdlAddress, KernelMode );
+
+	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}    
+
 	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     } else return NULL;
 }
