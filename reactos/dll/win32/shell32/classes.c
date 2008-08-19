@@ -345,15 +345,28 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	HKEY	hkey;
 	BOOL ret = FALSE;
 	DWORD buflen = len;
+	WCHAR szName[100];
+	LPOLESTR pStr;
 
- 	szDest[0] = 0;
-	if (HCR_RegOpenClassIDKey(riid, &hkey))
+	szDest[0] = 0;
+
+	if (StringFromCLSID(riid, &pStr) == S_OK)
 	{
-          static const WCHAR wszLocalizedString[] =
-            { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
-          if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
+	  DWORD dwLen = buflen * sizeof(WCHAR);
+	  swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
+	  if (RegGetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szDest, &dwLen) == ERROR_SUCCESS)
+	  {
+	    ret = TRUE;
+	  }
+	  CoTaskMemFree(pStr);
+	}
+	if (!ret && HCR_RegOpenClassIDKey(riid, &hkey))
+	{
+      static const WCHAR wszLocalizedString[] =
+      { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
+      if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
               !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
-          {
+      {
 	    ret = TRUE;
 	  }
 	  RegCloseKey(hkey);
