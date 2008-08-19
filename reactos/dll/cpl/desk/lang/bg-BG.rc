@@ -42,7 +42,7 @@ BEGIN
     CONTROL         "Искане на парола при изход",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 126, 19
     GROUPBOX        "&Енергоспестяващи възможности на монитора", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "За настройка захранването на монитора си, натиснете 'Захранване...'",
+    LTEXT           "За настройка захранването на монитора си, натиснете „Захранване...“.",
                     IDC_STATIC, 14, 166, 146 ,20
     PUSHBUTTON      "Захранване...", IDC_SCREENS_POWER_BUTTON, 176, 171, 60, 13
 END
