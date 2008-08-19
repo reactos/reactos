@@ -335,7 +335,7 @@ CAPTION "Uruchom jako"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Które konto u¿ytkownika chcesz u¿yæ do uruchomienia tego programu?", -1, 10, 20, 220, 20
-	CHECKBOX "Bierz¹cy u¿ytkownik %s", 14000, 10, 45, 150, 10
+	CHECKBOX "Bie¿¹cy u¿ytkownik %s", 14000, 10, 45, 150, 10
 	LTEXT "Zabezpiecz mój komputer i dane przed nieautoryzowanym dzia³aniem programów", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "Ta opcja mo¿e zabezpieczyæ twój komputer lub dane na nim przed szkodliwymi programami, ale u¿ycie jej mo¿e spowodowaæ nieprawid³owe dzia³anie programów.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Nastêpuj¹cy u¿ytkownik:", 14002, 10, 100, 90, 10
@@ -396,8 +396,8 @@ BEGIN
 	GROUPBOX "Dzia³anie przycisków myszki", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "&Pojedyncze klikniêcie by otworzyæ cel (najechanie by wskazaæ)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Podkreœ&laj tytu³y ikon tak jak w przegl¹darce", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Podkreœlaj &tytu³y ikon tylko po najechaniu na nie kursorem", 14009, 50, 144, 170, 10, WS_TABSTOP
 	AUTORADIOBUTTON "Po&dwójne klikniêcie by otworzyæ (pojedyncze klikniêcie by wskazaæ)", 14010, 40, 156, 170, 10, WS_TABSTOP
 	PUSHBUTTON "&Ustawienia domyœlne", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
@@ -572,14 +572,14 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Sprawdzanie dysków"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	GROUPBOX "Opcje sprawdzania dysków", -1, 7, 6, 179, 50
+	PUSHBUTTON "Anuluj", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatycznie naprawiaj b³êdy systemu plików", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Szukaj i próbuj odzyskaæ uszkodzone sektory", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -630,7 +630,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Mój komputer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kosz"
 	IDS_CONTROLPANEL            "Panel Sterowania"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Narzêdzia Administracyjne"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Du¿e Ikony"
@@ -645,9 +645,9 @@ BEGIN
 	IDS_PROPERTIES              "W³aœciwoœci"
 	IDS_CUT                     "Wytnij"
 	IDS_RESTORE                 "Przywróæ"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_FORMATDRIVE             "Formatuj..."
+	IDS_RENAME                  "Zmieñ nazwê"
+	IDS_INSERT                  "W³ó¿"
 
 	IDS_CREATEFOLDER_DENIED     "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION    "B³¹d przy tworzeniu nowego katalogu."
@@ -697,9 +697,9 @@ BEGIN
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Dokumenty"
 	IDS_ADMINTOOLS              "Menu Start\\Programy\\Narzêdzia administracyjne"
-	IDS_COMMON_MUSIC            "Documenty\\Moja muzyka"
-	IDS_COMMON_PICTURES         "Documenty\\Moje obrazy"
-	IDS_COMMON_VIDEO            "Documenty\\Moje wideo"
+	IDS_COMMON_MUSIC            "Dokumenty\\Moja muzyka"
+	IDS_COMMON_PICTURES         "Dokumenty\\Moje obrazy"
+	IDS_COMMON_VIDEO            "Dokumenty\\Moje wideo"
 	IDS_CDBURN_AREA             "Ustawienia lokalne\\Dane aplikacji\\Microsoft\\Nagrywanie dysków CD"
 	IDS_NETWORKPLACE            "Moja sieæ"
 
@@ -754,5 +754,5 @@ BEGIN
 	IDS_FONTS                   "Czcionki"
 	IDS_INSTALLNEWFONT          "Zainstaluj Now¹ Czcionkê..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Domyœlny rozmiar jednostki alokacji"
 END

@@ -8,14 +8,14 @@ BEGIN
   GROUPBOX "Repetisjonshastighet", -1, 5, 5, 236, 135
   ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 13, 18, 15, 15
   LTEXT "Repetisjon&forsinkelse:", -1, 40, 18, 100, 10
-  LTEXT "Lang", -1, 40, 33, 20, 10
-  LTEXT "Kort", -1, 200, 33, 20, 10
-  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 33, 130, 17
+  LTEXT "Lang", -1, 40, 33, 52, 10
+  LTEXT "Kort", -1, 210, 33, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 75, 33, 130, 17
   ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 13, 70, 15, 15
   LTEXT "&Repetisjonshastighet:", -1, 40, 70, 100, 10
-  LTEXT "Langsom", -1, 40, 85, 20, 10
-  LTEXT "Rask", -1, 200, 85, 20, 10
-  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
+  LTEXT "Langsom", -1, 40, 85, 62, 10
+  LTEXT "Rask", -1, 210, 85, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 75, 85, 130, 17
   LTEXT "Klikk her og hold nede en tast for å &teste repetisjonshastigheten:", -1, 15, 105, 216, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 116, 216, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Markør&blinking:", -1, 5, 145, 236, 50
@@ -37,12 +37,12 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Klikklås"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Kort", -1, 50, 35, 27, 10
-  LTEXT "Langt", -1, 157, 35, 27, 10
+  LTEXT "Kort tid", -1, 50, 35, 40, 10
+  LTEXT "Langt tid", -1, 157, 35, 40, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
   PUSHBUTTON "&OK", IDOK, 110, 59, 60, 14
   PUSHBUTTON "&Avbryt", IDCANCEL, 174, 59, 60, 14
-  LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,37,5,200,27
+  LTEXT "&Juster hvor lenge du må holde mus eller styrekuleknappen nede før klikket er låst.",-1,37,5,200,27
   ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
 END
 
@@ -57,9 +57,10 @@ BEGIN
   LTEXT "Merk av i denne avmerkningsboksen for å gjøre knappen til høyre til den du bruker til primærfunksjoner som å velge å dra.", -1, 10, 36, 156, 30
   GROUPBOX "Hastighet på dobbeltklikking", -1, 5, 78, 236, 70
   LTEXT "Dobbeltklikk mappen for å teste innstillingen. Hvis mappen ikke lukkes eller åpnes, kan du prøve med en langsommere innstilling.", -1, 10, 90, 156, 28
-  LTEXT "Hastig&het:  Langsom", -1, 10, 123, 50, 10
-  LTEXT "Rask", -1, 136, 123, 24, 10
-  CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
+  LTEXT "Hastig&het:", -1, 10, 123, 90, 10
+  LTEXT "Langsom", -1, 10, 130, 90, 10
+  LTEXT "Rask", -1, 140, 130, 24, 10
+  CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 40, 130, 90, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Klikklås", -1, 5, 150, 236, 70
   CHECKBOX "&Slå på klikklås", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
@@ -86,10 +87,10 @@ END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 192, 53
 STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
-CAPTION "Lagre Scheme"
+CAPTION "Lagre oppsett"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Lagre denne cursor scheme som:", -1, 5, 5, 181, 10
+  LTEXT "Lagre dette markøroppsettet som:", -1, 5, 5, 190, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&OK", IDOK, 63, 35, 60, 14
   PUSHBUTTON "&Avbryt", IDCANCEL, 126, 35, 60, 14
@@ -103,7 +104,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Bevegelse", -1, 5, 5, 236, 60
   LTEXT "Ve&lg en pekehastighet:", -1, 52, 15, 110, 10
-  LTEXT "Langsomt", -1, 60, 30, 20, 10
+  LTEXT "Langsom", -1, 54, 30, 40, 10
   CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
   LTEXT "Rask", -1, 170, 30, 20, 10
   ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
@@ -134,7 +135,7 @@ BEGIN
   ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
   LTEXT "Rull hjulet ett hakk for å rulle:", -1, 60, 15, 150, 10
   RADIOBUTTON "Følgende &antall linjer om gangen:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
-  RADIOBUTTON "&En skjermhøyde av gangen", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
+  RADIOBUTTON "&En skjermhøyde av gangen", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 150, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
   CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
 END
@@ -146,27 +147,27 @@ BEGIN
   IDS_CPLNAME_2 "Tastatur"
   IDS_CPLDESCRIPTION_2 "Endre tastatur innstillinger."
   IDS_ARROW "Vanlig merkering"
-  IDS_HELP "Hjelp valg"
+  IDS_HELP "Hjelpemerking"
   IDS_APPSTARTING "Arbeider i bakgrunnen"
-  IDS_WAIT "Busy"
-  IDS_CROSSHAIR "Precision Select"
-  IDS_IBEAM "Tekst valgt"
-  IDS_NWPEN "Handskriving"
-  IDS_NO "Utilgjengelig"
-  IDS_SIZENS "Vertical Resize"
-  IDS_SIZEWE "Horizontal Resize"
-  IDS_SIZENWSE "Diagonal Resize 1"
-  IDS_SIZENESW "Diagonal Resize 2"
+  IDS_WAIT "Opptatt"
+  IDS_CROSSHAIR "Presisjonsmerking"
+  IDS_IBEAM "Tekstmerking"
+  IDS_NWPEN "Handskrift"
+  IDS_NO "Ikke tilgjengelig"
+  IDS_SIZENS "Endre størrelse loddrett"
+  IDS_SIZEWE "Endre størrelse vannrett"
+  IDS_SIZENWSE "Endre størrelse diagonalt 1"
+  IDS_SIZENESW "Endre størrelse diagonalt 2"
   IDS_SIZEALL "Flytt"
-  IDS_UPARROW "Alternative Select"
-  IDS_HAND "Link Select"
+  IDS_UPARROW "Valg alternativ"
+  IDS_HAND "Koblingspeker"
   IDS_NONE "(Ingen)"
-  IDS_SYSTEM_SCHEME "(system scheme)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_SYSTEM_SCHEME "(systemoppsett)"
+  IDS_BROWSE_FILTER "Markører (*.ani, *.cur)\0*.ani;*.cur\0Animerte markører (*.ani)\0*.ani\0Statiske markører (*.cur)\0*.cur\0Alle filer\0*.*\0\0"
   IDS_BROWSE_TITLE "Bla gjennom"
-  IDS_REMOVE_TITLE "Confirm Cursor Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_REMOVE_TITLE "Bekreft markøroppsett fjerning"
+  IDS_REMOVE_TEXT "Er du sikker på at du vil fjerne the markøroppsett '%s'?"
+  IDS_OVERWRITE_TITLE "Bekreft markøroppsett overskrivning"
+  IDS_OVERWRITE_TEXT "Følgene markøroppsett navnet som du valgte er i bruk. Vil du overskrive eksisterende markøroppsett?"
+  IDS_ANIMATE_CURSOR "Animerte markør"
 END

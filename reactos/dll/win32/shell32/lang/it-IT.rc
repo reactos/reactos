@@ -207,18 +207,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "Folder", 14005, 68, 35, 160, 10
-	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "Tipo del file:", 14004, 8, 35, 50, 10
+	LTEXT "Cartella", 14005, 68, 35, 160, 10
+	LTEXT "Posizione:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
-	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "Dimensione:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "Contenente:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Creato:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "&Sola lettura", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Nascosto", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
@@ -569,11 +569,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Check Disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	DEFPUSHBUTTON "Inizia", IDOK, 53, 100, 60, 14
+	GROUPBOX "Opzioni per la verifica del disco", -1, 7, 6, 179, 50
+	PUSHBUTTON "Annulla", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Correggi automaticamente gli errori", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Ricerca dei settori difettosi e tentativo di correzione", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -606,25 +606,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Commenti"
 	IDS_SHV_COLUMN10            "Proprietario"
 	IDS_SHV_COLUMN11            "Gruppo"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Nome file"
+	IDS_SHV_COLUMN13            "Categoria"
 	IDS_SHV_COLUMN_DELFROM      "Posizione originale"
 	IDS_SHV_COLUMN_DELDATE      "Data di cancellazione"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_FONTTYPE     "Tipo di font"
+	IDS_SHV_COLUMN_WORKGROUP    "Gruppo di lavoro"
+	IDS_SHV_NETWORKLOCATION     "Posizione in rete"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documenti"
+	IDS_SHV_COLUMN_STATUS       "Stato"
+	IDS_SHV_COLUMN_COMMENTS     "Commenti"
+	IDS_SHV_COLUMN_LOCATION     "Posizione"
+	IDS_SHV_COLUMN_MODEL        "Modello"
 
 	/* special folders */
 	IDS_DESKTOP                 "Desktop"
 	IDS_MYCOMPUTER              "Risorse del Computer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Cestino"
 	IDS_CONTROLPANEL            "Pannello di controllo"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Strumenti di amministrazione"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Icone Grandi"
@@ -638,10 +638,10 @@ BEGIN
 	IDS_DELETE                  "&Cancella"
 	IDS_PROPERTIES              "&Proprietà"
 	IDS_CUT                     "&Taglia"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_RESTORE                 "Ripristina"
+	IDS_FORMATDRIVE             "Formatta..."
+	IDS_RENAME                  "Rinomina"
+	IDS_INSERT                  "Inserisci"
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"
@@ -663,9 +663,9 @@ BEGIN
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Riavvia"
-	IDS_RESTART_PROMPT          "Vuoi simulare un riavvio do Windows?"
+	IDS_RESTART_PROMPT          "Volete riavviare il sistema?"
 	IDS_SHUTDOWN_TITLE          "Termina sessione"
-	IDS_SHUTDOWN_PROMPT         "Vuoi terminare la sessione di ReactOS?"
+	IDS_SHUTDOWN_PROMPT         "Volete terminare la sessione di ReactOS?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Avvio\\Programmi"
@@ -679,7 +679,7 @@ BEGIN
 	IDS_MYVIDEO                 "Video"
 	IDS_DESKTOPDIRECTORY        "Desktop"
 	IDS_NETHOOD                 "Rete"
-	IDS_TEMPLATES               "Templates"
+	IDS_TEMPLATES               "Modelli"
 	IDS_APPDATA                 "DatiApplicazioni"
 	IDS_PRINTHOOD               "Stampanti"
 	IDS_LOCAL_APPDATA           "Impostazioni locali\\Dati Applicazioni"
@@ -727,7 +727,7 @@ BEGIN
 	IDS_CUR_FILE                "Cursore"
 	IDS_DLL_FILE                "Estensione di applicazione"
 	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Applicatione"
+	IDS_EXE_FILE                "Applicazione"
 	IDS_FON_FILE                "Font"
 	IDS_TTF_FILE                "TrueType Font"
 	IDS_HLP_FILE                "Help File"
@@ -735,18 +735,18 @@ BEGIN
 	IDS_LNK_FILE                "Collegamento"
 	IDS_SYS_FILE                "File di sistema"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Apri"
+	IDS_RUNAS_VERB              "Eseguire come "
+	IDS_EDIT_VERB               "Modifica"
+	IDS_FIND_VERB               "Cerca"
+	IDS_PRINT_VERB              "Stampa"
+	IDS_PLAY_VERB               "Mostra"
+	IDS_PREVIEW_VERB            "Anteprima"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u File, %u Cartelle"
+	IDS_PRINTERS                "Stampanti"
+	IDS_FONTS                   "Font"
+	IDS_INSTALLNEWFONT          "Installazione nuovi Font..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Dimensione predefinita di allocazione"
 END
