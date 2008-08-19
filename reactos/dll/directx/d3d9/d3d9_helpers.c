@@ -38,6 +38,59 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
     return TRUE;
 }
 
+HRESULT SafeFormatString(OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... )
+{
+    DWORD BytesWritten;
+    va_list vargs;
+
+    if (BufferSize == 0)
+        return DDERR_INVALIDPARAMS;
+
+    va_start(vargs, FormatString);
+    BytesWritten = _vsnprintf(Buffer, BufferSize-1, FormatString, vargs);
+
+    if (BytesWritten < BufferSize)
+        return DDERR_GENERIC;
+
+    Buffer[BufferSize-1] = '\0';
+
+    return ERROR_SUCCESS;
+}
+
+HRESULT SafeCopyString(OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src)
+{
+    HRESULT hr = ERROR_SUCCESS;
+
+    if (Dst == NULL || DstSize == 0 || Src == NULL)
+        return DDERR_INVALIDPARAMS;
+
+    while (*Src != '\0' && DstSize > 0)
+    {
+        *Dst++ = *Src++;
+        --DstSize;
+    }
+
+    if (DstSize == 0)
+    {
+        --Dst;
+        hr = DDERR_GENERIC;
+    }
+
+    return hr;
+}
+
+HRESULT SafeAppendString(IN OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src)
+{
+	DWORD CurrentDstLength;
+	
+    if (Dst == NULL || DstSize == 0)
+        return DDERR_INVALIDPARAMS;
+
+    CurrentDstLength = strlen(Dst);
+
+    return SafeCopyString(Dst + CurrentDstLength, DstSize - CurrentDstLength, Src);
+}
+
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
 {
     ULONG AddressOffset;

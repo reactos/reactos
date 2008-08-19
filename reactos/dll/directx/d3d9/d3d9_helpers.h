@@ -15,6 +15,11 @@
 /* Reads a registry value if it's of the correct value type */
 BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataBuffer, IN OUT LPDWORD DataBufferSize);
 
+/* Safe string formatting */
+HRESULT SafeFormatString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... );
+HRESULT SafeCopyString(OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src);
+HRESULT SafeAppendString(IN OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src);
+
 /* Allocates memory and returns an aligned pointer */
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize);
 

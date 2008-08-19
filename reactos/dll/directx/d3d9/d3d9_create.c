@@ -13,7 +13,6 @@
 #include <debug.h>
 #include <ddrawi.h>
 #include <ddrawgdi.h>
-#include <strsafe.h>
 
 static const GUID DISPLAY_GUID = { 0x67685559, 0x3106, 0x11D0, { 0xB9, 0x71, 0x00, 0xAA, 0x00, 0x34, 0x2F, 0x9F } };
 
