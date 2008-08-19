@@ -50,6 +50,8 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer || !Irp->MdlAddress ) return;
+
     MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 			Irp->MdlAddress );
     MmUnlockPages( Irp->MdlAddress );
