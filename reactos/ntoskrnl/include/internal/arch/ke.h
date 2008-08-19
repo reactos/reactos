@@ -33,6 +33,8 @@
 #error "Unknown processor"
 #endif
 
+VOID KiArchInitSystem(VOID);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_KE_H */
 
 /* EOF */
