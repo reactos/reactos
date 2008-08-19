@@ -1036,3 +1036,24 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
     /* Capture the control state */
     KiSaveProcessorControlState(State);
 }
+
+VOID
+KiArchInitSystem()
+{
+    PKTSS Tss;
+    PKGDTENTRY TssEntry;
+
+    /* Load the GDT and IDT */
+    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&KiGdtDescriptor.Limit);
+    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&KiIdtDescriptor.Limit);
+
+    /* Initialize the boot TSS */
+    Tss = &KiBootTss;
+    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+}
