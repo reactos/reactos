@@ -8,11 +8,6 @@
 #ifndef __int64
 #define __int64 long long
 #endif
-#if defined(_M_AMD64) || defined(__x86_64__)
-#if defined(_X86_)
-#undef _X86_
-#endif
-#endif
 #endif
 
 #if defined(_WIN64)
