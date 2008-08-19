@@ -150,14 +150,15 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
                                    TaLengthOfTransportAddress
                                    ( ConnInfo->RemoteAddress ) );
+                else Status = STATUS_INSUFFICIENT_RESOURCES;
 
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );
                 if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
+                MmUnlockPages( Mdl );
+                IoFreeMdl( Mdl );
             }
-	  /* MmUnlockPages( Mdl ); */
 	}
-    /* IoFreeMdl( Mdl ); */
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }
