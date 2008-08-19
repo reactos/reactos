@@ -177,6 +177,7 @@ VOID DGDeliverData(
     }
   else
     {
+      TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
       TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
     }
 

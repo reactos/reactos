@@ -262,7 +262,7 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
 
 
 NTSTATUS LostSocket( PIRP Irp ) {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    NTSTATUS Status = STATUS_FILE_CLOSED;
     AFD_DbgPrint(MIN_TRACE,("Called.\n"));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

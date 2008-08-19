@@ -125,12 +125,20 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
 
                 if( SysMdl ) {
-                    MmBuildMdlForNonPagedPool( SysMdl );
+                    _SEH_TRY {
+                        MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
+                    } _SEH_HANDLE {
+	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	                Status = _SEH_GetExceptionCode();
+                    } _SEH_END;
+                } else Status = STATUS_NO_MEMORY;
+
+                if( NT_SUCCESS(Status) ) {
                     Status = TdiQueryInformation
                         ( FCB->AddressFile.Object,
                           TDI_QUERY_CONNECTION_INFO,
                           SysMdl );
-                } else Status = STATUS_NO_MEMORY;
+                }
 
                 if( NT_SUCCESS(Status) ) {
                     TransAddr =
@@ -142,14 +150,15 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
                                    TaLengthOfTransportAddress
                                    ( ConnInfo->RemoteAddress ) );
+                else Status = STATUS_INSUFFICIENT_RESOURCES;
 
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );
                 if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
+                MmUnlockPages( Mdl );
+                IoFreeMdl( Mdl );
             }
-	  /* MmUnlockPages( Mdl ); */
 	}
-    /* IoFreeMdl( Mdl ); */
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }

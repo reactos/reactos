@@ -77,7 +77,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
@@ -108,7 +108,10 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
     if( NT_SUCCESS(Status) ) {
 	Status = MakeSocketIntoConnection( FCB );
 
-	if( !NT_SUCCESS(Status) ) return Status;
+	if( !NT_SUCCESS(Status) ) {
+	    SocketStateUnlock( FCB );
+	    return Status;
+	}
 
 	if( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
