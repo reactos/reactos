@@ -5581,12 +5581,6 @@ typedef struct _KFLOATING_SAVE {
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
 NTKERNELAPI
-KIRQL
-KeGetCurrentIrql (
-    VOID
-    );
-
-NTKERNELAPI
 PRKTHREAD
 NTAPI
 KeGetCurrentThread(
@@ -9965,6 +9959,41 @@ KeRaiseIrqlToSynchLevel(
 
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+#elif defined(_M_AMD64)
+
+NTKERNELAPI
+KIRQL
+KeGetCurrentIrql(
+    VOID);
+
+NTKERNELAPI
+VOID
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTKERNELAPI
+KIRQL
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+NTKERNELAPI
+VOID
+KeLowerIrql(
+  IN KIRQL NewIrql);
+
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
 
 #elif defined(__PowerPC__)
 
