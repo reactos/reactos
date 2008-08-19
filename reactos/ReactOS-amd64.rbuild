@@ -19,6 +19,7 @@
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 	<property name="NTOSKRNL_SHARED" value="-shared"/>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<compilerflag>-U_X86_</compilerflag>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>
