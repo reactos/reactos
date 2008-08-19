@@ -362,6 +362,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
     } else {
