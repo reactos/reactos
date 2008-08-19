@@ -1662,6 +1662,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
     IShellPropSheetExt *pspsx;
     HKEY hkBase, hkPropSheetHandlers;
     PPSXA psxa = NULL;
+    HRESULT hr;
 
     TRACE("(%p,%s,%u)\n", hKey, debugstr_w(pszSubKey), max_iface);
 
@@ -1699,38 +1700,41 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
                         lRet = ERROR_SUCCESS;
                     break;
                 }
-
-                dwClsidSize = sizeof(szClsidHandler);
-                if (SHGetValueW(hkPropSheetHandlers, szHandler, NULL, NULL, szClsidHandler, &dwClsidSize) == ERROR_SUCCESS)
+                szHandler[(sizeof(szHandler) / sizeof(szHandler[0])) - 1] = 0;
+                hr = SHCLSIDFromStringW(szHandler, &clsid);
+                if (FAILED(hr))
                 {
-                    /* Force a NULL-termination and convert the string */
-                    szClsidHandler[(sizeof(szClsidHandler) / sizeof(szClsidHandler[0])) - 1] = 0;
-                    if (SUCCEEDED(SHCLSIDFromStringW(szClsidHandler, &clsid)))
+                    dwClsidSize = sizeof(szClsidHandler);
+                    if (SHGetValueW(hkPropSheetHandlers, szHandler, NULL, NULL, szClsidHandler, &dwClsidSize) == ERROR_SUCCESS)
                     {
-                        /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
-                           Only if both interfaces are supported it's a real shell extension.
-                           Then call IShellExtInit's Initialize method. */
-                        if (SUCCEEDED(CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, &IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
-                        {
-                            if (SUCCEEDED(pspsx->lpVtbl->QueryInterface(pspsx, &IID_IShellExtInit, (PVOID *)&psxi)))
-                            {
-                                if (SUCCEEDED(psxi->lpVtbl->Initialize(psxi, NULL, pDataObj, hKey)))
-                                {
-                                    /* Add the IShellPropSheetExt instance to the array */
-                                    psxa->pspsx[psxa->uiCount++] = pspsx;
-                                }
-                                else
-                                {
-                                    psxi->lpVtbl->Release(psxi);
-                                    pspsx->lpVtbl->Release(pspsx);
-                                }
-                            }
-                            else
-                                pspsx->lpVtbl->Release(pspsx);
-                        }
+                        szClsidHandler[(sizeof(szClsidHandler) / sizeof(szClsidHandler[0])) - 1] = 0;
+                        hr = SHCLSIDFromStringW(szClsidHandler, &clsid);
                     }
                 }
-
+                if (SUCCEEDED(hr))
+                {
+                    /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
+                       Only if both interfaces are supported it's a real shell extension.
+                       Then call IShellExtInit's Initialize method. */
+                    if (SUCCEEDED(CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, &IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
+                    {
+                        if (SUCCEEDED(pspsx->lpVtbl->QueryInterface(pspsx, &IID_IShellExtInit, (PVOID *)&psxi)))
+                        {
+                            if (SUCCEEDED(psxi->lpVtbl->Initialize(psxi, NULL, pDataObj, hKey)))
+                            {
+                                /* Add the IShellPropSheetExt instance to the array */
+                                psxa->pspsx[psxa->uiCount++] = pspsx;
+                            }
+                            else
+                            {
+                                psxi->lpVtbl->Release(psxi);
+                                pspsx->lpVtbl->Release(pspsx);
+                            }
+                        }
+                        else
+                            pspsx->lpVtbl->Release(pspsx);
+                    }
+                }
             } while (psxa->uiCount != psxa->uiAllocated);
         }
         else
