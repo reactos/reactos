@@ -557,30 +557,6 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    return Entry;
 }
 
-/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
-BOOLEAN FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType)
-{
-   ULONG Length;
-
-   Length = (wcslen (Source) + 1) * sizeof(WCHAR);
-   UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG('U', 'S', 'T', 'R'));
-   if (UniDest->Buffer == NULL)
-      return FALSE;
-
-   RtlCopyMemory (UniDest->Buffer,
-                  Source,
-                  Length);
-
-   UniDest->MaximumLength = (USHORT)Length;
-   UniDest->Length = (USHORT)Length - sizeof (WCHAR);
-
-   return TRUE;
-}
-
 /*
  * Ldr Resource support code
  */
