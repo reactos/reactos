@@ -142,8 +142,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
                 if( NT_SUCCESS(Status) ) {
                     TransAddr =
-                        (PTRANSPORT_ADDRESS)MmMapLockedPages
-                        ( Mdl, Irp->RequestorMode );
+                        (PTRANSPORT_ADDRESS)MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority );
                 }
 
                 if( TransAddr )
