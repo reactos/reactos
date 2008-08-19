@@ -267,15 +267,16 @@ code64ret:
 	.quad 0
 
 gdt:
-	.quad 0x0000000000000000
-	.quad 0x0020980000000000
-	.quad 0x0000900000000000
+	.quad 0x0000000000000000 /* 00: NULL descriptor */
+	.quad 0x0000000000000000 /* 08:  */
+	.quad 0x0020980000000000 /* 10: long mode cs */
+	.quad 0x0000900000000000 /* 18: long mode ds */
 	.word	0xFFFF, 0x0000, 0x9E00, 0x0000 /* 16-bit real mode CS */
 	.word	0xFFFF, 0x0000, 0x9200, 0x0000 /* 16-bit real mode DS */
 
 /* GDT table pointer */
 gdtptr:
-	.word	0x27		/* Limit */
+	.word	0x2f		/* Limit */
 	.long	gdt			/* Base Address */
 
 

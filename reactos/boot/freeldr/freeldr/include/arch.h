@@ -25,12 +25,14 @@
 #include <arch/amd64/amd64.h>
 #endif
 
+#if defined (_M_IX86)
 /* Defines needed for switching between real and protected mode */
 #define NULL_DESC	0x00	/* NULL descriptor */
 #define PMODE_CS	0x08	/* PMode code selector, base 0 limit 4g */
 #define PMODE_DS	0x10	/* PMode data selector, base 0 limit 4g */
 #define RMODE_CS	0x18	/* RMode code selector, base 0 limit 64k */
 #define RMODE_DS	0x20	/* RMode data selector, base 0 limit 64k */
+#endif
 
 #define CR0_PE_SET	0x00000001	/* OR this value with CR0 to enable pmode */
 #define CR0_PE_CLR	0xFFFFFFFE	/* AND this value with CR0 to disable pmode */

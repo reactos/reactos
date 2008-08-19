@@ -24,8 +24,10 @@
 #define STACK64ADDR	0x74000	/* The 64-bit stack top will be at 0x74000 */
 
 /* Long mode selectors */
-#define LMODE_CS	0x08
-#define LMODE_DS	0x10
+#define LMODE_CS	0x10
+#define LMODE_DS	0x18
+#define RMODE_CS	0x20	/* RMode code selector, base 0 limit 64k */
+#define RMODE_DS	0x28	/* RMode data selector, base 0 limit 64k */
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
