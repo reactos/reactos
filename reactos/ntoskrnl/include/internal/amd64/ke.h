@@ -43,9 +43,20 @@
 
 #define FRAME_EDITED        0xFFF8
 
+#define X86_MSR_GSBASE          0xC0000101
+#define X86_MSR_KERNEL_GSBASE   0xC0000102
+
 #ifndef __ASM__
 
 #include "intrin_i.h"
+
+typedef struct _KIDT_INIT
+{
+    UCHAR InterruptId;
+    UCHAR Dpl;
+    UCHAR Type;
+    PVOID ServiceRoutine;
+} KIDT_INIT, *PKIDT_INIT;
 
 //#define KeArchFnInit() Ke386FnInit()
 #define KeArchFnInit() DbgPrint("KeArchFnInit is unimplemented!\n");
@@ -66,6 +77,31 @@ Ki386InitializeTss(
     IN PKIDTENTRY Idt,
     IN PKGDTENTRY Gdt
 );
+
+VOID KiDivideErrorFault();
+VOID KiDebugTrapOrFault();
+VOID KiNmiInterrupt();
+VOID KiBreakpointTrap();
+VOID KiOverflowTrap();
+VOID KiBoundFault();
+VOID KiInvalidOpcodeFault();
+VOID KiNpxNotAvailableFault();
+VOID KiDoubleFaultAbort();
+VOID KiNpxSegmentOverrunAbort();
+VOID KiInvalidTssFault();
+VOID KiSegmentNotPresentFault();
+VOID KiStackFault();
+VOID KiGeneralProtectionFault();
+VOID KiPageFault();
+VOID KiFloatingErrorFault();
+VOID KiAlignmentFault();
+VOID KiMcheckAbort();
+VOID KiXmmException();
+VOID KiApcInterrupt();
+VOID KiRaiseAssertion();
+VOID KiDebugServiceTrap();
+VOID KiDpcInterrupt();
+VOID KiIpiInterrupt();
 
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
