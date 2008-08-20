@@ -47,7 +47,6 @@ static NTSTATUS NTAPI SendComplete
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
-	DestroySocket( FCB );
 	return STATUS_SUCCESS;
     }
 
@@ -178,12 +177,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
-
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
-	SocketStateUnlock( FCB );
-	DestroySocket( FCB );
-	return STATUS_SUCCESS;
-    }
 
     SocketStateUnlock( FCB );
 

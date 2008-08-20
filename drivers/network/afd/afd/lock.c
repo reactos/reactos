@@ -68,7 +68,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 BOOLEAN Write, BOOLEAN LockAddress ) {
     UINT i;
     /* Copy the buffer array so we don't lose it */
-    UINT Lock = (LockAddress && AddressLen) ? 2 : 0;
+    UINT Lock = LockAddress ? 2 : 0;
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
@@ -80,13 +80,16 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
         _SEH_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
-            if( LockAddress ) {
+            if( LockAddress && AddressLen ) {
                 NewBuf[Count].buf = AddressBuf;
                 NewBuf[Count].len = *AddressLen;
                 Count++;
                 NewBuf[Count].buf = (PVOID)AddressLen;
                 NewBuf[Count].len = sizeof(*AddressLen);
                 Count++;
+            } else if( LockAddress ) {
+                RtlZeroMemory(NewBuf, sizeof(*NewBuf) * 2);
+                Count += 2;
             }
         } _SEH_HANDLE {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
