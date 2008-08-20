@@ -208,18 +208,18 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     InFlightRequest[0] = FCB->ListenIrp;
     InFlightRequest[1] = FCB->ReceiveIrp;
     InFlightRequest[2] = FCB->SendIrp;
+    InFlightRequest[3] = FCB->ConnectIrp;
 
     /* Return early here because we might be called in the mean time. */
     if( !(FCB->Critical ||
           FCB->ListenIrp.InFlightRequest ||
           FCB->ReceiveIrp.InFlightRequest ||
-          FCB->SendIrp.InFlightRequest) ) {
+          FCB->SendIrp.InFlightRequest || 
+          FCB->ConnectIrp.InFlightRequest) ) {
 	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
 				FCB->SendIrp.InFlightRequest));
-        SocketStateUnlock(FCB);
-        DestroySocket(FCB);
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -242,12 +242,13 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
 
         FCB->PendingClose = Irp;
+	DestroySocket( FCB );
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
-    DestroySocket( FCB );
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
 
     return Irp->IoStatus.Status;
