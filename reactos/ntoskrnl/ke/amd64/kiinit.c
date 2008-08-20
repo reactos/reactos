@@ -22,6 +22,8 @@ KSPIN_LOCK Ki486CompatibilityLock;
 extern ULONG KeMemoryMapRangeCount;
 extern ADDRESS_RANGE KeMemoryMap[64];
 
+KIPCR KiInitialPcr;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -331,57 +333,48 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKTHREAD IdleThread,
                 IN PVOID DpcStack)
 {
-#if 0
-    /* Setup the TIB */
-    Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
-    Pcr->NtTib.StackBase = 0;
-    Pcr->NtTib.StackLimit = 0;
-    Pcr->NtTib.Self = NULL;
-
     /* Set the Current Thread */
-    Pcr->PrcbData.CurrentThread = IdleThread;
+    Pcr->Prcb.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
-    Pcr->Prcb = &Pcr->PrcbData;
+    Pcr->CurrentPrcb = &Pcr->Prcb;
 
     /* Set the PCR Version */
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
 
     /* Set the PCRB Version */
-    Pcr->PrcbData.MajorVersion = 1;
-    Pcr->PrcbData.MinorVersion = 1;
+    Pcr->Prcb.MajorVersion = 1;
+    Pcr->Prcb.MinorVersion = 1;
 
     /* Set the Build Type */
-    Pcr->PrcbData.BuildType = 0;
+    Pcr->Prcb.BuildType = 0;
 #ifndef CONFIG_SMP
-    Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
+    Pcr->Prcb.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
 #ifdef DBG
-    Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
+    Pcr->Prcb.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 
     /* Set the Processor Number and current Processor Mask */
-    Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;
-    Pcr->PrcbData.SetMember = 1 << ProcessorNumber;
+    Pcr->Prcb.Number = (UCHAR)ProcessorNumber;
+    Pcr->Prcb.SetMember = 1 << ProcessorNumber;
 
     /* Set the PRCB for this Processor */
-    KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
+    KiProcessorBlock[ProcessorNumber] = &Pcr->Prcb;
 
     /* Start us out at PASSIVE_LEVEL */
-    Pcr->Irql = PASSIVE_LEVEL;
+//    Pcr->Irql = PASSIVE_LEVEL;
 
     /* Set the GDI, IDT, TSS and DPC Stack */
-    Pcr->GDT = (PVOID)Gdt;
-    Pcr->IDT = Idt;
-    Pcr->TSS = Tss;
-    Pcr->TssCopy = Tss;
-    Pcr->PrcbData.DpcStack = DpcStack;
+    Pcr->GdtBase = (PVOID)Gdt;
+    Pcr->IdtBase = Idt;
+    Pcr->TssBase = Tss;
+    Pcr->Prcb.DpcStack = DpcStack;
 
     /* Setup the processor set */
-    Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
-#endif
+    Pcr->Prcb.MultiThreadProcessorSet = Pcr->Prcb.SetMember;
 }
 
 VOID
@@ -616,14 +609,20 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-#if 0
-    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor = {0};
-    KGDTENTRY TssSelector, PcrSelector;
-    USHORT Tr = 0, Fs;
+    KDESCRIPTOR GdtDescriptor = {{0},0,0}, IdtDescriptor = {{0},0,0};
+    KGDTENTRY64 TssSelector;
+    USHORT Tr = 0;
 
     /* Get GDT and IDT descriptors */
-    Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&GdtDescriptor.Limit);
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    Ke386GetGlobalDescriptorTable(GdtDescriptor.Limit);
+    Ke386GetInterruptDescriptorTable(IdtDescriptor.Limit);
+
+    // FIXME: for some strange reason the gdt needs some time before it's finished...
+    if (!GdtDescriptor.Base)
+    {
+        FrLdrDbgPrint("1. Base = %p, Limit = 0x%x\n", GdtDescriptor.Base, GdtDescriptor.Limit);
+    }
+    FrLdrDbgPrint("2. Base = %p, Limit = 0x%x\n", GdtDescriptor.Base, GdtDescriptor.Limit);
 
     /* Save IDT and GDT */
     *Gdt = (PKGDTENTRY)GdtDescriptor.Base;
@@ -632,24 +631,15 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     /* Get TSS and FS Selectors */
     Ke386GetTr(Tr);
     if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
-    Fs = Ke386GetFs();
-
-    /* Get PCR Selector, mask it and get its GDT Entry */
-    PcrSelector = *(PKGDTENTRY)((ULONG_PTR)*Gdt + (Fs & ~RPL_MASK));
-
-    /* Get the KPCR itself */
-    *Pcr = (PKIPCR)(ULONG_PTR)(PcrSelector.BaseLow |
-                               PcrSelector.HighWord.Bytes.BaseMid << 16 |
-                               PcrSelector.HighWord.Bytes.BaseHi << 24);
 
     /* Get TSS Selector, mask it and get its GDT Entry */
     TssSelector = *(PKGDTENTRY)((ULONG_PTR)*Gdt + (Tr & ~RPL_MASK));
 
     /* Get the KTSS itself */
     *Tss = (PKTSS)(ULONG_PTR)(TssSelector.BaseLow |
-                              TssSelector.HighWord.Bytes.BaseMid << 16 |
-                              TssSelector.HighWord.Bytes.BaseHi << 24);
-#endif
+                              TssSelector.Bytes.BaseMiddle << 16 |
+                              TssSelector.Bytes.BaseHigh << 24 |
+                              (ULONG64)TssSelector.BaseUpper << 32);
 }
 
 VOID
@@ -657,26 +647,30 @@ NTAPI
 KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
 	FrLdrDbgPrint("Enter KiSystemStartupReal()\n");
-	for(;;);
 
-#if 0
     ULONG Cpu;
     PKTHREAD InitialThread;
-    ULONG InitialStack;
+    ULONG64 InitialStack;
     PKGDTENTRY Gdt;
     PKIDTENTRY Idt;
-    KIDTENTRY NmiEntry, DoubleFaultEntry;
+//    KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
 
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
+
+    /* Get Pcr from loader block */
+//    Pcr = CONTAINING_RECORD(LoaderBlock->Prcb, KIPCR, Prcb);
+    Pcr = &KiInitialPcr;
+
     Cpu = KeNumberProcessors;
-    if (!Cpu)
+    if (Cpu == 0)
     {
-        /* If this is the boot CPU, set FS and the CPU Number*/
-        Ke386SetFs(KGDT_R0_PCR);
-        __writefsdword(KPCR_PROCESSOR_NUMBER, Cpu);
+        /* If this is the boot CPU, set GS base and the CPU Number*/
+        __writemsr(X86_MSR_GSBASE, (ULONG64)Pcr);
+        __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
+        Pcr->Prcb.Number = Cpu;
 
         /* Set the initial stack and idle thread as well */
         LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
@@ -684,7 +678,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Save the initial thread and stack */
-    InitialStack = LoaderBlock->KernelStack;
+    InitialStack = LoaderBlock->KernelStack; // Chekme
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
     /* Clean the APC List Head */
@@ -694,53 +688,59 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KiInitializeMachineType();
 
     /* Skip initial setup if this isn't the Boot CPU */
-    if (Cpu) goto AppCpuInit;
+    if (Cpu == 0)
+    {
+        /* Get GDT, IDT, PCR and TSS pointers */
+        KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
 
-    /* Get GDT, IDT, PCR and TSS pointers */
-    KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
+FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
 
-    /* Setup the TSS descriptors and entries */
-    Ki386InitializeTss(Tss, Idt, Gdt);
+        /* Setup the TSS descriptors and entries */
+        Ki386InitializeTss(Tss, Idt, Gdt);
 
-    /* Initialize the PCR */
-    RtlZeroMemory(Pcr, PAGE_SIZE);
-    KiInitializePcr(Cpu,
-                    Pcr,
-                    Idt,
-                    Gdt,
-                    Tss,
-                    InitialThread,
-                    KiDoubleFaultStack);
+        /* Initialize the PCR */
+        RtlZeroMemory(Pcr, PAGE_SIZE);
+        KiInitializePcr(Cpu,
+                        Pcr,
+                        Idt,
+                        Gdt,
+                        Tss,
+                        InitialThread,
+                        KiDoubleFaultStack);
 
-    /* Set us as the current process */
-    InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
+        /* Set us as the current process */
+        InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
 
-    /* Clear DR6/7 to cleanup bootloader debugging */
-    __writefsdword(KPCR_TEB, 0);
-    __writefsdword(KPCR_DR6, 0);
-    __writefsdword(KPCR_DR7, 0);
+        /* Clear DR6/7 to cleanup bootloader debugging */
+        Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr6 = 0;
+        Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 
-    /* Setup the IDT */
-    KeInitExceptions();
+        /* Setup the IDT */
+        KeInitExceptions();
 
-    /* Load Ring 3 selectors for DS/ES */
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        /* Load Ring 3 selectors for DS/ES/FS */
+        Ke386SetDs(KGDT_64_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_64_DATA | RPL_MASK);
+//        Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
 
-    /* Save NMI and double fault traps */
-    RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
-    RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
+        /* LDT is unused */
+        Ke386SetLocalDescriptorTable(0);
 
-    /* Copy kernel's trap handlers */
-    RtlCopyMemory(Idt,
-                  (PVOID)KiIdtDescriptor.Base,
-                  KiIdtDescriptor.Limit + 1);
+        /* Save NMI and double fault traps */
+//        RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
+//        RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
 
-    /* Restore NMI and double fault */
-    RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
-    RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
+        /* Copy kernel's trap handlers */
+//        RtlCopyMemory(Idt,
+//                      (PVOID)KiIdtDescriptor.Base,
+//                      KiIdtDescriptor.Limit + 1);
 
-AppCpuInit:
+        /* Restore NMI and double fault */
+//        RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
+//        RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
+    }
+
+
     /* Loop until we can release the freeze lock */
     do
     {
@@ -749,26 +749,24 @@ AppCpuInit:
     } while(InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0));
 
     /* Setup CPU-related fields */
-    __writefsdword(KPCR_NUMBER, Cpu);
-    __writefsdword(KPCR_SET_MEMBER, 1 << Cpu);
-    __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
-    __writefsdword(KPCR_PRCB_SET_MEMBER, 1 << Cpu);
+    Pcr->Prcb.Number = Cpu;
+    Pcr->Prcb.SetMember = 1 << Cpu;
 
     /* Initialize the Processor with HAL */
-    HalInitializeProcessor(Cpu, KeLoaderBlock);
+//    HalInitializeProcessor(Cpu, KeLoaderBlock);
 
     /* Set active processors */
-    KeActiveProcessors |= __readfsdword(KPCR_SET_MEMBER);
+    KeActiveProcessors |= 1 << Cpu;
     KeNumberProcessors++;
 
     /* Check if this is the boot CPU */
-    if (!Cpu)
+    if (Cpu == 0)
     {
         /* Initialize debugging system */
-        KdInitSystem(0, KeLoaderBlock);
+//        KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+//        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
     }
 
     /* Raise to HIGH_LEVEL */
@@ -777,12 +775,14 @@ AppCpuInit:
     /* Align stack and make space for the trap frame and NPX frame */
     InitialStack &= ~(KTRAP_FRAME_ALIGN - 1);
 
+FrLdrDbgPrint("Before KiSetupStackAndInitializeKernel\n");
+for(;;);
+
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
                                     InitialThread,
                                     (PVOID)InitialStack,
-                                    (PKPRCB)__readfsdword(KPCR_PRCB),
+                                    &Pcr->Prcb,
                                     (CCHAR)Cpu,
                                     KeLoaderBlock);
-#endif
 }

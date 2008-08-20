@@ -6,7 +6,6 @@ EXPORTS
 ;
 KfAcquireSpinLock
 KfReleaseSpinLock
-KeRaiseIrql
 KefAcquireSpinLockAtDpcLevel
 KefReleaseSpinLockFromDpcLevel
 KeInitializeSpinLock

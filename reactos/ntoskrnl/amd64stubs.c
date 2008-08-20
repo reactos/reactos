@@ -1,17 +1,13 @@
 
+unsigned long (*FrLdrDbgPrint)(const char *Format, ...);
 
-#define STUB(x) void x() {}
+
+
+#define STUB(x) void x() {FrLdrDbgPrint("Sorry, %s is only a stub!\n", __FUNCTION__);}
 
 STUB(KdpEnableSafeMem)
-STUB(KfLowerIrql)
-STUB(KeRaiseIrql)
-STUB(KeLowerIrql)
-STUB(KeRaiseIrqlToSynchLevel)
-STUB(KeRaiseIrqlToDpcLevel)
 STUB(KiIdleLoop)
-STUB(KeGetCurrentIrql)
 STUB(KeAcquireInStackQueuedSpinLockRaiseToSynch)
-STUB(KeNumberProcessors)
 STUB(KeBugcheckCallbackListHead)
 STUB(ExpInterlockedPushEntrySList)
 STUB(NtContinue)
@@ -173,7 +169,6 @@ STUB(KeUpdateRunTime)
 STUB(KeUpdateSystemTime)
 STUB(KeUserModeCallback)
 STUB(KeWaitForMutexObject)
-STUB(KfRaiseIrql)
 STUB(KiBugCheckData)
 STUB(KiCpuId)
 STUB(MmCommitSessionMappedView)
