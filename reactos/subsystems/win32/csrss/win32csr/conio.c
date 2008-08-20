@@ -960,7 +960,6 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
                  ConsoleInput *KeyEventRecord)
 {
   BOOL updown;
-  BOOL bClientWake = FALSE;
   ConsoleInput *TempInput;
 
   if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT)))
@@ -1004,8 +1003,6 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
         {
           Console->WaitingLines++;
         }
-      bClientWake = TRUE;
-      SetEvent(Console->ActiveEvent);
     }
   KeyEventRecord->Echoed = FALSE;
   if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT))
@@ -1037,10 +1034,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
           RemoveEntryList(&KeyEventRecord->ListEntry);
           HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
           Console->WaitingChars -= 2;
-        }
-      else
-        {
-          SetEvent(Console->ActiveEvent);
+          return;
         }
     }
   else
@@ -1061,10 +1055,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     }
 
   /* Console->WaitingChars++; */
-  if (bClientWake || 0 == (Console->Mode & ENABLE_LINE_INPUT))
-    {
-      SetEvent(Console->ActiveEvent);
-    }
+  SetEvent(Console->ActiveEvent);
 }
 
 static DWORD FASTCALL
