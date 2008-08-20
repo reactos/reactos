@@ -1266,15 +1266,42 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     ULONG size, i = 0, *ent;
+#if defined(_M_IX86)
+    PKTSS Tss;
+    PKGDTENTRY TssEntry;
+
+    /* Load the GDT and IDT */
+    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&KiGdtDescriptor.Limit);
+    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&KiIdtDescriptor.Limit);
+
+    /* Initialize the boot TSS */
+    Tss = &KiBootTss;
+    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+#endif
+
+#if defined(_M_PPC)
+    // Zero bats.  We might have residual bats set that will interfere with
+    // our mapping of ofwldr.
+    for (i = 0; i < 4; i++)
+    {
+        SetBat(i, 0, 0, 0); SetBat(i, 1, 0, 0);
+    }
+    KiSetupSyscallHandler();
+    DbgPrint("Kernel Power (%08x)\n", LoaderBlock);
+    DbgPrint("ArchExtra (%08x)!\n", LoaderBlock->ArchExtra);
+#endif
 
     /* Save pointer to ROS Block */
     KeRosLoaderBlock = LoaderBlock;
 
     /* Get debugging function */
     FrLdrDbgPrint = LoaderBlock->FrLdrDbgPrint;
-
-    /* Per architecture initialisazion code */
-    KiArchInitSystem();
 
     /* Save memory manager data */
     KeMemoryMapRangeCount = 0;

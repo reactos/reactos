@@ -275,19 +275,3 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
     /* Capture the control state */
     KiSaveProcessorControlState(State);
 }
-
-VOID
-KiArchInitSystem()
-{
-    ULONG i;
-
-    // Zero bats.  We might have residual bats set that will interfere with
-    // our mapping of ofwldr.
-    for (i = 0; i < 4; i++)
-    {
-        SetBat(i, 0, 0, 0); SetBat(i, 1, 0, 0);
-    }
-    KiSetupSyscallHandler();
-    DbgPrint("Kernel Power (%08x)\n", KeRosLoaderBlock);
-    DbgPrint("ArchExtra (%08x)!\n", KeRosLoaderBlock->ArchExtra);
-}
