@@ -256,6 +256,10 @@ FrLdrSetupGdtIdt()
 	Entry = KiGetGdtEntry(pGdt, KGDT_64_R0_CODE);
 	*(PULONG64)Entry = 0x0020980000000000ULL;
 
+	/* Setup KGDT_64_DATA */
+	Entry = KiGetGdtEntry(pGdt, KGDT_64_DATA);
+	*(PULONG64)Entry = 0x0000F00000000000ULL;
+
 	/* Setup TSS entry */
 	Entry = KiGetGdtEntry(pGdt, KGDT_TSS);
 	KiInitGdtEntry(Entry, TssBase, I386_TSS, 0);
