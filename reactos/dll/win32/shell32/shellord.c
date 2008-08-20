@@ -2128,3 +2128,29 @@ BOOL WINAPI LinkWindow_UnregisterClass(void)
     return TRUE;
 
 }
+/*************************************************************************
+ *    SHParseDisplayName        [shell version 6.0]
+ */
+HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
+LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
+{
+    IShellFolder    * psfDesktop;
+    HRESULT         hr=E_FAIL;
+    ULONG           dwAttr=sfgaoIn;
+
+    if (!pszName || !ppidl || !psfgaoOut)
+        return E_INVALIDARG;
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
+    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
+
+    IShellFolder_Release(psfDesktop);
+
+    if (SUCCEEDED(hr))
+        *psfgaoOut = dwAttr;
+
+    return hr;
+}
