@@ -138,17 +138,17 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 
 /*++
  * @name FsRtlIsDbcsInExpression
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Check if the Name string is in the Expression string.
  *
  * @param Expression
- *        FILLME
+ *        The string in which we've to find Name. It can contains wildcards
  *
  * @param Name
- *        FILLME
+ *        The string to find. It cannot contain wildcards.
  *
- * @return None
+ * @return TRUE if Name is found in Expression, FALSE otherwise
  *
  * @remarks None
  *
@@ -158,7 +158,50 @@ NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-    KEBUGCHECK(0);
+    ULONG ExpressionPosition, NamePosition, MatchingChars = 0;
+
+    ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
+
+    /* One can't be null, both can be */
+    if (!Expression->Length || !Name->Length)
+    {
+        return !(Expression->Length ^ Name->Length);
+    }
+
+    for (ExpressionPosition = 0; ExpressionPosition < Expression->Length / sizeof(CHAR); ExpressionPosition++)
+    {
+        if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[MatchingChars]) ||
+            (Expression->Buffer[ExpressionPosition] == '?') ||
+            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
+            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT &&
+            (Name->Buffer[MatchingChars] == '.' || Name->Buffer[MatchingChars] == '0')))
+        {
+            MatchingChars++;
+        }
+        else if (Expression->Buffer[ExpressionPosition] == '*')
+        {
+            MatchingChars = Name->Length / sizeof(CHAR);
+        }
+        else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
+        {
+            for (NamePosition = MatchingChars; NamePosition < Name->Length / sizeof(CHAR); NamePosition++)
+            {
+                if (Name->Buffer[NamePosition] == '.')
+                {
+                    MatchingChars = NamePosition;
+                }
+            }
+        }
+        else
+        {
+            MatchingChars = 0;
+        }
+        if (MatchingChars == Name->Length / sizeof(CHAR))
+        {
+            return TRUE;
+        }
+    }
+
     return FALSE;
 }
 
