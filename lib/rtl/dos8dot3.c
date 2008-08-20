@@ -278,20 +278,23 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
             if (i == AnsiName->Length - 1) return FALSE;
             i++;
         }
-        switch (AnsiName->Buffer[i])
+        else
         {
-            case ' ':
-                /* leading/trailing spaces not allowed */
-                if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
-                GotSpace = TRUE;
-                break;
-            case '.':
-                if (Dot != -1) return FALSE;
-                Dot = i;
-                break;
-            default:
-                if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
-                break;
+            switch (AnsiName->Buffer[i])
+            {
+                case ' ':
+                    /* leading/trailing spaces not allowed */
+                    if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
+                    GotSpace = TRUE;
+                    break;
+                case '.':
+                    if (Dot != -1) return FALSE;
+                    Dot = i;
+                    break;
+                default:
+                    if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
+                    break;
+            }
         }
     }
     /* check file part is shorter than 8, extension shorter than 3
