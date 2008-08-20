@@ -40,11 +40,6 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
-    if( Irp->Cancel ) {
-	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
-	return STATUS_CANCELLED;
-    }
-
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->SendIrp.InFlightRequest = NULL;
@@ -52,6 +47,7 @@ static NTSTATUS NTAPI SendComplete
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
+	DestroySocket( FCB );
 	return STATUS_SUCCESS;
     }
 
@@ -174,11 +170,6 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
 
-    if( Irp->Cancel ) {
-	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
-	return STATUS_CANCELLED;
-    }
-
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
 
@@ -187,6 +178,12 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
+
+    if( FCB->State == SOCKET_STATE_CLOSED ) {
+	SocketStateUnlock( FCB );
+	DestroySocket( FCB );
+	return STATUS_SUCCESS;
+    }
 
     SocketStateUnlock( FCB );
 
