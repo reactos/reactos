@@ -40,6 +40,11 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
+
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->SendIrp.InFlightRequest = NULL;
@@ -168,6 +173,11 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
+
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
 
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
