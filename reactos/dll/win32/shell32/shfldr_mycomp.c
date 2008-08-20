@@ -451,6 +451,9 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
+    static const DWORD dwComputerAttributes =
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_CANCOPY |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -463,15 +466,8 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    if(cidl == 0){
-        IShellFolder *psfParent = NULL;
-        LPCITEMIDLIST rpidl = NULL;
-
-        hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
-        if(SUCCEEDED(hr)) {
-            SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
-            IShellFolder_Release(psfParent);
-        }
+    if(cidl == 0) {
+        *rgfInOut &= dwComputerAttributes;
     } else {
         while (cidl > 0 && *apidl) {
             pdump (*apidl);
@@ -778,9 +774,22 @@ static HRESULT WINAPI ISF_MyComputer_fnSetNameOf (
     LPWSTR sName;
     HKEY hKey;
     UINT length;
+    WCHAR szName[30];
 
     TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", This,
            hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
+
+    if (_ILIsDrive(pidl))
+    {
+       if (_ILSimpleGetTextW(pidl, szName, sizeof(szName)/sizeof(WCHAR)))
+       {
+           SetVolumeLabelW(szName, lpName);
+       }
+       if (pPidlOut)
+           *pPidlOut = _ILCreateDrive(szName);
+       return S_OK;
+    }
+
 
     if (pPidlOut != NULL)
     {
@@ -1021,7 +1030,12 @@ static HRESULT WINAPI IMCFldr_PersistFolder2_Initialize (
 {
     IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
     TRACE ("(%p)->(%p)\n", This, pidl);
-    return E_NOTIMPL;
+
+    if (This->pidlRoot)
+        SHFree((LPVOID)This->pidlRoot);
+
+    This->pidlRoot = ILClone(pidl);
+    return S_OK;
 }
 
 /**************************************************************************

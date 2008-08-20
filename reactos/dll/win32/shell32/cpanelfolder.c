@@ -703,7 +703,7 @@ static HRESULT WINAPI ISF_ControlPanel_fnGetDisplayNameOf(IShellFolder2 * iface,
 	    len = lstrlenW(wszPath);
 
 	    if (!SUCCEEDED
-	      (SHELL32_GetDisplayNameOfChild(iface, pidl, dwFlags | SHGDN_INFOLDER, wszPath + len, MAX_PATH + 1 - len)))
+	      (SHELL32_GetDisplayNameOfChild(iface, pidl, dwFlags, wszPath + len, MAX_PATH + 1 - len)))
 		return E_OUTOFMEMORY;
 	    if (!WideCharToMultiByte(CP_ACP, 0, wszPath, -1, szPath, MAX_PATH, NULL, NULL))
 		wszPath[0] = '\0';
@@ -907,8 +907,11 @@ static HRESULT WINAPI ICPanel_PersistFolder2_GetClassID(IPersistFolder2 * iface,
 static HRESULT WINAPI ICPanel_PersistFolder2_Initialize(IPersistFolder2 * iface, LPCITEMIDLIST pidl)
 {
     ICPanelImpl *This = impl_from_IPersistFolder2(iface);
-    TRACE("(%p)->(%p)\n", This, pidl);
-    return E_NOTIMPL;
+    if (This->pidlRoot)
+        SHFree((LPVOID)This->pidlRoot);
+
+    This->pidlRoot = ILClone(pidl);
+    return S_OK;
 }
 
 /**************************************************************************
@@ -1222,7 +1225,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    char szBuffer[30] = {0};
+    WCHAR szBuffer[30] = {0};
     ULONG Count = 1;
 
     ICPanelImpl *This = impl_from_IContextMenu(iface);
@@ -1230,22 +1233,22 @@ static HRESULT WINAPI ICPanel_IContextMenu2_QueryContextMenu(
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
           This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringA(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
         Count++;
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_CREATELINK, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_CREATELINK, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         if (Count)
         {
-            _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_ENABLED);
+            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_SEPARATOR, NULL, MFS_ENABLED);
         }
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
 
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
         Count++;
     }
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);

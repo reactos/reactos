@@ -368,8 +368,8 @@ static HRESULT WINAPI ISF_MyDocuments_fnGetAttributesOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
     static const DWORD dwMyDocumentsAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_CANCOPY |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);

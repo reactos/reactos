@@ -163,7 +163,8 @@ static ULONG WINAPI ISF_AdminTools_fnRelease (IShellFolder2 * iface)
         TRACE ("-- destroying IShellFolder(%p)\n", This);
         if (This->pidlRoot)
             SHFree (This->pidlRoot);
-        LocalFree ((HLOCAL) This);
+        HeapFree(GetProcessHeap(), 0, This->szTarget);
+        HeapFree(GetProcessHeap(), 0, This);
         return 0;
     }
     return refCount;
@@ -186,6 +187,8 @@ static HRESULT WINAPI ISF_AdminTools_fnParseDisplayName (IShellFolder2 * iface,
     *ppidl = 0;
     if (pchEaten)
         *pchEaten = 0;
+
+	MessageBoxW(NULL, lpszDisplayName, L"ParseDisplayName", MB_OK);
 
     return E_NOTIMPL;
 }
@@ -433,7 +436,8 @@ static HRESULT WINAPI ISF_AdminTools_fnGetDisplayNameOf (IShellFolder2 * iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
-    LPWSTR pszPath;
+    LPWSTR pszPath, pOffset;
+
 
     TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", This, pidl, dwFlags, strRet);
     pdump (pidl);
@@ -457,7 +461,19 @@ static HRESULT WINAPI ISF_AdminTools_fnGetDisplayNameOf (IShellFolder2 * iface,
     }
     else if (_ILIsPidlSimple(pidl))
     {
-        _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);
+        if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
+            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
+            This->szTarget)
+        {
+            wcscpy(pszPath, This->szTarget);
+            pOffset = PathAddBackslashW(pszPath);
+            if (pOffset)
+                _ILSimpleGetTextW(pidl, pOffset, MAX_PATH + 1 - (pOffset - pszPath));
+        }
+        else
+       {
+           _ILSimpleGetTextW(pidl, pszPath, MAX_PATH + 1);
+       }
     }
     else if (_ILIsSpecialFolder(pidl)) 
     {
@@ -467,10 +483,6 @@ static HRESULT WINAPI ISF_AdminTools_fnGetDisplayNameOf (IShellFolder2 * iface,
         {
             _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);
         } 
-        else 
-        {
-            FIXME("special pidl\n");
-        }
 
         if ((dwFlags & SHGDN_FORPARSING) && !bSimplePidl) 
         {
@@ -709,8 +721,11 @@ static HRESULT WINAPI IPF_AdminTools_Initialize (
                IPersistFolder2 * iface, LPCITEMIDLIST pidl)
 {
     _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
-    FIXME ("(%p)->(%p): stub\n", This, pidl);
-    return E_NOTIMPL;
+    if (This->pidlRoot)
+        SHFree((LPVOID)This->pidlRoot);
+
+    This->pidlRoot = ILClone(pidl);
+    return S_OK;
 }
 
 /**************************************************************************
@@ -765,6 +780,7 @@ HRESULT WINAPI ISF_AdminTools_Constructor (
     {
         HeapFree(GetProcessHeap(), 0, sf->szTarget);
         HeapFree(GetProcessHeap(), 0, sf);
+        return E_FAIL;
     }
 
     sf->ref = 1;

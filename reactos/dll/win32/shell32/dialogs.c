@@ -244,6 +244,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                                 DI_NORMAL);
                     break;
             }
+            break;
     }
 
     return FALSE;

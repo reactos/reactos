@@ -60,6 +60,48 @@ typedef struct
    WCHAR szFolderPath[MAX_PATH];
 }FOLDER_PROPERTIES_CONTEXT, *PFOLDER_PROPERTIES_CONTEXT;
 
+typedef struct
+{
+   LPCWSTR szKeyName;
+   UINT ResourceID;
+}FOLDER_VIEW_ENTRY, PFOLDER_VIEW_ENTRY;
+/*
+static FOLDER_VIEW_ENTRY s_Options[] =
+{
+    { L"AlwaysShowMenus", IDS_ALWAYSSHOWMENUS },
+    { L"AutoCheckSelect", -1 }, 
+    { L"ClassicViewState", -1 }, 
+    { L"DontPrettyPath",  -1 },
+    { L"Filter", -1 },
+    { L"FolderContentsInfoTip", IDS_FOLDERCONTENTSTIP },
+    { L"FriendlyTree", -1 },
+    { L"Hidden", -1, },
+    { L"HideFileExt", IDS_HIDEFILEEXT },
+    { L"HideIcons", -1},
+    { L"IconsOnly", -1},
+    { L"ListviewAlphaSelect", -1},
+    { L"ListviewShadow", -1},
+    { L"ListviewWatermark", -1},
+    { L"MapNetDrvBtn", -1},
+    { L"PersistBrowsers", -1},
+    { L"SeperateProcess", IDS_SEPERATEPROCESS},
+    { L"ServerAdminUI", -1},
+    { L"SharingWizardOn", IDS_USESHAREWIZARD},
+    { L"ShowCompColor", IDS_COMPCOLOR},
+    { L"ShowInfoTip", IDS_SHOWINFOTIP},
+    { L"ShowPreviewHandlers", -1},
+    { L"ShowSuperHidden", IDS_HIDEOSFILES},
+    { L"ShowTypeOverlay", -1},
+    { L"Start_ShowMyGames", -1},
+    { L"StartMenuInit", -1},
+    { L"SuperHidden", -1},
+    { L"TypeAhead", -1},
+    { L"Webview", -1},
+    { NULL, -1}
+
+};
+*/
+
 
 INT_PTR
 CALLBACK
@@ -76,6 +118,35 @@ FolderOptionsGeneralDlg(
     return FALSE;
 }
 
+static 
+VOID
+InitializeFolderOptionsListCtrl(HWND hwndDlg)
+{
+    RECT clientRect;
+    LVCOLUMNW col;
+    WCHAR szName[50];
+    HWND hDlgCtrl;
+
+	hDlgCtrl = GetDlgItem(hwndDlg, 14003);
+
+    if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, sizeof(szName) / sizeof(WCHAR)))
+        szName[0] = 0;
+    szName[(sizeof(szName)/sizeof(WCHAR))-1] = 0;
+
+    GetClientRect(hDlgCtrl, &clientRect);
+    ZeroMemory(&col, sizeof(LV_COLUMN));
+    col.mask      = LVCF_SUBITEM | LVCF_WIDTH | LVCF_FMT;
+    col.iSubItem  = 0;
+    col.pszText = szName;
+    col.fmt = LVCFMT_LEFT;
+    col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
+    (void)ListView_InsertColumnW(hDlgCtrl, 0, &col);
+
+
+
+}
+
+
 INT_PTR
 CALLBACK
 FolderOptionsViewDlg(
@@ -85,10 +156,15 @@ FolderOptionsViewDlg(
     LPARAM lParam
 )
 {
-
-
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            InitializeFolderOptionsListCtrl(hwndDlg);
+            return TRUE;
+    }
 
     return FALSE;
+
 }
 
 VOID
@@ -173,11 +249,8 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     DWORD dwName;
     INT iItem = 0;
 
-
     hDlgCtrl = GetDlgItem(hwndDlg, 14000);
     InitializeFileTypesListCtrlColumns(hDlgCtrl);
-
-
 
     dwName = sizeof(szName) / sizeof(WCHAR);
 
@@ -205,7 +278,6 @@ FolderOptionsFileTypesDlg(
             InitializeFileTypesListCtrl(hwndDlg);
             return TRUE;
     }
-
 
     return FALSE;
 }

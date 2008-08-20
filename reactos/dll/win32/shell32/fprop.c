@@ -650,24 +650,19 @@ SH_FileGeneralDlgProc(
 
 BOOL CALLBACK AddShellPropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 {
-    UINT iIndex;
-    HPROPSHEETPAGE * hppages = (HPROPSHEETPAGE *)lParam;
+    PROPSHEETHEADERW *pinfo = (PROPSHEETHEADERW *)lParam;
 
-    TRACE("AddShellPropSheetExCallback called\n");
-    for(iIndex = 0; iIndex < MAX_PROPERTY_SHEET_PAGE; iIndex++)
+    if (pinfo->nPages < MAX_PROPERTY_SHEET_PAGE)
     {
-        if (hppages[iIndex] == NULL)
-        {
-            hppages[iIndex] = hPage;
-            return TRUE;
-        }
+        pinfo->u3.phpage[pinfo->nPages++] = hPage;
+        return TRUE;
     }
     return FALSE;
 }
 
 
 int
-EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA * hpsxa, IDataObject *pDataObj)
+EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA * hpsxa, IDataObject *pDataObj)
 {
     WCHAR szName[100];
     WCHAR * pOffset;
@@ -702,7 +697,7 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
     }
     TRACE("EnumPropSheetExt szName %s\n", debugstr_w(szName));
     hpsxa[0] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages, pDataObj);
-    Pages = SHAddFromPropSheetExtArray(hpsxa[0], AddShellPropSheetExCallback, (LPARAM)hppages);
+    Pages = SHAddFromPropSheetExtArray(hpsxa[0], AddShellPropSheetExCallback, (LPARAM)pinfo);
 
 
     if (pOffset)
@@ -714,7 +709,7 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
             TRACE("EnumPropSheetExt szName %s, pOffset %s\n", debugstr_w(szName), debugstr_w(pOffset));
             szName[(sizeof(szName)/sizeof(WCHAR))-1] = L'\0';
             hpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
-            Pages +=SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)hppages);
+            Pages +=SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)pinfo);
         }
     }
     return Pages;
@@ -735,19 +730,15 @@ EnumPropSheetExt(LPWSTR wFileName, HPROPSHEETPAGE * hppages, int NumPages, HPSXA
  */
 
 BOOL
-SH_ShowPropertiesDialog(PCWSTR lpf)
+SH_ShowPropertiesDialog(WCHAR * lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl)
 {
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
-    HPROPSHEETPAGE hpage;
     WCHAR wFileName[MAX_PATH];
-    UINT num_pages = 0;
     DWORD dwHandle = 0;
     WCHAR * pFileName;
     HPSXA hpsxa[2];
     INT_PTR res;
-    LPITEMIDLIST pidlChild, pidlFolder;
-    WCHAR szTemp[MAX_PATH];
     IDataObject* pDataObj = NULL;
     HRESULT hResult;
 
@@ -783,45 +774,9 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
 
     if (wcslen(wFileName) == 3)
     {
-        return SH_ShowDriveProperties(wFileName);
+        return SH_ShowDriveProperties(wFileName, pidlFolder, apidl);
     }
 
-    wcscpy(szTemp, wFileName);
-    pFileName = wcsrchr(szTemp, '\\');
-    if (pFileName)
-    {
-        pFileName[0] = L'\0';
-        pFileName++;
-        pidlChild = ILCreateFromPathW(pFileName);
-        pidlFolder = ILCreateFromPathW(szTemp);
-        if (pidlChild && pidlFolder)
-        {
-            hResult = SHCreateDataObject(pidlFolder, 1, (LPCITEMIDLIST*)&pidlChild, NULL, &IID_IDataObject, (LPVOID*)&pDataObj);
-            ILFree(pidlChild);
-            ILFree(pidlFolder);
-            if (hResult != S_OK)
-                pDataObj = NULL;
-        }
-    }
-
-
-    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)wFileName, NULL);
-
-    if (hpage == NULL)
-        return FALSE;
-
-    hppages[num_pages] = hpage;
-    num_pages++;
-    num_pages += EnumPropSheetExt(wFileName, hppages, MAX_PROPERTY_SHEET_PAGE-1, hpsxa, pDataObj);
-
-    if ( GetFileVersionInfoSizeW(lpf, &dwHandle) && num_pages)
-    {
-        if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)wFileName, NULL))!= NULL)
-        {
-            hppages[num_pages] = hpage;
-            num_pages++;
-        }
-    }
 
     pFileName = wcsrchr(wFileName, '\\');
     if (!pFileName)
@@ -833,17 +788,35 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
-    pinfo.nPages = num_pages;
     pinfo.u3.phpage = hppages;
     pinfo.pszCaption = pFileName;
 
-    TRACE("SH_ShowPropertiesDialog pages %u\n", num_pages);
+    hppages[pinfo.nPages] = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)wFileName, NULL);
+    if (hppages[pinfo.nPages])
+        pinfo.nPages++;
+
+
+    hResult = SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (LPVOID*)&pDataObj);
+    if (hResult == S_OK)
+    {
+        EnumPropSheetExt(wFileName, &pinfo, MAX_PROPERTY_SHEET_PAGE-1, hpsxa, pDataObj);
+    }
+
+    if ( GetFileVersionInfoSizeW(lpf, &dwHandle))
+    {
+        hppages[pinfo.nPages] = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)wFileName, NULL);
+        if (hppages[pinfo.nPages])
+            pinfo.nPages++;
+    }
+
     res = PropertySheetW(&pinfo);
 
-    SHDestroyPropSheetExtArray(hpsxa[0]);
-    SHDestroyPropSheetExtArray(hpsxa[1]);
-    if (pDataObj)
+    if (hResult == S_OK)
+    {
+        SHDestroyPropSheetExtArray(hpsxa[0]);
+        SHDestroyPropSheetExtArray(hpsxa[1]);
         IDataObject_Release(pDataObj);
+    }
 
     return (res != -1);
 }

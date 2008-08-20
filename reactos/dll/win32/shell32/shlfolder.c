@@ -418,7 +418,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 
     if (_ILIsDrive (pidl)) {
         *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
-	    SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANLINK|SFGAO_CANRENAME;
+	    SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME;
     } else if (has_guid && HCR_GetFolderAttributes(pidl, &dwAttributes)) {
 	*pdwAttributes = dwAttributes;
     } else if (_ILGetDataPointer (pidl)) {
@@ -446,7 +446,10 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
                           SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
 
 	if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
 	    *pdwAttributes |=  (SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
+		*pdwAttributes &= ~SFGAO_CANLINK;
+	}
 	else
 	    *pdwAttributes &= ~(SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_FILESYSANCESTOR);
 

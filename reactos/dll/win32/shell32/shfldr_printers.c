@@ -923,8 +923,11 @@ static HRESULT WINAPI IPF_Printers_Initialize (
                IPersistFolder2 * iface, LPCITEMIDLIST pidl)
 {
     _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
-    FIXME ("(%p)->(%p): stub\n", This, pidl);
-    return E_NOTIMPL;
+    if (This->pidlRoot)
+        SHFree((LPVOID)This->pidlRoot);
+
+    This->pidlRoot = ILClone(pidl);
+    return S_OK;
 }
 
 /**************************************************************************

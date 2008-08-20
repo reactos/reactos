@@ -190,7 +190,7 @@ static INT_PTR CALLBACK ConfirmMsgBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
     return FALSE;
 }
 
-static int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll)
+int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll)
 {
     static const WCHAR wszTemplate[] = {'S','H','E','L','L','_','Y','E','S','T','O','A','L','L','_','M','S','G','B','O','X',0};
     struct confirm_msg_info info;

@@ -143,8 +143,8 @@ HRESULT WINAPI SHEOW_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv)
     SHEOWImpl * ow;
     HRESULT res;
 
-	ow = LocalAlloc(LMEM_ZEROINIT, sizeof(SHEOWImpl));
-	if (!ow)
+    ow = LocalAlloc(LMEM_ZEROINIT, sizeof(SHEOWImpl));
+    if (!ow)
     {
         return E_OUTOFMEMORY;
     }
@@ -241,6 +241,8 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH_CHOOSE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
        wcscpy(szBuffer, szChoose);
 
+    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
     mii.fType = MFT_STRING;
     mii.fState = MFS_ENABLED;
@@ -279,6 +281,7 @@ LoadOWItems(POPEN_WITH_CONTEXT pContext, WCHAR * szName)
     szPath[0] = 0;
     if (RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
     {
+        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
         LoadItemFromHKCR(pContext, szPath);
     }
 }
@@ -294,17 +297,18 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
 	UINT uFlags)
 {
     MENUITEMINFOW mii;
-    WCHAR szBuffer[100];
+    WCHAR szBuffer[100] = {0};
     INT pos;
     HMENU hSubMenu = NULL;
     OPEN_WITH_CONTEXT Context;
     SHEOWImpl *This = impl_from_IContextMenu(iface);
     
-    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, 100) < 0)
+    if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)) < 0)
     {
        TRACE("failed to load string\n");
        return E_FAIL;
     }
+    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
 
     hSubMenu = CreatePopupMenu();
 
@@ -383,12 +387,16 @@ FreeListItems(HWND hwndDlg)
 
 BOOL HideApplicationFromList(WCHAR * pFileName)
 {
-    WCHAR szBuffer[100];
+    WCHAR szBuffer[100] = {'A','p','p','l','i','c','a','t','i','o','n','s','\\',0};
     DWORD dwSize = 0;
     LONG result;
 
-    wcscpy(szBuffer, L"Applications\\");
-    wcscat(szBuffer, pFileName);
+    if (wcslen(pFileName) > (sizeof(szBuffer)/sizeof(WCHAR)) - 14)
+    {
+        ERR("insufficient buffer\n");
+        return FALSE;
+    }
+    wcscpy(&szBuffer[13], pFileName);
 
     result = RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize);
 
@@ -405,11 +413,17 @@ WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath)
 {
     HKEY hShell;
     LONG result;
-    WCHAR szBuffer[MAX_PATH+10];
+    WCHAR szBuffer[MAX_PATH+10] = {'s','h','e','l','l','\\', 0 };
+
+    if (wcslen(pVerb) > (sizeof(szBuffer)/sizeof(WCHAR)) - 15 ||
+        wcslen(pFullPath) > (sizeof(szBuffer)/sizeof(WCHAR)) - 4)
+    {
+        ERR("insufficient buffer\n");
+        return;
+    }
 
     /* construct verb reg path */
-    wcscpy(szBuffer, L"shell\\");
-    wcscat(szBuffer, pVerb);
+    wcscpy(&szBuffer[6], pVerb);
     wcscat(szBuffer, L"\\command");
 
     /* create verb reg key */
@@ -427,7 +441,7 @@ WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath)
 VOID
 StoreNewSettings(WCHAR * szFileName, WCHAR *szAppName)
 {
-    WCHAR szBuffer[100];
+    WCHAR szBuffer[100] = { L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\"};
     WCHAR * pFileExt;
     HKEY hKey;
     LONG result;
@@ -435,9 +449,12 @@ StoreNewSettings(WCHAR * szFileName, WCHAR *szAppName)
 
     /* get file extension */
     pFileExt = wcsrchr(szFileName, L'.');
-    wcscpy(szBuffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\");
-    wcscat(szBuffer, pFileExt);
-
+    if (wcslen(pFileExt) > (sizeof(szBuffer)/sizeof(WCHAR)) - 60)
+    {
+        ERR("insufficient buffer\n");
+        return;
+    }
+    wcscpy(&szBuffer[60], pFileExt);
     /* open  base key for this file extension */
     if (RegCreateKeyExW(HKEY_CURRENT_USER, szBuffer, 0, NULL, 0, KEY_WRITE | KEY_READ, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return;
@@ -464,7 +481,7 @@ VOID
 SetProgrammAsDefaultHandler(WCHAR * szFileName, WCHAR * szAppName)
 {
     HKEY hKey;
-	HKEY hAppKey;
+    HKEY hAppKey;
     DWORD dwDisposition;
     WCHAR szBuffer[100];
     DWORD dwSize;
@@ -541,18 +558,17 @@ SetProgrammAsDefaultHandler(WCHAR * szFileName, WCHAR * szAppName)
 void
 BrowseForApplication(HWND hwndDlg)
 {
-    WCHAR szBuffer[30];
-    WCHAR szFilter[30];
+    WCHAR szBuffer[30] = {0};
+    WCHAR szFilter[30] = {0};
     WCHAR szPath[MAX_PATH];
     OPENFILENAMEW ofn;
     OPEN_WITH_CONTEXT Context;
     INT count;
 
     /* load resource open with */
-    szBuffer[0] = 0;
     if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
     {
-        szBuffer[99] = 0;
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         ofn.lpstrTitle = szBuffer;
         ofn.nMaxFileTitle = strlenW(szBuffer);
     }
@@ -565,10 +581,9 @@ BrowseForApplication(HWND hwndDlg)
     ofn.lpstrFile = szPath;
 
     /* load the filter resource string */
-    szFilter[0] = 0;
     if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH_FILTER, szFilter, sizeof(szFilter) / sizeof(WCHAR)))
     {
-        szFilter[99] = 0;
+        szFilter[(sizeof(szFilter)/sizeof(WCHAR))-1] = 0;
         ofn.lpstrFilter = szFilter;
     }
     ZeroMemory(szPath, sizeof(szPath));
@@ -658,12 +673,16 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         {
              szBuffer[0] = L'\0';
              SendDlgItemMessageA(hwndDlg, 14001, WM_GETTEXT, sizeof(szBuffer), (LPARAM)szBuffer);
-             strcat((char*)szBuffer, poainfo->pcszFile);
+             index = strlen((char*)szBuffer);
+             if (index + strlen(poainfo->pcszFile) + 1 < sizeof(szBuffer))
+                 strcat((char*)szBuffer, poainfo->pcszFile);
+             szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
              SendDlgItemMessageA(hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
         if (MultiByteToWideChar(CP_ACP, 0,poainfo->pcszFile, -1, szBuffer, MAX_PATH))
         {
             OPEN_WITH_CONTEXT Context;
+            szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
             ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
             Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
             LoadOWItems(&Context, szBuffer);
@@ -1231,7 +1250,7 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
         return E_OUTOFMEMORY;
     }
     if (_ILIsDesktop(pidl_child) || _ILIsMyDocuments(pidl_child) || _ILIsControlPanel(pidl_child) || _ILIsNetHood(pidl_child) ||
-        _ILIsBitBucket(pidl_child) || _ILIsDrive(pidl_child) || _ILIsCPanelStruct(pidl_child) || _ILIsFolder(pidl_child))
+        _ILIsBitBucket(pidl_child) || _ILIsDrive(pidl_child) || _ILIsCPanelStruct(pidl_child) || _ILIsFolder(pidl_child) || _ILIsControlPanel(pidl_folder))
     {
         TRACE("pidl is a folder\n");
         SHFree((void*)pidl);
