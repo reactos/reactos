@@ -27,9 +27,11 @@
 /* Page Directory and Tables for non-PAE Systems */
 extern ULONG_PTR NextModuleBase;
 extern ULONG_PTR KernelBase;
+ULONG_PTR GdtBase, IdtBase, TssBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 PPAGE_DIRECTORY_AMD64 pPML4;
+PVOID pIdt, pGdt;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -91,6 +93,8 @@ FrLdrStartup(ULONG Magic)
 
 	/* Set the new PML4 */
 	__writecr3((ULONGLONG)pPML4);
+
+	FrLdrSetupGdtIdt();
 
 	LoaderBlock.FrLdrDbgPrint = DbgPrint;
 
@@ -220,5 +224,56 @@ FrLdrSetupPageDirectory(VOID)
 		DbgPrint("Could not map %d kernel pages.\n", KernelPages);
 	}
 
+	/* Setup a page for the idt */
+	pIdt = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+	IdtBase = KernelBase + KernelPages * PAGE_SIZE;
+	if (!FrLdrMapSinglePage(IdtBase, (ULONGLONG)pIdt))
+	{
+		DbgPrint("Could not map idt page.\n", KernelPages);
+	}
+
+	/* Setup a page for the gdt & tss */
+	pGdt = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+	GdtBase = IdtBase + PAGE_SIZE;
+	TssBase = GdtBase + 20 * sizeof(ULONG64); // FIXME: don't hardcode
+	if (!FrLdrMapSinglePage(GdtBase, (ULONGLONG)pGdt))
+	{
+		DbgPrint("Could not map idt page.\n", KernelPages);
+	}
+
+
 }
 
+VOID
+FrLdrSetupGdtIdt()
+{
+	PKGDTENTRY64 Entry;
+	KDESCRIPTOR Desc;
+
+	RtlZeroMemory(pGdt, PAGE_SIZE);
+
+	/* Setup KGDT_64_R0_CODE */
+	Entry = KiGetGdtEntry(pGdt, KGDT_64_R0_CODE);
+	*(PULONG64)Entry = 0x0020980000000000ULL;
+
+	/* Setup TSS entry */
+	Entry = KiGetGdtEntry(pGdt, KGDT_TSS);
+	KiInitGdtEntry(Entry, TssBase, I386_TSS, 0);
+
+	/* Setup the gdt descriptor */
+	Desc.Limit = 12 * sizeof(ULONG64) - 1;
+	Desc.Base = (PVOID)GdtBase;
+
+	/* Set the new Gdt */
+	__lgdt(&Desc.Limit);
+	DbgPrint("Gdtr.Base = %p\n", Desc.Base);
+
+	/* Setup the idt descriptor */
+	Desc.Limit = 12 * sizeof(ULONG64) - 1;
+	Desc.Base = (PVOID)IdtBase;
+
+	/* Set the new Idt */
+	__lidt(&Desc.Limit);
+	DbgPrint("Idtr.Base = %p\n", Desc.Base);
+
+}

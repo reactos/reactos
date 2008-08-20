@@ -51,6 +51,42 @@ typedef struct _PAGE_DIRECTORY_AMD64
     HARDWARE_PTE Pde[512];
 } PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
 
+VOID
+FORCEINLINE
+__lgdt(void *gdt)
+{
+    asm volatile ("lgdt %0\n" : : "m"(*(short*)gdt));
+}
+
+VOID
+FORCEINLINE
+__lidt(void *idt)
+{
+    asm volatile ("lidt %0\n" : : "m"(*(short*)idt));
+}
+
+PKGDTENTRY64
+FORCEINLINE
+KiGetGdtEntry(PVOID pGdt, USHORT Index)
+{
+    return (PKGDTENTRY64)((ULONG64)pGdt + (Index & ~RPL_MASK));
+}
+
+VOID
+FORCEINLINE
+KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, UCHAR Type, UCHAR Dpl)
+{
+    Entry->Bits.Type = Type;
+    Entry->Bits.Present = 1;
+    Entry->Bits.Dpl = Dpl;
+    Entry->BaseLow = (USHORT)(Base & 0xFFFF);
+    Entry->Bytes.BaseMiddle = (UCHAR)(Base >> 16);
+    Entry->Bytes.BaseHigh = (UCHAR)(Base >> 24);
+    Entry->BaseUpper = (ULONG)(Base >> 32);
+}
+
+VOID FrLdrSetupGdtIdt();
+
 #endif
 
 #endif /* __AMD64_AMD64_H_ */
