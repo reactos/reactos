@@ -53,34 +53,6 @@ NTSTATUS DispPrepareIrpForCancel(
     return IRPFinish(Irp, STATUS_CANCELLED);
 }
 
-
-VOID DispCancelComplete(
-    PVOID Context)
-/*
- * FUNCTION: Completes a cancel request
- * ARGUMENTS:
- *     Context = Pointer to context information (FILE_OBJECT)
- */
-{
-    /*KIRQL OldIrql;*/
-    PFILE_OBJECT FileObject;
-    PTRANSPORT_CONTEXT TranContext;
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
-    FileObject  = (PFILE_OBJECT)Context;
-    TranContext = (PTRANSPORT_CONTEXT)FileObject->FsContext;
-
-    /* Set the cleanup event */
-    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
-
-    /* We are expected to release the cancel spin lock */
-    /*IoReleaseCancelSpinLock(OldIrql);*/
-
-    TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
-}
-
-
 VOID DispDataRequestComplete(
     PVOID Context,
     NTSTATUS Status,
@@ -155,8 +127,14 @@ VOID DispDoDisconnect( PVOID Data ) {
     TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
 
     DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
+}
 
-    DispCancelComplete(DisType->FileObject);
+VOID DispDoPacketCancel( PVOID Data ) {
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+    PIRP *IrpP = (PIRP *)Data, Irp = *IrpP;
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 VOID NTAPI DispCancelRequest(
@@ -175,6 +153,7 @@ VOID NTAPI DispCancelRequest(
     UCHAR MinorFunction;
     DISCONNECT_TYPE DisType;
     PVOID WorkItem;
+    PADDRESS_FILE AddrFile;
     /*NTSTATUS Status = STATUS_SUCCESS;*/
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -209,24 +188,23 @@ VOID NTAPI DispCancelRequest(
 	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
 			 DispDoDisconnect, &DisType ) )
 	    ASSERT(0);
-        break;
+        return;
 
     case TDI_SEND_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
             break;
         }
-
-        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
+        /* Nothing to do.  We don't keep them around. */
         break;
 
     case TDI_RECEIVE_DATAGRAM:
+        AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
             break;
         }
-
-        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
+        DGRemoveIRP(AddrFile, Irp);
         break;
 
     default:
@@ -235,7 +213,8 @@ VOID NTAPI DispCancelRequest(
     }
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
@@ -279,9 +258,6 @@ VOID NTAPI DispCancelListenRequest(
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     DispDataRequestComplete(Irp, STATUS_CANCELLED, 0);
-
-    DispCancelComplete(FileObject);
-
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
@@ -817,7 +793,6 @@ NTSTATUS DispTdiReceive(
   return Status;
 }
 
-
 NTSTATUS DispTdiReceiveDatagram(
     PIRP Irp)
 /*
@@ -834,6 +809,7 @@ NTSTATUS DispTdiReceiveDatagram(
   TDI_REQUEST Request;
   NTSTATUS Status;
   ULONG BytesReceived;
+  PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -846,6 +822,8 @@ NTSTATUS DispTdiReceiveDatagram(
       TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
       return STATUS_INVALID_ADDRESS;
     }
+
+  AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
 
   /* Initialize a receive request */
   Request.Handle.AddressHandle = TranContext->Handle.AddressHandle;
@@ -866,21 +844,21 @@ NTSTATUS DispTdiReceiveDatagram(
 			 &DataBuffer,
 			 &BufferSize );
 
-      Status = DGReceiveDatagram(
-	  Request.Handle.AddressHandle,
-	  DgramInfo->ReceiveDatagramInformation,
-	  DataBuffer,
-	  DgramInfo->ReceiveLength,
-	  DgramInfo->ReceiveFlags,
-	  DgramInfo->ReturnDatagramInformation,
-	  &BytesReceived,
-	  (PDATAGRAM_COMPLETION_ROUTINE)DispDataRequestComplete,
-	  Irp,
-          Irp);
-      if (Status != STATUS_PENDING) {
-          DispDataRequestComplete(Irp, Status, BytesReceived);
-      } else
-	  IoMarkIrpPending(Irp);
+        Status = DGReceiveDatagram(
+            AddrFile,
+            DgramInfo->ReceiveDatagramInformation,
+            DataBuffer,
+            DgramInfo->ReceiveLength,
+            DgramInfo->ReceiveFlags,
+            DgramInfo->ReturnDatagramInformation,
+            &BytesReceived,
+            (PDATAGRAM_COMPLETION_ROUTINE)DispDataRequestComplete,
+            Irp,
+            Irp);
+        if (Status != STATUS_PENDING) {
+            DispDataRequestComplete(Irp, Status, BytesReceived);
+        } else
+            IoMarkIrpPending(Irp);
     }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
