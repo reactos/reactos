@@ -187,7 +187,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
-    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp, FALSE);
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
