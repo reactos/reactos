@@ -97,10 +97,12 @@ INT cmd_cls (LPTSTR, LPTSTR);
 /* Prototypes for CMD.C */
 INT ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len, BOOL bPutSeperator);
 VOID ParseCommandLine (LPTSTR);
+struct _PARSED_COMMAND;
+BOOL ExecuteCommand(struct _PARSED_COMMAND *Cmd);
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
-VOID DoCommand (LPTSTR line);
+BOOL DoCommand (LPTSTR line);
 int cmd_main (int argc, const TCHAR *argv[]);
 
 extern HANDLE CMD_ModuleHandle;
@@ -324,6 +326,21 @@ INT cmd_move (LPTSTR, LPTSTR);
 
 /* Prototypes for MSGBOX.C */
 INT CommandMsgbox (LPTSTR, LPTSTR);
+
+
+/* Prototypes from PARSER.C */
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE };
+typedef struct _PARSED_COMMAND
+{
+	struct _PARSED_COMMAND *Subcommands;
+	struct _PARSED_COMMAND *Next;
+	struct _REDIRECTION *Redirections;
+	TCHAR *Tail;
+	BYTE Type;
+	TCHAR CommandLine[];
+} PARSED_COMMAND;
+PARSED_COMMAND *ParseCommand(LPTSTR Line);
+VOID FreeCommand(PARSED_COMMAND *Cmd);
 
 
 /* Prototypes from PATH.C */

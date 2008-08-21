@@ -83,16 +83,6 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
                 }
 		if (*p1 != _T('\0'))
 		{
-                        p1 = param;
-                        while (NULL != (p1 = _tcschr(p1, _T('^'))))
-                        {
-                                memmove(p1, p1 + 1, (_tcslen(p1 + 1) + 1) * sizeof(TCHAR));
-                                if (*p1)
-                                {
-      					//skip past the char being escaped
-                                        p1++;
-                                }
-                        }
 			ConOutPuts (param);
 		}
 		else

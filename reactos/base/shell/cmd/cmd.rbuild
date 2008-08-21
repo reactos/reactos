@@ -44,6 +44,7 @@
 			<file>misc.c</file>
 			<file>move.c</file>
 			<file>msgbox.c</file>
+			<file>parser.c</file>
 			<file>path.c</file>
 			<file>pause.c</file>
 			<file>prompt.c</file>

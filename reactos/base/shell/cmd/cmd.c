@@ -323,7 +323,7 @@ static BOOL RunFile(LPTSTR filename)
  * Rest  - rest of command line
  */
 
-static VOID
+static BOOL
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
 	TCHAR *szFullName=NULL;
@@ -345,7 +345,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	{
 		error_out_of_memory();
                 nErrorLevel = 1;
-		return ;
+		return FALSE;
 	}
 
 	rest = cmd_alloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR));
@@ -354,7 +354,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		cmd_free (first);
 		error_out_of_memory();
                 nErrorLevel = 1;
-		return ;
+		return FALSE;
 	}
 
 	full = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
@@ -364,7 +364,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		cmd_free (rest);
 		error_out_of_memory();
                 nErrorLevel = 1;
-		return ;
+		return FALSE;
 	}
 
 	szFullName = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
@@ -375,7 +375,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		cmd_free (full);
 		error_out_of_memory();
                 nErrorLevel = 1;
-		return ;
+		return FALSE;
 	}
 
 
@@ -446,7 +446,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		cmd_free (full);
 		cmd_free (szFullName);
                 nErrorLevel = 1;
-		return;
+		return working;
 	}
 
 	/* get the PATH environment variable and parse it */
@@ -459,7 +459,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 			cmd_free (full);
 			cmd_free (szFullName);
                         nErrorLevel = 1;
-			return;
+			return FALSE;
 
 	}
 
@@ -554,6 +554,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	cmd_free(rest);
 	cmd_free(full);
 	cmd_free (szFullName);
+	return nErrorLevel == 0;
 }
 
 
@@ -566,7 +567,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
  *
  */
 
-VOID
+BOOL
 DoCommand (LPTSTR line)
 {
 	TCHAR *com = NULL;  /* the first word in the command */
@@ -575,6 +576,7 @@ DoCommand (LPTSTR line)
 	LPTSTR rest;   /* pointer to the rest of the command line */
 	INT cl;
 	LPCOMMAND cmdptr;
+	BOOL ret = TRUE;
 
 	TRACE ("DoCommand: (\'%s\')\n", debugstr_aw(line));
 
@@ -582,7 +584,7 @@ DoCommand (LPTSTR line)
 	if (com == NULL)
 	{
 		error_out_of_memory();
-		return;
+		return FALSE;
 	}
 
 	cp = com;
@@ -640,7 +642,7 @@ DoCommand (LPTSTR line)
 			/* If end of table execute ext cmd */
 			if (cmdptr->name == NULL)
 			{
-				Execute (line, com, rest);
+				ret = Execute (line, com, rest);
 				break;
 			}
 
@@ -677,6 +679,7 @@ DoCommand (LPTSTR line)
 		}
 	}
 	cmd_free(com);
+	return ret;
 }
 
 
@@ -687,25 +690,28 @@ DoCommand (LPTSTR line)
 
 VOID ParseCommandLine (LPTSTR cmd)
 {
-	TCHAR cmdline[CMDLINE_LENGTH];
-	LPTSTR s;
+	PARSED_COMMAND *Cmd = ParseCommand(cmd);
+	if (Cmd)
+	{
+		ExecuteCommand(Cmd);
+		FreeCommand(Cmd);
+	}
+}
+
+static VOID
+ExecutePipeline(PARSED_COMMAND *Cmd)
+{
 #ifdef FEATURE_REDIRECTION
-	REDIRECTION *RedirList = NULL;
 	TCHAR szTempPath[MAX_PATH] = _T(".\\");
 	TCHAR szFileName[2][MAX_PATH] = {_T(""), _T("")};
 	HANDLE hFile[2] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
-	INT  num = 0;
 	INT  Length;
 	UINT Attributes;
-	BOOL bNewBatch = TRUE;
 	HANDLE hOldConIn;
 	HANDLE hOldConOut;
 #endif /* FEATURE_REDIRECTION */
 
-	_tcscpy (cmdline, cmd);
-	s = &cmdline[0];
-
-	TRACE ("ParseCommandLine: (\'%s\')\n", debugstr_aw(s));
+	//TRACE ("ParseCommandLine: (\'%s\')\n", debugstr_aw(s));
 
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
@@ -726,15 +732,6 @@ VOID ParseCommandLine (LPTSTR cmd)
 	if (szTempPath[_tcslen (szTempPath) - 1] != _T('\\'))
 		_tcscat (szTempPath, _T("\\"));
 
-	/* get the redirections from the command line */
-	num = GetRedirection (s, &RedirList);
-
-	if (!PerformRedirection(RedirList))
-	{
-		FreeRedirection(RedirList);
-		return;
-	}
-
 	/* Set up the initial conditions ... */
 	/* preserve STDIN and STDOUT handles */
 	hOldConIn  = GetStdHandle (STD_INPUT_HANDLE);
@@ -744,7 +741,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	*szFileName[0] = _T('\0');
 	hFile[0] = INVALID_HANDLE_VALUE;
 
-	while (num-- > 1)
+	while (Cmd->Type == C_PIPE)
 	{
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
@@ -766,7 +763,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		SetStdHandle (STD_OUTPUT_HANDLE, hFile[1]);
 
-		DoCommand (s);
+		ExecuteCommand(Cmd->Subcommands);
 
 		/* close stdout file */
 		SetStdHandle (STD_OUTPUT_HANDLE, hOldConOut);
@@ -799,22 +796,18 @@ VOID ParseCommandLine (LPTSTR cmd)
 		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		SetStdHandle (STD_INPUT_HANDLE, hFile[0]);
 
-		s = s + _tcslen (s) + 1;
+		Cmd = Cmd->Subcommands->Next;
 	}
 
 	/* Now set up the end conditions... */
 	SetStdHandle(STD_OUTPUT_HANDLE, hOldConOut);
 
-	if(bc)
-		bNewBatch = FALSE;
 #endif
 
 	/* process final command */
-	DoCommand (s);
+	ExecuteCommand(Cmd);
 
 #ifdef FEATURE_REDIRECTION
-	if(bNewBatch && bc)
-		AddBatchRedirection(&RedirList);
 	/* close old stdin file */
 #if 0  /* buggy implementation */
 	SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
@@ -870,10 +863,53 @@ VOID ParseCommandLine (LPTSTR cmd)
 			}
 		}
 	}
-
-	UndoRedirection(RedirList, NULL);
-	FreeRedirection(RedirList);
 #endif /* FEATURE_REDIRECTION */
+}
+
+BOOL
+ExecuteCommand(PARSED_COMMAND *Cmd)
+{
+	BOOL bNewBatch = TRUE;
+	PARSED_COMMAND *Sub;
+	BOOL Success = TRUE;
+
+	if (!PerformRedirection(Cmd->Redirections))
+		return FALSE;
+
+	switch (Cmd->Type)
+	{
+	case C_COMMAND:
+		if(bc)
+			bNewBatch = FALSE;
+
+		Success = DoCommand(Cmd->CommandLine);
+
+		if(bNewBatch && bc)
+			AddBatchRedirection(&Cmd->Redirections);
+		break;
+	case C_QUIET:
+	case C_BLOCK:
+	case C_MULTI:
+		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+			Success = ExecuteCommand(Sub);
+		break;
+	case C_IFFAILURE:
+	case C_IFSUCCESS:
+		Sub = Cmd->Subcommands;
+		Success = ExecuteCommand(Sub);
+		if (Success == (Cmd->Type - C_IFFAILURE))
+		{
+			Sub = Sub->Next;
+			Success = ExecuteCommand(Sub);
+		}
+		break;
+	case C_PIPE:
+		ExecutePipeline(Cmd);
+		break;
+	}
+
+	UndoRedirection(Cmd->Redirections, NULL);
+	return Success;
 }
 
 BOOL

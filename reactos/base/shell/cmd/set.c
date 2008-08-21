@@ -53,22 +53,12 @@ skip_ws ( LPCTSTR p )
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
 {
-	INT i;
 	LPTSTR p;
 
 	if ( !_tcsncmp (param, _T("/?"), 2) )
 	{
 		ConOutResPaging(TRUE,STRING_SET_HELP);
 		return 0;
-	}
-
-	/* remove escapes */
-	if ( param[0] ) for ( i = 0; param[i+1]; i++ )
-	{
-		if ( param[i] == _T('^') )
-		{
-			memmove ( &param[i], &param[i+1], _tcslen(&param[i]) * sizeof(TCHAR) );
-		}
 	}
 
 	/* if no parameters, show the environment */
