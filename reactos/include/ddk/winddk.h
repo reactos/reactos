@@ -9962,10 +9962,19 @@ KeRaiseIrqlToSynchLevel(
 
 #elif defined(_M_AMD64)
 
+/*
 NTKERNELAPI
 KIRQL
 KeGetCurrentIrql(
     VOID);
+*/
+FORCEINLINE
+KIRQL
+_KeGetCurrentIrql(VOID)
+{
+    return (KIRQL)__readcr8();
+}
+#define KeGetCurrentIrql _KeGetCurrentIrql
 
 NTKERNELAPI
 VOID
