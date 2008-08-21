@@ -81,7 +81,7 @@ KiAcquireGuardedMutexContented(IN OUT PKGUARDED_MUTEX GuardedMutex)
         BitsToAdd = GM_LOCK_WAITER_WOKEN;
         
         /* We depend on these bits being just right */
-        ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
+        C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
     }
 }
 
