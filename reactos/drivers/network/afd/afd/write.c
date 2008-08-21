@@ -40,6 +40,11 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT_IRQL(APC_LEVEL);
 
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
+
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->SendIrp.InFlightRequest = NULL;
@@ -170,6 +175,11 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
 
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->SendIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
+
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
 
@@ -264,22 +274,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied, NULL );
 
-    AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
-
-    if( FCB->State != SOCKET_STATE_CONNECTED ) {
-	if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
-	    AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
-	    return UnlockAndMaybeComplete
-		( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
-	} else {
-	    AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
-	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
-	}
-    }
-
-    AFD_DbgPrint(MID_TRACE,("We already have %d bytes waiting.\n",
-			    FCB->Send.BytesUsed));
-
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
 					SendReq->BufferCount,
 					NULL, NULL,
@@ -288,6 +282,20 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SendReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
                                        Irp, 0, NULL );
+    }
+
+    AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
+
+    if( FCB->State != SOCKET_STATE_CONNECTED ) {
+	if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
+	    AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
+	    return UnlockAndMaybeComplete
+		( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
+	} else {
+	    AFD_DbgPrint(MID_TRACE,("Queuing request\n"));
+	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_SEND );
+	}
     }
 
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n",
@@ -362,6 +370,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( SendReq->AfdFlags & AFD_IMMEDIATE ) {
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
+	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_CANT_WAIT, Irp, 0, NULL );
     } else {

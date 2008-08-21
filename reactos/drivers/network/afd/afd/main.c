@@ -190,9 +190,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = STATUS_CANCELLED;
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
-	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	    InFlightRequest[i]->InFlightRequest = NULL;
 	}
     }
 

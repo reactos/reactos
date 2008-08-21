@@ -135,22 +135,21 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
                 if( NT_SUCCESS(Status) ) {
                     Status = TdiQueryInformation
-                        ( FCB->AddressFile.Object,
+                        ( FCB->Connection.Object,
                           TDI_QUERY_CONNECTION_INFO,
                           SysMdl );
                 }
 
                 if( NT_SUCCESS(Status) ) {
                     TransAddr =
-                        (PTRANSPORT_ADDRESS)MmMapLockedPages
-                        ( Mdl, IoModifyAccess );
-                }
+                        (PTRANSPORT_ADDRESS)MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority );
 
-                if( TransAddr )
-                    RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
-                                   TaLengthOfTransportAddress
-                                   ( ConnInfo->RemoteAddress ) );
-                else Status = STATUS_INSUFFICIENT_RESOURCES;
+                    if( TransAddr )
+                        RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
+                                       TaLengthOfTransportAddress
+                                       ( ConnInfo->RemoteAddress ) );
+                    else Status = STATUS_INSUFFICIENT_RESOURCES;
+		}
 
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );

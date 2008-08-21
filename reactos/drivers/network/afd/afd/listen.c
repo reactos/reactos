@@ -87,14 +87,14 @@ static NTSTATUS NTAPI ListenComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
 
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->ListenIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
+
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ListenIrp.InFlightRequest = NULL;
-
-    if( Irp->Cancel ) {
-	SocketStateUnlock( FCB );
-	return STATUS_SUCCESS;
-    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );

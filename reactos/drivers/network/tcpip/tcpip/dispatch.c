@@ -53,34 +53,6 @@ NTSTATUS DispPrepareIrpForCancel(
     return IRPFinish(Irp, STATUS_CANCELLED);
 }
 
-
-VOID DispCancelComplete(
-    PVOID Context)
-/*
- * FUNCTION: Completes a cancel request
- * ARGUMENTS:
- *     Context = Pointer to context information (FILE_OBJECT)
- */
-{
-    /*KIRQL OldIrql;*/
-    PFILE_OBJECT FileObject;
-    PTRANSPORT_CONTEXT TranContext;
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
-    FileObject  = (PFILE_OBJECT)Context;
-    TranContext = (PTRANSPORT_CONTEXT)FileObject->FsContext;
-
-    /* Set the cleanup event */
-    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
-
-    /* We are expected to release the cancel spin lock */
-    /*IoReleaseCancelSpinLock(OldIrql);*/
-
-    TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
-}
-
-
 VOID DispDataRequestComplete(
     PVOID Context,
     NTSTATUS Status,
@@ -155,8 +127,6 @@ VOID DispDoDisconnect( PVOID Data ) {
     TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
 
     DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
-
-    DispCancelComplete(DisType->FileObject);
 }
 
 VOID NTAPI DispCancelRequest(
@@ -209,24 +179,20 @@ VOID NTAPI DispCancelRequest(
 	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
 			 DispDoDisconnect, &DisType ) )
 	    ASSERT(0);
-        break;
+        return;
 
     case TDI_SEND_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
-            break;
         }
-
-        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
         break;
 
     case TDI_RECEIVE_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
-            break;
         }
 
-        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
+        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     default:
@@ -235,6 +201,7 @@ VOID NTAPI DispCancelRequest(
     }
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -279,8 +246,6 @@ VOID NTAPI DispCancelListenRequest(
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     DispDataRequestComplete(Irp, STATUS_CANCELLED, 0);
-
-    DispCancelComplete(FileObject);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
