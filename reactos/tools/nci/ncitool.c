@@ -53,9 +53,9 @@
                             "    call *(%%ecx)\n" \
                             "    ret $0x%x\n\n"
 
-#define UserModeStub_amd64  "    movq $0x%x, %%rax\n" \
-                            "    movq $KUSER_SHARED_SYSCALL, %%rcx\n" \
-                            "    call *(%%rcx)\n" \
+#define UserModeStub_amd64  "    movl $0x%x, %%eax\n" \
+                            "    movq %%rcx, %%r10\n" \
+                            "    syscall\n" \
                             "    ret $0x%x\n\n"
 
 #define UserModeStub_ppc    "    stwu 1,-16(1)\n" \
@@ -99,10 +99,7 @@
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
 
-#define KernelModeStub_amd64 "    movq $0x%x, %%rax\n" \
-                            "    leaq 4(%%rsp), %%rdx\n" \
-                            "    pushfq\n" \
-                            "    pushq $KGDT_R0_CODE\n" \
+#define KernelModeStub_amd64 "    movl $0x%x, %%eax\n" \
                             "    call _KiSystemService\n" \
                             "    ret $0x%x\n\n"
 
