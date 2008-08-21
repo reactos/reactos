@@ -36,9 +36,9 @@
 	<module name="hal" type="kernelmodedll">
 		<importlibrary definition="hal_amd64.def" />
 		<include base="ntoskrnl">include</include>
+		<library>halamd64_generic</library>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />
-		<file>hal.c</file>
 		<file>hal.rc</file>
 		<file>hal.spec</file>
 	</module>

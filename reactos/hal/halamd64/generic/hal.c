@@ -29,46 +29,6 @@
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
 ULONG _KdComPortInUse = 0;
 
-ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
-{
-    0xFFFFFFFF, // IRQL 0 PASSIVE_LEVEL
-    0xFFFFFFFD, // IRQL 1 APC_LEVEL
-    0xFFFFFFF9, // IRQL 2 DISPATCH_LEVEL
-    0xFFFFFFD9, // IRQL 3
-    0xFFFFFF99, // IRQL 4
-    0xFFFFFF19, // IRQL 5
-    0xFFFFFE19, // IRQL 6
-    0xFFFFFC19, // IRQL 7
-    0xFFFFF819, // IRQL 8
-    0xFFFFF019, // IRQL 9
-    0xFFFFE019, // IRQL 10
-    0xFFFFC019, // IRQL 11
-    0xFFFF8019, // IRQL 12
-    0xFFFF0019, // IRQL 13
-    0xFFFE0019, // IRQL 14
-    0xFFFC0019, // IRQL 15
-};
-
-UCHAR HalpMaskTable[HIGH_LEVEL + 1] =
-{
-    PROFILE_LEVEL, // INT 0 WATCHDOG
-    APC_LEVEL,     // INT 1 SOFTWARE INTERRUPT
-    DISPATCH_LEVEL,// INT 2 COMM RX
-    IPI_LEVEL,     // INT 3 COMM TX
-    CLOCK_LEVEL,  // INT 4 TIMER 0
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13
-};
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -802,42 +762,6 @@ KeStallExecutionProcessor(IN ULONG Microseconds)
   return;
 }
 
-VOID
-FASTCALL
-KfLowerIrql(IN KIRQL NewIrql)
-{
-  UNIMPLEMENTED;
-  return;
-}
-
-KIRQL
-FASTCALL
-KfRaiseIrql(IN KIRQL NewIrql)
-{
-  UNIMPLEMENTED;
-  return;
-}
-
-
-
-KIRQL
-KeRaiseIrqlToDpcLevel(VOID)
-{
-    //
-    // Call the generic routine
-    //
-    return KfRaiseIrql(DISPATCH_LEVEL);
-}
-
-KIRQL
-KeRaiseIrqlToSynchLevel(VOID)
-{
-    //
-    // Call the generic routine
-    //
-    return KfRaiseIrql(DISPATCH_LEVEL);
-}
-
 BOOLEAN HalpProcessorIdentified;
 BOOLEAN HalpTestCleanSupported;
 
@@ -860,29 +784,6 @@ HalSweepIcache(VOID)
 {
   UNIMPLEMENTED;
   return;
-}
-
-/*
- * @implemented
- */
-#undef KeGetCurrentIrql
-KIRQL
-NTAPI
-KeGetCurrentIrql(VOID)
-{
-  UNIMPLEMENTED;
-  return;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeLowerIrql(KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfLowerIrql(NewIrql);
 }
 
 /*
@@ -952,7 +853,7 @@ KfReleaseSpinLock(PKSPIN_LOCK SpinLock,
                   KIRQL OldIrql)
 {
     /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -1010,7 +911,7 @@ KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                         IN KIRQL OldIrql)
 {
     /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -1021,7 +922,7 @@ FASTCALL
 KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     /* Simply lower IRQL back */
-    KfLowerIrql(LockHandle->OldIrql);
+    KeLowerIrql(LockHandle->OldIrql);
 }
 
 /*
