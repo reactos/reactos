@@ -462,7 +462,6 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   WCHAR ShortNameBuffer[13];
   UNICODE_STRING ShortName;
   UNICODE_STRING LongName;
-  BOOLEAN HasSpaces;
   GENERATE_NAME_CONTEXT NameContext;
 
 
@@ -522,8 +521,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
       ShortName.Buffer = ShortNameBuffer;
       memset(ShortNameBuffer, 0, 26);
 
-      if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
-          (HasSpaces == TRUE))
+      if (!CdfsIsNameLegalDOS8Dot3(LongName))
         {
           /* Build short name */
           RtlGenerate8dot3Name(&LongName,

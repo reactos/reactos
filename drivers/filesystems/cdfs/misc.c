@@ -95,4 +95,38 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
 		    ((Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0);
 }
 
+BOOLEAN
+CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
+    )
+{
+    ULONG i;
+    STRING DbcsName;
+    CHAR DbcsNameBuffer[12];
+
+    for (i = 0; i < FileName.Length / sizeof(WCHAR) ; i++)
+    {
+        /* Don't allow spaces in FileName */
+        if (FileName.Buffer[i] == L' ')
+            return FALSE;
+    }
+    
+    /* If FileName is finishing with a dot, remove it */
+    if (FileName.Buffer[FileName.Length / sizeof(WCHAR) - 1] == '.')
+    {
+        FileName.Length -= sizeof(WCHAR);
+    }
+
+    /* Finally, convert the string to call the FsRtl function */
+    DbcsName.MaximumLength = 12;
+    DbcsName.Buffer = DbcsNameBuffer;
+    if (!NT_SUCCESS(RtlUnicodeStringToCountedOemString(&DbcsName,
+                                                       &FileName,
+                                                       FALSE )))
+    {
+
+        return FALSE;
+    }
+    return FsRtlIsFatDbcsLegal(DbcsName, FALSE, FALSE, FALSE);
+}
+
 /* EOF */

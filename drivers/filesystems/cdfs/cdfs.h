@@ -390,6 +390,9 @@ VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,
 			  PULONG FileAttributes);
 
+BOOLEAN
+CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName);
+
 
 /* rw.c */
 

@@ -176,7 +176,6 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   ULONG DirSize;
   PDIR_RECORD Record;
   LARGE_INTEGER StreamOffset;
-  BOOLEAN HasSpaces;
   GENERATE_NAME_CONTEXT NameContext;
 
   DPRINT("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n",
@@ -289,8 +288,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       ShortName.MaximumLength = 26;
       ShortName.Buffer = ShortNameBuffer;
 
-      if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
-	  (HasSpaces == TRUE))
+      if (!CdfsIsNameLegalDOS8Dot3(LongName))
 	{
 	  /* Build short name */
 	  RtlGenerate8dot3Name(&LongName,
