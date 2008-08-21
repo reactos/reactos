@@ -90,7 +90,6 @@
 		</if>
 		<if property="ARCH" value="amd64">
 			<directory name="amd64">
-				<file first="true">boot.S</file>
 				<file>cpu.c</file>
 				<file>except.c</file>
 				<file>irql.c</file>
