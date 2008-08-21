@@ -4609,6 +4609,15 @@ RtlSubAuthoritySid (
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlUnicodeStringToCountedOemString (
+    IN OUT POEM_STRING  DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN          AllocateDestinationString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlUnicodeToMultiByteN(
     OUT PCHAR MultiByteString,
     IN ULONG MaxBytesInMultiByteString,
