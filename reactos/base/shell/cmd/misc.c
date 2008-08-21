@@ -411,6 +411,18 @@ LPTSTR _stpcpy (LPTSTR dest, LPCTSTR src)
 	return (dest + _tcslen (src));
 }
 
+VOID
+StripQuotes(TCHAR *in)
+{
+	TCHAR *out = in;
+	for (; *in; in++)
+	{
+		if (*in != _T('"'))
+			*out++ = *in;
+	}
+	*out = _T('\0');
+}
+
 
 
 /*

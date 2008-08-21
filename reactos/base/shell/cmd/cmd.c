@@ -690,21 +690,16 @@ VOID ParseCommandLine (LPTSTR cmd)
 	TCHAR cmdline[CMDLINE_LENGTH];
 	LPTSTR s;
 #ifdef FEATURE_REDIRECTION
-	TCHAR in[CMDLINE_LENGTH] = _T("");
-	TCHAR out[CMDLINE_LENGTH] = _T("");
-	TCHAR err[CMDLINE_LENGTH] = _T("");
+	REDIRECTION *RedirList = NULL;
 	TCHAR szTempPath[MAX_PATH] = _T(".\\");
 	TCHAR szFileName[2][MAX_PATH] = {_T(""), _T("")};
 	HANDLE hFile[2] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
-	LPTSTR t = NULL;
 	INT  num = 0;
-	INT  nRedirFlags = 0;
 	INT  Length;
 	UINT Attributes;
 	BOOL bNewBatch = TRUE;
 	HANDLE hOldConIn;
 	HANDLE hOldConOut;
-	HANDLE hOldConErr;
 #endif /* FEATURE_REDIRECTION */
 
 	_tcscpy (cmdline, cmd);
@@ -732,65 +727,18 @@ VOID ParseCommandLine (LPTSTR cmd)
 		_tcscat (szTempPath, _T("\\"));
 
 	/* get the redirections from the command line */
-	num = GetRedirection (s, in, out, err, &nRedirFlags);
+	num = GetRedirection (s, &RedirList);
 
-	/* more efficient, but do we really need to do this? */
-	for (t = in; _istspace (*t); t++)
-		;
-	_tcscpy (in, t);
-
-	for (t = out; _istspace (*t); t++)
-		;
-	_tcscpy (out, t);
-
-	for (t = err; _istspace (*t); t++)
-		;
-	_tcscpy (err, t);
-
-	if(bc && !_tcslen (in) && _tcslen (bc->In))
-		_tcscpy(in, bc->In);
-	if(bc && !out[0] && _tcslen(bc->Out))
+	if (!PerformRedirection(RedirList))
 	{
-		nRedirFlags |= OUTPUT_APPEND;
-		_tcscpy(out, bc->Out);
-	}
-	if(bc && !_tcslen (err) && _tcslen (bc->Err))
-	{
-		nRedirFlags |= ERROR_APPEND;
-		_tcscpy(err, bc->Err);
+		FreeRedirection(RedirList);
+		return;
 	}
 
 	/* Set up the initial conditions ... */
-	/* preserve STDIN, STDOUT and STDERR handles */
+	/* preserve STDIN and STDOUT handles */
 	hOldConIn  = GetStdHandle (STD_INPUT_HANDLE);
 	hOldConOut = GetStdHandle (STD_OUTPUT_HANDLE);
-	hOldConErr = GetStdHandle (STD_ERROR_HANDLE);
-
-	/* redirect STDIN */
-	if (in[0])
-	{
-		HANDLE hFile;
-		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
-	/* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0);
-
-	/* Set up pipe for the standard input handler */
-		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
-		                    FILE_ATTRIBUTE_NORMAL, NULL);
-		if (hFile == INVALID_HANDLE_VALUE)
-		{
-			ConErrResPrintf(STRING_CMD_ERROR1, in);
-			return;
-		}
-
-		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
-		{
-			ConErrResPrintf(STRING_CMD_ERROR1, in);
-			return;
-		}
-		TRACE ("Input redirected from: %s\n", debugstr_aw(in));
-	}
 
 	/* Now do all but the last pipe command */
 	*szFileName[0] = _T('\0');
@@ -855,123 +803,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	}
 
 	/* Now set up the end conditions... */
-	/* redirect STDOUT */
-	if (out[0])
-	{
-		/* Final output to here */
-		HANDLE hFile;
-		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
-		/* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0);
-
-		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
-		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-		                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
-
-		if (hFile == INVALID_HANDLE_VALUE)
-		{
-			INT size = _tcslen(out)-1;
-
-			if (out[size] != _T(':'))
-			{
-				ConErrResPrintf(STRING_CMD_ERROR3, out);
-				return;
-			}
-
-			out[size]=_T('\0');
-			hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
-			                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-			                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
-
-			if (hFile == INVALID_HANDLE_VALUE)
-			{
-				ConErrResPrintf(STRING_CMD_ERROR3, out);
-				return;
-			}
-
-		}
-
-		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
-		{
-			ConErrResPrintf(STRING_CMD_ERROR3, out);
-			return;
-		}
-
-		if (nRedirFlags & OUTPUT_APPEND)
-		{
-			LONG lHighPos = 0;
-
-			if (GetFileType (hFile) == FILE_TYPE_DISK)
-				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
-		}
-		TRACE ("Output redirected to: %s\n", debugstr_aw(out));
-	}
-	else if (hOldConOut != INVALID_HANDLE_VALUE)
-	{
-		/* Restore original stdout */
-		HANDLE hOut = GetStdHandle (STD_OUTPUT_HANDLE);
-		SetStdHandle (STD_OUTPUT_HANDLE, hOldConOut);
-		if (hOldConOut != hOut)
-			CloseHandle (hOut);
-		hOldConOut = INVALID_HANDLE_VALUE;
-	}
-
-	/* redirect STDERR */
-	if (err[0])
-	{
-		/* Final output to here */
-		HANDLE hFile;
-		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
-		if (!_tcscmp (err, out))
-		{
-			TRACE ("Stdout and stderr will use the same file!!\n");
-			DuplicateHandle (GetCurrentProcess (),
-			                 GetStdHandle (STD_OUTPUT_HANDLE),
-			                 GetCurrentProcess (),
-			                 &hFile, 0, TRUE, DUPLICATE_SAME_ACCESS);
-		}
-		else
-		{
-			hFile = CreateFile (err,
-			                    GENERIC_WRITE,
-			                    FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
-			                    &sa,
-			                    (nRedirFlags & ERROR_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-			                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
-			                    NULL);
-			if (hFile == INVALID_HANDLE_VALUE)
-			{
-				ConErrResPrintf(STRING_CMD_ERROR3, err);
-				return;
-			}
-		}
-
-		if (!SetStdHandle (STD_ERROR_HANDLE, hFile))
-		{
-			ConErrResPrintf(STRING_CMD_ERROR3, err);
-			return;
-		}
-
-		if (nRedirFlags & ERROR_APPEND)
-		{
-			LONG lHighPos = 0;
-
-			if (GetFileType (hFile) == FILE_TYPE_DISK)
-				SetFilePointer (hFile, 0, &lHighPos, FILE_END);
-		}
-		TRACE ("Error redirected to: %s\n", debugstr_aw(err));
-	}
-	else if (hOldConErr != INVALID_HANDLE_VALUE)
-	{
-		/* Restore original stderr */
-		HANDLE hErr = GetStdHandle (STD_ERROR_HANDLE);
-		SetStdHandle (STD_ERROR_HANDLE, hOldConErr);
-		if (hOldConErr != hErr)
-			CloseHandle (hErr);
-		hOldConErr = INVALID_HANDLE_VALUE;
-	}
+	SetStdHandle(STD_OUTPUT_HANDLE, hOldConOut);
 
 	if(bc)
 		bNewBatch = FALSE;
@@ -982,7 +814,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 #ifdef FEATURE_REDIRECTION
 	if(bNewBatch && bc)
-		AddBatchRedirection(in, out, err);
+		AddBatchRedirection(&RedirList);
 	/* close old stdin file */
 #if 0  /* buggy implementation */
 	SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
@@ -1039,26 +871,8 @@ VOID ParseCommandLine (LPTSTR cmd)
 		}
 	}
 
-
-	/* Restore original STDOUT */
-	if (hOldConOut != INVALID_HANDLE_VALUE)
-	{
-		HANDLE hOut = GetStdHandle (STD_OUTPUT_HANDLE);
-		SetStdHandle (STD_OUTPUT_HANDLE, hOldConOut);
-		if (hOldConOut != hOut)
-			CloseHandle (hOut);
-		hOldConOut = INVALID_HANDLE_VALUE;
-	}
-
-	/* Restore original STDERR */
-	if (hOldConErr != INVALID_HANDLE_VALUE)
-	{
-		HANDLE hErr = GetStdHandle (STD_ERROR_HANDLE);
-		SetStdHandle (STD_ERROR_HANDLE, hOldConErr);
-		if (hOldConErr != hErr)
-			CloseHandle (hErr);
-		hOldConErr = INVALID_HANDLE_VALUE;
-	}
+	UndoRedirection(RedirList, NULL);
+	FreeRedirection(RedirList);
 #endif /* FEATURE_REDIRECTION */
 }
 

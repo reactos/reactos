@@ -301,6 +301,7 @@ BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);
+VOID   StripQuotes(LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
@@ -335,12 +336,19 @@ INT  cmd_prompt (LPTSTR, LPTSTR);
 
 
 /* Prototypes for REDIR.C */
-#define INPUT_REDIRECTION    1
-#define OUTPUT_REDIRECTION   2
-#define OUTPUT_APPEND        4
-#define ERROR_REDIRECTION    8
-#define ERROR_APPEND        16
-INT GetRedirection (LPTSTR, LPTSTR, LPTSTR, LPTSTR, LPINT);
+enum { REDIR_READ, REDIR_WRITE, REDIR_APPEND };
+typedef struct _REDIRECTION
+{
+	struct _REDIRECTION *Next;
+	HANDLE OldHandle;
+	BYTE Number;
+	BYTE Type;
+	TCHAR Filename[];
+} REDIRECTION;
+BOOL PerformRedirection(REDIRECTION *);
+VOID UndoRedirection(REDIRECTION *, REDIRECTION *End);
+INT GetRedirection(LPTSTR, REDIRECTION **);
+VOID FreeRedirection(REDIRECTION *);
 
 
 /* Prototypes for REN.C */
