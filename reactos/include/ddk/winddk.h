@@ -9962,47 +9962,47 @@ KeRaiseIrqlToSynchLevel(
 
 #elif defined(_M_AMD64)
 
-/*
-NTKERNELAPI
-KIRQL
-KeGetCurrentIrql(
-    VOID);
-*/
 FORCEINLINE
 KIRQL
-_KeGetCurrentIrql(VOID)
+KeGetCurrentIrql(VOID)
 {
     return (KIRQL)__readcr8();
 }
-#define KeGetCurrentIrql _KeGetCurrentIrql
 
-NTKERNELAPI
+FORCEINLINE
 VOID
-KfLowerIrql(
-  IN KIRQL  NewIrql);
+KeLowerIrql(IN KIRQL NewIrql)
+{
+    ASSERT(KeGetCurrentIrql() >= NewIrql);
+    __writecr8(NewIrql);
+}
 
-NTKERNELAPI
+FORCEINLINE
 KIRQL
-KfRaiseIrql(
-  IN KIRQL  NewIrql);
+KfRaiseIrql(IN KIRQL NewIrql)
+{
+    KIRQL OldIrql;
 
-NTKERNELAPI
-KIRQL
-KeRaiseIrqlToDpcLevel(
-  VOID);
-
-NTKERNELAPI
-KIRQL
-KeRaiseIrqlToSynchLevel(
-    VOID);
-
-NTKERNELAPI
-VOID
-KeLowerIrql(
-  IN KIRQL NewIrql);
-
+    OldIrql = __readcr8();
+    ASSERT(OldIrql <= NewIrql);
+    __writecr8(NewIrql);
+    return OldIrql;
+}
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToDpcLevel(VOID)
+{
+    return KfRaiseIrql(DISPATCH_LEVEL);
+}
+
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToSynchLevel(VOID)
+{
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+}
 
 #elif defined(__PowerPC__)
 
