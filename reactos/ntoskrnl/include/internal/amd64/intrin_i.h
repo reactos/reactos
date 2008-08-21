@@ -7,6 +7,8 @@
 #define LOCK ""
 #endif
 
+#define KeSetCurrentIrql(x) __writecr8(x)
+
 #if defined(__GNUC__)
 
 #define Ke386SetInterruptDescriptorTable(X) \
