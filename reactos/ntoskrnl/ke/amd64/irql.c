@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Routines for IRQL-level support
+ * PURPOSE:         Routines for IRQL support
  * PROGRAMMERS:     Timo Kreuzer
  */
 
@@ -11,60 +11,35 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef UNIMPLEMENTED
-
-#define UNIMPLEMENTED \
- FrLdrDbgPrint("Sorry, %s is unimplemented!\n", __FUNCTION__)
-
 /* FUNCTIONS ****************************************************************/
 
-#undef KeGetCurrentIrql
 NTKERNELAPI
 KIRQL
-KeGetCurrentIrql(VOID)
+KxGetCurrentIrql(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-NTKERNELAPI
-VOID
-KfLowerIrql(IN KIRQL NewIrql)
-{
-    UNIMPLEMENTED;
-}
-
-NTKERNELAPI
-KIRQL
-KfRaiseIrql(IN KIRQL NewIrql)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-NTKERNELAPI
-KIRQL
-KeRaiseIrqlToDpcLevel(VOID)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-NTKERNELAPI
-KIRQL
-KeRaiseIrqlToSynchLevel(VOID)
-{
-    UNIMPLEMENTED;
-    return 0;
+    return KeGetCurrentIrql();
 }
 
 NTKERNELAPI
 VOID
-KeLowerIrql(IN KIRQL NewIrql)
+KxLowerIrql(IN KIRQL NewIrql)
 {
-    UNIMPLEMENTED;
-    return 0;
+    KeLowerIrql(NewIrql);
 }
+
+NTKERNELAPI
+KIRQL
+KxRaiseIrql(IN KIRQL NewIrql)
+{
+    return KfRaiseIrql(NewIrql);
+}
+
+NTKERNELAPI
+KIRQL
+KxRaiseIrqlToDpcLevel(VOID)
+{
+    return KeRaiseIrqlToDpcLevel();
+}
+
 
 /* EOF */

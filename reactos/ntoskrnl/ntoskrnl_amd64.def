@@ -565,7 +565,7 @@ KeFindConfigurationNextEntry
 KeFlushEntireTb
 KeFlushQueuedDpcs
 KeGenericCallDpc
-KeGetCurrentIrql
+KeGetCurrentIrql=KxGetCurrentIrql
 KeGetCurrentThread
 KeGetRecommendedSharedDataAlignment
 KeInitializeApc
@@ -596,7 +596,7 @@ KeLastBranchMSR
 KeLeaveCriticalRegion
 KeLeaveGuardedRegion
 KeLoaderBlock
-KeLowerIrql
+KeLowerIrql=KxLowerIrql
 KeNumberProcessors
 KeProfileInterruptWithSource
 KePulseEvent
@@ -606,7 +606,7 @@ KeQueryPrcbAddress
 KeQueryPriorityThread
 KeQueryRuntimeThread
 KeQueryTimeIncrement
-KeRaiseIrqlToDpcLevel
+KeRaiseIrqlToDpcLevel=KxRaiseIrqlToDpcLevel
 KeRaiseUserException
 KeReadStateEvent
 KeReadStateMutant
@@ -676,7 +676,7 @@ KeUserModeCallback
 KeWaitForMultipleObjects
 KeWaitForMutexObject
 KeWaitForSingleObject
-KfRaiseIrql
+KfRaiseIrql=KxRaiseIrql
 KiBugCheckData
 KiCheckForKernelApcDelivery
 KiCpuId
