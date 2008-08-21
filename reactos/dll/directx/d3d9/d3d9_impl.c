@@ -923,7 +923,42 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
 
     if (hFocusWindow != NULL && FALSE == IsWindow(hFocusWindow))
     {
-        DPRINT1("Invalid hFocusWindow parameter specified");
+        DPRINT1("Invalid hFocusWindow parameter specified, expected NULL or a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == pPresentationParameters)
+    {
+        DPRINT1("Invalid pPresentationParameters parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (pPresentationParameters->hDeviceWindow != NULL && FALSE == IsWindow(pPresentationParameters->hDeviceWindow))
+    {
+        DPRINT1("Invalid pPresentationParameters->hDeviceWindow parameter specified, expected NULL or a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (FALSE == pPresentationParameters->Windowed && hFocusWindow == NULL)
+    {
+        DPRINT1("When pPresentationParameters->Windowed is not set, hFocusWindow must be a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == hFocusWindow && NULL == pPresentationParameters->hDeviceWindow)
+    {
+        DPRINT1("Any of pPresentationParameters->Windowed and hFocusWindow must be set to a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (Adapter > 0 && NULL == pPresentationParameters->hDeviceWindow)
+    {
+        DPRINT1("Invalid pPresentationParameters->hDeviceWindow, must be set to a valid unique HWND when Adapter is greater than 0");
         UNLOCK_D3D9();
         return D3DERR_INVALIDCALL;
     }
