@@ -583,6 +583,7 @@ IopInitializePnpServices(
     IN BOOLEAN BootDrivers);
 
 NTSTATUS
+NTAPI
 IopOpenRegistryKeyEx(
     PHANDLE KeyHandle,
     HANDLE ParentKey,

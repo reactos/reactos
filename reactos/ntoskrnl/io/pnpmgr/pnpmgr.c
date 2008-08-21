@@ -2669,6 +2669,7 @@ IopUpdateRootKey(VOID)
 }
 
 NTSTATUS
+NTAPI
 IopOpenRegistryKeyEx(PHANDLE KeyHandle,
                      HANDLE ParentKey,
                      PUNICODE_STRING Name,

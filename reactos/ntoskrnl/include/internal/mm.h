@@ -1547,6 +1547,13 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
+NTSTATUS
+NTAPI
+MmCallDllInitialize(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+    IN PLIST_ENTRY ListHead
+);
+
 /* ReactOS Mm Hack */
 VOID
 FASTCALL
