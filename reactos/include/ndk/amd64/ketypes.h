@@ -139,7 +139,7 @@ Author:
 #ifndef CONFIG_SMP
 #define SYNCH_LEVEL             DISPATCH_LEVEL
 #else
-#define SYNCH_LEVEL             (IPI_LEVEL - 1)
+#define SYNCH_LEVEL             (IPI_LEVEL - 2)
 #endif
 
 //
