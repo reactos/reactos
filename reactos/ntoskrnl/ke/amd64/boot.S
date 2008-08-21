@@ -76,7 +76,7 @@ _KiSetupStackAndInitializeKernel:
     /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
     sti
     mov rcx, DISPATCH_LEVEL
-    call _KfLowerIrql
+    mov cr8, rcx
 
     /* Set the right wait IRQL */
     mov byte ptr [rbx+KTHREAD_WAIT_IRQL], DISPATCH_LEVEL;
