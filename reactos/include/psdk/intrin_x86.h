@@ -1105,6 +1105,11 @@ static __inline__ __attribute__((always_inline)) void __writecr4(const unsigned 
 	__asm__("movq %q[Data], %%cr4" : : [Data] "q" (Data) : "memory");
 }
 
+static __inline__ __attribute__((always_inline)) void __writecr8(const unsigned long long Data)
+{
+	__asm__("movq %q[Data], %%cr8" : : [Data] "q" (Data) : "memory");
+}
+
 static __inline__ __attribute__((always_inline)) unsigned long long __readcr0(void)
 {
 	unsigned long long value;
@@ -1130,6 +1135,13 @@ static __inline__ __attribute__((always_inline)) unsigned long long __readcr4(vo
 {
 	unsigned long long value;
 	__asm__ __volatile__("movq %%cr4, %q[value]" : [value] "=q" (value));
+	return value;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned long long __readcr8(void)
+{
+	unsigned long long value;
+	__asm__ __volatile__("movq %%cr8, %q[value]" : [value] "=q" (value));
 	return value;
 }
 
@@ -1216,6 +1228,16 @@ static __inline__ __attribute__((always_inline)) unsigned long __segmentlimit(co
 static __inline__ __attribute__((always_inline)) void __wbinvd(void)
 {
 	__asm__ __volatile__("wbinvd");
+}
+
+static __inline__ __attribute__((always_inline)) void __lidt(void *Source)
+{
+	__asm__ __volatile__("lidt %0" : : "m"(*(short*)Source));
+}
+
+static __inline__ __attribute__((always_inline)) void __sidt(void *Destination)
+{
+	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination));
 }
 
 #endif /* KJK_INTRIN_X86_H_ */
