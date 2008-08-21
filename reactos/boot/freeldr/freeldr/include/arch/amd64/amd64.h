@@ -58,13 +58,6 @@ __lgdt(void *gdt)
     asm volatile ("lgdt %0\n" : : "m"(*(short*)gdt));
 }
 
-VOID
-FORCEINLINE
-__lidt(void *idt)
-{
-    asm volatile ("lidt %0\n" : : "m"(*(short*)idt));
-}
-
 PKGDTENTRY64
 FORCEINLINE
 KiGetGdtEntry(PVOID pGdt, USHORT Index)
