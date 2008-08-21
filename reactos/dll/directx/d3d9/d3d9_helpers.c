@@ -38,7 +38,7 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
     return TRUE;
 }
 
-HRESULT SafeFormatString(OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... )
+HRESULT SafeFormatString(OUT LPSTR Buffer, IN DWORD BufferSize, IN LPCSTR FormatString, ... )
 {
     DWORD BytesWritten;
     va_list vargs;
