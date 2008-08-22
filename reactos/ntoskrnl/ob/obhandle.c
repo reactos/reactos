@@ -697,7 +697,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         else
         {
             /* Otherwise, bugcheck the OS */
-            KeBugCheckEx(0x8B, (ULONG_PTR)Handle, 0, 0, 0);
+            KeBugCheckEx(INVALID_KERNEL_HANDLE, (ULONG_PTR)Handle, 0, 0, 0);
         }
     }
 
