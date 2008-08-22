@@ -3400,8 +3400,11 @@ IoSynchronousInvalidateDeviceRelations(
         case PowerRelations:
              /* Not handled yet */
              return STATUS_NOT_IMPLEMENTED;
+        case TargetDeviceRelation:
+            /* Nothing to do */
+            return STATUS_SUCCESS;
         default:
-            /* Ejection relations and target relations are not supported */
+            /* Ejection relations are not supported */
             return STATUS_NOT_SUPPORTED;
     }
 }
