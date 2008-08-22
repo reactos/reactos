@@ -764,7 +764,7 @@ typedef struct _DEVICE_NODE
     PNP_DEVNODE_STATE PreviousState;
     PNP_DEVNODE_STATE StateHistory[20];
     ULONG StateHistoryEntry;
-    LONG CompletionStatus;
+    NTSTATUS CompletionStatus;
     PIRP PendingIrp;
     ULONG Flags;
     ULONG UserFlags;
