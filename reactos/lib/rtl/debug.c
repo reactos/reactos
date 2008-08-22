@@ -186,7 +186,7 @@ vDbgPrintEx(IN ULONG ComponentId,
             IN va_list ap)
 {
     /* Call the internal routine that also handles ControlC */
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          ComponentId,
                                          Level,
                                          Format,
@@ -206,7 +206,7 @@ DbgPrint(PCCH Format,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          -1,
                                          DPFLTR_ERROR_LEVEL,
                                          Format,
@@ -229,7 +229,7 @@ DbgPrintEx(IN ULONG ComponentId,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          ComponentId,
                                          Level,
                                          Format,
@@ -250,7 +250,7 @@ DbgPrintReturnControlC(PCH Format,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          -1,
                                          DPFLTR_ERROR_LEVEL,
                                          Format,
