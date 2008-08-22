@@ -1696,17 +1696,13 @@ IopEnumerateDevice(
 
     DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
 
-    if (!DeviceRelations || DeviceRelations->Count < 0)
+    if (!DeviceRelations)
     {
         DPRINT("No PDOs\n");
-        if (DeviceRelations)
-        {
-            ExFreePool(DeviceRelations);
-        }
         return STATUS_UNSUCCESSFUL;
     }
 
-    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+    DPRINT("Got %u PDOs\n", DeviceRelations->Count);
 
     /*
      * Create device nodes for all discovered devices
