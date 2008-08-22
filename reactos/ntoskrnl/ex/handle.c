@@ -59,7 +59,7 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         /* Direct index */
         case 0:
 
-            /* Use level 1 and just get the entry directlry */
+            /* Use level 1 and just get the entry directly */
             Level1 = (PUCHAR)TableBase;
             Entry = (PVOID)&Level1[Handle.Value *
                                    (sizeof(HANDLE_TABLE_ENTRY) /
@@ -210,8 +210,8 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     PEPROCESS Process = HandleTable->QuotaProcess;
     ULONG i, j;
     ULONG_PTR TableCode = HandleTable->TableCode;
-    ULONG TableLevel = TableCode & 3;
     ULONG_PTR TableBase = TableCode & ~3;
+    ULONG TableLevel = (ULONG)(TableCode & 3);
     PHANDLE_TABLE_ENTRY Level1, *Level2, **Level3;
     PAGED_CODE();
 

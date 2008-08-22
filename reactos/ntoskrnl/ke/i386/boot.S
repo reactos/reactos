@@ -36,7 +36,7 @@ _KiSystemStartup:
     test dword ptr [esp+4], 0x80000000
     jnz _KiSystemStartupReal@4
 
-    /* FREELDR Boot: Cal the FreeLDR wrapper */
+    /* FREELDR Boot: Call the FreeLDR wrapper */
     jmp @KiRosPrepareForSystemStartup@8
 .endfunc
 

@@ -450,6 +450,7 @@ Author:
 #ifdef __ASM__
 #define EFLAGS_TF                               0x100
 #define EFLAGS_INTERRUPT_MASK                   0x200
+#define EFLAGS_IOPL                             0x3000
 #define EFLAGS_NESTED_TASK                      0x4000
 #define EFLAGS_V86_MASK                         0x20000
 #define EFLAGS_ALIGN_CHECK                      0x40000

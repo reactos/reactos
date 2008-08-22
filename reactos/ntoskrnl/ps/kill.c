@@ -1142,7 +1142,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     /* Lock the Process */
     if (!ExAcquireRundownProtection(&Process->RundownProtect))
     {
-        /* Failed to lock, fal */
+        /* Failed to lock, fail */
         ObDereferenceObject (Process);
         return STATUS_PROCESS_IS_TERMINATING;
     }
@@ -1182,7 +1182,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
         /* Also make sure the caller gave us our handle */
         if (KillByHandle)
         {
-            /* Dereference the project */
+            /* Dereference the process */
             ObDereferenceObject(Process);
 
             /* Terminate ourselves */

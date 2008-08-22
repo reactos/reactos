@@ -215,7 +215,7 @@ _OpcodePUSHFV86:
     or eax, edx
 
     /* Add IOPL Mask */
-    or eax, 0x3000
+    or eax, EFLAGS_IOPL
 
     /* Get flat ESP */
     movzx ecx, word ptr [ebp+KTRAP_FRAME_SS]
@@ -277,7 +277,7 @@ NoPrefix:
     mov [ebp+KTRAP_FRAME_ESP], edx
 
     /* Mask out EFLAGS */
-    and eax, ~0x3000
+    and eax, ~EFLAGS_IOPL
     mov ebx, ebx
     and ebx, ~0x4000
     and ecx, EFLAGS_ALIGN_CHECK + 0x4000 + EFLAGS_INTERRUPT_MASK
@@ -353,7 +353,7 @@ _OpcodeINTnnV86:
     mov [ebp+KTRAP_FRAME_EFLAGS], edx
 
     /* Set the IOPL Mask */
-    or eax, 0x3000
+    or eax, EFLAGS_IOPL
 
     /* Get stack flat address */
     movzx ecx, word ptr [ebp+KTRAP_FRAME_SS]
@@ -450,7 +450,7 @@ _OpcodeIRETV86:
 MaskEFlags:
 
     /* Mask out EFLAGS */
-    and ebx, ~(0x3000 + EFLAGS_VIF + 0x4000 + EFLAGS_VIP)
+    and ebx, ~(EFLAGS_IOPL + EFLAGS_VIF + 0x4000 + EFLAGS_VIP)
     mov ecx, ebx
 
     /* FIXME: Check for VME support */

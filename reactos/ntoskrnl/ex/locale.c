@@ -74,7 +74,7 @@ ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
             /* Success, is the value the right type? */
             if (ValueInfo->Type == REG_SZ)
             {
-                /* It is. Initailize the data and convert it */
+                /* It is. Initialize the data and convert it */
                 RtlInitUnicodeString(&ValueString, (PWSTR)ValueInfo->Data);
                 Status = RtlUnicodeStringToInteger(&ValueString, 16, &Value);
                 if (NT_SUCCESS(Status))
