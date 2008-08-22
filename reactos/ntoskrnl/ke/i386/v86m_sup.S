@@ -203,7 +203,7 @@ _OpcodeOUTSWV86:
 _OpcodePUSHFV86:
 
     /* Get VDM state */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
     mov eax, [eax]
 
     /* Get EFLAGS and mask out IF */
@@ -211,7 +211,7 @@ _OpcodePUSHFV86:
     and eax, ~EFLAGS_INTERRUPT_MASK
 
     /* Mask align check and interrupt mask */
-    and eax, EFLAGS_ALIGN_CHECK + 0x4000 + EFLAGS_INTERRUPT_MASK
+    and eax, EFLAGS_ALIGN_CHECK + EFLAGS_NESTED_TASK + EFLAGS_INTERRUPT_MASK
     or eax, edx
 
     /* Add IOPL Mask */
@@ -252,7 +252,7 @@ SkipPrefix:
 _OpcodePOPFV86:
 
     /* Get VDM state */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
 
     /* Get flat ESP */
     mov ecx, [ebp+KTRAP_FRAME_SS]
@@ -279,8 +279,8 @@ NoPrefix:
     /* Mask out EFLAGS */
     and eax, ~EFLAGS_IOPL
     mov ebx, ebx
-    and ebx, ~0x4000
-    and ecx, EFLAGS_ALIGN_CHECK + 0x4000 + EFLAGS_INTERRUPT_MASK
+    and ebx, ~EFLAGS_NESTED_TASK
+    and ecx, EFLAGS_ALIGN_CHECK + EFLAGS_NESTED_TASK + EFLAGS_INTERRUPT_MASK
 
     /* FIXME: Support VME */
 
@@ -314,7 +314,7 @@ NoAdjustEsp0:
     pop eax
 
     /* Update the flags in the VDM State */
-    LOCK and dword ptr [eax], ~(EFLAGS_ALIGN_CHECK + 0x4000 + EFLAGS_INTERRUPT_MASK)
+    LOCK and dword ptr [eax], ~(EFLAGS_ALIGN_CHECK + EFLAGS_NESTED_TASK + EFLAGS_INTERRUPT_MASK)
     LOCK or [eax], ecx
 
     /* Update EIP */
@@ -334,7 +334,7 @@ _OpcodeINTnnV86:
     mov edx, [ebp+KTRAP_FRAME_EFLAGS]
 
     /* Remove the flag in the VDM State */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
     mov ecx, [eax]
     LOCK and dword ptr [eax], ~EFLAGS_INTERRUPT_MASK
 
@@ -349,7 +349,7 @@ _OpcodeINTnnV86:
 
     /* Now mask out VIF and TF */
     or eax, ecx
-    and edx, ~(EFLAGS_VIF + 0x4000 + EFLAGS_TF)
+    and edx, ~(EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_TF)
     mov [ebp+KTRAP_FRAME_EFLAGS], edx
 
     /* Set the IOPL Mask */
@@ -422,7 +422,7 @@ _OpcodeINTOV86:
 _OpcodeIRETV86:
 
     /* Get the VDM State */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
 
     /* Get flat ESP */
     movzx ecx, word ptr [ebp+KTRAP_FRAME_SS]
@@ -450,7 +450,7 @@ _OpcodeIRETV86:
 MaskEFlags:
 
     /* Mask out EFLAGS */
-    and ebx, ~(EFLAGS_IOPL + EFLAGS_VIF + 0x4000 + EFLAGS_VIP)
+    and ebx, ~(EFLAGS_IOPL + EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_VIP)
     mov ecx, ebx
 
     /* FIXME: Check for VME support */
@@ -595,7 +595,7 @@ _OpcodeREPPrefixV86:
 _OpcodeCLIV86:
 
     /* Get VDM State */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
 
     /* FIXME: Support VME */
 
@@ -616,7 +616,7 @@ _OpcodeCLIV86:
 _OpcodeSTIV86:
 
     /* Get VDM State */
-    mov eax, 0x714
+    mov eax, FIXED_NTVDMSTATE_LINEAR_PC_AT
 
     /* FIXME: Support VME */
 
