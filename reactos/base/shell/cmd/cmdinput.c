@@ -152,10 +152,6 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	/* get screen size */
 	GetScreenSize (&maxx, &maxy);
 
-	/* JPP 19980807 - if echo off, don't print prompt */
-	if (bEcho)
-		PrintPrompt();
-
 	GetCursorXY (&orgx, &orgy);
 	GetCursorXY (&curx, &cury);
 
@@ -431,6 +427,8 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				if (str[0])
 					History (0, str);
 #endif
+				str[charcount++] = _T('\n');
+				str[charcount] = _T('\0');
 				ConInDummy ();
 				ConOutChar (_T('\n'));
 			bReturn = TRUE;

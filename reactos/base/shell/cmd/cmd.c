@@ -1239,60 +1239,86 @@ too_long:
  *
  */
 
+BOOL bNoInteractive;
+BOOL bIsBatch;
+
+BOOL
+ReadLine (TCHAR *commandline, BOOL bMore)
+{
+	TCHAR readline[CMDLINE_LENGTH];
+	LPTSTR ip;
+
+	/* if no batch input then... */
+	if (!(ip = ReadBatchLine()))
+	{
+		if (bNoInteractive)
+		{
+			bExit = TRUE;
+			return FALSE;
+		}
+
+		if (bMore)
+		{
+			ConOutPrintf(_T("More? "));
+		}
+		else
+		{
+			/* JPP 19980807 - if echo off, don't print prompt */
+			if (bEcho)
+				PrintPrompt();
+		}
+
+		ReadCommand (readline, CMDLINE_LENGTH - 1);
+		if (CheckCtrlBreak(BREAK_INPUT))
+		{
+			ConOutPuts(_T("\n"));
+			return FALSE;
+		}
+		ip = readline;
+		bIsBatch = FALSE;
+	}
+	else
+	{
+		bIsBatch = TRUE;
+	}
+
+	if (!SubstituteVars(ip, commandline, _T('%'), bIsBatch))
+		return FALSE;
+
+	/* FIXME: !vars! should be substituted later, after parsing. */
+	if (!SubstituteVars(commandline, readline, _T('!'), bIsBatch))
+		return FALSE;
+	_tcscpy(commandline, readline);
+
+	return TRUE;
+}
+
 static INT
 ProcessInput (BOOL bFlag)
 {
-	TCHAR commandline[CMDLINE_LENGTH];
-	TCHAR readline[CMDLINE_LENGTH];
-	LPTSTR ip;
-	BOOL bEchoThisLine;
-    BOOL bIsBatch;
+	PARSED_COMMAND *Cmd;
 
+	bNoInteractive = bFlag;
 	do
 	{
-		/* if no batch input then... */
-		if (!(ip = ReadBatchLine (&bEchoThisLine)))
-		{
-			if (bFlag)
-				return nErrorLevel;
-
-			ReadCommand (readline, CMDLINE_LENGTH);
-			ip = readline;
-			bEchoThisLine = FALSE;
-            bIsBatch = FALSE;
-		}
-        else
-        {
-            bIsBatch = TRUE;
-        }
-
-		/* skip leading blanks */
-		while ( _istspace(*ip) )
-			++ip;
-
-		if (!SubstituteVars(ip, commandline, _T('%'), bIsBatch))
+		Cmd = ParseCommand(NULL);
+		if (!Cmd)
 			continue;
 
 		/* JPP 19980807 */
 		/* Echo batch file line */
-		if (bEchoThisLine)
+		if (bIsBatch && bEcho && Cmd->Type != C_QUIET)
 		{
 			PrintPrompt ();
-			ConOutPuts (commandline);
+			EchoCommand(Cmd);
+			ConOutChar(_T('\n'));
 		}
 
-		/* FIXME: !vars! should be substituted later, after parsing. */
-		if (!SubstituteVars(commandline, readline, _T('!'), bIsBatch))
-			continue;
-		_tcscpy(commandline, readline);
-
-		if (!CheckCtrlBreak(BREAK_INPUT) && *commandline)
-		{
-			ParseCommandLine (commandline);
-			if (bEcho && !bIgnoreEcho && (!bIsBatch || bEchoThisLine))
-				ConOutChar ('\n');
-			bIgnoreEcho = FALSE;
-		}
+		ExecuteCommand(Cmd);
+		if (bEcho && !bIgnoreEcho && (!bIsBatch || Cmd->Type != C_QUIET))
+			ConOutChar ('\n');
+		FreeCommand(Cmd);
+		bIgnoreEcho = FALSE;
 	}
 	while (!bCanExit || !bExit);
 

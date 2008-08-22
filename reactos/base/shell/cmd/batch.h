@@ -44,7 +44,7 @@ LPTSTR FindArg (INT);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (LPTSTR);
 BOOL   Batch (LPTSTR, LPTSTR, LPTSTR);
-LPTSTR ReadBatchLine (LPBOOL);
+LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
 
 #endif /* _BATCH_H_INCLUDED_ */

@@ -332,10 +332,9 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
  * Set eflag to 0 if line is not to be echoed else 1
  */
 
-LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
+LPTSTR ReadBatchLine ()
 {
 	LPTSTR first;
-	LPTSTR ip;
 
 	/* No batch */
 	if (bc == NULL)
@@ -428,8 +427,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			*dp = _T('\0');
 
-			*bLocalEcho = bEcho;
-
 			return textline;
 		}
 
@@ -446,14 +443,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 		}
 		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
-		/* Strip leading spaces and trailing space/control chars */
-		for (first = textline; _istspace (*first); first++)
-			;
-
-		for (ip = first + _tcslen (first) - 1; _istspace (*ip) || _istcntrl (*ip); ip--)
-			;
-
-		*++ip = _T('\0');
+		first = textline;
 
 		/* cmd block over multiple lines (..) */
 		if (bc->bCmdBlock >= 0)
@@ -487,22 +477,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 					continue;
 				}
 		}
-
-		/* ignore labels and empty lines */
-		if (*first == _T(':') || *first == 0)
-			continue;
-
-		if (*first == _T('@'))
-		{
-			/* don't echo this line */
-			do
-				first++;
-			while (_istspace (*first));
-
-			*bLocalEcho = 0;
-		}
-		else
-			*bLocalEcho = bEcho;
 
 		break;
 	}

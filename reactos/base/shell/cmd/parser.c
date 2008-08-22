@@ -29,7 +29,10 @@ static TCHAR ParseChar()
 {
 	TCHAR Char;
 
-//restart:
+	if (bParseError)
+		return CurChar = 0;
+
+restart:
 	/* Although CRs can be injected into a line via an environment
 	 * variable substitution, the parser ignores them - they won't
 	 * even separate tokens. */
@@ -39,9 +42,19 @@ static TCHAR ParseChar()
 
 	if (!Char)
 	{
-		/*if (bLineContinuations)
-			if (ReadLine(ParseLine, TRUE) && *(ParsePos = ParseLine))
-				goto restart;*/
+		ParsePos--;
+		if (bLineContinuations)
+		{
+			if (!ReadLine(ParseLine, TRUE))
+			{
+				/* ^C pressed, or line was too long */
+				bParseError = TRUE;
+			}
+			else if (*(ParsePos = ParseLine))
+			{
+				goto restart;
+			}
+		}
 	}
 	return CurChar = Char;
 }
@@ -96,7 +109,8 @@ static int ParseToken(TCHAR ExtraEnd, BOOL PreserveSpace)
 				/* Next character is a forced literal */
 			}
 		}
-		/* FIXME: potential buffer overflow here */
+		if (Out == &CurrentToken[CMDLINE_LENGTH - 1])
+			break;
 		*Out++ = Char;
 		Char = ParseChar();
 	}
@@ -247,7 +261,7 @@ static PARSED_COMMAND *ParseBlock(REDIRECTION *RedirList)
 	/* Read the block contents */
 	NextPtr = &Cmd->Subcommands;
 	InsideBlock++;
-	do
+	while (1)
 	{
 		Sub = ParseCommandOp(C_OP_LOWEST);
 		if (Sub)
@@ -261,7 +275,12 @@ static PARSED_COMMAND *ParseBlock(REDIRECTION *RedirList)
 			FreeCommand(Cmd);
 			return NULL;
 		}
-	} while (CurrentTokenType != TOK_END_BLOCK);
+
+		if (CurrentTokenType == TOK_END_BLOCK)
+			break;
+		/* Skip past the \n */
+		ParseChar();
+	}
 	InsideBlock--;
 
 	/* Process any trailing redirections */
@@ -335,6 +354,10 @@ static PARSED_COMMAND *ParseCommandPart(void)
 		{
 			return ParseBlock(RedirList);
 		}
+		else if (Type == TOK_END_BLOCK && !RedirList)
+		{
+			return NULL;
+		}
 		else
 		{
 			ParseError();
@@ -352,7 +375,12 @@ static PARSED_COMMAND *ParseCommandPart(void)
 		Type = ParseToken(0, TRUE);
 		if (Type == TOK_NORMAL)
 		{
-			/* FIXME: potential buffer overflow here */
+			if (Pos + _tcslen(CurrentToken) >= &ParsedLine[CMDLINE_LENGTH])
+			{
+				ParseError();
+				FreeRedirection(RedirList);
+				return NULL;
+			}
 			Pos = _stpcpy(Pos, CurrentToken);
 		}
 		else if (Type == TOK_REDIRECTION)
@@ -426,7 +454,7 @@ ParseCommand(LPTSTR Line)
 	}
 	else
 	{
-		/*if (!ReadLine(ParseLine, FALSE))*/
+		if (!ReadLine(ParseLine, FALSE))
 			return NULL;
 		bLineContinuations = TRUE;
 	}
@@ -435,13 +463,59 @@ ParseCommand(LPTSTR Line)
 	CurChar = _T(' ');
 
 	Cmd = ParseCommandOp(C_OP_LOWEST);
-	if (Cmd && CurrentTokenType != TOK_END)
+	if (Cmd)
 	{
-		ParseError();
-		FreeCommand(Cmd);
-		Cmd = NULL;
+		if (CurrentTokenType != TOK_END)
+			ParseError();
+		if (bParseError)
+		{
+			FreeCommand(Cmd);
+			Cmd = NULL;
+		}
 	}
 	return Cmd;
+}
+
+/* Reconstruct a parse tree into text form;
+ * used for echoing batch file commands */
+VOID
+EchoCommand(PARSED_COMMAND *Cmd)
+{
+	PARSED_COMMAND *Sub;
+	REDIRECTION *Redir;
+
+	switch (Cmd->Type)
+	{
+	case C_COMMAND:
+		ConOutPrintf(_T("%s"), Cmd->CommandLine);
+		break;
+	case C_QUIET:
+		return;
+	case C_BLOCK:
+		ConOutChar(_T('('));
+		for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+		{
+			EchoCommand(Sub);
+			ConOutChar(_T('\n'));
+		}
+		ConOutChar(_T(')'));
+		break;
+	case C_MULTI:
+	case C_IFFAILURE:
+	case C_IFSUCCESS:
+	case C_PIPE:
+		Sub = Cmd->Subcommands;
+		EchoCommand(Sub);
+		ConOutPrintf(_T(" %s "), OpString[Cmd->Type - C_OP_LOWEST]);
+		EchoCommand(Sub->Next);
+		break;
+	}
+
+	for (Redir = Cmd->Redirections; Redir; Redir = Redir->Next)
+	{
+		ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
+			RedirString[Redir->Type], Redir->Filename);
+	}
 }
 
 VOID

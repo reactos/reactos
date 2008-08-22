@@ -103,6 +103,7 @@ LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 BOOL DoCommand (LPTSTR line);
+BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 int cmd_main (int argc, const TCHAR *argv[]);
 
 extern HANDLE CMD_ModuleHandle;
@@ -340,6 +341,7 @@ typedef struct _PARSED_COMMAND
 	TCHAR CommandLine[];
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
+VOID EchoCommand(PARSED_COMMAND *Cmd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
 
 
