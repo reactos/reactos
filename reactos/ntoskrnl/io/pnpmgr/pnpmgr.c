@@ -24,6 +24,7 @@ KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
 
 extern ULONG ExpInitializationPhase;
+extern BOOLEAN PnpSystemInit;
 
 /* DATA **********************************************************************/
 
@@ -139,16 +140,13 @@ IopStartDevice(
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
    ULONG RequiredLength;
-   PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
-
-   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
 
    IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
    DPRINT("Sending IRP_MN_FILTER_RESOURCE_REQUIREMENTS to device stack\n");
    Stack.Parameters.FilterResourceRequirements.IoResourceRequirementList = DeviceNode->ResourceRequirements;
    Status = IopInitiatePnpIrp(
-      Fdo,
+      DeviceNode->PhysicalDeviceObject,
       &IoStatusBlock,
       IRP_MN_FILTER_RESOURCE_REQUIREMENTS,
       &Stack);
@@ -190,7 +188,7 @@ IopStartDevice(
    KeEnterCriticalRegion();
 
    Status = IopInitiatePnpIrp(
-      Fdo,
+      DeviceNode->PhysicalDeviceObject,
       &IoStatusBlock,
       IRP_MN_START_DEVICE,
       &Stack);
@@ -213,10 +211,8 @@ IopStartDevice(
       }
    }
 
-   ObDereferenceObject(Fdo);
-
    if (NT_SUCCESS(Status))
-       DeviceNode->Flags |= DN_STARTED;
+       IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
 
    return Status;
 }
@@ -1784,7 +1780,6 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
              * device is started */
             DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-            DeviceNode->Flags |= DN_STARTED;
          }
          return STATUS_SUCCESS;
       }
@@ -1805,8 +1800,6 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
  *       Pointer to device node.
  *    Context
  *       Pointer to parent node to initialize child node services for.
- *    BootDrivers
- *       Load only driver marked as boot start.
  *
  * Remarks
  *    If the driver image for a service is not loaded and initialized
@@ -1819,14 +1812,13 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
 
 NTSTATUS
 IopActionInitChildServices(PDEVICE_NODE DeviceNode,
-                           PVOID Context,
-                           BOOLEAN BootDrivers)
+                           PVOID Context)
 {
    PDEVICE_NODE ParentDeviceNode;
    NTSTATUS Status;
+   BOOLEAN BootDrivers = !PnpSystemInit;
 
-   DPRINT("IopActionInitChildServices(%p, %p, %d)\n", DeviceNode, Context,
-      BootDrivers);
+   DPRINT("IopActionInitChildServices(%p, %p)\n", DeviceNode, Context);
 
    ParentDeviceNode = (PDEVICE_NODE)Context;
 
@@ -1900,8 +1892,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       /* Driver is loaded and initialized at this point */
       if (NT_SUCCESS(Status))
       {
-         /* We have a driver for this DeviceNode */
-         DeviceNode->Flags |= DN_DRIVER_LOADED;
          /* Attach lower level filter drivers. */
          IopAttachFilterDrivers(DeviceNode, TRUE);
          /* Initialize the function driver for the device node */
@@ -1946,34 +1936,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 }
 
 /*
- * IopActionInitAllServices
- *
- * Initialize the service for all (direct) child nodes of a parent node. This
- * function just calls IopActionInitChildServices with BootDrivers = FALSE.
- */
-
-NTSTATUS
-IopActionInitAllServices(PDEVICE_NODE DeviceNode,
-                         PVOID Context)
-{
-   return IopActionInitChildServices(DeviceNode, Context, FALSE);
-}
-
-/*
- * IopActionInitBootServices
- *
- * Initialize the boot start services for all (direct) child nodes of a
- * parent node. This function just calls IopActionInitChildServices with
- * BootDrivers = TRUE.
- */
-NTSTATUS
-IopActionInitBootServices(PDEVICE_NODE DeviceNode,
-                          PVOID Context)
-{
-   return IopActionInitChildServices(DeviceNode, Context, TRUE);
-}
-
-/*
  * IopInitializePnpServices
  *
  * Initialize services for discovered children
@@ -1982,37 +1944,21 @@ IopActionInitBootServices(PDEVICE_NODE DeviceNode,
  *    DeviceNode
  *       Top device node to start initializing services.
  *
- *    BootDrivers
- *       When set to TRUE, only drivers marked as boot start will
- *       be loaded. Otherwise, all drivers will be loaded.
- *
  * Return Value
  *    Status
  */
 NTSTATUS
-IopInitializePnpServices(IN PDEVICE_NODE DeviceNode,
-                         IN BOOLEAN BootDrivers)
+IopInitializePnpServices(IN PDEVICE_NODE DeviceNode)
 {
    DEVICETREE_TRAVERSE_CONTEXT Context;
 
-   DPRINT("IopInitializePnpServices(%p, %d)\n", DeviceNode, BootDrivers);
+   DPRINT("IopInitializePnpServices(%p)\n", DeviceNode);
 
-   if (BootDrivers)
-   {
-      IopInitDeviceTreeTraverseContext(
-         &Context,
-         DeviceNode,
-         IopActionInitBootServices,
-         DeviceNode);
-   }
-   else
-   {
-      IopInitDeviceTreeTraverseContext(
-         &Context,
-         DeviceNode,
-         IopActionInitAllServices,
-         DeviceNode);
-   }
+   IopInitDeviceTreeTraverseContext(
+      &Context,
+      DeviceNode,
+      IopActionInitChildServices,
+      DeviceNode);
 
    return IopTraverseDeviceTree(&Context);
 }
@@ -3051,12 +2997,11 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Problem: Status=0x%08x, ResultLength = %d\n", Status, *ResultLength);
                 ExFreePool(ValueInformation);
                 if (Status == STATUS_BUFFER_OVERFLOW)
                     return STATUS_BUFFER_TOO_SMALL;
-                else
-                    return Status;
+                DPRINT1("Problem: Status=0x%08x, ResultLength = %d\n", Status, *ResultLength);
+                return Status;
             }
 
             /* FIXME: Verify the value (NULL-terminated, correct format). */
@@ -3339,10 +3284,6 @@ IoSynchronousInvalidateDeviceRelations(
     IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_NODE ChildDeviceNode;
     IO_STACK_LOCATION Stack;
-    BOOLEAN BootDrivers;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-    HANDLE Handle;
     NTSTATUS Status;
     ULONG i;
 
@@ -3437,36 +3378,9 @@ IoSynchronousInvalidateDeviceRelations(
     }
 
     /*
-     * Get the state of the system boot. If the \\SystemRoot link isn't
-     * created yet, we will assume that it's possible to load only boot
-     * drivers.
+     * Initialize services for discovered children.
      */
-    InitializeObjectAttributes(
-        &ObjectAttributes,
-        &LinkName,
-        0,
-        NULL,
-        NULL);
-    Status = ZwOpenFile(
-        &Handle,
-        FILE_ALL_ACCESS,
-        &ObjectAttributes,
-        &IoStatusBlock,
-        0,
-        0);
-     if (NT_SUCCESS(Status))
-     {
-         BootDrivers = FALSE;
-         ZwClose(Handle);
-     }
-     else
-         BootDrivers = TRUE;
-
-    /*
-     * Initialize services for discovered children. Only boot drivers will
-     * be loaded from boot driver!
-     */
-    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
+    Status = IopInitializePnpServices(DeviceNode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);

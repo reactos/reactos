@@ -553,8 +553,7 @@ IopActionConfigureChildServices(
 NTSTATUS
 IopActionInitChildServices(
     IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context,
-    IN BOOLEAN BootDrivers
+    IN PVOID Context
 );
 
 NTSTATUS
@@ -579,8 +578,7 @@ IopQueueTargetDeviceEvent(
 
 NTSTATUS
 IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN BootDrivers);
+    IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 NTAPI

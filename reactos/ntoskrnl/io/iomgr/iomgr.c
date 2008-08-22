@@ -14,6 +14,7 @@
 #include <internal/debug.h>
 
 ULONG IopTraceLevel = 0;
+BOOLEAN PnpSystemInit = FALSE;
 
 // should go into a proper header
 VOID
@@ -535,9 +536,10 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 #endif
 
     /* Load services for devices found by PnP manager */
-    IopInitializePnpServices(IopRootDeviceNode, FALSE);
+    IopInitializePnpServices(IopRootDeviceNode);
 
     /* Load system start drivers */
+    PnpSystemInit = TRUE;
     IopInitializeSystemDrivers();
 
     /* Destroy the group driver list */

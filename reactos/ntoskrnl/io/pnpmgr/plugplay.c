@@ -576,7 +576,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     if (NT_SUCCESS(Status))
-        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent, FALSE);
+        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
 
     ObDereferenceObject(DeviceObject);
 
