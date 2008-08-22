@@ -60,6 +60,20 @@ RtlpGetIndexLength(ULONG Index)
    return Length ? Length : 1;
 }
 
+static WCHAR
+RtlpUpcaseUnicodeCharIfLegal(IN WCHAR LowChar)
+{
+    if (RtlpIsShortIllegal(LowChar))
+    {
+        return L'_';
+    }
+    if (LowChar >= L'a' && LowChar <= L'z')
+    {
+        return LowChar - 32;
+    }
+    return LowChar;
+}
+
 
 /*
  * @implemented
@@ -70,7 +84,6 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                      IN OUT PGENERATE_NAME_CONTEXT Context,
                      OUT PUNICODE_STRING Name8dot3)
 {
-   ULONG Count;
    WCHAR NameBuffer[8];
    WCHAR ExtBuffer[4];
    ULONG StrLength;
@@ -82,7 +95,6 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    ULONG IndexLength;
    ULONG CurrentIndex;
    USHORT Checksum;
-   CHAR c;
 
    StrLength = Name->Length / sizeof(WCHAR);
    DPRINT("StrLength: %lu\n", StrLength);
@@ -106,15 +118,9 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    /* Copy name (6 valid characters max) */
    for (i = 0, NameLength = 0; NameLength < 6 && i < DotPos; i++)
    {
-      c = 0;
-      RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-      if (Count != 1 || c == 0 || RtlpIsShortIllegal(c))
+      if (Name->Buffer[i] != L'.' && Name->Buffer[i] != L' ')
       {
-         NameBuffer[NameLength++] = L'_';
-      }
-      else if (c != '.')
-      {
-         NameBuffer[NameLength++] = (WCHAR)c;
+         NameBuffer[NameLength++] = RtlpUpcaseUnicodeCharIfLegal(Name->Buffer[i]);
       }
    }
 
@@ -126,16 +132,10 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       for (i = DotPos, ExtLength = 0; ExtLength < 4 && i < StrLength; i++)
       {
-         c = 0;
-         RtlUpcaseUnicodeToOemN(&c, sizeof(CHAR), &Count, &Name->Buffer[i], sizeof(WCHAR));
-         if (Count != 1 || c == 0 || RtlpIsShortIllegal(Name->Buffer[i]))
-         {
-            ExtBuffer[ExtLength++] = L'_';
-         }
-         else
-         {
-            ExtBuffer[ExtLength++] = c;
-         }
+          if (Name->Buffer[i] != L' ')
+          {
+             ExtBuffer[ExtLength++] = RtlpUpcaseUnicodeCharIfLegal(Name->Buffer[i]);
+          }
       }
    }
    else
