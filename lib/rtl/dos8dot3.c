@@ -198,7 +198,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
 
    /* Build the short name */
-   memcpy(Name8dot3->Buffer, NameBuffer, CopyLength * sizeof(WCHAR));
+   RtlCopyMemory(Name8dot3->Buffer, NameBuffer, CopyLength * sizeof(WCHAR));
    j = CopyLength;
    if (Context->CheckSumInserted)
    {
@@ -221,7 +221,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
    j += IndexLength + 1;
 
-   memcpy(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
+   RtlCopyMemory(Name8dot3->Buffer + j, ExtBuffer, ExtLength * sizeof(WCHAR));
    Name8dot3->Length = (j + ExtLength) * sizeof(WCHAR);
 
    DPRINT("Name8dot3: '%wZ'\n", Name8dot3);
@@ -229,8 +229,8 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    /* Update context */
    Context->NameLength = CopyLength;
    Context->ExtensionLength = ExtLength;
-   memcpy(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
-   memcpy(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));
+   RtlCopyMemory(Context->NameBuffer, NameBuffer, CopyLength * sizeof(WCHAR));
+   RtlCopyMemory(Context->ExtensionBuffer, ExtBuffer, ExtLength * sizeof(WCHAR));
 }
 
 
