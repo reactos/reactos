@@ -384,19 +384,21 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
    ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = Node;
 
-   if (ParentNode)
-   {
-      KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
-      Node->Parent = ParentNode;
-      Node->NextSibling = ParentNode->Child;
-      if (ParentNode->Child != NULL)
-      {
-         ParentNode->Child->PrevSibling = Node;
-      }
-      ParentNode->Child = Node;
-      KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
-      Node->Level = ParentNode->Level + 1;
-   }
+    if (ParentNode)
+    {
+        KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+        Node->Parent = ParentNode;
+        if (ParentNode->LastChild != NULL)
+            ParentNode->LastChild->Sibling = Node;
+        else
+            ParentNode->Child = Node;
+        ParentNode->LastChild = Node;
+        KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        Node->Level = ParentNode->Level + 1;
+    }
+
+    if (PhysicalDeviceObject)
+        PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
    *DeviceNode = Node;
 
@@ -407,6 +409,7 @@ NTSTATUS
 IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
 {
    KIRQL OldIrql;
+   PDEVICE_NODE PrevSibling = NULL;
 
    /* All children must be deleted before a parent is deleted */
    ASSERT(!DeviceNode->Child);
@@ -417,24 +420,30 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
 
    ObDereferenceObject(DeviceNode->PhysicalDeviceObject);
 
-   /* Unlink from parent if it exists */
+    /* Get previous sibling */
+    if (DeviceNode->Parent && DeviceNode->Parent->Child != DeviceNode)
+    {
+        PrevSibling = DeviceNode->Parent->Child;
+        while (PrevSibling->Sibling != DeviceNode)
+            PrevSibling = PrevSibling->Sibling;
+    }
 
-   if ((DeviceNode->Parent) && (DeviceNode->Parent->Child == DeviceNode))
-   {
-      DeviceNode->Parent->Child = DeviceNode->NextSibling;
-   }
+    /* Unlink from parent if it exists */
+    if (DeviceNode->Parent)
+    {
+        if (DeviceNode->Parent->LastChild == DeviceNode)
+        {
+            DeviceNode->Parent->LastChild = PrevSibling;
+            if (PrevSibling)
+                PrevSibling->Sibling = NULL;
+        }
+        if (DeviceNode->Parent->Child == DeviceNode)
+            DeviceNode->Parent->Child = DeviceNode->Sibling;
+    }
 
-   /* Unlink from sibling list */
-
-   if (DeviceNode->PrevSibling)
-   {
-      DeviceNode->PrevSibling->NextSibling = DeviceNode->NextSibling;
-   }
-
-   if (DeviceNode->NextSibling)
-   {
-      DeviceNode->NextSibling->PrevSibling = DeviceNode->PrevSibling;
-   }
+    /* Unlink from sibling list */
+    if (PrevSibling)
+        PrevSibling->Sibling = DeviceNode->Sibling;
 
    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
 
@@ -547,7 +556,7 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
    /* Traversal of all children nodes */
    for (ChildDeviceNode = ParentDeviceNode->Child;
         ChildDeviceNode != NULL;
-        ChildDeviceNode = ChildDeviceNode->NextSibling)
+        ChildDeviceNode = ChildDeviceNode->Sibling)
    {
       /* Pass the current device node to the action routine */
       Context->DeviceNode = ChildDeviceNode;
@@ -1656,7 +1665,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
    {
       /* Report the device to the user-mode pnp manager */
-      IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+      IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
                                 &DeviceNode->InstancePath);
    }
 
@@ -1671,6 +1680,7 @@ IopEnumerateDevice(
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
     DEVICETREE_TRAVERSE_CONTEXT Context;
     PDEVICE_RELATIONS DeviceRelations;
+    PDEVICE_OBJECT ChildDeviceObject;
     IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_NODE ChildDeviceNode;
     IO_STACK_LOCATION Stack;
@@ -1678,6 +1688,12 @@ IopEnumerateDevice(
     ULONG i;
 
     DPRINT("DeviceObject 0x%p\n", DeviceObject);
+
+    DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
+
+    /* Report the device to the user-mode pnp manager */
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                              &DeviceNode->InstancePath);
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
@@ -1709,24 +1725,38 @@ IopEnumerateDevice(
      */
     for (i = 0; i < DeviceRelations->Count; i++)
     {
-        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
+        ChildDeviceObject = DeviceRelations->Objects[i];
+        ASSERT((ChildDeviceObject->Flags & DO_DEVICE_INITIALIZING) == 0);
+
+        ChildDeviceNode = IopGetDeviceNode(ChildDeviceObject);
+        if (!ChildDeviceNode)
         {
-            ObDereferenceObject(DeviceRelations->Objects[i]);
-            continue;
+            /* One doesn't exist, create it */
+            Status = IopCreateDeviceNode(
+                DeviceNode,
+                ChildDeviceObject,
+                NULL,
+                &ChildDeviceNode);
+            if (NT_SUCCESS(Status))
+            {
+                /* Mark the node as enumerated */
+                ChildDeviceNode->Flags |= DNF_ENUMERATED;
+
+                /* Mark the DO as bus enumerated */
+                ChildDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
+            }
+            else
+            {
+                /* Ignore this DO */
+                DPRINT1("IopCreateDeviceNode() failed with status 0x%08x. Skipping PDO %u\n", Status, i);
+                ObDereferenceObject(ChildDeviceNode);
+            }
         }
-        Status = IopCreateDeviceNode(
-            DeviceNode,
-            DeviceRelations->Objects[i],
-            NULL,
-            &ChildDeviceNode);
-        DeviceNode->Flags |= DNF_ENUMERATED;
-        if (!NT_SUCCESS(Status))
+        else
         {
-            DPRINT("No resources\n");
-            for (i = 0; i < DeviceRelations->Count; i++)
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            ExFreePool(DeviceRelations);
-            return Status;
+            /* Mark it as enumerated */
+            ChildDeviceNode->Flags |= DNF_ENUMERATED;
+            ObDereferenceObject(ChildDeviceObject);
         }
     }
     ExFreePool(DeviceRelations);

@@ -128,7 +128,7 @@ IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
     /* Traversal of all children nodes */
     for (ChildNode = Node->Child;
          ChildNode != NULL;
-         ChildNode = ChildNode->NextSibling)
+         ChildNode = ChildNode->Sibling)
     {
         DeviceObject = IopTraverseDeviceNode(ChildNode, DeviceInstance);
         if (DeviceObject != NULL)
@@ -360,7 +360,7 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
             break;
 
         case PNP_GET_SIBLING_DEVICE:
-            RelatedDeviceNode = DeviceNode->NextSibling;
+            RelatedDeviceNode = DeviceNode->Sibling;
             break;
 
         default:
