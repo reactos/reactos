@@ -557,6 +557,11 @@ IopActionInitChildServices(
 );
 
 NTSTATUS
+IopEnumerateDevice(
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+NTSTATUS
 IoCreateDriverList(
     VOID
 );

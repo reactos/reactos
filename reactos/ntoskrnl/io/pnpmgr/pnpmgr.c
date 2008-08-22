@@ -43,13 +43,6 @@ typedef struct _INVALIDATE_DEVICE_RELATION_DATA
     PIO_WORKITEM WorkItem;
 } INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
 
-VOID
-NTAPI
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type);
-
-
 /* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
@@ -206,7 +199,7 @@ IopStartDevice(
          DPRINT("Device needs enumeration, invalidating bus relations\n");
          /* Invalidate device relations synchronously
             (otherwise there will be dirty read of DeviceNode) */
-         IoSynchronousInvalidateDeviceRelations(DeviceNode->PhysicalDeviceObject, BusRelations);
+         IopEnumerateDevice(DeviceNode->PhysicalDeviceObject);
          IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
       }
    }
@@ -1669,6 +1662,125 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 
    return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+IopEnumerateDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    PDEVICE_RELATIONS DeviceRelations;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_NODE ChildDeviceNode;
+    IO_STACK_LOCATION Stack;
+    NTSTATUS Status;
+    ULONG i;
+
+    DPRINT("DeviceObject 0x%p\n", DeviceObject);
+
+    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
+
+    Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
+
+    Status = IopInitiatePnpIrp(
+        DeviceObject,
+        &IoStatusBlock,
+        IRP_MN_QUERY_DEVICE_RELATIONS,
+        &Stack);
+    if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+    {
+        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+
+    if (!DeviceRelations || DeviceRelations->Count < 0)
+    {
+        DPRINT("No PDOs\n");
+        if (DeviceRelations)
+        {
+            ExFreePool(DeviceRelations);
+        }
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+
+    /*
+     * Create device nodes for all discovered devices
+     */
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
+        {
+            ObDereferenceObject(DeviceRelations->Objects[i]);
+            continue;
+        }
+        Status = IopCreateDeviceNode(
+            DeviceNode,
+            DeviceRelations->Objects[i],
+            NULL,
+            &ChildDeviceNode);
+        DeviceNode->Flags |= DNF_ENUMERATED;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("No resources\n");
+            for (i = 0; i < DeviceRelations->Count; i++)
+                ObDereferenceObject(DeviceRelations->Objects[i]);
+            ExFreePool(DeviceRelations);
+            return Status;
+        }
+    }
+    ExFreePool(DeviceRelations);
+
+    /*
+     * Retrieve information about all discovered children from the bus driver
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionInterrogateDeviceStack,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /*
+     * Retrieve configuration from the registry for discovered children
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionConfigureChildServices,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /*
+     * Initialize services for discovered children.
+     */
+    Status = IopInitializePnpServices(DeviceNode);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    DPRINT("IopEnumerateDevice() finished\n");
+    return STATUS_SUCCESS;
+}
+
 
 /*
  * IopActionConfigureChildServices
@@ -3272,120 +3384,24 @@ IoInvalidateDeviceRelations(
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 NTAPI
 IoSynchronousInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-    DEVICETREE_TRAVERSE_CONTEXT Context;
-    PDEVICE_RELATIONS DeviceRelations;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PDEVICE_NODE ChildDeviceNode;
-    IO_STACK_LOCATION Stack;
-    NTSTATUS Status;
-    ULONG i;
-
-    DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
-
-    Stack.Parameters.QueryDeviceRelations.Type = Type;
-
-    Status = IopInitiatePnpIrp(
-        DeviceObject,
-        &IoStatusBlock,
-        IRP_MN_QUERY_DEVICE_RELATIONS,
-        &Stack);
-    if (!NT_SUCCESS(Status))
+    PAGED_CODE();
+ 
+    switch (Type)
     {
-        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        return;
+        case BusRelations:
+            /* Enumerate the device */
+            return IopEnumerateDevice(DeviceObject);
+        case PowerRelations:
+             /* Not handled yet */
+             return STATUS_NOT_IMPLEMENTED;
+        default:
+            /* Ejection relations and target relations are not supported */
+            return STATUS_NOT_SUPPORTED;
     }
-
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-
-    if (!DeviceRelations || DeviceRelations->Count <= 0)
-    {
-        DPRINT("No PDOs\n");
-        if (DeviceRelations)
-        {
-            ExFreePool(DeviceRelations);
-        }
-        return;
-    }
-
-    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
-
-    /*
-     * Create device nodes for all discovered devices
-     */
-    for (i = 0; i < DeviceRelations->Count; i++)
-    {
-        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
-        {
-            ObDereferenceObject(DeviceRelations->Objects[i]);
-            continue;
-        }
-        Status = IopCreateDeviceNode(
-            DeviceNode,
-            DeviceRelations->Objects[i],
-            NULL,
-            &ChildDeviceNode);
-        DeviceNode->Flags |= DNF_ENUMERATED;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("No resources\n");
-            for (i = 0; i < DeviceRelations->Count; i++)
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            ExFreePool(DeviceRelations);
-            return;
-        }
-    }
-    ExFreePool(DeviceRelations);
-
-    /*
-     * Retrieve information about all discovered children from the bus driver
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionInterrogateDeviceStack,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    /*
-     * Retrieve configuration from the registry for discovered children
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionConfigureChildServices,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    /*
-     * Initialize services for discovered children.
-     */
-    Status = IopInitializePnpServices(DeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
-        return;
-    }
-
-    DPRINT("IopInvalidateDeviceRelations() finished\n");
 }

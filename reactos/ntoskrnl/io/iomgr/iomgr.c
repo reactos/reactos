@@ -16,14 +16,6 @@
 ULONG IopTraceLevel = 0;
 BOOLEAN PnpSystemInit = FALSE;
 
-// should go into a proper header
-VOID
-NTAPI
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type
-);
-
 VOID
 NTAPI
 IopTimerDispatch(
@@ -510,10 +502,8 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopReinitializeBootDrivers();
 
     /* Initialize PnP root relations */
-    IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
-                                           PhysicalDeviceObject,
-                                           BusRelations);
-    
+    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
+
     /* Check if this was a ramdisk boot */
     if (!_strnicmp(LoaderBlock->ArcBootDeviceName, "ramdisk(0)", 10))
     {
