@@ -13,22 +13,7 @@
 .intel_syntax noprefix
 .code64
 
-#define KERNEL_STACK_SIZE 0x6000
-
 /* GLOBALS *******************************************************************/
-
-.bss
-.align 16
-
-/* Kernel Boot Stack */
-.globl _P0BootStack
-.space KERNEL_STACK_SIZE
-_P0BootStack:
-
-/* Kernel Double-Fault and Temporary DPC Stack */
-.globl _KiDoubleFaultStack
-.space KERNEL_STACK_SIZE
-_KiDoubleFaultStack:
 
 .data
 

@@ -11,17 +11,6 @@
 
 #if defined(__GNUC__)
 
-ULONG64
-FORCEINLINE
-KiSwapStack(ULONG64 NewStack)
-{
-    ULONG64 OldStack;
-    asm volatile ("movq %%rsp, %[oldstack]\n movq %[newstack], %%rsp\n" 
-    : [oldstack] "=rm" (OldStack)
-    : [newstack] "rm" (NewStack));
-    return OldStack;
-}
-
 #define Ke386SetInterruptDescriptorTable(X) \
     __asm__("lidt %0\n\t" \
     : /* no outputs */ \
