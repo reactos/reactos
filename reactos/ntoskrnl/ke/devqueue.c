@@ -197,7 +197,7 @@ NTAPI
 KeRemoveByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
                          IN ULONG SortKey)
 {
-    PLIST_ENTRY ListEntry;
+    PLIST_ENTRY NextEntry;
     PKDEVICE_QUEUE_ENTRY ReturnEntry;
     KLOCK_QUEUE_HANDLE DeviceLock;
     ASSERT_DEVICE_QUEUE(DeviceQueue);
@@ -218,8 +218,8 @@ KeRemoveByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
     else
     {
         /* If SortKey is greater than the last key, then return the first entry right away */
-        ListEntry = &DeviceQueue->DeviceListHead;
-        ReturnEntry = CONTAINING_RECORD(ListEntry->Blink,
+        NextEntry = &DeviceQueue->DeviceListHead;
+        ReturnEntry = CONTAINING_RECORD(NextEntry->Blink,
                                         KDEVICE_QUEUE_ENTRY,
                                         DeviceListEntry);
 
@@ -227,24 +227,27 @@ KeRemoveByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
         if (ReturnEntry->SortKey <= SortKey)
         {
             /* Get the first entry */
-            ReturnEntry = CONTAINING_RECORD(ListEntry->Flink,
+            ReturnEntry = CONTAINING_RECORD(NextEntry->Flink,
                                             KDEVICE_QUEUE_ENTRY,
                                             DeviceListEntry);
         }
         else
         {
             /* Loop the list */
-            ListEntry = DeviceQueue->DeviceListHead.Flink;
+            NextEntry = DeviceQueue->DeviceListHead.Flink;
             while (TRUE)
             {
+                /* Make sure we don't go beyond the end of the queue */
+                ASSERT(NextEntry != &DeviceQueue->DeviceListHead);
+
                 /* Get the next entry and check if the key is low enough */
-                ReturnEntry = CONTAINING_RECORD(ListEntry,
+                ReturnEntry = CONTAINING_RECORD(NextEntry,
                                                 KDEVICE_QUEUE_ENTRY,
                                                 DeviceListEntry);
                 if (SortKey <= ReturnEntry->SortKey) break;
 
                 /* Try the next one */
-                ListEntry = ListEntry->Flink;
+                NextEntry = NextEntry->Flink;
             }
         }
 
@@ -270,7 +273,7 @@ NTAPI
 KeRemoveByKeyDeviceQueueIfBusy(IN PKDEVICE_QUEUE DeviceQueue,
                                IN ULONG SortKey)
 {
-    PLIST_ENTRY ListEntry;
+    PLIST_ENTRY NextEntry;
     PKDEVICE_QUEUE_ENTRY ReturnEntry;
     KLOCK_QUEUE_HANDLE DeviceLock;
     ASSERT_DEVICE_QUEUE(DeviceQueue);
@@ -289,27 +292,42 @@ KeRemoveByKeyDeviceQueueIfBusy(IN PKDEVICE_QUEUE DeviceQueue,
     }
     else
     {
-        /* Find entry with SortKey greater than or equal to the passed-in SortKey */
-        LIST_FOR_EACH(ReturnEntry, &DeviceQueue->DeviceListHead, KDEVICE_QUEUE_ENTRY, DeviceListEntry) 
-        {
-            /* Check if keys match */
-            if (ReturnEntry->SortKey >= SortKey)
-            {
-               /* We found it, so just remove it */
-               RemoveEntryList(&ReturnEntry->DeviceListEntry);
-               break;
-            }
-        }
+        /* If SortKey is greater than the last key, then return the first entry right away */
+        NextEntry = &DeviceQueue->DeviceListHead;
+        ReturnEntry = CONTAINING_RECORD(NextEntry->Blink,
+                                        KDEVICE_QUEUE_ENTRY,
+                                        DeviceListEntry);
 
-        /* Check if we found something */
-        if (!ReturnEntry)
+        /* Check if we can just get the first entry */
+        if (ReturnEntry->SortKey <= SortKey)
         {
-            /*  Not found, return the first entry */
-            ListEntry = RemoveHeadList(&DeviceQueue->DeviceListHead);
-            ReturnEntry = CONTAINING_RECORD(ListEntry,
+            /* Get the first entry */
+            ReturnEntry = CONTAINING_RECORD(NextEntry->Flink,
                                             KDEVICE_QUEUE_ENTRY,
                                             DeviceListEntry);
         }
+        else
+        {
+            /* Loop the list */
+            NextEntry = DeviceQueue->DeviceListHead.Flink;
+            while (TRUE)
+            {
+                /* Make sure we don't go beyond the end of the queue */
+                ASSERT(NextEntry != &DeviceQueue->DeviceListHead);
+
+                /* Get the next entry and check if the key is low enough */
+                ReturnEntry = CONTAINING_RECORD(NextEntry,
+                                                KDEVICE_QUEUE_ENTRY,
+                                                DeviceListEntry);
+                if (SortKey <= ReturnEntry->SortKey) break;
+
+                /* Try the next one */
+                NextEntry = NextEntry->Flink;
+            }
+        }
+
+        /* We have an entry, remove it now */
+        RemoveEntryList(&ReturnEntry->DeviceListEntry);
 
         /* Set it as non-inserted */
         ReturnEntry->Inserted = FALSE;
