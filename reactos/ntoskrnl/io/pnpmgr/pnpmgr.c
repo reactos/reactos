@@ -397,8 +397,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
         Node->Level = ParentNode->Level + 1;
     }
 
-    if (PhysicalDeviceObject)
-        PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
    *DeviceNode = Node;
 
