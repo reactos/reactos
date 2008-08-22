@@ -292,6 +292,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
         case STATUS_INVALID_CONNECTION: DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n"); *Errno = WSAEAFNOSUPPORT; break;
         case STATUS_REMOTE_NOT_LISTENING: DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n"); *Errno = WSAECONNRESET; break;
 	case STATUS_FILE_CLOSED: DbgPrint("MSAFD: STATUS_FILE_CLOSED\n"); *Errno = WSAENOTSOCK; break;
+	case STATUS_INVALID_PARAMETER: DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n"); *Errno = WSAEINVAL; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
