@@ -1408,12 +1408,12 @@ DoProperties(
     WCHAR szDrive[MAX_PATH];
     STRRET strFile;
 
-    if (_ILIsMyComputer(This->dcm.apidl[0]))
+    if (This->dcm.cidl &&_ILIsMyComputer(This->dcm.apidl[0]))
     {
          ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
          return S_OK;
     }
-    else if (_ILIsDesktop(This->dcm.apidl[0]))
+    else if (This->dcm.cidl == 0 && _ILIsDesktop(This->dcm.pidlFolder))
     {
         ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
         return S_OK;
