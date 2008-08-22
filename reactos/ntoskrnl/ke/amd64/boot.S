@@ -50,6 +50,7 @@ _KiSetupStackAndInitializeKernel:
 
     /* Setup the new stack */
     mov rsp, r8
+    sub rsp, 0x300 // FIXME
 
     /* Copy stack parameters to the new stack */
     sub rsp, 0x38

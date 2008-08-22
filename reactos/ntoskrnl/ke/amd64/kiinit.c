@@ -694,6 +694,9 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitialStack = LoaderBlock->KernelStack; // Chekme
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
+    /* Align stack to 16 bytes */
+    InitialStack &= ~(16 - 1);
+
     /* Clean the APC List Head */
     InitializeListHead(&InitialThread->ApcState.ApcListHead[KernelMode]);
 
@@ -784,10 +787,6 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
-
-    /* Align stack and make space for the trap frame */
-    InitialStack -= sizeof(KTRAP_FRAME) + 0x100; // FIXME
-    InitialStack &= ~(16 - 1);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
