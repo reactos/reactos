@@ -366,6 +366,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 
     /* Start us out at PASSIVE_LEVEL */
 //    Pcr->Irql = PASSIVE_LEVEL;
+    KeSetCurrentIrql(PASSIVE_LEVEL);
 
     /* Set the GDI, IDT, TSS and DPC Stack */
     Pcr->GdtBase = (PVOID)Gdt;
@@ -386,6 +387,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    FrLdrDbgPrint("Enter KiInitializeKernel\n");
 #if 0
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
@@ -642,6 +644,17 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                               (ULONG64)TssSelector.BaseUpper << 32);
 }
 
+// Hack
+VOID KiRosPrepareForSystemStartup(ULONG, PROS_LOADER_PARAMETER_BLOCK);
+
+VOID
+NTAPI
+KiSystemStartup(IN ULONG_PTR Dummy,
+                IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
+}
+
 VOID
 NTAPI
 KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -746,7 +759,7 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
     {
         /* Loop until execution can continue */
         while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
-    } while(InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0));
+    } while(InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0));
 
     /* Setup CPU-related fields */
     Pcr->Prcb.Number = Cpu;
@@ -772,11 +785,9 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
 
-    /* Align stack and make space for the trap frame and NPX frame */
-    InitialStack &= ~(KTRAP_FRAME_ALIGN - 1);
-
-FrLdrDbgPrint("Before KiSetupStackAndInitializeKernel\n");
-for(;;);
+    /* Align stack and make space for the trap frame */
+    InitialStack -= sizeof(KTRAP_FRAME) + 0x100; // FIXME
+    InitialStack &= ~(16 - 1);
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
@@ -785,4 +796,36 @@ for(;;);
                                     &Pcr->Prcb,
                                     (CCHAR)Cpu,
                                     KeLoaderBlock);
+}
+
+
+VOID
+NTAPI
+KiInitializeKernelAndGotoIdleLoop(IN PKPROCESS InitProcess,
+                                  IN PKTHREAD InitThread,
+                                  IN PVOID IdleStack,
+                                  IN PKPRCB Prcb,
+                                  IN CCHAR Number,
+                                  IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Initialize kernel */
+    KiInitializeKernel(InitProcess,
+                       InitThread,
+                       IdleStack,
+                       Prcb,
+                       Number,
+                       KeLoaderBlock);
+
+    /* Set the priority of this thread to 0 */
+    InitThread->Priority = 0;
+
+    /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
+    _enable();
+    KeLowerIrql(DISPATCH_LEVEL);
+
+    /* Set the right wait IRQL */
+    InitThread->WaitIrql = DISPATCH_LEVEL;
+
+    /* Jump into the idle loop */
+    KiIdleLoop();
 }
