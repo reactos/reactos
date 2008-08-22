@@ -252,7 +252,7 @@ NTSTATUS NTAPI ReceiveComplete
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
         SocketStateUnlock( FCB );
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER;
     }
 
     HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
@@ -285,7 +285,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->State != SOCKET_STATE_CONNECTING ) {
         AFD_DbgPrint(MID_TRACE,("Called recv on wrong kind of socket (s%x)\n",
                                 FCB->State));
-        return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL,
+        return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
 				       Irp, 0, NULL );
     }
 
@@ -576,7 +576,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_UNSUCCESSFUL, Irp, 0, NULL );
+	    ( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
