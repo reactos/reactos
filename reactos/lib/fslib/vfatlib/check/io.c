@@ -72,6 +72,9 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw)
         return;
     }
 
+    // If rw is specified, then the volume should be exclusively locked
+    if (rw) fs_lock(TRUE);
+
     // Query geometry and partition info, to have bytes per sector, etc
 
     CurrentOffset.QuadPart = 0LL;
@@ -100,6 +103,43 @@ BOOLEAN fs_isdirty()
 
     /* Convert Dirty mask to a boolean value */
     return (DirtyMask & 1);
+}
+
+NTSTATUS fs_lock(BOOLEAN LockVolume)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoSb;
+
+    /* Check if volume is dirty */
+    Status = NtFsControlFile(fd,
+                             NULL, NULL, NULL, &IoSb,
+                             LockVolume ? FSCTL_LOCK_VOLUME :
+                                          FSCTL_UNLOCK_VOLUME,
+                             NULL, 0, NULL, 0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
+    }
+
+    return Status;
+}
+
+void fs_dismount()
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoSb;
+
+    /* Check if volume is dirty */
+    Status = NtFsControlFile(fd,
+                             NULL, NULL, NULL, &IoSb,
+                             FSCTL_DISMOUNT_VOLUME,
+                             NULL, 0, NULL, 0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
+    }
 }
 
 void fs_read(loff_t pos,int size,void *data)

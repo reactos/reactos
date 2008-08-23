@@ -51,6 +51,14 @@ int fs_changed(void);
 
 /* Determines whether the file system has changed. See fs_close. */
 
+NTSTATUS fs_lock(BOOLEAN LockVolume);
+
+/* Lock or unlocks the volume */
+
+void fs_dismount();
+
+/* Dismounts the volume */
+
 extern unsigned device_no;
 
 /* Major number of device (0 if file) and size (in 512 byte sectors) */
