@@ -155,7 +155,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 VOID DestroySocket( PAFD_FCB FCB ) {
     UINT i;
     BOOLEAN ReturnEarly = FALSE;
-    KIRQL Irql = KeGetCurrentIrql();
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
 
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
@@ -193,7 +192,6 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 				    i, InFlightRequest[i]->InFlightRequest));
 	    IoCancelIrp(InFlightRequest[i]->InFlightRequest);
 	    InFlightRequest[i]->InFlightRequest = NULL;
-	    IoReleaseCancelSpinLock(Irql);
 	}
     }
 
