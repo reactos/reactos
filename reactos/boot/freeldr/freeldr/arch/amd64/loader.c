@@ -198,6 +198,7 @@ FASTCALL
 FrLdrSetupPageDirectory(VOID)
 {
 	ULONG KernelPages;
+	PVOID UserSharedData;
 
 	/* Allocate a Page for the PML4 */
 	pPML4 = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
@@ -238,9 +239,15 @@ FrLdrSetupPageDirectory(VOID)
 	TssBase = GdtBase + 20 * sizeof(ULONG64); // FIXME: don't hardcode
 	if (!FrLdrMapSinglePage(GdtBase, (ULONGLONG)pGdt))
 	{
-		DbgPrint("Could not map idt page.\n", KernelPages);
+		DbgPrint("Could not map gdt page.\n", KernelPages);
 	}
 
+	/* Setup KUSER_SHARED_DATA page */
+	UserSharedData = MmAllocateMemoryWithType(PAGE_SIZE, LoaderSpecialMemory);
+	if (!FrLdrMapSinglePage(KI_USER_SHARED_DATA, (ULONG64)UserSharedData))
+	{
+		DbgPrint("Could not map KUSER_SHARED_DATA page.\n", KernelPages);
+	}
 
 }
 
