@@ -59,11 +59,6 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
     // TODO: Query driver for correct DX version
     pThisBaseDevice->dwDXVersion = 9;
 
-    pThisBaseDevice->CurrentDisplayMode[0].Width = pDirect3D9->DisplayAdapters[0].DriverCaps.dwDisplayWidth;
-    pThisBaseDevice->CurrentDisplayMode[0].Height = pDirect3D9->DisplayAdapters[0].DriverCaps.dwDisplayHeight;
-    pThisBaseDevice->CurrentDisplayMode[0].RefreshRate = pDirect3D9->DisplayAdapters[0].DriverCaps.dwRefreshRate;
-    pThisBaseDevice->CurrentDisplayMode[0].Format = pDirect3D9->DisplayAdapters[0].DriverCaps.DisplayFormat;
-
     for (i = 0; i < NumAdaptersToCreate; i++)
     {
         if (FALSE == CreateD3D9DeviceData(&pDirect3D9->DisplayAdapters[i], &pThisBaseDevice->DeviceData[i]))
@@ -73,7 +68,10 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
         }
 
         pThisBaseDevice->AdapterIndexInGroup[i] = i;
-        pThisBaseDevice->CurrentDisplayMode[i] = pThisBaseDevice->CurrentDisplayMode[0];
+        pThisBaseDevice->CurrentDisplayMode[i].Width = pDirect3D9->DisplayAdapters[i].DriverCaps.dwDisplayWidth;
+        pThisBaseDevice->CurrentDisplayMode[i].Height = pDirect3D9->DisplayAdapters[i].DriverCaps.dwDisplayHeight;
+        pThisBaseDevice->CurrentDisplayMode[i].RefreshRate = pDirect3D9->DisplayAdapters[i].DriverCaps.dwRefreshRate;
+        pThisBaseDevice->CurrentDisplayMode[i].Format = pDirect3D9->DisplayAdapters[i].DriverCaps.RawDisplayFormat;
 
         pThisBaseDevice->pSwapChains[i] = CreateDirect3DSwapChain9(RT_BUILTIN, pThisBaseDevice, i);
         pThisBaseDevice->pSwapChains2[i] = pThisBaseDevice->pSwapChains[i];
