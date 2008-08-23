@@ -1200,14 +1200,24 @@ static __inline__ __attribute__((always_inline)) void __invlpg(void * const Addr
 /*** System operations ***/
 static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(const int reg)
 {
+#ifdef _M_AMD64
+	unsigned long low, high;
+	__asm__ __volatile__("rdmsr" : "=a" (low), "=d" (high) : "c" (reg));
+	return (high << 32) | low;
+#else
 	unsigned long long retval;
 	__asm__ __volatile__("rdmsr" : "=A" (retval) : "c" (reg));
 	return retval;
+#endif
 }
 
 static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned long Register, const unsigned long long Value)
 {
+#ifdef _M_AMD64
+	__asm__ __volatile__("wrmsr" : : "a" (Value), "d" (Value >> 32), "c" (Register));
+#else
 	__asm__ __volatile__("wrmsr" : : "A" (Value), "c" (Register));
+#endif
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __readpmc(const int counter)
