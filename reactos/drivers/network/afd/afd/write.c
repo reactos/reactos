@@ -223,7 +223,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         /* Check that the socket is bound */
         if( FCB->State != SOCKET_STATE_BOUND )
-            return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp,
+            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
                                            0, NULL );
 
         if( !(SendReq = LockRequest( Irp, IrpSp )) )
@@ -398,7 +398,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 	return UnlockAndMaybeComplete
-	    ( FCB, STATUS_UNSUCCESSFUL, Irp, 0, NULL );
+	    ( FCB, STATUS_INVALID_PARAMETER, Irp, 0, NULL );
     if( !(SendReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );

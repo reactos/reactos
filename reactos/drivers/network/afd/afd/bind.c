@@ -25,7 +25,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
     }
     if( !FCB->LocalAddress ) {
         AFD_DbgPrint(MID_TRACE,("No local address\n"));
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER;
     }
 
     Status = TdiOpenAddressFile(&FCB->TdiDeviceName,
