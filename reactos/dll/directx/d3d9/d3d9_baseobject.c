@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS ReactX
+ * FILE:            dll/directx/d3d9/d3d9_baseobject.c
+ * PURPOSE:         Direct3D9's base object
+ * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>
+ */
 #include "d3d9_baseobject.h"
 #include "d3d9_device.h"
 

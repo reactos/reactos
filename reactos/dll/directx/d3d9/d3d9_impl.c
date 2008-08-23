@@ -889,6 +889,46 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT 
     return hAdapterMonitor;
 }
 
+/*++
+* @name IDirect3D9::CreateDevice
+* @implemented
+*
+* The function IDirect3D9Impl_CreateDevice creates an IDirect3DDevice9 object
+* that represents the display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount() - 1.
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+*
+* @param HWND hFocusWindow
+* A window handle that is used as a reference when Direct3D should switch between
+* foreground mode and background mode.
+*
+* @param DWORD BehaviourFlags
+* Any valid combination of the D3DCREATE constants.
+*
+* @param D3DPRESENT_PARAMETERS* pPresentationParameters
+* Pointer to a D3DPRESENT_PARAMETERS structure describing the parameters for the device
+* to be created. If D3DCREATE_ADAPTERGROUP_DEVICE is specified in the BehaviourFlags parameter,
+* the pPresentationParameters is treated as an array.
+*
+* @param IDirect3DDevice9** ppReturnedDeviceInterface
+* Return object that represents the created device.
+*
+* @return HRESULT
+* If the method successfully creates a device and returns a valid ppReturnedDeviceInterface object,
+* the return value is D3D_OK.
+* If Adapter is out of range, DeviceType is invalid, hFocusWindow is not a valid, BehaviourFlags is invalid
+* pPresentationParameters is invalid or ppReturnedDeviceInterface is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                   HWND hFocusWindow, DWORD BehaviourFlags,
                                                   D3DPRESENT_PARAMETERS* pPresentationParameters,
