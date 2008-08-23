@@ -1313,7 +1313,6 @@ DoDelete(
             {
                 (void)TreeView_DeleteItem(hwnd, hItem);
             }
-            return S_OK;
         }
     }
     NotifyShellViewWindow(lpcmi, TRUE);
