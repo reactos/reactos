@@ -2775,6 +2775,51 @@ IopOpenRegistryKeyEx(PHANDLE KeyHandle,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+IopGetRegistryValue(IN HANDLE Handle,
+                    IN PWSTR ValueName,
+                    OUT PKEY_VALUE_FULL_INFORMATION *Information)
+{
+    UNICODE_STRING ValueString;
+    NTSTATUS Status;
+    PKEY_VALUE_FULL_INFORMATION FullInformation;
+    ULONG Size;
+    PAGED_CODE();
+
+    RtlInitUnicodeString(&ValueString, ValueName);
+
+    Status = ZwQueryValueKey(Handle,
+                             &ValueString,
+                             KeyValueFullInformation,
+                             NULL,
+                             0,
+                             &Size);
+    if ((Status != STATUS_BUFFER_OVERFLOW) &&
+        (Status != STATUS_BUFFER_TOO_SMALL))
+    {
+        return Status;
+    }
+
+    FullInformation = ExAllocatePool(NonPagedPool, Size);
+    if (!FullInformation) return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = ZwQueryValueKey(Handle,
+                             &ValueString,
+                             KeyValueFullInformation,
+                             FullInformation,
+                             Size,
+                             &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(FullInformation);
+        return Status;
+    }
+
+    *Information = FullInformation;
+    return STATUS_SUCCESS;
+}
+
 static NTSTATUS INIT_FUNCTION
 NTAPI
 PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)

@@ -593,6 +593,13 @@ IopOpenRegistryKeyEx(
     PUNICODE_STRING Name,
     ACCESS_MASK DesiredAccess);
 
+NTSTATUS
+NTAPI
+IopGetRegistryValue(IN HANDLE Handle,
+                    IN PWSTR ValueName,
+                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+
+
 //
 // Initialization Routines
 //
