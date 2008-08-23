@@ -970,12 +970,14 @@ NTAPI
 IoCancelIrp(IN PIRP Irp)
 {
     KIRQL OldIrql;
+    KIRQL IrqlAtEntry;
     PDRIVER_CANCEL CancelRoutine;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
             __FUNCTION__,
             Irp);
     ASSERT(Irp->Type == IO_TYPE_IRP);
+    IrqlAtEntry = KeGetCurrentIrql();
 
     /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
@@ -999,6 +1001,7 @@ IoCancelIrp(IN PIRP Irp)
         /* Set the cancel IRQL And call the routine */
         Irp->CancelIrql = OldIrql;
         CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+	ASSERT(IrqlAtEntry == KeGetCurrentIrql());
         return TRUE;
     }
 
