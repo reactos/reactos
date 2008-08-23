@@ -11,6 +11,7 @@
 #include <debug.h>
 #include "d3d9_helpers.h"
 #include "adapter.h"
+#include "device.h"
 #include "format.h"
 
 #define LOCK_D3D9()     EnterCriticalSection(&This->d3d9_cs);
@@ -894,6 +895,7 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
                                                   struct IDirect3DDevice9** ppReturnedDeviceInterface)
 {
     DWORD NumAdaptersToCreate;
+    HRESULT Ret;
 
     LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
     LOCK_D3D9();
@@ -977,9 +979,10 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
 
     *ppReturnedDeviceInterface = 0;
 
-    UNIMPLEMENTED
+    Ret = CreateD3D9HalDevice(This, Adapter, hFocusWindow, BehaviourFlags, pPresentationParameters, NumAdaptersToCreate, ppReturnedDeviceInterface);
 
-    return D3D_OK;
+    UNLOCK_D3D9();
+    return Ret;
 }
 
 IDirect3D9Vtbl Direct3D9_Vtbl =

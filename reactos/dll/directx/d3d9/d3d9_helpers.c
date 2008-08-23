@@ -81,7 +81,7 @@ HRESULT SafeCopyString(OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src)
 
 HRESULT SafeAppendString(IN OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src)
 {
-	DWORD CurrentDstLength;
+	size_t CurrentDstLength;
 	
     if (Dst == NULL || DstSize == 0)
         return DDERR_INVALIDPARAMS;
