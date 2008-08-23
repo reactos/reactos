@@ -70,6 +70,8 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	TdiBuildConnectionInfo( &FCB->AddressFrom,
 				FCB->LocalAddress );
 
+	if( !FCB->AddressFrom ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
 
 	Status = TdiReceiveDatagram
