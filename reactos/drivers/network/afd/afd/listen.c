@@ -216,7 +216,6 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp ) {
-    NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
@@ -239,7 +238,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         PollReeval( FCB->DeviceExt, FCB->FileObject );
 
 	SocketStateUnlock( FCB );
-	return Status;
+	return Irp->IoStatus.Status;
     } else {
 	AFD_DbgPrint(MID_TRACE,("Holding\n"));
 
@@ -328,10 +327,9 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
 	    SocketStateUnlock( FCB );
-	    return Status;
+	    return Irp->IoStatus.Status;
 	}
     }
 
-    SocketStateUnlock( FCB );
-    return STATUS_UNSUCCESSFUL;
+    return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0, NULL );
 }
