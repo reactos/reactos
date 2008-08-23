@@ -33,7 +33,6 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
-    NTSTATUS Status;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
@@ -51,16 +50,14 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 
     FCB->State = SOCKET_STATE_CONNECTED;
 
-    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-			 FCB->Connection.Object,
-			 TDI_RECEIVE_NORMAL,
-			 FCB->Recv.Window,
-			 FCB->Recv.Size,
-			 &FCB->ReceiveIrp.Iosb,
-			 ReceiveComplete,
-			 FCB );
-
-    return Status;
+    return TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+		       FCB->Connection.Object,
+		       TDI_RECEIVE_NORMAL,
+		       FCB->Recv.Window,
+		       FCB->Recv.Size,
+		       &FCB->ReceiveIrp.Iosb,
+		       ReceiveComplete,
+		       FCB );
 }
 
 static NTSTATUS NTAPI StreamSocketConnectComplete
@@ -84,15 +81,15 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
-	FCB->State = SOCKET_STATE_CONNECTED;
 	AFD_DbgPrint(MID_TRACE,("Going to connected state %d\n", FCB->State));
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
+	FCB->State = SOCKET_STATE_CONNECTED;
     } else {
 	FCB->PollState |= AFD_EVENT_CONNECT_FAIL | AFD_EVENT_RECEIVE;
 	AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
 	FCB->State = SOCKET_STATE_BOUND;
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
+
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     /* Succeed pending irps on the FUNCTION_CONNECT list */
     while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
@@ -198,6 +195,11 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_BOUND:
 	FCB->RemoteAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
+
+	if( !FCB->RemoteAddress ) {
+	    Status = STATUS_NO_MEMORY;
+	    break;
+	}
 
 	if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
 	{
