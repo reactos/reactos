@@ -864,6 +864,16 @@ static HRESULT WINAPI ISF_Desktop_fnSetNameOf (IShellFolder2 * iface,
         }
     }
 
+    if (!memcmp(szSrc, szDest, (wcslen(szDest)+1) * sizeof(WCHAR)))
+    {
+        /* src and destination is the same */
+        hr = S_OK;
+        if (pPidlOut)
+            hr = _ILCreateFromPathW(szDest, pPidlOut);
+
+        return hr;
+    }
+
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
     if (MoveFileW (szSrc, szDest))
     {

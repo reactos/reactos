@@ -664,7 +664,7 @@ BOOL CALLBACK AddShellPropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 int
 EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA * hpsxa, IDataObject *pDataObj)
 {
-    WCHAR szName[100];
+    WCHAR szName[MAX_PATH] = {0};
     WCHAR * pOffset;
     UINT Length;
     DWORD dwName;
@@ -675,7 +675,7 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
     if (!pOffset)
     {
         Length = wcslen(szName);
-        if (Length >=94)
+        if (Length + 6 > sizeof(szName)/sizeof(szName[0]))
            return 0;
 
         if (CLSIDFromString(wFileName, &clsid) == NOERROR)
@@ -691,7 +691,7 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
     else
     {
         Length = wcslen(pOffset);
-        if (Length  >= 100)
+        if (Length  >= sizeof(szName)/sizeof(szName[0]))
             return 0;
         wcscpy(szName, pOffset);
     }
@@ -799,7 +799,11 @@ SH_ShowPropertiesDialog(WCHAR * lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * a
     hResult = SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (LPVOID*)&pDataObj);
     if (hResult == S_OK)
     {
-        EnumPropSheetExt(wFileName, &pinfo, MAX_PROPERTY_SHEET_PAGE-1, hpsxa, pDataObj);
+        if (!EnumPropSheetExt(wFileName, &pinfo, MAX_PROPERTY_SHEET_PAGE-1, hpsxa, pDataObj))
+        {
+            hpsxa[0] = NULL;
+            hpsxa[1] = NULL;
+        }
     }
 
     if ( GetFileVersionInfoSizeW(lpf, &dwHandle))
@@ -813,8 +817,8 @@ SH_ShowPropertiesDialog(WCHAR * lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * a
 
     if (hResult == S_OK)
     {
-        SHDestroyPropSheetExtArray(hpsxa[0]);
-        SHDestroyPropSheetExtArray(hpsxa[1]);
+            SHDestroyPropSheetExtArray(hpsxa[0]);
+            SHDestroyPropSheetExtArray(hpsxa[1]);
         IDataObject_Release(pDataObj);
     }
 
