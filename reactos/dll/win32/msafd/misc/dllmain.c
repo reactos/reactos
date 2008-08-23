@@ -15,8 +15,8 @@
 #include <debug.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = DEBUG_ULTRA;
-//DWORD DebugTraceLevel = 0;
+//DWORD DebugTraceLevel = DEBUG_ULTRA;
+DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE GlobalHeap;
