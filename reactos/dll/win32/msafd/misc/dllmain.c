@@ -15,8 +15,8 @@
 #include <debug.h>
 
 #ifdef DBG
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE GlobalHeap;
@@ -598,7 +598,7 @@ WSPSelect(
     IO_STATUS_BLOCK			IOSB;
     PAFD_POLL_INFO			PollInfo;
     NTSTATUS				Status;
-    ULONG				HandleCount, OutCount = 0;
+    LONG				HandleCount, OutCount = 0;
     ULONG				PollBufferSize;
     PVOID				PollBuffer;
     ULONG				i, j = 0, x;
@@ -661,7 +661,6 @@ WSPSelect(
     RtlZeroMemory( PollInfo, PollBufferSize );
 
     /* Number of handles for AFD to Check */
-    PollInfo->HandleCount = HandleCount;
     PollInfo->Exclusive = FALSE;
     PollInfo->Timeout = Timeout;
     
@@ -689,6 +688,9 @@ WSPSelect(
 	}
     }
     
+    PollInfo->HandleCount = j;
+    PollBufferSize = ((PCHAR)&PollInfo->Handles[j+1]) - ((PCHAR)PollInfo);
+
     /* Send IOCTL */
     Status = NtDeviceIoControlFile( (HANDLE)PollInfo->Handles[0].Handle,
 				    SockEvent,
