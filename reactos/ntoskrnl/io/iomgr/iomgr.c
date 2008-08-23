@@ -68,7 +68,6 @@ extern LIST_ENTRY IopErrorLogListHead;
 extern LIST_ENTRY IopTimerQueueHead;
 extern KDPC IopTimerDpc;
 extern KTIMER IopTimer;
-extern KSPIN_LOCK CancelSpinLock;
 extern KSPIN_LOCK IoVpbLock;
 extern KSPIN_LOCK IoStatisticsLock;
 extern KSPIN_LOCK DriverReinitListLock;
@@ -463,7 +462,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitializeListHead(&LastChanceShutdownListHead);
     InitializeListHead(&FsChangeNotifyListHead);
     InitializeListHead(&IopErrorLogListHead);
-    KeInitializeSpinLock(&CancelSpinLock);
     KeInitializeSpinLock(&IoVpbLock);
     KeInitializeSpinLock(&IoStatisticsLock);
     KeInitializeSpinLock(&DriverReinitListLock);

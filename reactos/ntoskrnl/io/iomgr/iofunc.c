@@ -682,7 +682,7 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     StackPtr->FileObject = FileObject;
 
     /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
+    return IoCallDriver(DeviceObject, Irp);
 }
 
 /*
@@ -732,7 +732,7 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     StackPtr->FileObject = FileObject;
 
     /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
+    return IoCallDriver(DeviceObject, Irp);
 }
 
 /*
@@ -776,7 +776,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -2045,7 +2045,7 @@ NtReadFile(IN HANDLE FileHandle,
             CapturedByteOffset = FileObject->CurrentByteOffset;
         }
 
-        /* Rememer we are sync */
+        /* Remember we are sync */
         Synchronous = TRUE;
     }
     else if (!(ByteOffset) &&
@@ -2904,7 +2904,7 @@ NtWriteFile(IN HANDLE FileHandle,
             CapturedByteOffset = FileObject->CurrentByteOffset;
         }
 
-        /* Rememer we are sync */
+        /* Remember we are sync */
         Synchronous = TRUE;
     }
     else if (!(ByteOffset) &&
