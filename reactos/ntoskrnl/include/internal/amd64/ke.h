@@ -75,7 +75,8 @@ FASTCALL
 Ki386InitializeTss(
     IN PKTSS Tss,
     IN PKIDTENTRY Idt,
-    IN PKGDTENTRY Gdt
+    IN PKGDTENTRY Gdt,
+    IN UINT64 Stack
 );
 
 VOID KiDivideErrorFault();

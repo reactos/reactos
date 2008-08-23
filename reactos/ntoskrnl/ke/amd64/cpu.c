@@ -12,32 +12,475 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FIXME: Local EFLAGS defines not used anywhere else */
+#define EFLAGS_IOPL     0x3000
+#define EFLAGS_NF       0x4000
+#define EFLAGS_RF       0x10000
+#define EFLAGS_ID       0x200000
+
 /* GLOBALS *******************************************************************/
 
 /* The Boot TSS */
 KTSS64 KiBootTss;
 
-/* The TSS to use for Double Fault Traps (INT 0x9) */
-UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
-
-/* The TSS to use for NMI Fault Traps (INT 0x2) */
-UCHAR KiNMITSS[KTSS_IO_MAPS];
-
 /* CPU Features and Flags */
+ULONG KeI386CpuType;
+ULONG KeI386CpuStep;
 ULONG KeI386MachineType;
-
+ULONG KeI386NpxPresent = 1;
+ULONG KeI386XMMIPresent = 0;
+ULONG KeI386FxsrPresent = 0;
 CHAR KeNumberProcessors = 0;
+BOOLEAN KiI386PentiumLockErrataPresent;
+BOOLEAN KiSMTProcessorsPresent;
+
+/* CPU Signatures */
+static const CHAR CmpIntelID[]       = "GenuineIntel";
+static const CHAR CmpAmdID[]         = "AuthenticAMD";
+static const CHAR CmpCyrixID[]       = "CyrixInstead";
+static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
+static const CHAR CmpCentaurID[]     = "CentaurHauls";
+static const CHAR CmpRiseID[]        = "RiseRiseRise";
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+KiSetProcessorType(VOID)
+{
+    ULONG64 EFlags;
+    int Reg[4];
+    ULONG Stepping, Type;
+
+    /* Start by assuming no CPUID data */
+    KeGetCurrentPrcb()->CpuID = 0;
+
+    /* Save EFlags */
+    Ke386SaveFlags(EFlags);
+
+    /* Do CPUID 1 now */
+    __cpuid(Reg, 1);
+
+    /*
+     * Get the Stepping and Type. The stepping contains both the
+     * Model and the Step, while the Type contains the returned Type.
+     * We ignore the family.
+     *
+     * For the stepping, we convert this: zzzzzzxy into this: x0y
+     */
+    Stepping = Reg[0] & 0xF0;
+    Stepping <<= 4;
+    Stepping += (Reg[0] & 0xFF);
+    Stepping &= 0xF0F;
+    Type = Reg[0] & 0xF00;
+    Type >>= 8;
+
+    /* Save them in the PRCB */
+    KeGetCurrentPrcb()->CpuID = TRUE;
+    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
+    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
+
+    /* Restore EFLAGS */
+    Ke386RestoreFlags(EFlags);
+}
+
+ULONG
+NTAPI
+KiGetCpuVendor(VOID)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULONG Vendor[5];
+    ULONG Temp;
+
+    /* Assume no Vendor ID and fail if no CPUID Support. */
+    Prcb->VendorString[0] = 0;
+    if (!Prcb->CpuID) return 0;
+
+    /* Get the Vendor ID and null-terminate it */
+    __cpuid(Vendor, 0);
+    Vendor[4] = 0;
+
+    /* Re-arrange vendor string */
+    Temp = Vendor[2];
+    Vendor[2] = Vendor[3];
+    Vendor[3] = Temp;
+
+    /* Copy it to the PRCB and null-terminate it again */
+    RtlCopyMemory(Prcb->VendorString,
+                  &Vendor[1],
+                  sizeof(Prcb->VendorString) - sizeof(CHAR));
+    Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
+
+    /* Now check the CPU Type */
+    if (!strcmp(Prcb->VendorString, CmpIntelID))
+    {
+        return CPU_INTEL;
+    }
+    else if (!strcmp(Prcb->VendorString, CmpAmdID))
+    {
+        return CPU_AMD;
+    }
+    else if (!strcmp(Prcb->VendorString, CmpCyrixID))
+    {
+        DPRINT1("Cyrix CPUs not fully supported\n");
+        return 0;
+    }
+    else if (!strcmp(Prcb->VendorString, CmpTransmetaID))
+    {
+        DPRINT1("Transmeta CPUs not fully supported\n");
+        return 0;
+    }
+    else if (!strcmp(Prcb->VendorString, CmpCentaurID))
+    {
+        DPRINT1("VIA CPUs not fully supported\n");
+        return 0;
+    }
+    else if (!strcmp(Prcb->VendorString, CmpRiseID))
+    {
+        DPRINT1("Rise CPUs not fully supported\n");
+        return 0;
+    }
+
+    /* Invalid CPU */
+    return 0;
+}
+
+ULONG
+NTAPI
+KiGetFeatureBits(VOID)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULONG Vendor;
+    ULONG FeatureBits = KF_WORKING_PTE;
+    ULONG Reg[4];
+    BOOLEAN ExtendedCPUID = TRUE;
+    ULONG CpuFeatures = 0;
+
+    /* Get the Vendor ID */
+    Vendor = KiGetCpuVendor();
+
+    /* Make sure we got a valid vendor ID at least. */
+    if (!Vendor) return FeatureBits;
+
+    /* Get the CPUID Info. Features are in Reg[3]. */
+    __cpuid(Reg, 1);
+
+    /* Set the initial APIC ID */
+    Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
+
+    /* Check for AMD CPU */
+    if (Vendor == CPU_AMD)
+    {
+        /* Check if this is a K5 or higher. */
+        if ((Reg[0] & 0x0F00) >= 0x0500)
+        {
+            /* Check if this is a K5 specifically. */
+            if ((Reg[0] & 0x0F00) == 0x0500)
+            {
+                /* Get the Model Number */
+                switch (Reg[0] & 0x00F0)
+                {
+                    /* Check if this is the Model 1 */
+                    case 0x0010:
+
+                        /* Check if this is Step 0 or 1. They don't support PGE */
+                        if ((Reg[0] & 0x000F) > 0x03) break;
+
+                    case 0x0000:
+
+                        /* Model 0 doesn't support PGE at all. */
+                        Reg[3] &= ~0x2000;
+                        break;
+
+                    case 0x0080:
+
+                        /* K6-2, Step 8 and over have support for MTRR. */
+                        if ((Reg[0] & 0x000F) >= 0x8) FeatureBits |= KF_AMDK6MTRR;
+                        break;
+
+                    case 0x0090:
+
+                        /* As does the K6-3 */
+                        FeatureBits |= KF_AMDK6MTRR;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+        else
+        {
+            /* Families below 5 don't support PGE, PSE or CMOV at all */
+            Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
+
+            /* They also don't support advanced CPUID functions. */
+            ExtendedCPUID = FALSE;
+        }
+
+        /* Set the current features */
+        CpuFeatures = Reg[3];
+    }
+
+    /* Now check if this is Intel */
+    if (Vendor == CPU_INTEL)
+    {
+        /* Check if it's a P6 */
+        if (Prcb->CpuType == 6)
+        {
+            /* Perform the special sequence to get the MicroCode Signature */
+            __writemsr(0x8B, 0);
+            __writemsr(Reg, 1);
+            Prcb->UpdateSignature.QuadPart = __readmsr(0x8B);
+        }
+        else if (Prcb->CpuType == 5)
+        {
+            /* On P5, enable workaround for the LOCK errata. */
+            KiI386PentiumLockErrataPresent = TRUE;
+        }
+
+        /* Check for broken P6 with bad SMP PTE implementation */
+        if (((Reg[0] & 0x0FF0) == 0x0610 && (Reg[0] & 0x000F) <= 0x9) ||
+            ((Reg[0] & 0x0FF0) == 0x0630 && (Reg[0] & 0x000F) <= 0x4))
+        {
+            /* Remove support for correct PTE support. */
+            FeatureBits &= ~KF_WORKING_PTE;
+        }
+
+        /* Check if the CPU is too old to support SYSENTER */
+        if ((Prcb->CpuType < 6) ||
+            ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
+        {
+            /* Disable it */
+            Reg[3] &= ~0x800;
+        }
+
+        /* Set the current features */
+        CpuFeatures = Reg[3];
+    }
+
+    /* Convert all CPUID Feature bits into our format */
+    if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
+    if (CpuFeatures & 0x00000008) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
+    if (CpuFeatures & 0x00000010) FeatureBits |= KF_RDTSC;
+    if (CpuFeatures & 0x00000100) FeatureBits |= KF_CMPXCHG8B;
+    if (CpuFeatures & 0x00000800) FeatureBits |= KF_FAST_SYSCALL;
+    if (CpuFeatures & 0x00001000) FeatureBits |= KF_MTRR;
+    if (CpuFeatures & 0x00002000) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
+    if (CpuFeatures & 0x00008000) FeatureBits |= KF_CMOV;
+    if (CpuFeatures & 0x00010000) FeatureBits |= KF_PAT;
+    if (CpuFeatures & 0x00200000) FeatureBits |= KF_DTS;
+    if (CpuFeatures & 0x00800000) FeatureBits |= KF_MMX;
+    if (CpuFeatures & 0x01000000) FeatureBits |= KF_FXSR;
+    if (CpuFeatures & 0x02000000) FeatureBits |= KF_XMMI;
+    if (CpuFeatures & 0x04000000) FeatureBits |= KF_XMMI64;
+
+    /* Check if the CPU has hyper-threading */
+    if (CpuFeatures & 0x10000000)
+    {
+        /* Set the number of logical CPUs */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(Reg[1] >> 16);
+        if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
+        {
+            /* We're on dual-core */
+            KiSMTProcessorsPresent = TRUE;
+        }
+    }
+    else
+    {
+        /* We only have a single CPU */
+        Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
+    }
+
+    /* Check if CPUID 0x80000000 is supported */
+    if (ExtendedCPUID)
+    {
+        /* Do the call */
+        __cpuid(Reg, 0x80000000);
+        if ((Reg[0] & 0xffffff00) == 0x80000000)
+        {
+            /* Check if CPUID 0x80000001 is supported */
+            if (Reg[0] >= 0x80000001)
+            {
+                /* Check which extended features are available. */
+                __cpuid(Reg, 0x80000001);
+
+                /* Check if NX-bit is supported */
+                if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
+
+                /* Now handle each features for each CPU Vendor */
+                switch (Vendor)
+                {
+                    case CPU_AMD:
+                        if (Reg[3] & 0x80000000) FeatureBits |= KF_3DNOW;
+                        break;
+                }
+            }
+        }
+    }
+
+    /* Return the Feature Bits */
+    return FeatureBits;
+}
+
+VOID
+NTAPI
+KiGetCacheInformation(VOID)
+{
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    ULONG Vendor;
+    ULONG Data[4];
+    ULONG CacheRequests = 0, i;
+    ULONG CurrentRegister;
+    UCHAR RegisterByte;
+    BOOLEAN FirstPass = TRUE;
+
+    /* Set default L2 size */
+    Pcr->SecondLevelCacheSize = 0;
+
+    /* Get the Vendor ID and make sure we support CPUID */
+    Vendor = KiGetCpuVendor();
+    if (!Vendor) return;
+
+    /* Check the Vendor ID */
+    switch (Vendor)
+    {
+        /* Handle Intel case */
+        case CPU_INTEL:
+
+            /*Check if we support CPUID 2 */
+            __cpuid(Data, 0);
+            if (Data[0] >= 2)
+            {
+                /* We need to loop for the number of times CPUID will tell us to */
+                do
+                {
+                    /* Do the CPUID call */
+                    __cpuid(Data, 2);
+
+                    /* Check if it was the first call */
+                    if (FirstPass)
+                    {
+                        /*
+                         * The number of times to loop is the first byte. Read
+                         * it and then destroy it so we don't get confused.
+                         */
+                        CacheRequests = Data[0] & 0xFF;
+                        Data[0] &= 0xFFFFFF00;
+
+                        /* Don't go over this again */
+                        FirstPass = FALSE;
+                    }
+
+                    /* Loop all 4 registers */
+                    for (i = 0; i < 4; i++)
+                    {
+                        /* Get the current register */
+                        CurrentRegister = Data[i];
+
+                        /*
+                         * If the upper bit is set, then this register should
+                         * be skipped.
+                         */
+                        if (CurrentRegister & 0x80000000) continue;
+
+                        /* Keep looping for every byte inside this register */
+                        while (CurrentRegister)
+                        {
+                            /* Read a byte, skip a byte. */
+                            RegisterByte = (UCHAR)(CurrentRegister & 0xFF);
+                            CurrentRegister >>= 8;
+                            if (!RegisterByte) continue;
+
+                            /*
+                             * Valid values are from 0x40 (0 bytes) to 0x49
+                             * (32MB), or from 0x80 to 0x89 (same size but
+                             * 8-way associative.
+                             */
+                            if (((RegisterByte > 0x40) &&
+                                 (RegisterByte <= 0x49)) ||
+                                ((RegisterByte > 0x80) &&
+                                (RegisterByte <= 0x89)))
+                            {
+                                /* Mask out only the first nibble */
+                                RegisterByte &= 0x0F;
+
+                                /* Set the L2 Cache Size */
+                                Pcr->SecondLevelCacheSize = 0x10000 <<
+                                                            RegisterByte;
+                            }
+                        }
+                    }
+                } while (--CacheRequests);
+            }
+            break;
+
+        case CPU_AMD:
+
+            /* Check if we support CPUID 0x80000006 */
+            __cpuid(Data, 0x80000000);
+            if (Data[0] >= 6)
+            {
+                /* Get 2nd level cache and tlb size */
+                __cpuid(Data, 0x80000006);
+
+                /* Set the L2 Cache Size */
+                Pcr->SecondLevelCacheSize = (Data[2] & 0xFFFF0000) >> 6;
+            }
+            break;
+    }
+}
+
+
+VOID
+NTAPI
+KiSetCR0Bits(VOID)
+{
+    ULONG64 Cr0;
+
+    /* Save current CR0 */
+    Cr0 = __readcr0();
+
+    /* If this is a 486, enable Write-Protection */
+    if (KeGetCurrentPrcb()->CpuType > 3) Cr0 |= CR0_WP;
+
+    /* Set new Cr0 */
+    __writecr0(Cr0);
+}
 
 
 VOID
 FASTCALL
-Ki386InitializeTss(IN PKTSS Tss,
+Ki386InitializeTss(IN PKTSS64 Tss,
                    IN PKIDTENTRY Idt,
-                   IN PKGDTENTRY Gdt)
+                   IN PKGDTENTRY Gdt,
+                   IN UINT64 Stack)
 {
- //   UNIMPLEMENTED;
+    PKGDTENTRY TssEntry;
+
+    /* Initialize the boot TSS entry */
+    TssEntry = &Gdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry->Bits.Type = I386_TSS;
+    TssEntry->Bits.Present = 1;
+    TssEntry->Bits.Dpl = 0;
+
+    /* FIXME: I/O Map */
+
+    /* Load the task register */
+    Ke386SetTr(KGDT_TSS);
+
+    /* Setup stack pointer */
+    Tss->Rsp0 = Stack;
+
+    /* Setup a stack for Double Fault Traps */
+    Tss->Ist[1] = PtrToUlong(KiDoubleFaultStack);
+
+    /* Setup a stack for CheckAbort Traps */
+    Tss->Ist[2] = PtrToUlong(KiDoubleFaultStack);
+
+    /* Setup a stack for NMI Traps */
+    Tss->Ist[3] = PtrToUlong(KiDoubleFaultStack);
+
 }
 
 VOID
