@@ -1397,6 +1397,14 @@ Language=English
 MultiProcessor Kernel
 .
 
+MessageId=0x8A
+Severity=Informational
+Facility=System
+SymbolicName=THREAD_TERMINATE_HELD_MUTEX
+Language=English
+A kernel thread terminated while holding a mutex
+.
+
 MessageId=0x9D
 Severity=Informational
 Facility=System

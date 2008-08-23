@@ -416,7 +416,7 @@ KeRundownThread(VOID)
         if (Mutant->ApcDisable)
         {
             /* Bugcheck the system */
-            KEBUGCHECKEX(0, //THREAD_TERMINATE_HELD_MUTEX,
+            KeBugCheckEx(THREAD_TERMINATE_HELD_MUTEX,
                          (ULONG_PTR)Thread,
                          (ULONG_PTR)Mutant,
                          0,
