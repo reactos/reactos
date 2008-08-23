@@ -72,6 +72,8 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw)
         return;
     }
 
+    // Query geometry and partition info, to have bytes per sector, etc
+
     CurrentOffset.QuadPart = 0LL;
 
     changes = last = NULL;
@@ -80,43 +82,12 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw)
 
 BOOLEAN fs_isdirty(PUNICODE_STRING DriveRoot)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG DirtyMask = 0;
-    WCHAR TempRootBuf[128];
-    UNICODE_STRING TempRoot;
-    HANDLE FileSystem;
-    IO_STATUS_BLOCK IoSb;
     NTSTATUS Status;
-
-    /* Add backslash to the end, so FS will be opened */
-    TempRoot.Length = 0;
-    TempRoot.MaximumLength = sizeof(TempRootBuf);
-    TempRoot.Buffer = TempRootBuf;
-    RtlCopyUnicodeString(&TempRoot, DriveRoot);
-    if (TempRoot.Length == (TempRoot.MaximumLength-1)) return FALSE;
-    wcscat(TempRoot.Buffer, L"\\");
-    TempRoot.Length += sizeof(WCHAR);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-        &TempRoot,
-        0,
-        NULL,
-        NULL);
-
-    Status = NtOpenFile(&FileSystem,
-        FILE_GENERIC_READ,
-        &ObjectAttributes,
-        &IoSb,
-        0,
-        0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed with status 0x%.08x\n", Status);
-        return FALSE;
-    }
+    IO_STATUS_BLOCK IoSb;
 
     /* Check if volume is dirty */
-    Status = NtFsControlFile(FileSystem,
+    Status = NtFsControlFile(fd/*FileSystem*/,
                              NULL, NULL, NULL, &IoSb,
                              FSCTL_IS_VOLUME_DIRTY,
                              NULL, 0, &DirtyMask, sizeof(DirtyMask));
@@ -124,17 +95,12 @@ BOOLEAN fs_isdirty(PUNICODE_STRING DriveRoot)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
-        /* Close FS handle */
-        NtClose(FileSystem);
         return FALSE;
     }
 
-    /* Close FS handle */
-    NtClose(FileSystem);
-
+    /* Convert Dirty mask to a boolean value */
     return (DirtyMask & 1);
 }
-
 
 void fs_read(loff_t pos,int size,void *data)
 {
