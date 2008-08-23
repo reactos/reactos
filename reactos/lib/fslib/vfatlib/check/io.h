@@ -21,7 +21,7 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw);
 /* Opens the file system PATH. If RW is zero, the file system is opened
    read-only, otherwise, it is opened read-write. */
 
-BOOLEAN fs_isdirty(PUNICODE_STRING DriveRoot);
+BOOLEAN fs_isdirty();
 
 /* Checks if filesystem is dirty */
 

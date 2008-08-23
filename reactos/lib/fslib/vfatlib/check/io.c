@@ -80,14 +80,14 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw)
     did_change = 0;
 }
 
-BOOLEAN fs_isdirty(PUNICODE_STRING DriveRoot)
+BOOLEAN fs_isdirty()
 {
     ULONG DirtyMask = 0;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoSb;
 
     /* Check if volume is dirty */
-    Status = NtFsControlFile(fd/*FileSystem*/,
+    Status = NtFsControlFile(fd,
                              NULL, NULL, NULL, &IoSb,
                              FSCTL_IS_VOLUME_DIRTY,
                              NULL, 0, &DirtyMask, sizeof(DirtyMask));

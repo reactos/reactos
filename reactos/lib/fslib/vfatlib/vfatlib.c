@@ -256,7 +256,7 @@ VfatChkdsk(
     /* Open filesystem */
     fs_open(DriveRoot,FixErrors);
 
-    if (CheckOnlyIfDirty && !fs_isdirty(DriveRoot))
+    if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
         return fs_close(FALSE);
