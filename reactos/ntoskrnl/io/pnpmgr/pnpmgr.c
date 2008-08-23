@@ -388,11 +388,10 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
     {
         KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
         Node->Parent = ParentNode;
-        if (ParentNode->LastChild != NULL)
-            ParentNode->LastChild->Sibling = Node;
-        else
-            ParentNode->Child = Node;
-        ParentNode->LastChild = Node;
+        Node->Sibling = ParentNode->Child;
+        ParentNode->Child = Node;
+        if (ParentNode->LastChild == NULL)
+            ParentNode->LastChild = Node;
         KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
         Node->Level = ParentNode->Level + 1;
     }
