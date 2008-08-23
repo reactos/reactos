@@ -42,7 +42,7 @@ KIDT_INIT KiInterruptInitTable[] =
     {0x2D, 0x03, 0x00, KiDebugServiceTrap},
     {0x2F, 0x00, 0x00, KiDpcInterrupt},
     {0xE1, 0x00, 0x00, KiIpiInterrupt},
-    {0, 0}
+    {0, 0, 0, 0}
 };
 
 KIDTENTRY64 KiIdt[256];
@@ -68,17 +68,18 @@ KeInitExceptions(VOID)
         {
             Offset = (ULONG64)KiInterruptInitTable[j].ServiceRoutine;
             KiIdt[i].Dpl = KiInterruptInitTable[j].Dpl;
+            KiIdt[i].IstIndex = KiInterruptInitTable[j].IstIndex;
             j++;
         }
         else
         {
             Offset = (ULONG64)KiUnexpectedInterrupt;
             KiIdt[i].Dpl = 0;
+            KiIdt[i].IstIndex = 0;
         }
         KiIdt[i].OffsetLow = Offset & 0xffff;
         KiIdt[i].Selector = KGDT_64_R0_CODE;
         KiIdt[i].Type = 0x0e;
-        KiIdt[i].IstIndex = 0;
         KiIdt[i].Reserved0 = 0;
         KiIdt[i].Present = 1;
         KiIdt[i].OffsetMiddle = (Offset >> 16) & 0xffff;

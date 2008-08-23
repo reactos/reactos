@@ -54,7 +54,7 @@ typedef struct _KIDT_INIT
 {
     UCHAR InterruptId;
     UCHAR Dpl;
-    UCHAR Type;
+    UCHAR IstIndex;
     PVOID ServiceRoutine;
 } KIDT_INIT, *PKIDT_INIT;
 

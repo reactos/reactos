@@ -48,8 +48,8 @@
     : /* no outputs */ \
     : "m" (X));
 
-#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
-#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
+#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfq ; popq %0":"=g" (x): /* no input */)
+#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushq %0 ; popfq": /* no output */ :"g" (x):"memory")
 
 #define _Ke386GetSeg(N)           ({ \
                                      unsigned int __d; \
