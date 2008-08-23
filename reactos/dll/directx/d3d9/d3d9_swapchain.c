@@ -150,6 +150,8 @@ HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESE
             pThisSwapChain->GammaRamp.blue[i] = i;
     }
 
+    pThisSwapChain->PresentParameters = pPresentationParameters[pThisSwapChain->ChainIndex];
+
     return Direct3DSwapChain9_Reset(pThisSwapChain, pPresentationParameters);
 }
 

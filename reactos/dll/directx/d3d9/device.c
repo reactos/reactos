@@ -9,6 +9,7 @@
 #include "device.h"
 #include <debug.h>
 #include "d3d9_helpers.h"
+#include "d3d9_create.h"
 
 static HRESULT InitD3D9ResourceManager(D3D9ResourceManager* pThisResourceManager, LPDIRECT3DDEVICE9_INT pDirect3DDevice9)
 {
@@ -36,7 +37,6 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
 {
     D3D9ResourceManager* pResourceManager;
     DWORD i;
-    D3DDISPLAYMODE DisplayMode;
 
     // Insert Reset/Ctor here
 
@@ -59,16 +59,25 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
     // TODO: Query driver for correct DX version
     pThisBaseDevice->dwDXVersion = 9;
 
-    DisplayMode = pThisBaseDevice->CurrentDisplayMode[0];
+    pThisBaseDevice->CurrentDisplayMode[0].Width = pDirect3D9->DisplayAdapters[0].DriverCaps.dwDisplayWidth;
+    pThisBaseDevice->CurrentDisplayMode[0].Height = pDirect3D9->DisplayAdapters[0].DriverCaps.dwDisplayHeight;
+    pThisBaseDevice->CurrentDisplayMode[0].RefreshRate = pDirect3D9->DisplayAdapters[0].DriverCaps.dwRefreshRate;
+    pThisBaseDevice->CurrentDisplayMode[0].Format = pDirect3D9->DisplayAdapters[0].DriverCaps.DisplayFormat;
+
     for (i = 0; i < NumAdaptersToCreate; i++)
     {
-        pThisBaseDevice->CurrentDisplayMode[i] = pThisBaseDevice->CurrentDisplayMode[0];
+        if (FALSE == CreateD3D9DeviceData(&pDirect3D9->DisplayAdapters[i], &pThisBaseDevice->DeviceData[i]))
+        {
+            DPRINT1("Failed to get device data for adapter: %d", i);
+            return DDERR_GENERIC;
+        }
+
         pThisBaseDevice->AdapterIndexInGroup[i] = i;
-        // TODO: Fill pThisBaseDevice->DeviceData[i]
+        pThisBaseDevice->CurrentDisplayMode[i] = pThisBaseDevice->CurrentDisplayMode[0];
 
         pThisBaseDevice->pSwapChains[i] = CreateDirect3DSwapChain9(RT_BUILTIN, pThisBaseDevice, i);
         pThisBaseDevice->pSwapChains2[i] = pThisBaseDevice->pSwapChains[i];
-        Direct3DSwapChain9_SetDisplayMode(pThisBaseDevice->pSwapChains[i], &DisplayMode);
+        Direct3DSwapChain9_SetDisplayMode(pThisBaseDevice->pSwapChains[i], &pThisBaseDevice->CurrentDisplayMode[i]);
 
         if (FAILED(Direct3DSwapChain9_Init(pThisBaseDevice->pSwapChains[i], pPresentationParameters)))
         {

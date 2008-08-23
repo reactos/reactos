@@ -2667,6 +2667,6 @@ typedef struct _DIRECT3D9_INT
 /* 0x47ac */    DWORD unknown004587;
 /* 0x47b0 */    DWORD unknown004588;
 /* 0x47b4 */    UINT SDKVersion;
-} DIRECT3D9_INT, *LPDIRECT3D9_INT;
+} DIRECT3D9_INT, FAR *LPDIRECT3D9_INT;
 
 #endif // _D3D9_PRIVATE_H_

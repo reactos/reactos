@@ -8,7 +8,8 @@
 #include "d3d9_device.h"
 #include "d3d9_helpers.h"
 #include "adapter.h"
-#include "debug.h"
+#include <debug.h>
+#include "d3d9_create.h"
 
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
@@ -53,8 +54,16 @@ static ULONG WINAPI IDirect3DDevice9Impl_Release(LPDIRECT3DDEVICE9 iface)
 
     if (ref == 0)
     {
+        DWORD iAdapter;
+
         EnterCriticalSection(&This->CriticalSection);
+        
         /* TODO: Free resources here */
+        for (iAdapter = 0; iAdapter < This->NumAdaptersInDevice; iAdapter++)
+        {
+            DestroyD3D9DeviceData(&This->DeviceData[iAdapter]);
+        }
+
         LeaveCriticalSection(&This->CriticalSection);
         AlignedFree(This);
     }
