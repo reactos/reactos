@@ -282,17 +282,24 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
         }
         else
         {
-            /* FIXME: Take UpcaseTable into account! */
-            if (Expression->Buffer[ExpressionPosition] == L'?' ||
-                (IgnoreCase &&
+            if (Expression->Buffer[ExpressionPosition] == L'?' || (
+                IgnoreCase && !UpcaseTable &&
                 RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
                 RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
-                (!IgnoreCase &&
-                Expression->Buffer[ExpressionPosition] ==
+                (!IgnoreCase && Expression->Buffer[ExpressionPosition] ==
                 Name->Buffer[NamePosition]))
             {
                 NamePosition++;
                 ExpressionPosition++;
+            }
+            else if (IgnoreCase && UpcaseTable)
+            {
+                if (UpcaseTable[Expression->Buffer[ExpressionPosition]] ==
+                    UpcaseTable[Name->Buffer[NamePosition]])
+                {
+                    NamePosition++;
+                    ExpressionPosition++;
+                }
             }
             else
             {
