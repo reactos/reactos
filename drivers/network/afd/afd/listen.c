@@ -61,6 +61,13 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
 
     IPAddr = (PTA_IP_ADDRESS)&ListenReceive->Address;
 
+    if( !IPAddr ) {
+	if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+	Irp->IoStatus.Status = STATUS_NO_MEMORY;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+    }
+
     AFD_DbgPrint(MID_TRACE,("IPAddr->TAAddressCount %d\n",
                             IPAddr->TAAddressCount));
     AFD_DbgPrint(MID_TRACE,("IPAddr->Address[0].AddressType %d\n",
@@ -172,7 +179,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				       0, NULL );
 
     if( FCB->State != SOCKET_STATE_BOUND ) {
-	Status = STATUS_UNSUCCESSFUL;
+	Status = STATUS_INVALID_PARAMETER;
 	AFD_DbgPrint(MID_TRACE,("Could not listen an unbound socket\n"));
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
     }
