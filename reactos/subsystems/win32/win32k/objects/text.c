@@ -385,7 +385,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
 
 
-   DPRINT1("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
+   DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
 
    /* Add this font resource to the font table */
