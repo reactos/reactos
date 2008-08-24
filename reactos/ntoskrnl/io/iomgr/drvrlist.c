@@ -350,39 +350,44 @@ IoCreateDriverList(VOID)
 NTSTATUS INIT_FUNCTION
 IoDestroyDriverList(VOID)
 {
-  PSERVICE_GROUP CurrentGroup, tmp1;
-  PSERVICE CurrentService, tmp2;
+    PSERVICE_GROUP CurrentGroup, tmp1;
+    PSERVICE CurrentService, tmp2;
 
-  DPRINT("IoDestroyDriverList() called\n");
+    DPRINT("IoDestroyDriverList() called\n");
 
-  /* Destroy group list */
-  LIST_FOR_EACH_SAFE(CurrentGroup, tmp1, &GroupListHead, SERVICE_GROUP, GroupListEntry)
+    /* Destroy the Group List */
+    LIST_FOR_EACH_SAFE(CurrentGroup, tmp1, &GroupListHead, SERVICE_GROUP, GroupListEntry)
     {
-      ExFreePool(CurrentGroup->GroupName.Buffer);
-      RemoveEntryList(&CurrentGroup->GroupListEntry);
-      if (CurrentGroup->TagArray)
-        {
-	  ExFreePool(CurrentGroup->TagArray);
-	}
-      ExFreePool(CurrentGroup);
+        /* Remove it from the list */
+        RemoveEntryList(&CurrentGroup->GroupListEntry);
+
+        /* Free buffers */
+        ExFreePool(CurrentGroup->GroupName.Buffer);
+        if (CurrentGroup->TagArray)
+            ExFreePool(CurrentGroup->TagArray);
+        ExFreePool(CurrentGroup);
     }
 
-  /* Destroy service list */
-  LIST_FOR_EACH_SAFE(CurrentService, tmp2, &ServiceListHead, SERVICE, ServiceListEntry)
+    /* Destroy the Service List */
+    LIST_FOR_EACH_SAFE(CurrentService, tmp2, &ServiceListHead, SERVICE, ServiceListEntry)
     {
-      ExFreePool(CurrentService->ServiceName.Buffer);
-      ExFreePool(CurrentService->RegistryPath.Buffer);
-      if (CurrentService->ServiceGroup.Buffer)
-        ExFreePool(CurrentService->ServiceGroup.Buffer);
-      if (CurrentService->ImagePath.Buffer)
-        ExFreePool(CurrentService->ImagePath.Buffer);
-      RemoveEntryList(&CurrentService->ServiceListEntry);
-      ExFreePool(CurrentService);
+        /* Remove it from the list */
+        RemoveEntryList(&CurrentService->ServiceListEntry);
+
+        /* Free buffers */
+        ExFreePool(CurrentService->ServiceName.Buffer);
+        ExFreePool(CurrentService->RegistryPath.Buffer);
+        if (CurrentService->ServiceGroup.Buffer)
+            ExFreePool(CurrentService->ServiceGroup.Buffer);
+        if (CurrentService->ImagePath.Buffer)
+            ExFreePool(CurrentService->ImagePath.Buffer);
+        ExFreePool(CurrentService);
     }
 
-  DPRINT("IoDestroyDriverList() done\n");
+    DPRINT("IoDestroyDriverList() done\n");
 
-  return(STATUS_SUCCESS);
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 static INIT_FUNCTION NTSTATUS
@@ -435,8 +440,8 @@ IopLoadDriver(PSERVICE Service)
  * Return Value
  *    None
  */
-
-VOID FASTCALL
+VOID
+FASTCALL
 IopInitializeSystemDrivers(VOID)
 {
    PSERVICE_GROUP CurrentGroup;
@@ -446,50 +451,55 @@ IopInitializeSystemDrivers(VOID)
 
    DPRINT("IopInitializeSystemDrivers()\n");
 
-   LIST_FOR_EACH(CurrentGroup, &GroupListHead, SERVICE_GROUP, GroupListEntry)
-   {
-      DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
+    /* Loop the list */
+    LIST_FOR_EACH(CurrentGroup, &GroupListHead, SERVICE_GROUP, GroupListEntry)
+    {
 
-      /* Load all drivers with a valid tag */
-      for (i = 0; i < CurrentGroup->TagCount; i++)
-      {
-         LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
-         {
-            if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
-                                         &CurrentService->ServiceGroup, TRUE) == 0) &&
-	        (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/) &&
-		(CurrentService->Tag == CurrentGroup->TagArray[i]))
-	    {
-	       DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
-               Status = IopLoadDriver(CurrentService);
- 	    }
-         }
-      }
+        DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
 
-      /* Load all drivers without a tag or with an invalid tag */
-      LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
-      {
-         if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
-                                      &CurrentService->ServiceGroup, TRUE) == 0) &&
-	     (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/))
-	 {
-	    for (i = 0; i < CurrentGroup->TagCount; i++)
-	    {
-	       if (CurrentGroup->TagArray[i] == CurrentService->Tag)
-	       {
-	          break;
-	       }
-	    }
-	    if (i >= CurrentGroup->TagCount)
-	    {
-               DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
-               Status = IopLoadDriver(CurrentService);
- 	    }
-	 }
-      }
+        /* Load all drivers with a valid tag */
+        for (i = 0; i < CurrentGroup->TagCount; i++)
+        {
+            /* Loop the list */
+            LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
+            {
+                if ((!RtlCompareUnicodeString(&CurrentGroup->GroupName,
+                                             &CurrentService->ServiceGroup,
+                                             TRUE)) &&
+	                (CurrentService->Start == SERVICE_SYSTEM_START) &&
+		            (CurrentService->Tag == CurrentGroup->TagArray[i]))
 
-   }
+                {
+                    DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
+                    Status = IopLoadDriver(CurrentService);
+                }
+            }
+        }
 
-   DPRINT("IopInitializeSystemDrivers() done\n");
+        /* Load all drivers without a tag or with an invalid tag */
+        LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
+        {
+            if ((!RtlCompareUnicodeString(&CurrentGroup->GroupName,
+                                         &CurrentService->ServiceGroup,
+                                         TRUE)) &&
+	            (CurrentService->Start == SERVICE_SYSTEM_START))
+            {
+                for (i = 0; i < CurrentGroup->TagCount; i++)
+                {
+                    if (CurrentGroup->TagArray[i] == CurrentService->Tag)
+                    {
+                        break;
+                    }
+                }
+
+                if (i >= CurrentGroup->TagCount)
+                {
+                    DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
+                    Status = IopLoadDriver(CurrentService);
+                }
+            }
+        }
+    }
+
+    DPRINT("IopInitializeSystemDrivers() done\n");
 }
-/* EOF */
