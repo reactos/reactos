@@ -9,6 +9,9 @@
 #define _D3D9_BASEOBJECT_H_
 
 #include "d3d9_common.h"
+#include <d3d9.h>
+
+struct _D3D9BaseObject;
 
 enum REF_TYPE
 {
@@ -38,5 +41,6 @@ VOID InitD3D9BaseObject(D3D9BaseObject* pBaseObject, enum REF_TYPE RefType, IUnk
 
 ULONG D3D9BaseObject_AddRef(D3D9BaseObject* pBaseObject);
 ULONG D3D9BaseObject_Release(D3D9BaseObject* pBaseObject);
+HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9** ppDevice);
 
 #endif // _D3D9_BASEOBJECT_H_

@@ -341,16 +341,18 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface,
     LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
     LOCK_D3DDEVICE9();
 
-    if (iSwapChain >= IDirect3DDevice9_GetNumberOfSwapChains(iface))
+    if (IsBadWritePtr(ppSwapChain, sizeof(IDirect3DSwapChain9*)))
     {
-        DPRINT1("Invalid iSwapChain parameter specified");
+        DPRINT1("Invalid ppSwapChain parameter specified");
         UNLOCK_D3DDEVICE9();
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(ppSwapChain, sizeof(IDirect3DSwapChain9*)))
+    *ppSwapChain = NULL;
+
+    if (iSwapChain >= IDirect3DDevice9_GetNumberOfSwapChains(iface))
     {
-        DPRINT1("Invalid ppSwapChain parameter specified");
+        DPRINT1("Invalid iSwapChain parameter specified");
         UNLOCK_D3DDEVICE9();
         return D3DERR_INVALIDCALL;
     }

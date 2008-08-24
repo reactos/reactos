@@ -13,6 +13,8 @@
 #include <ddraw.h>
 #include "d3d9_baseobject.h"
 
+struct _Direct3DDevice9_INT;
+
 typedef struct _Direct3DSwapChain9_INT
 {
 /* 0x0000 */    D3D9BaseObject BaseObject;

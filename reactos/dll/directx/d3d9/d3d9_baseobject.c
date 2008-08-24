@@ -61,3 +61,13 @@ ULONG D3D9BaseObject_Release(D3D9BaseObject* pBaseObject)
 
     return Ref;
 }
+
+HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9** ppDevice)
+{
+    if (pBaseObject->pUnknown)
+    {
+        return pBaseObject->pUnknown->lpVtbl->QueryInterface((IUnknown*) &pBaseObject->pUnknown->lpVtbl, &IID_IDirect3DDevice9, (void**)ppDevice);
+    }
+
+    return E_NOINTERFACE;
+}

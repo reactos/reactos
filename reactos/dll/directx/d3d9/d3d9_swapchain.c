@@ -13,6 +13,11 @@
 #include "d3d9_helpers.h"
 #include "d3d9_device.h"
 
+#define LOCK_D3DDEVICE9()   if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
+                                EnterCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
+#define UNLOCK_D3DDEVICE9() if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
+                                LeaveCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
+
 /* Convert a IDirect3DSwapChain9 pointer safely to the internal implementation struct */
 static LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface)
 {
@@ -81,15 +86,81 @@ static HRESULT WINAPI Direct3DSwapChain9_GetDisplayMode(LPDIRECT3DSWAPCHAIN9 ifa
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DSwapChain9::GetDevice
+* @implemented
+*
+* The function Direct3DSwapChain9_GetDevice sets the ppDevice argument
+* to the device connected to create the swap chain.
+*
+* @param LPDIRECT3DSWAPCHAIN9 iface
+* Pointer to a IDirect3DSwapChain9 object returned from IDirect3D9Device::GetSwapChain()
+*
+* @param IDirect3DDevice9** ppDevice
+* Pointer to a IDirect3DDevice9* structure to be set to the device object.
+*
+* @return HRESULT
+* If the method successfully sets the ppDevice value, the return value is D3D_OK.
+* If ppDevice is a bad pointer the return value will be D3DERR_INVALIDCALL.
+* If the swap chain didn't contain any device, the return value will be D3DERR_INVALIDDEVICE.
+*
+*/
 static HRESULT WINAPI Direct3DSwapChain9_GetDevice(LPDIRECT3DSWAPCHAIN9 iface, IDirect3DDevice9** ppDevice)
 {
-    UNIMPLEMENTED
+    LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    if (IsBadWritePtr(ppDevice, sizeof(IDirect3DDevice9**)))
+    {
+        DPRINT1("Invalid ppDevice parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (FAILED(D3D9BaseObject_GetDevice(&This->BaseObject, ppDevice)))
+    {
+        DPRINT1("Invalid This parameter speficied");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDDEVICE;
+    }
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DSwapChain9::GetPresentParameters
+* @implemented
+*
+* The function Direct3DSwapChain9_GetPresentParameters fills the pPresentationParameters
+* argument with the D3DPRESENT_PARAMETERS parameters that was used to create the swap chain.
+*
+* @param LPDIRECT3DSWAPCHAIN9 iface
+* Pointer to a IDirect3DSwapChain9 object returned from IDirect3D9Device::GetSwapChain()
+*
+* @param D3DPRESENT_PARAMETERS* pPresentationParameters
+* Pointer to a D3DPRESENT_PARAMETERS structure to be filled with the creation parameters.
+*
+* @return HRESULT
+* If the method successfully fills the pPresentationParameters structure, the return value is D3D_OK.
+* If pPresentationParameters is a bad pointer the return value will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI Direct3DSwapChain9_GetPresentParameters(LPDIRECT3DSWAPCHAIN9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-    UNIMPLEMENTED
+    LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    if (IsBadWritePtr(pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS)))
+    {
+        DPRINT1("Invalid pPresentationParameters parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    *pPresentationParameters = This->PresentParameters;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
