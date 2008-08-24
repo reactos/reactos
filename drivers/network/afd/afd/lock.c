@@ -324,13 +324,12 @@ NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
 }
 
 VOID SocketCalloutEnter( PAFD_FCB FCB ) {
-    ASSERT(!FCB->Critical);
+    ASSERT(FCB->Locked);
     FCB->Critical = TRUE;
     SocketStateUnlock( FCB );
 }
 
 VOID SocketCalloutLeave( PAFD_FCB FCB ) {
-    ASSERT(FCB->Critical);
     FCB->Critical = FALSE;
     SocketAcquireStateLock( FCB );
 }
