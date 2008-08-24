@@ -589,168 +589,168 @@ static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * De
 
 static __inline__ __attribute__((always_inline)) void __writegsbyte(const unsigned long Offset, const unsigned char Data)
 {
-	__asm__("movb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writegsword(const unsigned long Offset, const unsigned short Data)
 {
-	__asm__("movw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writegsdword(const unsigned long Offset, const unsigned long Data)
 {
-	__asm__("movl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writegsqword(const unsigned long Offset, const unsigned __int64 Data)
 {
-	__asm__("movq %q[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movq %q[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) unsigned char __readgsbyte(const unsigned long Offset)
 {
 	unsigned char value;
-	__asm__("movb %%gs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movb %%gs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned short __readgsword(const unsigned long Offset)
 {
 	unsigned short value;
-	__asm__("movw %%gs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movw %%gs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long __readgsdword(const unsigned long Offset)
 {
 	unsigned long value;
-	__asm__("movl %%gs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movl %%gs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned __int64 __readgsqword(const unsigned long Offset)
 {
-	unsigned long value;
-	__asm__("movq %%gs:%a[Offset], %q[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	unsigned __int64 value;
+	__asm__ __volatile__("movq %%gs:%a[Offset], %q[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) void __incgsbyte(const unsigned long Offset)
 {
-	__asm__("incb %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incb %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __incgsword(const unsigned long Offset)
 {
-	__asm__("incw %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incw %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __incgsdword(const unsigned long Offset)
 {
-	__asm__("incl %%gs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incl %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 /* NOTE: the bizarre implementation of __addgsxxx mimics the broken Visual C++ behavior */
 static __inline__ __attribute__((always_inline)) void __addgsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addb %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addb %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addgsword(const unsigned long Offset, const unsigned short Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addw %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addw %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addgsdword(const unsigned long Offset, const unsigned int Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addl %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addl %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 #else
 /*** FS segment addressing ***/
 static __inline__ __attribute__((always_inline)) void __writefsbyte(const unsigned long Offset, const unsigned char Data)
 {
-	__asm__("movb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writefsword(const unsigned long Offset, const unsigned short Data)
 {
-	__asm__("movw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __writefsdword(const unsigned long Offset, const unsigned long Data)
 {
-	__asm__("movl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+	__asm__ __volatile__("movl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) unsigned char __readfsbyte(const unsigned long Offset)
 {
 	unsigned char value;
-	__asm__("movb %%fs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movb %%fs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset) : "memory");
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned short __readfsword(const unsigned long Offset)
 {
 	unsigned short value;
-	__asm__("movw %%fs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movw %%fs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword(const unsigned long Offset)
 {
 	unsigned long value;
-	__asm__("movl %%fs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movl %%fs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
 static __inline__ __attribute__((always_inline)) void __incfsbyte(const unsigned long Offset)
 {
-	__asm__("incb %%fs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incb %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __incfsword(const unsigned long Offset)
 {
-	__asm__("incw %%fs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incw %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __incfsdword(const unsigned long Offset)
 {
-	__asm__("incl %%fs:%a[Offset]" : : [Offset] "ir" (Offset));
+	__asm__ __volatile__("incl %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 /* NOTE: the bizarre implementation of __addfsxxx mimics the broken Visual C++ behavior */
 static __inline__ __attribute__((always_inline)) void __addfsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addb %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addb %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addfsword(const unsigned long Offset, const unsigned short Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addw %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addw %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addfsdword(const unsigned long Offset, const unsigned int Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__("addl %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset));
+		__asm__ __volatile__("addl %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
-		__asm__("addl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data));
+		__asm__ __volatile__("addl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 #endif
 
