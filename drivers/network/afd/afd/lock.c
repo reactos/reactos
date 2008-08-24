@@ -168,7 +168,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
  * pointers.  This will allow the system to do proper alerting */
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAFD_HANDLE FileObjects = ExAllocatePool
 	( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
@@ -177,13 +177,21 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	HandleArray[i].Status = 0;
 	HandleArray[i].Events = HandleArray[i].Events;
         FileObjects[i].Handle = 0;
-	Status = ObReferenceObjectByHandle
-	    ( (PVOID)HandleArray[i].Handle,
-	      FILE_ALL_ACCESS,
-	      NULL,
-	      KernelMode,
-	      (PVOID*)&FileObjects[i].Handle,
-	      NULL );
+	if( !HandleArray[i].Handle ) continue;
+	if( NT_SUCCESS(Status) ) {
+		Status = ObReferenceObjectByHandle
+	    	( (PVOID)HandleArray[i].Handle,
+	     	 FILE_ALL_ACCESS,
+	     	 NULL,
+	      	 KernelMode,
+	      	 (PVOID*)&FileObjects[i].Handle,
+	      	 NULL );
+	}
+    }
+
+    if( !NT_SUCCESS(Status) ) {
+	UnlockHandles( FileObjects, HandleCount );
+	return NULL;
     }
 
     return FileObjects;
@@ -324,7 +332,6 @@ VOID SocketCalloutEnter( PAFD_FCB FCB ) {
 
 VOID SocketCalloutLeave( PAFD_FCB FCB ) {
     ASSERT(FCB->Critical);
-    ASSERT(!FCB->Locked);
     FCB->Critical = FALSE;
     SocketAcquireStateLock( FCB );
 }
