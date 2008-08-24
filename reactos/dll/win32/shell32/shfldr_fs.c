@@ -886,6 +886,16 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
     }
 
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
+    if (!memcmp(szSrc, szDest, (wcslen(szDest)+1) * sizeof(WCHAR)))
+    {
+        /* src and destination is the same */
+        HRESULT hr = S_OK;
+        if (pPidlOut)
+            hr = _ILCreateFromPathW(szDest, pPidlOut);
+
+        return hr;
+    }
+
 
     if (MoveFileW (szSrc, szDest)) {
         HRESULT hr = S_OK;
