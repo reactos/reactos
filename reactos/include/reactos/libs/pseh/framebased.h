@@ -172,7 +172,7 @@ static _SEHPortableTryLevel_t * const _SEHPortableTryLevel = 0;
 		STMT_; \
 	}
 
-#if defined(_ARM_) || defined(_x86_64)
+#if defined(_ARM_) || defined(_M_AMD64)
 
 #define _SEH_TRY \
 	for(;;) \
