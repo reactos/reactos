@@ -19,14 +19,14 @@ enum REF_TYPE
 
 typedef struct _D3D9BaseObjectVtbl
 {
-    VOID (*Destroy)();
+    VOID (*Destroy)(struct _D3D9BaseObject* pBaseObject, BOOL bFreeThis);
 } ID3D9BaseObjectVtbl;
 
 typedef struct _D3D9BaseObject
 {
 /* 0x0000 */    ID3D9BaseObjectVtbl* lpVtbl;
-/* 0x0004 */    DWORD dwUnknown0004;
-/* 0x0008 */    DWORD dwUnknown0008;
+/* 0x0004 */    LONG lRefCnt;
+/* 0x0008 */    DWORD dwNumUsed;
 /* 0x000c */    struct _Direct3DDevice9_INT* pBaseDevice;
 /* 0x0010 */    DWORD dwUnknown0010;    // Index? Unique id?
 /* 0x0014 */    HANDLE hKernelHandle;

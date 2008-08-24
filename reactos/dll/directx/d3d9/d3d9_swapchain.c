@@ -41,15 +41,13 @@ static HRESULT WINAPI Direct3DSwapChain9_QueryInterface(LPDIRECT3DSWAPCHAIN9 ifa
 static ULONG WINAPI Direct3DSwapChain9_AddRef(LPDIRECT3DSWAPCHAIN9 iface)
 {
     LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
-    D3D9BaseObject* BaseObject = (D3D9BaseObject*)((ULONG_PTR)This - FIELD_OFFSET(Direct3DSwapChain9_INT, lpVtbl) - FIELD_OFFSET(Direct3DSwapChain9_INT, BaseObject));
-    return D3D9BaseObject_AddRef(BaseObject);
+    return D3D9BaseObject_AddRef((D3D9BaseObject*) &This->BaseObject.lpVtbl);
 }
 
 static ULONG WINAPI Direct3DSwapChain9_Release(LPDIRECT3DSWAPCHAIN9 iface)
 {
     LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
-    D3D9BaseObject* BaseObject = (D3D9BaseObject*)((ULONG_PTR)This - FIELD_OFFSET(Direct3DSwapChain9_INT, lpVtbl) - FIELD_OFFSET(Direct3DSwapChain9_INT, BaseObject));
-    return D3D9BaseObject_Release(BaseObject);
+    return D3D9BaseObject_Release((D3D9BaseObject*) &This->BaseObject.lpVtbl);
 }
 
 /* IDirect3DSwapChain9 interface */
@@ -121,7 +119,7 @@ Direct3DSwapChain9_INT* CreateDirect3DSwapChain9(enum REF_TYPE RefType, struct _
         return NULL;
     }
 
-    InitD3D9BaseObject(&pThisSwapChain->BaseObject, RefType, pBaseDevice);
+    InitD3D9BaseObject((D3D9BaseObject*) &pThisSwapChain->BaseObject.lpVtbl, RefType, pBaseDevice);
 
     pThisSwapChain->lpVtbl = &Direct3DSwapChain9_Vtbl;
 

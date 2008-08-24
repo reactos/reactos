@@ -49,6 +49,8 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
 
     pThisBaseDevice->pResourceManager = pResourceManager;
 
+    pThisBaseDevice->lpVtbl = &Direct3DDevice9_Vtbl;
+    pThisBaseDevice->lRefCnt = 1;
     pThisBaseDevice->pDirect3D9 = pDirect3D9;
     pThisBaseDevice->DeviceType = DeviceType;
     pThisBaseDevice->hWnd = hFocusWindow;
