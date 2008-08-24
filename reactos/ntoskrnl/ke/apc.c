@@ -478,7 +478,7 @@ Quickie:
     if (Process != Thread->ApcState.Process)
     {
         /* Erm, we got attached or something! BAD! */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
                      Thread->ApcStateIndex,

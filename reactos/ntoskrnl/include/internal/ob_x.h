@@ -113,7 +113,7 @@ ObpReferenceNameInfo(IN POBJECT_HEADER ObjectHeader)
     {
         /* FIXME: Unhandled*/
         DbgPrint("OB: Unhandled path\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Return the name information */

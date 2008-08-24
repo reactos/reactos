@@ -310,7 +310,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
         if (!(ExDestroyHandle(PspCidTable, Process->UniqueProcessId, NULL)))
         {
             /* Something wrong happened, bugcheck */
-            KEBUGCHECK(CID_HANDLE_DELETION);
+            KeBugCheck(CID_HANDLE_DELETION);
         }
     }
 
@@ -360,7 +360,7 @@ PspDeleteThread(IN PVOID ObjectBody)
         if (!(ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread, NULL)))
         {
             /* Something wrong happened, bugcheck */
-            KEBUGCHECK(CID_HANDLE_DELETION);
+            KeBugCheck(CID_HANDLE_DELETION);
         }
     }
 
@@ -421,7 +421,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (KeIsAttachedProcess())
     {
         /* Bugcheck */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)CurrentProcess,
                      (ULONG_PTR)Thread->Tcb.ApcState.Process,
                      (ULONG_PTR)Thread->Tcb.ApcStateIndex,
@@ -435,7 +435,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Thread->ActiveExWorker)
     {
         /* Bugcheck */
-        KEBUGCHECKEX(ACTIVE_EX_WORKER_THREAD_TERMINATION,
+        KeBugCheckEx(ACTIVE_EX_WORKER_THREAD_TERMINATION,
                      (ULONG_PTR)Thread,
                      0,
                      0,
@@ -446,7 +446,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Thread->Tcb.CombinedApcDisable != 0)
     {
         /* Bugcheck */
-        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+        KeBugCheckEx(KERNEL_APC_PENDING_DURING_EXIT,
                      0,
                      Thread->Tcb.CombinedApcDisable,
                      0,
@@ -578,7 +578,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         else
         {
             /* Bugcheck, we can't allow this */
-            KEBUGCHECKEX(CRITICAL_PROCESS_DIED,
+            KeBugCheckEx(CRITICAL_PROCESS_DIED,
                          (ULONG_PTR)CurrentProcess,
                          0,
                          0,
@@ -701,7 +701,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (!Thread->Tcb.EnableStackSwap)
     {
         /* Stack swap really shouldn't be disabled during exit! */
-        KEBUGCHECKEX(KERNEL_STACK_LOCKED_AT_EXIT, 0, 0, 0, 0);
+        KeBugCheckEx(KERNEL_STACK_LOCKED_AT_EXIT, 0, 0, 0, 0);
     }
 
     /* Cancel I/O for the thread. */
@@ -849,7 +849,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if ((FirstEntry) || (Thread->Tcb.CombinedApcDisable != 0))
     {
         /* Bugcheck time */
-        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+        KeBugCheckEx(KERNEL_APC_PENDING_DURING_EXIT,
                      (ULONG_PTR)FirstEntry,
                      Thread->Tcb.CombinedApcDisable,
                      KeGetCurrentIrql(),

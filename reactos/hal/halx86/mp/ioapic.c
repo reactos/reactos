@@ -256,7 +256,7 @@ AssignIrqVector(ULONG irq)
    else if (current_vector == FIRST_SYSTEM_VECTOR) 
    {
       DPRINT1("Ran out of interrupt sources!");
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    vector = current_vector;
@@ -489,7 +489,7 @@ IOAPICSetupIds(VOID)
     if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) 
     {
       DPRINT1("Could not set I/O APIC ID!\n");
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
     }
   }
 }

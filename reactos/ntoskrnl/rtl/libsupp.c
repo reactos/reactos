@@ -121,7 +121,7 @@ STDCALL
 RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -130,7 +130,7 @@ STDCALL
 RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -139,7 +139,7 @@ STDCALL
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-   KEBUGCHECK(0);
+   ASSERT(FALSE);
    return STATUS_SUCCESS;
 }
 
@@ -148,7 +148,7 @@ STDCALL
 RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -159,7 +159,7 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   if(KeGetCurrentIrql() > APC_LEVEL)
   {
     DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n", file, line, KeGetCurrentIrql());
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 }
 #endif

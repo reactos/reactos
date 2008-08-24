@@ -939,7 +939,7 @@ VOID HaliInitBSP(VOID)
    /* Only initialize the BSP once */
    if (BSPInitialized)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
       return;
    }
 
@@ -961,7 +961,7 @@ VOID HaliInitBSP(VOID)
    else 
    {
       DPRINT("No APIC found\n");
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    if (APICMode == amPIC) 
@@ -1013,7 +1013,7 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
        Cpu >= CPUCount ||
        OnlineCPUs & (1 << Cpu))
    {
-     KEBUGCHECK(0);
+     ASSERT(FALSE);
    }
    DPRINT1("Attempting to boot CPU %d\n", Cpu);
 

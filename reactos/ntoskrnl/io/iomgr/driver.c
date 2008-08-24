@@ -819,7 +819,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
    if (!NT_SUCCESS(Status))
    {
-      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
+      DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return(Status);
    }
    DeviceNode->ServiceName = ServiceName;

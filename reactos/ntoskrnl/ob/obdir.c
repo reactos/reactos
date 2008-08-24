@@ -62,7 +62,7 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
         /* Invalid context */
         DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
                 Context, Context->DirectoryLocked);
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
         return FALSE;
     }
 
@@ -252,7 +252,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if ((SearchShadow) && (Directory->DeviceMap))
         {
             /* FIXME: We don't support this yet */
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
     }
 

@@ -73,7 +73,7 @@ NTAPI
 KiRosGetMdFromArray(VOID)
 {
     /* Return the next MD from the list, but make sure we don't overflow */
-    if (BldrCurrentMd > 60) KEBUGCHECK(0);
+    if (BldrCurrentMd > 60) ASSERT(FALSE);
     return &BldrMemoryDescriptors[BldrCurrentMd++];
 }
 

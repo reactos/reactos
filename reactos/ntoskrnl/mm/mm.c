@@ -103,7 +103,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      CPRINT("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+      DPRINT1("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
       return(STATUS_UNSUCCESSFUL);
    }
    if (PsGetCurrentProcess() == NULL)
@@ -205,7 +205,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      CPRINT("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
+      DPRINT1("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -219,7 +219,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
-	 CPRINT("Address: %x\n", Address);
+	 DPRINT1("Address: %x\n", Address);
          return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();

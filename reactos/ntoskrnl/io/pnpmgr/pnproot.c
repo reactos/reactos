@@ -1076,7 +1076,7 @@ PnpRootAddDevice(
     {
         DPRINT("PhysicalDeviceObject 0x%p\n", PhysicalDeviceObject);
         Status = STATUS_INSUFFICIENT_RESOURCES;
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     Status = IoCreateDevice(
@@ -1090,7 +1090,7 @@ PnpRootAddDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
     DPRINT("Created FDO %p\n", PnpRootDeviceObject);
 
@@ -1110,7 +1110,7 @@ PnpRootAddDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     PnpRootDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;

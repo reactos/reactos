@@ -458,7 +458,7 @@ KeAttachProcess(IN PKPROCESS Process)
         (KeIsExecutingDpc()))
     {
         /* Invalid attempt */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
                      Thread->ApcStateIndex,
@@ -580,7 +580,7 @@ KeStackAttachProcess(IN PKPROCESS Process,
     if (KeIsExecutingDpc())
     {
         /* Executing a DPC, crash! */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
                      Thread->ApcStateIndex,
@@ -662,7 +662,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
         (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
     {
         /* Bugcheck the system */
-        KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
+        KeBugCheck(INVALID_PROCESS_DETACH_ATTEMPT);
     }
 
     /* Get the process */

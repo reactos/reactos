@@ -1195,7 +1195,7 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
             {
                 /* FIXME: Unhandled yet */
                 DPRINT1("FOEs not supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
         }
 

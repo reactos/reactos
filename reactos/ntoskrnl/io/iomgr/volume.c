@@ -140,7 +140,7 @@ IopDereferenceVpb(IN PVPB Vpb)
     if (!Vpb->ReferenceCount)
     {
         /* FIXME: IMPLEMENT CLEANUP! */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Release VPB lock */

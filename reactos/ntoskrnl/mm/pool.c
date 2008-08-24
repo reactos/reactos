@@ -41,7 +41,7 @@ EiAllocatePool(POOL_TYPE PoolType,
 
    if ((PoolType & MUST_SUCCEED_POOL_MASK) && Block==NULL)
    {
-      KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
+      KeBugCheck(MUST_SUCCEED_POOL_EMPTY);
    }
    return(Block);
 }

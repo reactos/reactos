@@ -78,7 +78,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
     Status = IopGetSystemPowerDeviceObject(&DeviceObject);
     if (!NT_SUCCESS(Status)) 
     {
-        CPRINT("No system power driver available\n");
+        DPRINT1("No system power driver available\n");
         return STATUS_UNSUCCESSFUL;
     }
 

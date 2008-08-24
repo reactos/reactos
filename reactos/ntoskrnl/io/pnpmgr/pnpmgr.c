@@ -937,7 +937,7 @@ IopAssignDeviceResources(
                             0x3c /* PCI_INTERRUPT_LINE */,
                             sizeof(UCHAR));
                          if (ret == 0 || ret == 2)
-                            KEBUGCHECK(0);
+                            ASSERT(FALSE);
                      }
                   }
                }
@@ -2057,7 +2057,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
             IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
             /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
-            CPRINT("Initialization of service %S failed (Status %x)\n",
+            DPRINT1("Initialization of service %S failed (Status %x)\n",
               DeviceNode->ServiceName.Buffer, Status);
          }
       }
@@ -2846,8 +2846,8 @@ PnpInit(VOID)
     Status = IopInitPlugPlayEvents();
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("IopInitPlugPlayEvents() failed\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        DPRINT1("IopInitPlugPlayEvents() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     /*
@@ -2857,30 +2857,30 @@ PnpInit(VOID)
     Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, NULL, 0, 0, &IopRootDriverObject);
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("IoCreateDriverObject() failed\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        DPRINT1("IoCreateDriverObject() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     Status = IoCreateDevice(IopRootDriverObject, 0, NULL, FILE_DEVICE_CONTROLLER,
         0, FALSE, &Pdo);
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("IoCreateDevice() failed\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        DPRINT1("IoCreateDevice() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     Status = IopCreateDeviceNode(NULL, Pdo, NULL, &IopRootDeviceNode);
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("Insufficient resources\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        DPRINT1("Insufficient resources\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
         L"HTREE\\ROOT\\0"))
     {
-        CPRINT("Failed to create the instance path!\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
+        DPRINT1("Failed to create the instance path!\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
     }
 
     /* Report the device to the user-mode pnp manager */
@@ -2898,8 +2898,8 @@ PnpInit(VOID)
     Status = IopUpdateRootKey();
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("IopUpdateRootKey() failed\n");
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        DPRINT1("IopUpdateRootKey() failed\n");
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 }
 
@@ -2910,7 +2910,7 @@ PiCompareInstancePath(IN PRTL_AVL_TABLE Table,
                       IN PVOID SecondStruct)
 {
     /* FIXME: TODO */
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return 0;
 }
 
@@ -2925,7 +2925,7 @@ PiAllocateGenericTableEntry(IN PRTL_AVL_TABLE Table,
                             IN CLONG ByteSize)
 {
     /* FIXME: TODO */
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return NULL;
 }
 
@@ -2935,7 +2935,7 @@ PiFreeGenericTableEntry(IN PRTL_AVL_TABLE Table,
                         IN PVOID Buffer)
 {
     /* FIXME: TODO */
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
 }
 
 VOID

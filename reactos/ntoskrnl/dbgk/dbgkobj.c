@@ -712,7 +712,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         {
             /* We failed. FIXME: Handle this */
             DPRINT1("Unhandled Dbgk codepath!\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
 
         /* Check if this was the first message */
@@ -736,7 +736,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     {
         /* We failed. FIXME: Handle this */
         DPRINT1("Unhandled Dbgk codepath!\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Make sure we have a first thread */

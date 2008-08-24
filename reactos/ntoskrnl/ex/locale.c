@@ -245,7 +245,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     {
         DPRINT1("TODO\n");
         Status = STATUS_SUCCESS;
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {
@@ -395,7 +395,7 @@ NtSetDefaultUILanguage(IN LANGID LanguageId)
     {
         /* FIXME */
         DPRINT1("TODO\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Otherwise, call the internal routine */

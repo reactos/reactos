@@ -661,7 +661,7 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     }
 
     /* We are strict FIFO, we need to reverse the entries */
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return LastFree;
 }
 
@@ -958,7 +958,7 @@ ExDestroyHandleTable(IN PHANDLE_TABLE HandleTable,
     if (DestroyHandleProcedure)
     {
         /* FIXME: */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Free the handle table */

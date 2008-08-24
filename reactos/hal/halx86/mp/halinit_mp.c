@@ -43,14 +43,14 @@ HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
    if (MPSInitialized)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    MPSInitialized = TRUE;
 
    if (!HaliFindSmpConfig())
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    /* store the kernel base for later use */

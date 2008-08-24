@@ -177,7 +177,7 @@ ExReferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack)
         /* FIXME: Race */
         CallbackRoutineBlock = NULL;
         DPRINT1("Unhandled callback race condition\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {

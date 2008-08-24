@@ -69,7 +69,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   if (FirstCluster == 0)
   {
     DbgPrint("OffsetToCluster is called with FirstCluster = 0!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 
   if (FirstCluster == 1)
@@ -233,7 +233,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
                       ROUND_DOWN(ReadOffset.u.LowPart, BytesPerCluster),
                       &CorrectCluster, FALSE);
       if (CorrectCluster != CurrentCluster)
-        KEBUGCHECK(FAT_FILE_SYSTEM);
+        KeBugCheck(FAT_FILE_SYSTEM);
     }
 #endif
   }
@@ -442,7 +442,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
                          ROUND_DOWN(WriteOffset.u.LowPart, BytesPerCluster),
                          &CorrectCluster, FALSE);
          if (CorrectCluster != CurrentCluster)
-            KEBUGCHECK(FAT_FILE_SYSTEM);
+            KeBugCheck(FAT_FILE_SYSTEM);
       }
 #endif
    }

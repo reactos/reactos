@@ -185,7 +185,7 @@ ShutdownThreadMain(PVOID Context)
 	        PKDPC Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC));
 		if (Dpc == NULL)
 		  {
-                    KEBUGCHECK(0);
+                    ASSERT(FALSE);
 		  }
 		KeInitializeDpc(Dpc, KiHaltProcessorDpcRoutine, (PVOID)Dpc);
 		KeSetTargetProcessorDpc(Dpc, i);
@@ -245,7 +245,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
                                  (PVOID)Action);
    if (!NT_SUCCESS(Status))
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_ALL_ACCESS,
@@ -256,7 +256,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    NtClose(ThreadHandle);
    if (!NT_SUCCESS(Status))
      {
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
      }
 
    KeSetPriorityThread(&ShutdownThread->Tcb, LOW_REALTIME_PRIORITY + 1);

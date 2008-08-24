@@ -378,7 +378,7 @@ KiReadyThread(IN PKTHREAD Thread)
     if (Process->State != ProcessInMemory)
     {
         /* We don't page out processes in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else if (!Thread->KernelStackResident)
     {
@@ -391,7 +391,7 @@ KiReadyThread(IN PKTHREAD Thread)
         Thread->State = Transition;
 
         /* The stack is always resident in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {
@@ -610,7 +610,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             {
                 /* FIXME: TODO */
                 DPRINT1("Deferred state not yet supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
             else
             {

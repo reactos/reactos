@@ -71,7 +71,7 @@ MmMpwThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("MpwThread: Wait failed\n");
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
          return(STATUS_UNSUCCESSFUL);
       }
       if (MpwThreadShouldTerminate)

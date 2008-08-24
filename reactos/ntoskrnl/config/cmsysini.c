@@ -643,7 +643,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!Buffer)
     {
         /* Fail */
-        KEBUGCHECKEX(BAD_SYSTEM_CONFIG_INFO, 3, 1, (ULONG_PTR)LoaderBlock, 0);
+        KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO, 3, 1, (ULONG_PTR)LoaderBlock, 0);
     }
 
     /* Setup the unicode string */
@@ -716,7 +716,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (CmpBootType & 4)
         {
             /* We're disabled, so bugcheck */
-            KEBUGCHECKEX(BAD_SYSTEM_CONFIG_INFO,
+            KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO,
                          3,
                          3,
                          (ULONG_PTR)SystemHive,
@@ -1346,7 +1346,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
     }
 
     /* Build the master hive */
@@ -1363,14 +1363,14 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 2, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 2, Status, 0);
     }
 
     /* Create the \REGISTRY key node */
     if (!CmpCreateRegistryRoot())
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
     }
 
     /* Create the default security descriptor */
@@ -1393,7 +1393,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 5, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 5, Status, 0);
     }
 
     /* Close the handle */
@@ -1416,7 +1416,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 6, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 6, Status, 0);
     }
 
     /* Close the handle */
@@ -1426,7 +1426,7 @@ CmInitSystem1(VOID)
     if (!CmpInitializeSystemHive(KeLoaderBlock))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
     }
 
     /* Create the 'CurrentControlSet' link. */
@@ -1434,7 +1434,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
     }
 
     /* Create the hardware hive */
@@ -1451,7 +1451,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
     }
     
     /* Add the hive to the hive list */
@@ -1467,7 +1467,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
     }
     
     /* FIXME: Add to HiveList key */
@@ -1480,7 +1480,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
     }
 
     /* Initialize machine-dependent information into the registry */
@@ -1488,7 +1488,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
     }
 
     /* Initialize volatile registry settings */
@@ -1496,7 +1496,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 15, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 15, Status, 0);
     }
 
     /* Free the load options */

@@ -294,7 +294,7 @@ KiInitMachineDependent(VOID)
                     if (KiMXCsrMask != MXCsrMask)
                     {
                         /* No, something is definitely wrong */
-                        KEBUGCHECKEX(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
+                        KeBugCheckEx(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
                                      KF_FXSR,
                                      KiMXCsrMask,
                                      MXCsrMask,
