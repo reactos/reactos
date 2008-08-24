@@ -10948,6 +10948,9 @@ NTAPI
 PoSetDeviceBusy(
   PULONG  IdlePointer);
 
+#define PoSetDeviceBusy(IdlePointer) \
+ ((void)(*(IdlePointer) = 0))
+
 NTKERNELAPI
 POWER_STATE
 NTAPI
@@ -11091,7 +11094,7 @@ DbgPrintEx(
   IN ...);
 
 ULONG
-DDKCDECLAPI
+NTAPI
 vDbgPrintEx(
   IN ULONG ComponentId,
   IN ULONG Level,
@@ -11099,7 +11102,7 @@ vDbgPrintEx(
   IN va_list ap);
 
 ULONG
-DDKCDECLAPI
+NTAPI
 vDbgPrintExWithPrefix(
   IN LPCSTR Prefix,
   IN ULONG ComponentId,

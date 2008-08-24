@@ -986,7 +986,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
-    /* Setup initial system settings (FIXME: Needs Cm Rewrite) */
+    /* Setup initial system settings */
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Load static defaults for Service Pack 1 and add our SVN revision */
@@ -1203,10 +1203,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Create the Basic Object Manager Types to allow new Object Types */
-    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
-    if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
     if (!PsInitSystem(LoaderBlock)) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
@@ -1516,7 +1516,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(5);
 
     /* Call OB initialization again */
-    if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
     if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 1, 0);
@@ -1532,7 +1532,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Initialize the SRM in Phase 1 */
-    if (!SeInit()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
     /* Update the progress bar */
     InbvUpdateProgressBar(10);

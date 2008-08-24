@@ -191,6 +191,7 @@ Author:
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
 #define KPCR_PRCB_CPU_TYPE                      0x138
+#define KPCR_PRCB_PRCB_LOCK                     0xA7C
 #define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C

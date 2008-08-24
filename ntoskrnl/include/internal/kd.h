@@ -183,6 +183,13 @@ KD_CONTINUE_TYPE
 
 /* INIT ROUTINES *************************************************************/
 
+BOOLEAN
+NTAPI
+KdInitSystem(
+    ULONG Reserved,
+    PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 VOID
 STDCALL
 KdpScreenInit(

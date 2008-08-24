@@ -3,11 +3,7 @@
 #include <reactos/helper.h>
 #include <debug.h>
 
-#ifdef __GNUC__
-#include <ccros.h>
-
-#define USE_ROS_CC_AND_FS
-#else
+#ifndef __GNUC__
 #define KEBUGCHECK KeBugCheck
 #define KEBUGCHECKEX KeBugCheckEx
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))

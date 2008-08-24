@@ -15,6 +15,8 @@
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    BOOLEAN LockFailed = FALSE;
+
     Irp->MdlAddress =
 	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
@@ -22,14 +24,34 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 		       FALSE,
 		       NULL );
     if( Irp->MdlAddress ) {
-	MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	_SEH_TRY {
+	    MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	} _SEH_HANDLE {
+	    LockFailed = TRUE;
+	} _SEH_END;
+
+	if( LockFailed ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}
+
 	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
 	    MmMapLockedPages( Irp->MdlAddress, KernelMode );
+
+	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}    
+
 	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     } else return NULL;
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer || !Irp->MdlAddress ) return;
+
     MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 			Irp->MdlAddress );
     MmUnlockPages( Irp->MdlAddress );
@@ -167,7 +189,7 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
 
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
 
@@ -218,7 +240,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
     PVOID CurrentThread = KeGetCurrentThread();
 #endif
     ASSERT(FCB->LockCount > 0);
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     ExAcquireFastMutex( &FCB->Mutex );
     FCB->LockCount--;
@@ -262,7 +284,7 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
 
 
 NTSTATUS LostSocket( PIRP Irp ) {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    NTSTATUS Status = STATUS_FILE_CLOSED;
     AFD_DbgPrint(MIN_TRACE,("Called.\n"));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

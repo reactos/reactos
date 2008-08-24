@@ -28,7 +28,7 @@
 
 #include "usetup.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -44,6 +44,8 @@ SetupCreateDirectory(PWCHAR DirectoryName)
   UNICODE_STRING PathName;
   HANDLE DirectoryHandle;
   NTSTATUS Status;
+
+  DPRINT("SetupCreateDirectory(%S)\n", DirectoryName);
 
   RtlCreateUnicodeString(&PathName,
 			 DirectoryName);
@@ -85,6 +87,8 @@ SetupCreateDirectory(PWCHAR DirectoryName)
     }
 
   RtlFreeUnicodeString(&PathName);
+
+  DPRINT("SetupCreateDirectory(%S) => %08x\n", DirectoryName, Status);
 
   return(Status);
 }

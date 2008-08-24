@@ -969,13 +969,14 @@ BOOLEAN
 NTAPI
 IoCancelIrp(IN PIRP Irp)
 {
-    KIRQL OldIrql;
+    KIRQL OldIrql, IrqlAtEntry;
     PDRIVER_CANCEL CancelRoutine;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
             __FUNCTION__,
             Irp);
     ASSERT(Irp->Type == IO_TYPE_IRP);
+    IrqlAtEntry = KeGetCurrentIrql();
 
     /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
@@ -1004,6 +1005,10 @@ IoCancelIrp(IN PIRP Irp)
 
     /* Otherwise, release the cancel lock and fail */
     IoReleaseCancelSpinLock(OldIrql);
+
+    /* Post Check: Verify that we don't leak IRQL from the cancel routine */
+    ASSERT(IrqlAtEntry == KeGetCurrentIrql());
+
     return FALSE;
 }
 

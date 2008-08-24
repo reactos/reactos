@@ -1,5 +1,6 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  15-02-2008
+/* TRANSLATOR :  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  07-08-2008
+ * LAST CHANGE:  08-08-2008
  */
 
 #include "resource.h"
@@ -7,13 +8,13 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-/* menovka zv‰zku = volume label, drive = jednotka */
-STRING_HELP,  "Pouûitie: %S jednotka: [-FS:systÈm s˙borov] [-V:menovka] [-Q] [-A:veækosù] [-C]\n\n\
-  [jednotka:]         Specifies the drive to format.\n\
-  -FS:systÈm s˙borov  Specifies the type of file system (%s).\n\
-  -V:menovka          Specifies volume label.\n\
-  -Q                  Performs a quick format.\n\
-  -A:veækosù          Overrides the default allocation unit size. Default settings\n\
+/* menovka zvÑzku = volume label, drive = jednotka */
+STRING_HELP,  "Poußitie: %S jednotka: [-FS:systÇm s£borov] [-V:menovka] [-Q] [-A:veñkosú] [-C]\n\n\
+  [jednotka:]         Urüuje jednotku k naform†tovaniu.\n\
+  -FS:systÇm s£borov  Urüuje typ s£borovÇho systÇmu (%s).\n\
+  -V:menovka          Urüuje menovku zvÑzku.\n\
+  -Q                  Vykon†va rÏchle form†tovanie.\n\
+  -A:veñkosú          Overrides the default allocation unit size. Default settings\n\
                       are strongly recommended for general use\n\
                       NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                       FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n\
@@ -22,31 +23,31 @@ STRING_HELP,  "Pouûitie: %S jednotka: [-FS:systÈm s˙borov] [-V:menovka] [-Q] [-A
   -C                  Files created on the new volume will be compressed by\n\
                       default.\n\n"
 
-STRING_COMPLETE   "DokonËenÈ na %lu percent.\r"
+STRING_COMPLETE   "DokonüenÇ na %lu percent.\r"
 
-STRING_FORMAT_FAIL "FormatEx was unable to complete successfully.\n\n"
+STRING_FORMAT_FAIL "FormatEx nebol schopnÏ £speÁne skonüiú.\n\n"
 
-STRING_NO_SUPPORT  "Oper·cia nie je podporovan·"
+STRING_NO_SUPPORT  "Oper†cia nie je podporovan†"
 
 STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
 
-STRING_UNKNOW_ARG  "Nezn·my argument: %S\n"
+STRING_UNKNOW_ARG  "Nezn†my argument: %S\n"
 
-STRING_DRIVE_PARM  "Ch˝ba nevyhnutn˝ parameter jednotky.\n\n"
+STRING_DRIVE_PARM  "ChÏba nevyhnutnÏ parameter jednotky.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Could not get drive type"
 
-STRING_INSERT_DISK       "Vloûte nov˙ disketu do jednotky %C:\na potom stlaËte ENTER..."
+STRING_INSERT_DISK       "Vloßte nov£ disketu do jednotky %C:\na potom stlaüte ENTER..."
 
 STRING_NO_VOLUME         "Could not query volume"
 
 STRING_NO_VOLUME_SIZE    "Could not query volume size"
 
-STRING_FILESYSTEM        "Typ systÈmu s˙borov je %S.\n"
+STRING_FILESYSTEM        "Typ systÇmu s£borov je %S.\n"
 
-STRING_LABEL_NAME_EDIT  "Vloûte s˙Ëasn˙ menovku zv‰zku pre jednotku %C: "
+STRING_LABEL_NAME_EDIT  "Vloßte s£üasn£ menovku zvÑzku pre jednotku %C: "
 
-STRING_ERROR_LABEL     "Bola zadan· nespr·vna menovka zv‰zku pre t˙to jednotku.\n"
+STRING_ERROR_LABEL     "Bola zadan† nespr†vna menovka zvÑzku pre t£to jednotku.\n"
 
 STRING_YN_FORMAT       "\nWARNING, ALL DATA ON NON_REMOVABLE DISK\n\
 DRIVE %C: WILL BE LOST!\nProceed with Format (A/N)? "
@@ -55,19 +56,19 @@ STRING_YES_NO_FAQ      "AN"
 
 STRING_VERIFYING       "Overovanie"
 
-STRING_FAST_FMT        "R˝chle form·tovanie"
+STRING_FAST_FMT        "RÏchle form†tovanie"
 
-STRING_CREATE_FSYS     "Vytv·ram ötrukt˙ru s˙borovÈho systÈmu.\n"
+STRING_CREATE_FSYS     "Vytv†ram Átrukt£ru s£borovÇho systÇmu.\n"
 
-STRING_FMT_COMPLETE    "Form·tovanie dokonËenÈ.\n"
+STRING_FMT_COMPLETE    "Form†tovanie dokonüenÇ.\n"
 
-STRING_VOL_COMPRESS    "Zv‰zok nepodporuje kompresiu.\n"
+STRING_VOL_COMPRESS    "ZvÑzok nepodporuje kompresiu.\n"
 
-STRING_ENTER_LABEL     "Menovka zv‰zku (11 znakov, ak nechcete zadaù tak iba Enter)? "
+STRING_ENTER_LABEL     "Menovka zvÑzku (11 znakov, ak nechcete zadaú, stlaüte ENTER)? "
 
-STRING_NO_LABEL        "Zv‰zok sa ned· pomenovaù"
+STRING_NO_LABEL        "ZvÑzok sa ned† pomenovaú"
 
-STRING_FREE_SPACE     "\nCelkovÈ diskovÈ miesto: %I64d bajtov.\nDostupnÈ miesto na disku: %I64d bajtov.\n"
+STRING_FREE_SPACE     "\nCelkovÇ diskovÇ miesto: %I64d bajtov.\nDostupnÇ miesto na disku: %I64d bajtov.\n"
 
-STRING_SERIAL_NUMBER   "\nSÈriovÈ ËÌslo zv‰zku je %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nSÇriovÇ ü°slo zvÑzku je %04X-%04X\n"
 END

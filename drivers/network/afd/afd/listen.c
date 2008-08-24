@@ -83,19 +83,18 @@ static NTSTATUS NTAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status = STATUS_FILE_CLOSED;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
-
-    if ( Irp->Cancel ) {
-	/* FIXME: is this anything else we need to do? */
-	FCB->ListenIrp.InFlightRequest = NULL;
-	return STATUS_SUCCESS;
-    }
 
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 
     FCB->ListenIrp.InFlightRequest = NULL;
+
+    if( Irp->Cancel ) {
+	SocketStateUnlock( FCB );
+	return STATUS_SUCCESS;
+    }
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
 	SocketStateUnlock( FCB );
@@ -188,14 +187,17 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 
-    FCB->State = SOCKET_STATE_LISTENING;
-
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionCallInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
     TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionReturnInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
+
+    if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
+    FCB->State = SOCKET_STATE_LISTENING;
 
     Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 			FCB->Connection.Object,
@@ -272,6 +274,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		( &FCB->ListenIrp.ConnectionReturnInfo,
 		  FCB->LocalAddress->Address[0].AddressType );
 
+	    if( !FCB->ListenIrp.ConnectionReturnInfo ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
 	    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 				FCB->Connection.Object,
 				&FCB->ListenIrp.ConnectionCallInfo,
@@ -305,6 +309,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		  KernelMode,
 		  (PVOID *)&NewFileObject,
 		  NULL );
+
+            if( !NT_SUCCESS(Status) ) UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 
             ASSERT(NewFileObject != FileObject);
             ASSERT(NewFileObject->FsContext != FCB);

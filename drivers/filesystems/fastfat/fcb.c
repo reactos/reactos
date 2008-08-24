@@ -14,7 +14,7 @@
 #include <wctype.h> /* towlower prototype */
 #endif
 
-#define NDEBUG
+//#define NDEBUG
 #include "vfat.h"
 
 /*  --------------------------------------------------------  DEFINES  */

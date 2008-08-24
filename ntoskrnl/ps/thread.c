@@ -155,7 +155,7 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     {
         if (!(Thread->Terminated) && !(Thread->DeadThread))
         {
-            /* Call it the Start Routine */
+            /* Call the Start Routine */
             StartRoutine(StartContext);
         }
     }

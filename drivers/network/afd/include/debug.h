@@ -47,6 +47,8 @@ extern DWORD DebugTraceLevel;
 #undef ASSERT
 #endif
 
+#define DPRINT1(_x_, ...) DbgPrint("(%s:%d) " _x_,__FILE__,__LINE__ __VA_ARGS__)
+
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */

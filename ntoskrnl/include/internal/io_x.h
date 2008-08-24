@@ -10,19 +10,15 @@ VOID
 static __inline
 IopLockFileObject(IN PFILE_OBJECT FileObject)
 {
-	ULONG CurrentThread = (ULONG)PsGetCurrentThread();
-
-	/* Lock the FO and check for contention */
-	if (FileObject->Busy == CurrentThread)
-	{
-		// Hack: Use the top byte for own-thread waiting
-		ExInterlockedAddUlong((PULONG)&FileObject->Waiters, 1<<24, &FileObject->IrpListLock);
-		return;
-	}
+    LARGE_INTEGER WaitInterval;
+    WaitInterval.QuadPart = -10000;
+    /* Lock the FO and check for contention */
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+    DbgPrint("Waiters: %d, Busy %d\n", FileObject->Waiters, FileObject->Busy);
     InterlockedIncrement((PLONG)&FileObject->Waiters);
-    while (InterlockedCompareExchange((PLONG)&FileObject->Busy, CurrentThread, FALSE) != FALSE)
+    while (InterlockedCompareExchange((PLONG)&FileObject->Busy, TRUE, FALSE) != FALSE)
     {
-		KeWaitForSingleObject(&FileObject->Lock, UserRequest, KeGetPreviousMode(), FALSE, NULL);
+	KeWaitForSingleObject(&FileObject->Lock, Executive, KernelMode, FALSE, &WaitInterval);
     }
     InterlockedDecrement((PLONG)&FileObject->Waiters);
 }

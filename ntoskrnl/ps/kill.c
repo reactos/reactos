@@ -697,10 +697,10 @@ PspExitThread(IN NTSTATUS ExitStatus)
         PspW32ProcessCallout(CurrentProcess, FALSE);
     }
 
-    /* Make sure Stack Swap isn't enabled */
-    if (Thread->Tcb.EnableStackSwap)
+    /* Make sure Stack Swap is enabled */
+    if (!Thread->Tcb.EnableStackSwap)
     {
-        /* Stack swap really shouldn't be on during exit !*/
+        /* Stack swap really shouldn't be disabled during exit! */
         KEBUGCHECKEX(KERNEL_STACK_LOCKED_AT_EXIT, 0, 0, 0, 0);
     }
 
@@ -1086,7 +1086,7 @@ PsTerminateSystemThread(IN NTSTATUS ExitStatus)
     PETHREAD Thread = PsGetCurrentThread();
 
     /* Make sure this is a system thread */
-    if (Thread->SystemThread) return STATUS_INVALID_PARAMETER;
+    if (!Thread->SystemThread) return STATUS_INVALID_PARAMETER;
 
     /* Terminate it for real */
     return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);

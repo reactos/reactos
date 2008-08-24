@@ -62,25 +62,6 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 
 BOOLEAN MmUnmapPageTable(PULONG Pt);
 
-ULONG_PTR
-NTAPI
-MiFlushTlbIpiRoutine(ULONG_PTR Address)
-{
-    if (Address == (ULONG_PTR)-1)
-    {
-        KeFlushCurrentTb();
-    }
-    else if (Address == (ULONG_PTR)-2)
-    {
-        KeFlushCurrentTb();
-    }
-    else
-    {
-        __invlpg((PVOID)Address);
-    }
-    return 0;
-}
-
 VOID
 MiFlushTlb(PULONG Pt, PVOID Address)
 {
@@ -89,8 +70,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
         __invlpg(Address);
     }
 }
-
-
 
 PULONG
 MmGetPageDirectory(VOID)
@@ -162,7 +141,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
         ExFreePool((PVOID) LdtBase);
     }
     
-    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
+    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
     {
         if (PageDir[i] != 0)
@@ -173,16 +152,11 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
     }
     MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
     MmDeleteHyperspaceMapping(PageDir);
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
-    
-#if defined(__GNUC__)
-    
-    Process->Pcb.DirectoryTableBase.QuadPart = 0LL;
-#else
-    
-    Process->Pcb.DirectoryTableBase.QuadPart = 0;
-#endif
-    
+    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+
+    Process->Pcb.DirectoryTableBase[0] = 0;
+    Process->Pcb.DirectoryTableBase[1] = 0;
+
     DPRINT("Finished Mmi386ReleaseMmInfo()\n");
     return(STATUS_SUCCESS);
 }
@@ -190,15 +164,16 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
+                             IN PULONG DirectoryTableBase)
 {
     /* Share the directory base with the idle process */
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
-    
+    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
+    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
+
     /* Initialize the Addresss Space */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
     Process->VadRoot.BalancedRoot.u1.Parent = NULL;
-    
+
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;
     return STATUS_SUCCESS;
@@ -208,7 +183,7 @@ BOOLEAN
 STDCALL
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+                            IN PULONG DirectoryTableBase)
 {
     NTSTATUS Status;
     ULONG i, j;
@@ -243,8 +218,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     
     MmDeleteHyperspaceMapping(PageDirectory);
     
-    DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
-    DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
+    DirectoryTableBase[0] = PFN_TO_PTE(Pfn[0]);
+    DirectoryTableBase[1] = 0;
+    DPRINT("Finished MmCopyMmInfo(): 0x%x\n", DirectoryTableBase[0]);
     return TRUE;
 }
 
@@ -274,50 +250,6 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
     }
 }
 
-VOID
-NTAPI
-MmFreePageTable(PEPROCESS Process, PVOID Address)
-{
-    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-    ULONG i;
-    PFN_TYPE Pfn;
-    PULONG PageTable;
-    
-    DPRINT("ProcessId %d, Address %x\n", Process->UniqueProcessId, Address);
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeAttachProcess(&Process->Pcb);
-    }
-    
-    PageTable = (PULONG)PAGE_ROUND_DOWN((PVOID)MiAddressToPte(Address));
-    for (i = 0; i < 1024; i++)
-    {
-        if (PageTable[i] != 0)
-        {
-            DbgPrint("Page table entry not clear at %x/%x (is %x)\n",
-                     ((ULONG)Address / (4*1024*1024)), i, PageTable[i]);
-            KEBUGCHECK(0);
-        }
-    }
-    Pfn = MiAddressToPde(Address)->u.Hard.PageFrameNumber;
-    MiAddressToPde(Address)->u.Long = 0;
-    MiFlushTlb((PULONG)MiAddressToPde(Address), MiAddressToPte(Address));
-    
-    if (Address >= MmSystemRangeStart)
-    {
-        //    MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-        KEBUGCHECK(0);
-    }
-    else
-    {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
-    }
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeDetachProcess();
-    }
-}
-
 static PULONG
 MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
@@ -329,12 +261,12 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     
     if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
     {
-        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.LowPart));
+        PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
         if (PageDir == NULL)
         {
             KEBUGCHECK(0);
         }
-        if (0 == InterlockedCompareExchangeUL(&PageDir[PdeOffset], 0, 0))
+        if (0 == InterlockedCompareExchangePte(&PageDir[PdeOffset], 0, 0))
         {
             if (Create == FALSE)
             {
@@ -346,7 +278,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 KEBUGCHECK(0);
             }
-            Entry = InterlockedCompareExchangeUL(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+            Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
                 MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -366,11 +298,11 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
         return Pt + ADDR_TO_PTE_OFFSET(Address);
     }
     PageDir = (PULONG)MiAddressToPde(Address);
-    if (0 == InterlockedCompareExchangeUL(PageDir, 0, 0))
+    if (0 == InterlockedCompareExchangePte(PageDir, 0, 0))
     {
         if (Address >= MmSystemRangeStart)
         {
-            if (0 == InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
+            if (0 == InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
             {
                 if (Create == FALSE)
                 {
@@ -386,12 +318,12 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 {
                     Entry |= PA_GLOBAL;
                 }
-                if(0 != InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
+                if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
                     MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
                 }
             }
-            (void)InterlockedExchangeUL(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+            InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
         }
         else
         {
@@ -404,7 +336,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 KEBUGCHECK(0);
             }
-            Entry = InterlockedCompareExchangeUL(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
+            Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
                 MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
@@ -479,7 +411,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPF
     do
     {
         Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_PRESENT, Pte));
+    } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_PRESENT, Pte));
     
     MiFlushTlb(Pt, Address);
     WasValid = (PAGE_MASK(Pte) != 0);
@@ -513,7 +445,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
         /*
          * Set the entry to zero
          */
-        (void)InterlockedExchangeUL(Pt, 0);
+        InterlockedExchangePte(Pt, 0);
         MiFlushTlb(Pt, Address);
     }
 }
@@ -552,7 +484,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     /*
      * Atomically set the entry to zero and get the old value.
      */
-    Pte = InterlockedExchangeUL(Pt, 0);
+    Pte = InterlockedExchangePte(Pt, 0);
     
     MiFlushTlb(Pt, Address);
     
@@ -607,7 +539,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
     /*
      * Atomically set the entry to zero and get the old value.
      */
-    Pte = InterlockedExchangeUL(Pt, 0);
+    Pte = InterlockedExchangePte(Pt, 0);
     
     MiFlushTlb(Pt, Address);
     
@@ -640,42 +572,6 @@ MmIsDirtyPage(PEPROCESS Process, PVOID Address)
     return MmGetPageEntryForProcess(Process, Address) & PA_DIRTY ? TRUE : FALSE;
 }
 
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
-{
-    PULONG Pt;
-    ULONG Pte;
-    
-    if (Address < MmSystemRangeStart && Process == NULL)
-    {
-        DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
-        KEBUGCHECK(0);
-    }
-    
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (Pt == NULL)
-    {
-        KEBUGCHECK(0);
-    }
-    
-    do
-    {
-        Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_ACCESSED, Pte));
-    
-    if (Pte & PA_ACCESSED)
-    {
-        MiFlushTlb(Pt, Address);
-        return TRUE;
-    }
-    else
-    {
-        MmUnmapPageTable(Pt);
-        return FALSE;
-    }
-}
-
 VOID
 NTAPI
 MmSetCleanPage(PEPROCESS Process, PVOID Address)
@@ -699,7 +595,7 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
     do
     {
         Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangeUL(Pt, Pte & ~PA_DIRTY, Pte));
+    } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_DIRTY, Pte));
     
     if (Pte & PA_DIRTY)
     {
@@ -733,7 +629,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     do
     {
         Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangeUL(Pt, Pte | PA_DIRTY, Pte));
+    } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_DIRTY, Pte));
     if (!(Pte & PA_DIRTY))
     {
         MiFlushTlb(Pt, Address);
@@ -760,7 +656,7 @@ MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
     do
     {
         Pte = *Pt;
-    } while (Pte != InterlockedCompareExchangeUL(Pt, Pte | PA_PRESENT, Pte));
+    } while (Pte != InterlockedCompareExchangePte(Pt, Pte | PA_PRESENT, Pte));
     if (!(Pte & PA_PRESENT))
     {
         MiFlushTlb(Pt, Address);
@@ -862,7 +758,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
         {
             KEBUGCHECK(0);
         }
-        (void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
+        InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
     }
     
     return(STATUS_SUCCESS);
@@ -902,7 +798,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
     {
         MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
     }
-    (void)InterlockedExchangeUL(Pt, SwapEntry << 1);
+    InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
     {
         MiFlushTlb(Pt, Address);
@@ -1021,7 +917,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         {
             MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
         }
-        (void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
+        InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
         {
             if (Address > MmSystemRangeStart ||
@@ -1141,7 +1037,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     {
         KEBUGCHECK(0);
     }
-    InterlockedExchange((PLONG)Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
+    InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
     MiFlushTlb(Pt, Address);
 }
 
@@ -1239,22 +1135,6 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
 
 PFN_TYPE
 NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
-{
-    PFN_TYPE Pfn;
-    ULONG Entry;
-    
-    ASSERT (IS_HYPERSPACE(Address));
-    
-    Entry = InterlockedExchange((PLONG)MiAddressToPte(Address), PFN_TO_PTE(NewPage) | PA_PRESENT | PA_READWRITE);
-    Pfn = PTE_TO_PFN(Entry);
-    
-    __invlpg(Address);
-    return Pfn;
-}
-
-PFN_TYPE
-NTAPI
 MmDeleteHyperspaceMapping(PVOID Address)
 {
     PFN_TYPE Pfn;
@@ -1262,7 +1142,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
     
     ASSERT (IS_HYPERSPACE(Address));
     
-    Entry = InterlockedExchange((PLONG)MiAddressToPte(Address), 0);
+    Entry = InterlockedExchangePte(MiAddressToPte(Address), 0);
     Pfn = PTE_TO_PFN(Entry);
     
     __invlpg(Address);
@@ -1286,7 +1166,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     
     if (Process != NULL && Process != PsGetCurrentProcess())
     {
-        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
+        Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
     }
     else
     {
@@ -1296,7 +1176,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     {
         if (Offset != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP))
         {
-            (void)InterlockedCompareExchangeUL(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
+            InterlockedCompareExchangePte(&Pde[Offset], MmGlobalKernelPageDirectory[Offset], 0);
         }
     }
     if (Pde != (PULONG)PAGEDIRECTORY_MAP)

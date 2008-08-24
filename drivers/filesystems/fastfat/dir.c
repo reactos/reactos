@@ -8,7 +8,7 @@
 
 */
 
-#define NDEBUG
+//#define NDEBUG
 #include "vfat.h"
 
 

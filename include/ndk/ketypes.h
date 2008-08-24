@@ -955,7 +955,7 @@ typedef struct _KPROCESS
     ULONG DirectoryTableBase;
     ULONG Unused0;
 #else
-    LARGE_INTEGER DirectoryTableBase;
+    ULONG DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;

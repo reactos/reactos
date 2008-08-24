@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
+//#define NDEBUG
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -84,13 +84,7 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_SUCCESS;
       goto ByeBye;
     }
-#if 0
-  /* There occurs a dead look at the call to CcRosDeleteFileCache/ObDereferenceObject/VfatClose
-     in CmLazyCloseThreadMain if VfatClose is execute asynchronous in a worker thread. */
-  if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, IrpContext->Flags & IRPCONTEXT_CANWAIT))
-#else
   if (!ExAcquireResourceExclusiveLite (&IrpContext->DeviceExt->DirResource, TRUE))
-#endif
   {
      return VfatQueueRequest (IrpContext);
   }

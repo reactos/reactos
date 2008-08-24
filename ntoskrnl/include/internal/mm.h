@@ -164,6 +164,13 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+
+#define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
+    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+
+#define InterlockedExchangePte(PointerPte, Value) \
+    InterlockedExchange((PLONG)(PointerPte), Value)
+
 typedef struct
 {
     ULONG Entry[NR_SECTION_PAGE_ENTRIES];
@@ -1275,14 +1282,14 @@ NTAPI
 MmCreateProcessAddressSpace(
     IN ULONG MinWs,
     IN PEPROCESS Dest,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
     IN PEPROCESS Process,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 
@@ -1559,16 +1566,13 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
-FORCEINLINE
+/* ReactOS Mm Hack */
 VOID
-NTAPI
-MiSyncThreadProcessViews(IN PVOID Process,
-                         IN PVOID Address,
-                         IN ULONG Size)
-{
-    MmUpdatePageDir((PEPROCESS)Process, Address, Size);
-}
-
+FASTCALL
+MiSyncThreadProcessViews(
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
+);
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;
 

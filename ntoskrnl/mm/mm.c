@@ -24,6 +24,22 @@ MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+FASTCALL
+MiSyncThreadProcessViews(IN PKTHREAD NextThread,
+                         IN PEPROCESS Process)
+{
+    PETHREAD Thread = CONTAINING_RECORD(NextThread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Thread, sizeof(ETHREAD));
+    MmUpdatePageDir(Process, Thread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->Tcb.StackLimit,
+                    NextThread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
 /*
  * @implemented
  */
@@ -349,6 +365,31 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 
 
 /* Miscellanea functions: they may fit somewhere else */
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+MmIsRecursiveIoFault (VOID)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+
+    return (Thread->DisablePageFaultClustering | Thread->ForwardClusterOnly);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmMapUserAddressesToPage(IN PVOID BaseAddress,
+                         IN SIZE_T NumberOfBytes,
+                         IN PVOID PageAddress)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented

@@ -86,7 +86,7 @@ extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 /* Functions */
 BOOLEAN
 NTAPI
-SeInit(VOID);
+SeInitSystem(VOID);
 
 BOOLEAN
 NTAPI

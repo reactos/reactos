@@ -11,7 +11,7 @@
 #include "usetup.h"
 #include <zlib.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #define SEEK_BEGIN    0
@@ -885,6 +885,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 							 NULL,
 							 NULL);
 
+  DPRINT("NtCreateFile(%S)\n", DestName);
   NtStatus = NtCreateFile(&DestFile,
 						  GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
 						  &ObjectAttributes,
@@ -928,6 +929,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
         }
     }
   MaxDestFileSize.QuadPart = Search->File->FileSize;
+  DPRINT("NtCreateSection(%S)\n", DestName);
   NtStatus = NtCreateSection(&DestFileSection,
 							 SECTION_ALL_ACCESS,
 							 0,
@@ -937,12 +939,13 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 							 DestFile);
   if(!NT_SUCCESS(NtStatus))
 	{
-	  DPRINT("NtCreateSection failed: %x\n", NtStatus);
+	  DPRINT("NtCreateSection failed: %x (%S)\n", NtStatus, DestName);
 	  Status = CAB_STATUS_NOMEMORY;
 	  goto CloseDestFile;
 	}
   DestFileBuffer = 0;
   DestFileSize = 0;
+  DPRINT("NtMapViewOfSection(%S)\n", DestName);
   NtStatus = NtMapViewOfSection(DestFileSection,
 								NtCurrentProcess(),
 								&DestFileBuffer,
@@ -967,6 +970,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	  goto UnmapDestFile;
     }
 
+  DPRINT("NtQueryInformationFile(%S)\n", DestName);
   NtStatus = NtQueryInformationFile(DestFile,
 									&IoStatusBlock,
 									&FileBasic,
@@ -1063,10 +1067,13 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	}
   Status = CAB_STATUS_SUCCESS;
  UnmapDestFile:
+  DPRINT("NtUnmapViewOfSection(%S)\n", DestName);
   NtUnmapViewOfSection(NtCurrentProcess(), DestFileBuffer);
  CloseDestFileSection:
+  DPRINT("NtClose section (%S)\n", DestName);
   NtClose(DestFileSection);
  CloseDestFile:
+  DPRINT("NtClose(%S)\n", DestName);
   NtClose(DestFile);
 
   return Status;

@@ -37,10 +37,11 @@
 #define InterlockedCompareExchange64 _InterlockedCompareExchange64
 #define InterlockedExchange          _InterlockedExchange
 #define InterlockedExchangeAdd       _InterlockedExchangeAdd
+#define InterlockedOr                _InterlockedOr
+#define InterlockedAnd               _InterlockedAnd
 
 #include "ke.h"
 #include "i386/mm.h"
-#include "i386/fpu.h"
 #include "i386/v86m.h"
 #include "ob.h"
 #include "mm.h"
@@ -70,84 +71,6 @@
 #include "vdm.h"
 #include "hal.h"
 #include "arch/intrin_i.h"
-
-#include <pshpack1.h>
-/*
- * Defines a descriptor as it appears in the processor tables
- */
-typedef struct __DESCRIPTOR
-{
-  ULONG a;
-  ULONG b;
-} IDT_DESCRIPTOR, GDT_DESCRIPTOR;
-
-#include <poppack.h>
-//extern GDT_DESCRIPTOR KiGdt[256];
-
-/*
- * Initalization functions (called once by main())
- */
-BOOLEAN NTAPI ObInit(VOID);
-BOOLEAN NTAPI CmInitSystem1(VOID);
-VOID NTAPI CmShutdownSystem(VOID);
-BOOLEAN NTAPI KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
-BOOLEAN FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType);
-
-VOID
-NTAPI
-RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT ContextRecord,
-                 IN PVOID ContextData,
-                 IN ULONG Size);
-
-/* FIXME: Interlocked functions that need to be made into a public header */
-#ifdef __GNUC__
-FORCEINLINE
-LONG
-InterlockedAnd(IN OUT LONG volatile *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i & Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-
-FORCEINLINE
-LONG
-InterlockedOr(IN OUT LONG volatile *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i | Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
 
 /*
  * generic information class probing code
@@ -324,8 +247,8 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
 C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
-//C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-//C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
@@ -335,7 +258,7 @@ C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) == KPCR_PRCB_DATA);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, KeSystemCalls) == KPCR_SYSTEM_CALLS);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + /*FIELD_OFFSET(KDPC_DATA, DpcQueuDepth)*/12 == KPCR_PRCB_DPC_QUEUE_DEPTH);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + FIELD_OFFSET(KDPC_DATA, DpcQueueDepth) == KPCR_PRCB_DPC_QUEUE_DEPTH);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + 16 == KPCR_PRCB_DPC_COUNT);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KPCR_PRCB_TIMER_REQUEST);
@@ -348,7 +271,7 @@ C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KP
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, QuantumEnd) == KPCR_PRCB_QUANTUM_END);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DeferredReadyListHead) == KPCR_PRCB_DEFERRED_READY_LIST_HEAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PowerState) == KPCR_PRCB_POWER_STATE_IDLE_FUNCTION);
-//C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PrcbLock) == KPCR_PRCB_PRCB_LOCK);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PrcbLock) == KPCR_PRCB_PRCB_LOCK);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
 C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 

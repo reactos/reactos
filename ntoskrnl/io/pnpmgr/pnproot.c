@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/pnproot.c
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/pnpmgr/pnproot.c
  * PURPOSE:         PnP manager root device
- *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  */
@@ -1063,7 +1062,7 @@ PnpRootPnpControl(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PnpRootAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -1135,5 +1134,3 @@ PnpRootDriverEntry(
 
     return STATUS_SUCCESS;
 }
-
-/* EOF */

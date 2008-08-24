@@ -11,18 +11,15 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 #include <internal/hal.h>
 
 /* DEPRECATED FUNCTIONS ******************************************************/
 
-#if 1
 const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
 #define AUTO_DRIVE         ((ULONG)-1)
-
-#define PARTITION_MAGIC    0xaa55
 
 #include <pshpack1.h>
 
@@ -908,8 +905,6 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         ZwClose(hKey);
     }
 }
-
-#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

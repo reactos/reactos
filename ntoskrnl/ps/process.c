@@ -365,7 +365,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PDEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;
-    PHYSICAL_ADDRESS DirectoryTableBase = {{0}};
+    ULONG DirectoryTableBase[2] = {0,0};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
     PETHREAD CurrentThread = PsGetCurrentThread();
@@ -562,7 +562,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         /* Create the address space for the child */
         if (!MmCreateProcessAddressSpace(MinWs,
                                          Process,
-                                         &DirectoryTableBase))
+                                         DirectoryTableBase))
         {
             /* Failed */
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -573,7 +573,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Otherwise, we are the boot process, we're already semi-initialized */
         Process->ObjectTable = CurrentProcess->ObjectTable;
-        Status = MmInitializeHandBuiltProcess(Process, &DirectoryTableBase);
+        Status = MmInitializeHandBuiltProcess(Process, DirectoryTableBase);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
 
@@ -587,7 +587,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeInitializeProcess(&Process->Pcb,
                         PROCESS_PRIORITY_NORMAL,
                         Affinity,
-                        &DirectoryTableBase,
+                        DirectoryTableBase,
                         (BOOLEAN)(Process->DefaultHardErrorProcessing & 4));
 
     /* Duplicate Parent Token */
