@@ -348,21 +348,34 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     LPWSTR	beg = NULL;
     LPWSTR	end;
     WCHAR	ch;
-    LPWSTR       ptr;
+    LPWSTR       ptr, ptr2;
+    WCHAR szName[MAX_PATH];
     unsigned 	sp = 0;
     LPWSTR	extraPmts = NULL;
     int        quoted = 0;
     BOOL	spSet = FALSE;
-	HANDLE hMutex;
+    HANDLE hMutex;
+    UINT Length;
 
-    hMutex = CreateMutex(NULL, FALSE, (LPCTSTR) wszCmd);
+    ptr = wcsrchr(wszCmd, L'\\');
+    ptr2 = wcsrchr(wszCmd, L',');
+    if (!ptr || !ptr2)
+        return;
+
+    Length = (ptr2 - ptr - 1);
+    if (Length >= MAX_PATH)
+        return;
+
+    memcpy(szName, ptr + 1, Length * sizeof(WCHAR));
+    szName[Length] = L'\0';
+    hMutex = CreateMutexW(NULL, FALSE, szName);
+
  	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return;
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer) return;
 
     end = lstrcpyW(buffer, wszCmd);
-
     for (;;) {
 	ch = *end;
         if (ch == '"') quoted = !quoted;
