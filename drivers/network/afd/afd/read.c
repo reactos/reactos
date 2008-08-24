@@ -480,12 +480,16 @@ PacketSocketRecvComplete(
 	DatagramRecv->Address =
 	    TaCopyTransportAddress( FCB->AddressFrom->RemoteAddress );
 
-	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
+	if( !DatagramRecv->Address ) Status = STATUS_NO_MEMORY;
+
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
+	if( DatagramRecv ) ExFreePool( DatagramRecv );
 	SocketStateUnlock( FCB );
 	return Status;
+    } else {
+	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
     }
 
     /* Satisfy as many requests as we can */
