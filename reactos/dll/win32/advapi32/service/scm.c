@@ -1461,7 +1461,7 @@ QueryServiceConfigA(SC_HANDLE hService,
     /* Call to services.exe using RPC */
     dwError = RQueryServiceConfigA(BindingHandle,
                                    (SC_RPC_HANDLE)hService,
-                                   lpServiceConfig,
+                                   (LPBYTE)lpServiceConfig,
                                    cbBufSize,
                                    pcbBytesNeeded);
     if (dwError != ERROR_SUCCESS)
