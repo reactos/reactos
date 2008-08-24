@@ -140,8 +140,9 @@ static NTSTATUS NTAPI SendComplete
 	SocketCalloutLeave( FCB );
     } else {
 	FCB->PollState |= AFD_EVENT_SEND;
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
+
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( TotalBytesCopied > 0 ) {
 	UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
@@ -394,6 +395,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     FCB->EventsFired &= ~AFD_EVENT_SEND;
     FCB->PollState &= ~AFD_EVENT_SEND;
+
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )

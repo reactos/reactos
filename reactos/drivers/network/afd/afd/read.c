@@ -98,6 +98,7 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     if( FCB->Recv.BytesUsed == FCB->Recv.Content ) {
 	FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
 
 	if( !FCB->ReceiveIrp.InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
@@ -480,12 +481,16 @@ PacketSocketRecvComplete(
 	DatagramRecv->Address =
 	    TaCopyTransportAddress( FCB->AddressFrom->RemoteAddress );
 
-	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
+	if( !DatagramRecv->Address ) Status = STATUS_NO_MEMORY;
+
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
+	if( DatagramRecv ) ExFreePool( DatagramRecv );
 	SocketStateUnlock( FCB );
 	return Status;
+    } else {
+	InsertTailList( &FCB->DatagramList, &DatagramRecv->ListEntry );
     }
 
     /* Satisfy as many requests as we can */

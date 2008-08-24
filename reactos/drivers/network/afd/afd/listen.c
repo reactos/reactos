@@ -330,8 +330,10 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    ExFreePool( PendingConnObj );
 
-	    if( IsListEmpty( &FCB->PendingConnections ) )
+	    if( IsListEmpty( &FCB->PendingConnections ) ) {
 		FCB->PollState &= ~AFD_EVENT_ACCEPT;
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
+	    }
 
 	    SocketStateUnlock( FCB );
 	    return Irp->IoStatus.Status;
