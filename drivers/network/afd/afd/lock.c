@@ -225,7 +225,6 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
 
     if( CurrentThread == FCB->CurrentThread ) {
 	FCB->LockCount++;
-	FCB->Locked = TRUE;
 	AFD_DbgPrint(MID_TRACE,
 		     ("Same thread, lock count %d\n", FCB->LockCount));
 	return TRUE;
