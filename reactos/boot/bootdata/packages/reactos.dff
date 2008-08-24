@@ -92,6 +92,7 @@ base\shell\explorer\notifyhook\notifyhook.dll       1
 base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
+base\system\bootok\bootok.exe                       1
 base\system\format\format.exe                       1
 base\system\lsass\lsass.exe                         1
 base\system\msiexec\msiexec.exe                     1
