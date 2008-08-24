@@ -27,14 +27,14 @@ typedef struct _D3D9BaseObject
 /* 0x0000 */    ID3D9BaseObjectVtbl* lpVtbl;
 /* 0x0004 */    LONG lRefCnt;
 /* 0x0008 */    DWORD dwNumUsed;
-/* 0x000c */    struct _Direct3DDevice9_INT* pBaseDevice;
+/* 0x000c */    IUnknown* pUnknown;
 /* 0x0010 */    DWORD dwUnknown0010;    // Index? Unique id?
 /* 0x0014 */    HANDLE hKernelHandle;
 /* 0x0018 */    LPDWORD dwUnknown0018;
 /* 0x001c */    enum REF_TYPE RefType;
 } D3D9BaseObject;
 
-VOID InitD3D9BaseObject(D3D9BaseObject* pBaseObject, enum REF_TYPE RefType, struct _Direct3DDevice9_INT* pBaseDevice);
+VOID InitD3D9BaseObject(D3D9BaseObject* pBaseObject, enum REF_TYPE RefType, IUnknown* pUnknown);
 
 ULONG D3D9BaseObject_AddRef(D3D9BaseObject* pBaseObject);
 ULONG D3D9BaseObject_Release(D3D9BaseObject* pBaseObject);

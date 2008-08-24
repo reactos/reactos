@@ -25,18 +25,18 @@ ID3D9BaseObjectVtbl D3D9BaseObject_Vtbl =
     D3D9BaseObject_Destroy
 };
 
-VOID InitD3D9BaseObject(D3D9BaseObject* pBaseObject, enum REF_TYPE RefType, struct _Direct3DDevice9_INT* pBaseDevice)
+VOID InitD3D9BaseObject(D3D9BaseObject* pBaseObject, enum REF_TYPE RefType, IUnknown* pUnknown)
 {
     pBaseObject->lpVtbl = &D3D9BaseObject_Vtbl;
     pBaseObject->RefType = RefType;
-    pBaseObject->pBaseDevice = pBaseDevice;
+    pBaseObject->pUnknown = pUnknown;
 }
 
 ULONG D3D9BaseObject_AddRef(D3D9BaseObject* pBaseObject)
 {
-    if (pBaseObject->pBaseDevice)
+    if (pBaseObject->pUnknown)
     {
-        pBaseObject->pBaseDevice->lpVtbl->AddRef((IDirect3DDevice9*)&pBaseObject->pBaseDevice->lpVtbl);
+        pBaseObject->pUnknown->lpVtbl->AddRef((IUnknown*) &pBaseObject->pUnknown->lpVtbl);
     }
 
     return InterlockedIncrement(&pBaseObject->lRefCnt);
@@ -52,9 +52,9 @@ ULONG D3D9BaseObject_Release(D3D9BaseObject* pBaseObject)
 
         if (Ref == 0)
         {
-            if (pBaseObject->pBaseDevice)
+            if (pBaseObject->pUnknown)
             {
-                pBaseObject->pBaseDevice->lpVtbl->Release((IDirect3DDevice9*)&pBaseObject->pBaseDevice->lpVtbl);
+                pBaseObject->pUnknown->lpVtbl->Release((IUnknown*) &pBaseObject->pUnknown->lpVtbl);
             }
         }
     }

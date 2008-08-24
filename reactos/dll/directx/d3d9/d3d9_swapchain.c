@@ -119,7 +119,7 @@ Direct3DSwapChain9_INT* CreateDirect3DSwapChain9(enum REF_TYPE RefType, struct _
         return NULL;
     }
 
-    InitD3D9BaseObject((D3D9BaseObject*) &pThisSwapChain->BaseObject.lpVtbl, RefType, pBaseDevice);
+    InitD3D9BaseObject((D3D9BaseObject*) &pThisSwapChain->BaseObject.lpVtbl, RefType, (IUnknown*) &pBaseDevice->lpVtbl);
 
     pThisSwapChain->lpVtbl = &Direct3DSwapChain9_Vtbl;
 
@@ -149,6 +149,7 @@ HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESE
     }
 
     pThisSwapChain->PresentParameters = pPresentationParameters[pThisSwapChain->ChainIndex];
+    pThisSwapChain->SwapEffect = pPresentationParameters->SwapEffect;
 
     return Direct3DSwapChain9_Reset(pThisSwapChain, pPresentationParameters);
 }
