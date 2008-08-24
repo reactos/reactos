@@ -98,6 +98,7 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     if( FCB->Recv.BytesUsed == FCB->Recv.Content ) {
 	FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
+	PollReeval( FCB->DeviceExt, FCB->FileObject );
 
 	if( !FCB->ReceiveIrp.InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
