@@ -100,19 +100,24 @@ LocateChildDevice(
     PPNPROOT_DEVICE Device;
     UNICODE_STRING DeviceIdU, InstanceIdU;
 
+    /* Initialize the strings to compare  */
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
     RtlInitUnicodeString(&InstanceIdU, InstanceId);
 
+    /* Start looping */
     LIST_FOR_EACH(Device, &DeviceExtension->DeviceListHead, PNPROOT_DEVICE, ListEntry)
     {
-        if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE)
-         && RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
+        /* See if the strings match */
+        if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE) &&
+            RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
         {
+            /* They do, so set the pointer and return success */
             *ChildDevice = Device;
             return STATUS_SUCCESS;
         }
     }
 
+    /* No device found */
     return STATUS_NO_SUCH_DEVICE;
 }
 
