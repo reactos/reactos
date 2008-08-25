@@ -133,7 +133,7 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         LONG size;
         HKEY hkey;
 
-	TRACE("%p %s %p\n", hkeyClass, debugstr_w(szVerb), szDest);
+        TRACE("%p %s %p\n", hkeyClass, debugstr_w(szVerb), szDest);
 
         if (szVerb)
         {
@@ -143,13 +143,13 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
 
         size=len;
         *szDest='\0';
-        if (!RegQueryValueW(hkeyClass, swShell, szDest, &size) && *szDest)
+        if (!RegQueryValueW(hkeyClass, L"shell", szDest, &size) && *szDest)
         {
             /* The MSDN says to first try the default verb */
             lstrcpyW(sTemp, swShell);
             lstrcatW(sTemp, szDest);
             lstrcatW(sTemp, swCommand);
-            if (!RegOpenKeyExW(hkeyClass, sTemp, 0, 0, &hkey))
+            if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
             {
                 RegCloseKey(hkey);
                 TRACE("default verb=%s\n", debugstr_w(szDest));
@@ -161,7 +161,7 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         lstrcpyW(sTemp, swShell);
         lstrcatW(sTemp, swOpen);
         lstrcatW(sTemp, swCommand);
-        if (!RegOpenKeyExW(hkeyClass, sTemp, 0, 0, &hkey))
+        if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
         {
             RegCloseKey(hkey);
             lstrcpynW(szDest, swOpen, len);
@@ -170,14 +170,20 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         }
 
         /* and then just use the first verb on Windows >= 2000 */
-        if (!RegEnumKeyW(hkeyClass, 0, szDest, len) && *szDest)
+        if (!RegOpenKeyExW(hkeyClass, L"shell", 0, KEY_READ, &hkey))
         {
-            TRACE("default verb=first verb=%s\n", debugstr_w(szDest));
-            return TRUE;
+            if (!RegEnumKeyW(hkey, 0, szDest, len) && *szDest)
+            {
+                TRACE("default verb=first verb=%s\n", debugstr_w(szDest));
+                RegCloseKey(hkey);
+                return TRUE;
+            }
+            RegCloseKey(hkey);
         }
 
+
         TRACE("no default verb!\n");
-	return FALSE;
+        return FALSE;
 }
 
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
