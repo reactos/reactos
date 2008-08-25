@@ -1789,7 +1789,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
  * internal dir command
  */
 INT
-CommandDir(LPTSTR first, LPTSTR rest)
+CommandDir(LPTSTR rest)
 {
 	TCHAR	dircmd[256];	/* A variable to store the DIRCMD enviroment variable */
 	TCHAR	path[MAX_PATH];

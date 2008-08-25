@@ -100,7 +100,7 @@ IsKeyInString (LPTSTR lpString, TCHAR cKey, BOOL bCaseSensitive)
 
 
 INT
-CommandChoice (LPTSTR cmd, LPTSTR param)
+CommandChoice (LPTSTR param)
 {
 	LPTSTR lpOptions;
 	TCHAR Options[6];

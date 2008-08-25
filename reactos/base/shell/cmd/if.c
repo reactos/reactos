@@ -36,12 +36,12 @@
 #define X_EXEC 1
 #define X_EMPTY 0x80
 
-INT cmd_if (LPTSTR cmd, LPTSTR param)
+INT cmd_if (LPTSTR param)
 {
 	INT x_flag = 0; /* when set cause 'then' clause to be executed */
 	LPTSTR pp;
 
-	TRACE ("cmd_if: (\'%s\', \'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

@@ -36,13 +36,13 @@
  *
  */
 
-INT cmd_goto (LPTSTR cmd, LPTSTR param)
+INT cmd_goto (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR tmp, tmp2;
 	LONG   lNewPosHigh = 0;
 
-	TRACE ("cmd_goto (\'%s\', \'%s\'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_goto (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

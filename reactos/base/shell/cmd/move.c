@@ -83,7 +83,7 @@ void GetDirectory (LPTSTR wholepath, LPTSTR directory, BOOL CheckExisting)
 }
 
 
-INT cmd_move (LPTSTR cmd, LPTSTR param)
+INT cmd_move (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT argc, i, nFiles;

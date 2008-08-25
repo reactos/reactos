@@ -51,7 +51,7 @@ skip_ws ( LPCTSTR p )
 	return p + _tcsspn ( p, _T(" \t") );
 }
 
-INT cmd_set (LPTSTR cmd, LPTSTR param)
+INT cmd_set (LPTSTR param)
 {
 	LPTSTR p;
 

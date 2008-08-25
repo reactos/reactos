@@ -47,14 +47,14 @@
  *   per list element.
  */
 
-INT cmd_for (LPTSTR cmd, LPTSTR param)
+INT cmd_for (LPTSTR param)
 {
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	TRACE ("cmd_for (\'%s\', \'%s\'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_for (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

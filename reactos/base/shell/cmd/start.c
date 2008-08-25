@@ -34,7 +34,7 @@ static TCHAR *GetParameter(TCHAR **pPointer)
 	return start - 1;
 }
 
-INT cmd_start (LPTSTR First, LPTSTR Rest)
+INT cmd_start (LPTSTR Rest)
 {
 	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR rest[CMDLINE_LENGTH];

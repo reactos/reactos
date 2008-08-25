@@ -648,7 +648,7 @@ DoCommand (LPTSTR line)
 
 			if (!_tcscmp (com, cmdptr->name))
 			{
-				cmdptr->func (com, rest);
+				cmdptr->func (rest);
 				break;
 			}
 
@@ -669,11 +669,8 @@ DoCommand (LPTSTR line)
 			{
 				/* OK its one of the specials...*/
 
-				/* Terminate first word properly */
-				com[cl] = _T('\0');
-
 				/* Call with new rest */
-				cmdptr->func (com, cstart + cl);
+				cmdptr->func (cstart + cl);
 				break;
 			}
 		}
@@ -1541,10 +1538,10 @@ Initialize (int argc, const TCHAR* argv[])
 				if (!IsExistingFile (_T("\\autoexec.bat")))
 				{
 #ifdef INCLUDE_CMD_DATE
-					cmd_date (_T(""), _T(""));
+					cmd_date (_T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-					cmd_time (_T(""), _T(""));
+					cmd_time (_T(""));
 #endif
 				}
 				else

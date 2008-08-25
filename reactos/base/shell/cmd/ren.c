@@ -40,7 +40,7 @@ enum
  *  file rename internal command.
  *
  */
-INT cmd_rename (LPTSTR cmd, LPTSTR param)
+INT cmd_rename (LPTSTR param)
 {
   LPTSTR *arg = NULL;
   INT args = 0;

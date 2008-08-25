@@ -188,7 +188,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 }
 
 
-INT CommandAttrib (LPTSTR cmd, LPTSTR param)
+INT CommandAttrib (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    argc, i;

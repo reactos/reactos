@@ -84,7 +84,7 @@ PrintDiskInfo (LPTSTR szDisk)
 }
 
 
-INT CommandFree (LPTSTR cmd, LPTSTR param)
+INT CommandFree (LPTSTR param)
 {
 	LPTSTR szParam;
 	TCHAR  szDefPath[MAX_PATH];

@@ -14,7 +14,7 @@
 #ifdef INCLUDE_CMD_TITLE
 
 
-INT cmd_title (LPTSTR cmd, LPTSTR param)
+INT cmd_title (LPTSTR param)
 {
 
 	/* Do nothing if no args */

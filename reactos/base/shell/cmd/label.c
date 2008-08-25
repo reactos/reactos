@@ -22,7 +22,7 @@
 #ifdef INCLUDE_CMD_LABEL
 
 
-INT cmd_label (LPTSTR cmd, LPTSTR param)
+INT cmd_label (LPTSTR param)
 {
 	TCHAR  szRootPath[] = _T("A:\\");
 	TCHAR  szLabel[80];

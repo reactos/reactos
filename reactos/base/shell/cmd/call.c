@@ -40,11 +40,11 @@
  * context block.
  */
 
-INT cmd_call (LPTSTR cmd, LPTSTR param)
+INT cmd_call (LPTSTR param)
 {
 	LPBATCH_CONTEXT n = NULL;
 
-	TRACE ("cmd_call: (\'%s\',\'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CALL_HELP);
@@ -54,7 +54,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 	if (*param == _T(':') && (bc))
 	{
 		bc->lCallPosition = SetFilePointer(bc->hBatchFile, 0, &bc->lCallPositionHigh, FILE_CURRENT);
-		cmd_goto(_T("goto"), param);
+		cmd_goto(param);
 		return 0;
 	}
 
