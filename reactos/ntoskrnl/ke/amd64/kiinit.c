@@ -497,7 +497,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         DPRINT1("SMP Boot support not yet present\n");
     }
 FrLdrDbgPrint("before KeInitializeThread\n");
-for(;;);
+
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
                        InitThread,
@@ -507,6 +507,7 @@ for(;;);
                        NULL,
                        NULL,
                        IdleStack);
+FrLdrDbgPrint("after KeInitializeThread\n");
     InitThread->NextProcessor = Number;
     InitThread->Priority = HIGH_PRIORITY;
     InitThread->State = Running;
@@ -596,15 +597,8 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     USHORT Tr = 0;
 
     /* Get GDT and IDT descriptors */
-    Ke386GetGlobalDescriptorTable(GdtDescriptor.Limit);
-    Ke386GetInterruptDescriptorTable(IdtDescriptor.Limit);
-
-    // FIXME: for some strange reason the gdt needs some time before it's finished...
-    if (!GdtDescriptor.Base)
-    {
-        FrLdrDbgPrint("1. Base = %p, Limit = 0x%x\n", GdtDescriptor.Base, GdtDescriptor.Limit);
-    }
-    FrLdrDbgPrint("2. Base = %p, Limit = 0x%x\n", GdtDescriptor.Base, GdtDescriptor.Limit);
+    __sgdt(&GdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
 
     /* Save IDT and GDT */
     *Gdt = (PKGDTENTRY)GdtDescriptor.Base;
