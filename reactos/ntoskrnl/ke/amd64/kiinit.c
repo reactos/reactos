@@ -378,6 +378,10 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 
     /* Setup the processor set */
     Pcr->Prcb.MultiThreadProcessorSet = Pcr->Prcb.SetMember;
+
+    /* Clear DR6/7 to cleanup bootloader debugging */
+    Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr6 = 0;
+    Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 }
 
 VOID
@@ -701,10 +705,6 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Set us as the current process */
         InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
 
-        /* Clear DR6/7 to cleanup bootloader debugging */
-        Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr6 = 0;
-        Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr7 = 0;
-
         /* Setup the IDT */
         KeInitExceptions();
 
@@ -714,7 +714,7 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
 //        Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
 
         /* LDT is unused */
-        Ke386SetLocalDescriptorTable(0);
+        __sldt(0);
 
         /* Save NMI and double fault traps */
 //        RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
@@ -753,7 +753,7 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
     if (Cpu == 0)
     {
         /* Initialize debugging system */
-//        KdInitSystem(0, KeLoaderBlock);
+        KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
 //        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
