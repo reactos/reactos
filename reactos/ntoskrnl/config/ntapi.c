@@ -707,7 +707,7 @@ NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
           IN POBJECT_ATTRIBUTES FileObjectAttributes)
 {
     /* Call the newer API */
-    return NtLoadKey2(KeyObjectAttributes, FileObjectAttributes, 0);
+    return NtLoadKeyEx(KeyObjectAttributes, FileObjectAttributes, 0, NULL);
 }
 
 NTSTATUS
