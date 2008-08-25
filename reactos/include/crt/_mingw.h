@@ -178,6 +178,20 @@
 # define __MSVCRT_VERSION__ 0x0600
 #endif
 
+#ifndef _SIZE_T_DEFINED
+#define _SIZE_T_DEFINED
+#undef size_t
+#ifdef _WIN64
+#if defined(__GNUC__) && defined(__STRICT_ANSI__)
+  typedef unsigned int size_t __attribute__ ((mode (DI)));
+#else
+  typedef unsigned __int64 size_t;
+#endif
+#else
+  typedef unsigned int size_t;
+#endif
+#endif
+
 #define __MINGW32_VERSION 3.13
 #define __MINGW32_MAJOR_VERSION 3
 #define __MINGW32_MINOR_VERSION 13

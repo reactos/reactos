@@ -65,37 +65,36 @@ typedef unsigned __int64 HANDLE_PTR;
 typedef unsigned int UHALF_PTR, *PUHALF_PTR;
 typedef int HALF_PTR, *PHALF_PTR;
 
-#if 0 /* TODO when WIN64 is here */
-inline unsigned long HandleToUlong(const void* h )
-    { return((unsigned long) h ); }
-inline long HandleToLong( const void* h )
-    { return((long) h ); }
-inline void* ULongToHandle( const long h )
+#if !defined(__midl) && !defined(__WIDL__)
+static inline unsigned long HandleToUlong(const void* h )
+    { return((unsigned long)(ULONG_PTR) h ); }
+static inline long HandleToLong( const void* h )
+    { return((long)(LONG_PTR) h ); }
+static inline void* ULongToHandle( const long h )
     { return((void*) (UINT_PTR) h ); }
-inline void* LongToHandle( const long h )
+static inline void* LongToHandle( const long h )
     { return((void*) (INT_PTR) h ); }
-inline unsigned long PtrToUlong( const void* p)
-    { return((unsigned long) p ); }
-inline unsigned int PtrToUint( const void* p )
-    { return((unsigned int) p ); }
-inline unsigned short PtrToUshort( const void* p )
-    { return((unsigned short) p ); }
-inline long PtrToLong( const void* p )
-    { return((long) p ); }
-inline int PtrToInt( const void* p )
-    { return((int) p ); }
-inline short PtrToShort( const void* p )
-    { return((short) p ); }
-inline void* IntToPtr( const int i )
+static inline unsigned long PtrToUlong( const void* p)
+    { return((unsigned long)(ULONG_PTR) p ); }
+static inline unsigned int PtrToUint( const void* p )
+    { return((unsigned int)(UINT_PTR) p ); }
+static inline unsigned short PtrToUshort( const void* p )
+    { return((unsigned short)(ULONG_PTR) p ); }
+static inline long PtrToLong( const void* p )
+    { return((long)(LONG_PTR) p ); }
+static inline int PtrToInt( const void* p )
+    { return((int)(INT_PTR) p ); }
+static inline short PtrToShort( const void* p )
+    { return((short)(INT_PTR) p ); }
+static inline void* IntToPtr( const int i )
     { return( (void*)(INT_PTR)i ); }
-inline void* UIntToPtr(const unsigned int ui)
+static inline void* UIntToPtr(const unsigned int ui)
     { return( (void*)(UINT_PTR)ui ); }
-inline void* LongToPtr( const long l )
+static inline void* LongToPtr( const long l )
     { return( (void*)(LONG_PTR)l ); }
-inline void* ULongToPtr( const unsigned long ul )
+static inline void* ULongToPtr( const unsigned long ul )
     { return( (void*)(ULONG_PTR)ul ); }
-#endif /* 0_ */
-
+#endif /* !__midl */
 #else /*  !_WIN64 */
 typedef int INT_PTR, *PINT_PTR;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
