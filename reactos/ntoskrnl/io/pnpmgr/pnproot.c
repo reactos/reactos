@@ -99,14 +99,20 @@ LocateChildDevice(
 {
     PPNPROOT_DEVICE Device;
     UNICODE_STRING DeviceIdU, InstanceIdU;
+    PLIST_ENTRY NextEntry;
 
     /* Initialize the strings to compare  */
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
     RtlInitUnicodeString(&InstanceIdU, InstanceId);
 
     /* Start looping */
-    LIST_FOR_EACH(Device, &DeviceExtension->DeviceListHead, PNPROOT_DEVICE, ListEntry)
+    for (NextEntry = DeviceExtension->DeviceListHead.Flink;
+         NextEntry != &DeviceExtension->DeviceListHead;
+         NextEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
+
         /* See if the strings match */
         if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE) &&
             RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
@@ -521,6 +527,7 @@ PnpRootQueryDeviceRelations(
     PPNPROOT_DEVICE Device = NULL;
     ULONG Size;
     NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
 
     DPRINT("PnpRootQueryDeviceRelations(FDO %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -556,8 +563,15 @@ PnpRootQueryDeviceRelations(
     }
 
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
-    LIST_FOR_EACH(Device, &DeviceExtension->DeviceListHead, PNPROOT_DEVICE, ListEntry)
+
+    /* Start looping */
+    for (NextEntry = DeviceExtension->DeviceListHead.Flink;
+         NextEntry != &DeviceExtension->DeviceListHead;
+         NextEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
+    
         if (!Device->Pdo)
         {
             /* Create a physical device object for the

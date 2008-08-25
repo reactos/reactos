@@ -54,8 +54,9 @@ KeStartProfile(PKPROFILE Profile,
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
-    BOOLEAN FreeBuffer = TRUE;
+    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;;
     PKPROCESS ProfileProcess;
+    PLIST_ENTRY NextEntry;
 
     /* Allocate a buffer first, before we raise IRQL */
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -89,18 +90,27 @@ KeStartProfile(PKPROFILE Profile,
             InsertTailList(&KiProfileListHead, &Profile->ProfileListEntry);
         }
 
-        /* Check if this type of profile (source) is already running */
-        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
+        /* Start looping */
+        for (NextEntry = KiProfileSourceListHead.Flink;
+             NextEntry != &KiProfileSourceListHead;
+             NextEntry = NextEntry->Flink)
         {
+            /* Get the entry */
+            CurrentSource = CONTAINING_RECORD(NextEntry,
+                                              KPROFILE_SOURCE_OBJECT,
+                                              ListEntry);
+
             /* Check if it's the same as the one being requested now */
             if (CurrentSource->Source == Profile->Source)
             {
+                /* It is, break out */
+                SourceFound = TRUE;
                 break;
             }
         }
 
         /* See if the loop found something */
-        if (!CurrentSource)
+        if (!SourceFound)
         {
             /* Nothing found, use our allocated buffer */
             CurrentSource = SourceBuffer;
@@ -122,7 +132,7 @@ KeStartProfile(PKPROFILE Profile,
     //HalStartProfileInterrupt(Profile->Source);
 
     /* Free the pool */
-    if (!FreeBuffer) ExFreePool(SourceBuffer);
+    if (FreeBuffer) ExFreePool(SourceBuffer);
 }
 
 BOOLEAN
@@ -131,6 +141,8 @@ KeStopProfile(PKPROFILE Profile)
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT CurrentSource = NULL;
+    PLIST_ENTRY NextEntry;
+    BOOLEAN SourceFound = FALSE;
 
     /* Raise to PROFILE_LEVEL and acquire spinlock */
     KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
@@ -143,12 +155,23 @@ KeStopProfile(PKPROFILE Profile)
         RemoveEntryList(&Profile->ProfileListEntry);
         Profile->Started = FALSE;
 
-        /* Find the Source Object */
-        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
+        /* Start looping */
+        for (NextEntry = KiProfileSourceListHead.Flink;
+             NextEntry != &KiProfileSourceListHead;
+             NextEntry = NextEntry->Flink)
         {
+            /* Get the entry */
+            CurrentSource = CONTAINING_RECORD(NextEntry,
+                                              KPROFILE_SOURCE_OBJECT,
+                                              ListEntry);
+
+            /* Check if this is the Source Object */
             if (CurrentSource->Source == Profile->Source)
             {
-                /* Remove it */
+                /* Remember we found one */
+                SourceFound = TRUE;
+
+                /* Remove it and break out */
                 RemoveEntryList(&CurrentSource->ListEntry);
                 break;
             }
@@ -164,7 +187,7 @@ KeStopProfile(PKPROFILE Profile)
     //HalStopProfileInterrupt(Profile->Source);
 
     /* Free the Source Object */
-    if (CurrentSource) ExFreePool(CurrentSource);
+    if (SourceFound) ExFreePool(CurrentSource);
 
     /* FIXME */
     return FALSE;
@@ -231,10 +254,16 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
 {
     PULONG BucketValue;
     PKPROFILE Profile;
+    PLIST_ENTRY NextEntry;
 
     /* Loop the List */
-    LIST_FOR_EACH(Profile, ListHead, KPROFILE, ProfileListEntry)
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        Profile = CONTAINING_RECORD(NextEntry, KPROFILE, ProfileListEntry);
+
         /* Check if the source is good, and if it's within the range */
 #ifdef _M_IX86
         if ((Profile->Source != Source) ||

@@ -350,14 +350,22 @@ IoCreateDriverList(VOID)
 NTSTATUS INIT_FUNCTION
 IoDestroyDriverList(VOID)
 {
-    PSERVICE_GROUP CurrentGroup, tmp1;
-    PSERVICE CurrentService, tmp2;
+    PSERVICE_GROUP CurrentGroup;
+    PSERVICE CurrentService;
+    PLIST_ENTRY NextEntry, TempEntry;
 
     DPRINT("IoDestroyDriverList() called\n");
 
     /* Destroy the Group List */
-    LIST_FOR_EACH_SAFE(CurrentGroup, tmp1, &GroupListHead, SERVICE_GROUP, GroupListEntry)
+    for (NextEntry = GroupListHead.Flink, TempEntry = NextEntry->Flink;
+         NextEntry != &GroupListHead;
+         NextEntry = TempEntry, TempEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        CurrentGroup = CONTAINING_RECORD(NextEntry,
+                                         SERVICE_GROUP,
+                                         GroupListEntry);
+
         /* Remove it from the list */
         RemoveEntryList(&CurrentGroup->GroupListEntry);
 
@@ -369,8 +377,15 @@ IoDestroyDriverList(VOID)
     }
 
     /* Destroy the Service List */
-    LIST_FOR_EACH_SAFE(CurrentService, tmp2, &ServiceListHead, SERVICE, ServiceListEntry)
+    for (NextEntry = ServiceListHead.Flink, TempEntry = NextEntry->Flink;
+         NextEntry != &ServiceListHead;
+         NextEntry = TempEntry, TempEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        CurrentService = CONTAINING_RECORD(NextEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
         /* Remove it from the list */
         RemoveEntryList(&CurrentService->ServiceListEntry);
 
@@ -448,21 +463,35 @@ IopInitializeSystemDrivers(VOID)
    PSERVICE CurrentService;
    NTSTATUS Status;
    ULONG i;
+   PLIST_ENTRY NextGroupEntry, NextServiceEntry;
 
    DPRINT("IopInitializeSystemDrivers()\n");
 
-    /* Loop the list */
-    LIST_FOR_EACH(CurrentGroup, &GroupListHead, SERVICE_GROUP, GroupListEntry)
+    /* Start looping */
+    for (NextGroupEntry = GroupListHead.Flink;
+         NextGroupEntry != &GroupListHead;
+         NextGroupEntry = NextGroupEntry->Flink)
     {
+        /* Get the entry */
+        CurrentGroup = CONTAINING_RECORD(NextGroupEntry,
+                                         SERVICE_GROUP,
+                                         GroupListEntry);
 
         DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
 
         /* Load all drivers with a valid tag */
         for (i = 0; i < CurrentGroup->TagCount; i++)
         {
-            /* Loop the list */
-            LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
+            /* Start looping */
+            for (NextServiceEntry = ServiceListHead.Flink;
+                 NextServiceEntry != &ServiceListHead;
+                 NextServiceEntry = NextServiceEntry->Flink)
             {
+                /* Get the entry */
+                CurrentService = CONTAINING_RECORD(NextServiceEntry,
+                                                   SERVICE,
+                                                   ServiceListEntry);
+
                 if ((!RtlCompareUnicodeString(&CurrentGroup->GroupName,
                                              &CurrentService->ServiceGroup,
                                              TRUE)) &&
@@ -477,8 +506,15 @@ IopInitializeSystemDrivers(VOID)
         }
 
         /* Load all drivers without a tag or with an invalid tag */
-        LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
+        for (NextServiceEntry = ServiceListHead.Flink;
+             NextServiceEntry != &ServiceListHead;
+             NextServiceEntry = NextServiceEntry->Flink)
         {
+            /* Get the entry */
+            CurrentService = CONTAINING_RECORD(NextServiceEntry,
+                                               SERVICE,
+                                               ServiceListEntry);
+
             if ((!RtlCompareUnicodeString(&CurrentGroup->GroupName,
                                          &CurrentService->ServiceGroup,
                                          TRUE)) &&
