@@ -1589,7 +1589,7 @@ NdisCopyFromPacketToPacket(
  *   IN ULONG ReceiveFlags);
  */
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
 #define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
   RtlCopyMemory(Destination, Source, Length)
 #else

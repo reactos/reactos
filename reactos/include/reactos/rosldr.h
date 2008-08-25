@@ -45,6 +45,7 @@ typedef struct _ROS_LOADER_PARAMETER_BLOCK
     ULONG_PTR PageDirectoryEnd;
     ULONG_PTR KernelBase;
     ULONG_PTR ArchExtra;
+    ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 } ROS_LOADER_PARAMETER_BLOCK, *PROS_LOADER_PARAMETER_BLOCK;
 
 extern BOOLEAN AcpiTableDetected;

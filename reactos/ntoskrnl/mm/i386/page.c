@@ -74,7 +74,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 PULONG
 MmGetPageDirectory(VOID)
 {
-    return (PULONG)__readcr3();
+    return (PULONG)(ULONG_PTR)__readcr3();
 }
 
 static ULONG

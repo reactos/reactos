@@ -2499,7 +2499,7 @@ ExDisableResourceBoostLite (
 );
 
 NTKERNELAPI
-ULONG
+SIZE_T
 NTAPI
 ExQueryPoolBlockSize (
     IN PVOID      PoolBlock,
