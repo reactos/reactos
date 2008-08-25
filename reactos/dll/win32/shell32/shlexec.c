@@ -129,6 +129,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                         used++;
                         if (used < len)
                             *res++ = '"';
+                        break;
                     }
                     else
                     {
@@ -146,7 +147,10 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                     }
                     break;
                 }
-                /* else fall through */
+                else
+                {
+                    break;
+                }
             case '1':
                 if (!done || (*fmt == '1'))
                 {

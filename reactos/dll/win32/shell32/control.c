@@ -427,12 +427,20 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	  sp = 0;
        }
 
-       if ((extraPmts)&&(!spSet))
+       if ((extraPmts) && extraPmts[0] &&(!spSet))
        {
           while ((lstrcmpiW(extraPmts, applet->info[sp].szName)) && (sp < applet->count))
             sp++;
-       }
 
+          if (sp >= applet->count)
+          {
+            ReleaseMutex(hMutex);
+            CloseHandle(hMutex);
+            Control_UnloadApplet(applet);
+            HeapFree(GetProcessHeap(), 0, buffer);
+            return;
+          }
+       }
        if (applet->info[sp].dwSize) {
 	  if (!applet->proc(applet->hWnd, CPL_STARTWPARMSA, sp, (LPARAM)extraPmts))
 	     applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].lData);

@@ -1508,6 +1508,8 @@ DoStaticShellExtensions(
     IDefaultContextMenuImpl *This,
     LPCMINVOKECOMMANDINFO lpcmi)
 {
+    STRRET strFile;
+    WCHAR szPath[MAX_PATH];
     SHELLEXECUTEINFOW sei;
     PStaticShellEntry pCurrent = This->shead;
     int verb = LOWORD(lpcmi->lpVerb) - This->iIdSCMFirst;
@@ -1520,16 +1522,25 @@ DoStaticShellExtensions(
         return E_FAIL;
 
 
+    if (IShellFolder2_GetDisplayNameOf(This->dcm.psf, This->dcm.apidl[0], SHGDN_FORPARSING, &strFile) != S_OK)
+    {
+        ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
+        return E_FAIL;
+    }
+
+    if (StrRetToBufW(&strFile, This->dcm.apidl[0], szPath, MAX_PATH) != S_OK)
+        return E_FAIL;
+
+
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_CLASSNAME | SEE_MASK_IDLIST;
+    sei.fMask = SEE_MASK_CLASSNAME;
     sei.lpClass = pCurrent->szClass;
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pCurrent->szVerb;
-    sei.lpIDList = ILCombine(This->dcm.pidlFolder, This->dcm.apidl[0]);
+    sei.lpFile = szPath;
     ShellExecuteExW(&sei);
-    SHFree(sei.lpIDList);
     return S_OK;
 
 }
