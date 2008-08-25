@@ -26,17 +26,31 @@ MM_STATS MmStats;
 
 VOID
 FASTCALL
-MiSyncThreadProcessViews(IN PKTHREAD NextThread,
-                         IN PEPROCESS Process)
+MiSyncForProcessAttach(IN PKTHREAD Thread,
+                       IN PEPROCESS Process)
 {
-    PETHREAD Thread = CONTAINING_RECORD(NextThread, ETHREAD, Tcb);
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
 
     /* Hack Sync because Mm is broken */
-    MmUpdatePageDir(Process, Thread, sizeof(ETHREAD));
-    MmUpdatePageDir(Process, Thread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
     MmUpdatePageDir(Process,
-                    (PVOID)Thread->Tcb.StackLimit,
-                    NextThread->LargeStack ?
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(IN PKTHREAD Thread)
+{
+    PVOID Process = PsGetCurrentProcess();
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
 }
 

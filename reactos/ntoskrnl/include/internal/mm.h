@@ -1554,12 +1554,18 @@ MmCallDllInitialize(
     IN PLIST_ENTRY ListHead
 );
 
-/* ReactOS Mm Hack */
+/* ReactOS Mm Hacks */
 VOID
 FASTCALL
-MiSyncThreadProcessViews(
+MiSyncForProcessAttach(
     IN PKTHREAD NextThread,
     IN PEPROCESS Process
+);
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(
+    IN PKTHREAD Thread
 );
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;

@@ -738,8 +738,7 @@ CheckNext:
 SwapContext:
     /* ReactOS Mm Hack */
     mov ecx, esi
-    mov edx, [edi+KTHREAD_APCSTATE_PROCESS]
-    call @MiSyncThreadProcessViews@8
+    call @MiSyncForContextSwitch@4
 
     /* Swap context at APC_LEVEL */
     mov ecx, APC_LEVEL

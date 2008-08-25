@@ -448,7 +448,7 @@ KeAttachProcess(IN PKPROCESS Process)
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
+    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;
@@ -574,7 +574,7 @@ KeStackAttachProcess(IN PKPROCESS Process,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
+    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc())
