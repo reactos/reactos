@@ -4438,7 +4438,11 @@ static __inline__ PVOID GetCurrentFiber(void)
 #elif defined (_M_AMD64)
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
+  #ifdef NONAMELESSUNION
+    return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, DUMMYUNIONNAME.FiberData));
+  #else
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
+  #endif
 }
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
