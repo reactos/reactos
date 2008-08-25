@@ -301,7 +301,6 @@ ScreenWrite(
 	if (!(DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT))
 	{
 		/* raw output mode */
-		CHECKPOINT;
 		Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 		IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
@@ -594,7 +593,6 @@ ScreenDeviceControl(
 				&& ConsoleDraw->SizeX == DeviceExtension->Columns
 				&& ConsoleDraw->SizeY == DeviceExtension->Rows)
 			{
-				CHECKPOINT1;
 				/* search if we need to clear all screen */
 				DoOptimization = TRUE;
 				Video = (PUCHAR)(ConsoleDraw + 1);
@@ -603,14 +601,12 @@ ScreenDeviceControl(
 				{
 					if (Video[x++] != ' ')
 					{
-						CHECKPOINT1;
 						DoOptimization = FALSE;
 					}
 					/*if (Video[x++] != DeviceExtension->CharAttribute) DoOptimization = FALSE; */
 				}
 				if (DoOptimization)
 				{
-					CHECKPOINT1;
 					AddToSendBuffer(DeviceExtension, 4, ESC, '[', '2', 'J');
 				}
 			}
