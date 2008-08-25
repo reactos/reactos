@@ -73,7 +73,7 @@ CsrIdentifyAlertableThread (VOID)
     /* Set up the data for CSR */
     DbgBreakPoint();
     IdentifyAlertableThread = &ApiMessage.IdentifyAlertableThread;
-    IdentifyAlertableThread->Cid = NtCurrentTeb()->Cid;
+    IdentifyAlertableThread->Cid = NtCurrentTeb()->ClientId;
 
     /* Call it */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,

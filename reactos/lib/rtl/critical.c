@@ -310,7 +310,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
         DPRINT("Freeing from Buffer: %p. Entry: %lu inside Process: %p\n",
                DebugInfo,
                EntryId,
-               NtCurrentTeb()->Cid.UniqueProcess);
+               NtCurrentTeb()->ClientId.UniqueProcess);
         RtlpDebugInfoFreeList[EntryId] = FALSE;
 
     } else {
@@ -318,7 +318,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
         /* It's a dynamic one, so free from the heap */
         DPRINT("Freeing from Heap: %p inside Process: %p\n",
                DebugInfo,
-               NtCurrentTeb()->Cid.UniqueProcess);
+               NtCurrentTeb()->ClientId.UniqueProcess);
         RtlFreeHeap(NtCurrentPeb()->ProcessHeap, 0, DebugInfo);
 
     }
@@ -424,7 +424,7 @@ NTSTATUS
 NTAPI
 RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
-    HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
+    HANDLE Thread = (HANDLE)NtCurrentTeb()->ClientId.UniqueThread;
 
     /* Try to Lock it */
     if (_InterlockedIncrement(&CriticalSection->LockCount) != 0) {
@@ -522,7 +522,7 @@ RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
     CritcalSectionDebugData = RtlpAllocateDebugInfo();
     DPRINT("Allocated Debug Data: %p inside Process: %p\n",
            CritcalSectionDebugData,
-           NtCurrentTeb()->Cid.UniqueProcess);
+           NtCurrentTeb()->ClientId.UniqueProcess);
 
     if (!CritcalSectionDebugData) {
 
@@ -657,11 +657,11 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
                                     -1) == -1) {
 
         /* It's ours */
-        CriticalSection->OwningThread =  NtCurrentTeb()->Cid.UniqueThread;
+        CriticalSection->OwningThread =  NtCurrentTeb()->ClientId.UniqueThread;
         CriticalSection->RecursionCount = 1;
         return TRUE;
 
-   } else if (CriticalSection->OwningThread == NtCurrentTeb()->Cid.UniqueThread) {
+   } else if (CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread) {
 
         /* It's already ours */
         _InterlockedIncrement(&CriticalSection->LockCount);

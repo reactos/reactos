@@ -452,7 +452,7 @@ MmCreateTeb(PEPROCESS Process,
     Teb->Tib.Self = (PNT_TIB)Teb;
 
     /* Set TEB Data */
-    Teb->Cid = *ClientId;
+    Teb->ClientId = *ClientId;
     Teb->RealClientId = *ClientId;
     Teb->ProcessEnvironmentBlock = Process->Peb;
     Teb->CurrentLocale = PsDefaultThreadLocaleId;
