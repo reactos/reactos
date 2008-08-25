@@ -138,6 +138,10 @@ ScsiDebugPrint(
 
 #else // _DEBUG
 
+#ifdef KdPrint
+#undef KdPrint
+#endif
+
 #define PRINT_PREFIX "UniATA: "
 
 //#define KdPrint3(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
