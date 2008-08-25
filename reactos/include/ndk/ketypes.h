@@ -558,7 +558,7 @@ typedef enum _PROCESSOR_CACHE_TYPE
 typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
-    ULONG DpcLock;
+    ULONG_PTR DpcLock;
     volatile ULONG DpcQueueDepth;
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
