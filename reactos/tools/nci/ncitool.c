@@ -140,7 +140,7 @@ struct ncitool_data_t ncitool_data[] = {
 	{ "i386", 4, KernelModeStub_x86, UserModeStub_x86,
 	  ".global _%s@%d\n", "_%s@%d:\n" },
 	{ "amd64", 4, KernelModeStub_amd64, UserModeStub_amd64,
-	  ".global _%s@%d\n", "_%s@%d:\n" },
+	  ".global _%s\n", "_%s:\n" },
 	{ "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
 	  "\t.globl %s\n", "%s:\n" },
 	{ "mips", 4, KernelModeStub_mips, UserModeStub_mips,
