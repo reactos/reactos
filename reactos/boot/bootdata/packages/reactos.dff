@@ -291,6 +291,7 @@ dll\win32\newdev\newdev.dll                         1
 dll\win32\ntdsapi\ntdsapi.dll                       1
 dll\win32\ntmarta\ntmarta.dll                       1
 dll\win32\objsel\objsel.dll                         1
+dll\win32\odbc32\odbc32.dll                         1
 dll\win32\odbccp32\odbccp32.dll                     1
 dll\win32\ole32\ole32.dll                           1
 dll\win32\oleacc\oleacc.dll                         1
