@@ -23,10 +23,8 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_ACTIVATE)
     {
-      CHECKPOINT1;
       if (LOWORD(wParam) != WA_INACTIVE)
         {
-          CHECKPOINT1;
           SetFocus(hWnd);
           ConioDrawConsole(ActiveConsole);
         }

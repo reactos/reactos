@@ -136,7 +136,6 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
-      CHECKPOINT;
       co_IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == UserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       co_IntPostOrSendMessage(hWnd, WM_ACTIVATE,
@@ -251,7 +250,6 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
 
-   CHECKPOINT;
    co_IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    co_IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 

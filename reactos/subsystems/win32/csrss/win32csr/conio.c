@@ -574,7 +574,6 @@ CSR_API(CsrReadConsole)
       CurrentEntry = RemoveHeadList(&Console->InputEvents);
       if (IsListEmpty(&Console->InputEvents))
       {
-         CHECKPOINT;
          ResetEvent(Console->ActiveEvent);
       }
       Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);

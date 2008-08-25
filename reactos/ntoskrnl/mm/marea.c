@@ -978,14 +978,12 @@ MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
       if (MmGetAddressSpaceOwner(AddressSpace) &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 

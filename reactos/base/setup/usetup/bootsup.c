@@ -979,7 +979,6 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }

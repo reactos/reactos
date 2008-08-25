@@ -300,14 +300,12 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 				if (RtlEqualUnicodeString(&FileNameU, FcbNameU, TRUE))
 				{
 					rcFCB->RefCount++;
-					CHECKPOINT;
 					return rcFCB;
 				}
 			}
 		}
 		entry = entry->next;
 	}
-	CHECKPOINT;
 	return  NULL;
 }
 
@@ -536,7 +534,6 @@ vfatAttachFCBToFileObject (
 	newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
 	if (newCCB == NULL)
 	{
-		CHECKPOINT;
 		return  STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RtlZeroMemory (newCCB, sizeof (VFATCCB));

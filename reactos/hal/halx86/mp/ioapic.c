@@ -648,15 +648,13 @@ HaliReconfigurePciInterrupts(VOID)
 	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId, 
 	        IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
 
-	 if(1 != HalSetBusDataByOffset(PCIConfiguration, 
+	 HalSetBusDataByOffset(PCIConfiguration, 
 	                               IRQMap[i].SrcBusId, 
 				       (IRQMap[i].SrcBusIrq >> 2) & 0x1f, 
 				       &IRQMap[i].DstApicInt, 
 				       0x3c /*PCI_INTERRUPT_LINE*/, 
-				       1))
-	 {
-	    CHECKPOINT;
-	 }
+				       1);
+
       }
    }
 }

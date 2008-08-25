@@ -316,7 +316,6 @@ MiBalancerThread(PVOID Unused)
       if (Status == STATUS_SUCCESS)
       {
          /* MiBalancerEvent */
-         CHECKPOINT;
          while (MmStats.NrFreePages < MiMinimumAvailablePages + 5)
          {
             for (i = 0; i < MC_MAXIMUM; i++)
@@ -333,7 +332,6 @@ MiBalancerThread(PVOID Unused)
             }
          }
          InterlockedExchange(&MiBalancerWork, 0);
-         CHECKPOINT;
       }
       else if (Status == STATUS_SUCCESS + 1)
       {
@@ -387,7 +385,6 @@ MiInitBalancerThread(VOID)
    ;
 #endif
 
-   CHECKPOINT;
 
    KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
    KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);

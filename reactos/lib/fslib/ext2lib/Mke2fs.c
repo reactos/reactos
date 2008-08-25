@@ -813,17 +813,14 @@ Ext2Format(
     EXT2_FILESYS     FileSys;
     ULONG Percent;
 
-    CHECKPOINT;
 
     Callback(PROGRESS, 0, (PVOID)&Percent);
 
-    CHECKPOINT;
 
     RtlZeroMemory(&Ext2Sb, sizeof(EXT2_SUPER_BLOCK));
     RtlZeroMemory(&FileSys, sizeof(EXT2_FILESYS));
     FileSys.ext2_sb = &Ext2Sb;
 
-    CHECKPOINT;
 
     if (!NT_SUCCESS(Ext2OpenDevice(&FileSys, DriveRoot)))
     {
@@ -831,7 +828,6 @@ Ext2Format(
         goto clean_up;
     }
 
-    CHECKPOINT;
 
     if (!NT_SUCCESS(Ext2GetMediaInfo(&FileSys)))
     {
@@ -844,7 +840,6 @@ Ext2Format(
     Ext2Sb.s_blocks_count = FileSys.PartInfo.PartitionLength.QuadPart /
                             EXT2_BLOCK_SIZE(&Ext2Sb);
 
-    CHECKPOINT;
 
     /*
      * Calculate number of inodes based on the inode ratio
@@ -857,7 +852,6 @@ Ext2Format(
      */
     Ext2Sb.s_r_blocks_count = (Ext2Sb.s_blocks_count * 5) / 100;
 
-    CHECKPOINT;
 
     Status = Ext2LockVolume(&FileSys);
     if (NT_SUCCESS(Status))
@@ -865,7 +859,6 @@ Ext2Format(
         bLocked = TRUE;
     }
 
-    CHECKPOINT;
 
     // Initialize 
     if (!ext2_initialize_sb(&FileSys))
@@ -874,7 +867,6 @@ Ext2Format(
         goto clean_up;
     }
 
-    CHECKPOINT;
 
     zap_sector(&FileSys, 2, 6);
 
@@ -999,13 +991,9 @@ clean_up:
         }
     }
 
-    CHECKPOINT;
     Ext2CloseDevice(&FileSys);
-    CHECKPOINT;
 
-    CHECKPOINT;
     Callback(DONE, 0, (PVOID)&bRet);
-    CHECKPOINT;
 
     return Status;
 }

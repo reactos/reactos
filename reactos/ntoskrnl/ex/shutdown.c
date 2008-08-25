@@ -197,7 +197,7 @@ ShutdownThreadMain(PVOID Context)
 #endif /* CONFIG_SMP */
         PopSetSystemPowerState(PowerSystemShutdown);
 
-	CHECKPOINT1;
+	DPRINT1("Shutting down\n");
 
 	KiHaltProcessorDpcRoutine(NULL, NULL, NULL, NULL);
 	/* KiHaltProcessor does never return */

@@ -2036,7 +2036,6 @@ MmProtectSectionView(PMM_AVL_TABLE AddressSpace,
    if ((MemoryArea->Flags & SEC_NO_CHANGE) &&
        Region->Protect != Protect)
    {
-      CHECKPOINT1;
       return STATUS_INVALID_PAGE_PROTECTION;
    }
 
@@ -3686,7 +3685,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     */
    if (Protect & ~PAGE_FLAGS_VALID_FROM_USER_MODE)
    {
-     CHECKPOINT1;
      return STATUS_INVALID_PARAMETER_10;
    }
 
@@ -3700,7 +3698,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        tmpProtect != PAGE_EXECUTE_READWRITE &&
        tmpProtect != PAGE_EXECUTE_WRITECOPY)
    {
-     CHECKPOINT1;
      return STATUS_INVALID_PAGE_PROTECTION;
    }
 
@@ -4508,7 +4505,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
        Protect != PAGE_EXECUTE_READWRITE &&
        Protect != PAGE_EXECUTE_WRITECOPY)
    {
-      CHECKPOINT1;
       return STATUS_INVALID_PAGE_PROTECTION;
    }
 
@@ -4605,21 +4601,18 @@ MmMapViewOfSection(IN PVOID SectionObject,
       if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
           !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
       {
-         CHECKPOINT1;
          return STATUS_SECTION_PROTECTION;
       }
       /* check for read access */
       if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
-         CHECKPOINT1;
          return STATUS_SECTION_PROTECTION;
       }
       /* check for execute access */
       if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
-         CHECKPOINT1;
          return STATUS_SECTION_PROTECTION;
       }
 
@@ -4925,7 +4918,6 @@ MmCreateSection (OUT PVOID  * Section,
        Protection != PAGE_EXECUTE_READWRITE &&
        Protection != PAGE_EXECUTE_WRITECOPY)
    {
-     CHECKPOINT1;
      return STATUS_INVALID_PAGE_PROTECTION;
    }
 

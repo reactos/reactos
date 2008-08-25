@@ -241,7 +241,6 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             if (PartitionInfoIsValid &&
                 FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
             {
-               CHECKPOINT1;
                *RecognizedFS = FALSE;
             }
 
