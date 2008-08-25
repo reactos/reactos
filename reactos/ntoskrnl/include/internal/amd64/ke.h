@@ -45,6 +45,10 @@
 
 #define X86_MSR_GSBASE          0xC0000101
 #define X86_MSR_KERNEL_GSBASE   0xC0000102
+#define X86_MSR_STAR            0xC0000081
+#define X86_MSR_LSTAR           0xC0000082
+#define X86_MSR_CSTAR           0xC0000083
+#define X86_MSR_SFMASK          0xC0000084
 
 #ifndef __ASM__
 

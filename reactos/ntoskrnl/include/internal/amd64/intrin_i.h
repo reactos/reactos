@@ -11,25 +11,45 @@
 
 #if defined(__GNUC__)
 
-#define Ke386SetInterruptDescriptorTable(X) \
-    __asm__("lidt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+static __inline__ __attribute__((always_inline)) void __lgdt(void *Source)
+{
+	__asm__ __volatile__("lgdt %0" : : "m"(*(short*)Source));
+}
 
-#define Ke386GetInterruptDescriptorTable(X) \
-    __asm__("sidt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+static __inline__ __attribute__((always_inline)) void __sgdt(void *Destination)
+{
+	__asm__ __volatile__("sgdt %0" : : "m"(*(short*)Destination) : "memory");
+}
 
-#define Ke386SetGlobalDescriptorTable(X) \
-    __asm__("lgdt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+static __inline__ __attribute__((always_inline)) void __lldt(void *Source)
+{
+	__asm__ __volatile__("lldt %0" : : "m"(*(short*)Source));
+}
 
-#define Ke386GetGlobalDescriptorTable(X) \
-    __asm__("sgdt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+static __inline__ __attribute__((always_inline)) void __sldt(void *Destination)
+{
+	__asm__ __volatile__("sldt %0" : : "m"(*(short*)Destination) : "memory");
+}
+
+static __inline__ __attribute__((always_inline)) void __ldmxcsr(unsigned long *Source)
+{
+	__asm__ __volatile__("ldmxcsr %0" : : "m"(*Source));
+}
+
+static __inline__ __attribute__((always_inline)) void __stmxcsr(unsigned long *Destination)
+{
+	__asm__ __volatile__("stmxcsr %0" : : "m"(*Destination) : "memory");
+}
+
+static __inline__ __attribute__((always_inline)) void __ltr(unsigned short *Source)
+{
+	__asm__ __volatile__("ltr %0" : : "m"(*Source));
+}
+
+static __inline__ __attribute__((always_inline)) void __str(unsigned short *Destination)
+{
+	__asm__ __volatile__("str %0" : : "m"(*Destination) : "memory");
+}
 
 #define Ke386GetLocalDescriptorTable(X) \
     __asm__("sldt %0\n\t" \
@@ -61,7 +81,7 @@
 
 #define _Ke386GetDr(N)           ({ \
                                      unsigned int __d; \
-                                     __asm__("movl %%dr" #N ",%0\n\t" :"=r" (__d)); \
+                                     __asm__("movq %%dr" #N ",%0\n\t" :"=r" (__d)); \
                                      __d; \
                                  })
 
