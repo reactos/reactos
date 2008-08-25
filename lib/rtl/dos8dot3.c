@@ -95,6 +95,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    ULONG IndexLength;
    ULONG CurrentIndex;
    USHORT Checksum;
+   BOOLEAN SkipDots = TRUE;
 
    StrLength = Name->Length / sizeof(WCHAR);
    DPRINT("StrLength: %lu\n", StrLength);
@@ -105,7 +106,14 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    {
       if (Name->Buffer[i] == L'.')
       {
-         DotPos = i;
+         if (!SkipDots)
+         {
+            DotPos = i;
+         }
+      }
+      else
+      {
+          SkipDots = FALSE;
       }
    }
 
