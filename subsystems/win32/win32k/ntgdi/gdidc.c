@@ -252,7 +252,7 @@ NtGdiDeleteClientObj(IN HANDLE h)
 }
 
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiAddRemoteMMInstanceToDC(IN HDC hdc,
                              IN DOWNLOADDESIGNVECTOR *pddv,
                              IN ULONG cjDDV)
@@ -262,7 +262,7 @@ NtGdiAddRemoteMMInstanceToDC(IN HDC hdc,
 }
 
 DHPDEV
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiGetDhpdev(IN HDEV hdev)
 {
     UNIMPLEMENTED;

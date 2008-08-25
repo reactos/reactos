@@ -157,7 +157,7 @@ NtGdiGetCharacterPlacementW(IN HDC hdc,
 }
 
 DWORD
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiGetCharSet(IN HDC hdc)
 {
     UNIMPLEMENTED;

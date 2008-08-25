@@ -274,7 +274,7 @@ NtGdiAddEmbFontToDC(IN HDC hdc,
 }
 
 DWORD
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiGetFontUnicodeRanges(IN HDC hdc,
                           OUT OPTIONAL LPGLYPHSET pgs)
 {
@@ -443,7 +443,7 @@ NtGdiGetRasterizerCaps(OUT LPRASTERIZER_STATUS praststat,
 }
 
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiGetRealizationInfo(IN HDC hdc,
                         OUT PREALIZATION_INFO pri,
                         IN HFONT hf)
