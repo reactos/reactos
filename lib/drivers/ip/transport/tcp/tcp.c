@@ -836,6 +836,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 
 	    if( Bucket->Request.RequestContext == Irp ) {
 		RemoveEntryList( &Bucket->Entry );
+		PoolFreeBuffer( Bucket );
 		break;
 	    }
 	}
