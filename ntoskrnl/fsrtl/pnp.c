@@ -3,12 +3,13 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/pnp.c
  * PURPOSE:         Manages PnP support routines for file system drivers.
- * PROGRAMMERS:     None.
+ * PROGRAMMERS:     heis_spiter@hotmail.com
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ioevent.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -16,17 +17,18 @@
 
 /*++
  * @name FsRtlNotifyVolumeEvent
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Notifies system (and applications) that something changed on volume.
+ * FSD should call it each time volume status changes. 
  *
  * @param FileObject
- *        FILLME
+ *        FileObject for the volume
  *
  * @param EventCode
- *        FILLME
+ *        Event that occurs one the volume
  *
- * @return None
+ * @return STATUS_SUCCESS if notification went well
  *
  * @remarks Only present in NT 5+.
  *
@@ -36,7 +38,69 @@ NTAPI
 FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
                        IN ULONG EventCode)
 {
-    /* Unimplemented */
-    KEBUGCHECK(0);
-    return STATUS_NOT_IMPLEMENTED;
+    LPGUID Guid = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    TARGET_DEVICE_CUSTOM_NOTIFICATION Notification;
+
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (DeviceObject)
+    {
+        Notification.Version = 1;
+        Notification.Size = sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION);
+        /* MSDN says that FileObject must be null
+           when calling IoReportTargetDeviceChangeAsynchronous */
+        Notification.FileObject = NULL;
+        Notification.NameBufferOffset = -1;
+        /* Find the good GUID associated with the event */
+        switch (EventCode)
+        {
+            case FSRTL_VOLUME_DISMOUNT:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_DISMOUNT;
+                break;
+            }
+            case FSRTL_VOLUME_DISMOUNT_FAILED:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_DISMOUNT_FAILED;
+                break;
+            }
+            case FSRTL_VOLUME_LOCK:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_LOCK;
+                break;
+            }
+            case FSRTL_VOLUME_LOCK_FAILED:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_LOCK_FAILED;
+                break;
+            }
+            case FSRTL_VOLUME_MOUNT:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_MOUNT;
+                break;
+            }
+            case FSRTL_VOLUME_UNLOCK:
+            {
+                Guid = (LPGUID)&GUID_IO_VOLUME_UNLOCK;
+                break;
+            }
+            default:
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+        }
+        if (Guid)
+        {
+            /* Copy GUID to notification structure and then report the change */
+            RtlCopyMemory(&(Notification.Event), Guid, sizeof(GUID));
+            IoReportTargetDeviceChangeAsynchronous(DeviceObject,
+                                                   &Notification,
+                                                   NULL,
+                                                   NULL);
+        }
+        ObfDereferenceObject(DeviceObject);
+    }
+    return Status;
 }

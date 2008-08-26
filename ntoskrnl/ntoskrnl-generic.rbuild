@@ -32,6 +32,7 @@
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
+	<library>ioevent</library>
 	<dependency>bugcodes</dependency>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>

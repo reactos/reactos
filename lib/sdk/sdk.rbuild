@@ -11,6 +11,9 @@
 	<directory name="nt">
 		<xi:include href="nt/nt.rbuild" />
 	</directory>
+	<directory name="ioevent">
+		<xi:include href="ioevent/ioevent.rbuild" />
+	</directory>
 	<directory name="strmiids">
 		<xi:include href="strmiids/strmiids.rbuild" />
 	</directory>
