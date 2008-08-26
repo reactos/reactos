@@ -2894,8 +2894,8 @@ FsRtlGetNextMcbEntry (
     OUT PULONG  SectorCount
 );
 
-#define FsRtlGetPerStreamContextPointer(FO) (  \
-    (PFSRTL_ADVANCED_FCB_HEADER) FO->FsContext \
+#define FsRtlGetPerStreamContextPointer(FO) (   \
+    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
 )
 
 NTKERNELAPI
@@ -2944,6 +2944,12 @@ NTAPI
 FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
 );
+
+#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
+    (PSC)->OwnerId = (O),                          \
+    (PSC)->InstanceId = (I),                       \
+    (PSC)->FreeCallback = (FC)                     \
+)
 
 NTKERNELAPI
 NTSTATUS
