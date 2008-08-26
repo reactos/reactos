@@ -692,7 +692,7 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                 }
 
                 if (poainfo->oaifInFlags & OAIF_EXEC)
-                    ExecuteOpenItem(pItemContext, szBuffer);
+                    ExecuteOpenItem(pItemContext, poainfo->pcszFile);
             }
             FreeListItems(hwndDlg);
             EndDialog(hwndDlg, 1);
