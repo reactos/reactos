@@ -14,6 +14,9 @@
 	<directory name="strmiids">
 		<xi:include href="strmiids/strmiids.rbuild" />
 	</directory>
+	<directory name="strsafe">
+		<xi:include href="strsafe/strsafe.rbuild" />
+	</directory>
 	<directory name="uuid">
 		<xi:include href="uuid/uuid.rbuild" />
 	</directory>
