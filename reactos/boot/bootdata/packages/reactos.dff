@@ -677,3 +677,7 @@ modules\wallpaper\lake.bmp                                                 4   o
 
 ; Native libraries
 modules\windows\mfc42.dll                                                  1   optional
+modules\windows\vmx_fb.dll                                                 1   optional
+modules\windows\vmx_mode.dll                                               1   optional
+modules\windows\vmx_svga.sys                                               2   optional
+modules\windows\vmx_svga.inf                                               6   optional
