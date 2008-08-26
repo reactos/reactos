@@ -282,6 +282,10 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    DPRINT("RtlSetEnvironmentVariable(Environment %p Name %wZ Value %wZ)\n",
           Environment, Name, Value);
 
+   /* Variable name must not be empty */
+   if (Name->Length < sizeof(WCHAR))
+      return STATUS_INVALID_PARAMETER;
+
    /* Variable names can't contain a '=' except as a first character. */
    for (wcs = Name->Buffer + 1;
         wcs < Name->Buffer + (Name->Length / sizeof(WCHAR));
