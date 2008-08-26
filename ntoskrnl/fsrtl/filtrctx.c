@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/filtrctx.c
  * PURPOSE:         File Stream Filter Context support for File System Drivers
- * PROGRAMMERS:     None.
+ * PROGRAMMERS:     Pierre Schweitzer (heis_spiter@hotmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -203,12 +203,24 @@ FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlTeardownPerStreamContexts(IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader)
 {
-    KEBUGCHECK(0);
+    PLIST_ENTRY NextEntry;
+    PFSRTL_PER_STREAM_CONTEXT PerStreamContext;
+
+    ExAcquireFastMutex(AdvancedHeader->FastMutex);
+    for (NextEntry = AdvancedHeader->FilterContexts.Flink;
+         NextEntry != &(AdvancedHeader->FilterContexts);
+         NextEntry = NextEntry->Flink)
+    {
+        PerStreamContext = CONTAINING_RECORD(NextEntry, FSRTL_PER_STREAM_CONTEXT, Links);
+        (*PerStreamContext->FreeCallback)(PerStreamContext);
+    }
+    InitializeListHead(&(AdvancedHeader->FilterContexts));
+    ExReleaseFastMutex(AdvancedHeader->FastMutex);
 }
 
