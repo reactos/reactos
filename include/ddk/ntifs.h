@@ -2894,6 +2894,10 @@ FsRtlGetNextMcbEntry (
     OUT PULONG  SectorCount
 );
 
+#define FsRtlGetPerStreamContextPointer(FO) (  \
+    (PFSRTL_ADVANCED_FCB_HEADER) FO->FsContext \
+)
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -2939,6 +2943,14 @@ VOID
 NTAPI
 FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER  PerStreamContext,
+    IN PFSRTL_PER_STREAM_CONTEXT   Ptr
 );
 
 NTKERNELAPI
@@ -3080,6 +3092,15 @@ FsRtlLookupMcbEntry (
     OUT PLBN    Lbn,
     OUT PULONG  SectorCount OPTIONAL,
     OUT PULONG  Index
+);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlLookupPerStreamContextInternal (
+    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
+    IN PVOID                       OwnerId OPTIONAL,
+    IN PVOID                       InstanceId OPTIONAL
 );
 
 NTKERNELAPI
@@ -3434,6 +3455,15 @@ FsRtlRemoveMcbEntry (
 );
 
 NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlRemovePerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
+    IN PVOID                       OwnerId OPTIONAL,
+    IN PVOID                       InstanceId OPTIONAL
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 FsRtlResetBaseMcb (
@@ -3465,6 +3495,12 @@ FsRtlSplitLargeMcb (
     IN LONGLONG    Vbn,
     IN LONGLONG    Amount
 );
+
+#define FsRtlSupportsPerStreamContexts(FO) (                       \
+    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
+              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
+              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
+)
 
 NTKERNELAPI
 VOID
