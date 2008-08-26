@@ -17,7 +17,7 @@
 		</directory>
 	</if>
 	<if property="ARCH" value="amd64">
-		<directory name="amd64">
+		<directory name="i386">
 				<file>kdbg.c</file>
 		</directory>
 	</if>
