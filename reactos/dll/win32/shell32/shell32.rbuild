@@ -25,6 +25,7 @@
 	<library>devmgr</library>
 	<library>winspool</library>
 	<library>winmm</library>
+	<pch>precomp.h</pch>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
@@ -68,7 +69,6 @@
 	<file>shv_def_cmenu.c</file>
 	<file>startmenu.c</file>
 	<file>ros-systray.c</file>
-	<file>shell32.rc</file>
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
@@ -78,4 +78,5 @@
 	<file>folder_options.c</file>
 	<file>shfldr_netplaces.c</file>
 	<file>shfldr_fonts.c</file>
+	<file>shell32.rc</file>
 </module>

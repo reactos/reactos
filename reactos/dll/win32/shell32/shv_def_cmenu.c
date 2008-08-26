@@ -6,28 +6,7 @@
  * PROGRAMMERS: Johannes Anderwald (janderwald@reactos.org)
  */
 
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#define YDEBUG
-#include "winerror.h"
-#include "wine/debug.h"
-
-#include "windef.h"
-#include "wingdi.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shlobj.h"
-#include "objbase.h"
-
-#include "shlwapi.h"
-#include "shell32_main.h"
-#include "shellfolder.h"
-#include "debughlp.h"
-#include "shresdef.h"
-#include "shlguid.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
@@ -61,11 +40,11 @@ typedef struct
     PStaticShellEntry shead; /* first static shell extension entry */
     UINT           iIdSCMFirst; /* first static used id */
     UINT           iIdSCMLast; /* last static used id */
-}IDefaultContextMenuImpl;
+}IDefaultContextMenuImpl, *LPIDefaultContextMenuImpl;
 
-static inline IDefaultContextMenuImpl *impl_from_IContextMenu( IContextMenu2 *iface )
+static LPIDefaultContextMenuImpl __inline impl_from_IContextMenu( IContextMenu2 *iface )
 {
-    return (IDefaultContextMenuImpl *)((char*)iface - FIELD_OFFSET(IDefaultContextMenuImpl, lpVtbl));
+    return (LPIDefaultContextMenuImpl)((char*)iface - FIELD_OFFSET(IDefaultContextMenuImpl, lpVtbl));
 }
 
 VOID INewItem_SetCurrentShellFolder(IShellFolder * psfParent); // HACK
@@ -255,7 +234,7 @@ SH_AddStaticEntryForFileClass(IDefaultContextMenuImpl * This, WCHAR * szExt)
     result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, (LPBYTE)szBuffer, &dwBuffer);
     if (result == ERROR_SUCCESS)
     {
-        Length = strlenW(szBuffer);
+        Length = wcslen(szBuffer);
         if (Length + (sizeof(szShell)/sizeof(WCHAR)) + 1 < sizeof(szBuffer)/sizeof(WCHAR))
         {
             wcscpy(&szBuffer[Length], szShell);
@@ -276,7 +255,7 @@ SH_AddStaticEntryForFileClass(IDefaultContextMenuImpl * This, WCHAR * szExt)
     result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, L"PerceivedType", RRF_RT_REG_SZ, NULL, (LPBYTE)&szBuffer[(sizeof(szShellAssoc)/sizeof(WCHAR))], &dwBuffer);
     if (result == ERROR_SUCCESS)
     {
-        Length = strlenW(&szBuffer[(sizeof(szShellAssoc)/sizeof(WCHAR))]) + (sizeof(szShellAssoc)/sizeof(WCHAR));
+        Length = wcslen(&szBuffer[(sizeof(szShellAssoc)/sizeof(WCHAR))]) + (sizeof(szShellAssoc)/sizeof(WCHAR));
         wcscat(&szBuffer[(sizeof(szShellAssoc)/sizeof(WCHAR))], szShell);
         TRACE("szBuffer %s\n", debugstr_w(szBuffer));
 
@@ -572,7 +551,7 @@ BuildBackgroundContextMenu(
             mii.fType = MFT_STRING;
             mii.wID = iIdCmdFirst++;
             mii.dwTypeData = szBuffer;
-            mii.cch = strlenW( mii.dwTypeData );
+            mii.cch = wcslen( mii.dwTypeData );
             mii.fState = MFS_ENABLED;
             mii.hSubMenu = hSubMenu;
             InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
@@ -704,7 +683,7 @@ AddStaticContextMenusToMenu(
            
         }
 
-        mii.cch = strlenW(mii.dwTypeData);
+        mii.cch = wcslen(mii.dwTypeData);
         InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
         mii.fState = fState;
         mii.wID++;
@@ -1494,7 +1473,7 @@ DoDynamicShellExtensions(
     if (verb >= pCurrent->iIdCmdFirst && verb <= pCurrent->iIdCmdFirst + pCurrent->NumIds)
     {
         /* invoke the dynamic context menu */
-        lpcmi->lpVerb = MAKEINTRESOURCE(verb - pCurrent->iIdCmdFirst);
+        lpcmi->lpVerb = MAKEINTRESOURCEA(verb - pCurrent->iIdCmdFirst);
         return IContextMenu_InvokeCommand(pCurrent->CMenu, lpcmi);
     }
 
@@ -1704,7 +1683,7 @@ SHCreateDefaultContextMenu(
  *
  */
 
-INT
+HRESULT
 WINAPI
 CDefFolderMenu_Create2(
 	LPCITEMIDLIST pidlFolder,
@@ -1714,7 +1693,7 @@ CDefFolderMenu_Create2(
 	IShellFolder *psf,
 	LPFNDFMCALLBACK lpfn,
 	UINT nKeys,
-	HKEY *ahkeyClsKeys,
+	const HKEY *ahkeyClsKeys,
 	IContextMenu **ppcm)
 {
    DEFCONTEXTMENU pdcm;

@@ -18,30 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include "config.h"
-#include "wine/port.h"
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "wine/debug.h"
-
-#include "shellapi.h"
-#include <shlwapi.h>
-#include "shlobj.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "undocshell.h"
-#include "prsht.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -138,7 +115,7 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
      {
          /* the fileextension is unknown, so default to string "FileExtension File" */
          SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)value);
-         sprintfW(name, value, &filext[1]);
+         swprintf(name, value, &filext[1]);
          SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)name);
          return TRUE;
      }
@@ -230,7 +207,7 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR * lpResult)
 
     wYear = dt.wYear;
     /* ddmmyy */
-    sprintfW (lpResult, wFormat, dt.wDay, dt.wMonth, wYear, dt.wHour, dt.wMinute);
+    swprintf (lpResult, wFormat, dt.wDay, dt.wMonth, wYear, dt.wHour, dt.wMinute);
 
     TRACE("result %s\n",debugstr_w(lpResult));
     return TRUE;
@@ -256,15 +233,15 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR * lpstr)
     if (lpstr == NULL)
         return FALSE;
 
-    lpdir = strrchrW(lpstr, '\\'); /* find the last occurence of '\\' */
+    lpdir = wcschr(lpstr, '\\'); /* find the last occurence of '\\' */
 
-    plength = strlenW(lpstr);
-    flength = strlenW(lpdir);
+    plength = wcslen(lpstr);
+    flength = wcslen(lpdir);
 
     if (lpdir)
     {
         /* location text field */
-        strncpyW(buff, lpstr, plength - flength);
+        wcsncpy(buff, lpstr, plength - flength);
         buff[plength - flength] = UNICODE_NULL;
         hDlgCtrl = GetDlgItem(hwndDlg, 14009);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
@@ -273,7 +250,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR * lpstr)
     if(flength > 1)
     {
          /* text filename field */
-         strncpyW(buff, &lpdir[1], flength);
+         wcsncpy(buff, &lpdir[1], flength);
          hDlgCtrl = GetDlgItem(hwndDlg, 14001);
          SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)buff);
     }
@@ -412,7 +389,7 @@ SH_FileVersionQuerySetListText(HWND hwndDlg, LPVOID pInfo, const WCHAR * text, W
   if(hwndDlg == NULL || resptr == NULL || text == NULL)
    return FALSE;
 
-  sprintfW(buff, wFormat, lang, code, text);
+  swprintf(buff, wFormat, lang, code, text);
   if(VerQueryValueW(pInfo, buff, (LPVOID *)resptr, &reslen))
   {
     /* listbox name property */
@@ -483,7 +460,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
   if(VerQueryValueW(pBuf, wSlash, &info, &infolen))
   {
     VS_FIXEDFILEINFO * inf = (VS_FIXEDFILEINFO *)info;
-    sprintfW(buff, wVersionFormat, HIWORD(inf->dwFileVersionMS),
+    swprintf(buff, wVersionFormat, HIWORD(inf->dwFileVersionMS),
                                    LOWORD(inf->dwFileVersionMS),
                                    HIWORD(inf->dwFileVersionLS),
                                    LOWORD(inf->dwFileVersionLS));
@@ -502,10 +479,10 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
     code = lplangcode->code;
   }
 
-  sprintfW(buff, wFileDescriptionFormat, lang, code);
+  swprintf(buff, wFileDescriptionFormat, lang, code);
   SH_FileVersionQuerySetText(hwndDlg, 14003, pBuf, buff, &str);
 
-  sprintfW(buff, wLegalCopyrightFormat, lang, code);
+  swprintf(buff, wLegalCopyrightFormat, lang, code);
   SH_FileVersionQuerySetText(hwndDlg, 14005, pBuf, buff, &str);
 
   /* listbox properties */
@@ -638,7 +615,7 @@ SH_FileGeneralDlgProc(
         /* set general text properties filename filelocation and icon */
         SH_FileGeneralSetText(hwndDlg, lpstr);
         /* enumerate file extension from registry and application which opens it*/
-        SH_FileGeneralSetFileType(hwndDlg, strrchrW(lpstr, '.'));
+        SH_FileGeneralSetFileType(hwndDlg, wcsrchr(lpstr, '.'));
         /* set file time create/modfied/accessed */
         SH_FileGeneralSetFileSizeTime(hwndDlg, lpstr, NULL);
         return TRUE;
@@ -747,7 +724,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * a
     if (lpf== NULL)
         return FALSE;
 
-    if ( !strlenW(lpf) )
+    if ( !wcslen(lpf) )
         return FALSE;
 
     memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
@@ -764,7 +741,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * a
     }
     else
     {
-        strcpyW(wFileName, lpf);
+        wcscpy(wFileName, lpf);
     }
 
     if (PathIsDirectoryW(wFileName))

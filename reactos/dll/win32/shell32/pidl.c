@@ -22,32 +22,7 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <ctype.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "objbase.h"
-#include "shlguid.h"
-#include "winerror.h"
-#include "winnls.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shlwapi.h"
-#include "shresdef.h"
-
-#include "pidl.h"
-#include "wine/debug.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 WINE_DECLARE_DEBUG_CHANNEL(shell);
@@ -110,7 +85,7 @@ BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR pa
             return FALSE;
     }
 
-    if (type >= 0 && type <= 2)
+    if (type <= 2)
     {
         switch (type)
         {
@@ -509,7 +484,7 @@ BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
         _ILSimpleGetText(pidltemp1, szData1, MAX_PATH);
         _ILSimpleGetText(pidltemp2, szData2, MAX_PATH);
 
-        if (strcasecmp( szData1, szData2 ))
+        if (strcmp( szData1, szData2 ))
             return FALSE;
 
         pidltemp1 = ILGetNext(pidltemp1);
@@ -559,7 +534,7 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
         _ILSimpleGetText(pParent, szData1, MAX_PATH);
         _ILSimpleGetText(pChild, szData2, MAX_PATH);
 
-        if (strcasecmp( szData1, szData2 ))
+        if (strcmp( szData1, szData2 ))
             return FALSE;
 
         pParent = ILGetNext(pParent);
@@ -626,7 +601,7 @@ LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
             _ILSimpleGetText(pidltemp1, szData1, MAX_PATH);
             _ILSimpleGetText(pidltemp2, szData2, MAX_PATH);
 
-            if (strcasecmp(szData1,szData2))
+            if (strcmp(szData1,szData2))
                 break;
 
             pidltemp1 = ILGetNext(pidltemp1);
@@ -1382,8 +1357,10 @@ LPITEMIDLIST _ILCreateIExplore(void)
 
 LPITEMIDLIST _ILCreateControlPanel(void)
 {
+    LPITEMIDLIST ret = NULL;
+    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer);
+
     TRACE("()\n");
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
 
     if (parent)
     {
@@ -1421,7 +1398,7 @@ LPITEMIDLIST _ILCreateBitBucket(void)
 LPITEMIDLIST _ILCreateAdminTools(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut);
+    return _ILCreateGuid(PT_GUID, &CLSID_AdminFolderShortcut); //FIXME
 }
 
 LPITEMIDLIST _ILCreateGuid(PIDLTYPE type, REFIID guid)
@@ -1464,7 +1441,7 @@ LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
 {
     IID iid;
 
-    if (!SUCCEEDED(SHCLSIDFromStringW(szGUID, &iid)))
+    if (FAILED(CLSIDFromString((LPOLESTR)szGUID, &iid)))
     {
         ERR("%s is not a GUID\n", debugstr_w(szGUID));
         return NULL;
@@ -1491,7 +1468,7 @@ LPITEMIDLIST _ILCreateFromFindDataW( const WIN32_FIND_DATAW *wfd )
 
     type = (wfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? PT_FOLDER : PT_VALUE;
 
-    wlen = lstrlenW(wfd->cFileName) + 1;
+    wlen = wcslen(wfd->cFileName) + 1;
     pidl = _ILAlloc(type, FIELD_OFFSET(FileStruct, szNames[alen + (alen & 1)]) +
                     FIELD_OFFSET(FileStructW, wszName[wlen]) + sizeof(WORD));
     if (pidl)
@@ -1554,7 +1531,7 @@ LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
         if (pszDest)
         {
             strcpy(pszDest, "x:\\");
-            pszDest[0]=toupperW(lpszNew[0]);
+            pszDest[0]=towupper(lpszNew[0]);
             TRACE("-- create Drive: %s\n", debugstr_a(pszDest));
         }
     }
@@ -1653,7 +1630,6 @@ LPITEMIDLIST _ILCreateNetHood(void)
 
 LPITEMIDLIST _ILCreateFont(void)
 {
-
     return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
 }
 
@@ -1854,7 +1830,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
 
     if (pFileStructW) {
         lstrcpynW(szOut, pFileStructW->wszName, uOutSize);
-        dwReturn = lstrlenW(pFileStructW->wszName);
+        dwReturn = wcslen(pFileStructW->wszName);
     } else {
         GUID const * riid;
         WCHAR szTemp[MAX_PATH];
@@ -1876,7 +1852,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
 
-                dwReturn = lstrlenW (szTemp);
+                dwReturn = wcslen (szTemp);
             }
         }
         else if (( szSrcW = _ILGetTextPointerW(pidl) ))
@@ -1885,7 +1861,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
             if (szOut)
                 lstrcpynW(szOut, szSrcW, uOutSize);
 
-            dwReturn = lstrlenW(szSrcW);
+            dwReturn = wcslen(szSrcW);
         }
         else if (( szSrc = _ILGetTextPointer(pidl) ))
         {
@@ -1895,7 +1871,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
             if (szOut)
                 lstrcpynW(szOut, szTemp, uOutSize);
 
-            dwReturn = lstrlenW (szTemp);
+            dwReturn = wcslen (szTemp);
         }
         else if (( riid = _ILGetGUIDPointer(pidl) ))
         {
@@ -1905,7 +1881,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
 
-                dwReturn = lstrlenW (szTemp);
+                dwReturn = wcslen (szTemp);
             }
         }
         else

@@ -18,27 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+#include <precomp.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "winerror.h"
-#include "wine/debug.h"
-
-#include "windef.h"
-#include "wingdi.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shlobj.h"
-#include "objbase.h"
-#include "commdlg.h"
-
-#include "shell32_main.h"
-#include "shellfolder.h"
-#include "shresdef.h"
-#include "stdio.h"
-#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 #define MAX_PROPERTY_SHEET_PAGE (32)
@@ -140,7 +121,7 @@ InitializeFolderOptionsListCtrl(HWND hwndDlg)
     col.pszText = szName;
     col.fmt = LVCFMT_LEFT;
     col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
-    (void)ListView_InsertColumnW(hDlgCtrl, 0, &col);
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMN, 0, (LPARAM)&col);
 
 
 
@@ -185,7 +166,7 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
     col.pszText = szName;
     col.fmt = LVCFMT_LEFT;
     col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
-    (void)ListView_InsertColumnW(hDlgCtrl, 0, &col);
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&col);
 }
 INT
 FindItem(HWND hDlgCtrl, WCHAR * ItemName)
@@ -235,7 +216,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, DWORD Size, INT iItem)
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
         lvItem.lParam = 0;
-        (void)ListView_InsertItemW(hDlgCtrl, &lvItem);
+        (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
         RegCloseKey(hKey);
     }
 }
@@ -465,7 +446,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
        if (FileTimeToLocalFileTime(&FolderAttribute.ftCreationTime, &ft))
        {
            FileTimeToSystemTime(&ft, &dt);
-           sprintfW (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
+           swprintf (szBuffer, wFormat, dt.wDay, dt.wMonth, dt.wYear, dt.wHour, dt.wMinute);
            SendDlgItemMessageW(pContext->hwndDlg, 14015, WM_SETTEXT, 0, (LPARAM) szBuffer);
        }
     }
@@ -476,7 +457,7 @@ InitializeFolderGeneralDlg(PFOLDER_PROPERTIES_CONTEXT pContext)
     /* set folder details */
     LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, szFormat, sizeof(szFormat)/sizeof(WCHAR));
     szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-    sprintfW(szBuffer, szFormat, pContext->cFiles, pContext->cFolder);
+    swprintf(szBuffer, szFormat, pContext->cFiles, pContext->cFolder);
     SendDlgItemMessageW(pContext->hwndDlg, 14011, WM_SETTEXT, 0, (LPARAM) szBuffer);
 
     if (StrFormatByteSizeW(pContext->bSize.QuadPart, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))

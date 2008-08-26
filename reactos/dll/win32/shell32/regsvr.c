@@ -17,26 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#include <precomp.h>
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
+const GUID CLSID_AdminFolderShortcut     = {0xD20EA4E1, 0x3957, 0x11D2, {0xA4, 0x0B, 0x0C, 0x50, 0x20, 0x52, 0x41, 0x53} };
+const GUID CLSID_StartMenu               = {0x4622AD11, 0xFF23, 0x11D0, {0x8D, 0x34, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19}};
+const GUID CLSID_OpenWith                = {0x09799AFB, 0xAD67, 0x11d1, {0xAB, 0xCD, 0x00, 0xC0, 0x4F, 0xC3, 0x09, 0x36}};
+const GUID CLSID_UnixFolder              = {0xcc702eb2, 0x7dc5, 0x11d9, {0xc6, 0x87, 0x00, 0x04, 0x23, 0x8a, 0x01, 0xcd}};
+const GUID CLSID_UnixDosFolder           = {0x9d20aae8, 0x0625, 0x44b0, {0x9c, 0xa7, 0x71, 0x88, 0x9c, 0x22, 0x54, 0xd9}};
+const GUID CLSID_FontsFolderShortcut     = {0xD20EA4E1, 0x3957, 0x11D2, {0xA4, 0x0B, 0x0C, 0x50, 0x20, 0x52, 0x41,0x52}};
+const GUID SHELL32_AdvtShortcutProduct   = {0x9db1186f, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
+const GUID SHELL32_AdvtShortcutComponent = {0x9db1186e, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-
-#include "ole2.h"
-#include "shldisp.h"
-#include "shlguid.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "initguid.h"
-#include "shfldr.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -193,10 +184,10 @@ static HRESULT register_interfaces(struct regsvr_interface const *list)
 				  KEY_READ | KEY_WRITE, NULL, &key, NULL);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 
-	    wsprintfW(buf, fmt, list->num_methods);
+	    swprintf(buf, fmt, list->num_methods);
 	    res = RegSetValueExW(key, NULL, 0, REG_SZ,
 				 (CONST BYTE*)buf,
-				 (lstrlenW(buf) + 1) * sizeof(WCHAR));
+				 (wcslen(buf) + 1) * sizeof(WCHAR));
 	    RegCloseKey(key);
 
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
@@ -464,18 +455,18 @@ static WCHAR *get_namespace_key(struct regsvr_namespace const *list) {
     WCHAR *pwszKey, *pwszCLSID;
 
     pwszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszExplorerKey)+sizeof(wszNamespace)+
-                                             sizeof(WCHAR)*(lstrlenW(list->parent)+CHARS_IN_GUID));
+                                             sizeof(WCHAR)*(wcslen(list->parent)+CHARS_IN_GUID));
     if (!pwszKey)
         return NULL;
 
-    lstrcpyW(pwszKey, wszExplorerKey);
-    lstrcatW(pwszKey, list->parent);
-    lstrcatW(pwszKey, wszNamespace);
+    wcscpy(pwszKey, wszExplorerKey);
+    wcscat(pwszKey, list->parent);
+    wcscat(pwszKey, wszNamespace);
     if (FAILED(StringFromCLSID(list->clsid, &pwszCLSID))) {
         HeapFree(GetProcessHeap(), 0, pwszKey);
         return NULL;
     }
-    lstrcatW(pwszKey, pwszCLSID);
+    wcscat(pwszKey, pwszCLSID);
     CoTaskMemFree(pwszCLSID);
 
     return pwszKey;
@@ -492,7 +483,7 @@ static HRESULT register_namespace_extensions(struct regsvr_namespace const *list
         if (pwszKey && ERROR_SUCCESS ==
             RegCreateKeyExW(HKEY_LOCAL_MACHINE, pwszKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL))
         {
-            RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE *)list->value, sizeof(WCHAR)*(lstrlenW(list->value)+1));
+            RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE *)list->value, sizeof(WCHAR)*(wcslen(list->value)+1));
             RegCloseKey(hKey);
         }
 
@@ -538,7 +529,7 @@ static LONG register_key_defvalueW(
 			  KEY_READ | KEY_WRITE, NULL, &key, NULL);
     if (res != ERROR_SUCCESS) return res;
     res = RegSetValueExW(key, NULL, 0, REG_SZ, (CONST BYTE*)value,
-			 (lstrlenW(value) + 1) * sizeof(WCHAR));
+			 (wcslen(value) + 1) * sizeof(WCHAR));
     RegCloseKey(key);
     return res;
 }

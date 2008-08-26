@@ -19,14 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdarg.h>
-#include <malloc.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "shellapi.h"
-
+#include <precomp.h>
 
  /* copy data structure for tray notifications */
 typedef struct TrayNotifyCDS_Dummy {

@@ -18,31 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 #define MAX_PROPERTY_SHEET_PAGE 32
 
-#include <stdarg.h>
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "ntquery.h"
-#include "shlwapi.h"
-#include "shlobj.h"
-#include "shresdef.h"
-#include "pidl.h"
-#include "wine/debug.h"
-
-#include "shell32_main.h"
-#include "enumidlist.h"
-#include "xdg.h"
-#include "recyclebin.h"
-#include <prsht.h>
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
@@ -91,7 +69,7 @@ typedef struct tagRecycleBin
     INT iIdEmpty;
     LPITEMIDLIST pidl;
     LPCITEMIDLIST apidl;
-} RecycleBin;
+} RecycleBin, *LPRecycleBin;
 
 typedef struct
 {
@@ -114,17 +92,17 @@ static const IShellFolder2Vtbl recycleBinVtbl;
 static const IPersistFolder2Vtbl recycleBinPersistVtbl;
 static const IShellExtInitVtbl eivt;
 
-static RecycleBin *impl_from_IContextMenu2(IContextMenu2 *iface)
+static LPRecycleBin __inline impl_from_IContextMenu2(IContextMenu2 *iface)
 {
     return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpContextMenu2));
 }
 
-static RecycleBin *impl_from_IPersistFolder(IPersistFolder2 *iface)
+static LPRecycleBin __inline impl_from_IPersistFolder(IPersistFolder2 *iface)
 {
     return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpPersistFolderVtbl));
 }
 
-static inline RecycleBin *impl_from_IShellExtInit( IShellExtInit *iface )
+static  LPRecycleBin __inline impl_from_IShellExtInit( IShellExtInit *iface )
 {
     return (RecycleBin *)((char*)iface - FIELD_OFFSET(RecycleBin, lpSEI));
 }
@@ -670,12 +648,12 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
             break;
         case COLUMN_TYPE:
             szTypeName[0] = L'\0';
-            lstrcpyW(buffer,PathFindExtensionW(pFileDetails->szName));
+            wcscpy(buffer,PathFindExtensionW(pFileDetails->szName));
             if (!( HCR_MapTypeToValueW(buffer, buffer, sizeof(buffer)/sizeof(WCHAR), TRUE) &&
                    HCR_MapTypeToValueW(buffer, szTypeName, sizeof(szTypeName)/sizeof(WCHAR), FALSE )))
             {
-                lstrcpyW (szTypeName, PathFindExtensionW(pFileDetails->szName));
-                strcatW(szTypeName, L"-");
+                wcscpy (szTypeName, PathFindExtensionW(pFileDetails->szName));
+                wcscat(szTypeName, L"-");
                 Length = wcslen(szTypeName);
                 if (LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, &szTypeName[Length], (sizeof(szTypeName)/sizeof(WCHAR))- Length))
                     szTypeName[(sizeof(szTypeName)/sizeof(WCHAR))-1] = L'\0';
@@ -878,7 +856,7 @@ RecycleBin_IContextMenu2Folder_QueryContextMenu( IContextMenu2* iface, HMENU hme
     LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
     mii.dwTypeData = szBuffer;
-    mii.cch = strlenW( mii.dwTypeData );
+    mii.cch = wcslen( mii.dwTypeData );
     mii.wID = idCmdFirst + id++;
     mii.fType = MFT_STRING;
     This->iIdEmpty = 1;
@@ -1067,7 +1045,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCE(1) || lpcmi->lpVerb == MAKEINTRESOURCE(5)) 
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(5)) 
     {
         Context.pFileDetails = _ILGetRecycleStruct(This->apidl);
         Context.bFound = FALSE;
@@ -1076,7 +1054,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
         if (!Context.bFound)
             return E_FAIL;
 
-        if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
         {
             /* restore file */
             if (RestoreFile(Context.hDeletedFile))
@@ -1090,12 +1068,12 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_InvokeCommand(
             return E_NOTIMPL;
         }
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCE(3)) 
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(3)) 
     {
         FIXME("implement cut\n");
         return E_NOTIMPL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCE(7))
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(7))
     {
         FIXME("implement properties\n");
         return E_NOTIMPL;
@@ -1206,18 +1184,18 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
    lc.iSubItem   = 0;
    lc.fmt = LVCFMT_FIXED_WIDTH;
    lc.cx         = columnSize;
-   lc.cchTextMax = lstrlenW(szVolume);
+   lc.cchTextMax = wcslen(szVolume);
    lc.pszText    = szVolume;
-   (void)ListView_InsertColumnW(hDlgCtrl, 0, &lc);
+   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&lc);
 
    if (!LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_DISKSPACE, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
        szVolume[0] = 0;
 
    lc.iSubItem   = 1;
    lc.cx         = rect.right - rect.left - columnSize;
-   lc.cchTextMax = lstrlenW(szVolume);
+   lc.cchTextMax = wcslen(szVolume);
    lc.pszText    = szVolume;
-   (void)ListView_InsertColumnW(hDlgCtrl, 1, &lc);
+   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&lc);
 
    dwDrives = GetLogicalDrives();
    itemCount = 0;
@@ -1234,13 +1212,13 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
                 dwSerial = -1;
             }
 
-            sprintfW(szVolume, L"%s (%c)", szName, szDrive[0]);
+            swprintf(szVolume, L"%s (%c)", szName, szDrive[0]);
             memset(&li, 0x0, sizeof(LVITEMW));
             li.mask = LVIF_TEXT | LVIF_PARAM;
             li.iSubItem = 0;
             li.pszText = szVolume;
             li.iItem = itemCount;
-            (void)ListView_InsertItemW(hDlgCtrl, &li);
+            (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMN, 0, (LPARAM)&li);
             if (GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable , &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
             {
                 if (StrFormatByteSizeW(TotalNumberOfFreeBytes.QuadPart, szVolume, sizeof(szVolume) / sizeof(WCHAR)))
@@ -1249,7 +1227,7 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
                     pItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DRIVE_ITEM_CONTEXT));
                     if (pItem)
                     {
-                        sprintfW(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
+                        swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
                         dwSize = sizeof(DWORD);
                         RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
                         dwSize = sizeof(DWORD);
@@ -1257,7 +1235,7 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
                         pItem->dwSerial = dwSerial;
                         li.mask = LVIF_PARAM;
                         li.lParam = (LPARAM)pItem;
-                        (void)ListView_SetItemW(hDlgCtrl, &li);
+                        (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                         if (CurDrive == DefaultDrive)
                         {
                             defIndex = itemCount;
@@ -1271,7 +1249,7 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
                     li.iSubItem = 1;
                     li.pszText = szVolume;
                     li.iItem = itemCount;
-                    (void)ListView_SetItemW(hDlgCtrl, &li);
+                    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                 }
             }
             itemCount++;
@@ -1294,7 +1272,7 @@ InitializeBitBucketDlg(HWND hwndDlg, WCHAR DefaultDrive)
    li.stateMask = (UINT)-1;
    li.state = LVIS_FOCUSED|LVIS_SELECTED;
    li.iItem = defIndex;
-   (void)ListView_SetItemW(hDlgCtrl, &li);
+   (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
 
 }
 
@@ -1320,10 +1298,10 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
    for(iIndex = 0; iIndex < iCount; iIndex++)
    {
        li.iItem = iIndex;
-       if (ListView_GetItemW(hDlgCtrl, &li))
+       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
        {
            pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
-           sprintfW(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
+           swprintf(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
            if (RegCreateKeyExW(hKey, szSerial, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
            {
                dwSize = sizeof(DWORD);
@@ -1353,7 +1331,7 @@ static VOID FreeDriveItemContext(HWND hwndDlg)
    for(iIndex = 0; iIndex < iCount; iIndex++)
    {
        li.iItem = iIndex;
-       if (ListView_GetItemW(hDlgCtrl, &li))
+       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
        {
            HeapFree(GetProcessHeap(), 0, (LPVOID)li.lParam);
        }
@@ -1380,7 +1358,7 @@ GetDefaultItem(HWND hwndDlg, LVITEMW * li)
    for (iIndex = 0; iIndex < iItemCount; iIndex++)
    {
        li->iItem = iIndex;
-       if (ListView_GetItemW(hDlgCtrl, li))
+       if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)li))
        {
            if (li->state & LVIS_SELECTED)
                return iIndex;
@@ -1462,7 +1440,7 @@ BitBucketDlg(
                     ZeroMemory(&li, sizeof(li));
                     li.mask = LVIF_PARAM;
                     li.iItem = lppl->iItem;
-                    if (!ListView_GetItemW(lppl->hdr.hwndFrom, &li))
+                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
                         return TRUE;
 
                     pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
@@ -1559,7 +1537,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
        return FALSE;
    }
 
-   sprintfW(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
+   swprintf(szBuffer, L"%04X-%04X", LOWORD(VolSerialNumber), HIWORD(VolSerialNumber));
    wcscat(szKey, szBuffer);
 
    if (RegCreateKeyExW(HKEY_CURRENT_USER, szKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition) != ERROR_SUCCESS)

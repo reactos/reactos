@@ -18,30 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "winerror.h"
-#include "wine/debug.h"
-
-#include "windef.h"
-#include "wingdi.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shlobj.h"
-#include "objbase.h"
-#include "commdlg.h"
-#include "shlwapi.h"
-#include "shell32_main.h"
-#include "shellfolder.h"
-#include "shresdef.h"
-#include "stdio.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
-
-const GUID CLSID_OpenWith = { 0x09799AFB, 0xAD67, 0x11d1, {0xAB,0xCD,0x00,0xC0,0x4F,0xC3,0x09,0x36} };
 
 ///
 /// [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system]
@@ -63,7 +42,7 @@ typedef struct
     UINT count;
     WCHAR szPath[MAX_PATH];
     HMENU hSubMenu;
-} SHEOWImpl;
+} SHEOWImpl, *LPSHEOWImpl;
 
 typedef struct
 {
@@ -160,12 +139,12 @@ HRESULT WINAPI SHEOW_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv)
     return res;
 }
 
-static inline SHEOWImpl *impl_from_IShellExtInit( IShellExtInit *iface )
+static LPSHEOWImpl __inline impl_from_IShellExtInit( IShellExtInit *iface )
 {
     return (SHEOWImpl *)((char*)iface - FIELD_OFFSET(SHEOWImpl, lpvtblShellExtInit));
 }
 
-static inline SHEOWImpl *impl_from_IContextMenu( IContextMenu2 *iface )
+static LPSHEOWImpl __inline impl_from_IContextMenu( IContextMenu2 *iface )
 {
     return (SHEOWImpl *)((char*)iface - FIELD_OFFSET(SHEOWImpl, lpVtblContextMenu));
 }
@@ -248,14 +227,14 @@ AddItem(HMENU hMenu, UINT idCmdFirst)
     mii.fState = MFS_ENABLED;
     mii.wID = idCmdFirst;
     mii.dwTypeData = (LPWSTR)szBuffer;
-    mii.cch = strlenW(szBuffer);
+    mii.cch = wcslen(szBuffer);
 
     InsertMenuItemW(hMenu, -1, TRUE, &mii);
 }
 
 static 
 void
-LoadOWItems(POPEN_WITH_CONTEXT pContext, WCHAR * szName)
+LoadOWItems(POPEN_WITH_CONTEXT pContext, LPCWSTR szName)
 {
     WCHAR * szExt;
     WCHAR szPath[100];
@@ -434,12 +413,12 @@ WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath)
     wcscpy(szBuffer, pFullPath);
     wcscat(szBuffer, L" %1");
 
-    result = RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (strlenW(szBuffer)+1)* sizeof(WCHAR));
+    result = RegSetValueExW(hShell, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer)+1)* sizeof(WCHAR));
     RegCloseKey(hShell);
 }
 
 VOID
-StoreNewSettings(WCHAR * szFileName, WCHAR *szAppName)
+StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
 {
     WCHAR szBuffer[100] = { L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\"};
     WCHAR * pFileExt;
@@ -478,7 +457,7 @@ StoreNewSettings(WCHAR * szFileName, WCHAR *szAppName)
 }
 
 VOID
-SetProgrammAsDefaultHandler(WCHAR * szFileName, WCHAR * szAppName)
+SetProgrammAsDefaultHandler(LPCWSTR szFileName, WCHAR * szAppName)
 {
     HKEY hKey;
     HKEY hAppKey;
@@ -503,7 +482,7 @@ SetProgrammAsDefaultHandler(WCHAR * szFileName, WCHAR * szAppName)
         /* a new entry was created create the prog key id */
         wcscpy(szBuffer, &pFileExt[1]);
         wcscat(szBuffer, L"_auto_file");
-        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (strlenW(szBuffer)+1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+        if (RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR)) != ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return;
@@ -570,7 +549,7 @@ BrowseForApplication(HWND hwndDlg)
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         ofn.lpstrTitle = szBuffer;
-        ofn.nMaxFileTitle = strlenW(szBuffer);
+        ofn.nMaxFileTitle = wcslen(szBuffer);
     }
 
     ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
@@ -655,6 +634,7 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     COLORREF preColor, preBkColor;
     POPEN_ITEM_CONTEXT pItemContext;
     LONG YOffset;
+    OPEN_WITH_CONTEXT Context;
 
     poainfo = (OPENASINFO*) GetWindowLong(hwndDlg, DWLP_USER);
 
@@ -672,21 +652,16 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         if (poainfo->pcszFile)
         {
              szBuffer[0] = L'\0';
-             SendDlgItemMessageA(hwndDlg, 14001, WM_GETTEXT, sizeof(szBuffer), (LPARAM)szBuffer);
-             index = strlen((char*)szBuffer);
-             if (index + strlen(poainfo->pcszFile) + 1 < sizeof(szBuffer))
-                 strcat((char*)szBuffer, poainfo->pcszFile);
+             SendDlgItemMessageW(hwndDlg, 14001, WM_GETTEXT, sizeof(szBuffer), (LPARAM)szBuffer);
+             index = wcslen(szBuffer);
+             if (index + wcslen(poainfo->pcszFile) + 1 < sizeof(szBuffer)/sizeof(szBuffer[0]))
+                 wcscat(szBuffer, poainfo->pcszFile);
              szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-             SendDlgItemMessageA(hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)szBuffer);
-        }
-        if (MultiByteToWideChar(CP_ACP, 0,poainfo->pcszFile, -1, szBuffer, MAX_PATH))
-        {
-            OPEN_WITH_CONTEXT Context;
-            szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-            ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
-            Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
-            LoadOWItems(&Context, szBuffer);
-            SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
+             SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)szBuffer);
+             ZeroMemory(&Context, sizeof(OPEN_WITH_CONTEXT));
+             Context.hDlgCtrl = GetDlgItem(hwndDlg, 14002);
+             LoadOWItems(&Context, poainfo->pcszFile);
+             SendMessage(Context.hDlgCtrl, LB_SETCURSEL, 0, 0);
         }
         return TRUE;
     case WM_MEASUREITEM:
@@ -708,16 +683,12 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             if (pItemContext)
             {
                 /* store settings in HKCU path */
-                if(MultiByteToWideChar(CP_ACP, 0, poainfo->pcszFile, -1, szBuffer, MAX_PATH + 30))
-                {
-                    szBuffer[MAX_PATH+29] = 0;
-                    StoreNewSettings(szBuffer, pItemContext->szAppName);
-                }
+                StoreNewSettings(poainfo->pcszFile, pItemContext->szAppName);
 
                 if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
                 {
                     /* set programm as default handler */
-                    SetProgrammAsDefaultHandler(szBuffer, pItemContext->szAppName);
+                    SetProgrammAsDefaultHandler(poainfo->pcszFile, pItemContext->szAppName);
                 }
 
                 if (poainfo->oaifInFlags & OAIF_EXEC)
@@ -834,13 +805,8 @@ SHEOWCm_fnInvokeCommand( IContextMenu2* iface, LPCMINVOKECOMMANDINFO lpici )
     if (This->wId == LOWORD(lpici->lpVerb))
     {
         OPENASINFO info;
-        char buffer[MAX_PATH] = {0};
 
-         if(WideCharToMultiByte(CP_ACP,0,This->szPath,-1,buffer,MAX_PATH,NULL,NULL))
-         {
-             info.pcszFile = buffer;
-         }
-
+        info.pcszFile = This->szPath;
         info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
         info.pcszClass = NULL;
         FreeMenuItemContext(This->hSubMenu);
@@ -953,7 +919,7 @@ GetManufacturer(WCHAR * szAppName, POPEN_ITEM_CONTEXT pContext)
        code = lplangcode->code;
     }
     /* set up format */
-    sprintfW(szBuffer, wFormat, lang, code);
+    swprintf(szBuffer, wFormat, lang, code);
     /* query manufacturer */
      pResult = NULL;
     bResult = VerQueryValueW(pBuf, szBuffer, (LPVOID *)&pResult, &VerSize);
@@ -1001,7 +967,7 @@ InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName)
         mii.fState = MFS_ENABLED;
         mii.wID = pContext->idCmdFirst;
         mii.dwTypeData = Buffer;
-        mii.cch = strlenW(Buffer);
+        mii.cch = wcslen(Buffer);
         mii.dwItemData = (ULONG_PTR)pItemContext;
         wcscpy(pItemContext->szManufacturer, Buffer);
         if (InsertMenuItemW(pContext->hMenu, -1, TRUE, &mii))
@@ -1042,10 +1008,10 @@ OpenMRUList(HKEY hKey)
         wcscat(szPath, L"comctl32.dll");
         hModule = LoadLibraryExW(szPath, NULL, 0);
     }
-    CreateMRUListW = (CREATEMRULISTW)GetProcAddress(hModule, MAKEINTRESOURCE(400));
-    EnumMRUListW = (ENUMMRULISTW)GetProcAddress(hModule, MAKEINTRESOURCE(403));
-    FreeMRUList = (FREEMRULIST)GetProcAddress(hModule, MAKEINTRESOURCE(152));
-    AddMRUStringW = (ADDMRUSTRINGW)GetProcAddress(hModule, MAKEINTRESOURCE(401));
+    CreateMRUListW = (CREATEMRULISTW)GetProcAddress(hModule, MAKEINTRESOURCEA(400));
+    EnumMRUListW = (ENUMMRULISTW)GetProcAddress(hModule, MAKEINTRESOURCEA(403));
+    FreeMRUList = (FREEMRULIST)GetProcAddress(hModule, MAKEINTRESOURCEA(152));
+    AddMRUStringW = (ADDMRUSTRINGW)GetProcAddress(hModule, MAKEINTRESOURCEA(401));
 
     if (!CreateMRUListW || !EnumMRUListW || !FreeMRUList || !AddMRUStringW)
         return 0;
@@ -1153,7 +1119,7 @@ LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, WCHAR * szExt)
     }
 
     /* load items from SystemFileAssociations\Ext key */
-    sprintfW(szResult, szSysFileAssoc, szExt);
+    swprintf(szResult, szSysFileAssoc, szExt);
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szResult, 0, KEY_READ | KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hSubKey);
@@ -1171,7 +1137,7 @@ LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, WCHAR * szExt)
 
     /* terminate it explictely */
     szBuffer[29] = 0;
-    sprintfW(szResult, szSysFileAssoc, szBuffer);
+    swprintf(szResult, szSysFileAssoc, szBuffer);
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szResult, 0, KEY_READ | KEY_WRITE, &hSubKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hSubKey);
@@ -1189,7 +1155,7 @@ LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, WCHAR * szExt)
     static const WCHAR szOpenWithList[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\%s";
 
     /* handle first progid lists */
-    sprintfW(szBuffer, szOpenWithProgIDs, szExt);
+    swprintf(szBuffer, szOpenWithProgIDs, szExt);
     if (RegOpenKeyExW(HKEY_CURRENT_USER, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         AddItemFromProgIDList(pContext, hKey);
@@ -1197,7 +1163,7 @@ LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, WCHAR * szExt)
     }
 
     /* now handle mru lists */
-    sprintfW(szBuffer, szOpenWithList, szExt);
+    swprintf(szBuffer, szOpenWithList, szExt);
     if (RegOpenKeyExW(HKEY_CURRENT_USER, szBuffer, 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
     {
         AddItemFromMRUList(pContext, hKey);

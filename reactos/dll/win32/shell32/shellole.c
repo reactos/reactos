@@ -19,31 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "shellapi.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "shlguid.h"
-#include "winreg.h"
-#include "winerror.h"
-
-#include "undocshell.h"
-#include "wine/unicode.h"
-#include "shell32_main.h"
-
-#include "wine/debug.h"
-#include "shlwapi.h"
-#include "debughlp.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -51,6 +27,7 @@ extern HRESULT WINAPI IFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, L
 
 static const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
 static const GUID dummy1 = {0xD969A300, 0xE7FF, 0x11d0, {0xA9, 0x3B, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19} };
+
 /**************************************************************************
  * Default ClassFactory types
  */
@@ -98,7 +75,7 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 			 '2','x','%','0','2','x','%','0','2','x',
 			 '}','\0'};
 
-    return wsprintfW ( str, sFormat,
+    return swprintf ( str, sFormat,
              guid->Data1, guid->Data2, guid->Data3,
              guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
              guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7] );
@@ -129,7 +106,7 @@ HRESULT WINAPI SHCoCreateInstance(
 	LPVOID *ppv)
 {
 	DWORD	hres;
-	IID	iid;
+	CLSID	iid;
 	const	CLSID * myclsid = clsid;
 	WCHAR	sKeyName[MAX_PATH];
 	const	WCHAR sCLSID[7] = {'C','L','S','I','D','\\','\0'};
@@ -150,7 +127,7 @@ HRESULT WINAPI SHCoCreateInstance(
 	if (!clsid)
 	{
 	  if (!aclsid) return REGDB_E_CLASSNOTREG;
-	  SHCLSIDFromStringW(aclsid, &iid);
+	  CLSIDFromString((LPOLESTR)aclsid, &iid);
 	  myclsid = &iid;
 	}
 
@@ -159,9 +136,9 @@ HRESULT WINAPI SHCoCreateInstance(
 
 	/* we look up the dll path in the registry */
         __SHGUIDToStringW(myclsid, sClassID);
-	lstrcpyW(sKeyName, sCLSID);
-	lstrcatW(sKeyName, sClassID);
-	lstrcatW(sKeyName, sInProcServer32);
+	wcscpy(sKeyName, sCLSID);
+	wcscat(sKeyName, sClassID);
+	wcscat(sKeyName, sInProcServer32);
 
 	if (ERROR_SUCCESS == RegOpenKeyExW(HKEY_CLASSES_ROOT, sKeyName, 0, KEY_READ, &hKey)) {
 	    dwSize = sizeof(sDllPath);
@@ -685,7 +662,7 @@ UINT WINAPI DragQueryFileW(
 	  }
 	}
 
-	i = strlenW(lpwDrop);
+	i = wcslen(lpwDrop);
 	if ( !lpszwFile) goto end;   /* needed buffer size */
 	lstrcpynW (lpszwFile, lpwDrop, lLength);
 end:

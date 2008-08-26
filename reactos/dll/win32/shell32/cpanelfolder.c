@@ -18,38 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/config.h"
-#include "wine/port.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <precomp.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "ole2.h"
-#include "shlguid.h"
-
-#include "cpanel.h"
-#include "enumidlist.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -71,7 +42,7 @@ typedef struct {
     int dwAttributes;		/* attributes returned by GetAttributesOf FIXME: use it */
     LPCITEMIDLIST *apidl;
     UINT cidl;
-} ICPanelImpl;
+} ICPanelImpl, *LPICPanelImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_PersistFolder2;
@@ -79,25 +50,25 @@ static const IShellExecuteHookWVtbl vt_ShellExecuteHookW;
 static const IShellExecuteHookAVtbl vt_ShellExecuteHookA;
 static const IContextMenu2Vtbl vt_ContextMenu;
 
-static inline ICPanelImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
+static LPICPanelImpl __inline impl_from_IPersistFolder2( IPersistFolder2 *iface )
 {
-    return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblPersistFolder2));
+    return (LPICPanelImpl)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblPersistFolder2));
 }
 
-static inline ICPanelImpl *impl_from_IContextMenu( IContextMenu2 *iface )
+static LPICPanelImpl __inline impl_from_IContextMenu( IContextMenu2 *iface )
 {
-    return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblContextMenu));
+    return (LPICPanelImpl)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblContextMenu));
 }
 
 
-static inline ICPanelImpl *impl_from_IShellExecuteHookW( IShellExecuteHookW *iface )
+static LPICPanelImpl __inline impl_from_IShellExecuteHookW( IShellExecuteHookW *iface )
 {
-    return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblShellExecuteHookW));
+    return (LPICPanelImpl)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblShellExecuteHookW));
 }
 
-static inline ICPanelImpl *impl_from_IShellExecuteHookA( IShellExecuteHookA *iface )
+static LPICPanelImpl __inline impl_from_IShellExecuteHookA( IShellExecuteHookA *iface )
 {
-    return (ICPanelImpl *)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblShellExecuteHookA));
+    return (LPICPanelImpl)((char*)iface - FIELD_OFFSET(ICPanelImpl, lpVtblShellExecuteHookA));
 }
 
 
@@ -700,7 +671,7 @@ static HRESULT WINAPI ISF_ControlPanel_fnGetDisplayNameOf(IShellFolder2 * iface,
 	    int len = 0;
 
 	    PathAddBackslashW(wszPath);
-	    len = lstrlenW(wszPath);
+	    len = wcslen(wszPath);
 
 	    if (!SUCCEEDED
 	      (SHELL32_GetDisplayNameOfChild(iface, pidl, dwFlags, wszPath + len, MAX_PATH + 1 - len)))
@@ -1275,7 +1246,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
     {
        ZeroMemory(&sei, sizeof(sei));
        sei.cbSize = sizeof(sei);
@@ -1288,7 +1259,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
        if (sei.hInstApp <= (HINSTANCE)32)
           return E_FAIL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCE(2))
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(2))
     {
         if (!SHGetSpecialFolderPathW(NULL, szPath, CSIDL_DESKTOPDIRECTORY, FALSE))
              return E_FAIL;

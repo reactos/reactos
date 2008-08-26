@@ -29,19 +29,7 @@
  * Up to date as of SHELL32 v5.00 (W2K)
  */
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-
-#include "shell32_main.h"
-#include "shlobj.h"
-
-#include "wine/debug.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -441,12 +429,14 @@ static POLICYDATA sh32_policy_table[] =
     strForceCopyACLW,
     SHELL_NO_POLICY
   },
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
   {
     REST_NOLOGO3CHANNELNOTIFY,
     strExplorer,
     strNoMSAppLogo,
     SHELL_NO_POLICY
   },
+#endif
   {
     REST_NOFORGETSOFTWAREUPDATE,
     strExplorer,

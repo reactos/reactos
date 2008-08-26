@@ -18,31 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdarg.h>
-#include <string.h>
-#include <sys/types.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "wine/debug.h"
-
-#include "shellapi.h"
-#include "objbase.h"
-#include "pidl.h"
-#include "shell32_main.h"
-#include "undocshell.h"
-#include "shresdef.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -89,7 +65,7 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
 	    (e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
 	  return 1;
 
-	if (strcmpiW(e1->sSourceFile,e2->sSourceFile))
+	if (wcsicmp(e1->sSourceFile,e2->sSourceFile))
 	  return 1;
 
 	return 0;
@@ -263,8 +239,8 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 	lpsice = (LPSIC_ENTRY) SHAlloc (sizeof (SIC_ENTRY));
 
 	GetFullPathNameW(sSourceFile, MAX_PATH, path, NULL);
-	lpsice->sSourceFile = HeapAlloc( GetProcessHeap(), 0, (strlenW(path)+1)*sizeof(WCHAR) );
-	strcpyW( lpsice->sSourceFile, path );
+	lpsice->sSourceFile = HeapAlloc( GetProcessHeap(), 0, (wcslen(path)+1)*sizeof(WCHAR) );
+	wcscpy( lpsice->sSourceFile, path );
 
 	lpsice->dwSourceIndex = dwSourceIndex;
 	lpsice->dwFlags = dwFlags;
@@ -501,18 +477,18 @@ static int SIC_LoadOverlayIcon(int icon_idx)
 	{
 	    DWORD count = sizeof(buffer);
 
-	    sprintfW(wszIdx, wszNumFmt, icon_idx);
+	    swprintf(wszIdx, wszNumFmt, icon_idx);
 
 	    /* read icon path and index */
 	    if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
 	    {
-		LPWSTR p = strchrW(buffer, ',');
+		LPWSTR p = wcschr(buffer, ',');
 
 		if (p)
 		    *p++ = 0;
 
 		iconPath = buffer;
-		iconIdx = atoiW(p);
+		iconIdx = _wtoi(p);
 	    }
 
 	    RegCloseKey(hKeyShellIcons);
@@ -568,12 +544,12 @@ BOOL PidlToSicIndex (
 
 	if (SUCCEEDED (IShellFolder_GetUIObjectOf(sh, 0, 1, &pidl, &IID_IExtractIconW, 0, (void **)&ei)))
 	{
-	  if (SUCCEEDED(IExtractIconW_GetIconLocation(ei, uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
+	  if (SUCCEEDED(ei->lpVtbl->GetIconLocation(ei, uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
 	  {
 	    *pIndex = SIC_GetIconIndex(szIconFile, iSourceIndex, uFlags);
 	    ret = TRUE;
 	  }
-	  IExtractIconW_Release(ei);
+	  ei->lpVtbl->Release(ei);
 	}
 
 	if (INVALID_INDEX == *pIndex)	/* default icon when failed */
@@ -646,7 +622,7 @@ HRESULT WINAPI SHMapIDListToImageListIndexAsync(IUnknown *pts, IShellFolder *psf
  * Shell_GetCachedImageIndex		[SHELL32.72]
  *
  */
-INT WINAPI Shell_GetCachedImageIndexA(LPCSTR szPath, INT nIndex, BOOL bSimulateDoc)
+INT WINAPI Shell_GetCachedImageIndexA(LPCSTR szPath, INT nIndex, UINT bSimulateDoc)
 {
 	INT ret, len;
 	LPWSTR szTemp;
@@ -664,7 +640,7 @@ INT WINAPI Shell_GetCachedImageIndexA(LPCSTR szPath, INT nIndex, BOOL bSimulateD
 	return ret;
 }
 
-INT WINAPI Shell_GetCachedImageIndexW(LPCWSTR szPath, INT nIndex, BOOL bSimulateDoc)
+INT WINAPI Shell_GetCachedImageIndexW(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc)
 {
 	WARN("(%s,%08x,%08x) semi-stub.\n",debugstr_w(szPath), nIndex, bSimulateDoc);
 
@@ -777,7 +753,7 @@ HICON WINAPI ExtractAssociatedIconW(HINSTANCE hInst, LPWSTR lpIconPath, LPWORD l
         HINSTANCE uRet = FindExecutableW(lpIconPath,NULL,tempPath);
 
         if( uRet > (HINSTANCE)32 && tempPath[0] )
-        { lstrcpyW(lpIconPath,tempPath);
+        { wcscpy(lpIconPath,tempPath);
           hIcon = ExtractIconW(hInst, lpIconPath, *lpiIcon);
           if( hIcon > (HICON)2 )
             return hIcon;

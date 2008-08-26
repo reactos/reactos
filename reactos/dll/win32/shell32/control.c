@@ -17,26 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/winbase16.h"
-#include "wownt32.h"
-#include "wine/debug.h"
-#include "cpl.h"
-#include "wine/unicode.h"
-
-#define NO_SHLWAPI_REG
-#include "shlwapi.h"
-
-#include "cpanel.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -319,13 +301,13 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
     WCHAR *p;
 
     GetSystemDirectoryW( buffer, MAX_PATH );
-    p = buffer + strlenW(buffer);
+    p = buffer + wcslen(buffer);
     *p++ = '\\';
-    lstrcpyW(p, wszAllCpl);
+    wcscpy(p, wszAllCpl);
 
     if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE) {
         do {
-	   lstrcpyW(p, fd.cFileName);
+	   wcscpy(p, fd.cFileName);
 	   Control_LoadApplet(hWnd, buffer, panel);
 	} while (FindNextFileW(h, &fd));
 	FindClose(h);
@@ -379,13 +361,13 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
  	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return;
-    buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
+    buffer = HeapAlloc(GetProcessHeap(), 0, (wcslen(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer)
     {
         CloseHandle(hMutex);
         return;
     }
-    end = lstrcpyW(buffer, wszCmd);
+    end = wcscpy(buffer, wszCmd);
     for (;;) {
 	ch = *end;
         if (ch == '"') quoted = !quoted;
@@ -409,10 +391,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	end++;
     }
     while ((ptr = StrChrW(buffer, '"')))
-	memmove((LPVOID)ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     while ((ptr = StrChrW(extraPmts, '"')))
-	memmove((LPVOID)ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
 

@@ -19,31 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-
-#include "wine/debug.h"
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "shlobj.h"
-#include "shell32_main.h"
-#include "shlguid.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "pidl.h"
-#include "wine/unicode.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -146,9 +122,9 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         if (!RegQueryValueW(hkeyClass, L"shell", szDest, &size) && *szDest)
         {
             /* The MSDN says to first try the default verb */
-            lstrcpyW(sTemp, swShell);
-            lstrcatW(sTemp, szDest);
-            lstrcatW(sTemp, swCommand);
+            wcscpy(sTemp, swShell);
+            wcscat(sTemp, szDest);
+            wcscat(sTemp, swCommand);
             if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
             {
                 RegCloseKey(hkey);
@@ -158,9 +134,9 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
         }
 
         /* then fallback to 'open' */
-        lstrcpyW(sTemp, swShell);
-        lstrcatW(sTemp, swOpen);
-        lstrcatW(sTemp, swCommand);
+        wcscpy(sTemp, swShell);
+        wcscat(sTemp, swOpen);
+        wcscat(sTemp, swCommand);
         if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
         {
             RegCloseKey(hkey);
@@ -202,9 +178,9 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
         if (HCR_GetDefaultVerbW(hkeyClass, szVerb, sTempVerb, sizeof(sTempVerb)))
         {
             WCHAR sTemp[MAX_PATH];
-            lstrcpyW(sTemp, swShell);
-            lstrcatW(sTemp, sTempVerb);
-            lstrcatW(sTemp, swCommand);
+            wcscpy(sTemp, swShell);
+            wcscat(sTemp, sTempVerb);
+            wcscat(sTemp, swCommand);
             ret = (ERROR_SUCCESS == SHGetValueW(hkeyClass, sTemp, NULL, NULL, szDest, &len));
         }
         if (szClass)
@@ -290,7 +266,7 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_i
 	TRACE("%s\n",debugstr_w(szClass) );
 
 	lstrcpynW(sTemp, szClass, MAX_PATH);
-	lstrcatW(sTemp, swDefaultIcon);
+	wcscat(sTemp, swDefaultIcon);
 
 	if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
 	{
