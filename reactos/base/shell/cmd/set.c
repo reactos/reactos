@@ -154,7 +154,7 @@ INT cmd_set (LPTSTR param)
 		}
 
 		*p++ = _T('\0');
-		if (!SetEnvironmentVariable(param, p))
+		if (!SetEnvironmentVariable(param, *p ? p : NULL))
 		{
 			nErrorLevel = 1;
 			return 1;

@@ -355,7 +355,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    }
 
 found:
-   if (Value != NULL && Value->Length > 0)
+   if (Value != NULL)
    {
       hole_len = tail - hole;
       /* calculate new environment size */
