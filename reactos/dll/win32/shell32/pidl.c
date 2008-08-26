@@ -1622,16 +1622,6 @@ BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
-BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
-{
-    REFIID iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n",pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_NetworkConnections);
-    return FALSE;
-}
 
 LPITEMIDLIST _ILCreateNetHood(void)
 {
@@ -1642,12 +1632,6 @@ LPITEMIDLIST _ILCreateFont(void)
 {
     return _ILCreateGuid(PT_GUID, &CLSID_FontsFolderShortcut);
 }
-
-LPITEMIDLIST _ILCreateNetConnect(void)
-{
-    return _ILCreateGuid(PT_GUID, &CLSID_NetworkConnections);
-}
-
 
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {

@@ -386,11 +386,7 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	    if(LoadStringW(shell32_hInstance, IDS_ADMINISTRATIVETOOLS, szDest, buflen))
 	      ret = TRUE;
 	  }
-	  else if (IsEqualIID(riid, &CLSID_NetworkConnections))
-	  {
-	    if(LoadStringW(shell32_hInstance, IDS_NETWORKCONNECTION, szDest, buflen))
-	      ret = TRUE;
-	  }
+
 	}
 	TRACE("-- %s\n", debugstr_w(szDest));
 	return ret;

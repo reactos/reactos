@@ -239,7 +239,6 @@ BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
 BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);
 BOOL	_ILIsAdminTools (LPCITEMIDLIST pidl);
 BOOL    _ILIsNetHood      (LPCITEMIDLIST pidl);
-BOOL    _ILIsNetConnect      (LPCITEMIDLIST pidl);
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl);
 BOOL	_ILIsFolder		(LPCITEMIDLIST pidl);
 BOOL	_ILIsValue		(LPCITEMIDLIST pidl);
@@ -288,10 +287,8 @@ LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
 LPITEMIDLIST	_ILCreateNetHood	(void);
-LPITEMIDLIST	_ILCreateNetConnect	(void);
 LPITEMIDLIST	_ILCreateAdminTools	(void);
 LPITEMIDLIST	_ILCreateFont		(void);
-LPITEMIDLIST	_ILCreateNetConnect	(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
 

@@ -618,9 +618,6 @@ BEGIN
 	IDS_SHV_COLUMN_COMMENTS     "Comments"
 	IDS_SHV_COLUMN_LOCATION     "Location"
 	IDS_SHV_COLUMN_MODEL        "Model"
-	IDS_SHV_COLUMN_DEVNAME      "Device Name"
-	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-	IDS_SHV_COLUMN_OWNER        "Owner"
 
 	/* special folders */
 	IDS_DESKTOP                 "Робочий стіл"
@@ -628,7 +625,6 @@ BEGIN
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 	IDS_CONTROLPANEL            "Панель керування"
 	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
-	IDS_NETWORKCONNECTION       "Network Connections"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"

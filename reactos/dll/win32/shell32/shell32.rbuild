@@ -60,7 +60,6 @@
 	<file>shfldr_admintools.c</file>
 	<file>shfldr_netplaces.c</file>
 	<file>shfldr_fonts.c</file>
-	<file>shfldr_netconnect.c</file>
 	<file>shfldr_cpanel.c</file>
 	<file>shfldr_recyclebin.c</file>
 	<file>shlexec.c</file>

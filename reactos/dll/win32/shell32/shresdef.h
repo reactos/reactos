@@ -89,7 +89,6 @@
 #define IDS_NETWORKPLACE            75
 #define IDS_FONTS                   76
 #define IDS_PRINTERS                77
-#define IDS_NETWORKCONNECTION       78
 
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
@@ -166,10 +165,6 @@
 #define IDS_FORMATDRIVE             327
 #define IDS_RENAME                  328
 #define IDS_INSERT                  329
-#define IDS_SHV_COLUMN_DEVNAME      330
-#define IDS_SHV_COLUMN_PHONE        331
-#define IDS_SHV_COLUMN_OWNER        332
-
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -246,7 +241,6 @@
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_CONTROL_PANEL1   330
 #define IDI_SHELL_ADMINTOOLS       328
-#define IDI_SHELL_NETWORK_FOLDER   172
 
 // Icons for Folder Options (ID's identical to Windows XP SP3)
 #define IDI_SHELL_SHOW_COMMON_TASKS    182
