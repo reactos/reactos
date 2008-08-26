@@ -44,7 +44,7 @@ DWORD WINAPI
 DiscardHandler(VOID* sock_)
 {
     DWORD retVal = 0;
-    SOCKET sock = (SOCKET)sock_;
+    SOCKET sock = (SOCKET)(UINT_PTR)sock_;
 
     if (!RecieveIncomingPackets(sock))
     {
