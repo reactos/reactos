@@ -561,4 +561,3 @@ void ConvInit(HWND hWnd)
     ConvAdjust(hWnd, 0);
 }
 
-

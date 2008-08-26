@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  30-07-2008
+ * LAST CHANGE:  16-08-2008
  */   
 
 /*
@@ -56,12 +56,12 @@ BEGIN
 		END
 		MENUITEM "Zarovnaù ikony",         FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "Obnoviù",                FCIDM_SHVIEW_REFRESH
+		MENUITEM "&Obnoviù",                FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "&Prilepiù",              FCIDM_SHVIEW_INSERT
 		MENUITEM "Prilepiù od&kaz",        FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Vlastnosti",             FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Vl&astnosti",             FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -571,14 +571,14 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Kontrola disku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	DEFPUSHBUTTON "&Spustiù", IDOK, 53, 100, 60, 14
+	GROUPBOX "Moûnosti kontroly disku", -1, 7, 6, 179, 50
+	PUSHBUTTON "Zruöiù", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "&Automaticky opraviù chyby v syst˝me s˙borov", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "Vy&hæadaù a pok˙siù sa obnoviù chybnÈ sektory", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -612,14 +612,14 @@ BEGIN
 	IDS_SHV_COLUMN10            "VlastnÌk"
 	IDS_SHV_COLUMN11            "Skupina"
 	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN13            "KategÛria"
 	IDS_SHV_COLUMN_DELFROM      "PÙvod" //PÙvodnÈ umiestnenie
 	IDS_SHV_COLUMN_DELDATE      "Odstr·nen˝" //D·tum zmazania
 	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
 	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
 	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
+	IDS_SHV_COLUMN_STATUS       "Stav"
 	IDS_SHV_COLUMN_COMMENTS     "Comments"
 	IDS_SHV_COLUMN_LOCATION     "Location"
 	IDS_SHV_COLUMN_MODEL        "Model"
@@ -629,7 +629,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Tento poËÌtaË"
 	IDS_RECYCLEBIN_FOLDER_NAME  "KÙö"
 	IDS_CONTROLPANEL            "Ovl·dacÌ panel"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "N·stroje na spr·vu"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&VeækÈ ikony"
@@ -637,13 +637,16 @@ BEGIN
 	IDS_VIEW_LIST               "&Zoznam"
 	IDS_VIEW_DETAILS            "&Podrobnosti"
 	IDS_SELECT                  "Vybraù"
-	IDS_OPEN                    "Otvoriù"
+	IDS_OPEN                    "&Otvoriù"
 	IDS_CREATELINK              "Vytvoriù o&dkaz"
-	IDS_COPY                    "&KopÌrova"
-	IDS_DELETE                  "&Odstr·ni"
+	IDS_COPY                    "&KopÌrovaù"
+	IDS_DELETE                  "Odstr·niù"
 	IDS_PROPERTIES              "Vl&astnosti"
 	IDS_CUT                     "&Vystrihn˙ù"
-	IDS_RESTORE                 "Restore"
+	IDS_RESTORE                 "&Obnoviù"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"
@@ -726,7 +729,7 @@ BEGIN
 	IDS_CMD_FILE                "ReactOS Command Script"
 	IDS_COM_FILE                "DOS aplik·cia"
 	IDS_CPL_FILE                "Poloûka ovl·dacieho panela"
-	IDS_CUR_FILE                "Cursor"
+	IDS_CUR_FILE                "Kurzor"
 	IDS_DLL_FILE                "Application Extension"
 	IDS_DRV_FILE                "Ovl·daË zariadenia"
 	IDS_EXE_FILE                "Aplik·cia"
@@ -746,9 +749,9 @@ BEGIN
 	IDS_PREVIEW_VERB            "Preview" //N·hæad, Uk·ûka, Prezrieù ???
 
 	IDS_FILE_FOLDER             "s˙bory: %u, prieËinky: %u"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_PRINTERS                "TlaËiarne"
+	IDS_FONTS                   "PÌsma"
+	IDS_INSTALLNEWFONT          "&Nainötalovaù novÈ pÌsmo..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Predvolen· alokaËn· veækosù" //Default allocation size
 END

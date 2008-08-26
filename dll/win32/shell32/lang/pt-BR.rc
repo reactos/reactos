@@ -640,6 +640,9 @@ BEGIN
 	IDS_PROPERTIES              "Propriedades"
 	IDS_CUT                     "C&ortar"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Não pode criar nova pasta: Permissão negada."
 	IDS_CREATEFOLDER_CAPTION    "Erro durante a criação da nova pasta"

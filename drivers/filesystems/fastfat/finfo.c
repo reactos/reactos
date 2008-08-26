@@ -10,7 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "vfat.h"
 
 /* GLOBALS ******************************************************************/
@@ -552,8 +552,6 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   BOOLEAN AllocSizeChanged = FALSE;
 
   DPRINT("VfatSetAllocationSizeInformation()\n");
-
-  __asm__("int3");
 
   if (Fcb->Flags & FCB_IS_FATX_ENTRY)
     OldSize = Fcb->entry.FatX.FileSize;

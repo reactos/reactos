@@ -205,7 +205,6 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
                 if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
                     !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
                   {
-	            CHECKPOINT;
 	            *pContext = NULL;
 	            return STATUS_NO_MORE_ENTRIES;
 		  }
@@ -230,7 +229,6 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	        if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
 	            !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
 	          {
-		    CHECKPOINT;
 		    *pContext = NULL;
 		    return STATUS_NO_MORE_ENTRIES;
 	          }
@@ -328,7 +326,6 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	    if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
 	        !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
 	      {
-		CHECKPOINT;
 		*pContext = NULL;
 		return STATUS_NO_MORE_ENTRIES;
 	      }
@@ -440,7 +437,6 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
          if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
              !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
          {
-            CHECKPOINT;
             *pContext = NULL;
    	    return STATUS_NO_MORE_ENTRIES;
          }

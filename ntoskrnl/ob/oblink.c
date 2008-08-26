@@ -49,7 +49,7 @@ ObpCreateSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
 
     /* FIXME: We don't support device maps yet */
     DPRINT1("Unhandled path!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
 }
 
 /*++

@@ -25,7 +25,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "vfat.h"
 
 /* FUNCTIONS *****************************************************************/
@@ -204,7 +204,6 @@ FindFile (
 	PathNameBuffer = ExAllocatePoolWithTag(NonPagedPool, PathNameBufferLength + sizeof(WCHAR), TAG_VFAT);
 	if (!PathNameBuffer)
 	{
-		CHECKPOINT1;
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -263,7 +262,6 @@ FindFile (
 	Status = RtlUpcaseUnicodeString(&FileToFindUpcase, FileToFindU, TRUE);
 	if (!NT_SUCCESS(Status))
 	{
-		CHECKPOINT;
 		ExFreePool(PathNameBuffer);
 		return Status;
 	}

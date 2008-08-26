@@ -215,7 +215,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create thread stack\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /*
@@ -239,7 +239,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not create Virtual Mapping for Kernel Stack\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Return the stack base */
@@ -452,7 +452,7 @@ MmCreateTeb(PEPROCESS Process,
     Teb->Tib.Self = (PNT_TIB)Teb;
 
     /* Set TEB Data */
-    Teb->Cid = *ClientId;
+    Teb->ClientId = *ClientId;
     Teb->RealClientId = *ClientId;
     Teb->ProcessEnvironmentBlock = Process->Peb;
     Teb->CurrentLocale = PsDefaultThreadLocaleId;
@@ -709,11 +709,11 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
              break;
 
          case MEMORY_AREA_MDL_MAPPING:
-            KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
+            KeBugCheck(PROCESS_HAS_LOCKED_PAGES);
             break;
 
          default:
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
       }
    }
 

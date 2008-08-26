@@ -85,6 +85,7 @@ i8042BasicDetect(
 
 	i8042Flush(DeviceExtension);
 
+	/* Issue a CTRL_SELF_TEST command to check if this is really an i8042 controller */
 	ResendIterations = DeviceExtension->Settings.ResendIterations + 1;
 	while (ResendIterations--)
 	{
@@ -118,24 +119,6 @@ i8042BasicDetect(
 		}
 	}
 
-	/*
-	 * We used to send a KBD_LINE_TEST (0xAB) command here, but on at least HP
-	 * Pavilion notebooks the response to that command was incorrect.
-	 * So now we just assume that a keyboard is attached.
-	 */
-	DeviceExtension->Flags |= KEYBOARD_PRESENT;
-
-	if (i8042Write(DeviceExtension, DeviceExtension->ControlPort, MOUSE_LINE_TEST))
-	{
-		Status = i8042ReadDataWait(DeviceExtension, &Value);
-		if (NT_SUCCESS(Status) && Value == 0)
-			DeviceExtension->Flags |= MOUSE_PRESENT;
-	}
-
-	if (IsFirstStageSetup())
-		/* Ignore the mouse */
-		DeviceExtension->Flags &= ~MOUSE_PRESENT;
-
 	return STATUS_SUCCESS;
 }
 
@@ -165,6 +148,13 @@ i8042DetectKeyboard(
 	if (!i8042ChangeMode(DeviceExtension, 0, CCB_TRANSLATE | CCB_SYSTEM_FLAG))
 		return;
 
+	/*
+	 * We used to send a KBD_LINE_TEST (0xAB) command, but on at least HP
+	 * Pavilion notebooks the response to that command was incorrect.
+	 * So now we just assume that a keyboard is attached.
+	 */
+	DeviceExtension->Flags |= KEYBOARD_PRESENT;
+
 	INFO_(I8042PRT, "Keyboard detected\n");
 }
 
@@ -177,6 +167,19 @@ i8042DetectMouse(
 	UCHAR ExpectedReply[] = { MOUSE_ACK, 0xAA };
 	UCHAR ReplyByte;
 
+	/* First do a mouse line test */
+	if (i8042Write(DeviceExtension, DeviceExtension->ControlPort, MOUSE_LINE_TEST))
+	{
+		Status = i8042ReadDataWait(DeviceExtension, &Value);
+
+		if (!NT_SUCCESS(Status) || Value != 0)
+		{
+			WARN_(I8042PRT, "Mouse line test failed\n");
+			goto failure;
+		}
+	}
+
+	/* Now reset the mouse */
 	i8042Flush(DeviceExtension);
 
 	if(!i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE))
@@ -240,6 +243,7 @@ i8042DetectMouse(
 		goto failure;
 	}
 
+	DeviceExtension->Flags |= MOUSE_PRESENT;
 	INFO_(I8042PRT, "Mouse detected\n");
 	return;
 
@@ -415,9 +419,14 @@ StartProcedure(
 		}
 
 		/* First detect the mouse and then the keyboard!
-		   If we do it the other way round, some systems throw away settings like the keyboard translation, when detecting the mouse. */
-		TRACE_(I8042PRT, "Detecting mouse\n");
-		i8042DetectMouse(DeviceExtension);
+		   If we do it the other way round, some systems throw away settings like the keyboard translation, when detecting the mouse.
+		
+		   Don't detect the mouse if we're in 1st stage setup! */
+		if(!IsFirstStageSetup())
+		{
+			TRACE_(I8042PRT, "Detecting mouse\n");
+			i8042DetectMouse(DeviceExtension);
+		}
 
 		TRACE_(I8042PRT, "Detecting keyboard\n");
 		i8042DetectKeyboard(DeviceExtension);
@@ -608,8 +617,8 @@ i8042PnpStartDevice(
 		}
 		default:
 		{
-			ERR_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
-			ASSERT(FALSE);
+			WARN_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
+			ASSERT(!(PortDeviceExtension->Flags & KEYBOARD_CONNECTED) || !(PortDeviceExtension->Flags & MOUSE_CONNECTED));
 			Status = STATUS_INVALID_DEVICE_REQUEST;
 		}
 	}

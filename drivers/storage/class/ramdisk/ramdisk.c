@@ -2284,7 +2284,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 			//
 			// Are we being booted from setup? Not yet supported
 			//
-			ASSERT (!KeLoaderBlock->SetupLdrBlock);
+			//ASSERT(!KeLoaderBlock->SetupLdrBlock);
 	    }
 
 		//
@@ -2308,6 +2308,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PCHAR BootDeviceName, CommandLine;
     PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
+    DPRINT1("RAM Disk Driver Initialized\n");
     
     //
     // Query ramdisk parameters
@@ -2399,7 +2400,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     //
     // Installing from Ramdisk isn't supported yet
     //
-    ASSERT(!KeLoaderBlock->SetupLdrBlock);
+    //ASSERT(!KeLoaderBlock->SetupLdrBlock);
     
     //
     // Are we reporting the device

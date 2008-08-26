@@ -8,7 +8,8 @@
 #include "d3d9_device.h"
 #include "d3d9_helpers.h"
 #include "adapter.h"
-#include "debug.h"
+#include <debug.h>
+#include "d3d9_create.h"
 
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
@@ -53,8 +54,16 @@ static ULONG WINAPI IDirect3DDevice9Impl_Release(LPDIRECT3DDEVICE9 iface)
 
     if (ref == 0)
     {
+        DWORD iAdapter;
+
         EnterCriticalSection(&This->CriticalSection);
+        
         /* TODO: Free resources here */
+        for (iAdapter = 0; iAdapter < This->NumAdaptersInDevice; iAdapter++)
+        {
+            DestroyD3D9DeviceData(&This->DeviceData[iAdapter]);
+        }
+
         LeaveCriticalSection(&This->CriticalSection);
         AlignedFree(This);
     }
@@ -332,16 +341,18 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9 iface,
     LPDIRECT3DDEVICE9_INT This = impl_from_IDirect3DDevice9(iface);
     LOCK_D3DDEVICE9();
 
-    if (iSwapChain >= IDirect3DDevice9_GetNumberOfSwapChains(iface))
+    if (IsBadWritePtr(ppSwapChain, sizeof(IDirect3DSwapChain9*)))
     {
-        DPRINT1("Invalid iSwapChain parameter specified");
+        DPRINT1("Invalid ppSwapChain parameter specified");
         UNLOCK_D3DDEVICE9();
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(ppSwapChain, sizeof(IDirect3DSwapChain9*)))
+    *ppSwapChain = NULL;
+
+    if (iSwapChain >= IDirect3DDevice9_GetNumberOfSwapChains(iface))
     {
-        DPRINT1("Invalid ppSwapChain parameter specified");
+        DPRINT1("Invalid iSwapChain parameter specified");
         UNLOCK_D3DDEVICE9();
         return D3DERR_INVALIDCALL;
     }

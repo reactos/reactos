@@ -33,7 +33,7 @@
 #define ENV_BUFFER_SIZE 1024
 
 
-INT cmd_path (LPTSTR cmd, LPTSTR param)
+INT cmd_path (LPTSTR param)
 {
 
 	if (!_tcsncmp (param, _T("/?"), 2))

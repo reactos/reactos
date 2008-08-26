@@ -92,6 +92,7 @@ base\shell\explorer\notifyhook\notifyhook.dll       1
 base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
+base\system\bootok\bootok.exe                       1
 base\system\format\format.exe                       1
 base\system\lsass\lsass.exe                         1
 base\system\msiexec\msiexec.exe                     1
@@ -290,6 +291,7 @@ dll\win32\newdev\newdev.dll                         1
 dll\win32\ntdsapi\ntdsapi.dll                       1
 dll\win32\ntmarta\ntmarta.dll                       1
 dll\win32\objsel\objsel.dll                         1
+dll\win32\odbc32\odbc32.dll                         1
 dll\win32\odbccp32\odbccp32.dll                     1
 dll\win32\ole32\ole32.dll                           1
 dll\win32\oleacc\oleacc.dll                         1

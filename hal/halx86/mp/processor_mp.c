@@ -31,7 +31,7 @@ HalInitializeProcessor(ULONG ProcessorNumber,
    CPU = ThisCPU();
    if (OnlineCPUs & (1 << CPU))
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    if (ProcessorNumber == 0)
@@ -70,7 +70,7 @@ HalAllProcessorsStarted (VOID)
     }
     if (CPUs > CPUCount)
     {
-       KEBUGCHECK(0);
+       ASSERT(FALSE);
     }
     else if (CPUs == CPUCount)
     {
@@ -108,7 +108,7 @@ HalStartNextProcessor(
 
    if (CPU >= CPUCount)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    DPRINT1("Attempting to boot CPU %d\n", CPU);

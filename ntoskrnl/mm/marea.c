@@ -899,7 +899,7 @@ MmFreeMemoryAreaByPtr(
                                             BaseAddress);
    if (MemoryArea == NULL)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -978,14 +978,12 @@ MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
 
       if (!MmGetAddressSpaceOwner(AddressSpace) && *BaseAddress < MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
       if (MmGetAddressSpaceOwner(AddressSpace) &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
@@ -1041,7 +1039,7 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to allocate page\n");
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
       }
       Status = MmCreateVirtualMapping (NULL,
                                        (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
@@ -1051,7 +1049,7 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
       }
    }
 }

@@ -697,7 +697,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         else
         {
             /* Otherwise, bugcheck the OS */
-            KeBugCheckEx(0x8B, (ULONG_PTR)Handle, 0, 0, 0);
+            KeBugCheckEx(INVALID_KERNEL_HANDLE, (ULONG_PTR)Handle, 0, 0, 0);
         }
     }
 
@@ -916,7 +916,7 @@ ObpIncrementHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             goto Quickie;
         }
     }
@@ -945,7 +945,7 @@ ObpIncrementHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }
@@ -1143,7 +1143,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             goto Quickie;
         }
     }
@@ -1169,7 +1169,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }
@@ -1753,7 +1753,7 @@ ObpCloseHandle(IN HANDLE Handle,
                     if (KdDebuggerEnabled)
                     {
                         /* Bugcheck */
-                        KeBugCheckEx(0, (ULONG_PTR)Handle, 1, 0, 0);
+                        KeBugCheckEx(INVALID_KERNEL_HANDLE, (ULONG_PTR)Handle, 1, 0, 0);
                     }
                 }
             }
@@ -3034,7 +3034,7 @@ ObInsertObject(IN PVOID Object,
             {
                 /* Weird case where we need to do a manual delete */
                 DPRINT1("Unhandled path\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
 
             /* Cleanup the lookup */
@@ -3052,7 +3052,7 @@ ObInsertObject(IN PVOID Object,
             }
 
             /* Return failure code */
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }

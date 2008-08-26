@@ -17,34 +17,35 @@
 
 typedef struct _LOADER_MODULE
 {
-    ULONG ModStart;
-    ULONG ModEnd;
-    ULONG String;
-    ULONG Reserved;
+    ULONG_PTR ModStart;
+    ULONG_PTR ModEnd;
+    ULONG_PTR String;
+    ULONG_PTR Reserved;
 } LOADER_MODULE, *PLOADER_MODULE;
 
 typedef struct _ROS_LOADER_PARAMETER_BLOCK
 {
     ULONG Flags;
-    ULONG MemLower;
-    ULONG MemHigher;
+    ULONG_PTR MemLower;
+    ULONG_PTR MemHigher;
     ULONG BootDevice;
     PCHAR CommandLine;
     ULONG ModsCount;
     PLOADER_MODULE ModsAddr;
     UCHAR Syms[12];
-    ULONG MmapLength;
-    ULONG MmapAddr;
-    ULONG RdLength;
-    ULONG RdAddr;
+    SIZE_T MmapLength;
+    ULONG_PTR MmapAddr;
+    SIZE_T RdLength;
+    ULONG_PTR RdAddr;
     ULONG DrivesCount;
     PARC_DISK_SIGNATURE DrivesAddr;
     ULONG ConfigTable;
     ULONG BootLoaderName;
-    ULONG PageDirectoryStart;
-    ULONG PageDirectoryEnd;
-    ULONG KernelBase;
-    ULONG ArchExtra;
+    ULONG_PTR PageDirectoryStart;
+    ULONG_PTR PageDirectoryEnd;
+    ULONG_PTR KernelBase;
+    ULONG_PTR ArchExtra;
+    ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 } ROS_LOADER_PARAMETER_BLOCK, *PROS_LOADER_PARAMETER_BLOCK;
 
 extern BOOLEAN AcpiTableDetected;

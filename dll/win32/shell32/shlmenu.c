@@ -907,6 +907,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 
 	  if (!GetMenuItemInfoW(hmSrc, nItem, TRUE, &miiSrc))
 	  {
+MessageBoxW(NULL, L"GetMenuItemInfoW failed", NULL, MB_OK);
 	    continue;
 	  }
 
@@ -916,8 +917,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	  {
 	    /* This is a separator; don't put two of them in a row */
 	    if (bAlreadySeparated)
+		{
+MessageBoxW(NULL, L"bAlreadySeparated failed", NULL, MB_OK);
 	      continue;
-
+		}
 	    bAlreadySeparated = TRUE;
 	  }
 	  else if (miiSrc.hSubMenu)
@@ -926,9 +929,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	    {
 	      miiSrc.wID += uIDAdjust;			/* add uIDAdjust to the ID */
 
-	      if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		  if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		  {MessageBoxW(NULL, L"uIDAdjustMax 111 failed", NULL, MB_OK);
 	        continue;
-
+		  }
 	      if (uIDMax <= miiSrc.wID)			/* remember the highest ID */
 	        uIDMax = miiSrc.wID + 1;
 	    }
@@ -953,9 +957,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	  {
 	    miiSrc.wID += uIDAdjust;			/* add uIDAdjust to the ID */
 
-	    if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */{
+MessageBoxW(NULL, L"uIDAdjustMax max 222 failed", NULL, MB_OK);
 	      continue;
-
+		}
 	    if (uIDMax <= miiSrc.wID)			/* remember the highest ID */
 	      uIDMax = miiSrc.wID + 1;
 
@@ -966,6 +971,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 */
 	  if (!InsertMenuItemW(hmDst, uInsert, TRUE, &miiSrc))
 	  {
+MessageBoxW(NULL, L"InsertMenuItemW failed", NULL, MB_OK);
 	    return(uIDMax);
 	  }
 	}

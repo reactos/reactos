@@ -10,15 +10,11 @@ VOID
 static __inline
 IopLockFileObject(IN PFILE_OBJECT FileObject)
 {
-    LARGE_INTEGER WaitInterval;
-    WaitInterval.QuadPart = -10000;
-    /* Lock the FO and check for contention */
-    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
-    DbgPrint("Waiters: %d, Busy %d\n", FileObject->Waiters, FileObject->Busy);
+	/* Lock the FO and check for contention */
     InterlockedIncrement((PLONG)&FileObject->Waiters);
     while (InterlockedCompareExchange((PLONG)&FileObject->Busy, TRUE, FALSE) != FALSE)
     {
-	KeWaitForSingleObject(&FileObject->Lock, Executive, KernelMode, FALSE, &WaitInterval);
+        /* FIXME - pause for a little while? */
     }
     InterlockedDecrement((PLONG)&FileObject->Waiters);
 }

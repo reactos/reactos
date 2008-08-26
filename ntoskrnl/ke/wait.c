@@ -520,7 +520,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
         if (Count > THREAD_WAIT_OBJECTS)
         {
             /* Bugcheck */
-            KEBUGCHECK(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
+            KeBugCheck(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
         }
 
         /* Use the Thread's Wait Block */
@@ -532,7 +532,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
         if (Count > MAXIMUM_WAIT_OBJECTS)
         {
             /* Bugcheck */
-            KEBUGCHECK(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
+            KeBugCheck(MAXIMUM_WAIT_OBJECTS_EXCEEDED);
         }
     }
 

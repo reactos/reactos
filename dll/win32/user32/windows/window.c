@@ -1313,8 +1313,8 @@ GetWindowThreadProcessId(HWND hWnd,
     { // We are current.
       //FIXME("Current!\n");
       if ( lpdwProcessId )
-        *lpdwProcessId = (DWORD)NtCurrentTeb()->Cid.UniqueProcess;
-      Ret = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
+        *lpdwProcessId = (DWORD)NtCurrentTeb()->ClientId.UniqueProcess;
+      Ret = (DWORD)NtCurrentTeb()->ClientId.UniqueThread;
     }
     else
     { // Ask kernel for info.

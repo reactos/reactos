@@ -26,8 +26,8 @@ CAPTION "Opprett snarvei"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
-    LTEXT "This wizard helps you to create shortcuts to local or network programs, files, folders, computers, or Internet addresses.", -1, 97, 7, 195, 28
-    LTEXT "&Type the location of the item:", IDC_LOCATIONITEM, 98, 46, 196, 8
+    LTEXT "Denne veiviseren vil hjelpe deg med å opprette en snarvei til lokale programmer eller nettverksprogrammer, filer, mapper, datamaskiner, eller internett addresser.", -1, 97, 7, 195, 28
+    LTEXT "&Velg plasseringen for enheten:", IDC_LOCATIONITEM, 98, 46, 196, 8
     EDITTEXT IDC_LOCITEMEDIT, 97, 58, 133, 14, ES_AUTOHSCROLL
     PUSHBUTTON "B&la gjennom...", IDC_LOCBROWSE, 233, 58, 60, 14
     LTEXT "Klikk på neste for å forsette.", -1, 97, 95, 198, 8
@@ -46,10 +46,10 @@ END
 
 IDD_SELPROGTITLE DIALOGEX 0, 0, SHORTCUTDLG_WIDTH, SHORTCUTDLG_HEIGHT
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Select a Title for the Program"
+CAPTION "Velg en tittel for programmet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Type a name for this shortcut:", -1, 100, 10, 194, 10
+    LTEXT "&Velg et navn for denne snarveien:", -1, 100, 10, 194, 10
     EDITTEXT IDC_NAMESCEDIT, 100, 23, 194, 14, ES_AUTOHSCROLL
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
     LTEXT "Klikk fullført for å opprette snarveien.", -1, 100, 61, 194, 8
@@ -94,18 +94,18 @@ CAPTION "Endre bruker valg"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
-    LTEXT "You have the option to make this new program available to every User.", 1012, 101, 5, 194, 40
+    LTEXT "Du har valget for å gjøre dette nye programmet tilgjengelig for alle brukere.", 1012, 101, 5, 194, 40
     AUTORADIOBUTTON "Installere", IDC_INSTALLRB, 108, 51, 146, 14, BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Kjør", IDC_LOCATIONITEM, 108, 74, 146, 14, BS_MULTILINE | NOT WS_TABSTOP
 END
 
 IDD_FINISHADMINST DIALOG 0, 0, SHORTCUTDLG_WIDTH, SHORTCUTDLG_HEIGHT
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Finish Admin Install"
+CAPTION "Fullføre admin installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
-    LTEXT "Change ini mapping back by clicking Finish.", IDC_HEADTEXT, 98, 7, 196, 40
+    LTEXT "Endre ini mapper tilbake ved å trykke på Fullført.", IDC_HEADTEXT, 98, 7, 196, 40
 END
 
 IDD_AFTERINST DIALOG 0, 0, SHORTCUTDLG_WIDTH, SHORTCUTDLG_HEIGHT
@@ -122,8 +122,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Kjør installasjons program"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Please specify the uninstall program location.", IDC_UNINSTLOCTEXT, 9, 8, 235, 37
-    LTEXT "&Command line for the uninstall program:", IDC_LOCATIONITEM, 9, 57, 237, 8
+    LTEXT "Vennligst velg avinnstalleringsprogram plassering.", IDC_UNINSTLOCTEXT, 9, 8, 235, 37
+    LTEXT "&Komando linje for avinnstalleringsprogrammet:", IDC_LOCATIONITEM, 9, 57, 237, 8
     EDITTEXT IDC_LOCITEMEDIT, 7, 69, 165, 14, ES_AUTOHSCROLL
     PUSHBUTTON "B&la gjennom...", IDC_LOCBROWSE, 178, 69, 66, 14
     DEFPUSHBUTTON "OK", IDOK, 118, 100, 60, 14
@@ -136,9 +136,9 @@ CAPTION "Advarsel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_WARNINGICON, 8, 10, 20, 20
-    LTEXT "There are other users logged on to this computer.", -1, 37, 8, 214, 10
-    LTEXT "If you uninstall this program while another user is running it, the program might not uninstall completely.", -1, 37, 23, 212, 22
-    LTEXT "To properly change or remove this program, switch to and log off each user before you continue.", IDC_WARNINGTEXT, 37, 46, 212, 26
+    LTEXT "Det er andre brukere som er logget på denne datamaskinen.", -1, 37, 8, 214, 10
+    LTEXT "Hvis du vil avinstallere dette programmet mens en annen bruker det, vil ikke programmet bli fjernet fullstendig.", -1, 37, 23, 212, 22
+    LTEXT "For å fullstendig endre eller fjerne dette programmet, bytt til og logg av alle brukere før du fortsetter.", IDC_WARNINGTEXT, 37, 46, 212, 26
     PUSHBUTTON "&Bytt bruker", IDC_SWITCHUSER, 61, 81, 60, 14
     PUSHBUTTON "&Fortsett", IDOK, 125, 81, 60, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 189, 81, 60, 14
@@ -149,7 +149,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Fjern snarveier/mapper"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", IDC_UNINSTLOCTEXT, 10, 7, 204, 16
+    LTEXT "&For å fjerne en enhet fra Start menyen, velg en enhet og trykk på Fjern.", IDC_UNINSTLOCTEXT, 10, 7, 204, 16
     CONTROL "", IDC_SELFOLDER, "SYSTREEVIEW32", WS_BORDER | WS_TABSTOP | 0x00000023, 10, 28, 200, 145
     PUSHBUTTON "&Fjern", IDC_REMOVEBTN, 84, 182, 60, 14
     DEFPUSHBUTTON "Lukk", IDOK, 151, 182, 60, 14
@@ -160,10 +160,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTERMOUSE | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "Legg til senere"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "You may choose a date and time when you would like to add this program to your computer. For example, you can schedule this to happen when you are away from your computer.", IDC_UNINSTLOCTEXT, 7, 4, 208, 33
-    AUTORADIOBUTTON "&Add program later", IDC_ADDPROGLATER, 7, 47, 207, 10, WS_GROUP
+    LTEXT "Du kan ha valgt en dato og tid når du vil legge til dette programmet til din datamaskin. For eksempel, kan du planlegge det som skal skje når du er borte din datamaskin.", IDC_UNINSTLOCTEXT, 7, 4, 208, 33
+    AUTORADIOBUTTON "&Legg til et program senere", IDC_ADDPROGLATER, 7, 47, 207, 10, WS_GROUP
     CONTROL "Picker", 12368, "SYSDATETIMEPICK32", WS_BORDER | WS_TABSTOP | 0x0000000C, 29, 62, 107, 14
-    AUTORADIOBUTTON "&Do not add program", IDC_NOTADDPROG, 7, 87, 208, 10
+    AUTORADIOBUTTON "&Ikke legg til programmer", IDC_NOTADDPROG, 7, 87, 208, 10
     DEFPUSHBUTTON "OK", IDOK, 89, 141, 60, 14, WS_GROUP
     PUSHBUTTON "Avbryt", IDCANCEL, 154, 141, 60, 14, NOT WS_TABSTOP
 END
@@ -172,7 +172,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME            "Legg til eller fjern programmer"
     IDS_CPLSYSTEMDESCRIPTION     "Innstaller eller fjern programmer og ReactOS komponenter."
-    IDS_UNABLEOPEN_UNINSTKEY     "Unable to open Uninstall Key"
+    IDS_UNABLEOPEN_UNINSTKEY     "Ikke mulig å åpne avinnstallering nøkkel"
     IDS_LIST_TITLE               "Liste"
     IDS_SIZE_TITLE               "Størrelse (MB)"
     IDS_LAST_USED                "Sist bruk"
@@ -180,11 +180,11 @@ BEGIN
     IDS_PROGRAMS_ONLY            "Bare programmer"
     IDS_UPDATES_ONLY             "Bare oppdateringer"
     IDS_WELCOME_TITLE            "Velkommen til assistenten for å legg til eller fjerne programmer"
-    IDS_WELCOME_MSG              "Please choose a category on the left or select application on the list for removing or viewing information."
+    IDS_WELCOME_MSG              "Venligst velg en kategori til venstre eller velg et program på listen for å fjerne eller vise informasjon."
     IDS_SEARCH_TEXT              "Søk i listen..."
     IDS_REMOVE_BTN               "&Fjern"
     IDS_MODIFY_BTN               "&Endre"
-    IDS_UNABLEREAD_UNINSTSTR     "Unable to read UninstallString. This entry is invalid or has been created by an MSI installer."
+    IDS_UNABLEREAD_UNINSTSTR     "Ikke mulig å lese Avinnstallerings streng. Denne enheten er ugyldig eller har blitt opprettet av en MSI installering."
     IDS_INF_REG_OWNER            "Registerert eier: "
     IDS_INF_PRODUCT_ID           "Produkt ID: "
     IDS_INF_PUBLISHER            "Utgiver: "
@@ -193,7 +193,7 @@ BEGIN
     IDS_INF_SUP_INFO             "Hjelp informasjon: "
     IDS_INF_SUP_PHONE            "Hjelp telefon: "
     IDS_INF_PRODUCT_UPD          "Produkt oppdateringer: "
-    IDS_INF_README               "Readme: "
+    IDS_INF_README               "Les meg: "
     IDS_INF_COMMENTS             "Kommentarer: "
     IDS_NO_INFORMATION           "Ingen informasjon om dette programmet."
 END

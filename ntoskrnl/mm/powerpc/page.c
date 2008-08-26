@@ -98,7 +98,7 @@ MmCopyMmInfo(PEPROCESS Src,
 {
     DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
 
-    KeBugCheck(0);
+    ASSERT(FALSE);
 
     return(STATUS_SUCCESS);
 }
@@ -125,7 +125,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
                             IN PLARGE_INTEGER DirectoryTableBase)
 {
-    KeBugCheck(0);
+    ASSERT(FALSE);
     return TRUE;
 }
 
@@ -302,7 +302,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
     if (Address < MmSystemRangeStart && Process == NULL)
     {
 	DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
     }
 
     info.proc = Process ? (int)Process->UniqueProcessId : 0;
@@ -370,7 +370,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
     if (Address < MmSystemRangeStart)
     {
 	DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
     }
 
     Addr = Address;
@@ -383,7 +383,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
             DPRINT1("Setting physical address but not allowing access at address "
                     "0x%.8X with attributes %x/%x.\n",
                     Addr, Attributes, flProtect);
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
 	}
 	(void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
 #endif
@@ -401,16 +401,16 @@ MmCreatePageFileMapping(PEPROCESS Process,
     if (Process == NULL && Address < MmSystemRangeStart)
     {
 	DPRINT1("No process\n");
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
     }
     if (Process != NULL && Address >= MmSystemRangeStart)
     {
 	DPRINT1("Setting kernel address with process context\n");
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
     }
     if (SwapEntry & (1 << 31))
     {
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
     }
 
     // XXX arty
@@ -440,13 +440,13 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	if (Address < MmSystemRangeStart)
 	{
 	    DPRINT1("No process\n");
-	    KEBUGCHECK(0);
+	    ASSERT(FALSE);
 	}
 	if (PageCount > 0x10000 ||
 	    (ULONG_PTR) Address / PAGE_SIZE + PageCount > 0x100000)
 	{
 	    DPRINT1("Page count to large\n");
-	    KEBUGCHECK(0);
+	    ASSERT(FALSE);
 	}
     }
     else
@@ -454,14 +454,14 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	if (Address >= MmSystemRangeStart)
 	{
 	    DPRINT1("Setting kernel address with process context\n");
-	    KEBUGCHECK(0);
+	    ASSERT(FALSE);
 	}
 	if (PageCount > (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE ||
 	    (ULONG_PTR) Address / PAGE_SIZE + PageCount >
 	    (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE)
 	{
 	    DPRINT1("Page Count to large\n");
-	    KEBUGCHECK(0);
+	    ASSERT(FALSE);
 	}
     }
 
@@ -508,7 +508,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
       if (!MmIsUsablePage(Pages[i]))
       {
          DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
       }
    }
 
@@ -564,7 +564,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
    if (Pt == NULL)
    {
-       KEBUGCHECK(0);
+       ASSERT(FALSE);
    }
    InterlockedExchange((PLONG)Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
    MiFlushTlb(Pt, Address);

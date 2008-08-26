@@ -82,124 +82,348 @@ ip_output(m0, opt, ro, flags, imo)
 	int flags;
 	struct ip_moptions *imo;
 {
-    register struct ip *ip, *mhip;
-    register struct mbuf *m = m0;
-    register int hlen = sizeof (struct ip);
-    int len, off, error = 0;
-    /*
-     * It might seem obvious at first glance that one could easily
-     * make a one-behind cache out of this by simply making `iproute'
-     * static and eliminating the bzero() below.  However, this turns
-     * out not to work, for two reasons:
-     *
-     * 1) This routine needs to be reentrant.  It can be called
-     * recursively from encapsulating network interfaces, and it
-     * is always called recursively from ip_mforward().
-     *
-     * 2) You turn out not to gain much.  There is already a one-
-     * behind cache implemented for the specific case of forwarding,
-     * and sends on a connected socket will use a route associated
-     * with the PCB.  The only cases left are sends on unconnected
-     * and raw sockets, and if these cases are really significant,
-     * something is seriously wrong.
-     */
-    struct route iproute;
-    struct sockaddr_in *dst;
-    struct in_ifaddr *ia;
+	register struct ip *ip, *mhip;
+#ifndef __REACTOS__
+	register struct ifnet *ifp;
+#endif
+	register struct mbuf *m = m0;
+	register int hlen = sizeof (struct ip);
+	int len, off, error = 0;
+	/*
+	 * It might seem obvious at first glance that one could easily
+	 * make a one-behind cache out of this by simply making `iproute'
+	 * static and eliminating the bzero() below.  However, this turns
+	 * out not to work, for two reasons:
+	 *
+	 * 1) This routine needs to be reentrant.  It can be called
+	 * recursively from encapsulating network interfaces, and it
+	 * is always called recursively from ip_mforward().
+	 *
+	 * 2) You turn out not to gain much.  There is already a one-
+	 * behind cache implemented for the specific case of forwarding,
+	 * and sends on a connected socket will use a route associated
+	 * with the PCB.  The only cases left are sends on unconnected
+	 * and raw sockets, and if these cases are really significant,
+	 * something is seriously wrong.
+	 */
+	struct route iproute;
+	struct sockaddr_in *dst;
+	struct in_ifaddr *ia;
 
 #ifdef	DIAGNOSTIC
-    if ((m->m_flags & M_PKTHDR) == 0)
-	panic("ip_output no HDR");
+	if ((m->m_flags & M_PKTHDR) == 0)
+		panic("ip_output no HDR");
 #endif
-    if (opt) {
-	m = ip_insertoptions(m, opt, &len);
-	hlen = len;
-    }
-    ip = mtod(m, struct ip *);
-    /*
-     * Fill in IP header.
-     */
-    if ((flags & (IP_FORWARDING|IP_RAWOUTPUT)) == 0) {
-	ip->ip_v = IPVERSION;
-	ip->ip_off &= IP_DF;
-	ip->ip_id = htons(ip_id++);
-	ip->ip_hl = hlen >> 2;
-	ipstat.ips_localout++;
-    } else {
-	hlen = ip->ip_hl << 2;
-    }
-    /*
-     * Route packet.
-     */
-    if (ro == 0) {
-	ro = &iproute;
-	bzero((caddr_t)ro, sizeof (*ro));
-    }
-    dst = (struct sockaddr_in *)&ro->ro_dst;
-    /*
-     * If there is a cached route,
-     * check that it is to the same destination
-     * and is still up.  If not, free it and try again.
-     */
-    if (ro->ro_rt && ((ro->ro_rt->rt_flags & RTF_UP) == 0 ||
-		      dst->sin_addr.s_addr != ip->ip_dst.s_addr)) {
-	RTFREE(ro->ro_rt);
-	ro->ro_rt = (struct rtentry *)0;
-    }
-    if (ro->ro_rt == 0) {
-	dst->sin_family = AF_INET;
-	dst->sin_len = sizeof(*dst);
-	dst->sin_addr = ip->ip_dst;
-    }
-    /*
-     * If routing to interface only,
-     * short circuit routing lookup.
-     */
+	if (opt) {
+		m = ip_insertoptions(m, opt, &len);
+		hlen = len;
+	}
+	ip = mtod(m, struct ip *);
+	/*
+	 * Fill in IP header.
+	 */
+	if ((flags & (IP_FORWARDING|IP_RAWOUTPUT)) == 0) {
+		ip->ip_v = IPVERSION;
+		ip->ip_off &= IP_DF;
+		ip->ip_id = htons(ip_id++);
+		ip->ip_hl = hlen >> 2;
+		ipstat.ips_localout++;
+	} else {
+		hlen = ip->ip_hl << 2;
+	}
+	/*
+	 * Route packet.
+	 */
+	if (ro == 0) {
+		ro = &iproute;
+		bzero((caddr_t)ro, sizeof (*ro));
+	}
+	dst = (struct sockaddr_in *)&ro->ro_dst;
+	/*
+	 * If there is a cached route,
+	 * check that it is to the same destination
+	 * and is still up.  If not, free it and try again.
+	 */
+	if (ro->ro_rt && ((ro->ro_rt->rt_flags & RTF_UP) == 0 ||
+	   dst->sin_addr.s_addr != ip->ip_dst.s_addr)) {
+		RTFREE(ro->ro_rt);
+		ro->ro_rt = (struct rtentry *)0;
+	}
+	if (ro->ro_rt == 0) {
+		dst->sin_family = AF_INET;
+		dst->sin_len = sizeof(*dst);
+		dst->sin_addr = ip->ip_dst;
+	}
+	/*
+	 * If routing to interface only,
+	 * short circuit routing lookup.
+	 */
 #define ifatoia(ifa)	((struct in_ifaddr *)(ifa))
 #define sintosa(sin)	((struct sockaddr *)(sin))
-    if (flags & IP_ROUTETOIF) {
-	if ((ia = ifatoia(ifa_ifwithdstaddr(sintosa(dst)))) == 0 &&
-	    (ia = ifatoia(ifa_ifwithnet(sintosa(dst)))) == 0) {
-	    ipstat.ips_noroute++;
-	    error = ENETUNREACH;
-	    goto bad;
+	if (flags & IP_ROUTETOIF) {
+		if ((ia = ifatoia(ifa_ifwithdstaddr(sintosa(dst)))) == 0 &&
+		    (ia = ifatoia(ifa_ifwithnet(sintosa(dst)))) == 0) {
+			ipstat.ips_noroute++;
+			error = ENETUNREACH;
+			goto bad;
+		}
+#ifndef __REACTOS__
+		ifp = ia->ia_ifp;
+#endif
+		ip->ip_ttl = 1;
+	} else {
+		/*
+		 * If this is the case, we probably don't want to allocate
+		 * a protocol-cloned route since we didn't get one from the
+		 * ULP.  This lets TCP do its thing, while not burdening
+		 * forwarding or ICMP with the overhead of cloning a route.
+		 * Of course, we still want to do any cloning requested by
+		 * the link layer, as this is probably required in all cases
+		 * for correct operation (as it is for ARP).
+		 */
+#ifndef __REACTOS__
+		if (ro->ro_rt == 0)
+			rtalloc_ign(ro, RTF_PRCLONING);
+		if (ro->ro_rt == 0) {
+			ipstat.ips_noroute++;
+			OS_DbgPrint(OSK_MID_TRACE,("EHOSTUNREACH\n"));
+			error = EHOSTUNREACH;
+			goto bad;
+		}
+		ia = ifatoia(ro->ro_rt->rt_ifa);
+		ifp = ro->ro_rt->rt_ifp;
+		ro->ro_rt->rt_use++;
+		if (ro->ro_rt->rt_flags & RTF_GATEWAY)
+			dst = (struct sockaddr_in *)ro->ro_rt->rt_gateway;
+#endif
 	}
-	ip->ip_ttl = 1;
-    }
+#ifndef __REACTOS__
+	if (IN_MULTICAST(ntohl(ip->ip_dst.s_addr))) {
+		struct in_multi *inm;
 
-    if( OtcpEvent.PacketSend ) {
-	struct mbuf *new_m;
-	new_m = m_get( M_DONTWAIT, 0 );
-	if ( NULL == new_m ) {
-	    error = ENOBUFS;
-	    goto done;
+		m->m_flags |= M_MCAST;
+		/*
+		 * IP destination address is multicast.  Make sure "dst"
+		 * still points to the address in "ro".  (It may have been
+		 * changed to point to a gateway address, above.)
+		 */
+		dst = (struct sockaddr_in *)&ro->ro_dst;
+		/*
+		 * See if the caller provided any multicast options
+		 */
+		if (imo != NULL) {
+			ip->ip_ttl = imo->imo_multicast_ttl;
+			if (imo->imo_multicast_ifp != NULL)
+				ifp = imo->imo_multicast_ifp;
+			if (imo->imo_multicast_vif != -1)
+				ip->ip_src.s_addr =
+				    ip_mcast_src(imo->imo_multicast_vif);
+		} else
+			ip->ip_ttl = IP_DEFAULT_MULTICAST_TTL;
+		/*
+		 * Confirm that the outgoing interface supports multicast.
+		 */
+		if ((imo == NULL) || (imo->imo_multicast_vif == -1)) {
+			if ((ifp->if_flags & IFF_MULTICAST) == 0) {
+				ipstat.ips_noroute++;
+				error = ENETUNREACH;
+				goto bad;
+			}
+		}
+		/*
+		 * If source address not specified yet, use address
+		 * of outgoing interface.
+		 */
+		if (ip->ip_src.s_addr == INADDR_ANY) {
+			register struct in_ifaddr *ia;
+
+			panic("We don't handle this yet\n");
+			for (ia = in_ifaddr; ia; ia = ia->ia_next)
+			    if (ia->ia_ifp == ifp) {
+				ip->ip_src = IA_SIN(ia)->sin_addr;
+				break;
+			    }
+		}
+
+		IN_LOOKUP_MULTI(ip->ip_dst, ifp, inm);
+		if (inm != NULL &&
+		   (imo == NULL || imo->imo_multicast_loop)) {
+			/*
+			 * If we belong to the destination multicast group
+			 * on the outgoing interface, and the caller did not
+			 * forbid loopback, loop back a copy.
+			 */
+			ip_mloopback(ifp, m, dst);
+		}
+		else {
+			/*
+			 * If we are acting as a multicast router, perform
+			 * multicast forwarding as if the packet had just
+			 * arrived on the interface to which we are about
+			 * to send.  The multicast forwarding function
+			 * recursively calls this function, using the
+			 * IP_FORWARDING flag to prevent infinite recursion.
+			 *
+			 * Multicasts that are looped back by ip_mloopback(),
+			 * above, will be forwarded by the ip_input() routine,
+			 * if necessary.
+			 */
+			if (ip_mrouter && (flags & IP_FORWARDING) == 0) {
+				/*
+				 * Check if rsvp daemon is running. If not, don't
+				 * set ip_moptions. This ensures that the packet
+				 * is multicast and not just sent down one link
+				 * as prescribed by rsvpd.
+				 */
+				if (!rsvp_on)
+				  imo = NULL;
+				if (ip_mforward(ip, ifp, m, imo) != 0) {
+					m_freem(m);
+					goto done;
+				}
+			}
+		}
+
+		/*
+		 * Multicasts with a time-to-live of zero may be looped-
+		 * back, above, but must not be transmitted on a network.
+		 * Also, multicasts addressed to the loopback interface
+		 * are not sent -- the above call to ip_mloopback() will
+		 * loop back a copy if this host actually belongs to the
+		 * destination group on the loopback interface.
+		 */
+		if (ip->ip_ttl == 0 || ifp->if_flags & IFF_LOOPBACK) {
+			m_freem(m);
+			goto done;
+		}
+
+		goto sendit;
 	}
-	MCLGET( new_m, M_DONTWAIT );
-	if (0 == (new_m->m_flags & M_EXT)) {
-	    m_free( new_m );
-	    error = ENOBUFS;
-	    goto done;
+#endif
+
+#ifndef notdef
+	/*
+	 * If source address not specified yet, use address
+	 * of outgoing interface.
+	 */
+	if (ip->ip_src.s_addr == INADDR_ANY)
+		ip->ip_src = IA_SIN(ia)->sin_addr;
+#endif
+#ifndef __REACTOS__
+	/*
+	 * Verify that we have any chance at all of being able to queue
+	 *      the packet or packet fragments
+	 */
+	if ((ifp->if_snd.ifq_len + ip->ip_len / ifp->if_mtu + 1) >=
+		ifp->if_snd.ifq_maxlen) {
+			error = ENOBUFS;
+			goto bad;
 	}
-	m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
-	new_m->m_len = htons(ip->ip_len);
-	error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-				      new_m->m_data, new_m->m_len );
-	m_free( new_m );
-	goto done;
-    }
 
-    /*
-     * Too large for interface; fragment if possible.
-     * Must be able to put at least 8 bytes per fragment.
-     */
-    if (ip->ip_off & IP_DF) {
-	error = EMSGSIZE;
-	ipstat.ips_cantfrag++;
-	goto bad;
-    }
+	/*
+	 * Look for broadcast address and
+	 * and verify user is allowed to send
+	 * such a packet.
+	 */
+	if (in_broadcast(dst->sin_addr, ifp)) {
+		if ((ifp->if_flags & IFF_BROADCAST) == 0) {
+			error = EADDRNOTAVAIL;
+			goto bad;
+		}
+		if ((flags & IP_ALLOWBROADCAST) == 0) {
+			error = EACCES;
+			goto bad;
+		}
+		/* don't allow broadcast messages to be fragmented */
+		if ((u_short)ip->ip_len > ifp->if_mtu) {
+			error = EMSGSIZE;
+			goto bad;
+		}
+		m->m_flags |= M_BCAST;
+	} else
+		m->m_flags &= ~M_BCAST;
+#endif
 
-    OS_DbgPrint(OSK_MID_TRACE,("Using default mtu of 1500\n"));
-    len = (1500 - hlen) & ~7;
+#ifndef __REACTOS__
+sendit:
+	/*
+	 * Check with the firewall...
+	 */
+	if (!(*ip_fw_chk_ptr)(m,ip,ifp,1)) {
+		error = EACCES;
+		goto done;
+	}
+#endif
+
+	/*
+	 * If small enough for interface, can just send directly.
+	 */
+	if ((u_short)ip->ip_len <= 1400 /* XXX Get MTU from Interface */) {
+	    ip->ip_len = htons((u_short)ip->ip_len);
+	    ip->ip_off = htons((u_short)ip->ip_off);
+	    ip->ip_sum = 0;
+	    ip->ip_sum = in_cksum(m, hlen);
+#ifdef __REACTOS__
+	    if( OtcpEvent.PacketSend ) {
+		struct mbuf *new_m;
+		new_m = m_get( M_DONTWAIT, 0 );
+		if ( NULL == new_m ) {
+		    error = ENOBUFS;
+		    goto done;
+		}
+		MCLGET( new_m, M_DONTWAIT );
+		if (0 == (new_m->m_flags & M_EXT)) {
+		    m_free( new_m );
+		    error = ENOBUFS;
+		    goto done;
+		}
+		m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
+		new_m->m_len = htons(ip->ip_len);
+		error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
+					      new_m->m_data, new_m->m_len );
+		m_free( new_m );
+		goto done;
+	    }
+#else
+	    error = (*ifp->if_output)(ifp, m,
+				      (struct sockaddr *)dst, ro->ro_rt);
+#endif
+	}
+	/*
+	 * Too large for interface; fragment if possible.
+	 * Must be able to put at least 8 bytes per fragment.
+	 */
+	if (ip->ip_off & IP_DF) {
+		error = EMSGSIZE;
+#ifndef __REACTOS__
+#if 1
+		/*
+		 * This case can happen if the user changed the MTU
+		 * of an interface after enabling IP on it.  Because
+		 * most netifs don't keep track of routes pointing to
+		 * them, there is no way for one to update all its
+		 * routes when the MTU is changed.
+		 */
+		if ((ro->ro_rt->rt_flags & (RTF_UP | RTF_HOST))
+		    && !(ro->ro_rt->rt_rmx.rmx_locks & RTV_MTU)
+		    && (ro->ro_rt->rt_rmx.rmx_mtu > ifp->if_mtu)) {
+			ro->ro_rt->rt_rmx.rmx_mtu = ifp->if_mtu;
+		}
+#endif
+#endif
+		ipstat.ips_cantfrag++;
+		goto bad;
+	}
+#ifndef __REACTOS__
+	len = (ifp->if_mtu - hlen) &~ 7;
+	if (len < 8) {
+		error = EMSGSIZE;
+		goto bad;
+	}
+#else
+	OS_DbgPrint(OSK_MID_TRACE,("Using default mtu of 1500\n"));
+	len = (1500 - hlen) & ~7;
+#endif
 
     {
 	int mhlen, firstlen = len;
@@ -213,43 +437,43 @@ ip_output(m0, opt, ro, flags, imo)
 	mhlen = sizeof (struct ip);
 	for (off = hlen + len; off < (u_short)ip->ip_len; off += len) {
 	    OS_DbgPrint(OSK_MID_TRACE,("off = %d, len = %d\n", off, len));
-	    MGETHDR(m, M_DONTWAIT, MT_HEADER);
-	    if (m == 0) {
-		error = ENOBUFS;
-		ipstat.ips_odropped++;
-		goto sendorfree;
-	    }
-	    m->m_data += max_linkhdr;
-	    mhip = mtod(m, struct ip *);
-	    *mhip = *ip;
-	    if (hlen > sizeof (struct ip)) {
-		mhlen = ip_optcopy(ip, mhip) + sizeof (struct ip);
-		mhip->ip_hl = mhlen >> 2;
-	    }
-	    m->m_len = mhlen;
-	    mhip->ip_off = ((off - hlen) >> 3) + (ip->ip_off & ~IP_MF);
-	    if (ip->ip_off & IP_MF)
-		mhip->ip_off |= IP_MF;
-	    if (off + len >= (u_short)ip->ip_len)
-		len = (u_short)ip->ip_len - off;
-	    else
-		mhip->ip_off |= IP_MF;
-	    mhip->ip_len = htons((u_short)(len + mhlen));
-	    m->m_next = m_copy(m0, off, len);
-	    if (m->m_next == 0) {
-		(void) m_free(m);
-		error = ENOBUFS;	/* ??? */
-		ipstat.ips_odropped++;
-		goto sendorfree;
-	    }
-	    m->m_pkthdr.len = mhlen + len;
-	    m->m_pkthdr.rcvif = (struct ifnet *)0;
-	    mhip->ip_off = htons((u_short)mhip->ip_off);
-	    mhip->ip_sum = 0;
-	    mhip->ip_sum = in_cksum(m, mhlen);
-	    *mnext = m;
-	    mnext = &m->m_nextpkt;
-	    ipstat.ips_ofragments++;
+		MGETHDR(m, M_DONTWAIT, MT_HEADER);
+		if (m == 0) {
+			error = ENOBUFS;
+			ipstat.ips_odropped++;
+			goto sendorfree;
+		}
+		m->m_data += max_linkhdr;
+		mhip = mtod(m, struct ip *);
+		*mhip = *ip;
+		if (hlen > sizeof (struct ip)) {
+			mhlen = ip_optcopy(ip, mhip) + sizeof (struct ip);
+			mhip->ip_hl = mhlen >> 2;
+		}
+		m->m_len = mhlen;
+		mhip->ip_off = ((off - hlen) >> 3) + (ip->ip_off & ~IP_MF);
+		if (ip->ip_off & IP_MF)
+			mhip->ip_off |= IP_MF;
+		if (off + len >= (u_short)ip->ip_len)
+			len = (u_short)ip->ip_len - off;
+		else
+			mhip->ip_off |= IP_MF;
+		mhip->ip_len = htons((u_short)(len + mhlen));
+		m->m_next = m_copy(m0, off, len);
+		if (m->m_next == 0) {
+			(void) m_free(m);
+			error = ENOBUFS;	/* ??? */
+			ipstat.ips_odropped++;
+			goto sendorfree;
+		}
+		m->m_pkthdr.len = mhlen + len;
+		m->m_pkthdr.rcvif = (struct ifnet *)0;
+		mhip->ip_off = htons((u_short)mhip->ip_off);
+		mhip->ip_sum = 0;
+		mhip->ip_sum = in_cksum(m, mhlen);
+		*mnext = m;
+		mnext = &m->m_nextpkt;
+		ipstat.ips_ofragments++;
 	}
 	/*
 	 * Update first fragment by trimming what's been copied out
@@ -269,48 +493,54 @@ ip_output(m0, opt, ro, flags, imo)
 
 	OS_DbgPrint(OSK_MID_TRACE,("ip->ip_len = %x\n", ip->ip_len));
 
-    sendorfree:
+sendorfree:
 	for (m = m0; m; m = m0) {
-	    m0 = m->m_nextpkt;
-	    m->m_nextpkt = 0;
-
-	    if( error == 0 && OtcpEvent.PacketSend ) {
-		struct mbuf *new_m;
-		MGET( new_m, M_DONTWAIT, 0 );
-		if ( NULL == new_m ) {
-		    error = ENOBUFS;
-		    goto done;
-		}
-		MCLGET( new_m, M_DONTWAIT );
-		if (0 == (new_m->m_flags & M_EXT)) {
-		    m_free( new_m );
-		    error = ENOBUFS;
-		    goto done;
-		}
-		m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
-		new_m->m_len = htons(ip->ip_len);
-		error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-					      new_m->m_data, new_m->m_len );
-		m_free( new_m );
+		m0 = m->m_nextpkt;
+		m->m_nextpkt = 0;
+#ifndef __REACTOS__
+		if (error == 0)
+		    error = (*ifp->if_output)(ifp, m,
+			    (struct sockaddr *)dst, ro->ro_rt);
+		else
+			m_freem(m);
+#else
+	if( error == 0 && OtcpEvent.PacketSend ) {
+	    struct mbuf *new_m;
+	    MGET( new_m, M_DONTWAIT, 0 );
+	    if ( NULL == new_m ) {
+		error = ENOBUFS;
 		goto done;
 	    }
+	    MCLGET( new_m, M_DONTWAIT );
+	    if (0 == (new_m->m_flags & M_EXT)) {
+		m_free( new_m );
+		error = ENOBUFS;
+		goto done;
+	    }
+	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
+	    new_m->m_len = htons(ip->ip_len);
+	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
+					  new_m->m_data, new_m->m_len );
+	    m_free( new_m );
+	    goto done;
+	}
 
-	    OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));
+	OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));
+#endif
 	}
 
 	if (error == 0)
-	    ipstat.ips_fragmented++;
+		ipstat.ips_fragmented++;
     }
 done:
-    if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt) {
-	RTFREE(ro->ro_rt);
-    }
+	if (ro == &iproute && (flags & IP_ROUTETOIF) == 0 && ro->ro_rt) {
+		RTFREE(ro->ro_rt);
+	}
 
-    m_freem(m0);
-    return (error);
+	return (error);
 bad:
-    m_freem(m0);
-    goto done;
+	m_freem(m0);
+	goto done;
 }
 
 /*

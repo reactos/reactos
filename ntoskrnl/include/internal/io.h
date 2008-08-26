@@ -553,8 +553,12 @@ IopActionConfigureChildServices(
 NTSTATUS
 IopActionInitChildServices(
     IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context,
-    IN BOOLEAN BootDrivers
+    IN PVOID Context
+);
+
+NTSTATUS
+IopEnumerateDevice(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
 NTSTATUS
@@ -579,15 +583,22 @@ IopQueueTargetDeviceEvent(
 
 NTSTATUS
 IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN BootDrivers);
+    IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
+NTAPI
 IopOpenRegistryKeyEx(
     PHANDLE KeyHandle,
     HANDLE ParentKey,
     PUNICODE_STRING Name,
     ACCESS_MASK DesiredAccess);
+
+NTSTATUS
+NTAPI
+IopGetRegistryValue(IN HANDLE Handle,
+                    IN PWSTR ValueName,
+                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+
 
 //
 // Initialization Routines

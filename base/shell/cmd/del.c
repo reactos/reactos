@@ -354,7 +354,7 @@ ProcessDirectory(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
 
 
-INT CommandDelete (LPTSTR cmd, LPTSTR param)
+INT CommandDelete (LPTSTR param)
 {
 	/*cmd is the command that was given, in this case it will always be "del" or "delete"
 	param is whatever is given after the command*/

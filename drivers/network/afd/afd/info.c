@@ -84,7 +84,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( FCB->AddressFile.Object == NULL) {
-	return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0,
+	return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
 	                               NULL );
     }
 

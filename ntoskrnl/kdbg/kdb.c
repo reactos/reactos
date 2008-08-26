@@ -1331,7 +1331,7 @@ KdbEnterDebuggerException(
                                                   BreakPoint->Data.SavedInstruction, NULL)))
          {
             KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
-            KEBUGCHECK(0);
+            KeBugCheck(0); // FIXME: Proper bugcode!
          }
       }
 

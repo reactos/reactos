@@ -138,7 +138,6 @@ CP
   }
 CP
   Context->CancelIrps = FALSE;
-  KeInitializeEvent(&Context->CleanupEvent, NotificationEvent, FALSE);
 CP
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   IrpSp->FileObject->FsContext = Context;
@@ -253,36 +252,6 @@ CP
   return Status;
 }
 
-
-VOID TiCleanupFileObjectComplete(
-  PVOID Context,
-  NTSTATUS Status)
-/*
- * FUNCTION: Completes an object cleanup IRP I/O request
- * ARGUMENTS:
- *     Context = Pointer to the IRP for this request
- *     Status  = Final status of the operation
- */
-{
-  PIRP Irp;
-  PIO_STACK_LOCATION IrpSp;
-  PTRANSPORT_CONTEXT TranContext;
-  KIRQL OldIrql;
-
-  Irp         = (PIRP)Context;
-  IrpSp       = IoGetCurrentIrpStackLocation(Irp);
-  TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
-
-  Irp->IoStatus.Status = Status;
-
-  IoAcquireCancelSpinLock(&OldIrql);
-
-  KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
-
-  IoReleaseCancelSpinLock(OldIrql);
-}
-
-
 /*
  * FUNCTION: Releases resources used by a file object
  * ARGUMENTS:
@@ -313,12 +282,8 @@ NTSTATUS TiCleanupFileObject(
   IoAcquireCancelSpinLock(&OldIrql);
 
   Context->CancelIrps = TRUE;
-  KeResetEvent(&Context->CleanupEvent);
 
   IoReleaseCancelSpinLock(OldIrql);
-
-  Request.RequestNotifyObject = TiCleanupFileObjectComplete;
-  Request.RequestContext      = Irp;
 
   switch ((ULONG_PTR)IrpSp->FileObject->FsContext2) {
   case TDI_TRANSPORT_ADDRESS_FILE:
@@ -345,19 +310,8 @@ NTSTATUS TiCleanupFileObject(
     Context->CancelIrps = FALSE;
     IoReleaseCancelSpinLock(OldIrql);
 
-    Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+    Status = STATUS_INVALID_PARAMETER;
 
-    return Irp->IoStatus.Status;
-  }
-
-  if (Status != STATUS_PENDING)
-  {
-     IoAcquireCancelSpinLock(&OldIrql);
-     KeSetEvent(&Context->CleanupEvent, 0, FALSE);
-     IoReleaseCancelSpinLock(OldIrql);
-
-     KeWaitForSingleObject(&Context->CleanupEvent,
-        UserRequest, KernelMode, FALSE, NULL);
   }
 
   Irp->IoStatus.Status = Status;

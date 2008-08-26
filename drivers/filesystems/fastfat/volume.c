@@ -9,7 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -179,7 +179,6 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 
   if (sizeof(DeviceObject->Vpb->VolumeLabel) < FsLabelInfo->VolumeLabelLength)
   {
-    CHECKPOINT;
     return STATUS_NAME_TOO_LONG;
   }
 

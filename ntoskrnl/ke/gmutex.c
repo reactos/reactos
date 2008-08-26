@@ -79,6 +79,9 @@ KiAcquireGuardedMutexContented(IN OUT PKGUARDED_MUTEX GuardedMutex)
         /* Ok, the wait is done, so set the new bits */
         BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
         BitsToAdd = GM_LOCK_WAITER_WOKEN;
+        
+        /* We depend on these bits being just right */
+        C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
     }
 }
 
@@ -103,7 +106,7 @@ FORCEINLINE
 FASTCALL
 KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {
-    LONG OldValue;
+    LONG OldValue, NewValue;
 
     /* Destroy the Owner */
     GuardedMutex->Owner = NULL;
@@ -117,10 +120,14 @@ KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     {
         /* Update the Oldvalue to what it should be now */
         OldValue |= GM_LOCK_BIT;
+        
+        /* The mutex will be woken, minus one waiter */
+        NewValue = (OldValue | GM_LOCK_WAITER_WOKEN);
+        NewValue &= ~GM_LOCK_WAITER_INC;
 
         /* Remove the Woken bit */
         if (InterlockedCompareExchange(&GuardedMutex->Count,
-                                       OldValue - GM_LOCK_WAITER_WOKEN,
+                                       NewValue,
                                        OldValue) == OldValue)
         {
             /* Signal the Gate */

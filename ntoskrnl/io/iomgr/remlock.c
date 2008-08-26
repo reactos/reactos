@@ -74,7 +74,7 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
         {
             /* FIXME: Not yet supported */
             DPRINT1("UNIMPLEMENTED\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
     }
     else
@@ -110,7 +110,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     {
         /* FIXME: Not yet supported */
         DPRINT1("UNIMPLEMENTED\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Decrement the lock count */
@@ -150,7 +150,7 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
     {
         /* FIXME: Not yet supported */
         DPRINT1("UNIMPLEMENTED\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 }
 

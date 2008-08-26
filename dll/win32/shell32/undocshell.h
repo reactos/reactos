@@ -178,8 +178,8 @@ typedef struct
 
 int WINAPI Shell_GetCachedImageIndex(
 	LPCSTR lpszFileName,
-	UINT nIconIndex,
-	BOOL bSimulateDoc);
+	int nIconIndex,
+	UINT bSimulateDoc);
 
 BOOL WINAPI Shell_GetImageLists(
 	HIMAGELIST *lphimlLarge,

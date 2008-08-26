@@ -713,18 +713,20 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 {
    PFILE_OBJECT FileObject;
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG RawLength;
    BOOLEAN IsImageSection;
    PVOID Buffer = NULL;
    IO_STATUS_BLOCK ReadStatus;
    FILE_STANDARD_INFORMATION FileInfo;
+   PMM_SECTION_SEGMENT Segment;
+   PROS_SECTION_OBJECT Section;
 
    *Page = 0;
 
-   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+   Segment = MemoryArea->Data.SectionData.Segment;
+   Section = MemoryArea->Data.SectionData.Section;
+   FileObject = Section->FileObject;
    ASSERT(FileObject);
-   RawLength = MemoryArea->Data.SectionData.Segment->RawLength;
-   IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+   IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
 
    DPRINT("MiReadPage: FileObject %x, Offset %x\n", FileObject, FileOffset->LowPart);
 
@@ -742,29 +744,32 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    }
 
    DPRINT("Read File Name:[%wZ] At:%x\n", &FileObject->FileName, FileOffset->LowPart);
-   
-   Status = IoQueryFileInformation
+
+   /* Delayed section info, if needed */
+   if (Section->MaximumSize.QuadPart == ~0ll)
+   {
+       Status = IoQueryFileInformation
 	   (FileObject, 
-		FileStandardInformation,
-		sizeof(FILE_STANDARD_INFORMATION),
-		&FileInfo,
-		&ReadStatus.Information);
+	    FileStandardInformation,
+	    sizeof(FILE_STANDARD_INFORMATION),
+	    &FileInfo,
+	    &ReadStatus.Information);
+       
+       if (NT_SUCCESS(Status))
+       {
+	   Section->MaximumSize = FileInfo.EndOfFile;
+	   Segment->RawLength = FileInfo.EndOfFile.QuadPart - Segment->FileOffset.QuadPart;
+	   Segment->Length = PAGE_ROUND_UP(Segment->RawLength);
+       }
+   }
+
+   /*
+    * If the cache segment isn't up to date then call the file
+    * system to read in the data.
+    */
    
-   if (NT_SUCCESS(Status) && 
-	   FileOffset->QuadPart + PAGE_SIZE > PAGE_ROUND_UP(FileInfo.EndOfFile.QuadPart))
-   {
-	   RtlZeroMemory(Buffer, PAGE_SIZE);
-   }
-   else
-   {
-	   /*
-		* If the cache segment isn't up to date then call the file
-		* system to read in the data.
-		*/
-	   
-	   Status = MiSimpleRead(FileObject, FileOffset, Buffer, PAGE_SIZE, &ReadStatus);
-	   DPRINT("MiSimpleRead: Status %08x\n", Status);
-   }
+   Status = MiSimpleRead(FileObject, FileOffset, Buffer, max(PAGE_SIZE, Segment->FileOffset.QuadPart + Segment->RawLength - FileOffset->QuadPart), &ReadStatus);
+   DPRINT("MiSimpleRead: Status %08x\n", Status);
 
 cleanup:
    if (Buffer) MmDeleteHyperspaceMapping(Buffer);
@@ -2352,8 +2357,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    PMM_SECTION_SEGMENT Segment;
    NTSTATUS Status;
    ULONG FileAccess;
-   IO_STATUS_BLOCK Iosb;
-   FILE_STANDARD_INFORMATION FileInfo;
 
    DPRINT("MmCreateDataFileSection [%wZ]\n", &FileObject->FileName);
 
@@ -2395,26 +2398,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    }
 
    /*
-    * FIXME: This is propably not entirely correct. We can't look into
-    * the standard FCB header because it might not be initialized yet
-    * (as in case of the EXT2FS driver by Manoj Paul Joseph where the
-    * standard file information is filled on first request).
-    */
-   Status = IoQueryFileInformation(FileObject,
-                                   FileStandardInformation,
-                                   sizeof(FILE_STANDARD_INFORMATION),
-                                   &FileInfo,
-                                   &Iosb.Information);
-
-   if (!NT_SUCCESS(Status))
-   {
-      ObDereferenceObject(Section);
-      ObDereferenceObject(FileObject);
-	  DPRINT("Failed: %08x\n", Status);
-      return Status;
-   }
-
-   /*
     * FIXME: Revise this once a locking order for file size changes is
     * decided
     */
@@ -2424,15 +2407,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    }
    else
    {
-      MaximumSize = FileInfo.EndOfFile;
-      /* Mapping zero-sized files isn't allowed. */
-      if (MaximumSize.QuadPart == 0)
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-		 DPRINT("Failed: STATUS_FILE_INVALID\n");
-         return STATUS_FILE_INVALID;
-      }
+      MaximumSize.QuadPart = ~0ll;
    }
 
    /*
@@ -2485,7 +2460,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
       else
       {
          Segment->RawLength = MaximumSize.u.LowPart;
-		 Segment->Length = FileInfo.AllocationSize.QuadPart;
+	 Segment->Length = MaximumSize.u.LowPart;
       }
       Segment->VirtualAddress = 0;
       RtlZeroMemory(&Segment->PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));

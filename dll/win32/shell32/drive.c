@@ -31,6 +31,7 @@
 #define NTOS_MODE_USER
 #define UNICODE
 #define _UNICODE
+#define COBJMACROS
 #include <windows.h>
 #include <ndk/ntndk.h>
 
@@ -121,7 +122,7 @@ typedef struct
 
 BOOL InitializeFmifsLibrary(PFORMAT_DRIVE_CONTEXT pContext);
 BOOL GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNumberOfBytes);
-
+HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 HWND WINAPI
 DeviceCreateHardwarePageEx(HWND hWndParent,
                            LPGUID lpGuids,
@@ -667,7 +668,7 @@ struct
     { "DRIVE_HARDWARE_DLG", DriveHardwareDlg },
 };
 
-BOOL
+HRESULT
 CALLBACK
 AddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
@@ -681,15 +682,16 @@ AddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 BOOL
-SH_ShowDriveProperties(WCHAR * drive)
+SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl)
 {
-   HPSXA hpsx;
+   HPSXA hpsx = NULL;
    HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
    PROPSHEETHEADERW psh;
    BOOL ret;
    UINT i;
    WCHAR szName[MAX_PATH];
    DWORD dwMaxComponent, dwFileSysFlags;
+   IDataObject * pDataObj = NULL;
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
    psh.dwSize = sizeof(PROPSHEETHEADERW);
@@ -721,7 +723,6 @@ SH_ShowDriveProperties(WCHAR * drive)
       }
    }
 
-
    for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
    {
        HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
@@ -731,16 +732,22 @@ SH_ShowDriveProperties(WCHAR * drive)
           psh.nPages++;
        }
    }
-
-   hpsx = SHCreatePropSheetExtArray(HKEY_CLASSES_ROOT,
-                                    L"Drive",
-                                    MAX_PROPERTY_SHEET_PAGE-DRIVE_PROPERTY_PAGES);
-
-   SHAddFromPropSheetExtArray(hpsx,
-                              (LPFNADDPROPSHEETPAGE)AddPropSheetPageProc,
-                              (LPARAM)&psh);
+   if (SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (void**)&pDataObj) == S_OK)
+   {
+       hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE-DRIVE_PROPERTY_PAGES, pDataObj);
+       if (hpsx)
+       {
+           SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageProc, (LPARAM)&psh);
+       }
+   }
 
    ret = PropertySheetW(&psh);
+   if (pDataObj)
+       IDataObject_Release(pDataObj);
+
+   if (hpsx)
+       SHDestroyPropSheetExtArray(hpsx);
+
    if (ret < 0)
        return FALSE;
    else

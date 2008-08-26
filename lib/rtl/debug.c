@@ -54,51 +54,46 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
                               IN va_list ap,
                               IN BOOLEAN HandleBreakpoint)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     ANSI_STRING DebugString;
     CHAR Buffer[512];
-    PCHAR pBuffer = Buffer;
-    ULONG pBufferSize = sizeof(Buffer);
-    ULONG Length;
+    ULONG Length, PrefixLength;
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if (ComponentId != -1 && !NtQueryDebugFilterState(ComponentId, Level))
+    if ((ComponentId != -1) && !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
-        return STATUS_SUCCESS;
+        return Status;
     }
 
     /* For user mode, don't recursively DbgPrint */
-    if (RtlpSetInDbgPrint(TRUE)) return STATUS_SUCCESS;
+    if (RtlpSetInDbgPrint(TRUE)) return Status;
 
-    /* Initialize the length to 8 */
-    DebugString.Length = 0;
-
-    /* Handle the prefix */
-    if (Prefix && *Prefix)
+    /* Guard against incorrect pointers */
+    _SEH_TRY
     {
-        /* Get the length */
-        DebugString.Length = strlen(Prefix);
-
-        /* Normalize it */
-        if(DebugString.Length > sizeof(Buffer))
-        {
-            DebugString.Length = sizeof(Buffer);
-        }
+        /* Get the length and normalize it */
+        PrefixLength = strlen(Prefix);
+        if (PrefixLength > sizeof(Buffer)) PrefixLength = sizeof(Buffer);
 
         /* Copy it */
-        strncpy(Buffer, Prefix, DebugString.Length);
-
-        /* Set the pointer and update the size */
-        pBuffer = &Buffer[DebugString.Length];
-        pBufferSize -= DebugString.Length;
+        strncpy(Buffer, Prefix, PrefixLength);
+        
+        /* Do the printf */
+        Length = _vsnprintf(Buffer + PrefixLength,
+                            sizeof(Buffer) - PrefixLength,
+                            Format,
+                            ap);
     }
-
-    /* Setup the ANSI String */
-    DebugString.Buffer = Buffer;
-    DebugString.MaximumLength = sizeof(Buffer);
-    Length = _vsnprintf(pBuffer, pBufferSize, Format, ap);
+    _SEH_HANDLE
+    {
+        /* Fail */
+        Length = PrefixLength = 0;
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */
     if (Length == -1)
@@ -109,9 +104,15 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
         /* Put maximum */
         Length = sizeof(Buffer);
     }
-
-    /* Update length */
-    DebugString.Length += (USHORT)Length;
+    else
+    {
+        /* Add the prefix */
+        Length += PrefixLength;
+    }
+    
+    /* Build the string */
+    DebugString.Length = Length;
+    DebugString.Buffer = Buffer;
 
     /* First, let the debugger know as well */
     if (RtlpCheckForActiveDebugger(FALSE))
@@ -185,7 +186,7 @@ vDbgPrintEx(IN ULONG ComponentId,
             IN va_list ap)
 {
     /* Call the internal routine that also handles ControlC */
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          ComponentId,
                                          Level,
                                          Format,
@@ -205,7 +206,7 @@ DbgPrint(PCCH Format,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          -1,
                                          DPFLTR_ERROR_LEVEL,
                                          Format,
@@ -228,7 +229,7 @@ DbgPrintEx(IN ULONG ComponentId,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          ComponentId,
                                          Level,
                                          Format,
@@ -249,7 +250,7 @@ DbgPrintReturnControlC(PCH Format,
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    return vDbgPrintExWithPrefixInternal(NULL,
+    return vDbgPrintExWithPrefixInternal("",
                                          -1,
                                          DPFLTR_ERROR_LEVEL,
                                          Format,

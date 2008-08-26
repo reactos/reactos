@@ -638,6 +638,9 @@ BEGIN
 	IDS_PROPERTIES              "&Özellikler"
 	IDS_CUT                     "&Kes"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
 	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"

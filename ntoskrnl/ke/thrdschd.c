@@ -344,7 +344,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     WaitIrql = CurrentThread->WaitIrql;
 
     /* REACTOS Mm Hack of Doom */
-    MiSyncThreadProcessViews(NextThread, PsGetCurrentProcess());
+    MiSyncForContextSwitch(NextThread);
 
     /* Swap contexts */
     ApcState = KiSwapContext(CurrentThread, NextThread);
@@ -378,7 +378,7 @@ KiReadyThread(IN PKTHREAD Thread)
     if (Process->State != ProcessInMemory)
     {
         /* We don't page out processes in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else if (!Thread->KernelStackResident)
     {
@@ -391,7 +391,7 @@ KiReadyThread(IN PKTHREAD Thread)
         Thread->State = Transition;
 
         /* The stack is always resident in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {
@@ -610,7 +610,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             {
                 /* FIXME: TODO */
                 DPRINT1("Deferred state not yet supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
             else
             {
@@ -714,7 +714,7 @@ NtYieldExecution(VOID)
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
             /* REACTOS Mm Hack of Doom */
-            MiSyncThreadProcessViews(NextThread, PsGetCurrentProcess());
+            MiSyncForContextSwitch(NextThread);
 
             /* Swap to new thread */
             KiSwapContext(Thread, NextThread);

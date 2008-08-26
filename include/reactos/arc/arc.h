@@ -118,10 +118,10 @@ typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 
 typedef struct _BOOT_DRIVER_LIST_ENTRY
 {
-    LIST_ENTRY ListEntry;
+    LIST_ENTRY Link;
     UNICODE_STRING FilePath;
     UNICODE_STRING RegistryPath;
-    struct _LDR_DATA_TABLE_ENTRY *DataTableEntry;
+    struct _LDR_DATA_TABLE_ENTRY *LdrEntry;
 } BOOT_DRIVER_LIST_ENTRY, *PBOOT_DRIVER_LIST_ENTRY;
 
 typedef struct _ARC_DISK_SIGNATURE

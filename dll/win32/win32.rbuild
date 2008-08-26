@@ -211,6 +211,9 @@
 <directory name="odbccp32">
 	<xi:include href="odbccp32/odbccp32.rbuild" />
 </directory>
+<directory name="odbc32">
+	<xi:include href="odbc32/odbc32.rbuild" />
+</directory>
 <directory name="ole32">
 	<xi:include href="ole32/ole32.rbuild" />
 </directory>

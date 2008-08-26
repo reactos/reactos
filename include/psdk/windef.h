@@ -123,14 +123,27 @@ extern "C" {
 #define pascal __stdcall
 #define _pascal __stdcall
 #define __pascal __stdcall
-#define PASCAL _pascal
+
 #define CDECL _cdecl
+#define PASCAL _pascal
+
+#if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
 #define STDCALL __stdcall
-#define WINAPI __stdcall
-#define WINAPIV __cdecl
-#define APIENTRY __stdcall
-#define CALLBACK __stdcall
-#define APIPRIVATE __stdcall
+#define CALLBACK    __stdcall
+#define WINAPI      __stdcall
+#define WINAPIV     __cdecl
+#define APIENTRY    WINAPI
+#define APIPRIVATE  __stdcall
+#define PASCAL      __stdcall
+#else
+#define STDCALL
+#define CALLBACK
+#define WINAPI
+#define WINAPIV
+#define APIENTRY    WINAPI
+#define APIPRIVATE
+#define PASCAL      pascal
+#endif
 
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)

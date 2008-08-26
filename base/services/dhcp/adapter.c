@@ -108,7 +108,7 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
     PCHAR TargetKeyName = NULL;
     PCHAR *EnumKeysLinkage = GetSubkeyNames( EnumKeyName, "\\Linkage" );
     PCHAR *EnumKeysTop     = GetSubkeyNames( EnumKeyName, "" );
-    PCHAR RootDevice = NULL, DriverDesc = NULL;
+    PCHAR RootDevice = NULL;
     HKEY EnumKey, OutKey = NULL;
     DWORD Error = ERROR_SUCCESS;
 
@@ -121,12 +121,9 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
     for( i = 0; EnumKeysLinkage[i]; i++ ) {
         RootDevice = RegReadString
             ( EnumKey, EnumKeysLinkage[i], "RootDevice" );
-        DriverDesc = RegReadString
-            ( EnumKey, EnumKeysTop[i], "DriverDesc" );
 
-        if( DriverDesc &&
-            RootDevice &&
-            !strcmp( DriverDesc, Adapter->DhclientInfo.name ) ) {
+        if( RootDevice &&
+            !strcmp( RootDevice, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 (CHAR*) malloc( strlen( TargetKeyNameStart ) +
                         strlen( RootDevice ) +
@@ -138,13 +135,11 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             break;
         } else {
             free( RootDevice ); RootDevice = 0;
-            free( DriverDesc ); DriverDesc = 0;
         }
     }
 
 cleanup:
     if( RootDevice ) free( RootDevice );
-    if( DriverDesc ) free( DriverDesc );
     if( EnumKeysLinkage ) free( EnumKeysLinkage );
     if( EnumKeysTop ) free( EnumKeysTop );
     if( TargetKeyName ) free( TargetKeyName );

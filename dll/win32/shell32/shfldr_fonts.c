@@ -918,7 +918,7 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    char szBuffer[30] = {0};
+    WCHAR szBuffer[30] = {0};
     ULONG Count = 1;
 
     _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
@@ -926,38 +926,38 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_QueryContextMenu(
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
           This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringA(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
         Count++;
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_COPY, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_COPY, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);

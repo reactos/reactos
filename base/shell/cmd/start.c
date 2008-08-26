@@ -34,18 +34,7 @@ static TCHAR *GetParameter(TCHAR **pPointer)
 	return start - 1;
 }
 
-static void StripQuotes(TCHAR *in)
-{
-	TCHAR *out = in;
-	for (; *in; in++)
-	{
-		if (*in != _T('"'))
-			*out++ = *in;
-	}
-	*out = _T('\0');
-}
-
-INT cmd_start (LPTSTR First, LPTSTR Rest)
+INT cmd_start (LPTSTR Rest)
 {
 	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR rest[CMDLINE_LENGTH];

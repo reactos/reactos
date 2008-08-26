@@ -92,15 +92,6 @@ extern "C" {
 #endif
 #endif
 
-/* i386 context definitions */
-#ifdef __i386__
-
-#define EXCEPTION_READ_FAULT    0
-#define EXCEPTION_WRITE_FAULT   1
-#define EXCEPTION_EXECUTE_FAULT 8
-
-#endif  /* __i386__ */
-
 #ifndef VOID
 #define VOID void
 #endif
@@ -511,8 +502,6 @@ typedef DWORD FLONG;
 #define THREAD_DIRECT_IMPERSONATION	0x200
 #endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
-#define EXCEPTION_NONCONTINUABLE	1
-#define EXCEPTION_MAXIMUM_PARAMETERS 15
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
 #ifndef __NTDDK_H
 #define MUTANT_QUERY_STATE	0x0001
@@ -1350,7 +1339,7 @@ typedef enum
 #define IMAGE_DLLCHARACTERISTICS_NO_BIND 0x0800
 #define IMAGE_DLLCHARACTERISTICS_WDM_DRIVER 0x2000
 #define IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE 0x8000
-#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
+#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((ULONG_PTR)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
 #define IMAGE_DIRECTORY_ENTRY_EXPORT	0
 #define IMAGE_DIRECTORY_ENTRY_IMPORT	1
 #define IMAGE_DIRECTORY_ENTRY_RESOURCE	2
@@ -2010,6 +1999,38 @@ typedef struct _ACL_SIZE_INFORMATION {
 	DWORD   AclBytesFree;
 } ACL_SIZE_INFORMATION;
 
+#ifndef _LDT_ENTRY_DEFINED
+#define _LDT_ENTRY_DEFINED
+typedef struct _LDT_ENTRY
+{
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union
+    {
+        struct
+        {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct
+        {
+            ULONG BaseMid:8;
+            ULONG Type:5;
+            ULONG Dpl:2;
+            ULONG Pres:1;
+            ULONG LimitHi:4;
+            ULONG Sys:1;
+            ULONG Reserved_0:1;
+            ULONG Default_Big:1;
+            ULONG Granularity:1;
+            ULONG BaseHi:8;
+        } Bits;
+    } HighWord;
+} LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
+#endif
+
 /* FIXME: add more machines */
 #if defined(_X86_) && !defined(__PowerPC__)
 #define SIZE_OF_80387_REGISTERS	80
@@ -2023,6 +2044,11 @@ typedef struct _ACL_SIZE_INFORMATION {
 #define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
 #define CONTEXT_FULL	(CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
 #define MAXIMUM_SUPPORTED_EXTENSION  512
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
 typedef struct _FLOATING_SAVE_AREA {
 	DWORD	ControlWord;
 	DWORD	StatusWord;
@@ -2061,6 +2087,237 @@ typedef struct _CONTEXT {
 	DWORD	SegSs;
 	BYTE	ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
+#elif defined(__x86_64__)
+
+
+#define CONTEXT_AMD64 0x100000
+
+#if !defined(RC_INVOKED)
+#define CONTEXT_CONTROL (CONTEXT_AMD64 | 0x1L)
+#define CONTEXT_INTEGER (CONTEXT_AMD64 | 0x2L)
+#define CONTEXT_SEGMENTS (CONTEXT_AMD64 | 0x4L)
+#define CONTEXT_FLOATING_POINT (CONTEXT_AMD64 | 0x8L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x10L)
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
+#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS)
+
+#define CONTEXT_EXCEPTION_ACTIVE 0x8000000
+#define CONTEXT_SERVICE_ACTIVE 0x10000000
+#define CONTEXT_EXCEPTION_REQUEST 0x40000000
+#define CONTEXT_EXCEPTION_REPORTING 0x80000000
+#endif
+
+#define INITIAL_MXCSR 0x1f80
+#define INITIAL_FPCSR 0x027f
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+typedef struct DECLSPEC_ALIGN(16) _M128A {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128A, *PM128A;
+
+typedef struct _XMM_SAVE_AREA32 {
+    WORD ControlWord;
+    WORD StatusWord;
+    BYTE TagWord;
+    BYTE Reserved1;
+    WORD ErrorOpcode;
+    DWORD ErrorOffset;
+    WORD ErrorSelector;
+    WORD Reserved2;
+    DWORD DataOffset;
+    WORD DataSelector;
+    WORD Reserved3;
+    DWORD MxCsr;
+    DWORD MxCsr_Mask;
+    M128A FloatRegisters[8];
+    M128A XmmRegisters[16];
+    BYTE Reserved4[96];
+} XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
+    DWORD64 P1Home;
+    DWORD64 P2Home;
+    DWORD64 P3Home;
+    DWORD64 P4Home;
+    DWORD64 P5Home;
+    DWORD64 P6Home;
+
+    /* Control flags */
+    DWORD ContextFlags;
+    DWORD MxCsr;
+
+    /* Segment */
+    WORD SegCs;
+    WORD SegDs;
+    WORD SegEs;
+    WORD SegFs;
+    WORD SegGs;
+    WORD SegSs;
+    DWORD EFlags;
+
+    /* Debug */
+    DWORD64 Dr0;
+    DWORD64 Dr1;
+    DWORD64 Dr2;
+    DWORD64 Dr3;
+    DWORD64 Dr6;
+    DWORD64 Dr7;
+
+    /* Integer */
+    DWORD64 Rax;
+    DWORD64 Rcx;
+    DWORD64 Rdx;
+    DWORD64 Rbx;
+    DWORD64 Rsp;
+    DWORD64 Rbp;
+    DWORD64 Rsi;
+    DWORD64 Rdi;
+    DWORD64 R8;
+    DWORD64 R9;
+    DWORD64 R10;
+    DWORD64 R11;
+    DWORD64 R12;
+    DWORD64 R13;
+    DWORD64 R14;
+    DWORD64 R15;
+
+    /* Counter */
+    DWORD64 Rip;
+
+   /* Floating point */
+   union {
+       XMM_SAVE_AREA32 FltSave;
+       struct {
+           M128A Header[2];
+           M128A Legacy[8];
+           M128A Xmm0;
+           M128A Xmm1;
+           M128A Xmm2;
+           M128A Xmm3;
+           M128A Xmm4;
+           M128A Xmm5;
+           M128A Xmm6;
+           M128A Xmm7;
+           M128A Xmm8;
+           M128A Xmm9;
+           M128A Xmm10;
+           M128A Xmm11;
+           M128A Xmm12;
+           M128A Xmm13;
+           M128A Xmm14;
+           M128A Xmm15;
+      } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+     /* Vector */
+    M128A VectorRegister[26];
+    DWORD64 VectorControl;
+
+    /* Debug control */
+    DWORD64 DebugControl;
+    DWORD64 LastBranchToRip;
+    DWORD64 LastBranchFromRip;
+    DWORD64 LastExceptionToRip;
+    DWORD64 LastExceptionFromRip;
+} CONTEXT, *PCONTEXT;
+
+
+typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+    union {
+        PM128A FloatingContext[16];
+        struct {
+            PM128A Xmm0;
+            PM128A Xmm1;
+            PM128A Xmm2;
+            PM128A Xmm3;
+            PM128A Xmm4;
+            PM128A Xmm5;
+            PM128A Xmm6;
+            PM128A Xmm7;
+            PM128A Xmm8;
+            PM128A Xmm9;
+            PM128A Xmm10;
+            PM128A Xmm11;
+            PM128A Xmm12;
+            PM128A Xmm13;
+            PM128A Xmm14;
+            PM128A Xmm15;
+        };
+    };
+
+    union {
+        PULONG64 IntegerContext[16];
+        struct {
+            PULONG64 Rax;
+            PULONG64 Rcx;
+            PULONG64 Rdx;
+            PULONG64 Rbx;
+            PULONG64 Rsp;
+            PULONG64 Rbp;
+            PULONG64 Rsi;
+            PULONG64 Rdi;
+            PULONG64 R8;
+            PULONG64 R9;
+            PULONG64 R10;
+            PULONG64 R11;
+            PULONG64 R12;
+            PULONG64 R13;
+            PULONG64 R14;
+            PULONG64 R15;
+        };
+    };
+} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+
+#define UNW_FLAG_NHANDLER 0x0 /* No handler. */
+#define UNW_FLAG_EHANDLER 0x1 /* Exception handler should be called */
+#define UNW_FLAG_UHANDLER 0x2 /* Termination handler that should be called when unwinding an exception */
+#define UNW_FLAG_CHAININFO 0x4 /* FunctionEntry member is the contents of a previous function table entry */
+
+#define RUNTIME_FUNCTION_INDIRECT 0x1
+
+  typedef struct _RUNTIME_FUNCTION {
+    DWORD BeginAddress;
+    DWORD EndAddress;
+    DWORD UnwindData;
+  } RUNTIME_FUNCTION,*PRUNTIME_FUNCTION;
+
+  typedef PRUNTIME_FUNCTION (*PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD64 ControlPc,PVOID Context);
+  typedef DWORD (*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(HANDLE Process,PVOID TableAddress,PDWORD Entries,PRUNTIME_FUNCTION *Functions);
+
+  #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
+
+NTSYSAPI
+VOID
+__cdecl
+RtlRestoreContext(PCONTEXT ContextRecord,
+                  struct _EXCEPTION_RECORD *ExceptionRecord);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlAddFunctionTable(PRUNTIME_FUNCTION FunctionTable,
+                    DWORD EntryCount,
+                    DWORD64 BaseAddress);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlInstallFunctionTableCallback(DWORD64 TableIdentifier,
+                                DWORD64 BaseAddress,
+                                DWORD Length,
+                                PGET_RUNTIME_FUNCTION_CALLBACK Callback,
+                                PVOID Context,
+                                PCWSTR OutOfProcessCallbackDll);
+
+NTSYSAPI
+BOOLEAN
+__cdecl
+RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
+
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL	1L
 #define CONTEXT_FLOATING_POINT	2L
@@ -2548,18 +2805,44 @@ typedef struct _CONTEXT {
 #error "undefined processor type"
 #endif
 typedef CONTEXT *PCONTEXT,*LPCONTEXT;
-typedef struct _EXCEPTION_RECORD {
-	DWORD ExceptionCode;
-	DWORD ExceptionFlags;
-	struct _EXCEPTION_RECORD *ExceptionRecord;
-	PVOID ExceptionAddress;
-	DWORD NumberParameters;
-	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD,*PEXCEPTION_RECORD,*LPEXCEPTION_RECORD;
-typedef struct _EXCEPTION_POINTERS {
-	PEXCEPTION_RECORD ExceptionRecord;
-	PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS,*PEXCEPTION_POINTERS,*LPEXCEPTION_POINTERS;
+
+#define EXCEPTION_NONCONTINUABLE	1
+#define EXCEPTION_MAXIMUM_PARAMETERS 15
+
+    typedef struct _EXCEPTION_RECORD {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      struct _EXCEPTION_RECORD *ExceptionRecord;
+      PVOID ExceptionAddress;
+      DWORD NumberParameters;
+      ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
+
+    typedef EXCEPTION_RECORD *PEXCEPTION_RECORD;
+
+    typedef struct _EXCEPTION_RECORD32 {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      DWORD ExceptionRecord;
+      DWORD ExceptionAddress;
+      DWORD NumberParameters;
+      DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD32,*PEXCEPTION_RECORD32;
+
+    typedef struct _EXCEPTION_RECORD64 {
+      DWORD ExceptionCode;
+      DWORD ExceptionFlags;
+      DWORD64 ExceptionRecord;
+      DWORD64 ExceptionAddress;
+      DWORD NumberParameters;
+      DWORD __unusedAlignment;
+      DWORD64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    } EXCEPTION_RECORD64,*PEXCEPTION_RECORD64;
+
+    typedef struct _EXCEPTION_POINTERS {
+      PEXCEPTION_RECORD ExceptionRecord;
+      PCONTEXT ContextRecord;
+    } EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
 
 #ifdef _M_PPC
 #define LARGE_INTEGER_ORDER(x) x HighPart; DWORD LowPart;
@@ -2902,7 +3185,7 @@ typedef struct _RTL_CRITICAL_SECTION {
 #endif
 
 NTSYSAPI
-WORD  
+WORD
 NTAPI
 RtlCaptureStackBackTrace(
     IN DWORD FramesToSkip,
@@ -2911,6 +3194,12 @@ RtlCaptureStackBackTrace(
     OUT PDWORD BackTraceHash OPTIONAL
 );
 
+NTSYSAPI
+VOID
+NTAPI
+RtlCaptureContext(
+    PCONTEXT ContextRecord
+);
 
 NTSYSAPI
 PVOID
@@ -3128,7 +3417,7 @@ typedef struct _IMAGE_OPTIONAL_HEADER64 {
 	WORD MinorImageVersion;
 	WORD MajorSubsystemVersion;
 	WORD MinorSubsystemVersion;
-	DWORD Reserved1;
+	DWORD Win32VersionValue;
 	DWORD SizeOfImage;
 	DWORD SizeOfHeaders;
 	DWORD CheckSum;
@@ -3365,14 +3654,75 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 	WORD Hint;
 	BYTE Name[1];
 } IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
-typedef struct _IMAGE_THUNK_DATA {
-	union {
-		ULONG ForwarderString;
-		ULONG Function;
-		DWORD Ordinal;
-		ULONG AddressOfData;
-	} u1;
-} IMAGE_THUNK_DATA,*PIMAGE_THUNK_DATA;
+#include "pshpack8.h"
+typedef struct _IMAGE_THUNK_DATA64 {
+    union {
+        ULONGLONG ForwarderString;
+        ULONGLONG Function;
+        ULONGLONG Ordinal;
+        ULONGLONG AddressOfData;
+    } u1;
+} IMAGE_THUNK_DATA64;
+typedef IMAGE_THUNK_DATA64 *PIMAGE_THUNK_DATA64;
+#include "poppack.h"
+
+typedef struct _IMAGE_THUNK_DATA32 {
+    union {
+        DWORD ForwarderString;
+        DWORD Function;
+        DWORD Ordinal;
+        DWORD AddressOfData;
+    } u1;
+} IMAGE_THUNK_DATA32;
+typedef IMAGE_THUNK_DATA32 *PIMAGE_THUNK_DATA32;
+
+#define IMAGE_ORDINAL_FLAG64 0x8000000000000000ULL
+#define IMAGE_ORDINAL_FLAG32 0x80000000
+#define IMAGE_ORDINAL64(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_ORDINAL32(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_SNAP_BY_ORDINAL64(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG64)!=0)
+#define IMAGE_SNAP_BY_ORDINAL32(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG32)!=0)
+
+typedef VOID
+(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID DllHandle,DWORD Reason,PVOID Reserved);
+
+typedef struct _IMAGE_TLS_DIRECTORY64 {
+    ULONGLONG StartAddressOfRawData;
+    ULONGLONG EndAddressOfRawData;
+    ULONGLONG AddressOfIndex;
+    ULONGLONG AddressOfCallBacks;
+    DWORD SizeOfZeroFill;
+    DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY64;
+typedef IMAGE_TLS_DIRECTORY64 *PIMAGE_TLS_DIRECTORY64;
+
+typedef struct _IMAGE_TLS_DIRECTORY32 {
+    DWORD StartAddressOfRawData;
+    DWORD EndAddressOfRawData;
+    DWORD AddressOfIndex;
+    DWORD AddressOfCallBacks;
+    DWORD SizeOfZeroFill;
+    DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY32;
+typedef IMAGE_TLS_DIRECTORY32 *PIMAGE_TLS_DIRECTORY32;
+#ifdef _WIN64
+#define IMAGE_ORDINAL_FLAG IMAGE_ORDINAL_FLAG64
+#define IMAGE_ORDINAL(Ordinal) IMAGE_ORDINAL64(Ordinal)
+typedef IMAGE_THUNK_DATA64 IMAGE_THUNK_DATA;
+typedef PIMAGE_THUNK_DATA64 PIMAGE_THUNK_DATA;
+#define IMAGE_SNAP_BY_ORDINAL(Ordinal) IMAGE_SNAP_BY_ORDINAL64(Ordinal)
+typedef IMAGE_TLS_DIRECTORY64 IMAGE_TLS_DIRECTORY;
+typedef PIMAGE_TLS_DIRECTORY64 PIMAGE_TLS_DIRECTORY;
+#else
+#define IMAGE_ORDINAL_FLAG IMAGE_ORDINAL_FLAG32
+#define IMAGE_ORDINAL(Ordinal) IMAGE_ORDINAL32(Ordinal)
+typedef IMAGE_THUNK_DATA32 IMAGE_THUNK_DATA;
+typedef PIMAGE_THUNK_DATA32 PIMAGE_THUNK_DATA;
+#define IMAGE_SNAP_BY_ORDINAL(Ordinal) IMAGE_SNAP_BY_ORDINAL32(Ordinal)
+typedef IMAGE_TLS_DIRECTORY32 IMAGE_TLS_DIRECTORY;
+typedef PIMAGE_TLS_DIRECTORY32 PIMAGE_TLS_DIRECTORY;
+#endif
+
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	_ANONYMOUS_UNION union {
 		DWORD Characteristics;
@@ -3394,14 +3744,6 @@ typedef struct _IMAGE_BOUND_FORWARDER_REF {
 	WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
 typedef void(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID,DWORD,PVOID);
-typedef struct _IMAGE_TLS_DIRECTORY {
-	DWORD StartAddressOfRawData;
-	DWORD EndAddressOfRawData;
-	PDWORD AddressOfIndex;
-	PIMAGE_TLS_CALLBACK *AddressOfCallBacks;
-	DWORD SizeOfZeroFill;
-	DWORD Characteristics;
-} IMAGE_TLS_DIRECTORY,*PIMAGE_TLS_DIRECTORY;
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -4090,6 +4432,11 @@ static __inline__ PVOID GetCurrentFiber(void)
     );
     return ret;
 }
+#elif defined (_M_AMD64)
+FORCEINLINE PVOID GetCurrentFiber(VOID)
+{
+    return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
+}
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
 #else
@@ -4130,13 +4477,18 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
     return ret;
 }
 #elif _M_ARM
-    
+
 //
 // NT-ARM is not documented
 //
 #define KIRQL ULONG // Hack!
 #include <armddk.h>
-    
+
+#elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
+{
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+}
 #else
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
@@ -4267,6 +4619,8 @@ BitScanReverse(OUT ULONG *Index,
 
 #if defined(_M_IX86)
 #define YieldProcessor() __asm__ __volatile__("pause");
+#elif defined (_M_AMD64)
+#define YieldProcessor() __asm__ __volatile__("pause");
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_MIPS)
@@ -4281,6 +4635,19 @@ BitScanReverse(OUT ULONG *Index,
 #if defined(_M_AMD64)
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG64 *)a, b)
+
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedOr _InterlockedOr
+
+#define InterlockedAnd64 _InterlockedAnd64
+#define InterlockedOr64 _InterlockedOr64
+
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset _interlockedbittestandreset
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
+
 
 #endif
 

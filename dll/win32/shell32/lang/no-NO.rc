@@ -617,6 +617,9 @@ BEGIN
 	IDS_PROPERTIES              "Egenska&per"
 	IDS_CUT                     "Klipp &ut"
 	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Kunne ikke opprette ny mappe: tilgang nektet."
 	IDS_CREATEFOLDER_CAPTION    "Klarte ikke opprette ny mappe"

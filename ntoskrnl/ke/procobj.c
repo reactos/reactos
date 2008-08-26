@@ -448,7 +448,7 @@ KeAttachProcess(IN PKPROCESS Process)
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
+    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;
@@ -458,7 +458,7 @@ KeAttachProcess(IN PKPROCESS Process)
         (KeIsExecutingDpc()))
     {
         /* Invalid attempt */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
                      Thread->ApcStateIndex,
@@ -574,13 +574,13 @@ KeStackAttachProcess(IN PKPROCESS Process,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
+    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc())
     {
         /* Executing a DPC, crash! */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
                      Thread->ApcStateIndex,
@@ -662,7 +662,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
         (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
     {
         /* Bugcheck the system */
-        KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
+        KeBugCheck(INVALID_PROCESS_DETACH_ATTEMPT);
     }
 
     /* Get the process */

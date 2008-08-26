@@ -337,7 +337,6 @@ IopSaveBootLogToFile(VOID)
 			   BufferSize);
   if (KeyInfo == NULL)
     {
-      CHECKPOINT1;
       ExReleaseResourceLite(&IopBootLogResource);
       return;
     }
@@ -354,7 +353,6 @@ IopSaveBootLogToFile(VOID)
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      CHECKPOINT1;
       ExFreePool(KeyInfo);
       ExReleaseResourceLite(&IopBootLogResource);
       return;
@@ -381,7 +379,6 @@ IopSaveBootLogToFile(VOID)
 
       if (!NT_SUCCESS(Status))
 	{
-	  CHECKPOINT1;
 	  ZwClose(KeyHandle);
 	  ExFreePool(KeyInfo);
 	  ExReleaseResourceLite(&IopBootLogResource);
@@ -391,7 +388,6 @@ IopSaveBootLogToFile(VOID)
       Status = IopWriteLogFile((PWSTR)&KeyInfo->Data);
       if (!NT_SUCCESS(Status))
 	{
-	  CHECKPOINT1;
 	  ZwClose(KeyHandle);
 	  ExFreePool(KeyInfo);
 	  ExReleaseResourceLite(&IopBootLogResource);

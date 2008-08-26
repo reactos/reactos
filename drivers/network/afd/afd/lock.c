@@ -37,7 +37,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 	}
 
 	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
-	    MmMapLockedPages( Irp->MdlAddress, KernelMode );
+	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
 
 	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
 	    IoFreeMdl( Irp->MdlAddress );
@@ -50,12 +50,13 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer || !Irp->MdlAddress ) return;
+    PVOID Buffer = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
+    if( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer == Buffer || Buffer == NULL ) {
+	MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer, Irp->MdlAddress );
+        MmUnlockPages( Irp->MdlAddress );
+        IoFreeMdl( Irp->MdlAddress );
+    }
 
-    MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
-			Irp->MdlAddress );
-    MmUnlockPages( Irp->MdlAddress );
-    IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
 }
 
@@ -72,6 +73,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
+    BOOLEAN LockFailed = FALSE;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
@@ -117,10 +119,24 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
-		MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
-				     Write ? IoModifyAccess : IoReadAccess );
+		_SEH_TRY {
+		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
+				         Write ? IoModifyAccess : IoReadAccess );
+		} _SEH_HANDLE {
+		    LockFailed = TRUE;
+		} _SEH_END;
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
-	    }
+
+		if( LockFailed ) {
+		    IoFreeMdl( MapBuf[i].Mdl );
+		    MapBuf[i].Mdl = NULL;
+		    ExFreePool( NewBuf );
+		    return NULL;
+		}
+	    } else {
+		ExFreePool( NewBuf );
+		return NULL;
+	    }     
 	}
     }
 
@@ -152,7 +168,7 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
  * pointers.  This will allow the system to do proper alerting */
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAFD_HANDLE FileObjects = ExAllocatePool
 	( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
@@ -161,13 +177,21 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	HandleArray[i].Status = 0;
 	HandleArray[i].Events = HandleArray[i].Events;
         FileObjects[i].Handle = 0;
-	Status = ObReferenceObjectByHandle
-	    ( (PVOID)HandleArray[i].Handle,
-	      FILE_ALL_ACCESS,
-	      NULL,
-	      KernelMode,
-	      (PVOID*)&FileObjects[i].Handle,
-	      NULL );
+	if( !HandleArray[i].Handle ) continue;
+	if( NT_SUCCESS(Status) ) {
+		Status = ObReferenceObjectByHandle
+	    	( (PVOID)HandleArray[i].Handle,
+	     	 FILE_ALL_ACCESS,
+	     	 NULL,
+	      	 KernelMode,
+	      	 (PVOID*)&FileObjects[i].Handle,
+	      	 NULL );
+	}
+    }
+
+    if( !NT_SUCCESS(Status) ) {
+	UnlockHandles( FileObjects, HandleCount );
+	return NULL;
     }
 
     return FileObjects;

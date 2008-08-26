@@ -1,9 +1,11 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/util.c
+ * FILE:            ntoskrnl/io/iomgr/util.c
  * PURPOSE:         I/O Utility Functions
- * PROGRAMMERS:     <UNKNOWN>
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
+ *                  Daniel Zimmerman (netzimme@aim.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,10 +19,6 @@ NTAPI
 RtlpGetStackLimits(PULONG_PTR StackBase,
                    PULONG_PTR StackLimit);
 
-/* DATA **********************************************************************/
-
-KSPIN_LOCK CancelSpinLock;
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -28,10 +26,10 @@ KSPIN_LOCK CancelSpinLock;
  */
 VOID
 NTAPI
-IoAcquireCancelSpinLock(PKIRQL Irql)
+IoAcquireCancelSpinLock(OUT PKIRQL Irql)
 {
     /* Just acquire the internal lock */
-    KeAcquireSpinLock(&CancelSpinLock,Irql);
+    *Irql = KeAcquireQueuedSpinLock(LockQueueIoCancelLock);
 }
 
 /*
@@ -113,6 +111,7 @@ PEPROCESS
 NTAPI
 IoGetCurrentProcess(VOID)
 {
+    /* Return the current thread's process */
     return (PEPROCESS)PsGetCurrentThread()->Tcb.ApcState.Process;
 }
 
@@ -121,10 +120,10 @@ IoGetCurrentProcess(VOID)
  */
 VOID
 NTAPI
-IoReleaseCancelSpinLock(KIRQL Irql)
+IoReleaseCancelSpinLock(IN KIRQL Irql)
 {
     /* Release the internal lock */
-    KeReleaseSpinLock(&CancelSpinLock,Irql);
+    KeReleaseQueuedSpinLock(LockQueueIoCancelLock, Irql);
 }
 
 /*
@@ -315,4 +314,3 @@ IoCheckQuerySetVolumeInformation(IN FS_INFORMATION_CLASS FsInformationClass,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-/* EOF */

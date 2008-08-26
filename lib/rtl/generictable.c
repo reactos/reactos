@@ -57,7 +57,7 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
             if ((ChildNode = RtlLeftChild(CurrentNode)))
             {
                 /* Continue searching from this node */
-                ChildNode = CurrentNode;
+                CurrentNode = ChildNode;
             }
             else
             {
@@ -72,7 +72,7 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
             if ((ChildNode = RtlRightChild(CurrentNode)))
             {
                 /* Continue searching from this node */
-                ChildNode = CurrentNode;
+                CurrentNode = ChildNode;
             }
             else
             {

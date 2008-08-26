@@ -2165,7 +2165,7 @@ PnpEventThread(LPVOID lpParameter)
 
         /* Process the pnp event */
         DPRINT("Received PnP Event\n");
-        if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+        if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ENUMERATED, &RpcStatus))
         {
             DeviceInstallParams* Params;
             DWORD len;

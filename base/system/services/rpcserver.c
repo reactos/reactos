@@ -2475,7 +2475,7 @@ DWORD ROpenServiceA(
 DWORD RQueryServiceConfigA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hService,
-    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+    LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGA lpServiceConfig,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_8K pcbBytesNeeded)
 {

@@ -162,6 +162,9 @@
 #define IDS_RESTORE                 324
 #define IDS_DEFAULT_CLUSTER_SIZE    325
 #define IDS_ADMINISTRATIVETOOLS     326
+#define IDS_FORMATDRIVE             327
+#define IDS_RENAME                  328
+#define IDS_INSERT                  329
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

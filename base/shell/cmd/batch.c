@@ -194,6 +194,9 @@ VOID ExitBatch (LPTSTR msg)
 		if (bc->ffind)
 			cmd_free(bc->ffind);
 
+		UndoRedirection(bc->RedirList, NULL);
+		FreeRedirection(bc->RedirList);
+
 		/* Preserve echo state across batch calls */
 		bEcho = bc->bEcho;
 
@@ -248,9 +251,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 		n->prev = bc;
 		bc = n;
-		bc->In[0] = _T('\0');
-		bc->Out[0] = _T('\0');
-		bc->Err[0] = _T('\0');
+		bc->RedirList = NULL;
 	}
 	else if (bc->hBatchFile != INVALID_HANDLE_VALUE)
 	{
@@ -263,7 +264,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 			cmd_free (bc->raw_params);
 	}
 
-	GetFullPathName(fullname, sizeof(bc->BatchFilePath), bc->BatchFilePath, &tmp);
+	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, &tmp);
 	*tmp = '\0';
 
 	bc->hBatchFile = hFile;
@@ -300,17 +301,23 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	return TRUE;
 }
 
-VOID AddBatchRedirection(TCHAR * ifn, TCHAR * ofn, TCHAR * efn)
+VOID AddBatchRedirection(REDIRECTION **RedirList)
 {
+	REDIRECTION **ListEnd;
+
 	if(!bc)
 		return;
-	if(_tcslen(ifn))
-		_tcscpy(bc->In,ifn);
-	if(_tcslen(ofn))
-		_tcscpy(bc->Out,ofn);
-	if(_tcslen(efn))
-		_tcscpy(bc->Err,efn);
 
+	/* Prepend the list to the batch context's list */
+	ListEnd = RedirList;
+	while (*ListEnd)
+		ListEnd = &(*ListEnd)->Next;
+	*ListEnd = bc->RedirList;
+	bc->RedirList = *RedirList;
+
+	/* Null out the pointer so that the list will not be cleared prematurely.
+	 * These redirections should persist until the batch file exits. */
+	*RedirList = NULL;
 }
 
 /*
@@ -325,10 +332,9 @@ VOID AddBatchRedirection(TCHAR * ifn, TCHAR * ofn, TCHAR * efn)
  * Set eflag to 0 if line is not to be echoed else 1
  */
 
-LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
+LPTSTR ReadBatchLine ()
 {
 	LPTSTR first;
-	LPTSTR ip;
 
 	/* No batch */
 	if (bc == NULL)
@@ -421,8 +427,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			*dp = _T('\0');
 
-			*bLocalEcho = bEcho;
-
 			return textline;
 		}
 
@@ -439,14 +443,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 		}
 		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
-		/* Strip leading spaces and trailing space/control chars */
-		for (first = textline; _istspace (*first); first++)
-			;
-
-		for (ip = first + _tcslen (first) - 1; _istspace (*ip) || _istcntrl (*ip); ip--)
-			;
-
-		*++ip = _T('\0');
+		first = textline;
 
 		/* cmd block over multiple lines (..) */
 		if (bc->bCmdBlock >= 0)
@@ -480,22 +477,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 					continue;
 				}
 		}
-
-		/* ignore labels and empty lines */
-		if (*first == _T(':') || *first == 0)
-			continue;
-
-		if (*first == _T('@'))
-		{
-			/* don't echo this line */
-			do
-				first++;
-			while (_istspace (*first));
-
-			*bLocalEcho = 0;
-		}
-		else
-			*bLocalEcho = bEcho;
 
 		break;
 	}

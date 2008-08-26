@@ -1097,6 +1097,14 @@ Language=English
 PP1_INITIALIZATION_FAILED
 .
 
+MessageId=0x93
+Severity=Success
+Facility=System
+SymbolicName=INVALID_KERNEL_HANDLE
+Language=English
+INVALID_KERNEL_HANDLE
+.
+
 MessageId=0x94
 Severity=Success
 Facility=System
@@ -1387,6 +1395,14 @@ Facility=System
 SymbolicName=WINDOWS_NT_MP_STRING
 Language=English
 MultiProcessor Kernel
+.
+
+MessageId=0x8A
+Severity=Informational
+Facility=System
+SymbolicName=THREAD_TERMINATE_HELD_MUTEX
+Language=English
+A kernel thread terminated while holding a mutex
 .
 
 MessageId=0x9D

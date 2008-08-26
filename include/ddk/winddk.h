@@ -228,7 +228,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
-    
+
 #if (_M_IX86)
 #define KIP0PCRADDRESS                      0xffdff000
 #endif
@@ -769,27 +769,6 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
-
-typedef struct _EXCEPTION_RECORD32
-{
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG ExceptionRecord;
-    ULONG ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
-
-typedef struct _EXCEPTION_RECORD64
-{
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG64 ExceptionRecord;
-    ULONG64 ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG __unusedAlignment;
-    ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
 
 typedef EXCEPTION_DISPOSITION
 (DDKAPI *PEXCEPTION_ROUTINE)(
@@ -5404,7 +5383,7 @@ typedef VOID
 */
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
-    
+
 #ifdef _X86_
 
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5493,26 +5472,133 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown compiler
 #endif
 }
-    
+
 NTHALAPI
 KIRQL
 DDKAPI
 KeGetCurrentIrql(
     VOID);
-    
+
 NTKERNELAPI
 PRKTHREAD
 NTAPI
 KeGetCurrentThread(
     VOID);
-    
+
 #define KI_USER_SHARED_DATA               0xffdf0000
 
 #elif defined(__x86_64__)
 
+#define PASSIVE_LEVEL                      0
+#define LOW_LEVEL                          0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define CLOCK_LEVEL                       13
+#define IPI_LEVEL                         14
+#define POWER_LEVEL                       14
+#define PROFILE_LEVEL                     15
+#define HIGH_LEVEL                        15
+
+#define PAGE_SIZE   0x1000
+#define PAGE_SHIFT 12L
+#define PTI_SHIFT  12L
+#define PDI_SHIFT  21L
+#define PPI_SHIFT  30L
+#define PXI_SHIFT  39L
+#define PTE_PER_PAGE 512
+#define PDE_PER_PAGE 512
+#define PPE_PER_PAGE 512
+#define PXE_PER_PAGE 512
+#define PTI_MASK_AMD64 (PTE_PER_PAGE - 1)
+#define PDI_MASK_AMD64 (PDE_PER_PAGE - 1)
+#define PPI_MASK (PPE_PER_PAGE - 1)
+#define PXI_MASK (PXE_PER_PAGE - 1)
+
+#define PXE_BASE    0xFFFFF6FB7DBED000ULL
+#define PXE_SELFMAP 0xFFFFF6FB7DBEDF68ULL
+#define PPE_BASE    0xFFFFF6FB7DA00000ULL
+#define PDE_BASE    0xFFFFF6FB40000000ULL
+#define PTE_BASE    0xFFFFF68000000000ULL
+#define PXE_TOP     0xFFFFF6FB7DBEDFFFULL
+#define PPE_TOP     0xFFFFF6FB7DBFFFFFULL
+#define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
+#define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
+
+#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
+#define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
+
+#define SharedUserData ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedInterruptTime (&SharedUserData->InterruptTime)
+#define SharedSystemTime (&SharedUserData->SystemTime)
+#define SharedTickCount (&SharedUserData->TickCount)
+
+#define KeQueryInterruptTime() \
+    (*(volatile ULONG64*)SharedInterruptTime)
+#define KeQuerySystemTime(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedSystemTime
+#define KeQueryTickCount(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedTickCount
+
+typedef struct _KPCR
+{
+    union
+    {
+        NT_TIB NtTib;
+        struct
+        {
+            union _KGDTENTRY64 *GdtBase;
+            struct _KTSS64 *TssBase;
+            ULONG64 UserRsp;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    union _KIDTENTRY64 *IdtBase;
+    ULONG64 Unused[2];
+    KIRQL Irql;
+    UCHAR SecondLevelCacheAssociativity;
+    UCHAR ObsoleteNumber;
+    UCHAR Fill0;
+    ULONG Unused0[3];
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
+    ULONG Unused2;
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[24];
+} KPCR, *PKPCR;
+
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+NTKERNELAPI
+PRKTHREAD
+NTAPI
+KeGetCurrentThread(
+    VOID);
+
+FORCEINLINE
+PKPCR
+KeGetPcr(VOID)
+{
+    return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
+}
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readgsword(0x184);
+}
 
 #elif defined(__PowerPC__)
 
@@ -5586,7 +5672,7 @@ KeGetCurrentProcessorNumber(VOID)
 #elif defined(_MIPS_)
 
 #error MIPS Headers are totally incorrect
-    
+
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
@@ -5620,16 +5706,16 @@ KeGetCurrentProcessorNumber(VOID)
 // NT-ARM is not documented, need DDK-ARM
 //
 #include <armddk.h>
-        
+
 #else
 #error Unknown architecture
 #endif
-    
+
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
 #define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-    
+
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
@@ -5704,6 +5790,8 @@ typedef struct _PCIBUSDATA
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
 
+#if defined (_X86_)
+#if defined(NO_INTERLOCKED_INTRINSICS)
 NTKERNELAPI
 LONG
 FASTCALL
@@ -5738,6 +5826,22 @@ InterlockedExchangeAdd(
   IN OUT LONG volatile *Addend,
   IN LONG  Value);
 
+#else // !defined(NO_INTERLOCKED_INTRINSICS)
+
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedIncrement _InterlockedIncrement
+#define InterlockedDecrement _InterlockedDecrement
+#define InterlockedExchangeAdd _InterlockedExchangeAdd
+#define InterlockedCompareExchange _InterlockedCompareExchange
+#define InterlockedOr _InterlockedOr
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedXor _InterlockedXor
+
+#endif // !defined(NO_INTERLOCKED_INTRINSICS)
+
+#endif // defined (_X86_)
+
+#if !defined (_WIN64)
 /*
  * PVOID
  * InterlockedExchangePointer(
@@ -5761,6 +5865,47 @@ InterlockedExchangeAdd(
 #define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
 #define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
 
+#endif // !defined (_WIN64)
+
+#if defined (_M_AMD64)
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONGLONG *)a, (LONGLONG)b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement64((LONGLONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement64((LONGLONG *)a)
+#define InterlockedAnd _InterlockedAnd
+#define InterlockedOr _InterlockedOr
+#define InterlockedXor _InterlockedXor
+#define InterlockedIncrement _InterlockedIncrement
+#define InterlockedDecrement _InterlockedDecrement
+#define InterlockedAdd _InterlockedAdd
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedExchangeAdd _InterlockedExchangeAdd
+#define InterlockedCompareExchange _InterlockedCompareExchange
+#define InterlockedAnd64 _InterlockedAnd64
+#define InterlockedOr64 _InterlockedOr64
+#define InterlockedXor64 _InterlockedXor64
+#define InterlockedIncrement64 _InterlockedIncrement64
+#define InterlockedDecrement64 _InterlockedDecrement64
+#define InterlockedAdd64 _InterlockedAdd64
+#define InterlockedExchange64 _InterlockedExchange64
+#define InterlockedExchangeAdd64 _InterlockedExchangeAdd64
+#define InterlockedCompareExchange64 _InterlockedCompareExchange64
+#define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
+#define InterlockedExchangePointer _InterlockedExchangePointer
+
+#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
+#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
+#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+
+#if !defined(_WINBASE_)
+#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
+#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
+#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+#define QueryDepthSList(Head) ExQueryDepthSList(Head)
+#endif // !defined(_WINBASE_
+
+#endif // _M_AMD64
+
 #endif /* !__INTERLOCKED_DECLARED */
 
 NTKERNELAPI
@@ -5775,6 +5920,20 @@ FASTCALL
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
+#if defined(_M_AMD64)
+NTKERNELAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+#else
 NTHALAPI
 KIRQL
 FASTCALL
@@ -5787,6 +5946,7 @@ FASTCALL
 KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
+#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -7569,6 +7729,9 @@ IoAllocateAdapterChannel(
     IN PVOID Context
 );
 
+/** Io access routines **/
+
+#if !defined(_M_AMD64)
 NTHALAPI
 VOID
 NTAPI
@@ -7742,6 +7905,244 @@ NTAPI
 WRITE_REGISTER_USHORT(
   IN PUSHORT  Register,
   IN USHORT  Value);
+
+#else
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __inbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __indwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __inwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_PORT_UCHAR(
+  IN PUCHAR  Port)
+{
+    return __inbyte((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+ULONG
+READ_PORT_ULONG(
+  IN PULONG  Port)
+{
+    return __indword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+USHORT
+READ_PORT_USHORT(
+  IN PUSHORT  Port)
+{
+    return __inword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __movsb(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __movsd(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __movsw(Register, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_REGISTER_UCHAR(
+  IN PUCHAR Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+ULONG
+READ_REGISTER_ULONG(
+  IN PULONG Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+USHORT
+READ_REGISTER_USHORT(
+  IN PUSHORT Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __outbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __outdwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __outwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value)
+{
+    __outbyte((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value)
+{
+    __outdword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value)
+{
+    __outword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsb(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsd(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsw(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value)
+{
+	LONG Sync;
+	*Register = Value;
+	InterlockedOr(&Sync, 1);
+}
+
+#endif
 
 /** I/O manager routines **/
 
@@ -9039,12 +9440,33 @@ IoWritePartitionTableEx(
 
 /** Kernel routines **/
 
+#if defined (_M_AMD64)
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock(
+  IN PKSPIN_LOCK  SpinLock,
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+#else
 NTHALAPI
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
   IN PKSPIN_LOCK  SpinLock,
   IN PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTHALAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+#endif
 
 NTKERNELAPI
 VOID
@@ -9232,12 +9654,6 @@ KePulseEvent(
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
 
-NTKERNELAPI
-ULONGLONG
-NTAPI
-KeQueryInterruptTime(
-  VOID);
-
 NTHALAPI
 LARGE_INTEGER
 NTAPI
@@ -9250,6 +9666,13 @@ NTAPI
 KeQueryPriorityThread(
   IN PRKTHREAD  Thread);
 
+#if !defined(_M_AMD64)
+NTKERNELAPI
+ULONGLONG
+NTAPI
+KeQueryInterruptTime(
+  VOID);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -9261,6 +9684,7 @@ VOID
 NTAPI
 KeQueryTickCount(
   OUT PLARGE_INTEGER  TickCount);
+#endif
 
 NTKERNELAPI
 ULONG
@@ -9302,12 +9726,6 @@ KeRegisterBugCheckCallback(
   IN PVOID  Buffer,
   IN ULONG  Length,
   IN PUCHAR  Component);
-
-NTHALAPI
-VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLock(
-  IN PKLOCK_QUEUE_HANDLE  LockHandle);
 
 NTKERNELAPI
 VOID
@@ -9542,6 +9960,50 @@ KeRaiseIrqlToSynchLevel(
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
+#elif defined(_M_AMD64)
+
+FORCEINLINE
+KIRQL
+KeGetCurrentIrql(VOID)
+{
+    return (KIRQL)__readcr8();
+}
+
+FORCEINLINE
+VOID
+KeLowerIrql(IN KIRQL NewIrql)
+{
+    ASSERT(KeGetCurrentIrql() >= NewIrql);
+    __writecr8(NewIrql);
+}
+
+FORCEINLINE
+KIRQL
+KfRaiseIrql(IN KIRQL NewIrql)
+{
+    KIRQL OldIrql;
+
+    OldIrql = __readcr8();
+    ASSERT(OldIrql <= NewIrql);
+    __writecr8(NewIrql);
+    return OldIrql;
+}
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToDpcLevel(VOID)
+{
+    return KfRaiseIrql(DISPATCH_LEVEL);
+}
+
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToSynchLevel(VOID)
+{
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+}
+
 #elif defined(__PowerPC__)
 
 NTHALAPI
@@ -9599,9 +10061,9 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToSynchLevel(
     VOID);
-    
+
 #elif defined(_M_ARM)
-    
+
 #include <armddk.h>
 
 #else

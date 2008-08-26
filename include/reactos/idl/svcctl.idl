@@ -578,7 +578,8 @@ interface svcctl
     DWORD RQueryServiceConfigA(
         [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
-        [out] LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+        [out, unique, size_is(cbBufSize)] LPBYTE lpServiceConfig,
+        /* FIXME: should be [out] LPQUERY_SERVICE_CONFIGA lpServiceConfig, */
         [in, range(0, 1024*8)] DWORD cbBufSize,
         [out] LPBOUNDED_DWORD_8K pcbBytesNeeded);
 

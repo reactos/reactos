@@ -20,8 +20,8 @@ struct linker_set domain_set;
 
 OSKITTCP_EVENT_HANDLERS OtcpEvent = { 0 };
 
-OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
-//OSK_UINT OskitDebugTraceLevel = 0;
+//OSK_UINT OskitDebugTraceLevel = OSK_DEBUG_ULTRA;
+OSK_UINT OskitDebugTraceLevel = 0;
 
 /* SPL */
 unsigned cpl;

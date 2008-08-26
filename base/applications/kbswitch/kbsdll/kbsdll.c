@@ -88,8 +88,8 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hWinHook, code, wParam, lParam);
 }
 
-BOOL
-KbSwitchSetHooks()
+BOOL WINAPI
+KbSwitchSetHooks(VOID)
 {
     hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardHookProc, hInstance, 0);
     hLangHook = SetWindowsHookEx(WH_GETMESSAGE, LangHookProc, hInstance, 0);
@@ -101,8 +101,8 @@ KbSwitchSetHooks()
         return FALSE;
 }
 
-VOID
-KbSwitchDeleteHooks()
+VOID WINAPI
+KbSwitchDeleteHooks(VOID)
 {
     if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
     if (hLangHook) UnhookWindowsHookEx(hLangHook);

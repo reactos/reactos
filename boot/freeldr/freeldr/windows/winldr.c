@@ -332,16 +332,16 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	while (NextBd != &LoaderBlock->BootDriverListHead)
 	{
-		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, ListEntry);
+		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
 		DbgPrint((DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
-			BootDriver->DataTableEntry, &BootDriver->RegistryPath));
+			BootDriver->LdrEntry, &BootDriver->RegistryPath));
 
 		// Paths are relative (FIXME: Are they always relative?)
 
 		// Load it
 		Status = WinLdrLoadDeviceDriver(LoaderBlock, BootPath, &BootDriver->FilePath,
-			0, &BootDriver->DataTableEntry);
+			0, &BootDriver->LdrEntry);
 
 		// If loading failed - cry loudly
 		//FIXME: Maybe remove it from the list and try to continue?
@@ -353,9 +353,9 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		// Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
 		BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
-		BootDriver->DataTableEntry = PaToVa(BootDriver->DataTableEntry);
+		BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
 
-		NextBd = BootDriver->ListEntry.Flink;
+		NextBd = BootDriver->Link.Flink;
 	}
 
 	return TRUE;
@@ -620,12 +620,12 @@ WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 	while (NextBd != &LoaderBlock->BootDriverListHead)
 	{
-		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, ListEntry);
+		BootDriver = CONTAINING_RECORD(NextBd, BOOT_DRIVER_LIST_ENTRY, Link);
 
 		DbgPrint((DPRINT_WINDOWS, "BootDriver %wZ DTE %08X RegPath: %wZ\n", &BootDriver->FilePath,
-			BootDriver->DataTableEntry, &BootDriver->RegistryPath));
+			BootDriver->LdrEntry, &BootDriver->RegistryPath));
 
-		NextBd = BootDriver->ListEntry.Flink;
+		NextBd = BootDriver->Link.Flink;
 	}
 }
 

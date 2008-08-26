@@ -311,7 +311,6 @@ static void evalStack(calc_number_t *number)
     unsigned int prec;
 
     mpfr_init(ip.node.number.mf);
-    percent_mode = FALSE;
     op = pop();
     node_copy(&ip, op);
     prec = operator_list[ip.node.operation].prec;
@@ -354,6 +353,9 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
             return 1;
         return 0;
     }
+
+    if (func == RPN_OPERATOR_PERCENT)
+        percent_mode = TRUE;
 
     mpfr_init(tmp.node.number.mf);
     rpn_copy(&tmp.node.number, number);

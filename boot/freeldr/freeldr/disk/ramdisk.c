@@ -27,7 +27,7 @@ RamDiskGetDataAtOffset(IN PVOID Offset)
     //
     // Return data from our RAM Disk
     //
-    assert(((ULONG_PTR)gRamDiskBase + (ULONG_PTR)Offset) <
+    ASSERT(((ULONG_PTR)gRamDiskBase + (ULONG_PTR)Offset) <
            ((ULONG_PTR)gRamDiskBase + (ULONG_PTR)gRamDiskSize));
     return (PVOID)((ULONG_PTR)gRamDiskBase + (ULONG_PTR)(Offset));
 }
@@ -83,35 +83,41 @@ RamDiskReadLogicalSectors(IN ULONG Reserved,
 
 VOID
 NTAPI
-RamDiskCheckForVirtualFile(VOID)
+RamDiskLoadVirtualFile(IN PCHAR FileName)
 {
     PFILE RamFile;
     ULONG TotalRead, ChunkSize;
-    
+	PCHAR MsgBuffer = "Loading ramdisk...";
+    ULONG PercentPerChunk, Percent;
+
+    //
+    // Display progress
+    //
+    UiDrawProgressBarCenter(1, 100, MsgBuffer);
+
     //
     // Try opening the ramdisk file (this assumes the boot volume was opened)
-    //
-    RamFile = FsOpenFile("reactos.img");
+    //    
+    RamFile = FsOpenFile(FileName);
     if (RamFile)
     {
         //
         // Get the file size
         //
         gRamDiskSize = FsGetFileSize(RamFile);
-        TuiPrintf("Found virtual ramdisk (%dKB)\n", gRamDiskSize / 1024);
         if (!gRamDiskSize) return;
         
         //
         // Allocate memory for it
         //
         ChunkSize = 8 * 1024 * 1024;
+        Percent = PercentPerChunk = 100 / (gRamDiskSize / ChunkSize);
         gRamDiskBase = MmAllocateMemory(gRamDiskSize);
         if (!gRamDiskBase) return;
-        
+                
         //
         // Read it in chunks
         //
-        TuiPrintf("Loading ramdisk @ 0x%x...", gRamDiskBase);
         for (TotalRead = 0; TotalRead < gRamDiskSize; TotalRead += ChunkSize)
         {
             //
@@ -124,11 +130,17 @@ RamDiskCheckForVirtualFile(VOID)
                 //
                 ChunkSize = gRamDiskSize - TotalRead;
             }
-            
+
+            //
+            // Draw progress
+            //
+            UiDrawProgressBarCenter(Percent, 100, MsgBuffer);
+            Percent += PercentPerChunk;
+
             //
             // Copy the contents
             //
-            TuiPrintf(".");
+            
             if (!FsReadFile(RamFile,
                             ChunkSize,
                             NULL,
@@ -137,10 +149,9 @@ RamDiskCheckForVirtualFile(VOID)
                 //
                 // Fail
                 //
-                TuiPrintf("Failed to read ramdisk\n");
+                UiMessageBox("Failed to read ramdisk\n");
             }
         }
-        TuiPrintf("\n");
     }
 }
 

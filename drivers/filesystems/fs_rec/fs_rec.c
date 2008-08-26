@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "fs_rec.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 PKEVENT FsRecLoadSync;

@@ -31,7 +31,7 @@
 #ifdef INCLUDE_CMD_TYPE
 
 
-INT cmd_type (LPTSTR cmd, LPTSTR param)
+INT cmd_type (LPTSTR param)
 {
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;

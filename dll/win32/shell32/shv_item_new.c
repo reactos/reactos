@@ -50,11 +50,14 @@ typedef struct __SHELLNEW_ITEM__
 typedef struct
 {
     const IContextMenu2Vtbl *lpVtblContextMenu;
-    LPSHELLFOLDER pSFParent;
+    const IShellExtInitVtbl *lpvtblShellExtInit;
+    LPWSTR szPath;
+    IShellFolder *pSFParent;
     PSHELLNEW_ITEM s_SnHead;
 }INewMenuImpl;
 
 static const IContextMenu2Vtbl cmvt;
+static const IShellExtInitVtbl sei;
 static WCHAR szNew[MAX_PATH];
 
 
@@ -552,15 +555,20 @@ static void DoNewFolder(
 	if (psfhlp)
 	{
 	  LPITEMIDLIST pidl;
-	  ISFHelper_GetUniqueName(psfhlp, wszName, MAX_PATH);
-	  ISFHelper_AddFolder(psfhlp, 0, wszName, &pidl);
+
+	  if (ISFHelper_GetUniqueName(psfhlp, wszName, MAX_PATH) != S_OK)
+		  return;
+	  if (ISFHelper_AddFolder(psfhlp, 0, wszName, &pidl) != S_OK)
+		  return;
 
 	  if(psv)
 	  {
+        IShellView_Refresh(psv);
 	    /* if we are in a shellview do labeledit */
 	    IShellView_SelectItem(psv,
                     pidl,(SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE
                     |SVSI_FOCUSED|SVSI_SELECT));
+        IShellView_Refresh(psv);
 	  }
 	  SHFree(pidl);
 
@@ -569,12 +577,10 @@ static void DoNewFolder(
 }
 
 
-#if 0
 static inline INewMenuImpl *impl_from_IShellExtInit( IShellExtInit *iface )
 {
     return (INewMenuImpl *)((char*)iface - FIELD_OFFSET(INewMenuImpl, lpvtblShellExtInit));
 }
-#endif
 
 static __inline INewMenuImpl * impl_from_IContextMenu( IContextMenu2 *iface )
 {
@@ -583,22 +589,21 @@ static __inline INewMenuImpl * impl_from_IContextMenu( IContextMenu2 *iface )
 
 static HRESULT WINAPI INewItem_fnQueryInterface(INewMenuImpl * This, REFIID riid, LPVOID *ppvObj)
 {
-	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
+    TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
-	*ppvObj = NULL;
+    *ppvObj = NULL;
 
      if(IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IContextMenu) ||
         IsEqualIID(riid, &IID_IContextMenu2))
-	{
-	  *ppvObj = &This->lpVtblContextMenu;
-	}
-#if 0
-	else if(IsEqualIID(riid, &IID_IShellExtInit))
-	{
-	  *ppvObj = &This->lpvtblShellExtInit;
-	}
-#endif
+     {
+         *ppvObj = &This->lpVtblContextMenu;
+     }
+     else if(IsEqualIID(riid, &IID_IShellExtInit))
+     {
+         *ppvObj = &This->lpvtblShellExtInit;
+     }
+
 
 	if(*ppvObj)
 	{
@@ -757,12 +762,12 @@ INewItem_IContextMenu_fnHandleMenuMsg(IContextMenu2 *iface,
 	                     LPARAM lParam)
 {
     INewMenuImpl *This = impl_from_IContextMenu(iface);
-    //DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
-    //MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
+    DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
+    MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
 
-	TRACE("INewItem_IContextMenu_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+    TRACE("INewItem_IContextMenu_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
 
-#if 0
+
     switch(uMsg)
     {
        case WM_MEASUREITEM:
@@ -772,9 +777,7 @@ INewItem_IContextMenu_fnHandleMenuMsg(IContextMenu2 *iface,
              return DoDrawItem(This, (HWND)wParam, lpids);
           break;
     }
-#else
     return S_OK;
-#endif
 
 	return E_UNEXPECTED;
 }
@@ -790,7 +793,48 @@ static const IContextMenu2Vtbl cmvt =
 	INewItem_IContextMenu_fnHandleMenuMsg
 };
 
-static INewMenuImpl *cached_ow;
+static HRESULT WINAPI
+INewItem_ExtInit_fnQueryInterface( IShellExtInit* iface, REFIID riid, void** ppvObject )
+{
+    return INewItem_fnQueryInterface(impl_from_IShellExtInit(iface), riid, ppvObject);
+}
+
+static ULONG WINAPI
+INewItem_ExtInit_AddRef( IShellExtInit* iface )
+{
+    return INewItem_fnAddRef(impl_from_IShellExtInit(iface));
+}
+
+static ULONG WINAPI
+INewItem_ExtInit_Release( IShellExtInit* iface )
+{
+    return INewItem_fnRelease(impl_from_IShellExtInit(iface));
+}
+
+static HRESULT WINAPI
+INewItem_ExtInit_Initialize( IShellExtInit* iface, LPCITEMIDLIST pidlFolder,
+                              IDataObject *pdtobj, HKEY hkeyProgID )
+{
+
+    return S_OK;
+}
+
+static const IShellExtInitVtbl sei =
+{
+    INewItem_ExtInit_fnQueryInterface,
+    INewItem_ExtInit_AddRef,
+    INewItem_ExtInit_Release,
+    INewItem_ExtInit_Initialize
+};
+static INewMenuImpl *cached_ow = NULL;
+
+VOID
+INewItem_SetCurrentShellFolder(IShellFolder * psfParent)
+{
+    if (cached_ow)
+        cached_ow->pSFParent = psfParent;
+}
+
 HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv)
 {
     INewMenuImpl * ow;
@@ -798,14 +842,16 @@ HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *p
 
     if (!cached_ow)
     {
-	    ow = LocalAlloc(LMEM_ZEROINIT, sizeof(INewMenuImpl));
-	    if (!ow)
+        ow = LocalAlloc(LMEM_ZEROINIT, sizeof(INewMenuImpl));
+        if (!ow)
         {
             return E_OUTOFMEMORY;
         }
 
         ow->lpVtblContextMenu = &cmvt;
+        ow->lpvtblShellExtInit = &sei;
         ow->s_SnHead = NULL;
+        ow->szPath = NULL;
 
         if (InterlockedCompareExchangePointer((void *)&cached_ow, ow, NULL) != NULL)
         {
@@ -814,18 +860,6 @@ HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *p
         }
     }
 
-    TRACE("(%p)->()\n",cached_ow);
-
     res = INewItem_fnQueryInterface( cached_ow, riid, ppv );
     return res;
-}
-
-VOID INewItem_SetParent(LPSHELLFOLDER pSFParent)
-{
-    if (cached_ow->pSFParent)
-    {
-        IShellFolder_Release(cached_ow->pSFParent);
-    }
-    cached_ow->pSFParent = pSFParent;
-    IShellFolder_AddRef(pSFParent);
 }

@@ -317,6 +317,9 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnGetAttributesOf (IShellFolder2 * iface
                UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    static const DWORD dwNethoodAttributes =
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
     HRESULT hr = S_OK;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n", This,
@@ -330,17 +333,8 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnGetAttributesOf (IShellFolder2 * iface
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    if (cidl == 0)
-    {
-        IShellFolder *psfParent = NULL;
-        LPCITEMIDLIST rpidl = NULL;
-
-        hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
-        if(SUCCEEDED(hr))
-        {
-            SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
-            IShellFolder_Release(psfParent);
-        }
+    if(cidl == 0) {
+        *rgfInOut = dwNethoodAttributes;
     }
     else
     {
@@ -392,8 +386,7 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnGetUIObjectOf (IShellFolder2 * iface,
 
 	if (IsEqualIID (riid, &IID_IContextMenu) && (cidl >= 1))
     {
-	    pObj = (LPUNKNOWN) ISvItemCm_Constructor ((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
+        hr = CDefFolderMenu_Create2(This->pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)iface, NULL, 0, NULL, (IContextMenu**)&pObj);
 	}
     else if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1))
     {

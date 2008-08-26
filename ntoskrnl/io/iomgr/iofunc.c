@@ -11,7 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 #include "internal/io_i.h"
 
@@ -44,7 +44,6 @@ IopCleanupAfterException(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Release it */
-	IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
         IopUnlockFileObject(FileObject);
     }
 
@@ -176,7 +175,6 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Release the file lock */
-	IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
         IopUnlockFileObject(FileObject);
     }
 
@@ -325,7 +323,6 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Remember to unlock later */
@@ -542,7 +539,6 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Use File Object event */
@@ -555,12 +551,8 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
         LocalEvent = TRUE;
     }
 
-    IOTRACE(IO_API_DEBUG, "IoGetRelatedDeviceObject\n");
-
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
-    DPRINT("Device Object %x\n", DeviceObject);
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
@@ -586,14 +578,12 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     /* Check which type this is */
     if (File)
     {
-	DPRINT("QueryFile\n");
         /* Set Parameters */
         StackPtr->Parameters.QueryFile.FileInformationClass = InformationClass;
         StackPtr->Parameters.QueryFile.Length = Length;
     }
     else
     {
-	DPRINT("QueryVolume\n");
         /* Set Parameters */
         StackPtr->Parameters.QueryVolume.FsInformationClass = InformationClass;
         StackPtr->Parameters.QueryVolume.Length = Length;
@@ -603,7 +593,6 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
-    DPRINT("IoCallDriver\n");
     Status = IoCallDriver(DeviceObject, Irp);
 
     /* Check if this was synch I/O */
@@ -629,7 +618,6 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
         }
 
         /* Release the file lock */
-	IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
         IopUnlockFileObject(FileObject);
     }
     else if (Status == STATUS_PENDING)
@@ -694,7 +682,7 @@ IoSynchronousPageWrite(IN PFILE_OBJECT FileObject,
     StackPtr->FileObject = FileObject;
 
     /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
+    return IoCallDriver(DeviceObject, Irp);
 }
 
 /*
@@ -744,7 +732,7 @@ IoPageRead(IN PFILE_OBJECT FileObject,
     StackPtr->FileObject = FileObject;
 
     /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
+    return IoCallDriver(DeviceObject, Irp);
 }
 
 /*
@@ -788,7 +776,7 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -815,11 +803,9 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Use File Object event */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject -> Done\n");
         KeClearEvent(&FileObject->Event);
     }
     else
@@ -885,7 +871,6 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
         }
 
         /* Release the file lock */
-	IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
         IopUnlockFileObject(FileObject);
     }
     else if (Status == STATUS_PENDING)
@@ -1030,7 +1015,6 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
     }
     else
@@ -1166,7 +1150,6 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
         LockedForSync = TRUE;
     }
@@ -1316,7 +1299,6 @@ NtLockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
         LockedForSync = TRUE;
     }
@@ -1513,7 +1495,6 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Remember to unlock later */
@@ -1748,7 +1729,6 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Check if the caller just wants the position */
@@ -1773,7 +1753,6 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             _SEH_END;
 
             /* Release the file lock, dereference the file and return */
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
             IopUnlockFileObject(FileObject);
             ObDereferenceObject(FileObject);
             return Status;
@@ -1901,7 +1880,6 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             Status = FileObject->FinalStatus;
 
             /* Release the file lock */
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
             IopUnlockFileObject(FileObject);
         }
     }
@@ -1928,11 +1906,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         KeLowerIrql(OldIrql);
 
         /* Release the file object if we had locked it*/
-        if (!LocalEvent) 
-	{
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
-	    IopUnlockFileObject(FileObject);
-	}
+        if (!LocalEvent) IopUnlockFileObject(FileObject);
     }
 
     /* Return the Status */
@@ -2060,7 +2034,6 @@ NtReadFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Check if we don't have a byte offset avilable */
@@ -2072,7 +2045,7 @@ NtReadFile(IN HANDLE FileHandle,
             CapturedByteOffset = FileObject->CurrentByteOffset;
         }
 
-        /* Rememer we are sync */
+        /* Remember we are sync */
         Synchronous = TRUE;
     }
     else if (!(ByteOffset) &&
@@ -2186,9 +2159,10 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
-
+#if 0
     /* FIXME: VFAT SUCKS */
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
+#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -2345,7 +2319,6 @@ NtSetInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Check if the caller just wants the position */
@@ -2371,7 +2344,6 @@ NtSetInformationFile(IN HANDLE FileHandle,
             _SEH_END;
 
             /* Release the file lock, dereference the file and return */
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
             IopUnlockFileObject(FileObject);
             ObDereferenceObject(FileObject);
             return Status;
@@ -2567,7 +2539,6 @@ NtSetInformationFile(IN HANDLE FileHandle,
             Status = FileObject->FinalStatus;
 
             /* Release the file lock */
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
             IopUnlockFileObject(FileObject);
         }
     }
@@ -2594,11 +2565,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         KeLowerIrql(OldIrql);
 
         /* Release the file object if we had locked it*/
-        if (!LocalEvent) 
-	{
-	    IOTRACE(IO_API_DEBUG, "IopUnlockFileObject -> Done\n");
-	    IopUnlockFileObject(FileObject);
-	}
+        if (!LocalEvent) IopUnlockFileObject(FileObject);
     }
 
     /* Return the Status */
@@ -2713,7 +2680,6 @@ NtUnlockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
     }
     else
@@ -2927,7 +2893,6 @@ NtWriteFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
 
         /* Check if we don't have a byte offset avilable */
@@ -2939,7 +2904,7 @@ NtWriteFile(IN HANDLE FileHandle,
             CapturedByteOffset = FileObject->CurrentByteOffset;
         }
 
-        /* Rememer we are sync */
+        /* Remember we are sync */
         Synchronous = TRUE;
     }
     else if (!(ByteOffset) &&
@@ -3158,7 +3123,6 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
     }
     else
@@ -3322,7 +3286,6 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-	IOTRACE(IO_API_DEBUG, "IopLockFileObject\n");
         IopLockFileObject(FileObject);
     }
     else

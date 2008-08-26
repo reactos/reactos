@@ -88,11 +88,7 @@ typedef struct tagRecycleBin
     const IContextMenu2Vtbl *lpContextMenu2;
     const IShellExtInitVtbl *lpSEI;
     LONG refCount;
-
-    INT iIdOpen;
     INT iIdEmpty;
-    INT iIdProperties;
-
     LPITEMIDLIST pidl;
     LPCITEMIDLIST apidl;
 } RecycleBin;
@@ -180,12 +176,12 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
             || IsEqualGUID(riid, &IID_IPersistFolder2))
         *ppvObject = &This->lpPersistFolderVtbl;
 
-    if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualGUID(riid, &IID_IContextMenu2))
+	else if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualGUID(riid, &IID_IContextMenu2))
     {
         This->lpContextMenu2 = &recycleBincmVtblFolder;
         *ppvObject = &This->lpContextMenu2;
     }
-    if(IsEqualIID(riid, &IID_IShellExtInit))
+	else if(IsEqualIID(riid, &IID_IShellExtInit))
     {
         *ppvObject = &(This->lpSEI);
     }
@@ -533,10 +529,12 @@ static HRESULT WINAPI RecycleBin_GetDisplayNameOf(IShellFolder2 *This, LPCITEMID
     {
        WCHAR pszPath[100];
 
-       HCR_GetClassNameW(&CLSID_RecycleBin, pszPath, MAX_PATH);
-       pName->uType = STRRET_WSTR;
-       pName->u.pOleStr = StrDupW(pszPath);
-       return S_OK;
+       if (HCR_GetClassNameW(&CLSID_RecycleBin, pszPath, MAX_PATH))
+       {
+           pName->uType = STRRET_WSTR;
+           pName->u.pOleStr = StrDupW(pszPath);
+           return S_OK;
+       }
     }
 
     pFileDetails = _ILGetRecycleStruct(pidl);
@@ -747,6 +745,7 @@ static HRESULT WINAPI RecycleBin_IPersistFolder2_Initialize(IPersistFolder2 *ifa
     RecycleBin *This = impl_from_IPersistFolder(iface);
     TRACE("(%p, %p)\n", This, pidl);
 
+    SHFree((LPVOID)This->pidl);
     This->pidl = ILClone(pidl);
     if (This->pidl == NULL)
         return E_OUTOFMEMORY;
@@ -874,31 +873,19 @@ RecycleBin_IContextMenu2Folder_QueryContextMenu( IContextMenu2* iface, HMENU hme
     memset( &mii, 0, sizeof(mii) );
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-    szBuffer[0] = L'\0';
-    LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
-    szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-    mii.dwTypeData = (LPWSTR)szBuffer;
-    mii.cch = strlenW( mii.dwTypeData );
-    mii.wID = idCmdFirst + id++;
-    mii.fState = MFS_ENABLED;
-    mii.fType = MFT_STRING;
-
-    if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
-        return E_FAIL;
-    This->iIdOpen = 1;
-
     mii.fState = MFS_ENABLED;
     szBuffer[0] = L'\0';
     LoadStringW(shell32_hInstance, IDS_EMPTY_BITBUCKET, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+    mii.dwTypeData = szBuffer;
     mii.cch = strlenW( mii.dwTypeData );
     mii.wID = idCmdFirst + id++;
-    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
-    {
-        TRACE("RecycleBin_IContextMenu2Folder_QueryContextMenu failed to insert item properties");
+    mii.fType = MFT_STRING;
+    This->iIdEmpty = 1;
+
+    if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
         return E_FAIL;
-    }
-    This->iIdEmpty = 2;
+
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
 
@@ -908,7 +895,6 @@ RecycleBin_IContextMenu2Folder_InvokeCommand( IContextMenu2* iface, LPCMINVOKECO
     HRESULT hr;
     LPSHELLBROWSER	lpSB;
     LPSHELLVIEW lpSV = NULL;
-
     RecycleBin * This = impl_from_IContextMenu2(iface);
 
     TRACE("%p %p verb %p\n", This, lpici, lpici->lpVerb);
@@ -932,15 +918,6 @@ RecycleBin_IContextMenu2Folder_InvokeCommand( IContextMenu2* iface, LPCMINVOKECO
           }
        }
     }
-
-
-    if ( LOWORD(lpici->lpVerb) == This->iIdProperties)
-    {
-       WCHAR szDrive = 'C';
-       SH_ShowRecycleBinProperties(szDrive);
-       return S_OK;
-    }
-
     return S_OK;
 }
 
@@ -1036,7 +1013,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    char szBuffer[30] = {0};
+    WCHAR szBuffer[30] = {0};
     ULONG Count = 1;
 
     RecycleBin * This = impl_from_IContextMenu2(iface);
@@ -1044,32 +1021,32 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryContextMenu(
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
           This, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (LoadStringA(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_RESTORE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_ENABLED);
         Count++;
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_CUT, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringA(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_PROPERTIES, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
-        _InsertMenuItem(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);

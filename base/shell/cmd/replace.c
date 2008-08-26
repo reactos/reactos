@@ -358,7 +358,7 @@ INT recFindSubDirs(DWORD dwFlags,
 	return filesReplaced;
 }
 
-INT cmd_replace (LPTSTR cmd, LPTSTR param)
+INT cmd_replace (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT argc, i,filesReplaced = 0, nFiles, srcIndex = -1, destIndex = -1;

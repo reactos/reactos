@@ -19,9 +19,7 @@ typedef struct tagBATCHCONTEXT
 	INT    shiftlevel;
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	HANDLE hFind;        /* Preserve find handle when doing a for */
-	TCHAR In[MAX_PATH];
-	TCHAR Out[MAX_PATH];
-	TCHAR Err[MAX_PATH];
+	REDIRECTION *RedirList;
 	TCHAR forvar;
 	INT   bCmdBlock;
 	BOOL  bExecuteBlock[MAX_PATH];
@@ -46,7 +44,7 @@ LPTSTR FindArg (INT);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (LPTSTR);
 BOOL   Batch (LPTSTR, LPTSTR, LPTSTR);
-LPTSTR ReadBatchLine (LPBOOL);
-VOID AddBatchRedirection(TCHAR *, TCHAR *, TCHAR *);
+LPTSTR ReadBatchLine();
+VOID AddBatchRedirection(REDIRECTION **);
 
 #endif /* _BATCH_H_INCLUDED_ */

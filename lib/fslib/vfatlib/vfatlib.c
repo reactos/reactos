@@ -256,7 +256,7 @@ VfatChkdsk(
     /* Open filesystem */
     fs_open(DriveRoot,FixErrors);
 
-    if (CheckOnlyIfDirty && !fs_isdirty(DriveRoot))
+    if (CheckOnlyIfDirty && !fs_isdirty())
     {
         /* No need to check FS */
         return fs_close(FALSE);
@@ -300,6 +300,16 @@ VfatChkdsk(
     VfatPrint("%wZ: %u files, %lu/%lu clusters\n", DriveRoot,
         FsCheckTotalFiles, fs.clusters - free_clusters, fs.clusters );
 
+    if (FixErrors)
+    {
+        /* Dismount the volume */
+        fs_dismount();
+
+        /* Unlock the volume */
+        fs_lock(FALSE);
+    }
+
+    /* Close the volume */
     return fs_close(FixErrors) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 #else
     return STATUS_SUCCESS;

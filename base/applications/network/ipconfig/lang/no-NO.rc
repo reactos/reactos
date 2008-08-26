@@ -53,7 +53,7 @@ BEGIN
     \n \
     For Setclassid, fjernes ClassId hvis det ikke angis en ClassId.\n \
     \n \
-    Examples:\n \
+    Eksempler:\n \
         > ipconfig                   ... Vis informasjon.\n \
         > ipconfig /all              ... Vis detaljert informasjon\n \
         > ipconfig /renew            ... Forny alle kort\n \

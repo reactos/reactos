@@ -8,7 +8,7 @@
 	<linkerflag>-fno-rtti</linkerflag>
 	-->
 	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
-	<importlibrary definition="portcls.def" />
+	<importlibrary definition="portcls.spec.def" />
 
 	<define name="_NTDDK_" />
 	<define name="PC_NO_IMPORTS" />
@@ -48,4 +48,5 @@
 	<file>MiniportWavePci.cpp</file>
 
 	<file>portcls.rc</file>
+	<file>portcls.spec</file>
 </module>

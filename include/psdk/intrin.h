@@ -79,7 +79,7 @@
 #include "intrin_arm.h"
 #elif defined(__x86_64__)
 /* TODO: the x64 architecture shares most of the i386 intrinsics. It should be easy to support */
-#include "intrin_x86_64.h"
+#include "intrin_x86.h"
 #else
 #error Unsupported architecture
 #endif

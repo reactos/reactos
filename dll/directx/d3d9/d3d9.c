@@ -11,7 +11,6 @@
 #include "d3d9_helpers.h"
 #include "d3d9_create.h"
 #include <debug.h>
-#include <strsafe.h>
 
 #define DEBUG_MESSAGE_BUFFER_SIZE   512
 
@@ -25,31 +24,31 @@ static LPCSTR D3dError_WrongSdkVersion =
     "Recompile the application against the appropriate SDK for the installed runtime.\n"
     "\n";
 
-HRESULT Direct3DShaderValidatorCreate9(void)
+HRESULT WINAPI Direct3DShaderValidatorCreate9(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT PSGPError(void)
+HRESULT WINAPI PSGPError(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT PSGPSampleTexture(void)
+HRESULT WINAPI PSGPSampleTexture(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DebugSetLevel(void)
+HRESULT WINAPI DebugSetLevel(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DebugSetMute(DWORD dw1)
+HRESULT WINAPI DebugSetMute(DWORD dw1)
 {
     UNIMPLEMENTED
     return 0;
@@ -86,7 +85,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
         if (SDKVersion & DX_D3D9_DEBUG)
         {
             HRESULT hResult;
-            hResult = StringCbPrintfA(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
+            hResult = SafeFormatString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
             if (SUCCEEDED(hResult))
                 OutputDebugStringA(DebugMessageBuffer);
         }

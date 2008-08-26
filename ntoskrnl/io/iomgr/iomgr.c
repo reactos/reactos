@@ -13,15 +13,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-ULONG IopTraceLevel = ~0;
-
-// should go into a proper header
-VOID
-NTAPI
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type
-);
+ULONG IopTraceLevel = 0;
+BOOLEAN PnpSystemInit = FALSE;
 
 VOID
 NTAPI
@@ -75,7 +68,6 @@ extern LIST_ENTRY IopErrorLogListHead;
 extern LIST_ENTRY IopTimerQueueHead;
 extern KDPC IopTimerDpc;
 extern KTIMER IopTimer;
-extern KSPIN_LOCK CancelSpinLock;
 extern KSPIN_LOCK IoVpbLock;
 extern KSPIN_LOCK IoStatisticsLock;
 extern KSPIN_LOCK DriverReinitListLock;
@@ -470,7 +462,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitializeListHead(&LastChanceShutdownListHead);
     InitializeListHead(&FsChangeNotifyListHead);
     InitializeListHead(&IopErrorLogListHead);
-    KeInitializeSpinLock(&CancelSpinLock);
     KeInitializeSpinLock(&IoVpbLock);
     KeInitializeSpinLock(&IoStatisticsLock);
     KeInitializeSpinLock(&DriverReinitListLock);
@@ -509,10 +500,8 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IopReinitializeBootDrivers();
 
     /* Initialize PnP root relations */
-    IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
-                                           PhysicalDeviceObject,
-                                           BusRelations);
-    
+    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
+
     /* Check if this was a ramdisk boot */
     if (!_strnicmp(LoaderBlock->ArcBootDeviceName, "ramdisk(0)", 10))
     {
@@ -535,9 +524,10 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 #endif
 
     /* Load services for devices found by PnP manager */
-    IopInitializePnpServices(IopRootDeviceNode, FALSE);
+    IopInitializePnpServices(IopRootDeviceNode);
 
     /* Load system start drivers */
+    PnpSystemInit = TRUE;
     IopInitializeSystemDrivers();
 
     /* Destroy the group driver list */

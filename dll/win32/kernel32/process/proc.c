@@ -272,7 +272,7 @@ GetCurrentThread(VOID)
 DWORD STDCALL
 GetCurrentProcessId(VOID)
 {
-  return((DWORD)GetTeb()->Cid.UniqueProcess);
+  return((DWORD)GetTeb()->ClientId.UniqueProcess);
 }
 
 

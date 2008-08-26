@@ -152,7 +152,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     {
         /* This is a server-to-server call. Save our CID and do a direct call */
         DbgBreakPoint();
-        ApiMessage->Header.ClientId = NtCurrentTeb()->Cid;
+        ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
         Status = CsrServerApiRoutine(&ApiMessage->Header,
                                      &ApiMessage->Header);
        

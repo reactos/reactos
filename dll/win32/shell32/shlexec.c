@@ -129,6 +129,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                         used++;
                         if (used < len)
                             *res++ = '"';
+                        break;
                     }
                     else
                     {
@@ -146,7 +147,10 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                     }
                     break;
                 }
-                /* else fall through */
+                else
+                {
+                    break;
+                }
             case '1':
                 if (!done || (*fmt == '1'))
                 {
@@ -1298,7 +1302,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     static const WCHAR wFile[] = {'f','i','l','e',0};
     static const WCHAR wHttp[] = {'h','t','t','p',':','/','/',0};
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
-    static const WCHAR wProperties[] = { 'p','r','o','p','e','r','t','i','e','s',0 };
+    //static const WCHAR wProperties[] = { 'p','r','o','p','e','r','t','i','e','s',0 };
     static const DWORD unsupportedFlags =
         SEE_MASK_INVOKEIDLIST  | SEE_MASK_ICON         | SEE_MASK_HOTKEY |
         SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI |
@@ -1403,14 +1407,14 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         HeapFree(GetProcessHeap(), 0, wszApplicationName);
         return TRUE;
     }
-
+#if 0
     if (sei_tmp.lpVerb && !wcscmp(sei_tmp.lpVerb, wProperties))
     {
         SH_ShowPropertiesDialog(sei_tmp.lpFile);
         sei->hInstApp = (HINSTANCE) 33;
         return TRUE;
     }
-
+#endif
     if (sei_tmp.fMask & SEE_MASK_CLASSALL)
     {
 	/* launch a document by fileclass like 'WordPad.Document.1' */

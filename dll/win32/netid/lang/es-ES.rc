@@ -14,7 +14,7 @@ BEGIN
     LTEXT       "ReactOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
     LTEXT       "Descripción del equipo:", IDC_STATIC, 6, 40, 85, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "Nombre completo de equipo:", IDC_STATIC, 6, 66, 64, 14
+    LTEXT       "Nombre completo del equipo:", IDC_STATIC, 6, 66, 64, 16
     LTEXT       "(Defecto)", IDC_COMPUTERNAME, 98, 68, 144, 11
     LTEXT       "Grupo de trabajo:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     LTEXT       "(vacío)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9

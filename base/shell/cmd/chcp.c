@@ -17,7 +17,7 @@
 
 #ifdef INCLUDE_CMD_CHCP
 
-INT CommandChcp (LPTSTR cmd, LPTSTR param)
+INT CommandChcp (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    args;

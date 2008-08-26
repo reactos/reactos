@@ -1,13 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/profile.c
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel
+ * FILE:            ntoskrnl/ke/profobj.c
  * PURPOSE:         Kernel Profiling
- *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/
+
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
@@ -54,8 +54,9 @@ KeStartProfile(PKPROFILE Profile,
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
-    BOOLEAN FreeBuffer = TRUE;
+    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;;
     PKPROCESS ProfileProcess;
+    PLIST_ENTRY NextEntry;
 
     /* Allocate a buffer first, before we raise IRQL */
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -68,8 +69,8 @@ KeStartProfile(PKPROFILE Profile,
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's not running */
-    if (!Profile->Started) {
-
+    if (!Profile->Started)
+    {
         /* Set it as Started */
         Profile->Buffer = Buffer;
         Profile->Started = TRUE;
@@ -77,28 +78,40 @@ KeStartProfile(PKPROFILE Profile,
         /* Get the process, if any */
         ProfileProcess = Profile->Process;
 
-        /* Insert it into the Process List or Global List */
-        if (ProfileProcess) {
-
+        /* Check where we should insert it */
+        if (ProfileProcess)
+        {
+            /* Insert it into the Process List */
             InsertTailList(&ProfileProcess->ProfileListHead, &Profile->ProfileListEntry);
-
-        } else {
-
+        }
+        else
+        {
+            /* Insert it into the Global List */
             InsertTailList(&KiProfileListHead, &Profile->ProfileListEntry);
         }
 
-        /* Check if this type of profile (source) is already running */
-        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
+        /* Start looping */
+        for (NextEntry = KiProfileSourceListHead.Flink;
+             NextEntry != &KiProfileSourceListHead;
+             NextEntry = NextEntry->Flink)
         {
+            /* Get the entry */
+            CurrentSource = CONTAINING_RECORD(NextEntry,
+                                              KPROFILE_SOURCE_OBJECT,
+                                              ListEntry);
+
             /* Check if it's the same as the one being requested now */
-            if (CurrentSource->Source == Profile->Source) {
+            if (CurrentSource->Source == Profile->Source)
+            {
+                /* It is, break out */
+                SourceFound = TRUE;
                 break;
             }
         }
 
         /* See if the loop found something */
-        if (!CurrentSource) {
-
+        if (!SourceFound)
+        {
             /* Nothing found, use our allocated buffer */
             CurrentSource = SourceBuffer;
 
@@ -119,7 +132,7 @@ KeStartProfile(PKPROFILE Profile,
     //HalStartProfileInterrupt(Profile->Source);
 
     /* Free the pool */
-    if (!FreeBuffer) ExFreePool(SourceBuffer);
+    if (FreeBuffer) ExFreePool(SourceBuffer);
 }
 
 BOOLEAN
@@ -128,23 +141,37 @@ KeStopProfile(PKPROFILE Profile)
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT CurrentSource = NULL;
+    PLIST_ENTRY NextEntry;
+    BOOLEAN SourceFound = FALSE;
 
     /* Raise to PROFILE_LEVEL and acquire spinlock */
     KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's running */
-    if (Profile->Started) {
-
+    if (Profile->Started)
+    {
         /* Remove it from the list and disable */
         RemoveEntryList(&Profile->ProfileListEntry);
         Profile->Started = FALSE;
 
-        /* Find the Source Object */
-        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
+        /* Start looping */
+        for (NextEntry = KiProfileSourceListHead.Flink;
+             NextEntry != &KiProfileSourceListHead;
+             NextEntry = NextEntry->Flink)
         {
-            if (CurrentSource->Source == Profile->Source) {
-                /* Remove it */
+            /* Get the entry */
+            CurrentSource = CONTAINING_RECORD(NextEntry,
+                                              KPROFILE_SOURCE_OBJECT,
+                                              ListEntry);
+
+            /* Check if this is the Source Object */
+            if (CurrentSource->Source == Profile->Source)
+            {
+                /* Remember we found one */
+                SourceFound = TRUE;
+
+                /* Remove it and break out */
                 RemoveEntryList(&CurrentSource->ListEntry);
                 break;
             }
@@ -160,7 +187,7 @@ KeStopProfile(PKPROFILE Profile)
     //HalStopProfileInterrupt(Profile->Source);
 
     /* Free the Source Object */
-    if (CurrentSource) ExFreePool(CurrentSource);
+    if (SourceFound) ExFreePool(CurrentSource);
 
     /* FIXME */
     return FALSE;
@@ -171,13 +198,13 @@ STDCALL
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
 {
     /* Check if this is the timer profile */
-    if (ProfileSource == ProfileTime) {
-
+    if (ProfileSource == ProfileTime)
+    {
         /* Return the good old 100ns sampling interval */
         return KiProfileTimeInterval;
-
-    } else {
-
+    }
+    else
+    {
         /* Request it from HAL. FIXME: What structure is used? */
         HalQuerySystemInformation(HalProfileSourceInformation,
                                   sizeof(NULL),
@@ -194,18 +221,17 @@ KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
                      ULONG Interval)
 {
     /* Check if this is the timer profile */
-    if (ProfileSource == ProfileTime) {
-
+    if (ProfileSource == ProfileTime)
+    {
         /* Set the good old 100ns sampling interval */
         KiProfileTimeInterval = Interval;
-
-    } else {
-
+    }
+    else
+    {
         /* Set it with HAL. FIXME: What structure is used? */
         HalSetSystemInformation(HalProfileSourceInformation,
                                   sizeof(NULL),
                                   NULL);
-
     }
 }
 
@@ -228,16 +254,22 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
 {
     PULONG BucketValue;
     PKPROFILE Profile;
+    PLIST_ENTRY NextEntry;
 
     /* Loop the List */
-    LIST_FOR_EACH(Profile, ListHead, KPROFILE, ProfileListEntry)
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        Profile = CONTAINING_RECORD(NextEntry, KPROFILE, ProfileListEntry);
+
         /* Check if the source is good, and if it's within the range */
 #ifdef _M_IX86
         if ((Profile->Source != Source) ||
             (TrapFrame->Eip < (ULONG_PTR)Profile->RangeBase) ||
-            (TrapFrame->Eip > (ULONG_PTR)Profile->RangeLimit)) {
-
+            (TrapFrame->Eip > (ULONG_PTR)Profile->RangeLimit))
+        {
             continue;
         }
 

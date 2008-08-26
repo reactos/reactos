@@ -366,7 +366,6 @@
 			</directory>
 		</if>
 		<file>anonmem.c</file>
-		<file>aspace.c</file>
 		<file>balance.c</file>
 		<file>cont.c</file>
 		<file>drvlck.c</file>
@@ -382,7 +381,6 @@
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pager.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
 		<file>pool.c</file>
@@ -444,6 +442,11 @@
 		<if property="ARCH" value="arm">
 			<directory name="arm">
 				<file>rtlexcpt.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>stack.S</file>
 			</directory>
 		</if>
 		<file>libsupp.c</file>

@@ -9,7 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "vfat.h"
 
 /*
@@ -69,7 +69,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   if (FirstCluster == 0)
   {
     DbgPrint("OffsetToCluster is called with FirstCluster = 0!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 
   if (FirstCluster == 1)
@@ -194,7 +194,6 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   if (FirstCluster == 1)
   {
     // Directory of FAT12/16 needs a special handling
-    CHECKPOINT;
     if (ReadOffset.u.LowPart + Length > DeviceExt->FatInfo.rootDirectorySectors * BytesPerSector)
     {
       Length = DeviceExt->FatInfo.rootDirectorySectors * BytesPerSector - ReadOffset.u.LowPart;
@@ -233,7 +232,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
                       ROUND_DOWN(ReadOffset.u.LowPart, BytesPerCluster),
                       &CorrectCluster, FALSE);
       if (CorrectCluster != CurrentCluster)
-        KEBUGCHECK(FAT_FILE_SYSTEM);
+        KeBugCheck(FAT_FILE_SYSTEM);
     }
 #endif
   }
@@ -442,7 +441,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
                          ROUND_DOWN(WriteOffset.u.LowPart, BytesPerCluster),
                          &CorrectCluster, FALSE);
          if (CorrectCluster != CurrentCluster)
-            KEBUGCHECK(FAT_FILE_SYSTEM);
+            KeBugCheck(FAT_FILE_SYSTEM);
       }
 #endif
    }
@@ -660,7 +659,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
      !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
    {
       // cached read
-      CHECKPOINT;
       Status = STATUS_SUCCESS;
       if (ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
       {
@@ -668,7 +666,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
          Status = /*STATUS_END_OF_FILE*/STATUS_SUCCESS;
       }
 
-      CHECKPOINT;
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
         CcInitializeCacheMap(IrpContext->FileObject,
@@ -684,7 +681,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
          Status = IrpContext->Irp->IoStatus.Status;//STATUS_PENDING;
          goto ByeBye;
       }
-      CHECKPOINT;
       if (!NT_SUCCESS(IrpContext->Irp->IoStatus.Status))
       {
         Status = IrpContext->Irp->IoStatus.Status;
@@ -693,7 +689,6 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    else
    {
       // non cached read
-      CHECKPOINT;
       if (ByteOffset.QuadPart + Length > ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
       {
          Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
@@ -951,7 +946,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 	                                        IrpContext->DeviceExt, &AllocationSize);
       if (!NT_SUCCESS (Status))
       {
-         CHECKPOINT;
          goto ByeBye;
       }
    }
@@ -960,7 +954,6 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
    {
       // cached write
-      CHECKPOINT;
 
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
@@ -984,12 +977,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       {
          Status = STATUS_UNSUCCESSFUL;
       }
-      CHECKPOINT;
    }
    else
    {
       // non cached write
-      CHECKPOINT;
 
       if (ByteOffset.QuadPart > OldFileSize.QuadPart)
       {

@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "fs_rec.h"
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -22,8 +22,6 @@ FsRecIsFatVolume(IN PPACKED_BOOT_SECTOR PackedBootSector)
     BIOS_PARAMETER_BLOCK Bpb;
     BOOLEAN Result = TRUE;
     PAGED_CODE();
-
-    DPRINT("CAN HAS FAT FS?\n");
 
     RtlZeroMemory(&Bpb, sizeof(BIOS_PARAMETER_BLOCK));
 
@@ -93,7 +91,6 @@ FsRecIsFatVolume(IN PPACKED_BOOT_SECTOR PackedBootSector)
     }
 
     /* Return the result */
-    DPRINT("CAN HAS FAT FS -> %s\n", Result ? "TRUE" : "FALSE");
     return Result;
 }
 
@@ -113,9 +110,6 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 
     /* Get the I/O Stack and check the function type */
     Stack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("VfatFsControl -> %d\n", Stack->MinorFunction);
-
     switch (Stack->MinorFunction)
     {
         case IRP_MN_MOUNT_VOLUME:

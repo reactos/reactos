@@ -78,7 +78,7 @@ typedef struct
 static const IAutoCompleteVtbl acvt;
 static const IAutoComplete2Vtbl ac2vt;
 
-static inline IAutoCompleteImpl *impl_from_IAutoComplete2( IAutoComplete2 *iface )
+static IAutoCompleteImpl * impl_from_IAutoComplete2( IAutoComplete2 *iface )
 {
     return (IAutoCompleteImpl *)((char*)iface - FIELD_OFFSET(IAutoCompleteImpl, lpvtblAutoComplete2));
 }

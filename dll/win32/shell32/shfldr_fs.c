@@ -653,10 +653,17 @@ IShellFolder_fnGetUIObjectOf (IShellFolder2 * iface,
 
         if (IsEqualIID (riid, &IID_IContextMenu) && (cidl >= 1)) {
             hr = CDefFolderMenu_Create2(This->pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)iface, NULL, 0, NULL, (IContextMenu**)&pObj);
-        } else if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1)) {
+        } else if (IsEqualIID (riid, &IID_IDataObject)){
+			if (cidl >= 1) {
             pObj = (LPUNKNOWN) IDataObject_Constructor (hwndOwner,
              This->pidlRoot, apidl, cidl);
             hr = S_OK;
+			}
+			else
+			{
+                pObj = (LPUNKNOWN) IDataObject_Constructor (hwndOwner, This->pidlRoot, (LPCITEMIDLIST*)&This->pidlRoot, 1);
+                hr = S_OK;
+			}
         } else if (IsEqualIID (riid, &IID_IExtractIconA) && (cidl == 1)) {
             pidl = ILCombine (This->pidlRoot, apidl[0]);
             pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
@@ -879,6 +886,16 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
     }
 
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
+    if (!memcmp(szSrc, szDest, (wcslen(szDest)+1) * sizeof(WCHAR)))
+    {
+        /* src and destination is the same */
+        HRESULT hr = S_OK;
+        if (pPidlOut)
+            hr = _ILCreateFromPathW(szDest, pPidlOut);
+
+        return hr;
+    }
+
 
     if (MoveFileW (szSrc, szDest)) {
         HRESULT hr = S_OK;
@@ -1269,39 +1286,109 @@ static HRESULT WINAPI
 ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
                        LPCITEMIDLIST * apidl)
 {
-    UINT i;
     IPersistFolder2 *ppf2 = NULL;
-    char szSrcPath[MAX_PATH],
-      szDstPath[MAX_PATH];
+    WCHAR szSrcPath[MAX_PATH];
+    WCHAR szTargetPath[MAX_PATH];
+    SHFILEOPSTRUCTW op;
+    LPITEMIDLIST pidl;
+    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList;
+    int res;
+    STRRET strRet;
 
     IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(%p,%u,%p)\n", This, pSFFrom, cidl, apidl);
 
-    IShellFolder_QueryInterface (pSFFrom, &IID_IPersistFolder2,
-     (LPVOID *) & ppf2);
-    if (ppf2) {
-        LPITEMIDLIST pidl;
-
-        if (SUCCEEDED (IPersistFolder2_GetCurFolder (ppf2, &pidl))) {
-            for (i = 0; i < cidl; i++) {
-                SHGetPathFromIDListA (pidl, szSrcPath);
-                PathAddBackslashA (szSrcPath);
-                _ILSimpleGetText (apidl[i], szSrcPath + strlen (szSrcPath),
-                 MAX_PATH);
-
-                if (!WideCharToMultiByte(CP_ACP, 0, This->sPathTarget, -1, szDstPath, MAX_PATH, NULL, NULL))
-                    szDstPath[0] = '\0';
-                PathAddBackslashA (szDstPath);
-                _ILSimpleGetText (apidl[i], szDstPath + strlen (szDstPath),
-                 MAX_PATH);
-                MESSAGE ("would copy %s to %s\n", szSrcPath, szDstPath);
-            }
-            SHFree (pidl);
+    IShellFolder_QueryInterface (pSFFrom, &IID_IPersistFolder2, (LPVOID *) & ppf2);
+    if (ppf2) 
+    {
+        if (FAILED(IPersistFolder2_GetCurFolder (ppf2, &pidl)))
+        {
+            IPersistFolder2_Release(ppf2);
+            return E_FAIL;
         }
-        IPersistFolder2_Release (ppf2);
+        IPersistFolder2_Release(ppf2);
+
+        if (FAILED(IShellFolder_GetDisplayNameOf(pSFFrom, pidl, SHGDN_FORPARSING, &strRet)))
+        {
+            SHFree (pidl);
+            return E_FAIL;
+        }
+
+        if (FAILED(StrRetToBufW(&strRet, pidl, szSrcPath, MAX_PATH)))
+        {
+            SHFree (pidl);
+            return E_FAIL;
+        }
+        SHFree (pidl);
+
+        pszSrc = PathAddBackslashW (szSrcPath);
+
+        wcscpy(szTargetPath, This->sPathTarget);
+        pszTarget = PathAddBackslashW (szTargetPath);
+
+        pszSrcList = build_paths_list(szSrcPath, cidl, apidl);
+        pszTargetList = build_paths_list(szTargetPath, cidl, apidl);
+
+        if (!pszSrcList || !pszTargetList)
+        {
+            if (pszSrcList)
+                HeapFree(GetProcessHeap(), 0, pszSrcList);
+
+            if (pszTargetList)
+                HeapFree(GetProcessHeap(), 0, pszTargetList);
+
+            SHFree (pidl);
+            IPersistFolder2_Release (ppf2);
+            return E_OUTOFMEMORY;
+        }
+        ZeroMemory(&op, sizeof(op));
+        if (!pszSrcList[0])
+        {
+            /* remove trailing backslash */
+            pszSrc--;
+            pszSrc[0] = L'\0';
+            op.pFrom = szSrcPath;
+        }
+        else
+        {
+            op.pFrom = pszSrcList;
+        }
+
+        if (!pszTargetList[0])
+        {
+            /* remove trailing backslash */
+            if (pszTarget - szTargetPath > 3)
+            {
+                pszTarget--;
+                pszTarget[0] = L'\0';
+            }
+            else
+            {
+                pszTarget[1] = L'\0';
+            }
+
+            op.pTo = szTargetPath;
+        }
+        else
+        {
+            op.pTo = pszTargetList;
+        }
+        op.hwnd = GetActiveWindow();
+        op.wFunc = FO_COPY;
+        op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+
+        res = SHFileOperationW(&op);
+
+        HeapFree(GetProcessHeap(), 0, pszSrc);
+        HeapFree(GetProcessHeap(), 0, pszTarget);
+
+        if (res)
+            return E_FAIL;
+        else
+            return S_OK;
     }
-    return S_OK;
+    return E_FAIL;
 }
 
 static const ISFHelperVtbl shvt =

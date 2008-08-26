@@ -9,7 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "vfat.h"
 
 /* GLOBALS ******************************************************************/
@@ -653,7 +653,6 @@ GetNextClusterExtend(PDEVICE_EXTENSION DeviceExt,
 	  DeviceExt, CurrentCluster);
 
   ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
-  CHECKPOINT;
   /*
    * If the file hasn't any clusters allocated then we need special
    * handling

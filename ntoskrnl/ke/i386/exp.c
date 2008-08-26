@@ -72,7 +72,7 @@ KeInitExceptions(VOID)
     extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 
     /* Loop the IDT */
-    for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)
+    for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
     {
         /* Save the current Selector */
         FlippedSelector = KiIdt[i].Selector;
@@ -113,7 +113,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
     /* Check if the caller gave us a mask */
     if (!DrMask)
     {
-        /* He didn't use the one from the thread */
+        /* He didn't, use the one from the thread */
         Mask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
     }
     else
@@ -266,7 +266,7 @@ ULONG
 NTAPI
 KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
-    /* If this was V86 Mode */
+    /* Check if this was V86 Mode */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK)
     {
         /* Just return it */
@@ -274,7 +274,7 @@ KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
     }
     else if (TrapFrame->SegCs & MODE_MASK)
     {
-        /* Usermode, return the User SS */
+        /* User mode, return the User SS */
         return TrapFrame->HardwareSegSs | RPL_MASK;
     }
     else
@@ -599,7 +599,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Check if thread has IOPL and force it enabled if so */
-    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= 0x3000;
+    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= EFLAGS_IOPL;
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);

@@ -31,7 +31,7 @@ extern "C" {
     
 #ifndef NO_PORT_MACROS
 
-#if defined(_X86_)
+#if defined(_X86_) || defined(_M_AMD64)
 #define READ_REGISTER_UCHAR(r) (*(volatile UCHAR *)(r))
 #define READ_REGISTER_USHORT(r) (*(volatile USHORT *)(r))
 #define READ_REGISTER_ULONG(r) (*(volatile ULONG *)(r))

@@ -647,7 +647,7 @@ PsImpersonateClient(IN PETHREAD Thread,
         }
 
         /* Check if this is a job, which we don't support yet */
-        if (Thread->ThreadsProcess->Job) KEBUGCHECK(0);
+        if (Thread->ThreadsProcess->Job) ASSERT(FALSE);
 
         /* Lock thread security */
         PspLockThreadSecurityExclusive(Thread);

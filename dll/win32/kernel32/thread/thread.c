@@ -319,7 +319,7 @@ DWORD
 WINAPI
 GetCurrentThreadId(VOID)
 {
-    return (DWORD)(NtCurrentTeb()->Cid).UniqueThread;
+    return (DWORD)(NtCurrentTeb()->ClientId).UniqueThread;
 }
 
 /*

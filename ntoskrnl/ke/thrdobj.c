@@ -416,7 +416,7 @@ KeRundownThread(VOID)
         if (Mutant->ApcDisable)
         {
             /* Bugcheck the system */
-            KEBUGCHECKEX(0, //THREAD_TERMINATE_HELD_MUTEX,
+            KeBugCheckEx(THREAD_TERMINATE_HELD_MUTEX,
                          (ULONG_PTR)Thread,
                          (ULONG_PTR)Mutant,
                          0,
@@ -811,7 +811,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->KernelStackResident = TRUE;
 
     /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncThreadProcessViews(Thread, (PEPROCESS)Process);
+    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;

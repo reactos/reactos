@@ -78,6 +78,26 @@ HandleUnbind(VOID)
 #endif
 
 
+static DWORD
+ScmRpcStatusToWinError(RPC_STATUS Status)
+{
+    switch (Status)
+    {
+        case RPC_X_SS_IN_NULL_CONTEXT:
+            return ERROR_INVALID_HANDLE;
+
+        case RPC_X_NULL_REF_POINTER:
+            return ERROR_INVALID_PARAMETER;
+
+        case STATUS_ACCESS_VIOLATION:
+            return ERROR_INVALID_ADDRESS;
+
+        default:
+            return (DWORD)Status;
+    }
+}
+
+
 /**********************************************************************
  *  ChangeServiceConfig2A
  *
@@ -116,9 +136,18 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     HandleBind();
 
-    dwError = RChangeServiceConfig2A(BindingHandle,
-                                     (SC_RPC_HANDLE)hService,
-                                     Info);
+    _SEH_TRY
+    {
+        dwError = RChangeServiceConfig2A(BindingHandle,
+                                         (SC_RPC_HANDLE)hService,
+                                         Info);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RChangeServiceConfig2A() failed (Error %lu)\n", dwError);
@@ -170,9 +199,18 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     HandleBind();
 
-    dwError = RChangeServiceConfig2W(BindingHandle,
-                                     (SC_RPC_HANDLE)hService,
-                                     Info);
+    _SEH_TRY
+    {
+        dwError = RChangeServiceConfig2W(BindingHandle,
+                                         (SC_RPC_HANDLE)hService,
+                                         Info);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RChangeServiceConfig2W() failed (Error %lu)\n", dwError);
@@ -226,21 +264,30 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RChangeServiceConfigA(BindingHandle,
-                                    (SC_RPC_HANDLE)hService,
-                                    dwServiceType,
-                                    dwStartType,
-                                    dwErrorControl,
-                                    (LPSTR)lpBinaryPathName,
-                                    (LPSTR)lpLoadOrderGroup,
-                                    lpdwTagId,
-                                    (LPSTR)lpDependencies,
-                                    dwDependenciesLength,
-                                    (LPSTR)lpServiceStartName,
-                                    NULL,              /* FIXME: lpPassword */
-                                    0,                 /* FIXME: dwPasswordLength */
-                                    (LPSTR)lpDisplayName);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RChangeServiceConfigA(BindingHandle,
+                                        (SC_RPC_HANDLE)hService,
+                                        dwServiceType,
+                                        dwStartType,
+                                        dwErrorControl,
+                                        (LPSTR)lpBinaryPathName,
+                                        (LPSTR)lpLoadOrderGroup,
+                                        lpdwTagId,
+                                        (LPSTR)lpDependencies,
+                                        dwDependenciesLength,
+                                        (LPSTR)lpServiceStartName,
+                                        NULL,              /* FIXME: lpPassword */
+                                        0,                 /* FIXME: dwPasswordLength */
+                                        (LPSTR)lpDisplayName);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RChangeServiceConfigA() failed (Error %lu)\n", dwError);
@@ -294,21 +341,30 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RChangeServiceConfigW(BindingHandle,
-                                    (SC_RPC_HANDLE)hService,
-                                    dwServiceType,
-                                    dwStartType,
-                                    dwErrorControl,
-                                    (LPWSTR)lpBinaryPathName,
-                                    (LPWSTR)lpLoadOrderGroup,
-                                    lpdwTagId,
-                                    (LPBYTE)lpDependencies,
-                                    dwDependenciesLength,
-                                    (LPWSTR)lpServiceStartName,
-                                    NULL,              /* FIXME: lpPassword */
-                                    0,                 /* FIXME: dwPasswordLength */
-                                    (LPWSTR)lpDisplayName);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RChangeServiceConfigW(BindingHandle,
+                                        (SC_RPC_HANDLE)hService,
+                                        dwServiceType,
+                                        dwStartType,
+                                        dwErrorControl,
+                                        (LPWSTR)lpBinaryPathName,
+                                        (LPWSTR)lpLoadOrderGroup,
+                                        lpdwTagId,
+                                        (LPBYTE)lpDependencies,
+                                        dwDependenciesLength,
+                                        (LPWSTR)lpServiceStartName,
+                                        NULL,              /* FIXME: lpPassword */
+                                        0,                 /* FIXME: dwPasswordLength */
+                                        (LPWSTR)lpDisplayName);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RChangeServiceConfigW() failed (Error %lu)\n", dwError);
@@ -334,9 +390,18 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RCloseServiceHandle(BindingHandle,
-                                  (LPSC_RPC_HANDLE)&hSCObject);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RCloseServiceHandle(BindingHandle,
+                                      (LPSC_RPC_HANDLE)&hSCObject);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError)
     {
         ERR("RCloseServiceHandle() failed (Error %lu)\n", dwError);
@@ -367,11 +432,20 @@ ControlService(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RControlService(BindingHandle,
-                              (SC_RPC_HANDLE)hService,
-                              dwControl,
-                              lpServiceStatus);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RControlService(BindingHandle,
+                                  (SC_RPC_HANDLE)hService,
+                                  dwControl,
+                                  lpServiceStatus);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RControlService() failed (Error %lu)\n", dwError);
@@ -401,7 +475,6 @@ ControlServiceEx(IN SC_HANDLE hService,
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
-
 
 
 /**********************************************************************
@@ -616,24 +689,33 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RCreateServiceW(BindingHandle,
-                              (SC_RPC_HANDLE)hSCManager,
-                              (LPWSTR)lpServiceName,
-                              (LPWSTR)lpDisplayName,
-                              dwDesiredAccess,
-                              dwServiceType,
-                              dwStartType,
-                              dwErrorControl,
-                              (LPWSTR)lpBinaryPathName,
-                              (LPWSTR)lpLoadOrderGroup,
-                              lpdwTagId,
-                              (LPBYTE)lpDependencies,
-                              dwDependenciesLength,
-                              (LPWSTR)lpServiceStartName,
-                              NULL,              /* FIXME: lpPassword */
-                              0,                 /* FIXME: dwPasswordLength */
-                              (SC_RPC_HANDLE *)&hService);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RCreateServiceW(BindingHandle,
+                                  (SC_RPC_HANDLE)hSCManager,
+                                  (LPWSTR)lpServiceName,
+                                  (LPWSTR)lpDisplayName,
+                                  dwDesiredAccess,
+                                  dwServiceType,
+                                  dwStartType,
+                                  dwErrorControl,
+                                  (LPWSTR)lpBinaryPathName,
+                                  (LPWSTR)lpLoadOrderGroup,
+                                  lpdwTagId,
+                                  (LPBYTE)lpDependencies,
+                                  dwDependenciesLength,
+                                  (LPWSTR)lpServiceStartName,
+                                  NULL,              /* FIXME: lpPassword */
+                                  0,                 /* FIXME: dwPasswordLength */
+                                  (SC_RPC_HANDLE *)&hService);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RCreateServiceW() failed (Error %lu)\n", dwError);
@@ -659,9 +741,18 @@ DeleteService(SC_HANDLE hService)
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RDeleteService(BindingHandle,
-                             (SC_RPC_HANDLE)hService);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RDeleteService(BindingHandle,
+                                 (SC_RPC_HANDLE)hService);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RDeleteService() failed (Error %lu)\n", dwError);
@@ -687,20 +778,28 @@ EnumDependentServicesA(SC_HANDLE hService,
                        LPDWORD lpServicesReturned)
 {
     LPENUM_SERVICE_STATUSA lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusA() called\n");
 
     HandleBind();
 
-    dwError = REnumDependentServicesA(BindingHandle,
-                                      (SC_RPC_HANDLE)hService,
-                                      dwServiceState,
-                                      (LPBYTE)lpServices,
-                                      cbBufSize,
-                                      pcbBytesNeeded,
-                                      lpServicesReturned);
+    _SEH_TRY
+    {
+        dwError = REnumDependentServicesA(BindingHandle,
+                                          (SC_RPC_HANDLE)hService,
+                                          dwServiceState,
+                                          (LPBYTE)lpServices,
+                                          cbBufSize,
+                                          pcbBytesNeeded,
+                                          lpServicesReturned);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -743,20 +842,28 @@ EnumDependentServicesW(SC_HANDLE hService,
                        LPDWORD lpServicesReturned)
 {
     LPENUM_SERVICE_STATUSW lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusW() called\n");
 
     HandleBind();
 
-    dwError = REnumDependentServicesW(BindingHandle,
-                                      (SC_RPC_HANDLE)hService,
-                                      dwServiceState,
-                                      (LPBYTE)lpServices,
-                                      cbBufSize,
-                                      pcbBytesNeeded,
-                                      lpServicesReturned);
+    _SEH_TRY
+    {
+        dwError = REnumDependentServicesW(BindingHandle,
+                                          (SC_RPC_HANDLE)hService,
+                                          dwServiceState,
+                                          (LPBYTE)lpServices,
+                                          cbBufSize,
+                                          pcbBytesNeeded,
+                                          lpServicesReturned);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -825,22 +932,30 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
                     LPDWORD lpResumeHandle)
 {
     LPENUM_SERVICE_STATUSA lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusA() called\n");
 
     HandleBind();
 
-    dwError = REnumServicesStatusA(BindingHandle,
-                                   (SC_RPC_HANDLE)hSCManager,
-                                   dwServiceType,
-                                   dwServiceState,
-                                   (LPBYTE)lpServices,
-                                   cbBufSize,
-                                   pcbBytesNeeded,
-                                   lpServicesReturned,
-                                   lpResumeHandle);
+    _SEH_TRY
+    {
+        dwError = REnumServicesStatusA(BindingHandle,
+                                       (SC_RPC_HANDLE)hSCManager,
+                                       dwServiceType,
+                                       dwServiceState,
+                                       (LPBYTE)lpServices,
+                                       cbBufSize,
+                                       pcbBytesNeeded,
+                                       lpServicesReturned,
+                                       lpResumeHandle);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -885,22 +1000,30 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
                     LPDWORD lpResumeHandle)
 {
     LPENUM_SERVICE_STATUSW lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusW() called\n");
 
     HandleBind();
 
-    dwError = REnumServicesStatusW(BindingHandle,
-                                   (SC_RPC_HANDLE)hSCManager,
-                                   dwServiceType,
-                                   dwServiceState,
-                                   (LPBYTE)lpServices,
-                                   cbBufSize,
-                                   pcbBytesNeeded,
-                                   lpServicesReturned,
-                                   lpResumeHandle);
+    _SEH_TRY
+    {
+        dwError = REnumServicesStatusW(BindingHandle,
+                                       (SC_RPC_HANDLE)hSCManager,
+                                       dwServiceType,
+                                       dwServiceState,
+                                       (LPBYTE)lpServices,
+                                       cbBufSize,
+                                       pcbBytesNeeded,
+                                       lpServicesReturned,
+                                       lpResumeHandle);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -947,24 +1070,32 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
                       LPCSTR pszGroupName)
 {
     LPENUM_SERVICE_STATUS_PROCESSA lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusExA() called\n");
 
     HandleBind();
 
-    dwError = REnumServicesStatusExA(BindingHandle,
-                                     (SC_RPC_HANDLE)hSCManager,
-                                     InfoLevel,
-                                     dwServiceType,
-                                     dwServiceState,
-                                     (LPBYTE)lpServices,
-                                     cbBufSize,
-                                     pcbBytesNeeded,
-                                     lpServicesReturned,
-                                     lpResumeHandle,
-                                     (LPSTR)pszGroupName);
+    _SEH_TRY
+    {
+        dwError = REnumServicesStatusExA(BindingHandle,
+                                         (SC_RPC_HANDLE)hSCManager,
+                                         InfoLevel,
+                                         dwServiceType,
+                                         dwServiceState,
+                                         (LPBYTE)lpServices,
+                                         cbBufSize,
+                                         pcbBytesNeeded,
+                                         lpServicesReturned,
+                                         lpResumeHandle,
+                                         (LPSTR)pszGroupName);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     if (dwError == ERROR_MORE_DATA)
     {
@@ -1019,24 +1150,32 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
                       LPCWSTR pszGroupName)
 {
     LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtr;
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     DWORD dwCount;
 
     TRACE("EnumServicesStatusExW() called\n");
 
     HandleBind();
 
-    dwError = REnumServicesStatusExW(BindingHandle,
-                                     (SC_RPC_HANDLE)hSCManager,
-                                     InfoLevel,
-                                     dwServiceType,
-                                     dwServiceState,
-                                     (LPBYTE)lpServices,
-                                     cbBufSize,
-                                     pcbBytesNeeded,
-                                     lpServicesReturned,
-                                     lpResumeHandle,
-                                     (LPWSTR)pszGroupName);
+    _SEH_TRY
+    {
+        dwError = REnumServicesStatusExW(BindingHandle,
+                                         (SC_RPC_HANDLE)hSCManager,
+                                         InfoLevel,
+                                         dwServiceType,
+                                         dwServiceState,
+                                         (LPBYTE)lpServices,
+                                         cbBufSize,
+                                         pcbBytesNeeded,
+                                         lpServicesReturned,
+                                         lpResumeHandle,
+                                         (LPWSTR)pszGroupName);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     if (dwError == ERROR_MORE_DATA)
     {
@@ -1090,11 +1229,23 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    dwError = RGetServiceDisplayNameA(BindingHandle,
-                                      (SC_RPC_HANDLE)hSCManager,
-                                      (LPSTR)lpServiceName,
-                                      lpDisplayName,
-                                      lpcchBuffer);
+    _SEH_TRY
+    {
+        dwError = RGetServiceDisplayNameA(BindingHandle,
+                                          (SC_RPC_HANDLE)hSCManager,
+                                          (LPSTR)lpServiceName,
+                                          lpDisplayName,
+                                          lpcchBuffer);
+    }
+    _SEH_HANDLE
+    {
+        /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+
+
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
@@ -1125,11 +1276,20 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    dwError = RGetServiceDisplayNameW(BindingHandle,
-                                      (SC_RPC_HANDLE)hSCManager,
-                                      (LPWSTR)lpServiceName,
-                                      lpDisplayName,
-                                      lpcchBuffer);
+    _SEH_TRY
+    {
+        dwError = RGetServiceDisplayNameW(BindingHandle,
+                                          (SC_RPC_HANDLE)hSCManager,
+                                          (LPWSTR)lpServiceName,
+                                          lpDisplayName,
+                                          lpcchBuffer);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
@@ -1160,11 +1320,20 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    dwError = RGetServiceKeyNameA(BindingHandle,
-                                  (SC_RPC_HANDLE)hSCManager,
-                                  (LPSTR)lpDisplayName,
-                                  lpServiceName,
-                                  lpcchBuffer);
+    _SEH_TRY
+    {
+        dwError = RGetServiceKeyNameA(BindingHandle,
+                                      (SC_RPC_HANDLE)hSCManager,
+                                      (LPSTR)lpDisplayName,
+                                      lpServiceName,
+                                      lpcchBuffer);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RGetServiceKeyNameA() failed (Error %lu)\n", dwError);
@@ -1195,11 +1364,20 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    dwError = RGetServiceKeyNameW(BindingHandle,
-                                  (SC_RPC_HANDLE)hSCManager,
-                                  (LPWSTR)lpDisplayName,
-                                  lpServiceName,
-                                  lpcchBuffer);
+    _SEH_TRY
+    {
+        dwError = RGetServiceKeyNameW(BindingHandle,
+                                      (SC_RPC_HANDLE)hSCManager,
+                                      (LPWSTR)lpDisplayName,
+                                      lpServiceName,
+                                      lpcchBuffer);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RGetServiceKeyNameW() failed (Error %lu)\n", dwError);
@@ -1228,10 +1406,19 @@ LockServiceDatabase(SC_HANDLE hSCManager)
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RLockServiceDatabase(BindingHandle,
-                                   (SC_RPC_HANDLE)hSCManager,
-                                   (SC_RPC_LOCK *)&hLock);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RLockServiceDatabase(BindingHandle,
+                                       (SC_RPC_HANDLE)hSCManager,
+                                       (SC_RPC_LOCK *)&hLock);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RLockServiceDatabase() failed (Error %lu)\n", dwError);
@@ -1305,12 +1492,21 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = ROpenSCManagerA(BindingHandle,
-                              (LPSTR)lpMachineName,
-                              (LPSTR)lpDatabaseName,
-                              dwDesiredAccess,
-                              (SC_RPC_HANDLE *)&hScm);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = ROpenSCManagerA(BindingHandle,
+                                  (LPSTR)lpMachineName,
+                                  (LPSTR)lpDatabaseName,
+                                  dwDesiredAccess,
+                                  (SC_RPC_HANDLE *)&hScm);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ROpenSCManagerA() failed (Error %lu)\n", dwError);
@@ -1344,12 +1540,21 @@ OpenSCManagerW(LPCWSTR lpMachineName,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = ROpenSCManagerW(BindingHandle,
-                              (LPWSTR)lpMachineName,
-                              (LPWSTR)lpDatabaseName,
-                              dwDesiredAccess,
-                              (SC_RPC_HANDLE *)&hScm);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = ROpenSCManagerW(BindingHandle,
+                                  (LPWSTR)lpMachineName,
+                                  (LPWSTR)lpDatabaseName,
+                                  dwDesiredAccess,
+                                  (SC_RPC_HANDLE *)&hScm);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ROpenSCManagerW() failed (Error %lu)\n", dwError);
@@ -1381,12 +1586,21 @@ OpenServiceA(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = ROpenServiceA(BindingHandle,
-                            (SC_RPC_HANDLE)hSCManager,
-                            (LPSTR)lpServiceName,
-                            dwDesiredAccess,
-                            (SC_RPC_HANDLE *)&hService);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = ROpenServiceA(BindingHandle,
+                                (SC_RPC_HANDLE)hSCManager,
+                                (LPSTR)lpServiceName,
+                                dwDesiredAccess,
+                                (SC_RPC_HANDLE *)&hService);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ROpenServiceA() failed (Error %lu)\n", dwError);
@@ -1418,12 +1632,21 @@ OpenServiceW(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = ROpenServiceW(BindingHandle,
-                            (SC_RPC_HANDLE)hSCManager,
-                            (LPWSTR)lpServiceName,
-                            dwDesiredAccess,
-                            (SC_RPC_HANDLE *)&hService);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = ROpenServiceW(BindingHandle,
+                                (SC_RPC_HANDLE)hSCManager,
+                                (LPWSTR)lpServiceName,
+                                dwDesiredAccess,
+                                (SC_RPC_HANDLE *)&hService);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         if (dwError == ERROR_SERVICE_DOES_NOT_EXIST)
@@ -1458,12 +1681,21 @@ QueryServiceConfigA(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceConfigA(BindingHandle,
-                                   (SC_RPC_HANDLE)hService,
-                                   lpServiceConfig,
-                                   cbBufSize,
-                                   pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceConfigA(BindingHandle,
+                                       (SC_RPC_HANDLE)hService,
+                                       (LPBYTE)lpServiceConfig,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceConfigA() failed (Error %lu)\n", dwError);
@@ -1521,12 +1753,21 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceConfigW(BindingHandle,
-                                   (SC_RPC_HANDLE)hService,
-                                   (LPBYTE)lpServiceConfig,
-                                   cbBufSize,
-                                   pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceConfigW(BindingHandle,
+                                       (SC_RPC_HANDLE)hService,
+                                       (LPBYTE)lpServiceConfig,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         if (dwError == ERROR_INSUFFICIENT_BUFFER)
@@ -1588,13 +1829,22 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceConfig2A(BindingHandle,
-                                    (SC_RPC_HANDLE)hService,
-                                    dwInfoLevel,
-                                    lpBuffer,
-                                    cbBufSize,
-                                    pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceConfig2A(BindingHandle,
+                                        (SC_RPC_HANDLE)hService,
+                                        dwInfoLevel,
+                                        lpBuffer,
+                                        cbBufSize,
+                                        pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceConfig2A() failed (Error %lu)\n", dwError);
@@ -1663,13 +1913,22 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceConfig2W(BindingHandle,
-                                    (SC_RPC_HANDLE)hService,
-                                    dwInfoLevel,
-                                    lpBuffer,
-                                    cbBufSize,
-                                    pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceConfig2W(BindingHandle,
+                                        (SC_RPC_HANDLE)hService,
+                                        dwInfoLevel,
+                                        lpBuffer,
+                                        cbBufSize,
+                                        pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceConfig2W() failed (Error %lu)\n", dwError);
@@ -1736,12 +1995,21 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceLockStatusA(BindingHandle,
-                                       (SC_RPC_HANDLE)hSCManager,
-                                       lpLockStatus,
-                                       cbBufSize,
-                                       pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceLockStatusA(BindingHandle,
+                                           (SC_RPC_HANDLE)hSCManager,
+                                           lpLockStatus,
+                                           cbBufSize,
+                                           pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
@@ -1778,12 +2046,21 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceLockStatusW(BindingHandle,
-                                       (SC_RPC_HANDLE)hSCManager,
-                                       lpLockStatus,
-                                       cbBufSize,
-                                       pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceLockStatusW(BindingHandle,
+                                           (SC_RPC_HANDLE)hSCManager,
+                                           lpLockStatus,
+                                           cbBufSize,
+                                           pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
@@ -1822,13 +2099,22 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceObjectSecurity(BindingHandle,
-                                          (SC_RPC_HANDLE)hService,
-                                          dwSecurityInformation,
-                                          (LPBYTE)lpSecurityDescriptor,
-                                          cbBufSize,
-                                          pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceObjectSecurity(BindingHandle,
+                                              (SC_RPC_HANDLE)hService,
+                                              dwSecurityInformation,
+                                              (LPBYTE)lpSecurityDescriptor,
+                                              cbBufSize,
+                                              pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
@@ -1883,12 +2169,20 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RSetServiceObjectSecurity(BindingHandle,
-                                        (SC_RPC_HANDLE)hService,
-                                        dwSecurityInformation,
-                                        (LPBYTE)SelfRelativeSD,
-                                        Length);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RSetServiceObjectSecurity(BindingHandle,
+                                            (SC_RPC_HANDLE)hService,
+                                            dwSecurityInformation,
+                                            (LPBYTE)SelfRelativeSD,
+                                            Length);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
 
@@ -1919,10 +2213,19 @@ QueryServiceStatus(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceStatus(BindingHandle,
-                                  (SC_RPC_HANDLE)hService,
-                                  lpServiceStatus);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceStatus(BindingHandle,
+                                      (SC_RPC_HANDLE)hService,
+                                      lpServiceStatus);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceStatus() failed (Error %lu)\n", dwError);
@@ -1952,13 +2255,22 @@ QueryServiceStatusEx(SC_HANDLE hService,
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RQueryServiceStatusEx(BindingHandle,
-                                    (SC_RPC_HANDLE)hService,
-                                    InfoLevel,
-                                    lpBuffer,
-                                    cbBufSize,
-                                    pcbBytesNeeded);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RQueryServiceStatusEx(BindingHandle,
+                                        (SC_RPC_HANDLE)hService,
+                                        InfoLevel,
+                                        lpBuffer,
+                                        cbBufSize,
+                                        pcbBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RQueryServiceStatusEx() failed (Error %lu)\n", dwError);
@@ -1982,11 +2294,18 @@ StartServiceA(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    dwError = RStartServiceA(BindingHandle,
-                             (SC_RPC_HANDLE)hService,
-                             dwNumServiceArgs,
-                             (LPSTRING_PTRSA)lpServiceArgVectors);
-
+    _SEH_TRY
+    {
+        dwError = RStartServiceA(BindingHandle,
+                                 (SC_RPC_HANDLE)hService,
+                                 dwNumServiceArgs,
+                                 (LPSTRING_PTRSA)lpServiceArgVectors);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -2011,10 +2330,18 @@ StartServiceW(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    dwError = RStartServiceW(BindingHandle,
-                             (SC_RPC_HANDLE)hService,
-                             dwNumServiceArgs,
-                             (LPSTRING_PTRSW)lpServiceArgVectors);
+    _SEH_TRY
+    {
+        dwError = RStartServiceW(BindingHandle,
+                                 (SC_RPC_HANDLE)hService,
+                                 dwNumServiceArgs,
+                                 (LPSTRING_PTRSW)lpServiceArgVectors);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -2041,9 +2368,18 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RUnlockServiceDatabase(BindingHandle,
-                                     (SC_RPC_LOCK)ScLock);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RUnlockServiceDatabase(BindingHandle,
+                                         (SC_RPC_LOCK)ScLock);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
@@ -2069,10 +2405,19 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
     HandleBind();
 
-    /* Call to services.exe using RPC */
-    dwError = RNotifyBootConfigStatus(BindingHandle,
-                                      NULL,
-                                      BootAcceptable);
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        dwError = RNotifyBootConfigStatus(BindingHandle,
+                                          NULL,
+                                          BootAcceptable);
+    }
+    _SEH_HANDLE
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);

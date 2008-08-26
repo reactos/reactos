@@ -1,8 +1,7 @@
-
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/irp.c
+ * FILE:            ntoskrnl/io/iomgr/irp.c
  * PURPOSE:         IRP Handling Functions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
@@ -627,7 +626,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return Irp;
+    if (!Irp) return NULL;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -731,7 +730,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
     Irp->UserIosb = IoStatusBlock;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
-    /* Set the Status Block after all is done */
+    /* Return the IRP */
     IOTRACE(IO_IRP_DEBUG,
             "%s - Built IRP %p with Major, Buffer, DO %lx %p %p\n",
             __FUNCTION__,
@@ -763,7 +762,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return Irp;
+    if (!Irp) return NULL;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -857,6 +856,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
             }
             else
             {
+                /* Clear the flags */
                 Irp->Flags = 0;
             }
 
@@ -969,7 +969,8 @@ BOOLEAN
 NTAPI
 IoCancelIrp(IN PIRP Irp)
 {
-    KIRQL OldIrql, IrqlAtEntry;
+    KIRQL OldIrql;
+    KIRQL IrqlAtEntry;
     PDRIVER_CANCEL CancelRoutine;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
@@ -1000,15 +1001,12 @@ IoCancelIrp(IN PIRP Irp)
         /* Set the cancel IRQL And call the routine */
         Irp->CancelIrql = OldIrql;
         CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+	ASSERT(IrqlAtEntry == KeGetCurrentIrql());
         return TRUE;
     }
 
     /* Otherwise, release the cancel lock and fail */
     IoReleaseCancelSpinLock(OldIrql);
-
-    /* Post Check: Verify that we don't leak IRQL from the cancel routine */
-    ASSERT(IrqlAtEntry == KeGetCurrentIrql());
-
     return FALSE;
 }
 
@@ -1063,7 +1061,12 @@ IoCancelThreadIo(IN PETHREAD Thread)
          * Don't stay here forever if some broken driver doesn't complete
          * the IRP.
          */
-        if (!(Retries--)) IopRemoveThreadIrp();
+        if (!(Retries--))
+        {
+            /* Print out a message and remove the IRP */
+            DPRINT1("Broken driver did not complete!\n");
+            IopRemoveThreadIrp();
+        }
 
         /* Raise the IRQL Again */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -1081,7 +1084,7 @@ NTAPI
 IoCallDriver(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
-    /* Call fast call */
+    /* Call fastcall */
     return IofCallDriver(DeviceObject, Irp);
 }
 
@@ -1117,7 +1120,7 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
     PDRIVER_OBJECT DriverObject;
-    PIO_STACK_LOCATION Param;
+    PIO_STACK_LOCATION StackPtr;
 
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
@@ -1131,15 +1134,15 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Now update the stack location */
-    Param = IoGetNextIrpStackLocation(Irp);
-    Irp->Tail.Overlay.CurrentStackLocation = Param;
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    Irp->Tail.Overlay.CurrentStackLocation = StackPtr;
 
     /* Get the Device Object */
-    Param->DeviceObject = DeviceObject;
+    StackPtr->DeviceObject = DeviceObject;
 
     /* Call it */
-    return DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
-                                                             Irp);
+    return DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject,
+                                                                Irp);
 }
 
 FORCEINLINE
@@ -1422,10 +1425,9 @@ IofCompleteRequest(IN PIRP Irp,
 
 NTSTATUS
 NTAPI
-IopSynchronousCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
+IopSynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp,
+                         IN PVOID Context)
 {
     if (Irp->PendingReturned)
         KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
@@ -1469,6 +1471,7 @@ IoForwardIrpSynchronously(IN PDEVICE_OBJECT DeviceObject,
         KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
     }
 
+    /* Return success */
     return TRUE;
 }
 
@@ -1555,10 +1558,12 @@ IoGetPagingIoPriority(IN PIRP Irp)
 /*
  * @implemented
  */
-PEPROCESS NTAPI
+PEPROCESS
+NTAPI
 IoGetRequestorProcess(IN PIRP Irp)
 {
-    return(Irp->Tail.Overlay.Thread->ThreadsProcess);
+    /* Return the requestor process */
+    return Irp->Tail.Overlay.Thread->ThreadsProcess;
 }
 
 /*
@@ -1568,6 +1573,7 @@ ULONG
 NTAPI
 IoGetRequestorProcessId(IN PIRP Irp)
 {
+    /* Return the requestor process' id */
     return (ULONG)(IoGetRequestorProcess(Irp)->UniqueProcessId);
 }
 
@@ -1591,6 +1597,7 @@ PIRP
 NTAPI
 IoGetTopLevelIrp(VOID)
 {
+    /* Return the IRP */
     return (PIRP)PsGetCurrentThread()->TopLevelIrp;
 }
 
@@ -1741,5 +1748,3 @@ IoSetTopLevelIrp(IN PIRP Irp)
     /* Set the IRP */
     PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
 }
-
-/* EOF */
