@@ -2512,7 +2512,7 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
     mii.fType = MFT_STRING;
     if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
         return E_FAIL;
-    This->iIdOpen = 0;
+    This->iIdOpen = 1;
 
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
@@ -2788,7 +2788,8 @@ static HRESULT WINAPI
 ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 {
     IShellLinkImpl *This = impl_from_IContextMenu(iface);
-    static const WCHAR szOpen[] = { 'O','p','e','n',0 };
+    static const WCHAR szOpen[] = { 'o','p','e','n',0 };
+    static const WCHAR szCplOpen[] = { 'c','p','l','o','p','e','n',0 };
     SHELLEXECUTEINFOW sei;
     HWND hwnd = NULL; /* FIXME: get using interface set from IObjectWithSite */
     LPWSTR args = NULL;
@@ -2800,16 +2801,12 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     if ( lpici->cbSize < sizeof (CMINVOKECOMMANDINFO) )
         return E_INVALIDARG;
 
-    if ( lpici->lpVerb != MAKEINTRESOURCEA(This->iIdOpen) )
-    {
-        ERR("Unknown id %d != %d\n", (INT)lpici->lpVerb, This->iIdOpen );
-        return E_INVALIDARG;
-    }
-
     r = IShellLinkW_Resolve( (IShellLinkW*)&(This->lpvtblw), hwnd, 0 );
     if ( FAILED( r ) )
+    {
+        TRACE("failed to resolve component with error 0x%08x", r);
         return r;
-
+    }
     if ( This->sComponent )
     {
         path = shelllink_get_msi_component_path( This->sComponent );
@@ -2847,10 +2844,15 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     sei.fMask = SEE_MASK_UNICODE | (lpici->fMask & (SEE_MASK_NOASYNC|SEE_MASK_ASYNCOK|SEE_MASK_FLAG_NO_UI));
     sei.lpFile = path;
     sei.nShow = This->iShowCmd;
-    sei.lpIDList = This->pPidl;
     sei.lpDirectory = This->sWorkDir;
     sei.lpParameters = args;
     sei.lpVerb = szOpen;
+
+    // HACK for ShellExecuteExW
+    if (!wcsstr(This->sPath, L".cpl"))
+        sei.lpVerb = szOpen;
+    else
+        sei.lpVerb = szCplOpen;
 
     if( ShellExecuteExW( &sei ) )
         r = S_OK;
