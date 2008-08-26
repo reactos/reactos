@@ -8,7 +8,7 @@
 #include <wingdi.h>
 
 #if !defined(_MSC_VER)
-#include "../../psdk/winuser.h"
+#include_next "winuser.h"
 #endif
 
 #define WS_EX_TRAYWINDOW 0x80000000L
@@ -16,8 +16,8 @@
 #define WS_EX_MANAGED    0x40000000L /* Window managed by the window system */
 #define LB_CARETOFF      0x01a4
 
-UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
-UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
+WINUSERAPI UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
+WINUSERAPI UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
 
 typedef struct tagCWPSTRUCT *LPCWPSTRUCT;
 
@@ -31,12 +31,13 @@ typedef struct tagCWPSTRUCT *LPCWPSTRUCT;
 #endif
 
 /* MapVirtualKey translation types */
+#if 0
 #define MAPVK_VK_TO_VSC     0
 #define MAPVK_VSC_TO_VK     1
 #define MAPVK_VK_TO_CHAR    2
 #define MAPVK_VSC_TO_VK_EX  3
 #define MAPVK_VK_TO_VSC_EX  4
-
+#endif
 #define WM_SETVISIBLE           0x0009
 
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
