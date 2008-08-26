@@ -470,7 +470,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
 		TRACE ("[BATCH: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(rest));
-		Batch (szFullName, first, rest);
+		Batch (szFullName, first, rest, FALSE);
 	}
 	else
 	{
@@ -1024,14 +1024,16 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 	return NULL;
 }
 
+
+
 LPCTSTR
 GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 {
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
+	DWORD len;
 
-	if ( varNameLen )
-		*varNameLen = 1;
+	*varNameLen = 1;
 
 	switch ( *varName )
 	{
@@ -1039,10 +1041,35 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 		varName++;
 		if (_tcsncicmp(varName, _T("dp0"), 3) == 0)
 		{
-			if ( varNameLen )
-				*varNameLen = 4;
-			return bc->BatchFilePath;
+			*varNameLen = 4;
+			len = _tcsrchr(bc->BatchFilePath, _T('\\')) + 1 - bc->BatchFilePath;
+			if (!GrowIfNecessary(len + 1, &ret, &retlen))
+				return NULL;
+			memcpy(ret, bc->BatchFilePath, len * sizeof(TCHAR));
+			ret[len] = _T('\0');
+			return ret;
 		}
+
+		*varNameLen = 2;
+		if (*varName >= _T('0') && *varName <= _T('9')) {
+			LPTSTR arg = FindArg(*varName - _T('0'));
+
+			if (*arg != _T('"'))
+				return arg;
+
+			/* Exclude the leading and trailing quotes */
+			arg++;
+			len = _tcslen(arg);
+			if (arg[len - 1] == _T('"'))
+				len--;
+
+			if (!GrowIfNecessary(len + 1, &ret, &retlen))
+				return NULL;
+			memcpy(ret, arg, len * sizeof(TCHAR));
+			ret[len] = _T('\0');
+			return ret;
+		}
+		break;
 	case _T('0'):
 	case _T('1'):
 	case _T('2'):
@@ -1063,16 +1090,6 @@ GetBatchVar ( LPCTSTR varName, UINT* varNameLen )
 
 	case _T('%'):
 		return _T("%");
-
-	case _T('?'):
-		/* TODO FIXME 10 is only max size for 32-bit */
-		if ( !GrowIfNecessary ( 11, &ret, &retlen ) )
-			return NULL;
-		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
-		ret[retlen-1] = 0;
-		if ( varNameLen )
-			*varNameLen = 1;
-		return ret;
 	}
 	return NULL;
 }

@@ -75,15 +75,7 @@ INT cmd_goto (LPTSTR param)
 	/* jump to end of the file */
 	if ( _tcsicmp( param, _T(":eof"))==0)
 	{
-		/* when lCallPosition != 0 we have to return to the caller */
-		if (bc->lCallPosition == 0)
-			SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
-		else
-		{
-			SetFilePointer (bc->hBatchFile, (LONG)bc->lCallPosition, &bc->lCallPositionHigh, FILE_BEGIN);
-			bc->lCallPosition = 0;
-			bc->lCallPositionHigh = 0;
-		}
+		SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
 		return 0;
 	}
 
