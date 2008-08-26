@@ -37,7 +37,7 @@ FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PFSRTL_PER_STREAM_CONTEXT
 NTAPI
@@ -45,8 +45,46 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
                                     IN PVOID OwnerId OPTIONAL,
                                     IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    PLIST_ENTRY NextEntry;
+    PFSRTL_PER_STREAM_CONTEXT TmpPerStreamContext, PerStreamContext = NULL;
+
+    ASSERT(StreamContext);
+
+    if (!(StreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
+    {
+        return NULL;
+    }
+
+    ExAcquireFastMutex(StreamContext->FastMutex);
+    /* If list is empty, no need to browse it */
+    if (!IsListEmpty(&(StreamContext->FilterContexts)))
+    {
+        for (NextEntry = StreamContext->FilterContexts.Flink;
+             NextEntry != &(StreamContext->FilterContexts);
+             NextEntry = NextEntry->Flink)
+        {
+            /* If we don't have any criteria for search, first entry will be enough */
+            if (!OwnerId && !InstanceId)
+            {
+                PerStreamContext = (PFSRTL_PER_STREAM_CONTEXT)NextEntry;
+                break;
+            }
+            /* Else, we've to find something that matches with the parameters. */
+            else
+            {
+                TmpPerStreamContext = CONTAINING_RECORD(NextEntry, FSRTL_PER_STREAM_CONTEXT, Links);
+                if ((InstanceId && TmpPerStreamContext->InstanceId == InstanceId && TmpPerStreamContext->OwnerId == OwnerId) ||
+                    (OwnerId && TmpPerStreamContext->OwnerId == OwnerId))
+                {
+                    PerStreamContext = TmpPerStreamContext;
+                    break;
+                }
+            }
+        }
+    }
+    ExReleaseFastMutex(StreamContext->FastMutex);
+
+    return PerStreamContext;
 }
 
 /*
