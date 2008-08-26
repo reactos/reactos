@@ -415,7 +415,7 @@
  @ stub MakeAbsoluteSD2
  @ stdcall MakeAbsoluteSD(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
  @ stdcall MakeSelfRelativeSD(ptr ptr ptr)
- @ stdcall MapGenericMask (ptr ptr) NTDLL.RtlMapGenericMask
+ @ stdcall MapGenericMask(ptr ptr) ntdll.MapGenericMask
  @ stdcall NotifyBootConfigStatus(long)
  @ stdcall NotifyChangeEventLog (long long)
  @ stdcall ObjectCloseAuditAlarmA(str ptr long)

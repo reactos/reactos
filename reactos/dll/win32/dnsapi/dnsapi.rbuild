@@ -9,7 +9,6 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>
-	<library>msvcrt</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<directory name="dnsapi">

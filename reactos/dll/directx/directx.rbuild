@@ -44,7 +44,4 @@
 		<xi:include href="quartz/quartz.rbuild" />
 	</directory>
 
-	<directory name="wine">
-		<xi:include href="wine/wine.rbuild" />
-	</directory>
 </group>

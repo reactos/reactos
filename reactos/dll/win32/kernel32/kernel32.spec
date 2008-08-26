@@ -310,10 +310,10 @@
 @ stdcall GetConsoleAliasesW(wstr long wstr)
 @ stdcall GetConsoleCP()
 @ stub GetConsoleCharType
-@ stdcall GetConsoleCommandHistoryA(long long long) #check
-@ stdcall GetConsoleCommandHistoryLengthA(long)#check
-@ stdcall GetConsoleCommandHistoryLengthW(long)#check
-@ stdcall GetConsoleCommandHistoryW(long long long)#check
+@ stdcall GetConsoleCommandHistoryA(long long long)
+@ stdcall GetConsoleCommandHistoryLengthA(long)
+@ stdcall GetConsoleCommandHistoryLengthW(long)
+@ stdcall GetConsoleCommandHistoryW(long long long)
 @ stdcall GetConsoleCursorInfo(long ptr)
 @ stub GetConsoleCursorMode
 @ stdcall GetConsoleDisplayMode(ptr)
@@ -763,6 +763,8 @@
 @ stdcall RtlFillMemory(ptr long long) ntdll.RtlFillMemory
 @ stdcall RtlMoveMemory(ptr ptr long) ntdll.RtlMoveMemory
 @ stdcall RtlUnwind(ptr ptr ptr long) ntdll.RtlUnwind
+@ stdcall RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
+@ stdcall RtlLookupFunctionEntry(ptr ptr ptr) ntdll.RtlLookupFunctionEntry
 @ stdcall RtlZeroMemory(ptr long) ntdll.RtlZeroMemory
 @ stdcall ScrollConsoleScreenBufferA(long ptr ptr ptr ptr)
 @ stdcall ScrollConsoleScreenBufferW(long ptr ptr ptr ptr)

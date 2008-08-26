@@ -88,7 +88,7 @@ static LPSTR load_messageA( HMODULE module, UINT id, WORD lang )
     TRACE("module = %p, id = %08x\n", module, id );
 
     if (!module) module = GetModuleHandleW( NULL );
-    Status = RtlFindMessage( module, (ULONG) RT_MESSAGETABLE, lang, id, &mre );
+    Status = RtlFindMessage( module, (ULONG_PTR) RT_MESSAGETABLE, lang, id, &mre );
     if (!NT_SUCCESS(Status))
         return NULL;
 
@@ -119,7 +119,7 @@ static LPWSTR load_messageW( HMODULE module, UINT id, WORD lang )
     TRACE("module = %p, id = %08x\n", module, id );
 
     if (!module) module = GetModuleHandleW( NULL );
-    Status = RtlFindMessage( module, (ULONG) RT_MESSAGETABLE, lang, id, &mre );
+    Status = RtlFindMessage( module, (ULONG_PTR) RT_MESSAGETABLE, lang, id, &mre );
     if (!NT_SUCCESS(Status))
         return NULL;
 

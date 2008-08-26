@@ -581,6 +581,7 @@ RtlLookupElementGenericTable
 RtlLookupElementGenericTableAvl
 RtlLookupElementGenericTableFull
 RtlLookupElementGenericTableFullAvl
+RtlLookupFunctionEntry ;WIN64
 RtlMakeSelfRelativeSD
 RtlMapGenericMask
 RtlMergeRangeLists

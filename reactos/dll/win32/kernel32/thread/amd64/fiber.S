@@ -12,10 +12,10 @@
 #define CONTEXT_FULL                    0x10007
 #define CONTEXT_FLOATING_POINT          0xF
 
-.globl _SwitchToFiber@4
+.globl _SwitchToFiber
 .intel_syntax noprefix
 
-_SwitchToFiber@4:
+_SwitchToFiber:
     /* Get the TEB */
     mov edx, fs:[KGDT_R3_TEB]
     

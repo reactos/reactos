@@ -185,7 +185,7 @@ CheckNtMartaPresent(VOID)
 {
     DWORD ErrorCode;
 
-    if (InterlockedCompareExchangePointer(&NtMarta,
+    if (InterlockedCompareExchangePointer((PVOID)&NtMarta,
                                           NULL,
                                           NULL) == NULL)
     {
@@ -196,7 +196,7 @@ CheckNtMartaPresent(VOID)
         if (ErrorCode == ERROR_SUCCESS)
         {
             /* try change the NtMarta pointer */
-            if (InterlockedCompareExchangePointer(&NtMarta,
+            if (InterlockedCompareExchangePointer((PVOID)&NtMarta,
                                                   &NtMartaStatic,
                                                   NULL) != NULL)
             {
@@ -223,7 +223,7 @@ CheckNtMartaPresent(VOID)
 
 VOID UnloadNtMarta(VOID)
 {
-    if (InterlockedExchangePointer(&NtMarta,
+    if (InterlockedExchangePointer((PVOID)&NtMarta,
                                    NULL) != NULL)
     {
         FreeLibrary(NtMartaStatic.hDllInstance);

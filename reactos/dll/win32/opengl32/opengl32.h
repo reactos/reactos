@@ -11,9 +11,7 @@
 #ifndef OPENGL32_PRIVATE_H
 #define OPENGL32_PRIVATE_H
 
-#ifdef _MSC_VER
 #define snwprintf _snwprintf
-#endif
 
 #ifdef __cplusplus
 extern "C" {

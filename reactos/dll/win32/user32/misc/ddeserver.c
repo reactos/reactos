@@ -804,7 +804,7 @@ static	WDML_QUEUE_STATE WDML_ServerHandleExecute(WDML_CONV* pConv, WDML_XACT* pX
     case DDE_FNOTPROCESSED:
 	break;
     }
-    WDML_PostAck(pConv, WDML_SERVER_SIDE, 0, fBusy, fAck, (UINT)pXAct->hMem, 0, 0);
+    WDML_PostAck(pConv, WDML_SERVER_SIDE, 0, fBusy, fAck, (UINT_PTR)pXAct->hMem, 0, 0);
 
     return WDML_QS_HANDLED;
 }

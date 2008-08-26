@@ -9,7 +9,6 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>setupapi</library>
-	<library>msvcrt</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>

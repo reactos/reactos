@@ -5,7 +5,6 @@
 	<define name="_WIN32_WINNT=0x0500" />
 	<library>ntdll</library>
 	<library>kernel32</library>
-	<library>msvcrt</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<file>dhcpcsvc.c</file>
