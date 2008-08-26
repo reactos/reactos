@@ -510,7 +510,7 @@ KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
 
   KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
   KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
-  KernelName.Buffer = ExAllocatePoolWithTag(PagedPool, KernelName.MaximumLength, TAG_KDBS);
+  KernelName.Buffer = ExAllocatePoolWithTag(NonPagedPool, KernelName.MaximumLength, TAG_KDBS);
   if (NULL == KernelName.Buffer)
     {
       return;
