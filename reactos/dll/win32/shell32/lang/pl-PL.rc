@@ -624,6 +624,9 @@ BEGIN
 	IDS_SHV_COLUMN_COMMENTS     "Komentarze"
 	IDS_SHV_COLUMN_LOCATION     "Lokalizacja"
 	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_DEVNAME      "Device Name"
+	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
+	IDS_SHV_COLUMN_OWNER        "Owner"
 
 	/* special folders */
 	IDS_DESKTOP                 "Pulpit"
@@ -631,6 +634,7 @@ BEGIN
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kosz"
 	IDS_CONTROLPANEL            "Panel Sterowania"
 	IDS_ADMINISTRATIVETOOLS     "Narzêdzia Administracyjne"
+	IDS_NETWORKCONNECTION       "Network Connections"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Du¿e Ikony"

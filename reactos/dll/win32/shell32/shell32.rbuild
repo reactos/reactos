@@ -33,7 +33,6 @@
 	<file>classes.c</file>
 	<file>clipboard.c</file>
 	<file>control.c</file>
-	<file>cpanelfolder.c</file>
 	<file>dataobject.c</file>
 	<file>dde.c</file>
 	<file>debughlp.c</file>
@@ -59,6 +58,11 @@
 	<file>shfldr_mydocuments.c</file>
 	<file>shfldr_printers.c</file>
 	<file>shfldr_admintools.c</file>
+	<file>shfldr_netplaces.c</file>
+	<file>shfldr_fonts.c</file>
+	<file>shfldr_netconnect.c</file>
+	<file>shfldr_cpanel.c</file>
+	<file>shfldr_recyclebin.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>
@@ -72,11 +76,8 @@
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
-	<file>shfldr_recyclebin.c</file>
 	<file>she_ocmenu.c</file>
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
-	<file>shfldr_netplaces.c</file>
-	<file>shfldr_fonts.c</file>
 	<file>shell32.rc</file>
 </module>

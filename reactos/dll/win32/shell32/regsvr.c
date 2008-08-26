@@ -25,6 +25,7 @@ const GUID CLSID_OpenWith                = {0x09799AFB, 0xAD67, 0x11d1, {0xAB, 0
 const GUID CLSID_UnixFolder              = {0xcc702eb2, 0x7dc5, 0x11d9, {0xc6, 0x87, 0x00, 0x04, 0x23, 0x8a, 0x01, 0xcd}};
 const GUID CLSID_UnixDosFolder           = {0x9d20aae8, 0x0625, 0x44b0, {0x9c, 0xa7, 0x71, 0x88, 0x9c, 0x22, 0x54, 0xd9}};
 const GUID CLSID_FontsFolderShortcut     = {0xD20EA4E1, 0x3957, 0x11D2, {0xA4, 0x0B, 0x0C, 0x50, 0x20, 0x52, 0x41,0x52}};
+const GUID CLSID_NetworkConnections      = {0x7007ACC7, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 const GUID SHELL32_AdvtShortcutProduct   = {0x9db1186f, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
 const GUID SHELL32_AdvtShortcutComponent = {0x9db1186e, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
 
@@ -622,6 +623,19 @@ static struct regsvr_coclass const coclass_list[] = {
         0,
         NULL,
         NULL,
+        IDI_SHELL_NETWORK_FOLDER
+    },
+    {   &CLSID_NetworkConnections,
+        "Network Connections",
+        IDS_NETWORKCONNECTION,
+        NULL,
+        "shell32.dll",
+        "Apartment",
+        SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES,
+        SFGAO_FOLDER,
+        0,
+        NULL,
+        NULL,
         IDI_SHELL_MY_NETWORK_PLACES
     },
     {  &CLSID_FontsFolderShortcut,
@@ -745,6 +759,7 @@ static const WCHAR wszNethoodFolder[] = { 'N','e','t','h','o','o','d',' ','f','o
 static const WCHAR wszPrinters[] = { 'P','r','i','n','t','e','r','s',0 };
 static const WCHAR wszFonts[] = { 'F','o','n','t','s',0 };
 static const WCHAR wszAdminTools[] = { 'A','d','m','i','n','T','o','o','l','s',0 };
+static const WCHAR wszNetConnect[] = { 'N','e','t','w','o','r','k',' ','C','o','n','n','e','c','t','i','o','n','s',0 };
 const GUID CLSID_FolderOptions = { 0x6DFD7C5C, 0x2451, 0x11d3, {0xa2,0x99,0x00,0xC0,0x4F,0x8e,0xf6,0xaf} };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
@@ -794,6 +809,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         &CLSID_AdminFolderShortcut,
         wszControlPanel,
         wszAdminTools
+    },
+    {
+        &CLSID_NetworkConnections,
+        wszControlPanel,
+        wszNetConnect
     },
     { NULL }
 };

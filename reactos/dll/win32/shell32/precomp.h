@@ -44,7 +44,7 @@
 #include <shtypes.h>
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
-#include <largeint.h>
+//#include <largeint.h>
 
 
 #include "base/shell/explorer-new/todo.h"
@@ -72,6 +72,7 @@ extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
+extern const GUID CLSID_NetworkConnections;
 
 
 #endif
