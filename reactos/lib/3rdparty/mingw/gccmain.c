@@ -13,6 +13,7 @@
 
 /* Needed for the atexit prototype. */
 #include <stdlib.h>
+#include <stddef.h>
 
 typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];
@@ -37,8 +38,8 @@ __do_global_dtors (void)
 void
 __do_global_ctors (void)
 {
-  unsigned long nptrs = (unsigned long) __CTOR_LIST__[0];
-  unsigned i;
+  unsigned long nptrs = (unsigned long) (ptrdiff_t) __CTOR_LIST__[0];
+  unsigned long i;
 
   /*
    * If the first entry in the constructor list is -1 then the list
@@ -47,8 +48,7 @@ __do_global_ctors (void)
    */
   if (nptrs == -1)
     {
-      for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++)
-	;
+      for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++);
     }
 
   /*
@@ -76,4 +76,5 @@ __main (void)
       __do_global_ctors ();
     }
 }
+
 

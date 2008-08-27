@@ -4,17 +4,13 @@
 /*
  * @implemented
  */
-#if defined(_UNICODE) || !(__MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3)
-long
-#else
-int
-#endif
+intptr_t
 _tfindfirst(const _TCHAR* _name, struct _tfinddata_t* result)
 {
     WIN32_FIND_DATA FindFileData;
     long hFindFile;
 
-    hFindFile = (long)FindFirstFile(_name, &FindFileData);
+    hFindFile = (intptr_t)FindFirstFile(_name, &FindFileData);
     if (hFindFile == -1) {
         _dosmaperr(GetLastError());
         return -1;
@@ -33,13 +29,7 @@ _tfindfirst(const _TCHAR* _name, struct _tfinddata_t* result)
 /*
  * @implemented
  */
-int _tfindnext(
-#if defined(_UNICODE) || !(__MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3)
-   long handle,
-#else
-   int handle,
-#endif
-   struct _tfinddata_t* result)
+intptr_t _tfindnext(intptr_t handle, struct _tfinddata_t* result)
 {
     WIN32_FIND_DATA FindFileData;
 
@@ -62,12 +52,12 @@ int _tfindnext(
 /*
  * @implemented
  */
-long _tfindfirsti64(const _TCHAR *_name, struct _tfinddatai64_t *result)
+intptr_t _tfindfirsti64(const _TCHAR *_name, struct _tfinddatai64_t *result)
 {
   WIN32_FIND_DATA FindFileData;
   long hFindFile;
 
-  hFindFile = (long)FindFirstFile(_name, &FindFileData);
+  hFindFile = (intptr_t)FindFirstFile(_name, &FindFileData);
   if (hFindFile == -1)
     {
       _dosmaperr(GetLastError());
@@ -85,14 +75,10 @@ long _tfindfirsti64(const _TCHAR *_name, struct _tfinddatai64_t *result)
   return hFindFile;
 }
 
-//_CRTIMP long __cdecl _findfirsti64(const char*, struct _finddatai64_t*);
-//_CRTIMP int __cdecl _findnexti64(long, struct _finddatai64_t*);
-
-
 /*
  * @implemented
  */
-int _tfindnexti64(long handle, struct _tfinddatai64_t *result)
+int _tfindnexti64(intptr_t handle, struct _tfinddatai64_t *result)
 {
   WIN32_FIND_DATA FindFileData;
 
@@ -119,15 +105,9 @@ int _tfindnexti64(long handle, struct _tfinddatai64_t *result)
 /*
  * @implemented
  */
-int _findclose(
-#if __MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 3
-   int handle
-#else
-   long handle
-#endif
-   )
+int _findclose(intptr_t handle)
 {
-  if (!FindClose((void*)handle)) {
+  if (!FindClose((HANDLE)handle)) {
     _dosmaperr(GetLastError());
     return -1;
   }

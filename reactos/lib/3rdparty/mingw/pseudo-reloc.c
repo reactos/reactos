@@ -28,12 +28,12 @@ runtime_pseudo_reloc;
 static void
 do_pseudo_reloc (void* start, void* end, void* base)
 {
-  DWORD reloc_target;
+  ptrdiff_t reloc_target;
   runtime_pseudo_reloc* r;
   for (r = (runtime_pseudo_reloc*) start; r < (runtime_pseudo_reloc*) end; r++)
     {
-      reloc_target = (DWORD) base + r->target;
-      *((DWORD*) reloc_target) += r->addend;
+      reloc_target = (ptrdiff_t) base + r->target;
+      *((ptrdiff_t*) reloc_target) += r->addend;
     }
 }
 

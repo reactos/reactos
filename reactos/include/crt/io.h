@@ -129,10 +129,10 @@ extern "C" {
  * _findclose calls. _findnext also returns -1 if no match could be found,
  * and 0 if a match was found. Call _findclose when you are finished.
  */
-/*  FIXME: Should these all use intptr_t, as per recent MSDN docs?  */
-_CRTIMP long __cdecl __MINGW_NOTHROW _findfirst (const char*, struct _finddata_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW _findnext (long, struct _finddata_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW _findclose (long);
+
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _findfirst (const char*, struct _finddata_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _findnext (intptr_t, struct _finddata_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _findclose (intptr_t);
 
 _CRTIMP int __cdecl __MINGW_NOTHROW _chdir (const char*);
 _CRTIMP char* __cdecl __MINGW_NOTHROW _getcwd (char*, int);
@@ -143,8 +143,8 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _chmod (const char*, int);
 
 #ifdef __MSVCRT__
 _CRTIMP __int64 __cdecl __MINGW_NOTHROW _filelengthi64(int);
-_CRTIMP long __cdecl __MINGW_NOTHROW _findfirsti64(const char*, struct _finddatai64_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW _findnexti64(long, struct _finddatai64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _findfirsti64(const char*, struct _finddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _findnexti64(intptr_t, struct _finddatai64_t*);
 _CRTIMP __int64 __cdecl __MINGW_NOTHROW _lseeki64(int, __int64, int);
 _CRTIMP __int64 __cdecl __MINGW_NOTHROW _telli64(int);
 /* These require newer versions of msvcrt.dll (6.1 or higher). */ 
@@ -259,14 +259,14 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _write (int, const void*, unsigned int);
 _CRTIMP int __cdecl __MINGW_NOTHROW _waccess(const wchar_t*, int);
 _CRTIMP int __cdecl __MINGW_NOTHROW _wchmod(const wchar_t*, int);
 _CRTIMP int __cdecl __MINGW_NOTHROW _wcreat(const wchar_t*, int);
-_CRTIMP long __cdecl __MINGW_NOTHROW _wfindfirst(const wchar_t*, struct _wfinddata_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW _wfindnext(long, struct _wfinddata_t *);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindfirst(const wchar_t*, struct _wfinddata_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindnext(intptr_t, struct _wfinddata_t *);
 _CRTIMP int __cdecl __MINGW_NOTHROW _wunlink(const wchar_t*);
 _CRTIMP int __cdecl __MINGW_NOTHROW _wopen(const wchar_t*, int, ...);
 _CRTIMP int __cdecl __MINGW_NOTHROW _wsopen(const wchar_t*, int, int, ...);
 _CRTIMP wchar_t * __cdecl __MINGW_NOTHROW _wmktemp(wchar_t*);
-_CRTIMP long __cdecl __MINGW_NOTHROW _wfindfirsti64(const wchar_t*, struct _wfinddatai64_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW _wfindnexti64(long, struct _wfinddatai64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindfirsti64(const wchar_t*, struct _wfinddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wfindnexti64(intptr_t, struct _wfinddatai64_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
 _CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindfirst64(const wchar_t*, struct __wfinddata64_t*); 
 _CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindnext64(intptr_t, struct __wfinddata64_t*);
