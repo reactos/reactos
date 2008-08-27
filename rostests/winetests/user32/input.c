@@ -49,7 +49,7 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/winuser.h"
+#include "winuser.h"
 
 #include "wine/test.h"
 

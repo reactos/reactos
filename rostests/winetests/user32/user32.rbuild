@@ -3,6 +3,7 @@
 <group>
 <module name="user32_winetest" type="win32cui" installbase="bin" installname="user32_winetest.exe" allowwarnings="true">
     <include base="user32_winetest">.</include>
+    <include base="ReactOS">include/reactos/wine</include>
     <define name="__USE_W32API" />
     <define name="_WIN32_WINNT">0x0600</define>
     <define name="WINVER">0x609</define>
