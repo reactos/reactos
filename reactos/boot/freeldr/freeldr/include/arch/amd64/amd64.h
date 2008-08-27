@@ -34,10 +34,10 @@
 #define PtrToPfn(p) \
     ((((ULONGLONG)p) >> PAGE_SHIFT) & 0xfffffffULL)
 
-#define VAtoPXI(va) (((va) >> PXI_SHIFT) & 0x1FF)
-#define VAtoPPI(va) (((va) >> PPI_SHIFT) & 0x1FF)
-#define VAtoPDI(va) (((va) >> PDI_SHIFT) & 0x1FF)
-#define VAtoPTI(va) (((va) >> PTI_SHIFT) & 0x1FF)
+#define VAtoPXI(va) ((((ULONG64)va) >> PXI_SHIFT) & 0x1FF)
+#define VAtoPPI(va) ((((ULONG64)va) >> PPI_SHIFT) & 0x1FF)
+#define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
+#define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
 
 #define HYPERSPACE_BASE             0xfffff70000000000ULL
 #define HAL_BASE                    0xffffffff80000000ULL
