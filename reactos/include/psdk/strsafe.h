@@ -286,11 +286,7 @@ STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cxMax, size_t *pcx)
         return STRSAFE_E_INVALID_PARAMETER;
     }
 
-    while (*psz != 0 && cch != 0)
-    {
-        cch--;
-        psz++;
-    }
+    for (--psz; *(++psz) != 0 && --cch > 0;);
 
     if (cch == 0)
     {
