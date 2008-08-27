@@ -1,0 +1,20 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Network Connection"
+	IDS_SHV_COLUMN_NAME         "Name"
+	IDS_SHV_COLUMN_TYPE         "Type"
+	IDS_SHV_COLUMN_STATE        "Status"
+	IDS_SHV_COLUMN_DEVNAME      "Device Name"
+	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
+	IDS_SHV_COLUMN_OWNER        "Owner"
+	IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
+	IDS_STATUS_NON_OPERATIONAL  "Disabled"
+	IDS_STATUS_UNREACHABLE      "Not Connected"
+	IDS_STATUS_DISCONNECTED     "Network cable unplugged"
+	IDS_STATUS_CONNECTING       "Acquiring network address"
+	IDS_STATUS_CONNECTED        "Connected"
+	IDS_STATUS_OPERATIONAL      "Connected"
+END
+

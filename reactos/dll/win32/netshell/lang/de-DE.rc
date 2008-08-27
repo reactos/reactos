@@ -1,0 +1,21 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Netzwerkverbindungen"
+	IDS_SHV_COLUMN_NAME         "Name"
+	IDS_SHV_COLUMN_TYPE         "Typ"
+	IDS_SHV_COLUMN_STATE         "Status"
+	IDS_SHV_COLUMN_DEVNAME      "Gerätename"
+	IDS_SHV_COLUMN_PHONE        "Rufnummer oder Hostaddresse"
+	IDS_SHV_COLUMN_OWNER        "Besitzer"
+	IDS_TYPE_ETHERNET           "LAN oder Hochgeschwindigkeitsinternet"
+	IDS_STATUS_NON_OPERATIONAL  "Deaktiviert"
+	IDS_STATUS_UNREACHABLE      "Nicht verbunden"
+	IDS_STATUS_DISCONNECTED     "Netzwerkkabel wurde entfernt"
+	IDS_STATUS_CONNECTING       "Netzwerkaddresse beziehen"
+	IDS_STATUS_CONNECTED        "Verbindung hergestellt"
+	IDS_STATUS_OPERATIONAL      "Verbindung hergestellt"
+
+END
