@@ -8,6 +8,11 @@
 #error Both STRSAFE_NO_CCH_FUNCTIONS and STRSAFE_NO_CB_FUNCTIONS are defined
 #endif
 
+#define STRSAFE_MAX_CCH 2147483647
+#define STRSAFE_E_INVALID_PARAMETER ((HRESULT)0x80070057L)
+#ifndef S_OK
+#define S_OK  ((HRESULT)0x00000000L)
+#endif
 
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
@@ -24,35 +29,43 @@ typedef unsigned long STRSAFE_DWORD;
 
 /* Implement Cb functions for ansi and unicode */
 #define STRSAFE_CB
-#define STRSAFE_CXX_CB(x)
-#define STRSAFE_CXX_CCH(x) x *= sizeof(STRSAFE_TCHAR)
 #define STRSAFE_UNICODE 0
 # include <strsafe.h>
 #undef STRSAFE_UNICODE
 #define STRSAFE_UNICODE 1
 # include <strsafe.h>
 #undef STRSAFE_UNICODE
-#undef STRSAFE_CXX
 #undef STRSAFE_CB
-#undef STRSAFE_CXX_CB
-#undef STRSAFE_CXX_CCH
 
 /* Implement Cch functions for ansi and unicode */
-#define STRSAFE_CXX_CB(x) x /= sizeof(STRSAFE_TCHAR)
-#define STRSAFE_CXX_CCH(x)
 #define STRSAFE_UNICODE 0
 # include <strsafe.h>
 #undef STRSAFE_UNICODE
 #define STRSAFE_UNICODE 1
 # include <strsafe.h>
 #undef STRSAFE_UNICODE
-#undef STRSAFE_CXX_CB
-#undef STRSAFE_CXX_CCH
 
 #undef STRSAFE_PASS2
 
 /* Now define the functions depending on UNICODE */
 #if defined(UNICODE)
+# define STRSAFE_UNICODE 1
+#else
+# define STRSAFE_UNICODE 0
+#endif
+#include <strsafe.h>
+#undef STRSAFE_UNICODE
+
+#endif // !__STRSAFE_H_
+
+/*****************************************************************************/
+
+#if defined(STRSAFE_UNICODE)
+#if (STRSAFE_UNICODE == 1)
+
+#define STRSAFE_LPTSTR STRSAFE_LPWSTR
+#define STRSAFE_LPCTSTR STRSAFE_LPCWSTR
+#define STRSAFE_TCHAR wchar_t
 
 #define StringCbCat StringCbCatW
 #define StringCbCatEx StringCbCatExW
@@ -85,7 +98,11 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCchVPrintf StringCchVPrintfW
 #define StringCchVPrintfEx StringCchVPrintfExW
 
-#else // !UNICODE
+#else // (STRSAFE_UNICODE != 1)
+
+#define STRSAFE_LPTSTR STRSAFE_LPSTR
+#define STRSAFE_LPCTSTR STRSAFE_LPCSTR
+#define STRSAFE_TCHAR char
 
 #define StringCbCat StringCbCatA
 #define StringCbCatEx StringCbCatExA
@@ -102,93 +119,21 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCbPrintfEx StringCbPrintfExA
 #define StringCbVPrintf StringCbVPrintfA
 #define StringCbVPrintfEx StringCbVPrintfExA
-
-#endif // !UNICODE
-
-#endif // !__STRSAFE_H_
-
-/*****************************************************************************/
-
-#if defined(STRSAFE_UNICODE)
-#if (STRSAFE_UNICODE == 1)
-
-#define STRSAFE_LPTSTR STRSAFE_LPWSTR
-#define STRSAFE_LPCTSTR STRSAFE_LPCWSTR
-#define STRSAFE_TCHAR wchar_t
-
-#if defined(STRSAFE_CB)
-#define StringCxxCat StringCbCatW
-#define StringCxxCatEx StringCbCatExW
-#define StringCxxCatN StringCbCatNW
-#define StringCxxCatNEx StringCbCatNExW
-#define StringCxxCopy StringCbCopyW
-#define StringCxxCopyEx StringCbCopyExW
-#define StringCxxCopyN StringCbCopyNW
-#define StringCxxCopyNEx StringCbCopyNExW
-#define StringCxxGets StringCbGetsW
-#define StringCxxGetsEx StringCbGetsExW
-#define StringCxxLength StringCbLengthW
-#define StringCxxPrintf StringCbPrintfW
-#define StringCxxPrintfEx StringCbPrintfExW
-#define StringCxxVPrintf StringCbVPrintfW
-#define StringCxxVPrintfEx StringCbVPrintfExW
-#else // !STRSAFE_CB
-#define StringCxxCat StringCchCatW
-#define StringCxxCatEx StringCchCatExW
-#define StringCxxCatN StringCchCatNW
-#define StringCxxCatNEx StringCchCatNExW
-#define StringCxxCopy StringCchCopyW
-#define StringCxxCopyEx StringCchCopyExW
-#define StringCxxCopyN StringCchCopyNW
-#define StringCxxCopyNEx StringCchCopyNExW
-#define StringCxxGets StringCchGetsW
-#define StringCxxGetsEx StringCchGetsExW
-#define StringCxxLength StringCchLengthW
-#define StringCxxPrintf StringCchPrintfW
-#define StringCxxPrintfEx StringCchPrintfExW
-#define StringCxxVPrintf StringCchVPrintfW
-#define StringCxxVPrintfEx StringCchVPrintfExW
-#endif // !STRSAFE_CB
-
-#else // (STRSAFE_UNICODE != 1)
-
-#define STRSAFE_LPTSTR STRSAFE_LPSTR
-#define STRSAFE_LPCTSTR STRSAFE_LPCSTR
-#define STRSAFE_TCHAR char
-
-#if defined(STRSAFE_CB)
-#define StringCxxCat StringCbCatA
-#define StringCxxCatEx StringCbCatExA
-#define StringCxxCatN StringCbCatNA
-#define StringCxxCatNEx StringCbCatNExA
-#define StringCxxCopy StringCbCopyA
-#define StringCxxCopyEx StringCbCopyExA
-#define StringCxxCopyN StringCbCopyNA
-#define StringCxxCopyNEx StringCbCopyNExA
-#define StringCxxGets StringCbGetsA
-#define StringCxxGetsEx StringCbGetsExA
-#define StringCxxLength StringCbLengthA
-#define StringCxxPrintf StringCbPrintfA
-#define StringCxxPrintfEx StringCbPrintfExA
-#define StringCxxVPrintf StringCbVPrintfA
-#define StringCxxVPrintfEx StringCbVPrintfExA
-#else // !STRSAFE_CB
-#define StringCxxCat StringCchCatA
-#define StringCxxCatEx StringCchCatExA
-#define StringCxxCatN StringCchCatNA
-#define StringCxxCatNEx StringCchCatNExA
-#define StringCxxCopy StringCchCopyA
-#define StringCxxCopyEx StringCchCopyExA
-#define StringCxxCopyN StringCchCopyNA
-#define StringCopyNEx StringCchCopyNExA
-#define StringCxxGets StringCchGetsA
-#define StringCxxGetsEx StringCchGetsExA
-#define StringCxxLength StringCchLengthA
-#define StringCxxPrintf StringCchPrintfA
-#define StringCxxPrintfEx StringCchPrintfExA
-#define StringCxxVPrintf StringCchVPrintfA
-#define StringCxxVPrintfEx StringCchVPrintfExA
-#endif // !STRSAFE_CB
+#define StringCchCat StringCchCatA
+#define StringCchCatEx StringCchCatExA
+#define StringCchCatN StringCchCatNA
+#define StringCchCatNEx StringCchCatNExA
+#define StringCchCopy StringCchCopyA
+#define StringCchCopyEx StringCchCopyExA
+#define StringCchCopyN StringCchCopyNA
+#define StringCchCopyNEx StringCchCopyNExA
+#define StringCchGets StringCchGetsA
+#define StringCchGetsEx StringCchGetsExA
+#define StringCchLength StringCchLengthA
+#define StringCchPrintf StringCchPrintfA
+#define StringCchPrintfEx StringCchPrintfExA
+#define StringCchVPrintf StringCchVPrintfA
+#define StringCchVPrintfEx StringCchVPrintfExA
 
 #endif // (STRSAFE_UNICODE != 1)
 #endif // defined(STRSAFE_UNICODE)
@@ -196,6 +141,52 @@ typedef unsigned long STRSAFE_DWORD;
 /*****************************************************************************/
 
 #if defined (STRSAFE_PASS2)
+
+#if defined(STRSAFE_CB)
+
+#define STRSAFE_CXXtoCB(x) (x)
+#define STRSAFE_CBtoCXX(x) (x)
+#define STRSAFE_CXXtoCCH(x) (x)*sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CCHtoCXX(x) (x)/sizeof(STRSAFE_TCHAR)
+#define StringCxxCat StringCbCat
+#define StringCxxCatEx StringCbCatEx
+#define StringCxxCatN StringCbCatN
+#define StringCxxCatNEx StringCbCatNEx
+#define StringCxxCopy StringCbCopy
+#define StringCxxCopyEx StringCbCopyEx
+#define StringCxxCopyN StringCbCopyN
+#define StringCxxCopyNEx StringCbCopyNEx
+#define StringCxxGets StringCbGets
+#define StringCxxGetsEx StringCbGetsEx
+#define StringCxxLength StringCbLength
+#define StringCxxPrintf StringCbPrintf
+#define StringCxxPrintfEx StringCbPrintfEx
+#define StringCxxVPrintf StringCbVPrintf
+#define StringCxxVPrintfEx StringCbVPrintfEx
+
+#else // !STRSAFE_CB
+
+#define STRSAFE_CXXtoCB(x) (x)/sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CBtoCXX(x) (x)*sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CXXtoCCH(x) (x)
+#define STRSAFE_CCHtoCXX(x) (x)
+#define StringCxxCat StringCchCat
+#define StringCxxCatEx StringCchCatEx
+#define StringCxxCatN StringCchCatN
+#define StringCxxCatNEx StringCchCatNEx
+#define StringCxxCopy StringCchCopy
+#define StringCxxCopyEx StringCchCopyEx
+#define StringCxxCopyN StringCchCopyN
+#define StringCxxCopyNEx StringCchCopyNEx
+#define StringCxxGets StringCchGets
+#define StringCxxGetsEx StringCchGetsEx
+#define StringCxxLength StringCchLength
+#define StringCxxPrintf StringCchPrintf
+#define StringCxxPrintfEx StringCchPrintfEx
+#define StringCxxVPrintf StringCchVPrintf
+#define StringCxxVPrintfEx StringCchVPrintfEx
+
+#endif // !STRSAFE_CB
 
 #ifdef STRSAFE_LIB
 
@@ -234,7 +225,6 @@ STRSAFEAPI StringVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPTSTR
 
 STRSAFEAPI StringCxxCat(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc)
 {
-    STRSAFE_CXX_CB(cxDest);
     return 0; // FIXME
 }
 
@@ -283,9 +273,34 @@ STRSAFEAPI StringCxxGetsEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTSTR
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cbMax, size_t *pcb)
+STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cxMax, size_t *pcx)
 {
-    return 0; // FIXME
+    size_t cch = STRSAFE_CXXtoCCH(cxMax);
+
+    /* Default return on error */
+    if (pcx)
+        *pcx = 0;
+
+    if (!psz || cch > STRSAFE_MAX_CCH || cch == 0)
+    {
+        return STRSAFE_E_INVALID_PARAMETER;
+    }
+
+    while (*psz != 0 && cch != 0)
+    {
+        cch--;
+        psz++;
+    }
+
+    if (cch == 0)
+    {
+        return STRSAFE_E_INVALID_PARAMETER;
+    }
+
+    if (pcx)
+        *pcx = cxMax - STRSAFE_CCHtoCXX(cch);
+
+    return S_OK;
 }
 
 STRSAFEAPI StringCxxVPrintf(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszFormat, va_list args)
@@ -343,9 +358,45 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
 #undef StringCxxVPrintf
 #undef StringCxxVPrintfEx
 
+#undef StringCbCat
+#undef StringCbCatEx
+#undef StringCbCatN
+#undef StringCbCatNEx
+#undef StringCbCopy
+#undef StringCbCopyEx
+#undef StringCbCopyN
+#undef StringCbCopyNEx
+#undef StringCbGets
+#undef StringCbGetsEx
+#undef StringCbLength
+#undef StringCbPrintf
+#undef StringCbPrintfEx
+#undef StringCbVPrintf
+#undef StringCbVPrintfEx
+#undef StringCchCat
+#undef StringCchCatEx
+#undef StringCchCatN
+#undef StringCchCatNEx
+#undef StringCchCopy
+#undef StringCchCopyEx
+#undef StringCchCopyN
+#undef StringCchCopyNEx
+#undef StringCchGets
+#undef StringCchGetsEx
+#undef StringCchLength
+#undef StringCchPrintf
+#undef StringCchPrintfEx
+#undef StringCchVPrintf
+#undef StringCchVPrintfEx
+
 #undef STRSAFE_LPTSTR
 #undef STRSAFE_LPCTSTR
 #undef STRSAFE_TCHAR
+
+#undef STRSAFE_CXXtoCB
+#undef STRSAFE_CBtoCXX
+#undef STRSAFE_CXXtoCCH
+#undef STRSAFE_CCHtoCXX
 
 #endif // defined (STRSAFE_PASS2)
 
