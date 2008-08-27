@@ -202,7 +202,7 @@ CcGetFileSizes(PFILE_OBJECT FileObject, PCC_FILE_SIZES FileSizes);
 
 extern NOCC_BCB CcCacheSections[CACHE_NUM_SECTIONS];
 extern PRTL_BITMAP CcCacheBitmap;
-extern KGUARDED_MUTEX CcMutex;
+extern FAST_MUTEX CcMutex;
 extern KEVENT CcDeleteEvent;
 extern ULONG CcCacheClockHand;
 extern LIST_ENTRY CcPendingUnmap;

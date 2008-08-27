@@ -21,10 +21,6 @@ PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
 
-BOOLEAN
-NTAPI
-MmIsCOWAddress(PEPROCESS Process, PVOID Address);
-
 NTSTATUS
 NTAPI
 CcpSimpleWrite
@@ -43,8 +39,7 @@ CcpSimpleWrite
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
-    if (MmIsDirtyPage(PsInitialSystemProcess, Buffer) && 
-	!MmIsCOWAddress(PsInitialSystemProcess, Buffer))
+    if (MmIsDirtyPage(PsInitialSystemProcess, Buffer))
     {
 	DPRINT1
 	    ("PAGING WRITE (FLUSH) Offset %x Length %d\n", 
@@ -100,7 +95,6 @@ CcpSimpleWrite
 	}
 	
 	ObDereferenceObject(FileObject);
-	MmDeleteHyperspaceMapping(Buffer);
 
 	DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     }

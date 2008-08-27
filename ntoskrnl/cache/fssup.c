@@ -44,7 +44,7 @@ CcInitializeCacheManager(VOID)
 	CcCacheBitmap->Buffer = ((PULONG)&CcCacheBitmap[1]);
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
-	KeInitializeGuardedMutex(&CcMutex);
+	ExInitializeFastMutex(&CcMutex);
 	Status = PsCreateSystemThread
 		(&CcUnmapThreadHandle,
 		 THREAD_ALL_ACCESS,

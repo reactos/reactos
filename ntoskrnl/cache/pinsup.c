@@ -22,7 +22,7 @@
 NOCC_BCB CcCacheSections[CACHE_NUM_SECTIONS];
 CHAR CcpBitmapBuffer[sizeof(RTL_BITMAP) + ROUND_UP((CACHE_NUM_SECTIONS), 32) / 8];
 PRTL_BITMAP CcCacheBitmap = (PRTL_BITMAP)&CcpBitmapBuffer;
-KGUARDED_MUTEX CcMutex;
+FAST_MUTEX CcMutex;
 KEVENT CcDeleteEvent;
 ULONG CcCacheClockHand;
 LONG CcOutstandingDeletes;
@@ -55,7 +55,7 @@ VOID CcpUnlinkedFromFile
 
 VOID CcpLock()
 {
-    KeAcquireGuardedMutex(&CcMutex);
+    ExAcquireFastMutex(&CcMutex);
     //DPRINT("<<<---<<< CC In Mutex!\n");
 }
 
@@ -75,14 +75,14 @@ VOID CcpPerformUnmapWork()
     PCHAR BufStart, BufPage;
     LARGE_INTEGER ToWrite;
 
-    KeAcquireGuardedMutex(&CcMutex);
+    ExAcquireFastMutex(&CcMutex);
     while (CcOutstandingDeletes > 0)
     {
 	NumElements = InterlockedDecrement(&CcOutstandingDeletes);
 	DPRINT1("Unmapping %d ...\n", NumElements);
 	WorkingOn = CcUnmapChain[0];
 	RtlMoveMemory(&CcUnmapChain[0], &CcUnmapChain[1], NumElements * sizeof(NOCC_UNMAP_CHAIN));
-	KeReleaseGuardedMutex(&CcMutex);
+	ExReleaseFastMutex(&CcMutex);
 
 	BufStart = (PCHAR)WorkingOn.Buffer;
 	ToWrite = WorkingOn.FileOffset;
@@ -98,15 +98,15 @@ VOID CcpPerformUnmapWork()
 	MmUnmapViewInSystemSpace(WorkingOn.Buffer);
 	ObDereferenceObject(WorkingOn.SectionObject);
 	DPRINT1("Done unmapping\n");
-	KeAcquireGuardedMutex(&CcMutex);
+	ExAcquireFastMutex(&CcMutex);
     }
-    KeReleaseGuardedMutex(&CcMutex);
+    ExReleaseFastMutex(&CcMutex);
 }
 
 VOID CcpUnlock()
 {
     //DPRINT(">>>--->>> CC Exit Mutex!\n");
-    KeReleaseGuardedMutex(&CcMutex);
+    ExReleaseFastMutex(&CcMutex);
 }
 
 VOID STDCALL
