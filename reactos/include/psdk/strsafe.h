@@ -218,8 +218,6 @@ STRSAFEAPI StringCxxVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPT
 /* Create inlined versions */
 #define STRSAFEAPI HRESULT static __inline__
 
-#ifndef STRSAFE_NO_CB_FUNCTIONS
-
 STRSAFEAPI StringCxxCat(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc)
 {
     return 0; // FIXME
@@ -325,12 +323,6 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
     va_end(args);
     return result;
 }
-
-#endif // !STRSAFE_NO_CB_FUNCTIONS
-
-#ifndef STRSAFE_NO_CCH_FUNCTIONS
-
-#endif // !STRSAFE_NO_CCH_FUNCTIONS
 
 #endif // !STRSAFE_LIB
 
