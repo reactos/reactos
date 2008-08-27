@@ -376,21 +376,6 @@ MmGetFileNameForAddress(IN PVOID Address,
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-NTAPI
-MmIsCOWAddress(IN PEPROCESS Process, IN PVOID Address)
-{
-    BOOLEAN IsCow = TRUE; /* Don't write unless we're sure */
-    PMEMORY_AREA MemoryArea;
-
-    MmLockAddressSpace(&Process->VadRoot);
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->VadRoot, Address);
-    ASSERT(MemoryArea);
-    IsCow = MemoryArea->Data.SectionData.WriteCopyView;
-    MmUnlockAddressSpace(&Process->VadRoot);
-    return IsCow;
-}
-
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 
 /*
