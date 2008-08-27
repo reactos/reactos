@@ -75,6 +75,9 @@ UINT STDCALL
 WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 		  POINT* MinTrack, POINT* MaxTrack)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if o
   MINMAXINFO MinMax;
 
   if(NtUserGetMinMaxInfo(hWnd, &MinMax, TRUE))
@@ -90,6 +93,7 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
     if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
   }
   return 0; //FIXME: what does it return?
+#endif
 }
 
 

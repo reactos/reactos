@@ -283,74 +283,8 @@ static int FASTCALL
 IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
                     BOOL Unicode)
 {
-  int FontFamilyCount;
-  int FontFamilySize;
-  PFONTFAMILYINFO Info;
-  int Ret = 0;
-  int i;
-  ENUMLOGFONTEXA EnumLogFontExA;
-  NEWTEXTMETRICEXA NewTextMetricExA;
-
-  Info = RtlAllocateHeap(GetProcessHeap(), 0,
-                         INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO));
-  if (NULL == Info)
-    {
-      return 0;
-    }
-  FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, INITIAL_FAMILY_COUNT);
-  if (FontFamilyCount < 0)
-    {
-      RtlFreeHeap(GetProcessHeap(), 0, Info);
-      return 0;
-    }
-  if (INITIAL_FAMILY_COUNT < FontFamilyCount)
-    {
-      FontFamilySize = FontFamilyCount;
-      RtlFreeHeap(GetProcessHeap(), 0, Info);
-      Info = RtlAllocateHeap(GetProcessHeap(), 0,
-                             FontFamilyCount * sizeof(FONTFAMILYINFO));
-      if (NULL == Info)
-        {
-          return 0;
-        }
-      FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, FontFamilySize);
-      if (FontFamilyCount < 0 || FontFamilySize < FontFamilyCount)
-        {
-          RtlFreeHeap(GetProcessHeap(), 0, Info);
-          return 0;
-        }
-    }
-
-  for (i = 0; i < FontFamilyCount; i++)
-    {
-      if (Unicode)
-        {
-          Ret = ((FONTENUMPROCW) EnumProc)(
-            &Info[i].EnumLogFontEx,
-            &Info[i].NewTextMetricEx,
-            Info[i].FontType, lParam);
-        }
-      else
-        { // Could use EnumLogFontExW2A here?
-          LogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
-          WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
-                              (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
-          WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfStyle, -1,
-                              (LPSTR)EnumLogFontExA.elfStyle, LF_FACESIZE, NULL, NULL);
-          WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfScript, -1,
-                              (LPSTR)EnumLogFontExA.elfScript, LF_FACESIZE, NULL, NULL);
-          NewTextMetricExW2A(&NewTextMetricExA,
-                             &Info[i].NewTextMetricEx);
-          Ret = ((FONTENUMPROCA) EnumProc)(
-            &EnumLogFontExA,
-            &NewTextMetricExA,
-            Info[i].FontType, lParam);
-        }
-    }
-
-  RtlFreeHeap(GetProcessHeap(), 0, Info);
-
-  return Ret;
+    /* Unimplemented for now, should use NewEnumFontFamiliesExW */
+    return 0;
 }
 
 /*

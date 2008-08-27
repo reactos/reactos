@@ -377,7 +377,8 @@ SetViewportExtEx(HDC hdc,
   }
   return TRUE;
 #endif
-  return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
+  /* Unimplemented for now */
+  return FALSE;
 }
 
 /*
@@ -439,7 +440,8 @@ SetWindowOrgEx(HDC hdc,
   Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
   return TRUE;
 #endif
-  return NtGdiSetWindowOrgEx(hdc,X,Y,lpPoint);
+  /* Unimplemented for now */
+  return FALSE;
 }
 
 /*
@@ -510,7 +512,8 @@ SetWindowExtEx(HDC hdc,
   }
   return TRUE; // Return TRUE.
 #endif
-  return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
+  /* Unimplemented for now */
+  return FALSE;
 }
 
 /*
@@ -559,7 +562,8 @@ SetViewportOrgEx(HDC hdc,
   Dc_Attr->ptlViewportOrg.y = Y;
   return TRUE;
 #endif
-  return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
+  /* Unimplemented for now */
+  return FALSE;
 }
 
 /*

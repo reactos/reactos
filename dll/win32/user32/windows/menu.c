@@ -131,7 +131,8 @@ MenuGetRosMenuInfo(PROSMENUINFO MenuInfo, HMENU Menu)
   MenuInfo->cbSize = sizeof(ROSMENUINFO);
   MenuInfo->fMask = MIM_BACKGROUND | MIM_HELPID | MIM_MAXHEIGHT | MIM_MENUDATA | MIM_STYLE;
 
-  return NtUserMenuInfo(Menu, MenuInfo, FALSE);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /***********************************************************************
@@ -145,7 +146,8 @@ MenuSetRosMenuInfo(PROSMENUINFO MenuInfo)
   MenuInfo->cbSize = sizeof(ROSMENUINFO);
   MenuInfo->fMask = MIM_BACKGROUND | MIM_HELPID | MIM_MAXHEIGHT | MIM_MENUDATA | MIM_STYLE;
 
-  return NtUserMenuInfo(MenuInfo->Self, MenuInfo, TRUE);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /***********************************************************************
@@ -180,9 +182,10 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
              | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU | MIIM_TYPE;
   ItemInfo->dwTypeData = NULL;
 
-  if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
+  if (TRUE)
     {
       ItemInfo->fType = 0;
+      UNIMPLEMENTED;
       return FALSE;
     }
 
@@ -196,9 +199,10 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
           return FALSE;
         }
 
-      if (! NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, FALSE))
+      if (TRUE)
         {
           ItemInfo->fType = 0;
+          UNIMPLEMENTED;
           return FALSE;
         }
       ItemInfo->dwTypeData[ItemInfo->cch - 1] = UNICODE_NULL;
@@ -222,7 +226,8 @@ MenuSetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
   {
     ItemInfo->cch = strlenW(ItemInfo->dwTypeData);
   }
-  Ret = NtUserMenuItemInfo(Menu, Index, TRUE, ItemInfo, TRUE);
+  UNIMPLEMENTED;
+  Ret = FALSE;
 
   return Ret;
 }
@@ -250,6 +255,9 @@ MenuCleanupRosMenuItemInfo(PROSMENUITEMINFO ItemInfo)
 static INT FASTCALL
 MenuGetAllRosMenuItemInfo(HMENU Menu, PROSMENUITEMINFO *ItemInfo)
 {
+  UNIMPLEMENTED;
+  return -1;
+#if 0
   DWORD BufSize;
 
   BufSize = NtUserBuildMenuItemList(Menu, (VOID *) 1, 0, 0);
@@ -264,6 +272,7 @@ MenuGetAllRosMenuItemInfo(HMENU Menu, PROSMENUITEMINFO *ItemInfo)
     }
 
   return NtUserBuildMenuItemList(Menu, *ItemInfo, BufSize, 0);
+#endif
 }
 
 /***********************************************************************
@@ -4128,7 +4137,8 @@ GetMenuDefaultItem(HMENU hMenu,
 		   UINT fByPos,
 		   UINT gmdiFlags)
 {
-  return NtUserGetMenuDefaultItem(hMenu, fByPos, gmdiFlags);
+    UNIMPLEMENTED;
+    return -1;
 }
 
 
@@ -4149,7 +4159,8 @@ GetMenuInfo(HMENU hmenu,
   mi.cbSize = sizeof(MENUINFO);
   mi.fMask = lpcmi->fMask;
 
-  res = NtUserMenuInfo(hmenu, &mi, FALSE);
+  UNIMPLEMENTED;
+  res = FALSE;
 
   memcpy(lpcmi, &mi, sizeof(MENUINFO));
   return res;
@@ -4180,7 +4191,7 @@ GetMenuItemID(HMENU hMenu,
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_ID | MIIM_SUBMENU;
 
-  if (! NtUserMenuItemInfo(hMenu, nPos, MF_BYPOSITION, &mii, FALSE))
+  if (TRUE)
     {
       return -1;
     }
@@ -4222,7 +4233,8 @@ GetMenuItemInfoA(
    if(!(mii->fMask & (MIIM_TYPE | MIIM_STRING)))
    {
       /* No text requested, just pass on */
-      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+      UNIMPLEMENTED;
+      return FALSE;
    }
 
    AnsiBuffer = mii->dwTypeData;
@@ -4238,7 +4250,7 @@ GetMenuItemInfoA(
       miiW.dwTypeData[0] = 0;
    }
 
-   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
+   if (TRUE)
    {
       if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
       return FALSE;
@@ -4305,7 +4317,8 @@ GetMenuItemInfoW(
    if(!(mii->fMask & (MIIM_TYPE | MIIM_STRING)))
    {
       /* No text requested, just pass on */
-      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+      UNIMPLEMENTED;
+      return FALSE;
    }
 
    String = mii->dwTypeData;
@@ -4321,7 +4334,7 @@ GetMenuItemInfoW(
       miiW.dwTypeData[0] = 0;
    }
 
-   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))
+   if (TRUE)
    {
       if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
       return FALSE;
@@ -4379,7 +4392,7 @@ GetMenuState(
   mii.fMask = MIIM_STATE | MIIM_FTYPE | MIIM_SUBMENU;
 
   SetLastError(0);
-  if(NtUserMenuItemInfo(hMenu, uId, uFlags, &mii, FALSE))
+  if(FALSE)
     {
       UINT nSubItems = 0;
       if(mii.hSubMenu)
@@ -4473,7 +4486,7 @@ GetSubMenu(
   mi.cbSize = sizeof(MENUITEMINFOW);
   mi.fMask = MIIM_SUBMENU;
 
-  if (NtUserMenuItemInfo(hMenu, (UINT)nPos, MF_BYPOSITION, &mi, FALSE))
+  if (FALSE)
     {
       return IsMenu(mi.hSubMenu) ? mi.hSubMenu : NULL;
     }
@@ -4925,7 +4938,9 @@ SetMenuInfo(
     return res;
 
   memcpy(&mi, lpcmi, sizeof(MENUINFO));
-  return NtUserMenuInfo(hmenu, &mi, TRUE);
+
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
@@ -4945,8 +4960,7 @@ SetMenuItemBitmaps(
   memset ( &uItem, 0, sizeof(uItem) );
   uItem.fMask = MIIM_STATE | MIIM_BITMAP;
 
-  if(!(NtUserMenuItemInfo(hMenu, uPosition,
-                 (BOOL)(MF_BYPOSITION & uFlags), &uItem, FALSE))) return FALSE;
+  if(TRUE) return FALSE;
 
   if (!hBitmapChecked && !hBitmapUnchecked)
   {
@@ -4958,8 +4972,7 @@ SetMenuItemBitmaps(
     uItem.hbmpUnchecked = hBitmapUnchecked;
     uItem.fState |= MF_USECHECKBITMAPS;
   }
- return NtUserMenuItemInfo(hMenu, uPosition,
-                                 (BOOL)(MF_BYPOSITION & uFlags), &uItem, TRUE);
+ return FALSE;
 }
 
 
@@ -5013,8 +5026,8 @@ SetMenuItemInfoA(
     UnicodeString.Buffer = NULL;
   }
 
-  Result = NtUserMenuItemInfo(hMenu, uItem, fByPosition,
-                              (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
+  UNIMPLEMENTED;
+  Result = FALSE;
 
   if (UnicodeString.Buffer != NULL)
   {
@@ -5054,8 +5067,8 @@ SetMenuItemInfoW(
   {
      MenuItemInfoW.cch = strlenW(MenuItemInfoW.dwTypeData);
   }
-  Result = NtUserMenuItemInfo(hMenu, uItem, fByPosition,
-                            (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
+  UNIMPLEMENTED;
+  Result = FALSE;
 
   return Result;
 }
@@ -5183,10 +5196,7 @@ GetMenuContextHelpId(HMENU hmenu)
   mi.cbSize = sizeof(ROSMENUINFO);
   mi.fMask = MIM_HELPID;
 
-  if(NtUserMenuInfo(hmenu, &mi, FALSE))
-  {
-    return mi.dwContextHelpID;
-  }
+  UNIMPLEMENTED;
   return 0;
 }
 

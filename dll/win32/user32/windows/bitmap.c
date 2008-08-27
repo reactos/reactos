@@ -242,7 +242,8 @@ LoadCursorIconImage(
        * Let's see if we already loaded it */
       if (fuLoad & LR_SHARED)
       {
-         hIcon = NtUserFindExistingCursorIcon(hinst, hResInfo, 0, 0);
+         PPOINT Point = NULL;
+         hIcon = NtUserFindExistingCursorIcon(hinst, hResInfo, Point);
          if (hIcon)
          {
             return hIcon;
@@ -270,7 +271,7 @@ LoadCursorIconImage(
 
       if (hIcon && 0 != (fuLoad & LR_SHARED))
       {
-#if 1
+#if 0
          NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, hResInfo,
                                  (HRSRC)NULL);
 #else

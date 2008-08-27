@@ -265,6 +265,7 @@ MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
   return;
 }
 
+#if 0
 static BOOL FASTCALL
 MsgiUMToKMReply(PMSG UMMsg, PMSG KMMsg, LRESULT *Result)
 {
@@ -272,6 +273,7 @@ MsgiUMToKMReply(PMSG UMMsg, PMSG KMMsg, LRESULT *Result)
 
   return TRUE;
 }
+#endif
 
 static BOOL FASTCALL
 MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
@@ -1702,6 +1704,9 @@ SendMessageW(HWND Wnd,
 	     WPARAM wParam,
 	     LPARAM lParam)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
   MSG UMMsg, KMMsg;
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
@@ -1749,6 +1754,7 @@ SendMessageW(HWND Wnd,
     }
 
   return Result;
+#endif
 }
 
 
@@ -1758,6 +1764,9 @@ SendMessageW(HWND Wnd,
 LRESULT STDCALL
 SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
   MSG AnsiMsg, UcMsg;
   MSG KMMsg;
   LRESULT Result;
@@ -1831,6 +1840,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 
   return Result;
+#endif
 }
 
 /*
@@ -1891,6 +1901,9 @@ SendMessageTimeoutA(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
   MSG AnsiMsg;
   MSG UcMsg;
   LRESULT Result;
@@ -1955,6 +1968,7 @@ SendMessageTimeoutA(
 
   SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
+#endif
 }
 
 
@@ -1972,6 +1986,9 @@ SendMessageTimeoutW(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
 
@@ -1993,6 +2010,7 @@ SendMessageTimeoutW(
 
   SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
+#endif
 }
 
 
@@ -2007,6 +2025,9 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+#if 0
   MSG AnsiMsg, UcMsg;
   MSG KMMsg;
   LRESULT Result;
@@ -2031,6 +2052,7 @@ SendNotifyMessageA(
   MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
 
   return Result;
+#endif
 }
 
 
@@ -2045,6 +2067,9 @@ SendNotifyMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+#if 0
   MSG UMMsg, KMMsg;
   LRESULT Result;
 
@@ -2061,6 +2086,7 @@ SendNotifyMessageW(
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
+#endif
 }
 
 

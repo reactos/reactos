@@ -21,7 +21,8 @@ OffsetViewportOrgEx(HDC hdc,
                     int nYOffset,
                     LPPOINT lpPoint)
 {
-    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+    /* Unimplemented for now */
+    return FALSE;
 }
 
 /*
@@ -35,7 +36,8 @@ OffsetWindowOrgEx(HDC hdc,
                   int nYOffset,
                   LPPOINT lpPoint)
 {
-    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+    /* Unimplemented for now */
+    return FALSE;
 }
 
 

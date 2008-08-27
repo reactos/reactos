@@ -88,7 +88,8 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
              ImageData, bwBIH, DIB_RGB_COLORS);
 
    /* Create the icon based on everything we have so far */
-   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+   UNIMPLEMENTED;
+   return NULL;
 }
 
 HICON
@@ -139,7 +140,8 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    IconInfo.hbmColor = (HBITMAP)0;
 
    /* Create the icon based on everything we have so far */
-   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+   UNIMPLEMENTED;
+   return NULL;
 }
 
 
@@ -195,7 +197,8 @@ CreateIcon(
     return (HICON)0;
   }
 
-  return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+  UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -343,7 +346,8 @@ CreateIconIndirect(PICONINFO IconInfo)
     return (HICON)0;
   }*/
 
-  return (HICON)NtUserCreateCursorIconHandle(IconInfo, TRUE);
+  UNIMPLEMENTED;
+  return NULL;
 }
 
 

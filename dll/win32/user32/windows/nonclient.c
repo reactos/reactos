@@ -583,7 +583,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
           else
             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-          NtUserSetScrollBarInfo(hWnd, OBJID_VSCROLL, &ssbi);
+          //NtUserSetScrollBarInfo(hWnd, OBJID_VSCROLL, &ssbi);
           if(ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
             Style &= ~WS_VSCROLL;
         }
@@ -602,7 +602,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
           else
             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-          NtUserSetScrollBarInfo(hWnd, OBJID_HSCROLL, &ssbi);
+          //NtUserSetScrollBarInfo(hWnd, OBJID_HSCROLL, &ssbi);
           if(ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
             Style &= ~WS_HSCROLL;
         }

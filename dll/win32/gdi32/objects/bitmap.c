@@ -315,7 +315,6 @@ CreateDIBitmap( HDC hDC,
                                     0);
 }
 
-#if 0
 /*
  * @implemented
  */
@@ -406,20 +405,6 @@ SetDIBits(HDC hDC,
     RestoreDC(SavehDC, -1);
 
  return LinesCopied;
-}
-#endif
-
-INT
-STDCALL
-SetDIBits(HDC hdc,
-          HBITMAP hbmp,
-          UINT uStartScan,
-          UINT cScanLines,
-          CONST VOID *lpvBits,
-          CONST BITMAPINFO *lpbmi,
-          UINT fuColorUse)
-{
-   return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
 }
 
 /*

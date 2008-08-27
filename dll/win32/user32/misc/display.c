@@ -134,66 +134,8 @@ EnumDisplayMonitors(
   MONITORENUMPROC lpfnEnum,
   LPARAM dwData)
 {
-  INT iCount, i;
-  HMONITOR *hMonitorList;
-  LPRECT pRectList;
-  HANDLE hHeap;
-
-  /* get list of monitors/rects */
-  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, NULL, NULL, 0);
-  if (iCount < 0)
-    {
-      /* FIXME: SetLastError() */
-      return FALSE;
-    }
-  if (iCount == 0)
-    {
-      return TRUE;
-    }
-
-  hHeap = GetProcessHeap();
-  hMonitorList = HeapAlloc(hHeap, 0, sizeof (HMONITOR) * iCount);
-  if (hMonitorList == NULL)
-    {
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-  pRectList = HeapAlloc(hHeap, 0, sizeof (RECT) * iCount);
-  if (pRectList == NULL)
-    {
-      HeapFree(hHeap, 0, hMonitorList);
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-
-  iCount = NtUserEnumDisplayMonitors(hdc, lprcClip, hMonitorList, pRectList, iCount);
-  if (iCount <= 0)
-    {
-      /* FIXME: SetLastError() */
-      HeapFree(hHeap, 0, hMonitorList);
-      HeapFree(hHeap, 0, pRectList);
-      return FALSE;
-    }
-
-  /* enumerate list */
-  for (i = 0; i < iCount; i++)
-    {
-      HMONITOR hMonitor = hMonitorList[i];
-      LPRECT pMonitorRect = pRectList + i;
-      HDC hMonitorDC = NULL;
-
-      if (hdc != NULL)
-        {
-          /* make monitor DC */
-          hMonitorDC = hdc;
-        }
-
-      if (!lpfnEnum(hMonitor, hMonitorDC, pMonitorRect, dwData))
-        break;
-    }
-  HeapFree(hHeap, 0, hMonitorList);
-  HeapFree(hHeap, 0, pRectList);
-  return TRUE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -361,7 +303,7 @@ GetMonitorInfoA(
 {
   if (lpmi->cbSize == sizeof (MONITORINFO))
     {
-      return NtUserGetMonitorInfo(hMonitor, lpmi);
+      return FALSE;
     }
   else if (lpmi->cbSize != sizeof (MONITORINFOEXA))
     {
@@ -374,7 +316,7 @@ GetMonitorInfoA(
       INT res;
 
       miExW.cbSize = sizeof (MONITORINFOEXW);
-      if (!NtUserGetMonitorInfo(hMonitor, (LPMONITORINFO)&miExW))
+      if (FALSE)
         {
           return FALSE;
         }
@@ -402,7 +344,8 @@ GetMonitorInfoW(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
 {
-  return NtUserGetMonitorInfo(hMonitor, lpmi);
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -415,7 +358,8 @@ MonitorFromPoint(
 	IN POINT ptPoint,
 	IN DWORD dwFlags )
 {
-  return NtUserMonitorFromPoint(ptPoint, dwFlags);
+  UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -428,7 +372,8 @@ MonitorFromRect(
 	IN LPCRECT lpcRect,
 	IN DWORD dwFlags )
 {
-  return NtUserMonitorFromRect(lpcRect, dwFlags);
+  UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -441,7 +386,8 @@ MonitorFromWindow(
 	IN HWND hWnd,
 	IN DWORD dwFlags )
 {
-  return NtUserMonitorFromWindow(hWnd, dwFlags);
+  UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -478,7 +424,7 @@ ChangeDisplaySettingsExA(
   else
     pDevModeW = NULL;
 
-  rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
+  rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, dwflags, lParam );
 
   if (lpszDeviceName != NULL)
     RtlFreeUnicodeString ( &DeviceName );
@@ -521,7 +467,7 @@ ChangeDisplaySettingsExW(
   else
     pDeviceName = NULL;
 
-  rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, hwnd, dwflags, lParam );
+  rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, dwflags, lParam );
 
   return rc;
 }

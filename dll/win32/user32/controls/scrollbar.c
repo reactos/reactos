@@ -58,14 +58,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(scrollbar);
 #define SCROLL_MIN_THUMB 6
 
  /* Thumb-tracking info */
-static HWND ScrollTrackingWin = 0;
-static INT  ScrollTrackingBar = 0;
-static INT  ScrollTrackingPos = 0;
-static INT  ScrollTrackingVal = 0;
-static BOOL ScrollMovingThumb = FALSE;
+//static HWND ScrollTrackingWin = 0;
+//static INT  ScrollTrackingBar = 0;
+//static INT  ScrollTrackingPos = 0;
+//static INT  ScrollTrackingVal = 0;
+//static BOOL ScrollMovingThumb = FALSE;
 
-static DWORD ScrollTrackHitTest = SCROLL_NOWHERE;
-static BOOL ScrollTrackVertical;
+//static DWORD ScrollTrackHitTest = SCROLL_NOWHERE;
+//static BOOL ScrollTrackVertical;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
@@ -254,6 +254,7 @@ IntDrawScrollArrows(HDC hDC, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
    DrawFrameControl(hDC, &RectRB, DFC_SCROLL, ScrollDirFlagRB);
 }
 
+#if 0
 static VOID FASTCALL
 IntScrollDrawMovingThumb(HDC Dc, PSCROLLBARINFO ScrollBarInfo, BOOL Vertical)
 {
@@ -306,13 +307,13 @@ IntScrollGetObjectId(INT SBType)
 
   return OBJID_CLIENT;
 }
+#endif
 
 static BOOL FASTCALL
 IntGetScrollBarInfo(HWND Wnd, INT Bar, PSCROLLBARINFO ScrollBarInfo)
 {
-  ScrollBarInfo->cbSize = sizeof(SCROLLBARINFO);
-
-  return NtUserGetScrollBarInfo(Wnd, IntScrollGetObjectId(Bar), ScrollBarInfo);
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 void
@@ -383,6 +384,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
     }
 }
 
+#if 0
 static BOOL FASTCALL
 IntScrollPtInRectEx(LPRECT Rect, POINT Pt, BOOL Vertical)
 {
@@ -467,6 +469,7 @@ IntScrollHitTest(PSCROLLBARINFO ScrollBarInfo, BOOL Vertical, POINT Pt, BOOL Dra
 
   return SCROLL_THUMB;
 }
+#endif
 
 
 /***********************************************************************
@@ -485,6 +488,9 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
                           INT *ArrowSize, INT *ThumbSize,
                           INT *ThumbPos)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+#if 0
   INT Pixels;
   BOOL Vertical;
   RECT ClientRect;
@@ -622,6 +628,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
     }
 
   return Vertical;
+#endif
 }
 
 /***********************************************************************
@@ -630,6 +637,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
  * Compute the current scroll position based on the thumb position in pixels
  * from the top of the scroll-bar.
  */
+#if 0
 static UINT FASTCALL
 IntScrollGetThumbVal(HWND Wnd, INT SBType, PSCROLLBARINFO ScrollBarInfo,
                      BOOL Vertical, INT Pos)
@@ -699,6 +707,7 @@ static POINT IntScrollClipPos(PRECT Rect, POINT Pt)
 
   return Pt;
 }
+#endif
 
 /***********************************************************************
  *           IntScrollDrawSizeGrip
@@ -782,6 +791,9 @@ IntScrollHandleKbdEvent(
 static VOID FASTCALL
 IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
 {
+    UNIMPLEMENTED;
+    return;
+#if 0
   static POINT PrevPt;           /* Previous mouse position for timer events */
   static UINT TrackThumbPos;     /* Thumb position when tracking started. */
   static INT LastClickPos;       /* Position in the scroll-bar of the last
@@ -1057,6 +1069,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
     }
 
   ReleaseDC(Wnd, Dc);
+#endif
 }
 
 
@@ -1140,16 +1153,8 @@ static void IntScrollCreateScrollBar(
 static INT FASTCALL
 IntScrollGetScrollPos(HWND Wnd, INT Bar)
 {
-  SCROLLINFO ScrollInfo;
-
-  ScrollInfo.cbSize = sizeof(SCROLLINFO);
-  ScrollInfo.fMask = SIF_POS;
-  if (! NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo))
-    {
-      return 0;
-    }
-
-  return ScrollInfo.nPos;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 static BOOL FASTCALL
@@ -1166,7 +1171,7 @@ IntScrollGetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 
   ScrollInfo.cbSize = sizeof(SCROLLINFO);
   ScrollInfo.fMask = SIF_RANGE;
-  Result = NtUserGetScrollInfo(Wnd, Bar, &ScrollInfo);
+  Result = FALSE;
   if (Result)
     {
       *MinPos = ScrollInfo.nMin;
@@ -1436,7 +1441,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
         return NtUserSetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam, wParam);
 
       case SBM_GETSCROLLINFO:
-        return NtUserGetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam);
+        return FALSE;
 
       case 0x00e5:
       case 0x00e7:
@@ -1491,7 +1496,8 @@ EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
 BOOL STDCALL
 GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
-  return NtUserGetScrollBarInfo(hWnd, idObject, psbi);
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -1506,7 +1512,8 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
     }
   else
     {
-      return NtUserGetScrollInfo(Wnd, SBType, Info);
+      UNIMPLEMENTED;
+      return FALSE;
     }
 }
 
@@ -1580,7 +1587,7 @@ SetScrollPos(HWND hWnd, INT nBar, INT nPos, BOOL bRedraw)
    * Call NtUserGetScrollInfo() to get the previous position that
    * we will later return.
    */
-  if (NtUserGetScrollInfo(hWnd, nBar, &ScrollInfo))
+  if (FALSE)
     {
       Result = ScrollInfo.nPos;
       if (Result != nPos)

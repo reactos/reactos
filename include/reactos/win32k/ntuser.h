@@ -882,7 +882,6 @@ NTAPI
 NtUserChangeDisplaySettings(
   PUNICODE_STRING lpszDeviceName,
   LPDEVMODEW lpDevMode,
-  HWND hwnd,
   DWORD dwflags,
   LPVOID lParam);
 
@@ -1204,8 +1203,7 @@ NTAPI
 NtUserFindExistingCursorIcon(
   HMODULE hModule,
   HRSRC hRsrc,
-  LONG cx,
-  LONG cy);
+  PPOINT Point); // FIXME: Verify!
 
 HWND
 NTAPI
@@ -2127,11 +2125,9 @@ BOOL
 NTAPI
 NtUserSetCursorIconData(
   HANDLE Handle,
-  PBOOL fIcon,
-  POINT *Hotspot,
   HMODULE hModule,
-  HRSRC hRsrc,
-  HRSRC hGroupRsrc);
+  PUNICODE_STRING pstrResName,
+  PICONINFO pIconInfo);
 
 DWORD
 NTAPI

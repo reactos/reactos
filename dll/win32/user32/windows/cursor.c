@@ -76,7 +76,7 @@ CopyCursor(HCURSOR pcur)
 
   if(GetIconInfo((HANDLE)pcur, &IconInfo))
   {
-    return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+    return 0;
   }
   return (HCURSOR)0;
 }
@@ -145,7 +145,7 @@ CreateCursor(HINSTANCE hInst,
    IconInfo.yHotspot = yHotSpot;
    IconInfo.hbmColor = 0;
 
-   return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+   return NULL;
 }
 
 

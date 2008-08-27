@@ -23,6 +23,9 @@ GetClassInfoExA(
   LPCSTR lpszClass,
   LPWNDCLASSEXA lpwcx)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+#if 0
     UNICODE_STRING ClassName = {0};
     BOOL Ret;
 
@@ -71,6 +74,7 @@ GetClassInfoExA(
     }
 
     return Ret;
+#endif
 }
 
 
@@ -84,6 +88,9 @@ GetClassInfoExW(
   LPCWSTR lpszClass,
   LPWNDCLASSEXW lpwcx)
 {
+    UNIMPLEMENTED;
+    return FALSE;
+#if 0
     UNICODE_STRING ClassName = {0};
 
     TRACE("%p class/atom: %S/%04x %p\n", hInstance,
@@ -120,6 +127,7 @@ GetClassInfoExW(
                               lpwcx,
                               NULL,
                               FALSE);
+#endif
 }
 
 
@@ -292,7 +300,7 @@ GetClassLongA(HWND hWnd, int nIndex)
     _SEH_END;
 
     if (Wnd == NULL)
-        Ret = NtUserGetClassLong(hWnd, nIndex, TRUE);
+        Ret = 0;
 
     return Ret;
 }
@@ -405,7 +413,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
     _SEH_END;
 
     if (Wnd == NULL)
-        Ret = NtUserGetClassLong(hWnd, nIndex, FALSE);
+        Ret = 0;
 
     return Ret;
 }
@@ -426,9 +434,10 @@ GetClassNameA(
     ClassName.MaximumLength = nMaxCount;
     ClassName.Buffer = lpClassName;
 
+    /* FIXME: Conver to unicode!!! */
     Result = NtUserGetClassName(hWnd,
-                                (PUNICODE_STRING)&ClassName,
-                                TRUE);
+                                FALSE,
+                                (PUNICODE_STRING)&ClassName);
 
     TRACE("%p class/atom: %s/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
@@ -456,8 +465,8 @@ GetClassNameW(
     ClassName.Buffer = lpClassName;
 
     Result = NtUserGetClassName(hWnd,
-                                &ClassName,
-                                FALSE);
+                                FALSE,
+                                &ClassName);
 
     TRACE("%p class/atom: %S/%04x %x\n", hWnd,
         IS_ATOM(lpClassName) ? NULL : lpClassName,
@@ -485,7 +494,7 @@ GetClassWord(
     if ((nIndex < 0) && (nIndex != GCW_ATOM))
         return 0;
 
-    return (WORD) NtUserGetClassLong ( hWnd, nIndex, TRUE );
+    return 0;
 }
 
 
@@ -536,7 +545,7 @@ GetWindowLongA ( HWND hWnd, int nIndex )
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need
                    to be created */
-                return NtUserGetWindowLong(hWnd, nIndex, TRUE);
+                return 0;
 
             default:
                 SetLastError(ERROR_INVALID_PARAMETER);
@@ -593,7 +602,7 @@ GetWindowLongW(HWND hWnd, int nIndex)
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need
                    to be created */
-                return NtUserGetWindowLong(hWnd, nIndex, FALSE);
+                return 0;
 
             default:
                 SetLastError(ERROR_INVALID_PARAMETER);
@@ -654,6 +663,7 @@ RealGetWindowClassA(
 /*
  * Create a small icon based on a standard icon
  */
+#if 0
 static HICON
 CreateSmallIcon(HICON StdIcon)
 {
@@ -814,6 +824,7 @@ cleanup:
 
    return SmallIcon;
 }
+#endif
 
 
 ATOM STDCALL
@@ -832,6 +843,9 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
 ATOM STDCALL
 RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
    RTL_ATOM Atom;
    WNDCLASSEXA WndClass;
    UNICODE_STRING ClassName;
@@ -917,6 +931,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       RtlFreeUnicodeString(&ClassName);
 
    return (ATOM)Atom;
+#endif
 }
 
 /*
@@ -925,6 +940,9 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 ATOM STDCALL
 RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
+    UNIMPLEMENTED;
+    return 0;
+#if 0
    ATOM Atom;
    WNDCLASSEXW WndClass;
    UNICODE_STRING ClassName;
@@ -1005,6 +1023,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
           lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
 
    return Atom;
+#endif
 }
 
 /*

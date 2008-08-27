@@ -1043,7 +1043,8 @@ GetWindow(HWND hWnd,
     _SEH_END;
 
     if (!Wnd) /* Fall back to win32k... */
-        Ret = NtUserGetWindow(hWnd, uCmd);
+        UNIMPLEMENTED;
+        Ret = NULL;
 
     return Ret;
 }

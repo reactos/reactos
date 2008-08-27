@@ -35,8 +35,7 @@ HICON
 APIENTRY
 NtUserFindExistingCursorIcon(HMODULE hModule,
                              HRSRC hRsrc,
-                             LONG cx,
-                             LONG cy) 
+                             PPOINT Point) 
 {
     UNIMPLEMENTED;
     return NULL;
@@ -86,15 +85,12 @@ NtUserSetCursorContents(HANDLE Handle,
     return FALSE;
 }
 
-
 BOOL
-APIENTRY
+NTAPI
 NtUserSetCursorIconData(HANDLE Handle,
-                        PBOOL fIcon,
-                        POINT *Hotspot,
                         HMODULE hModule,
-                        HRSRC hRsrc,
-                        HRSRC hGroupRsrc)
+                        PUNICODE_STRING pstrResName,
+                        PICONINFO pIconInfo)
 {
     UNIMPLEMENTED;
     return FALSE;

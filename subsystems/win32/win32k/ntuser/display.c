@@ -18,7 +18,6 @@ LONG
 APIENTRY
 NtUserChangeDisplaySettings(PUNICODE_STRING lpszDeviceName,
                             LPDEVMODEW lpDevMode,
-                            HWND hWnd,
                             DWORD dwflags,
                             LPVOID lParam)
 {
