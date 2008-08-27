@@ -886,6 +886,14 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     return Kcb;
 }
 
+PUNICODE_STRING
+NTAPI
+CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 VOID
 NTAPI
 EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,

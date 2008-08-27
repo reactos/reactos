@@ -119,9 +119,74 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 OUT PULONG ReturnLength,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-    DPRINT1("CmpQueryKeyName() called\n");
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
+    PUNICODE_STRING KeyName;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
+    PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
+
+    /* Acquire hive lock */
+    CmpLockRegistry();
+
+    /* Lock KCB shared */
+    CmpAcquireKcbLockShared(Kcb);
+
+    /* Check if it's a deleted block */
+    if (Kcb->Delete)
+    {
+        /* Release the locks */
+        CmpReleaseKcbLock(Kcb);
+        CmpUnlockRegistry();
+
+        /* Let the caller know it's deleted */
+        return STATUS_KEY_DELETED;
+    }
+
+    /* Get the name */
+    KeyName = CmpConstructName(Kcb);
+
+    /* Release the locks */
+    CmpReleaseKcbLock(Kcb);
+    CmpUnlockRegistry();
+
+    /* Check if we got the name */
+    if (!KeyName) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set the returned length */
+    *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
+
+    /* Check if it fits into the provided buffer */
+    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
+        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    {
+        /* Free the buffer allocated by CmpConstructName */
+        ExFreePool(KeyName->Buffer);
+
+        /* Return buffer length failure */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Fill in the result */
+    _SEH_TRY
+    {
+        /* Return data to user */
+        ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
+        ObjectNameInfo->Name.MaximumLength = KeyName->Length;
+        ObjectNameInfo->Name.Length = KeyName->Length;
+
+        /* Copy string content*/
+        RtlCopyMemory(ObjectNameInfo->Name.Buffer, KeyName->Buffer, *ReturnLength);
+    }
+    _SEH_HANDLE
+    {
+        /* Get the status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Free the buffer allocated by CmpConstructName */
+    ExFreePool(KeyName->Buffer);
+
+    return Status;
 }
 
 NTSTATUS
