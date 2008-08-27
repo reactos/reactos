@@ -32,4 +32,34 @@
 	<file>StringCbVPrintfW.c</file>
 	<file>StringCbVPrintfExA.c</file>
 	<file>StringCbVPrintfExW.c</file>
+	<file>StringCchCatA.c</file>
+	<file>StringCchCatW.c</file>
+	<file>StringCchCatExA.c</file>
+	<file>StringCchCatExW.c</file>
+	<file>StringCchCatNA.c</file>
+	<file>StringCchCatNW.c</file>
+	<file>StringCchCatNExA.c</file>
+	<file>StringCchCatNExW.c</file>
+	<file>StringCchCopyA.c</file>
+	<file>StringCchCopyW.c</file>
+	<file>StringCchCopyExA.c</file>
+	<file>StringCchCopyExW.c</file>
+	<file>StringCchCopyNA.c</file>
+	<file>StringCchCopyNW.c</file>
+	<file>StringCchCopyNExA.c</file>
+	<file>StringCchCopyNExW.c</file>
+	<file>StringCchGetsA.c</file>
+	<file>StringCchGetsW.c</file>
+	<file>StringCchGetsExA.c</file>
+	<file>StringCchGetsExW.c</file>
+	<file>StringCchLengthA.c</file>
+	<file>StringCchLengthW.c</file>
+	<file>StringCchPrintfA.c</file>
+	<file>StringCchPrintfW.c</file>
+	<file>StringCchPrintfExA.c</file>
+	<file>StringCchPrintfExW.c</file>
+	<file>StringCchVPrintfA.c</file>
+	<file>StringCchVPrintfW.c</file>
+	<file>StringCchVPrintfExA.c</file>
+	<file>StringCchVPrintfExW.c</file>
 </module>
