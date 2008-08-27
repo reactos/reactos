@@ -26,6 +26,7 @@
 #include "mm.h"
 #endif
 
+#define MachInit PcMachInit
 VOID PcMachInit(const char *CmdLine);
 
 VOID PcConsPutChar(int Ch);

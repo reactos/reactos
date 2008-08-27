@@ -36,6 +36,12 @@ PVOID pIdt, pGdt;
 /* FUNCTIONS *****************************************************************/
 
 void
+EnableA20()
+{
+    /* Already done */
+}
+
+void
 DumpLoaderBlock()
 {
 	DbgPrint("LoaderBlock @ %p.\n", &LoaderBlock);
