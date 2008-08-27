@@ -214,10 +214,10 @@ IopLogWorker(IN PVOID Parameter)
         }
 
         /* Align the buffer */
-        StringBuffer = (PVOID)ALIGN_UP(StringBuffer, WCHAR);
+        StringBuffer = ALIGN_UP_POINTER(StringBuffer, WCHAR);
 
         /* Set the offset for the driver's name to the current buffer */
-        ErrorMessage->DriverNameOffset = (ULONG)(StringBuffer -
+        ErrorMessage->DriverNameOffset = (ULONG_PTR)(StringBuffer -
                                                  (ULONG_PTR)ErrorMessage);
 
         /* Check how much space we have left for the device string */
