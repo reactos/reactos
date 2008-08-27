@@ -101,7 +101,10 @@ typedef _sigset_t	sigset_t;
 typedef long _ssize_t;
 
 #ifndef	_NO_OLDNAMES
+# ifndef _SSIZE_T_DEFINED
+#  define _SSIZE_T_DEFINED
 typedef _ssize_t ssize_t;
+# endif
 #endif
 #endif /* Not _SSIZE_T_ */
 
