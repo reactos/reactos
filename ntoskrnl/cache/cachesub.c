@@ -185,6 +185,16 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	LARGE_INTEGER ToWrite = *FileOffset;
 	IO_STATUS_BLOCK IOSB;
 
+	if (!SectionObjectPointer->SharedCacheMap)
+	{
+	    if (IoStatus)
+	    {
+		IoStatus->Status = STATUS_SUCCESS;
+		IoStatus->Information = 0;
+	    }
+	    return;
+	}
+
 	BOOLEAN Result = CcpMapData
 		((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap,
 		 FileOffset,
@@ -227,6 +237,48 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 		IoStatus->Status = IOSB.Status;
 		IoStatus->Information = 0;
 	}
+}
+
+BOOLEAN
+NTAPI
+CcFlushImageSection
+(PSECTION_OBJECT_POINTERS SectionObjectPointer,
+ MMFLUSH_TYPE FlushType)
+{
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+    PNOCC_BCB Bcb;
+    PLIST_ENTRY Entry;
+    IO_STATUS_BLOCK IOSB;
+    BOOLEAN Result = TRUE;
+    
+    for (Entry = Map->AssociatedBcb.Flink;
+	 Entry != &Map->AssociatedBcb;
+	 Entry = Entry->Flink)
+    {
+	Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
+
+	if (!Bcb->Dirty) continue;
+
+	switch (FlushType)
+	{
+	case MmFlushForDelete:
+	    CcPurgeCacheSection
+		(Bcb->FileObject->SectionObjectPointer,
+		 &Bcb->FileOffset,
+		 Bcb->Length,
+		 FALSE);
+	    break;
+	case MmFlushForWrite:
+	    CcFlushCache
+		(Bcb->FileObject->SectionObjectPointer,
+		 &Bcb->FileOffset,
+		 Bcb->Length,
+		 &IOSB);
+	    break;
+	}
+    }
+
+    return Result;
 }
 
 // Always succeeds for us

@@ -108,8 +108,9 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
     FileObject->SectionObjectPointer->SharedCacheMap = Map;
     Map->FileObject = FileObject;
     Map->NumberOfMaps = 0;
+    Map->FileSizes = *FileSizes;
+    DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
     InitializeListHead(&Map->AssociatedBcb);
-    return;
 }
 
 BOOLEAN
@@ -174,7 +175,21 @@ NTAPI
 CcSetFileSizes(IN PFILE_OBJECT FileObject,
                IN PCC_FILE_SIZES FileSizes)
 {
-    /* Nothing to do */
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+    if (!Map) return;
+    Map->FileSizes = *FileSizes;
+    DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
+}
+
+BOOLEAN
+NTAPI
+CcGetFileSizes(IN PFILE_OBJECT FileObject,
+	       IN PCC_FILE_SIZES FileSizes)
+{
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+    if (!Map) return FALSE;
+    *FileSizes = Map->FileSizes;
+    return TRUE;
 }
 
 BOOLEAN

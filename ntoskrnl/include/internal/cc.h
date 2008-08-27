@@ -102,27 +102,6 @@ typedef struct _PFSN_PREFETCHER_GLOBALS
     LONG ActivePrefetches;
 } PFSN_PREFETCHER_GLOBALS, *PPFSN_PREFETCHER_GLOBALS;
 
-#if 0
-typedef struct _BCB
-{
-    LIST_ENTRY BcbSegmentListHead;
-    LIST_ENTRY BcbRemoveListEntry;
-    BOOLEAN RemoveOnClose;
-    ULONG TimeStamp;
-    PFILE_OBJECT FileObject;
-    ULONG CacheSegmentSize;
-    LARGE_INTEGER AllocationSize;
-    LARGE_INTEGER FileSize;
-    PCACHE_MANAGER_CALLBACKS Callbacks;
-    PVOID LazyWriteContext;
-    KSPIN_LOCK BcbLock;
-    ULONG RefCount;
-#if defined(DBG) || defined(KDBG)
-	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
-#endif
-} BCB, *PBCB;
-#endif
-
 typedef struct _NOCC_BCB
 {
     /* Public part */
@@ -150,9 +129,10 @@ typedef struct _NOCC_BCB
 
 typedef struct _NOCC_CACHE_MAP
 {
-	LIST_ENTRY AssociatedBcb;
-	PFILE_OBJECT FileObject;
-	ULONG NumberOfMaps;
+    LIST_ENTRY AssociatedBcb;
+    PFILE_OBJECT FileObject;
+    ULONG NumberOfMaps;
+    CC_FILE_SIZES FileSizes;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID
@@ -188,28 +168,14 @@ VOID
 NTAPI
 CcInitCacheZeroPage(VOID);
 
-NTSTATUS
+/* Called by section.c */
+BOOLEAN
 NTAPI
-CcRosFlushDirtyPages(
-    ULONG Target,
-    PULONG Count
-);
+CcFlushImageSection(PSECTION_OBJECT_POINTERS SectionObjectPointer, MMFLUSH_TYPE FlushType);
 
-VOID
+BOOLEAN
 NTAPI
-CcRosDereferenceCache(PFILE_OBJECT FileObject);
-
-VOID
-NTAPI
-CcRosReferenceCache(PFILE_OBJECT FileObject);
-
-VOID
-NTAPI
-CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
-
-NTSTATUS
-NTAPI
-CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+CcGetFileSizes(PFILE_OBJECT FileObject, PCC_FILE_SIZES FileSizes);
 
 /*
  * Macro for generic cache manage bugchecking. Note that this macro assumes

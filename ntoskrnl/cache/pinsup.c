@@ -454,9 +454,13 @@ CcpMapData
 
     if (!SectionObject)
     {
+	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	ULONG SectionSize = min(CACHE_STRIPE, Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart);
+	DPRINT("Allocating a cache stripe at %x:%d\n",
+	       Target.LowPart, SectionSize);
 	Status = CcpAllocateSection
 	    (FileObject,
-	     CACHE_STRIPE,
+	     SectionSize,
 	     PAGE_READWRITE,
 	     &SectionObject);
 		
@@ -587,7 +591,17 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
 	     FALSE,
 	     FALSE,
 	     NULL);
-	MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	_SEH_TRY
+	{
+	    MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	}
+	_SEH_HANDLE
+	{
+	    IoFreeMdl(TheBcb->Pinned);
+	    TheBcb->Pinned = NULL;
+	    Result = FALSE;
+	}
+	_SEH_END;
     }
 
     return TRUE;
@@ -615,7 +629,17 @@ CcPinRead(IN PFILE_OBJECT FileObject,
 		 FALSE,
 		 FALSE,
 		 NULL);
-	    MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	    _SEH_TRY
+	    {
+		MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	    }
+	    _SEH_HANDLE
+	    {
+		IoFreeMdl(TheBcb->Pinned);
+		TheBcb->Pinned = NULL;
+		Result = FALSE;
+	    }
+	    _SEH_END;
 	}
     }
 
