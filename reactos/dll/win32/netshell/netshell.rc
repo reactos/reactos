@@ -1,0 +1,10 @@
+#include <windows.h>
+#include "shlobj.h"
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_SHELL_NETWORK_FOLDER    ICON "res/netshell.ico"
+
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"

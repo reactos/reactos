@@ -196,6 +196,9 @@
 <directory name="netid">
 	<xi:include href="netid/netid.rbuild" />
 </directory>
+<directory name="netshell">
+	<xi:include href="netshell/netshell.rbuild" />
+</directory>
 <directory name="newdev">
 	<xi:include href="newdev/newdev.rbuild" />
 </directory>
