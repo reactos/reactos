@@ -466,18 +466,6 @@ typedef unsigned short PIXEL;
 /* 16-bit HiColor (565 format) */
 __inline PIXEL average16(PIXEL a, PIXEL b)
 {
-// This one doesn't work
-/*
-    if (a == b)
-    {
-        return a;
-    }
-    else
-    {
-        unsigned short mask = ~ (((a | b) & 0x0410) << 1);
-        return ((a & mask) + (b & mask)) >> 1;
-    }*/ /* if */
-
 // This one should be correct, but it's too long
 /*
     unsigned char r1, g1, b1, r2, g2, b2, rr, gr, br;
@@ -499,8 +487,11 @@ __inline PIXEL average16(PIXEL a, PIXEL b)
 
     return res;
 */
-  // This one is the short form of the correct one ;-)
-  return (((a ^ b) & 0xf7deU) >> 1) + (a & b);
+  // This one is the short form of the correct one, but does not work for QEMU (expects 555 format)
+  //return (((a ^ b) & 0xf7deU) >> 1) + (a & b);
+
+  //hack until short version works properly
+  return a;
 }
 
 //NOTE: If you change something here, please do the same in other dibXXbpp.c files!
