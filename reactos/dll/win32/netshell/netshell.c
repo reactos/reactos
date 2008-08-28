@@ -47,6 +47,8 @@ DllCanUnloadNow(void)
     return S_FALSE;
 }
 
+//#define CHECKPOINT1 ERR("\n");
+
 STDAPI
 DllRegisterServer(void)
 {
@@ -55,8 +57,12 @@ DllRegisterServer(void)
     WCHAR szNet[20];
     UINT Length, Offset;
 
+    //CHECKPOINT1;
+
     if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szNetConnectClass, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return SELFREG_E_CLASS;
+
+    //CHECKPOINT1;
 
     if (LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, szName, MAX_PATH))
     {
@@ -64,11 +70,15 @@ DllRegisterServer(void)
         RegSetValueW(hKey, NULL, REG_SZ, szName, (wcslen(szName)+1) * sizeof(WCHAR));
     }
 
+    //CHECKPOINT1;
+
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szNamespaceKey, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
     {
         RegSetValueW(hSubKey, NULL, REG_SZ, szName, (wcslen(szName)+1) * sizeof(WCHAR));
         RegCloseKey(hSubKey);
     }
+
+    //CHECKPOINT1;
 
     Length = swprintf(szNet, L",-%u", IDS_NETWORKCONNECTION);
     Offset = GetModuleFileNameW(netshell_hInstance, &szName[1], MAX_PATH);
@@ -80,7 +90,12 @@ DllRegisterServer(void)
         RegSetValueExW(hKey, L"LocalizedString", 0, REG_SZ, (const LPBYTE)szName, (wcslen(szName)+1) * sizeof(WCHAR));
     }
 
+
+    //CHECKPOINT1;
+
     szName[Offset+1] = L'\0';
+
+    //CHECKPOINT1;
 
     /* store default icon */
     if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
@@ -88,17 +103,23 @@ DllRegisterServer(void)
         RegSetValueW(hSubKey, NULL, REG_SZ, &szName[1], (Offset+1) * sizeof(WCHAR));
         RegCloseKey(hSubKey);
     }
+    //CHECKPOINT1;
     if (RegCreateKeyExW(hKey, L"InProcServer32", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
     {
         RegSetValueW(hSubKey, NULL, REG_SZ, &szName[1], (Offset+1) * sizeof(WCHAR));
         RegCloseKey(hSubKey);
     }
 
+
+    //CHECKPOINT1;
+
     if (RegCreateKeyExW(hKey, L"ShellFolder", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
     {
         DWORD dwAttributes = SFGAO_FOLDER;
         RegSetValueExW(hSubKey, L"Attributes",0, REG_BINARY, (const LPBYTE)&dwAttributes, sizeof(DWORD));
     }
+
+    //CHECKPOINT1;
 
     return S_OK;
 }

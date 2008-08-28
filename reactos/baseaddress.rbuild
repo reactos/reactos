@@ -127,11 +127,12 @@
   <property name="BASEADDRESS_COMCTL32" value="0x76160000" />
   <property name="BASEADDRESS_COMDLG32" value="0x76210000" />
   <property name="BASEADDRESS_WINSTA" value="0x762F0000" />
+  <property name="BASEADDRESS_IMM32" value="0x76320000" />
   <property name="BASEADDRESS_RICHED32" value="0x76340000" />
   <property name="BASEADDRESS_D3D8THK" value="0x76340000" />
   <property name="BASEADDRESS_RICHED20" value="0x76360000" />
   <property name="BASEADDRESS_TWAIN_32" value="0x76380000" />
-  <property name="BASEADDRESS_IMM32" value="0x76390000" />
+  <property name="BASEADDRESS_NETSHELL" value="0x76390000" />
   <property name="BASEADDRESS_LSASRV" value="0x76540000" />
   <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
   <property name="BASEADDRESS_ODBC32" value="0x76660000" />

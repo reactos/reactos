@@ -1,4 +1,4 @@
-<module name="netshell" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="netshell.dll">
+<module name="netshell" type="win32dll" baseaddress="${BASEADDRESS_NETSHELL}" installbase="system32" installname="netshell.dll">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="netshell.spec.def" />
 	<include base="netshell">.</include>
