@@ -76,14 +76,19 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
       LARGE_INTEGER FileOffset;
       IO_STATUS_BLOCK IoStatus;
+      CC_FILE_SIZES FileSizes;
 
       if (ReadOffset + Length > Fcb->Entry.DataLengthL)
          Length = Fcb->Entry.DataLengthL - ReadOffset;
 
       if (FileObject->PrivateCacheMap == NULL)
 	{
+	  FileSizes.AllocationSize = Fcb->RFCB.AllocationSize;
+	  FileSizes.FileSize = Fcb->RFCB.FileSize;
+	  FileSizes.ValidDataLength = Fcb->RFCB.ValidDataLength;
+
           CcInitializeCacheMap(FileObject,
-                               (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                               &FileSizes,
 		               FALSE,
 		               &(CdfsGlobalData->CacheMgrCallbacks),
 		               Fcb);

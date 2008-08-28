@@ -223,6 +223,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
   PCCB  newCCB;
+  CC_FILE_SIZES FileSizes;
 
   FileObject = IoCreateStreamFileObject(NULL, Vcb->StorageDevice);
 
@@ -240,6 +241,9 @@ CdfsFCBInitializeCache(PVCB Vcb,
   newCCB->PtrFileObject = FileObject;
   Fcb->FileObject = FileObject;
   Fcb->DevExt = Vcb;
+  FileSizes.AllocationSize = Fcb->RFCB.AllocationSize;
+  FileSizes.FileSize = Fcb->RFCB.FileSize;
+  FileSizes.ValidDataLength = Fcb->RFCB.ValidDataLength;
 
   Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
@@ -411,6 +415,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
                           PFILE_OBJECT FileObject)
 {
   PCCB  newCCB;
+  CC_FILE_SIZES FileSizes;
 
   newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
   if (newCCB == NULL)
@@ -424,11 +429,14 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
   FileObject->FsContext2 = newCCB;
   newCCB->PtrFileObject = FileObject;
   Fcb->DevExt = Vcb;
+  FileSizes.AllocationSize = Fcb->RFCB.AllocationSize;
+  FileSizes.FileSize = Fcb->RFCB.FileSize;
+  FileSizes.ValidDataLength = Fcb->RFCB.ValidDataLength;
 
   if (CdfsFCBIsDirectory(Fcb))
     {
   CcInitializeCacheMap(FileObject,
-                       (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                       &FileSizes,
                        FALSE,
                        &(CdfsGlobalData->CacheMgrCallbacks),
                        Fcb);
