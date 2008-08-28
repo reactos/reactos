@@ -189,6 +189,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                 if (Name->Buffer[NamePosition] == '.')
                 {
                     MatchingChars = NamePosition;
+                    break;
                 }
             }
         }

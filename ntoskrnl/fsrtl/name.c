@@ -317,6 +317,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                 if (IntName.Buffer[j] == '.')
                 {
                     k = j;
+                    break;
                 }
             }
         }
