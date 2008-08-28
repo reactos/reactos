@@ -22,6 +22,7 @@
 	<file>run.c</file>
 	<file>string.c</file>
 	<file>style.c</file>
+	<file>table.c</file>
 	<file>txtsrv.c</file>
 	<file>undo.c</file>
 	<file>wrap.c</file>

@@ -140,10 +140,10 @@
   + WM_SETTEXT (resets undo stack !) (proper style?) ANSI&Unicode
   - WM_STYLECHANGING
   - WM_STYLECHANGED (things like read-only flag)
-  - WM_UNICHAR
-  
+  + WM_UNICHAR
+
   Notifications
-  
+
   * EN_CHANGE (sent from the wrong place)
   - EN_CORRECTTEXT
   - EN_DROPFILES
@@ -320,6 +320,32 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
   return 0;
 }
 
+static void ME_ApplyBorderProperties(RTF_Info *info,
+                                     ME_BorderRect *borderRect,
+                                     RTFBorder *borderDef)
+{
+  int i, colorNum;
+  ME_Border *pBorders[] = {&borderRect->top,
+                           &borderRect->left,
+                           &borderRect->bottom,
+                           &borderRect->right};
+  for (i = 0; i < 4; i++)
+  {
+    RTFColor *colorDef = info->colorList;
+    pBorders[i]->width = borderDef[i].width;
+    colorNum = borderDef[i].color;
+    while (colorDef && colorDef->rtfCNum != colorNum)
+      colorDef = colorDef->rtfNextColor;
+    if (colorDef)
+      pBorders[i]->colorRef = RGB(
+                           colorDef->rtfCRed >= 0 ? colorDef->rtfCRed : 0,
+                           colorDef->rtfCGreen >= 0 ? colorDef->rtfCGreen : 0,
+                           colorDef->rtfCBlue >= 0 ? colorDef->rtfCBlue : 0);
+    else
+      pBorders[i]->colorRef = RGB(0, 0, 0);
+  }
+}
+
 static void ME_RTFCharAttrHook(RTF_Info *info)
 {
   CHARFORMAT2W fmt;
@@ -451,8 +477,13 @@ static void ME_RTFParAttrHook(RTF_Info *info)
   switch(info->rtfMinor)
   {
   case rtfParDef: /* restores default paragraph attributes */
-    fmt.dwMask = PFM_ALIGNMENT | PFM_BORDER | PFM_LINESPACING | PFM_TABSTOPS | PFM_OFFSET |
-        PFM_RIGHTINDENT | PFM_SPACEAFTER | PFM_SPACEBEFORE | PFM_STARTINDENT;
+    if (!info->editor->bEmulateVersion10) /* v4.1 */
+      info->borderType = RTFBorderParaLeft;
+    else /* v1.0 - 3.0 */
+      info->borderType = RTFBorderParaTop;
+    fmt.dwMask = PFM_ALIGNMENT | PFM_BORDER | PFM_LINESPACING | PFM_TABSTOPS |
+        PFM_OFFSET | PFM_RIGHTINDENT | PFM_SPACEAFTER | PFM_SPACEBEFORE |
+        PFM_STARTINDENT;
     /* TODO: numbering, shading */
     fmt.wAlignment = PFA_LEFT;
     fmt.cTabCount = 0;
@@ -462,31 +493,113 @@ static void ME_RTFParAttrHook(RTF_Info *info)
     fmt.bLineSpacingRule = 0;
     fmt.dySpaceBefore = fmt.dySpaceAfter = 0;
     fmt.dyLineSpacing = 0;
-    RTFFlushOutputBuffer(info);
-    ME_GetParagraph(info->editor->pCursors[0].pRun)->member.para.bTable = FALSE;
+    if (!info->editor->bEmulateVersion10) /* v4.1 */
+    {
+      if (info->tableDef && info->tableDef->tableRowStart &&
+          info->tableDef->tableRowStart->member.para.nFlags & MEPF_ROWEND)
+      {
+        ME_Cursor cursor;
+        ME_DisplayItem *para;
+        /* We are just after a table row. */
+        RTFFlushOutputBuffer(info);
+        cursor = info->editor->pCursors[0];
+        para = ME_GetParagraph(cursor.pRun);
+        if (para  == info->tableDef->tableRowStart->member.para.next_para
+            && !cursor.nOffset && !cursor.pRun->member.run.nCharOfs)
+        {
+          /* Since the table row end, no text has been inserted, and the \intbl
+           * control word has not be used.  We can confirm that we are not in a
+           * table anymore.
+           */
+          info->tableDef->tableRowStart = NULL;
+          info->canInheritInTbl = FALSE;
+        }
+      }
+    } else { /* v1.0 - v3.0 */
+      fmt.dwMask |= PFM_TABLE;
+      fmt.wEffects &= ~PFE_TABLE;
+    }
+    break;
+  case rtfNestLevel:
+    if (!info->editor->bEmulateVersion10) /* v4.1 */
+    {
+      while (info->rtfParam > info->nestingLevel) {
+        RTFTable *tableDef = ALLOC_OBJ(RTFTable);
+        ZeroMemory(tableDef, sizeof(RTFTable));
+        tableDef->parent = info->tableDef;
+        info->tableDef = tableDef;
+
+        RTFFlushOutputBuffer(info);
+        if (tableDef->tableRowStart &&
+            tableDef->tableRowStart->member.para.nFlags & MEPF_ROWEND)
+        {
+          ME_DisplayItem *para = tableDef->tableRowStart;
+          para = para->member.para.next_para;
+          para = ME_InsertTableRowStartAtParagraph(info->editor, para);
+          tableDef->tableRowStart = para;
+        } else {
+          ME_Cursor cursor;
+          WCHAR endl = '\r';
+          cursor = info->editor->pCursors[0];
+          if (cursor.nOffset || cursor.pRun->member.run.nCharOfs)
+            ME_InsertTextFromCursor(info->editor, 0, &endl, 1, info->style);
+          tableDef->tableRowStart = ME_InsertTableRowStartFromCursor(info->editor);
+        }
+
+        info->nestingLevel++;
+      }
+      info->canInheritInTbl = FALSE;
+    }
     break;
   case rtfInTable:
   {
-    ME_DisplayItem *para;
-    
-    RTFFlushOutputBuffer(info);
-    para = ME_GetParagraph(info->editor->pCursors[0].pRun);
-    assert(para->member.para.pCells);
-    para->member.para.bTable = TRUE;
-    return;
+    if (!info->editor->bEmulateVersion10) /* v4.1 */
+    {
+      if (info->nestingLevel < 1)
+      {
+        RTFTable *tableDef;
+        if (!info->tableDef)
+        {
+            info->tableDef = ALLOC_OBJ(RTFTable);
+            ZeroMemory(info->tableDef, sizeof(RTFTable));
+        }
+        tableDef = info->tableDef;
+        RTFFlushOutputBuffer(info);
+        if (tableDef->tableRowStart &&
+            tableDef->tableRowStart->member.para.nFlags & MEPF_ROWEND)
+        {
+          ME_DisplayItem *para = tableDef->tableRowStart;
+          para = para->member.para.next_para;
+          para = ME_InsertTableRowStartAtParagraph(info->editor, para);
+          tableDef->tableRowStart = para;
+        } else {
+          ME_Cursor cursor;
+          WCHAR endl = '\r';
+          cursor = info->editor->pCursors[0];
+          if (cursor.nOffset || cursor.pRun->member.run.nCharOfs)
+            ME_InsertTextFromCursor(info->editor, 0, &endl, 1, info->style);
+          tableDef->tableRowStart = ME_InsertTableRowStartFromCursor(info->editor);
+        }
+        info->nestingLevel = 1;
+        info->canInheritInTbl = TRUE;
+      }
+      return;
+    } else { /* v1.0 - v3.0 */
+      fmt.dwMask |= PFM_TABLE;
+      fmt.wEffects |= PFE_TABLE;
+    }
+    break;
   }
   case rtfFirstIndent:
     ME_GetSelectionParaFormat(info->editor, &fmt);
-    fmt.dwMask |= PFM_STARTINDENT | PFM_OFFSET;
-    fmt.dxStartIndent += info->rtfParam;
+    fmt.dwMask = PFM_STARTINDENT | PFM_OFFSET;
+    fmt.dxStartIndent += fmt.dxOffset + info->rtfParam;
     fmt.dxOffset = -info->rtfParam;
     break;
   case rtfLeftIndent:
-    /* we assume rtfLeftIndent is always specified before rtfFirstIndent */
     ME_GetSelectionParaFormat(info->editor, &fmt);
-    fmt.dwMask |= PFM_STARTINDENT;
-    fmt.dxStartIndent = info->rtfParam;
-    fmt.dxOffset = 0;
+    fmt.dwMask = PFM_STARTINDENT;
+    fmt.dxStartIndent = info->rtfParam - fmt.dxOffset;
     break;
   case rtfRightIndent:
     fmt.dwMask = PFM_RIGHTINDENT;
@@ -509,11 +622,11 @@ static void ME_RTFParAttrHook(RTF_Info *info)
     ME_GetSelectionParaFormat(info->editor, &fmt);
     if (!(fmt.dwMask & PFM_TABSTOPS))
     {
-      fmt.dwMask |= PFM_TABSTOPS;
       fmt.cTabCount = 0;
     }
-    if (fmt.cTabCount < MAX_TAB_STOPS)
+    if (fmt.cTabCount < MAX_TAB_STOPS && info->rtfParam < 0x1000000)
       fmt.rgxTabs[fmt.cTabCount++] = info->rtfParam;
+    fmt.dwMask = PFM_TABSTOPS;
     break;
   case rtfKeep:
     fmt.dwMask = PFM_KEEP;
@@ -573,90 +686,138 @@ static void ME_RTFParAttrHook(RTF_Info *info)
     fmt.wNumberingStart = info->rtfParam;
     break;
   case rtfBorderLeft:
+    info->borderType = RTFBorderParaLeft;
     ME_GetSelectionParaFormat(info->editor, &fmt);
     if (!(fmt.dwMask & PFM_BORDER))
     {
-      fmt.dwMask |= PFM_BORDER;
       fmt.wBorderSpace = 0;
       fmt.wBorderWidth = 1;
       fmt.wBorders = 0;
     }
     fmt.wBorders |= 1;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderRight:
+    info->borderType = RTFBorderParaRight;
     ME_GetSelectionParaFormat(info->editor, &fmt);
     if (!(fmt.dwMask & PFM_BORDER))
     {
-      fmt.dwMask |= PFM_BORDER;
       fmt.wBorderSpace = 0;
       fmt.wBorderWidth = 1;
       fmt.wBorders = 0;
     }
     fmt.wBorders |= 2;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderTop:
+    info->borderType = RTFBorderParaTop;
     ME_GetSelectionParaFormat(info->editor, &fmt);
     if (!(fmt.dwMask & PFM_BORDER))
     {
-      fmt.dwMask |= PFM_BORDER;
       fmt.wBorderSpace = 0;
       fmt.wBorderWidth = 1;
       fmt.wBorders = 0;
     }
     fmt.wBorders |= 4;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderBottom:
+    info->borderType = RTFBorderParaBottom;
     ME_GetSelectionParaFormat(info->editor, &fmt);
     if (!(fmt.dwMask & PFM_BORDER))
     {
-      fmt.dwMask |= PFM_BORDER;
       fmt.wBorderSpace = 0;
       fmt.wBorderWidth = 1;
       fmt.wBorders = 0;
     }
     fmt.wBorders |= 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderSingle:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorders &= ~0x700;
     fmt.wBorders |= 1 << 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderThick:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorders &= ~0x700;
     fmt.wBorders |= 2 << 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderShadow:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorders &= ~0x700;
     fmt.wBorders |= 10 << 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderDouble:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorders &= ~0x700;
     fmt.wBorders |= 7 << 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderDot:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorders &= ~0x700;
     fmt.wBorders |= 11 << 8;
+    fmt.dwMask = PFM_BORDER;
     break;
   case rtfBorderWidth:
+  {
+    int borderSide = info->borderType & RTFBorderSideMask;
+    RTFTable *tableDef = info->tableDef;
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorderWidth |= ((info->rtfParam / 15) & 7) << 8;
+    if ((info->borderType & RTFBorderTypeMask) == RTFBorderTypeCell)
+    {
+      RTFBorder *border;
+      if (!tableDef || tableDef->numCellsDefined >= MAX_TABLE_CELLS)
+        break;
+      border = &tableDef->cells[tableDef->numCellsDefined].border[borderSide];
+      border->width = info->rtfParam;
+      break;
+    }
+    fmt.dwMask = PFM_BORDER;
     break;
+  }
   case rtfBorderSpace:
     ME_GetSelectionParaFormat(info->editor, &fmt);
     /* we assume that borders have been created before (RTF spec) */
     fmt.wBorderSpace = info->rtfParam;
+    fmt.dwMask = PFM_BORDER;
     break;
-  }  
+  case rtfBorderColor:
+  {
+    RTFTable *tableDef = info->tableDef;
+    int borderSide = info->borderType & RTFBorderSideMask;
+    int borderType = info->borderType & RTFBorderTypeMask;
+    switch(borderType)
+    {
+    case RTFBorderTypePara:
+      if (!info->editor->bEmulateVersion10) /* v4.1 */
+        break;
+      /* v1.0 - 3.0 treat paragraph and row borders the same. */
+    case RTFBorderTypeRow:
+      if (tableDef) {
+        tableDef->border[borderSide].color = info->rtfParam;
+      }
+      break;
+    case RTFBorderTypeCell:
+      if (tableDef && tableDef->numCellsDefined < MAX_TABLE_CELLS) {
+        tableDef->cells[tableDef->numCellsDefined].border[borderSide].color = info->rtfParam;
+      }
+      break;
+    }
+    break;
+  }
+  }
   if (fmt.dwMask) {
     RTFFlushOutputBuffer(info);
     /* FIXME too slow ? how come ?*/
@@ -666,35 +827,249 @@ static void ME_RTFParAttrHook(RTF_Info *info)
 
 static void ME_RTFTblAttrHook(RTF_Info *info)
 {
-  ME_DisplayItem *para;
-  
   switch (info->rtfMinor)
   {
     case rtfRowDef:
-      RTFFlushOutputBuffer(info);
-      para = ME_GetParagraph(info->editor->pCursors[0].pRun);
-      
-      /* Release possibly inherited cell definitions */
-      ME_DestroyTableCellList(para);
-      
-      para->member.para.pCells = ALLOC_OBJ(ME_TableCell);
-      para->member.para.pCells->nRightBoundary = 0;
-      para->member.para.pCells->next = NULL;
-      para->member.para.pLastCell = para->member.para.pCells;
-      break;
-    case rtfCellPos:
-      RTFFlushOutputBuffer(info);
-      para = ME_GetParagraph(info->editor->pCursors[0].pRun);
-      
-      if (para->member.para.pLastCell->nRightBoundary)
-      {
-        ME_TableCell *pCell = ALLOC_OBJ(ME_TableCell);
-        
-        pCell->next = NULL;
-        para->member.para.pLastCell->next = pCell;
-        para->member.para.pLastCell = pCell;
+    {
+      if (!info->editor->bEmulateVersion10) /* v4.1 */
+        info->borderType = 0; /* Not sure */
+      else /* v1.0 - 3.0 */
+        info->borderType = RTFBorderRowTop;
+      if (!info->tableDef) {
+        info->tableDef = ME_MakeTableDef(info->editor);
+      } else {
+        ME_InitTableDef(info->editor, info->tableDef);
       }
-      para->member.para.pLastCell->nRightBoundary = info->rtfParam;
+      break;
+    }
+    case rtfCellPos:
+      if (!info->tableDef)
+      {
+        info->tableDef = ME_MakeTableDef(info->editor);
+      }
+      if (info->tableDef->numCellsDefined >= MAX_TABLE_CELLS)
+        break;
+      info->tableDef->cells[info->tableDef->numCellsDefined].rightBoundary = info->rtfParam;
+      {
+        /* Tab stops were used to store cell positions before v4.1 but v4.1
+         * still seems to set the tabstops without using them. */
+        ME_DisplayItem *para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+        PARAFORMAT2 *pFmt = para->member.para.pFmt;
+        int cellNum = info->tableDef->numCellsDefined;
+        pFmt->rgxTabs[cellNum] &= ~0x00FFFFFF;
+        pFmt->rgxTabs[cellNum] = 0x00FFFFFF & info->rtfParam;
+      }
+      info->tableDef->numCellsDefined++;
+      break;
+    case rtfRowBordTop:
+      info->borderType = RTFBorderRowTop;
+      break;
+    case rtfRowBordLeft:
+      info->borderType = RTFBorderRowLeft;
+      break;
+    case rtfRowBordBottom:
+      info->borderType = RTFBorderRowBottom;
+      break;
+    case rtfRowBordRight:
+      info->borderType = RTFBorderRowRight;
+      break;
+    case rtfCellBordTop:
+      info->borderType = RTFBorderCellTop;
+      break;
+    case rtfCellBordLeft:
+      info->borderType = RTFBorderCellLeft;
+      break;
+    case rtfCellBordBottom:
+      info->borderType = RTFBorderCellBottom;
+      break;
+    case rtfCellBordRight:
+      info->borderType = RTFBorderCellRight;
+      break;
+    case rtfRowGapH:
+      if (info->tableDef)
+        info->tableDef->gapH = info->rtfParam;
+      break;
+    case rtfRowLeftEdge:
+      if (info->tableDef)
+        info->tableDef->leftEdge = info->rtfParam;
+      break;
+  }
+}
+
+static void ME_RTFSpecialCharHook(RTF_Info *info)
+{
+  RTFTable *tableDef = info->tableDef;
+  switch (info->rtfMinor)
+  {
+    case rtfNestCell:
+      if (info->editor->bEmulateVersion10) /* v1.0 - v3.0 */
+        break;
+      /* else fall through since v4.1 treats rtfNestCell and rtfCell the same */
+    case rtfCell:
+      if (!tableDef)
+        break;
+      RTFFlushOutputBuffer(info);
+      if (!info->editor->bEmulateVersion10) { /* v4.1 */
+        if (tableDef->tableRowStart)
+        {
+          if (!info->nestingLevel &&
+              tableDef->tableRowStart->member.para.nFlags & MEPF_ROWEND)
+          {
+            ME_DisplayItem *para = tableDef->tableRowStart;
+            para = para->member.para.next_para;
+            para = ME_InsertTableRowStartAtParagraph(info->editor, para);
+            tableDef->tableRowStart = para;
+            info->nestingLevel = 1;
+          }
+          ME_InsertTableCellFromCursor(info->editor);
+        }
+      } else { /* v1.0 - v3.0 */
+        ME_DisplayItem *para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+        PARAFORMAT2 *pFmt = para->member.para.pFmt;
+        if (pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE &&
+            tableDef->numCellsInserted < tableDef->numCellsDefined)
+        {
+          WCHAR tab = '\t';
+          ME_InsertTextFromCursor(info->editor, 0, &tab, 1, info->style);
+          tableDef->numCellsInserted++;
+        }
+      }
+      break;
+    case rtfNestRow:
+      if (info->editor->bEmulateVersion10) /* v1.0 - v3.0 */
+        break;
+      /* else fall through since v4.1 treats rtfNestRow and rtfRow the same */
+    case rtfRow:
+    {
+      ME_DisplayItem *para, *cell, *run;
+      int i;
+
+      if (!tableDef)
+        break;
+      RTFFlushOutputBuffer(info);
+      if (!info->editor->bEmulateVersion10) { /* v4.1 */
+        if (!tableDef->tableRowStart)
+          break;
+        if (!info->nestingLevel &&
+            tableDef->tableRowStart->member.para.nFlags & MEPF_ROWEND)
+        {
+          para = tableDef->tableRowStart;
+          para = para->member.para.next_para;
+          para = ME_InsertTableRowStartAtParagraph(info->editor, para);
+          tableDef->tableRowStart = para;
+          info->nestingLevel++;
+        }
+        para = tableDef->tableRowStart;
+        cell = ME_FindItemFwd(para, diCell);
+        assert(cell && !cell->member.cell.prev_cell);
+        if (tableDef->numCellsDefined < 1)
+        {
+          /* 2000 twips appears to be the cell size that native richedit uses
+           * when no cell sizes are specified. */
+          const int defaultCellSize = 2000;
+          int nRightBoundary = defaultCellSize;
+          cell->member.cell.nRightBoundary = nRightBoundary;
+          while (cell->member.cell.next_cell) {
+            cell = cell->member.cell.next_cell;
+            nRightBoundary += defaultCellSize;
+            cell->member.cell.nRightBoundary = nRightBoundary;
+          }
+          para = ME_InsertTableCellFromCursor(info->editor);
+          cell = para->member.para.pCell;
+          cell->member.cell.nRightBoundary = nRightBoundary;
+        } else {
+          for (i = 0; i < tableDef->numCellsDefined; i++)
+          {
+            RTFCell *cellDef = &tableDef->cells[i];
+            cell->member.cell.nRightBoundary = cellDef->rightBoundary;
+            ME_ApplyBorderProperties(info, &cell->member.cell.border,
+                                     cellDef->border);
+            cell = cell->member.cell.next_cell;
+            if (!cell)
+            {
+              para = ME_InsertTableCellFromCursor(info->editor);
+              cell = para->member.para.pCell;
+            }
+          }
+          /* Cell for table row delimiter is empty */
+          cell->member.cell.nRightBoundary = tableDef->cells[i-1].rightBoundary;
+        }
+
+        run = ME_FindItemFwd(cell, diRun);
+        if (info->editor->pCursors[0].pRun != run ||
+            info->editor->pCursors[0].nOffset)
+        {
+          int nOfs, nChars;
+          /* Delete inserted cells that aren't defined. */
+          info->editor->pCursors[1].pRun = run;
+          info->editor->pCursors[1].nOffset = 0;
+          nOfs = ME_GetCursorOfs(info->editor, 1);
+          nChars = ME_GetCursorOfs(info->editor, 0) - nOfs;
+          ME_InternalDeleteText(info->editor, nOfs, nChars, TRUE);
+        }
+
+        para = ME_InsertTableRowEndFromCursor(info->editor);
+        para->member.para.pFmt->dxOffset = abs(info->tableDef->gapH);
+        para->member.para.pFmt->dxStartIndent = info->tableDef->leftEdge;
+        ME_ApplyBorderProperties(info, &para->member.para.border,
+                                 tableDef->border);
+        info->nestingLevel--;
+        if (!info->nestingLevel)
+        {
+          if (info->canInheritInTbl) {
+            tableDef->tableRowStart = para;
+          } else {
+            while (info->tableDef) {
+              tableDef = info->tableDef;
+              info->tableDef = tableDef->parent;
+              heap_free(tableDef);
+            }
+          }
+        } else {
+          info->tableDef = tableDef->parent;
+          heap_free(tableDef);
+        }
+      } else { /* v1.0 - v3.0 */
+        WCHAR endl = '\r';
+        ME_DisplayItem *para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+        PARAFORMAT2 *pFmt = para->member.para.pFmt;
+        pFmt->dxOffset = info->tableDef->gapH;
+        pFmt->dxStartIndent = info->tableDef->leftEdge;
+
+        para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+        ME_ApplyBorderProperties(info, &para->member.para.border,
+                                 tableDef->border);
+        while (tableDef->numCellsInserted < tableDef->numCellsDefined)
+        {
+          WCHAR tab = '\t';
+          ME_InsertTextFromCursor(info->editor, 0, &tab, 1, info->style);
+          tableDef->numCellsInserted++;
+        }
+        pFmt->cTabCount = tableDef->numCellsDefined;
+        if (!tableDef->numCellsDefined)
+          pFmt->wEffects &= ~PFE_TABLE;
+        ME_InsertTextFromCursor(info->editor, 0, &endl, 1, info->style);
+        tableDef->numCellsInserted = 0;
+      }
+      break;
+    }
+    case rtfTab:
+    case rtfPar:
+      if (info->editor->bEmulateVersion10) { /* v1.0 - 3.0 */
+        ME_DisplayItem *para;
+        PARAFORMAT2 *pFmt;
+        RTFFlushOutputBuffer(info);
+        para = ME_GetParagraph(info->editor->pCursors[0].pRun);
+        pFmt = para->member.para.pFmt;
+        if (pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
+        {
+          /* rtfPar is treated like a space within a table. */
+          info->rtfClass = rtfText;
+          info->rtfMajor = ' ';
+        }
+        else if (info->rtfMinor == rtfPar && tableDef)
+          tableDef->numCellsInserted = 0;
+      }
       break;
   }
 }
@@ -1001,11 +1376,8 @@ static void ME_RTFReadHook(RTF_Info *info) {
           ME_RTFTblAttrHook(info);
           break;
         case rtfSpecialChar:
-          if (info->rtfMinor == rtfCell)
-          {
-            RTFFlushOutputBuffer(info);
-            ME_InsertTableCellFromCursor(info->editor, 0);
-          }
+          ME_RTFSpecialCharHook(info);
+          break;
       }
       break;
   }
@@ -1037,16 +1409,19 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   if ((format & SFF_SELECTION) && (editor->mode & TM_RICHTEXT)) {
     style = ME_GetSelectionInsertStyle(editor);
 
-    ME_InternalDeleteText(editor, from, to-from);
+    ME_InternalDeleteText(editor, from, to-from, FALSE);
   }
   else {
+    ME_DisplayItem *para_item;
     style = editor->pBuffer->pDefaultStyle;
     ME_AddRefStyle(style);
     SendMessageA(editor->hWnd, EM_SETSEL, 0, 0);    
-    ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
+    ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor), FALSE);
     from = to = 0;
     ME_ClearTempStyle(editor);
-    /* FIXME restore default paragraph formatting ! */
+
+    para_item = ME_GetParagraph(editor->pCursors[0].pRun);
+    ME_SetDefaultParaFormat(para_item->member.para.pFmt);
   }
 
 
@@ -1080,6 +1455,8 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   if (!invalidRTF && !inStream.editstream->dwError)
   {
     if (format & SF_RTF) {
+      ME_DisplayItem *para;
+
       /* setup the RTF parser */
       memset(&parser, 0, sizeof parser);
       RTFSetEditStream(&parser, &inStream);
@@ -1092,11 +1469,50 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
       RTFSetReadHook(&parser, ME_RTFReadHook);
       RTFSetDestinationCallback(&parser, rtfPict, ME_RTFReadPictGroup);
       RTFSetDestinationCallback(&parser, rtfObject, ME_RTFReadObjectGroup);
+      if (!parser.editor->bEmulateVersion10) /* v4.1 */
+        RTFSetDestinationCallback(&parser, rtfNoNestTables, RTFSkipGroup);
       BeginFile(&parser);
 
       /* do the parsing */
       RTFRead(&parser);
       RTFFlushOutputBuffer(&parser);
+      if (!editor->bEmulateVersion10) { /* v4.1 */
+        if (parser.tableDef && parser.tableDef->tableRowStart)
+        {
+          /* Delete any incomplete table row at the end of the rich text. */
+          int nOfs, nChars;
+          ME_DisplayItem *pCell;
+
+          para = parser.tableDef->tableRowStart;
+
+          parser.rtfMinor = rtfRow;
+          /* Complete the table row before deleting it.
+           * By doing it this way we will have the current paragraph format set
+           * properly to reflect that is not in the complete table, and undo items
+           * will be added for this change to the current paragraph format. */
+          if (parser.nestingLevel > 0)
+          {
+            while (parser.nestingLevel--)
+              ME_RTFSpecialCharHook(&parser);
+          } else if (parser.canInheritInTbl) {
+            ME_RTFSpecialCharHook(&parser);
+          }
+          if (parser.tableDef && parser.tableDef->tableRowStart &&
+              para->member.para.nFlags & MEPF_ROWEND)
+          {
+            para = para->member.para.next_para;
+          }
+          pCell = para->member.para.pCell;
+
+          editor->pCursors[1].pRun = ME_FindItemFwd(para, diRun);
+          editor->pCursors[1].nOffset = 0;
+          nOfs = ME_GetCursorOfs(editor, 1);
+          nChars = ME_GetCursorOfs(editor, 0) - nOfs;
+          ME_InternalDeleteText(editor, nOfs, nChars, TRUE);
+          parser.tableDef->tableRowStart = NULL;
+        }
+      }
+      ME_CheckTablesForCorruption(editor);
       RTFDestroy(&parser);
       if (parser.lpRichEditOle)
         IRichEditOle_Release(parser.lpRichEditOle);
@@ -1117,7 +1533,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
 
           ME_GetTextW(editor, lastchar, newto - linebreakSize, linebreakSize, 0);
           if (lastchar[0] == '\r' && (lastchar[1] == '\n' || lastchar[1] == '\0')) {
-            ME_InternalDeleteText(editor, newto - linebreakSize, linebreakSize);
+            ME_InternalDeleteText(editor, newto - linebreakSize, linebreakSize, FALSE);
           }
         }
       }
@@ -1537,7 +1953,10 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
 {
   BOOL ctrl_is_down = GetKeyState(VK_CONTROL) & 0x8000;
   BOOL shift_is_down = GetKeyState(VK_SHIFT) & 0x8000;
-  
+
+  if (nKey != VK_SHIFT && nKey != VK_CONTROL && nKey != VK_MENU)
+      editor->nSelectionType = stPosition;
+
   switch (nKey)
   {
     case VK_LEFT:
@@ -1573,10 +1992,17 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
       }
       else if (ME_ArrowKey(editor, VK_LEFT, FALSE, FALSE))
       {
-          /* Backspace can be grouped for a single undo */
-          ME_ContinueCoalescingTransaction(editor);
-          ME_DeleteTextAtCursor(editor, 1, 1);
-          ME_CommitCoalescingUndo(editor);
+        BOOL bDeletionSucceeded;
+        /* Backspace can be grouped for a single undo */
+        ME_ContinueCoalescingTransaction(editor);
+        bDeletionSucceeded = ME_DeleteTextAtCursor(editor, 1, 1);
+        if (!bDeletionSucceeded && !editor->bEmulateVersion10) { /* v4.1 */
+          /* Deletion was prevented so the cursor is moved back to where it was.
+           * (e.g. this happens when trying to delete cell boundaries)
+           */
+          ME_ArrowKey(editor, VK_RIGHT, FALSE, FALSE);
+        }
+        ME_CommitCoalescingUndo(editor);
       }
       else
         return TRUE;
@@ -1609,15 +2035,102 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
   return FALSE;
 }
 
-static BOOL ME_SetCursor(ME_TextEditor *editor, int x)
+/* Process the message and calculate the new click count.
+ *
+ * returns: The click count if it is mouse down event, else returns 0. */
+static int ME_CalculateClickCount(HWND hWnd, UINT msg, WPARAM wParam,
+                                  LPARAM lParam)
 {
+    static int clickNum = 0;
+    if (msg < WM_MOUSEFIRST || msg > WM_MOUSELAST)
+        return 0;
+
+    if ((msg == WM_LBUTTONDBLCLK) ||
+        (msg == WM_RBUTTONDBLCLK) ||
+        (msg == WM_MBUTTONDBLCLK) ||
+        (msg == WM_XBUTTONDBLCLK))
+    {
+        msg -= (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
+    }
+
+    if ((msg == WM_LBUTTONDOWN) ||
+        (msg == WM_RBUTTONDOWN) ||
+        (msg == WM_MBUTTONDOWN) ||
+        (msg == WM_XBUTTONDOWN))
+    {
+        static MSG prevClickMsg;
+        MSG clickMsg;
+        clickMsg.hwnd = hWnd;
+        clickMsg.message = msg;
+        clickMsg.wParam = wParam;
+        clickMsg.lParam = lParam;
+        clickMsg.time = GetMessageTime();
+        clickMsg.pt.x = (short)LOWORD(lParam);
+        clickMsg.pt.y = (short)HIWORD(lParam);
+        if ((clickNum != 0) &&
+            (clickMsg.message == prevClickMsg.message) &&
+            (clickMsg.hwnd == prevClickMsg.hwnd) &&
+            (clickMsg.wParam == prevClickMsg.wParam) &&
+            (clickMsg.time - prevClickMsg.time < GetDoubleClickTime()) &&
+            (abs(clickMsg.pt.x - prevClickMsg.pt.x) < GetSystemMetrics(SM_CXDOUBLECLK)/2) &&
+            (abs(clickMsg.pt.y - prevClickMsg.pt.y) < GetSystemMetrics(SM_CYDOUBLECLK)/2))
+        {
+            clickNum++;
+        } else {
+            clickNum = 1;
+        }
+        prevClickMsg = clickMsg;
+    } else {
+        return 0;
+    }
+    return clickNum;
+}
+
+static BOOL ME_SetCursor(ME_TextEditor *editor)
+{
+  POINT pt;
+  BOOL isExact;
+  int offset;
+  DWORD messagePos = GetMessagePos();
+  pt.x = (short)LOWORD(messagePos);
+  pt.y = (short)HIWORD(messagePos);
+  ScreenToClient(editor->hWnd, &pt);
   if ((GetWindowLongW(editor->hWnd, GWL_STYLE) & ES_SELECTIONBAR) &&
-      (x < editor->selofs || editor->linesel))
+      (pt.x < editor->selofs ||
+       (editor->nSelectionType == stLine && GetCapture() == editor->hWnd)))
   {
       SetCursor(hLeft);
       return TRUE;
   }
-  return FALSE;
+  offset = ME_CharFromPos(editor, pt.x, pt.y, &isExact);
+  if (isExact)
+  {
+      if (editor->AutoURLDetect_bEnable)
+      {
+          ME_Cursor cursor;
+          ME_Run *run;
+          ME_CursorFromCharOfs(editor, offset, &cursor);
+          run = &cursor.pRun->member.run;
+          if (editor->AutoURLDetect_bEnable &&
+              run->style->fmt.dwMask & CFM_LINK &&
+              run->style->fmt.dwEffects & CFE_LINK)
+          {
+              SetCursor(LoadCursorW(NULL, (WCHAR*)IDC_HAND));
+              return TRUE;
+          }
+      }
+      if (ME_IsSelection(editor))
+      {
+          int selStart, selEnd;
+          ME_GetSelection(editor, &selStart, &selEnd);
+          if (selStart <= offset && selEnd >= offset) {
+              SetCursor(LoadCursorW(NULL, (WCHAR*)IDC_ARROW));
+              return TRUE;
+          }
+      }
+  }
+  SetCursor(LoadCursorW(NULL, (WCHAR*)IDC_IBEAM));
+  return TRUE;
 }
 
 static BOOL ME_ShowContextMenu(ME_TextEditor *editor, int x, int y)
@@ -1653,7 +2166,12 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->pBuffer = ME_MakeText();
   ed->nZoomNumerator = ed->nZoomDenominator = 0;
   ME_MakeFirstParagraph(ed);
-  ed->bCaretShown = FALSE;
+  /* The four cursors are for:
+   * 0 - The position where the caret is shown
+   * 1 - The anchored end of the selection (for normal selection)
+   * 2 & 3 - The anchored start and end respectively for word, line,
+   * or paragraph selection.
+   */
   ed->nCursors = 4;
   ed->pCursors = ALLOC_N_OBJ(ME_Cursor, ed->nCursors);
   ed->pCursors[0].pRun = ME_FindItemFwd(ed->pBuffer->pFirst, diRun);
@@ -1700,7 +2218,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
     ed->selofs = SELECTIONBAR_WIDTH;
   else
     ed->selofs = 0;
-  ed->linesel = 0;
+  ed->nSelectionType = stPosition;
 
   if (GetWindowLongW(hWnd, GWL_STYLE) & ES_PASSWORD)
     ed->cPasswordMask = '*';
@@ -1708,6 +2226,15 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
     ed->cPasswordMask = 0;
   
   ed->notified_cr.cpMin = ed->notified_cr.cpMax = 0;
+
+  /* Default vertical scrollbar information */
+  ed->vert_si.cbSize = sizeof(SCROLLINFO);
+  ed->vert_si.nMin = 0;
+  ed->vert_si.nMax = 0;
+  ed->vert_si.nPage = 0;
+  ed->vert_si.nPos = 0;
+
+  OleInitialize(NULL);
 
   return ed;
 }
@@ -1777,6 +2304,7 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     DeleteObject(editor->hbrBackground);
   if(editor->lpOleCallback)
     IUnknown_Release(editor->lpOleCallback);
+  OleUninitialize();
 
   FREE_OBJ(editor->pBuffer);
   FREE_OBJ(editor->pCursors);
@@ -1996,10 +2524,9 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROCEX)
   UNSUPPORTED_MSG(WM_STYLECHANGING)
   UNSUPPORTED_MSG(WM_STYLECHANGED)
-/*  UNSUPPORTED_MSG(WM_UNICHAR) FIXME missing in Wine headers */
-    
+
 /* Messages specific to Richedit controls */
-  
+
   case EM_STREAMIN:
    return ME_StreamIn(editor, wParam, (EDITSTREAM*)lParam, TRUE);
   case EM_STREAMOUT:
@@ -2134,6 +2661,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     ME_InvalidateSelection(editor);
     ME_SetSelection(editor, wParam, lParam);
     ME_InvalidateSelection(editor);
+    HideCaret(editor->hWnd);
+    ME_ShowCaret(editor);
     ME_SendSelChange(editor);
     return 0;
   }
@@ -2166,6 +2695,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     ME_InvalidateSelection(editor);
     end = ME_SetSelection(editor, range.cpMin, range.cpMax);
     ME_InvalidateSelection(editor);
+    HideCaret(editor->hWnd);
+    ME_ShowCaret(editor);
     ME_SendSelChange(editor);
 
     return end;
@@ -2197,16 +2728,16 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (pStruct->flags & ST_SELECTION) {
       ME_GetSelection(editor, &from, &to);
       style = ME_GetSelectionInsertStyle(editor);
-      ME_InternalDeleteText(editor, from, to - from);
+      ME_InternalDeleteText(editor, from, to - from, FALSE);
       if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
-          ME_StreamInRTFString(editor, 0, (char *)lParam);
+          ME_StreamInRTFString(editor, 1, (char *)lParam);
       else ME_InsertTextFromCursor(editor, 0, wszText, len, style);
       ME_ReleaseStyle(style);
 
       if (editor->AutoURLDetect_bEnable) ME_UpdateSelectionLinkAttribute(editor);
     }
     else {
-      ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
+      ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor), FALSE);
       if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
           ME_StreamInRTFString(editor, 0, (char *)lParam);
       else ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
@@ -2328,13 +2859,15 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return tmp.dwMask;
   }
   case EM_SETPARAFORMAT:
-    ME_SetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
+  {
+    BOOL result = ME_SetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
     ME_RewrapRepaint(editor);
     ME_CommitUndo(editor);
-    return 0;
+    return result;
+  }
   case EM_GETPARAFORMAT:
     ME_GetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
-    return 0;
+    return ((PARAFORMAT2 *)lParam)->dwMask;
   case EM_GETFIRSTVISIBLELINE:
   {
     ME_DisplayItem *p = editor->pBuffer->pFirst;
@@ -2347,10 +2880,10 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       if (p->type == diTextEnd)
         break;
       if (p->type == diParagraph) {
-        ypara = p->member.para.nYPos;
+        ypara = p->member.para.pt.y;
         continue;
       }
-      ystart = ypara + p->member.row.nYPos;
+      ystart = ypara + p->member.row.pt.y;
       yend = ystart + p->member.row.nHeight;
       if (y < yend) {
         break;
@@ -2374,7 +2907,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   {
     int from, to;
     ME_GetSelection(editor, &from, &to);
-    ME_InternalDeleteText(editor, from, to-from);
+    ME_InternalDeleteText(editor, from, to-from, FALSE);
     ME_CommitUndo(editor);
     ME_UpdateRepaint(editor);
     return 0;
@@ -2389,7 +2922,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
 
     ME_GetSelection(editor, &from, &to);
     style = ME_GetSelectionInsertStyle(editor);
-    ME_InternalDeleteText(editor, from, to-from);
+    ME_InternalDeleteText(editor, from, to-from, FALSE);
     ME_InsertTextFromCursor(editor, 0, wszText, len, style);
     ME_ReleaseStyle(style);
     /* drop temporary style if line end */
@@ -2416,7 +2949,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     nPos = ME_GetYScrollPos(editor);
     row = ME_RowStart(editor->pCursors[0].pRun);
     para = ME_GetParagraph(row);
-    top = para->member.para.nYPos + row->member.row.nYPos;
+    top = para->member.para.pt.y + row->member.row.pt.y;
     bottom = top + row->member.row.nHeight;
     
     if (top < nPos) /* caret above window */
@@ -2448,7 +2981,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   }
   case WM_SETTEXT:
   {
-    ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
+    ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor), FALSE);
     if (lParam)
     {
       TRACE("WM_SETTEXT lParam==%lx\n",lParam);
@@ -2548,7 +3081,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     }
     if (SUCCEEDED(hr) && msg == WM_CUT)
     {
-      ME_InternalDeleteText(editor, range.cpMin, range.cpMax-range.cpMin);
+      ME_InternalDeleteText(editor, range.cpMin, range.cpMax-range.cpMin, FALSE);
       ME_CommitUndo(editor);
       ME_UpdateRepaint(editor);
     }
@@ -2914,7 +3447,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   case EM_SETZOOM:
     return ME_SetZoom(editor, wParam, lParam);
   case EM_CHARFROMPOS:
-    return ME_CharFromPos(editor, ((POINTL *)lParam)->x, ((POINTL *)lParam)->y);
+    return ME_CharFromPos(editor, ((POINTL *)lParam)->x, ((POINTL *)lParam)->y, NULL);
   case EM_POSFROMCHAR:
   {
     ME_DisplayItem *pRun;
@@ -2933,10 +3466,10 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
         assert(pRun->type == diRun);
         pt.y = pRun->member.run.pt.y;
         pt.x = pRun->member.run.pt.x + ME_PointFromChar(editor, &pRun->member.run, nOffset);
-        pt.y += ME_GetParagraph(pRun)->member.para.nYPos;
+        pt.y += ME_GetParagraph(pRun)->member.para.pt.y;
     } else {
         pt.x = 0;
-        pt.y = editor->pBuffer->pLast->member.para.nYPos;
+        pt.y = editor->pBuffer->pLast->member.para.pt.y;
     }
     pt.x += editor->selofs;
 
@@ -2953,33 +3486,50 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return (wParam >= 0x40000) ? 0 : MAKELONG( pt.x, pt.y );
   }
   case WM_CREATE:
+  {
+    SCROLLINFO si;
+
     GetClientRect(hWnd, &editor->rcFormat);
     if (GetWindowLongW(hWnd, GWL_STYLE) & WS_HSCROLL)
     { /* Squelch the default horizontal scrollbar it would make */
       ShowScrollBar(editor->hWnd, SB_HORZ, FALSE);
     }
+
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_PAGE | SIF_RANGE;
+    if (GetWindowLongW(hWnd, GWL_STYLE) & ES_DISABLENOSCROLL)
+      si.fMask |= SIF_DISABLENOSCROLL;
+    si.nMax = (si.fMask & SIF_DISABLENOSCROLL) ? 1 : 0;
+    si.nMin = 0;
+    si.nPage = 0;
+    SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
+
     ME_CommitUndo(editor);
     ME_WrapMarkedParagraphs(editor);
     ME_MoveCaret(editor);
     return 0;
+  }
   case WM_DESTROY:
     ME_DestroyEditor(editor);
     SetWindowLongPtrW(hWnd, 0, 0);
     return 0;
+  case WM_SETCURSOR:
+  {
+    return ME_SetCursor(editor);
+  }
   case WM_LBUTTONDBLCLK:
   case WM_LBUTTONDOWN:
   {
-    int clickNum = (msg == WM_LBUTTONDBLCLK) ? 2 : 1;
     ME_CommitUndo(editor); /* End coalesced undos for typed characters */
     if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
         !ME_FilterEvent(editor, msg, &wParam, &lParam))
       return 0;
     SetFocus(hWnd);
     ME_LButtonDown(editor, (short)LOWORD(lParam), (short)HIWORD(lParam),
-                   clickNum);
+                   ME_CalculateClickCount(hWnd, msg, wParam, lParam));
     SetCapture(hWnd);
     ME_LinkNotify(editor,msg,wParam,lParam);
-    if (!ME_SetCursor(editor, LOWORD(lParam))) goto do_default;
+    if (!ME_SetCursor(editor)) goto do_default;
     break;
   }
   case WM_MOUSEMOVE:
@@ -2989,21 +3539,22 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (GetCapture() == hWnd)
       ME_MouseMove(editor, (short)LOWORD(lParam), (short)HIWORD(lParam));
     ME_LinkNotify(editor,msg,wParam,lParam);
-    if (!ME_SetCursor(editor, LOWORD(lParam))) goto do_default;
+    /* Set cursor if mouse is captured, since WM_SETCURSOR won't be received. */
+    if (GetCapture() == hWnd)
+        ME_SetCursor(editor);
     break;
   case WM_LBUTTONUP:
     if (GetCapture() == hWnd)
       ReleaseCapture();
+    if (editor->nSelectionType == stDocument)
+      editor->nSelectionType = stPosition;
     if ((editor->nEventMask & ENM_MOUSEEVENTS) &&
         !ME_FilterEvent(editor, msg, &wParam, &lParam))
       return 0;
     else
     {
-      BOOL ret;
-      editor->linesel = 0;
-      ret = ME_SetCursor(editor, LOWORD(lParam));
+      ME_SetCursor(editor);
       ME_LinkNotify(editor,msg,wParam,lParam);
-      if (!ret) goto do_default;
     }
     break;
   case WM_RBUTTONUP:
@@ -3035,8 +3586,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return 0;
   case WM_KILLFOCUS:
     ME_CommitUndo(editor); /* End coalesced undos for typed characters */
-    ME_HideCaret(editor);
     editor->bHaveFocus = FALSE;
+    ME_HideCaret(editor);
     ME_SendOldNotify(editor, EN_KILLFOCUS);
     return 0;
   case WM_ERASEBKGND:
@@ -3112,10 +3663,35 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (((unsigned)wstr)>=' '
         || (wstr=='\r' && (GetWindowLongW(hWnd, GWL_STYLE) & ES_MULTILINE))
         || wstr=='\t') {
+      int from, to;
+      BOOL ctrl_is_down = GetKeyState(VK_CONTROL) & 0x8000;
+      ME_GetSelection(editor, &from, &to);
+      if (wstr=='\t'
+          /* v4.1 allows tabs to be inserted with ctrl key down */
+          && !(ctrl_is_down && !editor->bEmulateVersion10)
+          )
+      {
+        ME_Cursor cursor = editor->pCursors[0];
+        ME_DisplayItem *para;
+        BOOL bSelectedRow = FALSE;
+
+        para = ME_GetParagraph(cursor.pRun);
+        if (ME_IsSelection(editor) &&
+            cursor.pRun->member.run.nCharOfs + cursor.nOffset == 0 &&
+            para->member.para.prev_para->type == diParagraph)
+        {
+          para = para->member.para.prev_para;
+          bSelectedRow = TRUE;
+        }
+        if (ME_IsInTable(para))
+        {
+          ME_TabPressedInTable(editor, bSelectedRow);
+          ME_CommitUndo(editor);
+          return 0;
+        }
+      }
       /* FIXME maybe it would make sense to call EM_REPLACESEL instead ? */
       /* WM_CHAR is restricted to nTextLimit */
-      int from, to;
-      ME_GetSelection(editor, &from, &to);
       if(editor->nTextLimit > ME_GetTextLength(editor) - (to-from))
       {
         ME_Style *style = ME_GetInsertStyle(editor, 0);
@@ -3127,6 +3703,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
           ME_InsertTextFromCursor(editor, 0, &wstr, 1, style);
         ME_ReleaseStyle(style);
         ME_CommitCoalescingUndo(editor);
+        SetCursor(NULL);
       }
 
       if (editor->AutoURLDetect_bEnable) ME_UpdateSelectionLinkAttribute(editor);
@@ -3135,6 +3712,23 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     }
     return 0;
   }
+  case WM_UNICHAR:
+    if (unicode)
+    {
+        if(wParam == UNICODE_NOCHAR) return TRUE;
+        if(wParam <= 0x000fffff)
+        {
+            if(wParam > 0xffff) /* convert to surrogates */
+            {
+                wParam -= 0x10000;
+                SendMessageW(editor->hWnd, WM_CHAR, (wParam >> 10) + 0xd800, 0);
+                SendMessageW(editor->hWnd, WM_CHAR, (wParam & 0x03ff) + 0xdc00, 0);
+            }
+            else SendMessageW(editor->hWnd, WM_CHAR, wParam, 0);
+        }
+        return 0;
+    }
+    break;
   case EM_STOPGROUPTYPING:
     ME_CommitUndo(editor); /* End coalesced undos for typed characters */
     return 0;
@@ -3429,6 +4023,7 @@ void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam
 {
   int x,y;
   ME_Cursor tmpCursor;
+  BOOL isExact;
   int nCharOfs; /* The start of the clicked text. Absolute character offset */
 
   ME_Run *tmpRun;
@@ -3436,8 +4031,8 @@ void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam
   ENLINK info;
   x = (short)LOWORD(lParam);
   y = (short)HIWORD(lParam);
-  nCharOfs = ME_CharFromPos(editor, x, y);
-  if (nCharOfs < 0) return;
+  nCharOfs = ME_CharFromPos(editor, x, y, &isExact);
+  if (!isExact) return;
 
   ME_CursorFromCharOfs(editor, nCharOfs, &tmpCursor);
   tmpRun = &tmpCursor.pRun->member.run;
@@ -3513,7 +4108,12 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
     if (nLen > nChars)
       nLen = nChars;
 
-    if (item->member.run.nFlags & MERF_ENDPARA)
+    if (item->member.run.nFlags & MERF_ENDCELL &&
+        item->member.run.nFlags & MERF_ENDPARA)
+    {
+      *buffer = '\t';
+    }
+    else if (item->member.run.nFlags & MERF_ENDPARA)
     {
       if (!ME_FindItemFwd(item, diRun))
         /* No '\r' is appended to the last paragraph. */
@@ -3525,10 +4125,16 @@ int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, in
         if (bCRLF)
         {
           /* richedit 2.0 case - actual line-break is \r but should report \r\n */
-          assert(nLen == 1);
+          if (ME_GetParagraph(item)->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
+            assert(nLen == 2);
+          else
+            assert(nLen == 1);
           *buffer++ = '\r';
           *buffer = '\n'; /* Later updated by nLen==1 at the end of the loop */
-          nWritten++;
+          if (nLen == 1)
+            nWritten++;
+          else
+            buffer--;
         }
         else
         {

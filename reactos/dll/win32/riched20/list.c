@@ -112,36 +112,20 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item) {
 /*  TRACE("type=%s\n", ME_GetDITypeName(item->type)); */
   if (item->type==diParagraph || item->type == diUndoSetParagraphFormat) {
     FREE_OBJ(item->member.para.pFmt);
-    ME_DestroyTableCellList(item);
   }
   if (item->type==diRun || item->type == diUndoInsertRun) {
     if (item->member.run.ole_obj) ME_DeleteReObject(item->member.run.ole_obj);
     ME_ReleaseStyle(item->member.run.style);
     ME_DestroyString(item->member.run.strText);
   }
-  if (item->type==diUndoSetCharFormat || item->type==diUndoSetDefaultCharFormat) {
+  if (item->type==diUndoSetCharFormat) {
     ME_ReleaseStyle(item->member.ustyle);
   }
-  if (item->type==diUndoSplitParagraph)
+  if (item->type==diUndoSplitParagraph) {
      FREE_OBJ(item->member.para.pFmt);
-  FREE_OBJ(item);
-}
-
-void
-ME_DestroyTableCellList(ME_DisplayItem *item)
-{
-  if (item->member.para.pCells)
-  {
-    ME_TableCell *pCell = item->member.para.pCells;
-    ME_TableCell *pNext;
-
-    while (pCell) {
-      pNext = pCell->next;
-      FREE_OBJ(pCell);
-      pCell = pNext;
-    }
-    item->member.para.pCells = NULL;
+     FREE_OBJ(item->member.para.pCell);
   }
+  FREE_OBJ(item);
 }
 
 ME_DisplayItem *ME_MakeDI(ME_DIType type) {
@@ -151,8 +135,7 @@ ME_DisplayItem *ME_MakeDI(ME_DIType type) {
   item->prev = item->next = NULL;
   if (type == diParagraph || type == diUndoSplitParagraph) {
     item->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
-    item->member.para.pFmt->cbSize = sizeof(PARAFORMAT2);
-    item->member.para.pFmt->dwMask = 0;
+    ME_SetDefaultParaFormat(item->member.para.pFmt);
     item->member.para.nFlags = MEPF_REWRAP;
   }
     
@@ -165,6 +148,7 @@ const char *ME_GetDITypeName(ME_DIType type)
   {
     case diParagraph: return "diParagraph";
     case diRun: return "diRun";
+    case diCell: return "diCell";
     case diTextStart: return "diTextStart";
     case diTextEnd: return "diTextEnd";
     case diStartRow: return "diStartRow";
@@ -176,7 +160,6 @@ const char *ME_GetDITypeName(ME_DIType type)
     case diUndoDeleteRun: return "diUndoDeleteRun";
     case diUndoJoinParagraphs: return "diJoinParagraphs";
     case diUndoSplitParagraph: return "diSplitParagraph";
-    case diUndoSetDefaultCharFormat: return "diUndoSetDefaultCharFormat";
     default: return "?";
   }
 }
@@ -192,8 +175,17 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
       case diTextStart:
         TRACE("Start\n");
         break;
+      case diCell:
+        TRACE("Cell(level=%d%s)\n", pItem->member.cell.nNestingLevel,
+              !pItem->member.cell.next_cell ? ", END" :
+                (!pItem->member.cell.prev_cell ? ", START" :""));
+        break;
       case diParagraph:
         TRACE("Paragraph(ofs=%d)\n", pItem->member.para.nCharOfs);
+        if (pItem->member.para.nFlags & MEPF_ROWSTART)
+          TRACE(" - (Table Row Start)\n");
+        if (pItem->member.para.nFlags & MEPF_ROWEND)
+          TRACE(" - (Table Row End)\n");
         break;
       case diStartRow:
         TRACE(" - StartRow\n");

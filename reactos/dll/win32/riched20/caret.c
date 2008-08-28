@@ -215,7 +215,7 @@ ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
 
       *height = pSizeRun->member.run.nAscent + pSizeRun->member.run.nDescent;
       *x = run->member.run.pt.x + sz.cx;
-      *y = para->member.para.nYPos + row->member.row.nBaseline + run->member.run.pt.y - pSizeRun->member.run.nAscent - ME_GetYScrollPos(editor);
+      *y = para->member.para.pt.y + row->member.row.nBaseline + run->member.run.pt.y - pSizeRun->member.run.nAscent - ME_GetYScrollPos(editor);
       ME_DestroyContext(&c, editor->hWnd);
       return;
     }
@@ -234,7 +234,7 @@ ME_MoveCaret(ME_TextEditor *editor)
   if (ME_WrapMarkedParagraphs(editor))
     ME_UpdateScrollBar(editor);
   ME_GetCursorCoordinates(editor, &editor->pCursors[0], &x, &y, &height);
-  if(editor->bHaveFocus)
+  if(editor->bHaveFocus && !ME_IsSelection(editor))
   {
     RECT rect;
 
@@ -249,38 +249,96 @@ ME_MoveCaret(ME_TextEditor *editor)
 void ME_ShowCaret(ME_TextEditor *ed)
 {
   ME_MoveCaret(ed);
-  if(ed->bHaveFocus)
+  if(ed->bHaveFocus && !ME_IsSelection(ed))
     ShowCaret(ed->hWnd);
 }
 
 void ME_HideCaret(ME_TextEditor *ed)
 {
-  if(ed->bHaveFocus)
+  if(!ed->bHaveFocus || ME_IsSelection(ed))
   {
     HideCaret(ed->hWnd);
     DestroyCaret();
   }
 }
 
-void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, 
-  int nChars)
+BOOL ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars,
+                           BOOL bForce)
 {
   ME_Cursor c;
   int shift = 0;
-  
+  int totalChars = nChars;
+  ME_DisplayItem *start_para;
+
+  {
+    /* Prevent deletion past last end of paragraph run. */
+    ME_DisplayItem *pTextEnd = editor->pBuffer->pLast;
+    int nMaxChars = pTextEnd->member.para.prev_para->member.para.nCharOfs;
+    nMaxChars += ME_FindItemBack(pTextEnd, diRun)->member.run.nCharOfs;
+    nMaxChars -= nOfs;
+    nChars = min(nChars, nMaxChars);
+  }
+
+  ME_CursorFromCharOfs(editor, nOfs, &c);
+  start_para = ME_GetParagraph(c.pRun);
+
+  if (!bForce)
+  {
+    ME_ProtectPartialTableDeletion(editor, nOfs, &nChars);
+    if (nChars == 0)
+      return FALSE;
+  }
+
   while(nChars > 0)
   {
     ME_Run *run;
-    ME_CursorFromCharOfs(editor, nOfs, &c);
+    ME_CursorFromCharOfs(editor, nOfs+nChars, &c);
+    if (!c.nOffset &&
+        nOfs+nChars == (c.pRun->member.run.nCharOfs
+                        + ME_GetParagraph(c.pRun)->member.para.nCharOfs))
+    {
+      /* We aren't deleting anything in this run, so we will go back to the
+       * last run we are deleting text in. */
+      c.pRun = ME_FindItemBack(c.pRun, diRun);
+      if (c.pRun->member.run.nFlags & MERF_ENDPARA)
+        c.nOffset = c.pRun->member.run.nCR + c.pRun->member.run.nLF;
+      else
+        c.nOffset = c.pRun->member.run.strText->nLen;
+    }
     run = &c.pRun->member.run;
     if (run->nFlags & MERF_ENDPARA) {
       int eollen = run->nCR + run->nLF;
+      BOOL keepFirstParaFormat;
 
       if (!ME_FindItemFwd(c.pRun, diParagraph))
       {
-        return;
+        return TRUE;
       }
-      ME_JoinParagraphs(editor, ME_GetParagraph(c.pRun));
+      keepFirstParaFormat = (totalChars == nChars && nChars <= eollen &&
+                             run->nCharOfs);
+      if (!editor->bEmulateVersion10) /* v4.1 */
+      {
+        ME_DisplayItem *next_para = ME_FindItemFwd(c.pRun, diParagraphOrEnd);
+        ME_DisplayItem *this_para = next_para->member.para.prev_para;
+
+        /* The end of paragraph before a table row is only deleted if there
+         * is nothing else on the line before it. */
+        if (this_para == start_para &&
+            next_para->member.para.nFlags & MEPF_ROWSTART)
+        {
+          /* If the paragraph will be empty, then it should be deleted, however
+           * it still might have text right now which would inherit the
+           * MEPF_STARTROW property if we joined it right now.
+           * Instead we will delete it after the preceding text is deleted. */
+          if (nOfs > this_para->member.para.nCharOfs) {
+            /* Skip this end of line. */
+            nChars -= (eollen < nChars) ? eollen : nChars;
+            continue;
+          }
+          keepFirstParaFormat = TRUE;
+        }
+      }
+      ME_JoinParagraphs(editor, ME_GetParagraph(c.pRun), keepFirstParaFormat);
       /* ME_SkipAndPropagateCharOffset(p->pRun, shift); */
       ME_CheckCharOffsets(editor);
       nChars -= (eollen < nChars) ? eollen : nChars;
@@ -289,22 +347,21 @@ void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs,
     else
     {
       ME_Cursor cursor;
-      int nIntendedChars = nChars;
-      int nCharsToDelete = nChars;
+      int nCharsToDelete = min(nChars, c.nOffset);
       int i;
-      int loc = c.nOffset;
-      
+
+      c.nOffset -= nCharsToDelete;
+
       ME_FindItemBack(c.pRun, diParagraph)->member.para.nFlags |= MEPF_REWRAP;
-      
+
       cursor = c;
-      ME_StrRelPos(run->strText, loc, &nChars);
       /* nChars is the number of characters that should be deleted from the
-         FOLLOWING runs (these AFTER cursor.pRun)
+         PRECEDING runs (these BEFORE cursor.pRun)
          nCharsToDelete is a number of chars to delete from THIS run */
-      nCharsToDelete -= nChars;
+      nChars -= nCharsToDelete;
       shift -= nCharsToDelete;
-      TRACE("Deleting %d (intended %d-remaning %d) chars at %d in '%s' (%d)\n", 
-        nCharsToDelete, nIntendedChars, nChars, c.nOffset, 
+      TRACE("Deleting %d (remaning %d) chars at %d in '%s' (%d)\n",
+        nCharsToDelete, nChars, c.nOffset,
         debugstr_w(run->strText->szData), run->strText->nLen);
 
       if (!c.nOffset && ME_StrVLen(run->strText) == nCharsToDelete)
@@ -314,7 +371,7 @@ void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs,
            to the current (deleted) run */
         ME_UndoItem *pUndo = ME_AddUndoItem(editor, diUndoInsertRun, c.pRun);
         if (pUndo)
-          pUndo->di.member.run.nCharOfs = nOfs;
+          pUndo->di.member.run.nCharOfs = nOfs+nChars;
       }
       else
       {
@@ -322,7 +379,7 @@ void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs,
         ME_UndoItem *pUndo = ME_AddUndoItem(editor, diUndoInsertRun, c.pRun);
         if (pUndo) {
           ME_DestroyString(pUndo->di.member.run.strText);
-          pUndo->di.member.run.nCharOfs = nOfs;
+          pUndo->di.member.run.nCharOfs = nOfs+nChars;
           pUndo->di.member.run.strText = ME_MakeStringN(run->strText->szData+c.nOffset, nCharsToDelete);
         }
       }
@@ -373,15 +430,16 @@ void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs,
       continue;
     }
   }
+  return TRUE;
 }
 
-void ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, 
-  int nChars)
+BOOL ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars)
 {  
   assert(nCursor>=0 && nCursor<editor->nCursors);
   /* text operations set modified state */
   editor->nModifyStep = 1;
-  ME_InternalDeleteText(editor, ME_GetCursorOfs(editor, nCursor), nChars);
+  return ME_InternalDeleteText(editor, ME_GetCursorOfs(editor, nCursor), nChars,
+                               FALSE);
 }
 
 static ME_DisplayItem *
@@ -430,31 +488,6 @@ void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor)
   di = ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, pStyle,
                                        MERF_ENDROW);
   ME_SendSelChange(editor);
-}
-
-void
-ME_InsertTableCellFromCursor(ME_TextEditor *editor, int nCursor)
-{
-  WCHAR tab = '\t';
-  ME_DisplayItem *p, *run;
-  ME_Style *pStyle = ME_GetInsertStyle(editor, nCursor);
-  
-  p = ME_InternalInsertTextFromCursor(editor, nCursor, &tab, 1, pStyle,
-                                      MERF_CELL);
-  run = p;
-  while ((run = ME_FindItemBack(run, diRunOrParagraph))->type == diRun)
-  {
-    if (run->member.run.nFlags & MERF_CELL)
-    {
-      assert(run->member.run.pCell->next);
-      p->member.run.pCell = run->member.run.pCell->next;
-      return;
-    }
-  }
-  assert(run->type == diParagraph);
-  assert(run->member.para.bTable);
-  assert(run->member.para.pCells);
-  p->member.run.pCell = run->member.para.pCells;
 }
 
 
@@ -572,7 +605,7 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
           pos++;
         numCR = 1; numLF = 0;
       }
-      tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, numCR, numLF);
+      tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, numCR, numLF, 0);
       p->pRun = ME_FindItemFwd(tp, diRun);
       end_run = ME_FindItemBack(tp, diRun);
       ME_ReleaseStyle(end_run->member.run.style);
@@ -619,7 +652,8 @@ ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
             assert(pRun->type != diRun && pRun->type != diParagraph);
             return FALSE;
         }
-      } while (RUN_IS_HIDDEN(&pRun->member.run));
+      } while (RUN_IS_HIDDEN(&pRun->member.run) ||
+               pRun->member.run.nFlags & MERF_HIDDEN);
       pCursor->pRun = pRun;
       if (pRun->member.run.nFlags & MERF_ENDPARA)
         pCursor->nOffset = 0;
@@ -645,7 +679,8 @@ ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
     }
     do {
       pRun = ME_FindItemFwd(pRun, diRun);
-    } while (pRun && RUN_IS_HIDDEN(&pRun->member.run));
+    } while (pRun && (RUN_IS_HIDDEN(&pRun->member.run) ||
+                      pRun->member.run.nFlags & MERF_HIDDEN));
     if (pRun)
     {
       pCursor->pRun = pRun;
@@ -690,9 +725,13 @@ ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
       {
         if (cursor->pRun == pRun && cursor->nOffset == 0)
         {
+          /* Skip empty start of table row paragraph */
+          if (pOtherRun->member.para.prev_para->member.para.nFlags & MEPF_ROWSTART)
+            pOtherRun = pOtherRun->member.para.prev_para;
           /* Paragraph breaks are treated as separate words */
           if (pOtherRun->member.para.prev_para->type == diTextStart)
             return FALSE;
+
           pRun = ME_FindItemBack(pOtherRun, diRunOrParagraph);
         }
         break;
@@ -723,6 +762,8 @@ ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
       }
       else if (pOtherRun->type == diParagraph)
       {
+        if (pOtherRun->member.para.nFlags & MEPF_ROWSTART)
+            pOtherRun = pOtherRun->member.para.next_para;
         if (cursor->pRun == pRun)
           pRun = ME_FindItemFwd(pOtherRun, diRun);
         nOffset = 0;
@@ -744,13 +785,63 @@ ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
 
 
 void
-ME_SelectWord(ME_TextEditor *editor)
+ME_SelectByType(ME_TextEditor *editor, ME_SelectionType selectionType)
 {
-  ME_MoveCursorWords(editor, &editor->pCursors[1], +1);
-  editor->pCursors[0] = editor->pCursors[1];
-  ME_MoveCursorWords(editor, &editor->pCursors[0], -1);
-}
+  /* pCursor[0] is the end of the selection
+   * pCursor[1] is the start of the selection (or the position selection anchor)
+   * pCursor[2] and [3] are the selection anchors that are backed up
+   * so they are kept when the selection changes for drag selection.
+   */
 
+  editor->nSelectionType = selectionType;
+  switch(selectionType)
+  {
+    case stPosition:
+      break;
+    case stWord:
+      ME_MoveCursorWords(editor, &editor->pCursors[0], +1);
+      editor->pCursors[1] = editor->pCursors[0];
+      ME_MoveCursorWords(editor, &editor->pCursors[1], -1);
+      break;
+    case stLine:
+    case stParagraph:
+    {
+      ME_DisplayItem *pItem;
+      ME_DIType fwdSearchType, backSearchType;
+      if (selectionType == stParagraph) {
+          backSearchType = diParagraph;
+          fwdSearchType = diParagraphOrEnd;
+      } else {
+          backSearchType = diStartRow;
+          fwdSearchType = diStartRowOrParagraphOrEnd;
+      }
+      pItem = ME_FindItemFwd(editor->pCursors[0].pRun, fwdSearchType);
+      assert(pItem);
+      if (pItem->type == diTextEnd)
+          editor->pCursors[0].pRun = ME_FindItemBack(pItem, diRun);
+      else
+          editor->pCursors[0].pRun = ME_FindItemFwd(pItem, diRun);
+      editor->pCursors[0].nOffset = 0;
+
+      pItem = ME_FindItemBack(pItem, backSearchType);
+      editor->pCursors[1].pRun = ME_FindItemFwd(pItem, diRun);
+      editor->pCursors[1].nOffset = 0;
+      break;
+    }
+    case stDocument:
+      /* Select everything with cursor anchored from the start of the text */
+      editor->nSelectionType = stDocument;
+      editor->pCursors[1].pRun = ME_FindItemFwd(editor->pBuffer->pFirst, diRun);
+      editor->pCursors[1].nOffset = 0;
+      editor->pCursors[0].pRun = ME_FindItemBack(editor->pBuffer->pLast, diRun);
+      editor->pCursors[0].nOffset = 0;
+      break;
+    default: assert(0);
+  }
+  /* Store the anchor positions for extending the selection. */
+  editor->pCursors[2] = editor->pCursors[0];
+  editor->pCursors[3] = editor->pCursors[1];
+}
 
 int ME_GetCursorOfs(ME_TextEditor *editor, int nCursor)
 {
@@ -759,11 +850,60 @@ int ME_GetCursorOfs(ME_TextEditor *editor, int nCursor)
     + pCursor->pRun->member.run.nCharOfs + pCursor->nOffset;
 }
 
-static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *result, BOOL *is_eol)
+/* Helper function for ME_FindPixelPos to find paragraph within tables */
+static ME_DisplayItem* ME_FindPixelPosInTableRow(int x, int y,
+                                                 ME_DisplayItem *para)
+{
+  ME_DisplayItem *cell, *next_cell;
+  assert(para->member.para.nFlags & MEPF_ROWSTART);
+  cell = para->member.para.next_para->member.para.pCell;
+  assert(cell);
+
+  /* find the cell we are in */
+  while ((next_cell = cell->member.cell.next_cell) != NULL) {
+    if (x < next_cell->member.cell.pt.x)
+    {
+      para = ME_FindItemFwd(cell, diParagraph);
+      /* Found the cell, but there might be multiple paragraphs in
+       * the cell, so need to search down the cell for the paragraph. */
+      while (cell == para->member.para.pCell) {
+        if (y < para->member.para.pt.y + para->member.para.nHeight)
+        {
+          if (para->member.para.nFlags & MEPF_ROWSTART)
+            return ME_FindPixelPosInTableRow(x, y, para);
+          else
+            return para;
+        }
+        para = para->member.para.next_para;
+      }
+      /* Past the end of the cell, so go back to the last cell paragraph */
+      return para->member.para.prev_para;
+    }
+    cell = next_cell;
+  }
+  /* Return table row delimiter */
+  para = ME_FindItemFwd(cell, diParagraph);
+  assert(para->member.para.nFlags & MEPF_ROWEND);
+  assert(para->member.para.pFmt->dwMask & PFM_TABLEROWDELIMITER);
+  assert(para->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER);
+  return para;
+}
+
+/* Finds the run and offset from the pixel position.
+ *
+ * x & y are pixel positions in virtual coordinates into the rich edit control,
+ * so client coordinates must first be adjusted by the scroll position.
+ *
+ * returns TRUE if the result was exactly under the cursor, otherwise returns
+ * FALSE, and result is set to the closest position to the coordinates.
+ */
+static BOOL ME_FindPixelPos(ME_TextEditor *editor, int x, int y,
+                            ME_Cursor *result, BOOL *is_eol)
 {
   ME_DisplayItem *p = editor->pBuffer->pFirst->member.para.next_para;
   ME_DisplayItem *last = NULL;
   int rx = 0;
+  BOOL isExact = TRUE;
 
   if (is_eol)
     *is_eol = 0;
@@ -772,11 +912,15 @@ static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *resu
   for (; p != editor->pBuffer->pLast; p = p->member.para.next_para)
   {
     assert(p->type == diParagraph);
-    if (y < p->member.para.nYPos + p->member.para.nHeight)
+    if (y < p->member.para.pt.y + p->member.para.nHeight)
     {
-      y -= p->member.para.nYPos;
+      if (p->member.para.nFlags & MEPF_ROWSTART)
+        p = ME_FindPixelPosInTableRow(x, y, p);
+      y -= p->member.para.pt.y;
       p = ME_FindItemFwd(p, diStartRow);
       break;
+    } else if (p->member.para.nFlags & MEPF_ROWSTART) {
+      p = ME_GetTableRowEnd(p);
     }
   }
   /* find row */
@@ -784,7 +928,7 @@ static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *resu
   {
     ME_DisplayItem *pp;
     assert(p->type == diStartRow);
-    if (y < p->member.row.nYPos + p->member.row.nHeight)
+    if (y < p->member.row.pt.y + p->member.row.nHeight)
     {
         p = ME_FindItemFwd(p, diRun);
         break;
@@ -802,6 +946,7 @@ static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *resu
     /* The position is below the last paragraph, so the last row will be used
      * rather than the end of the text, so the x position will be used to
      * determine the offset closest to the pixel position. */
+    isExact = FALSE;
     p = ME_FindItemBack(p, diStartRow);
     if (p != NULL){
       p = ME_FindItemFwd(p, diRun);
@@ -830,16 +975,19 @@ static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *resu
           result->pRun = ME_FindItemFwd(editor->pCursors[0].pRun, diRun);
           result->nOffset = 0;
         }
-        return;
+        return isExact;
       }
       break;
     case diStartRow:
+      isExact = FALSE;
       p = ME_FindItemFwd(p, diRun);
       if (is_eol) *is_eol = 1;
       rx = 0; /* FIXME not sure */
       goto found_here;
+    case diCell:
     case diParagraph:
     case diTextEnd:
+      isExact = FALSE;
       rx = 0; /* FIXME not sure */
       p = last;
       goto found_here;
@@ -850,29 +998,102 @@ static void ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *resu
   result->pRun = ME_FindItemBack(p, diRun);
   result->nOffset = 0;
   assert(result->pRun->member.run.nFlags & MERF_ENDPARA);
+  return FALSE;
 }
 
 
-int
-ME_CharFromPos(ME_TextEditor *editor, int x, int y)
+/* Returns the character offset closest to the pixel position
+ *
+ * x & y are pixel positions in client coordinates.
+ *
+ * isExact will be set to TRUE if the run is directly under the pixel
+ * position, FALSE if it not, unless isExact is set to NULL.
+ */
+int ME_CharFromPos(ME_TextEditor *editor, int x, int y, BOOL *isExact)
 {
   ME_Cursor cursor;
   RECT rc;
+  BOOL bResult;
 
   GetClientRect(editor->hWnd, &rc);
-  if (x < 0 || y < 0 || x >= rc.right || y >= rc.bottom)
+  if (x < 0 || y < 0 || x >= rc.right || y >= rc.bottom) {
+    if (isExact) *isExact = FALSE;
     return -1;
+  }
   y += ME_GetYScrollPos(editor);
-  ME_FindPixelPos(editor, x, y, &cursor, NULL);
+  bResult = ME_FindPixelPos(editor, x, y, &cursor, NULL);
+  if (isExact) *isExact = bResult;
   return (ME_GetParagraph(cursor.pRun)->member.para.nCharOfs
           + cursor.pRun->member.run.nCharOfs + cursor.nOffset);
 }
 
 
+
+/* Extends the selection with a word, line, or paragraph selection type.
+ *
+ * The selection is anchored by editor->pCursors[2-3] such that the text
+ * between the anchors will remain selected, and one end will be extended.
+ *
+ * editor->pCursors[0] should have the position to extend the selection to
+ * before this function is called.
+ *
+ * Nothing will be done if editor->nSelectionType equals stPosition.
+ */
+static void ME_ExtendAnchorSelection(ME_TextEditor *editor)
+{
+  ME_Cursor tmp_cursor;
+  int curOfs, anchorStartOfs, anchorEndOfs;
+  if (editor->nSelectionType == stPosition || editor->nSelectionType == stDocument)
+      return;
+  curOfs = ME_GetCursorOfs(editor, 0);
+  anchorStartOfs = ME_GetCursorOfs(editor, 3);
+  anchorEndOfs = ME_GetCursorOfs(editor, 2);
+
+  tmp_cursor = editor->pCursors[0];
+  editor->pCursors[0] = editor->pCursors[2];
+  editor->pCursors[1] = editor->pCursors[3];
+  if (curOfs < anchorStartOfs)
+  {
+      /* Extend the left side of selection */
+      editor->pCursors[1] = tmp_cursor;
+      if (editor->nSelectionType == stWord)
+          ME_MoveCursorWords(editor, &editor->pCursors[1], -1);
+      else
+      {
+          ME_DisplayItem *pItem;
+          ME_DIType searchType = ((editor->nSelectionType == stLine) ?
+                                  diStartRowOrParagraph:diParagraph);
+          pItem = ME_FindItemBack(editor->pCursors[1].pRun, searchType);
+          editor->pCursors[1].pRun = ME_FindItemFwd(pItem, diRun);
+          editor->pCursors[1].nOffset = 0;
+      }
+  }
+  else if (curOfs >= anchorEndOfs)
+  {
+      /* Extend the right side of selection */
+      editor->pCursors[0] = tmp_cursor;
+      if (editor->nSelectionType == stWord)
+          ME_MoveCursorWords(editor, &editor->pCursors[0], +1);
+      else
+      {
+          ME_DisplayItem *pItem;
+          ME_DIType searchType = ((editor->nSelectionType == stLine) ?
+                                  diStartRowOrParagraphOrEnd:diParagraphOrEnd);
+          pItem = ME_FindItemFwd(editor->pCursors[0].pRun, searchType);
+          if (pItem->type == diTextEnd)
+              editor->pCursors[0].pRun = ME_FindItemBack(pItem, diRun);
+          else
+              editor->pCursors[0].pRun = ME_FindItemFwd(pItem, diRun);
+          editor->pCursors[0].nOffset = 0;
+      }
+  }
+}
+
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
 {
   ME_Cursor tmp_cursor;
   int is_selection = 0;
+  BOOL is_shift;
   
   editor->nUDArrowX = -1;
   
@@ -880,59 +1101,54 @@ void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
 
   tmp_cursor = editor->pCursors[0];
   is_selection = ME_IsSelection(editor);
+  is_shift = GetKeyState(VK_SHIFT) < 0;
 
-  if (x >= editor->selofs)
+  ME_FindPixelPos(editor, x, y, &editor->pCursors[0], &editor->bCaretAtEnd);
+
+  if (x >= editor->selofs || is_shift)
   {
-    ME_FindPixelPos(editor, x, y, &editor->pCursors[0], &editor->bCaretAtEnd);
-    if (GetKeyState(VK_SHIFT)>=0)
+    if (clickNum > 1)
     {
-      /* Shift key is not down */
       editor->pCursors[1] = editor->pCursors[0];
-      if (clickNum > 1)
-          ME_SelectWord(editor);
+      if (is_shift) {
+          if (x >= editor->selofs)
+              ME_SelectByType(editor, stWord);
+          else
+              ME_SelectByType(editor, stParagraph);
+      } else if (clickNum % 2 == 0) {
+          ME_SelectByType(editor, stWord);
+      } else {
+          ME_SelectByType(editor, stParagraph);
+      }
     }
-    else if (!is_selection) {
+    else if (!is_shift)
+    {
+      editor->nSelectionType = stPosition;
+      editor->pCursors[1] = editor->pCursors[0];
+    }
+    else if (!is_selection)
+    {
+      editor->nSelectionType = stPosition;
       editor->pCursors[1] = tmp_cursor;
-      is_selection = 1;
+    }
+    else if (editor->nSelectionType != stPosition)
+    {
+      ME_ExtendAnchorSelection(editor);
     }
   }
   else
   {
-    ME_DisplayItem *pRow;
-
-    editor->linesel = 1;
-    editor->sely = y;
-    /* Set pCursors[0] to beginning of line */
-    ME_FindPixelPos(editor, x, y, &editor->pCursors[1], &editor->bCaretAtEnd);
-    /* Set pCursors[1] to end of line */
-    pRow = ME_FindItemFwd(editor->pCursors[1].pRun, diStartRowOrParagraphOrEnd);
-    assert(pRow);
-    /* pCursor[0] is the position where the cursor will be drawn,
-     * pCursor[1] is the other end of the selection range
-     * pCursor[2] and [3] are backups of [0] and [1] so I
-     * don't have to look them up again
-     */
-
-    if (pRow->type == diStartRow) {
-      /* FIXME WTF was I thinking about here ? */
-      ME_DisplayItem *pRun = ME_FindItemFwd(pRow, diRun);
-      assert(pRun);
-      editor->pCursors[0].pRun = pRun;
-      editor->pCursors[0].nOffset = 0;
-      editor->bCaretAtEnd = 1;
+    if (clickNum < 2) {
+        ME_SelectByType(editor, stLine);
+    } else if (clickNum % 2 == 0 || is_shift) {
+        ME_SelectByType(editor, stParagraph);
     } else {
-      editor->pCursors[0].pRun = ME_FindItemBack(pRow, diRun);
-      assert(editor->pCursors[0].pRun && editor->pCursors[0].pRun->member.run.nFlags & MERF_ENDPARA);
-      editor->pCursors[0].nOffset = 0;
-      editor->bCaretAtEnd = 0;
+        ME_SelectByType(editor, stDocument);
     }
-    editor->pCursors[2] = editor->pCursors[0];
-    editor->pCursors[3] = editor->pCursors[1];
   }
   ME_InvalidateSelection(editor);
   HideCaret(editor->hWnd);
-  ME_MoveCaret(editor);
-  ShowCaret(editor->hWnd);
+  ME_ShowCaret(editor);
   ME_ClearTempStyle(editor);
   ME_SendSelChange(editor);
 }
@@ -941,43 +1157,38 @@ void ME_MouseMove(ME_TextEditor *editor, int x, int y)
 {
   ME_Cursor tmp_cursor;
   
+  if (editor->nSelectionType == stDocument)
+      return;
   y += ME_GetYScrollPos(editor);
 
   tmp_cursor = editor->pCursors[0];
   /* FIXME: do something with the return value of ME_FindPixelPos */
-  if (!editor->linesel)
-    ME_FindPixelPos(editor, x, y, &tmp_cursor, &editor->bCaretAtEnd);
-  else ME_FindPixelPos(editor, (y > editor->sely) * editor->rcFormat.right, y, &tmp_cursor, &editor->bCaretAtEnd);
-
-  if (!memcmp(&tmp_cursor, editor->pCursors, sizeof(tmp_cursor)))
-    return;
+  ME_FindPixelPos(editor, x, y, &tmp_cursor, &editor->bCaretAtEnd);
 
   ME_InvalidateSelection(editor);
-  if (!editor->linesel)
-    editor->pCursors[0] = tmp_cursor;
-  else if (!memcmp(&tmp_cursor, editor->pCursors+2, sizeof(tmp_cursor)) ||
-           !memcmp(&tmp_cursor, editor->pCursors+3, sizeof(tmp_cursor)))
+  editor->pCursors[0] = tmp_cursor;
+  ME_ExtendAnchorSelection(editor);
+
+  if (editor->nSelectionType != stPosition &&
+      memcmp(&editor->pCursors[1], &editor->pCursors[3], sizeof(ME_Cursor)))
   {
-    editor->pCursors[0] = editor->pCursors[2];
-    editor->pCursors[1] = editor->pCursors[3];
-  }
-  else if (y < editor->sely)
-  {
-    editor->pCursors[0] = tmp_cursor;
-    editor->pCursors[1] = editor->pCursors[2];
-  }
-  else
-  {
-    editor->pCursors[0] = tmp_cursor;
-    editor->pCursors[1] = editor->pCursors[3];
+      /* The scroll the cursor towards the other end, since it was the one
+       * extended by ME_ExtendAnchorSelection
+       */
+      ME_Cursor tmpCursor = editor->pCursors[0];
+      editor->pCursors[0] = editor->pCursors[1];
+      editor->pCursors[1] = tmpCursor;
+      SendMessageW(editor->hWnd, EM_SCROLLCARET, 0, 0);
+      editor->pCursors[1] = editor->pCursors[0];
+      editor->pCursors[0] = tmpCursor;
+  } else {
+      SendMessageW(editor->hWnd, EM_SCROLLCARET, 0, 0);
   }
 
+  ME_InvalidateSelection(editor);
   HideCaret(editor->hWnd);
-  ME_MoveCaret(editor);
-  ME_InvalidateSelection(editor);
-  ShowCaret(editor->hWnd);
+  ME_ShowCaret(editor);
   ME_SendSelChange(editor);
-  SendMessageW(editor->hWnd, EM_SCROLLCARET, 0, 0);
 }
 
 static ME_DisplayItem *ME_FindRunInRow(ME_TextEditor *editor, ME_DisplayItem *pRow, 
@@ -1048,13 +1259,14 @@ static void
 ME_MoveCursorLines(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
 {
   ME_DisplayItem *pRun = pCursor->pRun;
-  ME_DisplayItem *pItem;
+  ME_DisplayItem *pItem, *pOldPara, *pNewPara;
   int x = ME_GetXForArrow(editor, pCursor);
 
   if (editor->bCaretAtEnd && !pCursor->nOffset)
     pRun = ME_FindItemBack(pRun, diRun);
   if (!pRun)
     return;
+  pOldPara = ME_GetParagraph(pRun);
   if (nRelOfs == -1)
   {
     /* start of this row */
@@ -1062,13 +1274,57 @@ ME_MoveCursorLines(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
     assert(pItem);
     /* start of the previous row */
     pItem = ME_FindItemBack(pItem, diStartRow);
+    if (!pItem)
+      return; /* row not found - ignore */
+    pNewPara = ME_GetParagraph(pItem);
+    if (pOldPara->member.para.nFlags & MEPF_ROWEND ||
+        (pOldPara->member.para.pCell &&
+         pOldPara->member.para.pCell != pNewPara->member.para.pCell))
+    {
+      /* Brought out of a cell */
+      pNewPara = ME_GetTableRowStart(pOldPara)->member.para.prev_para;
+      if (pNewPara->type == diTextStart)
+        return; /* At the top, so don't go anywhere. */
+      pItem = ME_FindItemFwd(pNewPara, diStartRow);
+    }
+    if (pNewPara->member.para.nFlags & MEPF_ROWEND)
+    {
+      /* Brought into a table row */
+      ME_Cell *cell = &ME_FindItemBack(pNewPara, diCell)->member.cell;
+      while (x < cell->pt.x && cell->prev_cell)
+        cell = &cell->prev_cell->member.cell;
+      if (cell->next_cell) /* else - we are still at the end of the row */
+        pItem = ME_FindItemBack(cell->next_cell, diStartRow);
+    }
   }
   else
   {
     /* start of the next row */
     pItem = ME_FindItemFwd(pRun, diStartRow);
+    if (!pItem)
+      return; /* row not found - ignore */
     /* FIXME If diParagraph is before diStartRow, wrap the next paragraph?
     */
+    pNewPara = ME_GetParagraph(pItem);
+    if (pOldPara->member.para.nFlags & MEPF_ROWSTART ||
+        (pOldPara->member.para.pCell &&
+         pOldPara->member.para.pCell != pNewPara->member.para.pCell))
+    {
+      /* Brought out of a cell */
+      pNewPara = ME_GetTableRowEnd(pOldPara)->member.para.next_para;
+      if (pNewPara->type == diTextEnd)
+        return; /* At the bottom, so don't go anywhere. */
+      pItem = ME_FindItemFwd(pNewPara, diStartRow);
+    }
+    if (pNewPara->member.para.nFlags & MEPF_ROWSTART)
+    {
+      /* Brought into a table row */
+      ME_DisplayItem *cell = ME_FindItemFwd(pNewPara, diCell);
+      while (cell->member.cell.next_cell &&
+             x >= cell->member.cell.next_cell->member.cell.pt.x)
+        cell = cell->member.cell.next_cell;
+      pItem = ME_FindItemFwd(cell, diStartRow);
+    }
   }
   if (!pItem)
   {
@@ -1094,8 +1350,8 @@ static void ME_ArrowPageUp(ME_TextEditor *editor, ME_Cursor *pCursor)
   
   p = ME_FindItemBack(pRun, diStartRowOrParagraph);
   assert(p->type == diStartRow);
-  yp = ME_FindItemBack(p, diParagraph)->member.para.nYPos;
-  yprev = ys = y = yp + p->member.row.nYPos;
+  yp = ME_FindItemBack(p, diParagraph)->member.para.pt.y;
+  yprev = ys = y = yp + p->member.row.pt.y;
   yd = y - editor->sizeWindow.cy;
   pLast = p;
   
@@ -1106,10 +1362,10 @@ static void ME_ArrowPageUp(ME_TextEditor *editor, ME_Cursor *pCursor)
     if (p->type == diParagraph) { /* crossing paragraphs */
       if (p->member.para.prev_para == NULL)
         break;
-      yp = p->member.para.prev_para->member.para.nYPos;
+      yp = p->member.para.prev_para->member.para.pt.y;
       continue;
     }
-    y = yp + p->member.row.nYPos;
+    y = yp + p->member.row.pt.y;
     if (y < yd)
       break;
     pLast = p;
@@ -1149,8 +1405,8 @@ static void ME_ArrowPageDown(ME_TextEditor *editor, ME_Cursor *pCursor)
   
   p = ME_FindItemBack(pRun, diStartRowOrParagraph);
   assert(p->type == diStartRow);
-  yp = ME_FindItemBack(p, diParagraph)->member.para.nYPos;
-  yprev = ys = y = yp + p->member.row.nYPos;
+  yp = ME_FindItemBack(p, diParagraph)->member.para.pt.y;
+  yprev = ys = y = yp + p->member.row.pt.y;
   yd = y + editor->sizeWindow.cy;
   pLast = p;
   
@@ -1159,10 +1415,10 @@ static void ME_ArrowPageDown(ME_TextEditor *editor, ME_Cursor *pCursor)
     if (!p)
       break;
     if (p->type == diParagraph) {
-      yp = p->member.para.nYPos;
+      yp = p->member.para.pt.y;
       continue;
     }
-    y = yp + p->member.row.nYPos;
+    y = yp + p->member.row.pt.y;
     if (y >= yd)
       break;
     pLast = p;

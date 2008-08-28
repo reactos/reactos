@@ -182,7 +182,9 @@
 # define		rtfTOC			72
 # define		rtfNeXTGraphic		73
 # define		rtfGenerator		74
-# define		rtfMaxDestination	75	/* highest dest + 1 */
+# define		rtfNestTableProps	75
+# define		rtfNoNestTables		76
+# define		rtfMaxDestination	77	/* highest dest + 1 */
 
 # define	rtfFontFamily	4
 # define		rtfFFNil		0
@@ -261,6 +263,8 @@
 # define		rtfCurHeadPict		57	/* valid? */
 /*# define		rtfCurAnnot		58*/	/* apparently not used */
 # define		rtfUnicode		58	/* no better category*/
+# define		rtfNestCell		59
+# define		rtfNestRow		60
 
 # define	rtfStyleAttr	7
 # define		rtfAdditive		0	/* new in 1.10 */
@@ -551,6 +555,7 @@
 # define		rtfDarkDiagHatchBgPat	101
 # define		rtfBgPatLineColor	102
 # define		rtfBgPatColor		103
+# define		rtfNestLevel		104
 
 # define	rtfCharAttr	12
 # define		rtfPlain		0
@@ -945,7 +950,9 @@ typedef struct RTFFont		RTFFont;
 typedef struct RTFColor		RTFColor;
 typedef struct RTFStyle		RTFStyle;
 typedef struct RTFStyleElt	RTFStyleElt;
-
+typedef struct RTFBorder	RTFBorder;
+typedef struct RTFCell		RTFCell;
+typedef struct RTFTable		RTFTable;
 
 struct RTFFont
 {
@@ -1000,6 +1007,74 @@ struct RTFStyleElt
 	RTFStyleElt	*rtfNextSE;	/* next element in style */
 };
 
+struct RTFBorder
+{
+	int width;
+	int color;
+};
+
+struct RTFCell
+{
+	int rightBoundary;
+	RTFBorder border[4];
+};
+
+
+struct RTFTable
+{
+	RTFCell cells[MAX_TABLE_CELLS];
+	int numCellsDefined;
+
+	int gapH, leftEdge;
+	/* borders for the table row */
+	RTFBorder border[6];
+
+	/* Used in v1.0 - v3.0 */
+	int numCellsInserted;
+
+	/* v4.1 */
+	/* tableRowStart may be the start row paragraph of the table row,
+	 * or it may store the end of the previous row if it may still be
+	 * continued, otherwise NULL is stored. */
+	ME_DisplayItem *tableRowStart;
+
+	/* Table definitions are stored as a stack to support nested tables. */
+	RTFTable *parent;
+};
+
+
+# define RTFBorderTypeNone       0x00
+# define RTFBorderTypePara       0x10 /* for \brdrX control words */
+# define RTFBorderTypeRow        0x20 /* for \trbrdrX control words */
+# define RTFBorderTypeCell       0x30 /* for \clbrdrX control words */
+# define RTFBorderTypeMask       0xf0
+
+/* The X in the control words \brdrX \trbrdrX and \clbrdrX mentioned above
+ * should be one of t, l, b, r which stand for top, left, bottom, right
+ * respectively. */
+# define RTFBorderSideTop        0x00
+# define RTFBorderSideLeft       0x01
+# define RTFBorderSideBottom     0x02
+# define RTFBorderSideRight      0x03
+# define RTFBorderSideHorizontal 0x04
+# define RTFBorderSideVertical   0x05
+# define RTFBorderSideMask       0x0f
+
+/* Here are the values from the border types and sides put together.  */
+# define RTFBorderParaTop        0x10
+# define RTFBorderParaLeft       0x11
+# define RTFBorderParaBottom     0x12
+# define RTFBorderParaRight      0x13
+# define RTFBorderRowTop         0x20
+# define RTFBorderRowLeft        0x21
+# define RTFBorderRowBottom      0x22
+# define RTFBorderRowRight       0x23
+# define RTFBorderRowHorizontal  0x24
+# define RTFBorderRowVertical    0x25
+# define RTFBorderCellTop        0x30
+# define RTFBorderCellLeft       0x31
+# define RTFBorderCellBottom     0x32
+# define RTFBorderCellRight      0x33
 
 /*
  * Return pointer to new element of type t, or NULL
@@ -1105,6 +1180,11 @@ struct _RTF_Info {
     int              stackTop;
     BOOL             styleChanged;
     LPRICHEDITOLE       lpRichEditOle;
+
+    RTFTable *tableDef;
+    int nestingLevel;
+    BOOL canInheritInTbl;
+    int borderType; /* value corresponds to the RTFBorder constants. */
 };
 
 
