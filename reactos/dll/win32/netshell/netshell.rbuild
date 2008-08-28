@@ -23,5 +23,6 @@
 	<file>enumlist.c</file>
 	<file>netshell.rc</file>
 	<file>classfactory.c</file>
+	<file>connectmanager.c</file>
 	<file>netshell.spec</file>
 </module>

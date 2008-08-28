@@ -32,6 +32,7 @@
 #include <shtypes.h>
 #include <setupapi.h>
 #include <devguid.h>
+#include <netcon.h>
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -53,10 +54,7 @@ typedef struct {
 typedef struct tagVALUEStruct
 {
     BYTE dummy;
-    DWORD dwType;
-    DWORD dwOperStatus;
-    DWORD dwNameLength;
-    WCHAR szName[1];
+    INetConnection * pItem;
 }VALUEStruct;
 
 /* globals */
@@ -71,12 +69,15 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
 /* enumlist.c */
 IEnumIDList * IEnumIDList_Constructor(void);
 LPITEMIDLIST _ILCreateNetConnect();
-LPITEMIDLIST ILCreateNetConnectItem(MIB_IFROW * pRow, LPWSTR szName, LPWSTR szAdapterName);
+LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem);
 BOOL _ILIsNetConnect (LPCITEMIDLIST pidl);
 BOOL AddToEnumList(IEnumIDList * iface, LPITEMIDLIST pidl);
 VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl);
 
 /* classfactory.c */
 IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, REFIID riidInst);
+
+/* connectmanager.c */
+HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 #endif

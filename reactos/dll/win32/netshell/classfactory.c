@@ -54,7 +54,7 @@ IClassFactory_fnRelease(
 
     if (!refCount)
     {
-        HeapFree(GetProcessHeap(),0,This);
+        CoTaskMemFree(This);
         return 0;
     }
     return refCount;
@@ -110,7 +110,7 @@ IClassFactory_fnConstructor(
 {
     IClassFactoryImpl* lpclf;
 
-    lpclf = HeapAlloc(GetProcessHeap(),0,sizeof(IClassFactoryImpl));
+    lpclf = CoTaskMemAlloc(sizeof(IClassFactoryImpl));
     lpclf->ref = 1;
     lpclf->lpVtbl = &dclfvt;
     lpclf->lpfnCI = lpfnCI;

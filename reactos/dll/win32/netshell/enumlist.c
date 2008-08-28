@@ -129,7 +129,7 @@ WINAPI IEnumIDList_fnRelease(
             SHFree(pDelete->pidl);
             SHFree(pDelete);
         }
-        HeapFree(GetProcessHeap(),0,This);
+        CoTaskMemFree(This);
     }
     return refCount;
 }
@@ -242,13 +242,15 @@ static const IEnumIDListVtbl eidlvt =
 
 IEnumIDList * IEnumIDList_Constructor(void)
 {
-    IEnumIDListImpl *lpeidl = HeapAlloc(GetProcessHeap(),
-     HEAP_ZERO_MEMORY, sizeof(IEnumIDListImpl));
+    IEnumIDListImpl *lpeidl = CoTaskMemAlloc(sizeof(IEnumIDListImpl));
 
     if (lpeidl)
     {
         lpeidl->ref = 1;
         lpeidl->lpVtbl = &eidlvt;
+        lpeidl->mpCurrent = NULL;
+        lpeidl->mpLast = NULL;
+        lpeidl->mpFirst = NULL;
     }
 
     return (IEnumIDList*)lpeidl;
@@ -322,34 +324,24 @@ BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
-LPITEMIDLIST ILCreateNetConnectItem(MIB_IFROW * pRow, LPWSTR szName, LPWSTR szAdapterName)
+LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem)
 {
-    PIDLDATA tmp;
     LPITEMIDLIST pidl;
-    VALUEStruct * p;
-    int size = sizeof(struct tagVALUEStruct);
+    LPPIDLDATA pdata;
+    int size = sizeof(PIDLDATA);
 
-    tmp.type = 0x00;
-    tmp.u.value.dummy = 0xFF;
-
-    tmp.u.value.dwOperStatus = pRow->dwOperStatus;
-    tmp.u.value.dwType = pRow->dwType;
-    tmp.u.value.dwNameLength = wcslen(szName) + 1;
-
-    size += (tmp.u.value.dwNameLength + wcslen(szAdapterName)) * sizeof(WCHAR);
-
-    pidl = (LPITEMIDLIST)SHAlloc(size + 4);
+    pidl = (LPITEMIDLIST)SHAlloc(size + 2 * sizeof(SHITEMID));
     if (!pidl)
         return pidl;
+    ZeroMemory(pidl, size + 2 * sizeof(SHITEMID));
 
-    pidl->mkid.cb = size+2;
-    memcpy(pidl->mkid.abID, &tmp, 2+sizeof(struct tagVALUEStruct));
+    pidl->mkid.cb = size + sizeof(SHITEMID);
 
-    p = &((PIDLDATA*)pidl->mkid.abID)->u.value;
-    wcscpy(&p->szName[0], szName);
-    wcscpy(p->szName + tmp.u.value.dwNameLength, szAdapterName);
+    pdata = _ILGetDataPointer(pidl);
+    pdata->type = 0x99;
+    pdata->u.value.dummy = 0xFF;
+    pdata->u.value.pItem = (PVOID)pItem;
 
-    *(WORD*)((char*)pidl+(size+2)) = 0;
     return pidl;
 }
 
@@ -357,7 +349,7 @@ VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
-    if (pdata && pdata->type==0x00)
+    if (pdata && pdata->type==0x99)
         return (VALUEStruct*)&(pdata->u.value);
 
     return NULL;

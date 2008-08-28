@@ -117,7 +117,7 @@ static ULONG WINAPI ISF_NetConnect_fnRelease (IShellFolder2 * iface)
     if (!refCount) 
     {
         SHFree (This->pidlRoot);
-        HeapFree (GetProcessHeap(), 0, This);
+        CoTaskMemFree(This);
     }
     return refCount;
 }
@@ -145,140 +145,46 @@ static HRESULT WINAPI ISF_NetConnect_fnParseDisplayName (IShellFolder2 * iface,
  */
 static BOOL CreateNetConnectEnumList(IEnumIDList *list, DWORD dwFlags)
 {
-    DWORD dwSize, dwResult, dwIndex;
-    MIB_IFTABLE *pIfTable;
-    MIB_IFROW IfEntry;
-    IP_ADAPTER_INFO * pAdapterInfo, *pCurrentAdapter;
-    HDEVINFO hInfo;
-    SP_DEVINFO_DATA DevInfo;
-    HKEY hSubKey;
-    WCHAR szNetCfg[50];
-    WCHAR szAdapterNetCfg[50];
+    HRESULT hr;
+    INetConnectionManager * INetConMan;
+    IEnumNetConnection * IEnumCon;
+    INetConnection * INetCon;
+    ULONG Count;
     LPITEMIDLIST pidl;
-    WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
-    WCHAR szName[130] = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\";
 
-    /* get the IfTable */
-    dwSize = 0;
-    if (GetIfTable(NULL, &dwSize, TRUE) != ERROR_INSUFFICIENT_BUFFER)
+    /* get an instance to of IConnectionManager */
+    hr = INetConnectionManager_Constructor(NULL, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
+    if (FAILED(hr))
         return FALSE;
 
-    pIfTable = (PMIB_IFTABLE)HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (!pIfTable)
-        return FALSE;
-
-    dwResult = GetIfTable(pIfTable, &dwSize, TRUE);
-    if (dwResult != NO_ERROR)
+    hr = INetConnectionManager_EnumConnections(INetConMan, NCME_DEFAULT, &IEnumCon);
+    if (FAILED(hr))
     {
-        HeapFree(GetProcessHeap(), 0, pIfTable);
+        INetConnectionManager_Release(INetConMan);
         return FALSE;
     }
 
-    dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
-    if (dwResult!= ERROR_BUFFER_OVERFLOW)
-    {
-        HeapFree(GetProcessHeap(), 0, pIfTable);
-        return FALSE;
-    }
-
-    pAdapterInfo = (PIP_ADAPTER_INFO)HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (!pAdapterInfo)
-    {
-        HeapFree(GetProcessHeap(), 0, pIfTable);
-        return FALSE;
-    }
-
-    if (GetAdaptersInfo(pAdapterInfo, &dwSize) != NO_ERROR)
-    {
-        HeapFree(GetProcessHeap(), 0, pIfTable);
-        HeapFree(GetProcessHeap(), 0, pAdapterInfo);
-        return FALSE;
-    }
-
-
-    hInfo = SetupDiGetClassDevs(&GUID_DEVCLASS_NET, NULL, NULL, DIGCF_PRESENT );
-    if (!hInfo)
-    {
-        HeapFree(GetProcessHeap(), 0, pIfTable);
-        HeapFree(GetProcessHeap(), 0, pAdapterInfo);
-        return FALSE;
-    }
-
-    dwIndex = 0;
     do
     {
-        ZeroMemory(&DevInfo, sizeof(SP_DEVINFO_DATA));
-        DevInfo.cbSize = sizeof(DevInfo);
-        if (SetupDiEnumDeviceInfo(hInfo, dwIndex++, &DevInfo))
+        hr = IEnumNetConnection_Next(IEnumCon, 1, &INetCon, &Count);
+        if (hr == S_OK)
         {
-            if (SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DRIVER, NULL, (LPBYTE)&szDetail[39], sizeof(szDetail)/sizeof(WCHAR) - 40, &dwSize))
+            pidl = ILCreateNetConnectItem(INetCon);
+            if (pidl)
             {
-                if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szDetail, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
-                {
-                    dwSize = sizeof(szNetCfg);
-                    dwResult = RegQueryValueExW(hSubKey, L"NetCfgInstanceId", NULL, NULL, (LPBYTE)szNetCfg, &dwSize);
-                    if (dwResult == ERROR_SUCCESS)
-                    {
-                        pCurrentAdapter = pAdapterInfo;
-                        while(pCurrentAdapter)
-                        {
-                            szAdapterNetCfg[0] = L'\0';
-                            if (MultiByteToWideChar(CP_ACP, 0, pCurrentAdapter->AdapterName, -1, szAdapterNetCfg, sizeof(szAdapterNetCfg)/sizeof(szAdapterNetCfg[0])))
-                            {
-                                szAdapterNetCfg[(sizeof(szAdapterNetCfg)/sizeof(WCHAR))-1] = L'\0';
-                            }
-                            if (!wcsicmp(szAdapterNetCfg, szNetCfg))
-                            {
-                                ZeroMemory(&IfEntry, sizeof(IfEntry));
-                                IfEntry.dwIndex = pCurrentAdapter->Index;
-                                dwResult = GetIfEntry(&IfEntry);
-                                if (dwResult == NO_ERROR)
-                                {
-                                    if (IfEntry.dwType == IF_TYPE_ETHERNET_CSMACD || IfEntry.dwType == IF_TYPE_IEEE80211)
-                                    {
-                                        wcscpy(&szName[80], szNetCfg);
-                                        wcscpy(&szName[118], L"\\Connection");
-                                        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
-                                        {
-                                            dwSize = sizeof(szAdapterNetCfg);
-                                            if (RegQueryValueExW(hSubKey, L"Name", NULL, NULL, (LPBYTE)szAdapterNetCfg, &dwSize) != ERROR_SUCCESS)
-                                            {
-                                                if (!SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_FRIENDLYNAME, NULL, (PBYTE)szAdapterNetCfg, sizeof(szAdapterNetCfg)/sizeof(WCHAR), &dwSize))
-                                                {
-                                                    szDetail[0] = 0;
-                                                }
-                                            }
-                                            RegCloseKey(hSubKey);
-                                        }
-                                        szNetCfg[0] = 0;
-                                        SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, (PBYTE)szNetCfg, sizeof(szNetCfg)/sizeof(WCHAR), &dwSize);
-                                        pidl = ILCreateNetConnectItem(&IfEntry, szAdapterNetCfg, szNetCfg);
-                                        if (pidl)
-                                        {
-                                            AddToEnumList(list, pidl);
-                                        }
-                                     }
-                                }
-                                break;
-                            }
-                            pCurrentAdapter = pCurrentAdapter->Next;
-                        }
-                    }
-                }
+                AddToEnumList(list, pidl);
             }
-        }else if (GetLastError() == ERROR_NO_MORE_ITEMS)
+        }
+        else
         {
             break;
         }
     }while(TRUE);
 
-    HeapFree(GetProcessHeap(), 0, pAdapterInfo);
-    HeapFree(GetProcessHeap(), 0, pIfTable);
-    SetupDiDestroyDeviceInfoList(hInfo);
+    IEnumNetConnection_Release(IEnumCon);
+    INetConnectionManager_Release(INetConMan);
 
-    return FALSE;
-
+    return TRUE;
 }
 
 /**************************************************************************
@@ -450,6 +356,8 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDisplayNameOf (IShellFolder2 * iface,
 {
     LPWSTR pszName;
     HRESULT hr = E_FAIL;
+    NETCON_PROPERTIES * pProperties;
+    VALUEStruct * val;
     //IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     if (!strRet)
@@ -469,11 +377,18 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDisplayNameOf (IShellFolder2 * iface,
     }
     else
     {
-        VALUEStruct * val = _ILGetValueStruct(pidl);
+        val = _ILGetValueStruct(pidl);
         if (val)
         {
-            wcscpy(pszName, val->szName);
-            hr = S_OK;
+            if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) == NOERROR)
+            {
+                if (pProperties->pszwName)
+                {
+                    wcscpy(pszName, pProperties->pszwName);
+                    hr = S_OK;
+                }
+                //NcFreeNetconProperties(pProperties);
+            }
         }
 
     }
@@ -567,6 +482,7 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;
     VALUEStruct * val;
+    NETCON_PROPERTIES * pProperties;
 
     if (iColumn >= NETCONNECTSHELLVIEWCOLUMNS)
         return E_FAIL;
@@ -592,10 +508,14 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
     if (!val)
         return E_FAIL;
 
+    if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
+        return E_FAIL;
+
+
     switch(iColumn)
     {
         case COLUMN_TYPE:
-            if (val->dwType == IF_TYPE_ETHERNET_CSMACD || val->dwType == IF_TYPE_IEEE80211)
+            if (pProperties->MediaType  == NCM_LAN || pProperties->MediaType == NCM_SHAREDACCESSHOST_RAS)
             {
                 if (LoadStringW(netshell_hInstance, IDS_TYPE_ETHERNET, buffer, MAX_PATH))
                 {
@@ -606,18 +526,16 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
             break;
         case COLUMN_STATUS:
             buffer[0] = L'\0';
-            if (val->dwOperStatus == MIB_IF_OPER_STATUS_NON_OPERATIONAL)
+            if (pProperties->Status == NCS_HARDWARE_DISABLED)
                 LoadStringW(netshell_hInstance, IDS_STATUS_NON_OPERATIONAL, buffer, MAX_PATH);
-            else if (val->dwOperStatus == MIB_IF_OPER_STATUS_UNREACHABLE)
+            else if (pProperties->Status == NCS_DISCONNECTED)
                 LoadStringW(netshell_hInstance, IDS_STATUS_UNREACHABLE, buffer, MAX_PATH);
-            else if (val->dwOperStatus == MIB_IF_OPER_STATUS_DISCONNECTED)
+            else if (pProperties->Status == NCS_MEDIA_DISCONNECTED)
                 LoadStringW(netshell_hInstance, IDS_STATUS_DISCONNECTED, buffer, MAX_PATH);
-            else if (val->dwOperStatus == MIB_IF_OPER_STATUS_CONNECTING)
+            else if (pProperties->Status == NCS_CONNECTING)
                 LoadStringW(netshell_hInstance, IDS_STATUS_CONNECTING, buffer, MAX_PATH);
-            else if (val->dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED)
+            else if (pProperties->Status == NCS_CONNECTED)
                 LoadStringW(netshell_hInstance, IDS_STATUS_CONNECTED, buffer, MAX_PATH);
-            else if (val->dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
-                LoadStringW(netshell_hInstance, IDS_STATUS_OPERATIONAL, buffer, MAX_PATH);
 
             if (buffer[0])
             {
@@ -627,7 +545,7 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
             }
             break;
         case COLUMN_DEVNAME:
-            wcscpy(buffer, val->szName + val->dwNameLength);
+            wcscpy(buffer, pProperties->pszwDeviceName);
             buffer[MAX_PATH-1] = L'\0';
             psd->str.uType = STRRET_WSTR;
             hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
@@ -638,7 +556,9 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
             psd->str.uType = STRRET_CSTR;
             break;
     }
-
+#if 0
+    NcFreeNetconProperties(pProperties);
+#endif
     return hr;
 }
 
@@ -885,7 +805,7 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    sf = (IGenericSFImpl *) HeapAlloc ( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (IGenericSFImpl));
+    sf = (IGenericSFImpl *) CoTaskMemAlloc(sizeof (IGenericSFImpl));
     if (!sf)
         return E_OUTOFMEMORY;
 

@@ -13,6 +13,10 @@ static INTERFACE_TABLE InterfaceTable[] =
         ISF_NetConnect_Constructor
     },
     {
+        &CLSID_ConnectionManager,
+        INetConnectionManager_Constructor
+    },
+    {
         NULL,
         NULL
     }
