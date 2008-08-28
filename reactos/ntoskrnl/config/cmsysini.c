@@ -159,7 +159,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
     {
         /* Free the buffer allocated by CmpConstructName */
-        ExFreePool(KeyName->Buffer);
+        ExFreePool(KeyName);
 
         /* Return buffer length failure */
         return STATUS_INFO_LENGTH_MISMATCH;
@@ -174,7 +174,9 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         ObjectNameInfo->Name.Length = KeyName->Length;
 
         /* Copy string content*/
-        RtlCopyMemory(ObjectNameInfo->Name.Buffer, KeyName->Buffer, *ReturnLength);
+        RtlCopyMemory(ObjectNameInfo->Name.Buffer,
+                      KeyName->Buffer,
+                      *ReturnLength);
     }
     _SEH_HANDLE
     {
@@ -186,6 +188,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     /* Free the buffer allocated by CmpConstructName */
     ExFreePool(KeyName);
 
+    /* Return status */
     return Status;
 }
 

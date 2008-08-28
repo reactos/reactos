@@ -898,7 +898,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
     PWCHAR TargetBuffer, CurrentNameW;
     PUCHAR CurrentName;
 
-     /* Calculate how much size our key name is going to occupy */
+    /* Calculate how much size our key name is going to occupy */
     NameLength = 0;
     MyKcb = Kcb;
 
@@ -906,11 +906,16 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
     {
         /* Add length of the name */
         if (!MyKcb->NameBlock->Compressed)
+        {
             NameLength += MyKcb->NameBlock->NameLength;
+        }
         else
-            NameLength += MyKcb->NameBlock->NameLength * sizeof(WCHAR);
+        {
+            NameLength += CmpCompressedNameSize(MyKcb->NameBlock->Name,
+                                                MyKcb->NameBlock->NameLength);
+        }
 
-        /* Sum up the separator also */
+        /* Sum up the separator too */
         NameLength += sizeof(WCHAR);
 
         /* Go to the parent KCB */
@@ -918,10 +923,13 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
 
     /* Allocate the unicode string now */
-    KeyName = ExAllocatePoolWithTag(PagedPool, NameLength + sizeof(UNICODE_STRING), TAG_CM);
+    KeyName = ExAllocatePoolWithTag(PagedPool,
+                                    NameLength + sizeof(UNICODE_STRING),
+                                    TAG_CM);
 
     if (!KeyName) return NULL;
 
+    /* Set it up */
     KeyName->Buffer = (PWSTR)(KeyName + 1);
     KeyName->Length = NameLength;
     KeyName->MaximumLength = NameLength;
@@ -932,7 +940,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
     while (MyKcb)
     {
-        /* Sanity checks for deleted keys */
+        /* Sanity checks for deleted and fake keys */
         if ((!MyKcb->KeyCell && !MyKcb->Delete) ||
             !MyKcb->KeyHive ||
             MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST)
