@@ -184,7 +184,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     _SEH_END;
 
     /* Free the buffer allocated by CmpConstructName */
-    ExFreePool(KeyName->Buffer);
+    ExFreePool(KeyName);
 
     return Status;
 }
