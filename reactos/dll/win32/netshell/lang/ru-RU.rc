@@ -1,0 +1,28 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Сетевые подключения"
+	IDS_SHV_COLUMN_NAME         "Имя"
+	IDS_SHV_COLUMN_TYPE         "Тип"
+	IDS_SHV_COLUMN_STATE        "Состояние"
+	IDS_SHV_COLUMN_DEVNAME      "Имя устройства"
+	IDS_SHV_COLUMN_PHONE        "Номер телефона или адрес узла"
+	IDS_SHV_COLUMN_OWNER        "Владелец"
+	IDS_TYPE_ETHERNET           "ЛВС или высокоскоростной Интернет"
+	IDS_STATUS_NON_OPERATIONAL  "Отключено"
+	IDS_STATUS_UNREACHABLE      "Отключено"
+	IDS_STATUS_DISCONNECTED     "Сетевой кабель не подключен"
+	IDS_STATUS_CONNECTING       "Получение сетевого адреса"
+	IDS_STATUS_CONNECTED        "Подключено"
+	IDS_STATUS_OPERATIONAL      "Подключено"
+
+	IDS_NET_ACTIVATE            "Включить"
+	IDS_NET_DEACTIVATE          "Отключить"
+	IDS_NET_STATUS              "Состояние"
+	IDS_NET_REPAIR              "Исправить"
+	IDS_NET_CREATELINK          "Создать ярлык"
+	IDS_NET_DELETE              "Удалить"
+	IDS_NET_PROPERTIES          "Свойства"
+END
+
