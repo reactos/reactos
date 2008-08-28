@@ -380,7 +380,7 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDisplayNameOf (IShellFolder2 * iface,
         val = _ILGetValueStruct(pidl);
         if (val)
         {
-            if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) == NOERROR)
+            if (INetConnection_GetProperties(val->pItem, &pProperties) == NOERROR)
             {
                 if (pProperties->pszwName)
                 {
@@ -628,6 +628,51 @@ static ULONG WINAPI ISF_NetConnect_IContextMenu2_Release(IContextMenu2  * iface)
     return IShellFolder2_Release((IShellFolder2*)This);
 }
 
+void WINAPI _InsertMenuItemW (
+    HMENU hmenu,
+    UINT indexMenu,
+    BOOL fByPosition,
+    UINT wID,
+    UINT fType,
+    LPCWSTR dwTypeData,
+    UINT fState)
+{
+    MENUITEMINFOW mii;
+    WCHAR szText[100];
+
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    if (fType == MFT_SEPARATOR)
+    {
+        mii.fMask = MIIM_ID | MIIM_TYPE;
+    }
+    else if (fType == MFT_STRING)
+    {
+        mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
+        if ((ULONG_PTR)HIWORD((ULONG_PTR)dwTypeData) == 0)
+        {
+            if (LoadStringW(netshell_hInstance, LOWORD((ULONG_PTR)dwTypeData), szText, sizeof(szText)/sizeof(WCHAR)))
+            {
+                szText[(sizeof(szText)/sizeof(WCHAR))-1] = 0;
+                mii.dwTypeData = szText;
+            }
+            else
+            {
+                return;
+            }
+        }
+        else
+        {
+            mii.dwTypeData = (LPWSTR) dwTypeData;
+        }
+        mii.fState = fState;
+    }
+
+    mii.wID = wID;
+    mii.fType = fType;
+    InsertMenuItemW( hmenu, indexMenu, fByPosition, &mii);
+}
+
 /**************************************************************************
 * ISF_NetConnect_IContextMenu_QueryContextMenu()
 */
@@ -639,10 +684,52 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    int Count = 1;
-    //IGenericSFImpl * This = impl_from_IContextMenu2(iface);
+    IGenericSFImpl * This = impl_from_IContextMenu2(iface);
+    VALUEStruct * val;
+    NETCON_PROPERTIES * pProperties;
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+	val = _ILGetValueStruct(This->apidl);
+    if (!val)
+        return E_FAIL;
+
+    if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    if (pProperties->Status == NCS_HARDWARE_DISABLED)
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_ACTIVATE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_ACTIVATE), MFS_DEFAULT);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DEACTIVATE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DEACTIVATE), MFS_ENABLED);
+
+    if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED)
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_GRAYED);
+    else if (pProperties->Status == NCS_CONNECTED)
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_DEFAULT);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_ENABLED);
+
+    if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED)
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_REPAIR, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_GRAYED);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_REPAIR, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_ENABLED);
+
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
+
+    if (pProperties->dwCharacter & NCCF_ALLOW_REMOVAL) 
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
+
+    if (pProperties->dwCharacter & NCCF_ALLOW_RENAME) 
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
+
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
+
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
 
 

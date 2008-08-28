@@ -18,4 +18,12 @@ BEGIN
 	IDS_STATUS_CONNECTED        "Verbindung hergestellt"
 	IDS_STATUS_OPERATIONAL      "Verbindung hergestellt"
 
+	IDS_NET_ACTIVATE            "Aktivieren"
+	IDS_NET_DEACTIVATE          "Deaktivieren"
+	IDS_NET_STATUS              "Status"
+	IDS_NET_REPAIR              "Reparieren"
+	IDS_NET_CREATELINK          "Verknüpfung erstellen"
+	IDS_NET_DELETE              "Löschen"
+	IDS_NET_RENAME              "Umbenennen"
+	IDS_NET_PROPERTIES          "Eigenschaften"
 END

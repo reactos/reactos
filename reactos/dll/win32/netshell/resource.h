@@ -29,3 +29,12 @@
 #define IDS_STATUS_CONNECTING       10011
 #define IDS_STATUS_CONNECTED        10012
 #define IDS_STATUS_OPERATIONAL      10013
+
+#define IDS_NET_ACTIVATE            10100
+#define IDS_NET_DEACTIVATE          10101
+#define IDS_NET_STATUS              10102
+#define IDS_NET_REPAIR              10103
+#define IDS_NET_CREATELINK          10104
+#define IDS_NET_DELETE              10105
+#define IDS_NET_RENAME              10106
+#define IDS_NET_PROPERTIES          10107

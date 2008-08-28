@@ -16,5 +16,13 @@ BEGIN
 	IDS_STATUS_CONNECTING       "Acquiring network address"
 	IDS_STATUS_CONNECTED        "Connected"
 	IDS_STATUS_OPERATIONAL      "Connected"
+
+	IDS_NET_ACTIVATE            "Enable"
+	IDS_NET_DEACTIVATE          "Disable"
+	IDS_NET_STATUS              "Status"
+	IDS_NET_REPAIR              "Repair"
+	IDS_NET_CREATELINK          "Create Shortcut"
+	IDS_NET_DELETE              "Delete"
+	IDS_NET_PROPERTIES          "Properties"
 END
 
