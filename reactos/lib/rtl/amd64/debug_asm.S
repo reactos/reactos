@@ -51,27 +51,38 @@ _DebugService2:
 
 .endfunc
 
+/******************************************************************************
+ * NTSTATUS NTAPI DebugService(
+ *     IN ULONG Service,    // <rcx> = [rsp + 8]
+ *     IN PVOID Buffer,     // <rdx> = [rsp + 16]
+ *     IN ULONG Length,     // <r8>  = [rsp + 24]
+ *     IN PVOID Argument1,  // <r9>  = [rsp + 32]
+ *     IN PVOID Argument2); //         [rsp + 40]
+ */
 .func DebugService
 _DebugService:
 
     /* Save the registers */
+    push rbx
     push rcx
-    push rbx
+    push rdx
+    push rsi
     push rdi
-    push rdi
-    push rbx
+ 
+    /* Load Argument 2 in rax */
+    mov rax, [rsp + 48 + 40]
 
     /* Call the Interrupt */
-    // FIXME: setup registers
     int 0x2D
     int 3
 
     /* Restore registers */
-    pop rbx
     pop rdi
-    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
     pop rbx
 
     /* Return */
-    ret 20
+    ret
 .endfunc
