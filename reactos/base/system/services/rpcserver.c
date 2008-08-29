@@ -1599,9 +1599,47 @@ DWORD RCreateServiceW(
         return ERROR_ACCESS_DENIED;
     }
 
-    /* Fail if the service already exists! */
-    if (ScmGetServiceEntryByName(lpServiceName) != NULL)
+    if (wcslen(lpServiceName) == 0)
+    {
+        return ERROR_INVALID_NAME;
+    }
+
+    if (wcslen(lpBinaryPathName) == 0)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if ((dwServiceType == (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
+        (lpServiceStartName))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if ((dwServiceType > SERVICE_WIN32_SHARE_PROCESS) &&
+        (dwServiceType != (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
+        (dwServiceType != (SERVICE_WIN32_SHARE_PROCESS | SERVICE_INTERACTIVE_PROCESS)))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if (dwStartType > SERVICE_DISABLED)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    lpService = ScmGetServiceEntryByName(lpServiceName);
+    if (lpService)
+    {
+        /* check if it is marked for deletion */
+        if (lpService->bDeleted)
+            return ERROR_SERVICE_MARKED_FOR_DELETE;
+        /* Return Error exist */
         return ERROR_SERVICE_EXISTS;
+    }
+
+    if (lpDisplayName != NULL &&
+        ScmGetServiceEntryByDisplayName(lpDisplayName) != NULL)
+        return ERROR_DUPLICATE_SERVICE_NAME;
 
     if (dwServiceType & SERVICE_DRIVER)
     {
@@ -1611,6 +1649,14 @@ DWORD RCreateServiceW(
 
         if (dwError != ERROR_SUCCESS)
             goto done;
+    }
+    else
+    {
+        if (dwStartType == SERVICE_BOOT_START ||
+            dwStartType == SERVICE_SYSTEM_START)
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
     }
 
     /* Allocate a new service entry */
@@ -1760,6 +1806,19 @@ DWORD RCreateServiceW(
         dwError = ScmWriteDependencies(hServiceKey,
                                        (LPWSTR)lpDependencies,
                                        dwDependSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    /* If a non driver and NULL for lpServiceName, write ObjectName as LocalSystem */
+    if ((dwServiceType & SERVICE_WIN32) && (!lpServiceName))
+    {
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ObjectName",
+                                 0,
+                                 REG_SZ,
+                                 (LPBYTE)L"LocalSystem",
+                                 24);
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
@@ -2033,19 +2092,16 @@ DWORD REnumServicesStatusW(
                  ((wcslen(CurrentService->lpServiceName) + 1) * sizeof(WCHAR)) +
                  ((wcslen(CurrentService->lpDisplayName) + 1) * sizeof(WCHAR));
 
-        if (dwRequiredSize + dwSize <= dwBufSize)
-        {
-            DPRINT("Service name: %S  fit\n", CurrentService->lpServiceName);
-            dwRequiredSize += dwSize;
-            dwServiceCount++;
-            dwLastResumeCount = CurrentService->dwResumeCount;
-        }
-        else
+        if (dwRequiredSize + dwSize > dwBufSize)
         {
             DPRINT("Service name: %S  no fit\n", CurrentService->lpServiceName);
             break;
         }
 
+        DPRINT("Service name: %S  fit\n", CurrentService->lpServiceName);
+        dwRequiredSize += dwSize;
+        dwServiceCount++;
+        dwLastResumeCount = CurrentService->dwResumeCount;
     }
 
     DPRINT("dwRequiredSize: %lu\n", dwRequiredSize);
@@ -2109,33 +2165,26 @@ DWORD REnumServicesStatusW(
                  ((wcslen(CurrentService->lpServiceName) + 1) * sizeof(WCHAR)) +
                  ((wcslen(CurrentService->lpDisplayName) + 1) * sizeof(WCHAR));
 
-        if (dwRequiredSize + dwSize <= dwBufSize)
-        {
-            /* Copy the service name */
-            wcscpy(lpStringPtr,
-                   CurrentService->lpServiceName);
-            lpStatusPtr->lpServiceName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpBuffer);
-            lpStringPtr += (wcslen(CurrentService->lpServiceName) + 1);
-
-            /* Copy the display name */
-            wcscpy(lpStringPtr,
-                   CurrentService->lpDisplayName);
-            lpStatusPtr->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpBuffer);
-            lpStringPtr += (wcslen(CurrentService->lpDisplayName) + 1);
-
-            /* Copy the status information */
-            memcpy(&lpStatusPtr->ServiceStatus,
-                   &CurrentService->Status,
-                   sizeof(SERVICE_STATUS));
-
-            lpStatusPtr++;
-            dwRequiredSize += dwSize;
-        }
-        else
-        {
+        if (dwRequiredSize + dwSize > dwBufSize)
             break;
-        }
 
+        /* Copy the service name */
+        wcscpy(lpStringPtr, CurrentService->lpServiceName);
+        lpStatusPtr->lpServiceName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpBuffer);
+        lpStringPtr += (wcslen(CurrentService->lpServiceName) + 1);
+
+        /* Copy the display name */
+        wcscpy(lpStringPtr, CurrentService->lpDisplayName);
+        lpStatusPtr->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStringPtr - (ULONG_PTR)lpBuffer);
+        lpStringPtr += (wcslen(CurrentService->lpDisplayName) + 1);
+
+        /* Copy the status information */
+        memcpy(&lpStatusPtr->ServiceStatus,
+               &CurrentService->Status,
+               sizeof(SERVICE_STATUS));
+
+        lpStatusPtr++;
+        dwRequiredSize += dwSize;
     }
 
 Done:;
