@@ -136,7 +136,8 @@ static NTSTATUS TdiOpenDevice(
                                            NULL);                         /* Handle information */
         if (!NT_SUCCESS(Status)) {
           AFD_DbgPrint(MIN_TRACE, ("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status));
-            ZwClose(*Handle);
+          ZwClose(*Handle);
+          *Handle = NULL;
         } else {
           AFD_DbgPrint(MAX_TRACE, ("Got handle (0x%X)  Object (0x%X)\n",
             *Handle, *Object));
