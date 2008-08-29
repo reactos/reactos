@@ -6,7 +6,6 @@
  * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
  *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
- *
  */
 
 /* INCLUDES ****************************************************************/
@@ -1168,6 +1167,7 @@ done:
     return dwError;
 }
 
+
 /* Create a path suitable for the bootloader out of the full path */
 DWORD
 ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
@@ -1183,12 +1183,12 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     DPRINT("ScmConvertToBootPathName %S\n", CanonName);
 
     ServiceNameLen = wcslen(CanonName);
+
     /* First check, if it's already good */
     if (ServiceNameLen > 12 &&
         !wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
     {
         *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
-
         if (*RelativeName == NULL)
         {
             DPRINT1("Error allocating memory for boot driver name!\n");
@@ -1236,8 +1236,8 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     Expanded = LocalAlloc(LMEM_ZEROINIT, BufferSize * sizeof(WCHAR) + sizeof(WCHAR));
     if (!Expanded)
     {
-            DPRINT1("Error allocating memory for boot driver name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
+        DPRINT1("Error allocating memory for boot driver name!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     /* Expand it */
@@ -1279,7 +1279,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         /* Only \SystemRoot\ is missing */
         *RelativeName = LocalAlloc(LMEM_ZEROINIT,
             (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
-
         if (*RelativeName == NULL)
         {
             DPRINT1("Error allocating memory for boot driver name!\n");
@@ -1644,9 +1643,8 @@ DWORD RCreateServiceW(
     if (dwServiceType & SERVICE_DRIVER)
     {
         dwError = ScmCanonDriverImagePath(dwStartType,
-            lpBinaryPathName,
-            &lpImagePath);
-
+                                          lpBinaryPathName,
+                                          &lpImagePath);
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
@@ -3210,10 +3208,10 @@ DWORD ROpenSCManagerA(
                                          lpDatabaseName);
 
     dwError = ROpenSCManagerW(BindingHandle,
-                                 lpMachineName ? MachineName.Buffer : NULL,
-                                 lpDatabaseName ? DatabaseName.Buffer : NULL,
-                                 dwDesiredAccess,
-                                 lpScHandle);
+                              lpMachineName ? MachineName.Buffer : NULL,
+                              lpDatabaseName ? DatabaseName.Buffer : NULL,
+                              dwDesiredAccess,
+                              lpScHandle);
 
     if (lpMachineName)
         RtlFreeUnicodeString(&MachineName);
@@ -3243,10 +3241,10 @@ DWORD ROpenServiceA(
                                          lpServiceName);
 
     dwError = ROpenServiceW(BindingHandle,
-                               hSCManager,
-                               ServiceName.Buffer,
-                               dwDesiredAccess,
-                               lpServiceHandle);
+                            hSCManager,
+                            lpServiceName ? ServiceName.Buffer : NULL,
+                            dwDesiredAccess,
+                            lpServiceHandle);
 
     if (lpServiceName)
         RtlFreeUnicodeString(&ServiceName);
