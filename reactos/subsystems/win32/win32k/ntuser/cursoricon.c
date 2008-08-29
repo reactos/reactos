@@ -317,7 +317,7 @@ IntSetupCurIconHandles(PWINSTATION_OBJECT WinSta)
                                   NULL,
                                   0,
                                   sizeof(CURICON_PROCESS),
-                                  0,
+                                  TAG_DIB,
                                   128);
    InitializeListHead(&gCurIconList);
 

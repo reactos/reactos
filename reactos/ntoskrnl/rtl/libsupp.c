@@ -74,13 +74,18 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
+#define TAG_USTR        TAG('U', 'S', 'T', 'R')
+#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
+#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 VOID
 STDCALL
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
-    ExFreePoolWithTag(Mem,
-                      Tag);
+    if (Tag == TAG_ASTR || Tag == TAG_OSTR || Tag == TAG_USTR)
+        ExFreePool(Mem);
+    else
+        ExFreePoolWithTag(Mem, Tag);
 }
 
 /*

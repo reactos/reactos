@@ -243,7 +243,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    {
       XlateObj->cEntries = SourcePalGDI->NumColors;
       XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
+         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
 
       XlateObj->flXlate |= XO_TRIVIAL;
       for (i = 0; i < XlateObj->cEntries; i++)
@@ -264,7 +264,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    {
       XlateObj->cEntries = SourcePalGDI->NumColors;
       XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
+         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
       for (i = 0; i < XlateObj->cEntries; i++)
          XlateObj->pulXlate[i] =
             ShiftAndMask(XlateGDI, *((ULONG *)&SourcePalGDI->IndexedColors[i]));
@@ -379,7 +379,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateObj = GDIToObj(XlateGDI, XLATE);
 
    XlateObj->cEntries = 2;
-   XlateObj->pulXlate = EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
+   XlateObj->pulXlate = EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
    if (XlateObj->pulXlate == NULL)
    {
       PALETTE_UnlockPalette(DestPalGDI);
