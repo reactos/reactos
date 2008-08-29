@@ -2,15 +2,32 @@
 /* icons */
 
 #define IDI_SHELL_NETWORK_FOLDER 100
-
+#define IDI_HORIZONTAL           101
+#define IDI_NETSTAT              102
+#define IDI_VERTICAL             103
 
 /* dialogs */
-
-
-
-
+#define IDD_NETPROPERTIES             400
+#define IDD_NETSTATUS                 401
 
 /* dialog controls */
+#define IDC_NETCARDNAME              1000
+#define IDC_CONFIGURE                1001
+#define IDC_COMPONENTSLIST           2800
+#define IDC_INSTALL                  1003
+#define IDC_UNINSTALL                1004
+#define IDC_PROPERTIES               1005
+#define IDC_DESCRIPTION              1006
+#define IDC_SHOWTASKBAR              1007
+#define IDC_NOTIFYNOCONNECTION       1008
+
+#define IDC_SEND                     1100
+#define IDC_RECEIVED                 1101
+#define IDC_STATUS_PROPERTIES        1102
+#define IDC_ENDISABLE                1103
+#define IDC_STATUS                   1104
+#define IDC_DURATION                 1105
+#define IDC_SPEED                    1106
 
 
 /* resource constants */

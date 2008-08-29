@@ -1,9 +1,12 @@
 #include "precomp.h"
 
 HINSTANCE netshell_hInstance;
+const GUID CLSID_LANConnectUI            = {0x7007ACC5, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 const GUID CLSID_NetworkConnections      = {0x7007ACC7, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 const GUID GUID_DEVCLASS_NET             = {0x4d36e972, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18}};
+
 static const WCHAR szNetConnectClass[] = L"CLSID\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
+static const WCHAR szLanConnectUI[]    = L"CLSID\\{7007ACC5-3202-11D1-AA-D200805FC1270E}";
 static const WCHAR szNamespaceKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
 
 static INTERFACE_TABLE InterfaceTable[] =
@@ -15,6 +18,10 @@ static INTERFACE_TABLE InterfaceTable[] =
     {
         &CLSID_ConnectionManager,
         INetConnectionManager_Constructor
+    },
+    {
+        &CLSID_LANConnectUI,
+        LanConnectUI_Constructor
     },
     {
         NULL,
@@ -51,7 +58,7 @@ STDAPI
 DllRegisterServer(void)
 {
     HKEY hKey, hSubKey;
-    WCHAR szName[MAX_PATH] = {0};
+    WCHAR szName[MAX_PATH+20] = {0};
     WCHAR szNet[20];
     UINT Length, Offset;
 
@@ -71,7 +78,7 @@ DllRegisterServer(void)
     }
 
     Length = swprintf(szNet, L",-%u", IDS_NETWORKCONNECTION);
-    Offset = GetModuleFileNameW(netshell_hInstance, &szName[1], MAX_PATH);
+    Offset = GetModuleFileNameW(netshell_hInstance, &szName[1], (sizeof(szName)/sizeof(WCHAR))-1);
     if (Offset + Length + 2 < MAX_PATH)
     {
         /* set localized name */
@@ -100,6 +107,7 @@ DllRegisterServer(void)
         RegSetValueExW(hSubKey, L"Attributes",0, REG_BINARY, (const LPBYTE)&dwAttributes, sizeof(DWORD));
     }
 
+    RegCloseKey(hKey);
     return S_OK;
 }
 
@@ -145,4 +153,13 @@ DllGetClassObject(
     IClassFactory_Release(pcf);
 
     return hres;
+}
+
+VOID
+STDCALL
+NcFreeNetconProperties (NETCON_PROPERTIES* pProps)
+{
+    CoTaskMemFree(pProps->pszwName);
+    CoTaskMemFree(pProps->pszwDeviceName);
+    CoTaskMemFree(pProps);
 }

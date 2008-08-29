@@ -38,6 +38,17 @@
 #include "wine/unicode.h"
 #include "resource.h"
 
+#define NCF_VIRTUAL                     0x1
+#define NCF_SOFTWARE_ENUMERATED         0x2
+#define NCF_PHYSICAL                    0x4
+#define NCF_HIDDEN                      0x8
+#define NCF_NO_SERVICE                  0x10
+#define NCF_NOT_USER_REMOVABLE          0x20
+#define NCF_MULTIPORT_INSTANCED_ADAPTER 0x40
+#define NCF_HAS_UI                      0x80
+#define NCF_FILTER                      0x400
+#define NCF_NDIS_PROTOCOL               0x4000
+
 typedef struct {
     int colnameid;
     int pcsFlags;
@@ -60,6 +71,7 @@ typedef struct tagVALUEStruct
 /* globals */
 extern HINSTANCE netshell_hInstance;
 extern const GUID CLSID_NetworkConnections;
+extern const GUID CLSID_LANConnectUI;
 extern const GUID GUID_DEVCLASS_NET;
 
 
@@ -79,5 +91,11 @@ IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcR
 
 /* connectmanager.c */
 HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+
+/* lanconnectui.c */
+HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+HRESULT ShowLANConnectionStatusDialog(NETCON_PROPERTIES * pProperties);
+
+#define NCCF_NOTIFY_DISCONNECTED 0x100000
 
 #endif

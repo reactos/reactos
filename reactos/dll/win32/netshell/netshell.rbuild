@@ -17,6 +17,7 @@
 	<library>uuid</library>
 	<library>advapi32</library>
 	<library>setupapi</library>
+	<library>comctl32</library>
 	<pch>precomp.h</pch>
 	<file>netshell.c</file>
 	<file>shfldr_netconnect.c</file>
@@ -25,4 +26,5 @@
 	<file>classfactory.c</file>
 	<file>connectmanager.c</file>
 	<file>netshell.spec</file>
+	<file>lanconnectui.c</file>
 </module>

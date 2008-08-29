@@ -21,7 +21,6 @@ IClassFactory_fnQueryInterface(
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 
     *ppvObj = NULL;
-
     if(IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppvObj = This;

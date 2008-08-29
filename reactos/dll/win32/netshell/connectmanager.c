@@ -211,17 +211,14 @@ INetConnection_fnGetProperties(
     INetConnection * iface,
     NETCON_PROPERTIES **ppProps)
 {
-#if 0
+
     NETCON_PROPERTIES * pProperties;
-#endif
+
     INetConnectionImpl * This = (INetConnectionImpl*)iface;
 
     if (!ppProps)
         return E_POINTER;
 
-#if 1
-    *ppProps = &This->Props;
-#else
     pProperties = CoTaskMemAlloc(sizeof(NETCON_PROPERTIES));
     if (!pProperties)
         return E_OUTOFMEMORY;
@@ -241,7 +238,6 @@ INetConnection_fnGetProperties(
     }
 
     *ppProps = pProperties;
-#endif
     return NOERROR;
 }
 
@@ -252,6 +248,15 @@ INetConnection_fnGetUiObjectClassId(
     INetConnection * iface,
     CLSID *pclsid)
 {
+
+    INetConnectionImpl * This = (INetConnectionImpl*)iface;
+
+    if (This->Props.MediaType == NCM_LAN)
+    {
+        CopyMemory(pclsid, &CLSID_LANConnectUI, sizeof(CLSID));
+        return S_OK;
+    }
+
     return E_NOTIMPL;
 }
 

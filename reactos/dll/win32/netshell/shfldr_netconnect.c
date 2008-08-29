@@ -22,6 +22,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+#define MAX_PROPERTY_SHEET_PAGE (10)
+
 /***********************************************************************
 *   IShellFolder implementation
 */
@@ -732,6 +734,19 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_QueryContextMenu(
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
 
+BOOL
+CALLBACK
+PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
+{
+    PROPSHEETHEADERW *pinfo = (PROPSHEETHEADERW *)lParam;
+
+    if (pinfo->nPages < MAX_PROPERTY_SHEET_PAGE)
+    {
+        pinfo->u3.phpage[pinfo->nPages++] = hPage;
+        return TRUE;
+    }
+    return FALSE;
+}
 
 /**************************************************************************
 * ISF_NetConnect_IContextMenu_InvokeCommand()
@@ -740,7 +755,61 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
 	IContextMenu2 *iface,
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
-    //IGenericSFImpl * This = impl_from_IContextMenu2(iface);
+    IGenericSFImpl * This = impl_from_IContextMenu2(iface);
+    VALUEStruct * val;
+    NETCON_PROPERTIES * pProperties;
+    HRESULT hr = S_OK;
+    PROPSHEETHEADERW pinfo;
+    CLSID ClassID;
+    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
+    INetConnectionPropertyUi * pNCP;
+
+    val = _ILGetValueStruct(This->apidl);
+    if (!val)
+        return E_FAIL;
+
+    if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS))
+    {
+        if (pProperties->MediaType == NCM_LAN)
+        {
+            hr = ShowLANConnectionStatusDialog(pProperties);
+            NcFreeNetconProperties(pProperties);
+        }
+        return hr;
+    }
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES))
+    {
+        hr = INetConnection_GetUiObjectClassId(val->pItem, &ClassID);
+        if (SUCCEEDED(hr))
+        {
+            /* FIXME perform version checks */
+            hr = CoCreateInstance(&ClassID, NULL, 0, &IID_INetConnectionPropertyUi, (LPVOID)&pNCP);
+            if (SUCCEEDED(hr))
+            {
+                hr = INetConnectionPropertyUi_SetConnection(pNCP, val->pItem);
+                if (SUCCEEDED(hr))
+                {
+                    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
+                    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
+                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+                    pinfo.u3.phpage = hppages;
+                    pinfo.pszCaption = pProperties->pszwName;
+
+                    hr = INetConnectionPropertyUi_AddPages(pNCP, lpcmi->hwnd, PropSheetExCallback, (LPARAM)&pinfo);
+                    if (SUCCEEDED(hr))
+                    {
+                        if(PropertySheetW(&pinfo) < 0)
+                            hr = E_FAIL;
+                    }
+                }
+            }
+        }
+        NcFreeNetconProperties(pProperties);
+        return hr;
+    }
 
     return S_OK;
 }

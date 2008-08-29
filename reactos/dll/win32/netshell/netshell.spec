@@ -20,7 +20,7 @@
 19 stub HrRenameConnection
 20 stub HrRunWizard
 21 stub InvokeDunFile
-22 stub NcFreeNetconProperties
+22 stdcall NcFreeNetconProperties(ptr)
 23 stub NcIsValidConnectionName
 24 stub NetSetupAddRasConnection
 25 stub NetSetupFinishInstall
