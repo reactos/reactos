@@ -455,10 +455,23 @@ CcpMapData
     if (!SectionObject)
     {
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
-	LONG SectionSize = min(CACHE_STRIPE, Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart);
-	ASSERT(SectionSize > 0 && SectionSize <= CACHE_STRIPE);
+	ULONG SectionSize;
+
+	DPRINT("%08x: File size %x%x\n", FileObject->SectionObjectPointer, Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
+
+	if (Map->FileSizes.ValidDataLength.QuadPart)
+	{
+	    SectionSize = min(CACHE_STRIPE, Map->FileSizes.ValidDataLength.QuadPart - Target.QuadPart);
+	}
+	else
+	{
+	    SectionSize = CACHE_STRIPE;
+	}
+
 	DPRINT("Allocating a cache stripe at %x:%d\n",
 	       Target.LowPart, SectionSize);
+	ASSERT(SectionSize <= CACHE_STRIPE);
+
 	Status = CcpAllocateSection
 	    (FileObject,
 	     SectionSize,

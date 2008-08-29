@@ -132,6 +132,7 @@ typedef struct _NOCC_CACHE_MAP
     LIST_ENTRY AssociatedBcb;
     PFILE_OBJECT FileObject;
     ULONG NumberOfMaps;
+    ULONG RefCount;
     CC_FILE_SIZES FileSizes;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 

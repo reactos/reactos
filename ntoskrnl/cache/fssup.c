@@ -104,13 +104,25 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
                      IN PVOID LazyWriteContext)
 {
     DPRINT("Initializing file object for %wZ\n", &FileObject->FileName);
-    PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
-    FileObject->SectionObjectPointer->SharedCacheMap = Map;
-    Map->FileObject = FileObject;
-    Map->NumberOfMaps = 0;
-    Map->FileSizes = *FileSizes;
-    DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
-    InitializeListHead(&Map->AssociatedBcb);
+    CcpLock();
+    if (FileObject->SectionObjectPointer->SharedCacheMap)
+    {
+	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
+	InterlockedIncrement((PLONG)&Map->RefCount);
+    }
+    else
+    {
+	PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
+	FileObject->SectionObjectPointer->SharedCacheMap = Map;
+	Map->RefCount = 1;
+	Map->FileObject = FileObject;
+	Map->NumberOfMaps = 0;
+	Map->FileSizes = *FileSizes;
+	ASSERT(Map->FileSizes.ValidDataLength.HighPart != 0xcccccccc);
+	DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
+	InitializeListHead(&Map->AssociatedBcb);
+    }
+    CcpUnlock();
 }
 
 BOOLEAN
@@ -124,10 +136,10 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
     PLIST_ENTRY Entry;
     IO_STATUS_BLOCK IOSB;
     
-    DPRINT("Uninitializing file object for %wZ\n", &FileObject->FileName);
+    DPRINT("Uninitializing file object for %wZ SectionObjectPointer %x\n", &FileObject->FileName, FileObject->SectionObjectPointer);
     
     ASSERT(UninitializeEvent == NULL);
-    
+
     for (Entry = Map->AssociatedBcb.Flink;
 	 Entry != &Map->AssociatedBcb;
 	 Entry = Entry->Flink)
@@ -148,25 +160,28 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
     }
     
     CcpLock();
-    
-    for (Entry = Map->AssociatedBcb.Flink;
-	 Entry != &Map->AssociatedBcb;
-	 Entry = Entry->Flink)
+
+    if (InterlockedDecrement((PLONG)&Map->RefCount) == 1)
     {
-	Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
-	if (Bcb->RefCount == 1)
+	for (Entry = Map->AssociatedBcb.Flink;
+	     Entry != &Map->AssociatedBcb;
+	     Entry = Entry->Flink)
 	{
-	    DPRINT("Unmapping #%x\n", Bcb - CcCacheSections);
-	    CcpDereferenceCache(Bcb - CcCacheSections);
+	    Bcb = CONTAINING_RECORD(Entry, NOCC_BCB, ThisFileList);
+	    if (Bcb->RefCount == 1)
+	    {
+		DPRINT("Unmapping #%x\n", Bcb - CcCacheSections);
+		CcpDereferenceCache(Bcb - CcCacheSections);
+	    }
 	}
+	
+	ExFreePool(Map);
+	
+	/* Clear the cache map */
+	FileObject->SectionObjectPointer->SharedCacheMap = NULL;
     }
     
     CcpUnlock();
-    
-    ExFreePool(Map);
-    
-    /* Clear the cache map */
-    FileObject->SectionObjectPointer->SharedCacheMap = NULL;
     return TRUE;
 }
 
@@ -200,7 +215,10 @@ CcPurgeCacheSection(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                     IN BOOLEAN UninitializeCacheMaps)
 {
 	IO_STATUS_BLOCK IOSB;
+	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
 	CcFlushCache(SectionObjectPointer, FileOffset, Length, &IOSB);
+	if (UninitializeCacheMaps)
+	    CcUninitializeCacheMap(Map->FileObject, NULL, NULL);
 	return NT_SUCCESS(IOSB.Status);
 }
 

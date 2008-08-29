@@ -36,7 +36,9 @@ CcpSimpleWrite
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION IrpSp;
     KIRQL OldIrql;
+    PHYSICAL_ADDRESS Page;
 
+    ASSERT(Length <= PAGE_SIZE);
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     if (MmIsDirtyPage(PsInitialSystemProcess, Buffer))
@@ -93,7 +95,9 @@ CcpSimpleWrite
 		return Status;
 	    }
 	}
-	
+
+	Page = MmGetPhysicalAddress(Buffer);
+	MmSetCleanAllRmaps((PFN_TYPE)(Page.QuadPart >> PAGE_SHIFT));
 	ObDereferenceObject(FileObject);
 
 	DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);

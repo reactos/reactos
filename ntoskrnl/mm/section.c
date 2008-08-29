@@ -159,8 +159,6 @@ MiSimpleRead
     PIRP Irp = NULL;
     KEVENT ReadWait;
     PDEVICE_OBJECT DeviceObject = MmGetDeviceObjectForFile(FileObject);
-    PCHAR BufferWalk;
-    PHYSICAL_ADDRESS Page;
     PIO_STACK_LOCATION IrpSp;
     
     DPRINT1
@@ -220,13 +218,6 @@ MiSimpleRead
 	   ((PCHAR)Buffer)[2] & 0xff, 
 	   ((PCHAR)Buffer)[3] & 0xff);
 
-    for (BufferWalk = (PCHAR)Buffer; BufferWalk < (PCHAR)Buffer + Length; BufferWalk += PAGE_SIZE)
-    {
-	Page = MmGetPhysicalAddress((PVOID)BufferWalk);
-	DPRINT("Setting page clean: %x\n", Page.u.LowPart);
-	//MmSetCleanAllRmaps((PFN_TYPE)(Page.QuadPart >> PAGE_SHIFT));
-    }
-    
     return ReadStatus->Status;
 }
 
@@ -243,8 +234,6 @@ MiSimpleWrite
     PIRP Irp = NULL;
     KEVENT ReadWait;
     PDEVICE_OBJECT DeviceObject;
-    PCHAR BufferWalk;
-    PHYSICAL_ADDRESS Page;
     PIO_STACK_LOCATION IrpSp;
     
     ASSERT(FileObject);
@@ -308,12 +297,6 @@ MiSimpleWrite
     ObDereferenceObject(FileObject);
     
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-    for (BufferWalk = (PCHAR)Buffer; BufferWalk < (PCHAR)Buffer + Length; BufferWalk += PAGE_SIZE)
-    {
-	Page = MmGetPhysicalAddress((PVOID)BufferWalk);
-	//MmSetCleanAllRmaps((PFN_TYPE)(Page.QuadPart >> PAGE_SHIFT));
-    }
-    
     return ReadStatus->Status;
 }
 
