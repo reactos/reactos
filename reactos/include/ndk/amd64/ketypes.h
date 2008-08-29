@@ -62,9 +62,9 @@ Author:
 #define KGDT_64_R0_SS           0x0018
 #define KGDT_64_DATA            0x0028 // 2b
 #define KGDT_64_R3_CODE         0x0030 // 33
+#define KGDT_TSS                0x0040
 #define KGDT_32_R3_TEB          0x0050 // 53
 
-#define KGDT_TSS 0x0038 // ??
 
 //
 // CR4
