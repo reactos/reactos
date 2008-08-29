@@ -95,6 +95,7 @@
 				<file>except.c</file>
 				<file>irql.c</file>
 				<file>kiinit.c</file>
+				<file>thrdini.c</file>
 				<file>trap.S</file>
 			</directory>
 		</if>
@@ -303,6 +304,11 @@
 				<!-- file>kdb_expr.c</file -->
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
+				<if property="ARCH" value="amd64">
+					<directory name="amd64">
+						<file>kdb.c</file>
+					</directory>
+				</if>
 			</if>
 			<if property="DBG_OR_KDBG" value="true">
 				<file>kdb_symbols.c</file>

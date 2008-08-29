@@ -87,5 +87,6 @@ KeInitExceptions(VOID)
         KiIdt[i].Reserved1 = 0;
     }
 
+    __lidt(&KiIdtDescriptor.Limit);
 }
 
