@@ -48,9 +48,7 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     PLIST_ENTRY NextEntry;
     PFSRTL_PER_STREAM_CONTEXT TmpPerStreamContext, PerStreamContext = NULL;
 
-    ASSERT(StreamContext);
-
-    if (!(StreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
+    if (!(StreamContext) || !(StreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
     {
         return NULL;
     }
@@ -108,9 +106,7 @@ NTAPI
 FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
                             IN PFSRTL_PER_STREAM_CONTEXT Ptr)
 {
-    ASSERT(PerStreamContext);
-
-    if (!(PerStreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
+    if (!(PerStreamContext) || !(PerStreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -133,9 +129,7 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     PLIST_ENTRY NextEntry;
     PFSRTL_PER_STREAM_CONTEXT TmpPerStreamContext, PerStreamContext = NULL;
 
-    ASSERT(StreamContext);
-
-    if (!(StreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
+    if (!(StreamContext) || !(StreamContext->Flags2 & FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))
     {
         return NULL;
     }
