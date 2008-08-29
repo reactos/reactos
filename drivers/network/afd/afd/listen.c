@@ -28,6 +28,8 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
 
     FCB->State = SOCKET_STATE_CONNECTED;
     FCB->Connection = Qelt->Object;
+
+    if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
     FCB->RemoteAddress =
 	TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
