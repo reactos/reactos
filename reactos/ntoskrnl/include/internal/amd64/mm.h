@@ -2,8 +2,8 @@
  * Lowlevel memory managment definitions
  */
 
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H
 
 struct _EPROCESS;
 PULONG_PTR MmGetPageDirectory(VOID);
@@ -17,15 +17,21 @@ PULONG_PTR MmGetPageDirectory(VOID);
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
+    ((PMMPTE)(((((ULONG64)(x)) >> 22) << 2) + PAGEDIRECTORY_MAP))
 #define MiAddressToPte(x) \
-    ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PAGETABLE_MAP))
+    ((PMMPTE)(((((ULONG64)(x)) >> 12) << 2) + PAGETABLE_MAP))
 
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
-#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+//#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
+//#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
+//#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+
+#define VAtoPXI(va) ((((ULONG64)va) >> PXI_SHIFT) & 0x1FF)
+#define VAtoPPI(va) ((((ULONG64)va) >> PPI_SHIFT) & 0x1FF)
+#define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
+#define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
+
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H */
