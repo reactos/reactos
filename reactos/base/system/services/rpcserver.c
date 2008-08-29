@@ -246,6 +246,159 @@ ScmAssignNewTag(PSERVICE lpService)
 }
 
 
+/* Internal recursive function */
+/* Need to search for every dependency on every service */
+static DWORD
+Int_EnumDependentServicesW(HKEY hServicesKey,
+                           PSERVICE lpService,
+                           DWORD dwServiceState,
+                           PSERVICE *lpServices,
+                           LPDWORD pcbBytesNeeded,
+                           LPDWORD lpServicesReturned)
+{
+    DWORD dwError = ERROR_SUCCESS;
+    WCHAR szNameBuf[MAX_PATH];
+    WCHAR szValueBuf[MAX_PATH];
+    WCHAR *lpszNameBuf = szNameBuf;
+    WCHAR *lpszValueBuf = szValueBuf;
+    DWORD dwSize;
+    DWORD dwNumSubKeys;
+    DWORD dwIteration;
+    PSERVICE lpCurrentService;
+    HKEY hServiceEnumKey;
+    DWORD dwCurrentServiceState = SERVICE_ACTIVE;
+    DWORD dwDependServiceStrPtr = 0;
+    DWORD dwRequiredSize = 0;
+
+    /* Get the number of service keys */
+    dwError = RegQueryInfoKeyW(hServicesKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwNumSubKeys,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ERROR! Unable to get number of services keys.\n");
+        return dwError;
+    }
+
+    /* Iterate the service keys to see if another service depends on the this service */
+    for (dwIteration = 0; dwIteration < dwNumSubKeys; dwIteration++)
+    {
+        dwSize = MAX_PATH;
+        dwError = RegEnumKeyExW(hServicesKey,
+                                dwIteration,
+                                lpszNameBuf,
+                                &dwSize,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+
+        /* Open the Service key */
+        dwError = RegOpenKeyExW(hServicesKey,
+                                lpszNameBuf,
+                                0,
+                                KEY_READ,
+                                &hServiceEnumKey);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+
+        dwSize = MAX_PATH;
+
+        /* Check for the DependOnService Value */
+        dwError = RegQueryValueExW(hServiceEnumKey,
+                                   L"DependOnService",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)lpszValueBuf,
+                                   &dwSize);
+
+        /* FIXME: Handle load order. */
+
+        /* If the service found has a DependOnService value */
+        if (dwError == ERROR_SUCCESS)
+        {
+            dwDependServiceStrPtr = 0;
+
+            /* Can be more than one Dependencies in the DependOnService string */
+            while (wcslen(lpszValueBuf + dwDependServiceStrPtr) > 0)
+            {
+                if (wcsicmp(lpszValueBuf + dwDependServiceStrPtr, lpService->lpServiceName) == 0)
+                {
+                    /* Get the current enumed service pointer */
+                    lpCurrentService = ScmGetServiceEntryByName(lpszNameBuf);
+
+                    /* Check for valid Service */
+                    if (!lpCurrentService)
+                    {
+                        /* This should never happen! */
+                        DPRINT1("This should not happen at this point, report to Developer\n");
+                        return ERROR_NOT_FOUND;
+                    }
+
+                    /* Determine state the service is in */
+                    if (lpCurrentService->Status.dwCurrentState == SERVICE_STOPPED)
+                        dwCurrentServiceState = SERVICE_INACTIVE;
+
+                    /* If the ServiceState matches that requested or searching for SERVICE_STATE_ALL */
+                    if ((dwCurrentServiceState == dwServiceState) ||
+                        (dwServiceState == SERVICE_STATE_ALL))
+                    {
+                        /* Calculate the required size */
+                        dwRequiredSize += sizeof(SERVICE_STATUS);
+                        dwRequiredSize += ((wcslen(lpCurrentService->lpServiceName) + 1) * sizeof(WCHAR));
+                        dwRequiredSize += ((wcslen(lpCurrentService->lpDisplayName) + 1) * sizeof(WCHAR));
+
+                        /* Add the size for service name and display name pointers */
+                        dwRequiredSize += (2 * sizeof(PVOID));
+
+                        /* increase the BytesNeeded size */
+                        *pcbBytesNeeded = *pcbBytesNeeded + dwRequiredSize;
+
+                        /* Don't fill callers buffer yet, as MSDN read that the last service with dependency
+                           comes first */
+
+                        /* Recursive call to check for its dependencies */
+                        Int_EnumDependentServicesW(hServicesKey,
+                                                   lpCurrentService,
+                                                   dwServiceState,
+                                                   lpServices,
+                                                   pcbBytesNeeded,
+                                                   lpServicesReturned);
+
+                        /* If the lpServices is valid set the service pointer */
+                        if (lpServices)
+                            lpServices[*lpServicesReturned] = lpCurrentService;
+
+                        *lpServicesReturned = *lpServicesReturned + 1;
+                    }
+                }
+
+                dwDependServiceStrPtr += (wcslen(lpszValueBuf + dwDependServiceStrPtr) + 1);
+            }
+        }
+        else if (*pcbBytesNeeded)
+        {
+            dwError = ERROR_SUCCESS;
+        }
+
+        RegCloseKey(hServiceEnumKey);
+    }
+
+    return dwError;
+}
+
+
 /* Function 0 */
 DWORD RCloseServiceHandle(
     handle_t BindingHandle,
@@ -1676,12 +1829,120 @@ DWORD REnumDependentServicesW(
     LPBOUNDED_DWORD_256K lpServicesReturned)
 {
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwServicesReturned = 0;
+    DWORD dwServiceCount;
+    HKEY hServicesKey = NULL;
+    LPSC_RPC_HANDLE hSCObject;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    PSERVICE *lpServicesArray = NULL;
+    LPENUM_SERVICE_STATUSW lpServicesPtr = NULL;
+    LPWSTR lpStr;
 
-    UNIMPLEMENTED;
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
 
-    DPRINT1("REnumDependentServicesW() done (Error %lu)\n", dwError);
+    DPRINT("REnumDependentServicesW() called\n");
+
+    hSCObject = &hService;
+    hSvc = (PSERVICE_HANDLE) *hSCObject;
+    lpService = hSvc->ServiceEntry;
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n",
+                hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Open the Services Reg key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* First determine the bytes needed and get the number of dependent services */
+    dwError = Int_EnumDependentServicesW(hServicesKey,
+                                         lpService,
+                                         dwServiceState,
+                                         NULL,
+                                         pcbBytesNeeded,
+                                         &dwServicesReturned);
+    if (dwError != ERROR_SUCCESS)
+        goto Done;
+
+    /* If buffer size is less than the bytes needed or pointer is null */
+    if ((!lpServices) || (cbBufSize < *pcbBytesNeeded))
+    {
+        dwError = ERROR_MORE_DATA;
+        goto Done;
+    }
+
+    /* Allocate memory for array of service pointers */
+    lpServicesArray = HeapAlloc(GetProcessHeap(),
+                                0,
+                                (dwServicesReturned + 1) * sizeof(PSERVICE));
+    if (!lpServicesArray)
+    {
+        DPRINT1("Could not allocate a buffer!!\n");
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Done;
+    }
+
+    dwServicesReturned = 0;
+    *pcbBytesNeeded = 0;
+
+    dwError = Int_EnumDependentServicesW(hServicesKey,
+                                         lpService,
+                                         dwServiceState,
+                                         lpServicesArray,
+                                         pcbBytesNeeded,
+                                         &dwServicesReturned);
+    if (dwError != ERROR_SUCCESS)
+    {
+        goto Done;
+    }
+
+    lpServicesPtr = (LPENUM_SERVICE_STATUSW) lpServices;
+    lpStr = (LPWSTR)(lpServices + (dwServicesReturned * sizeof(ENUM_SERVICE_STATUSW)));
+
+    /* Copy EnumDepenedentService to Buffer */
+    for (dwServiceCount = 0; dwServiceCount < dwServicesReturned; dwServiceCount++)
+    {
+        lpService = lpServicesArray[dwServiceCount];
+
+        /* Copy status info */
+        memcpy(&lpServicesPtr->ServiceStatus,
+               &lpService->Status,
+               sizeof(SERVICE_STATUS));
+
+        /* Copy display name */
+        wcscpy(lpStr, lpService->lpDisplayName);
+        lpServicesPtr->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
+        lpStr += (wcslen(lpService->lpDisplayName) + 1);
+
+        /* Copy service name */
+        wcscpy(lpStr, lpService->lpServiceName);
+        lpServicesPtr->lpServiceName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
+        lpStr += (wcslen(lpService->lpServiceName) + 1);
+
+        lpServicesPtr ++;
+    }
+
+    *lpServicesReturned = dwServicesReturned;
+
+Done:
+    if (lpServicesArray != NULL)
+        HeapFree(GetProcessHeap(), 0, lpServicesArray);
+
+    RegCloseKey(hServicesKey);
+
+    DPRINT("REnumDependentServicesW() done (Error %lu)\n", dwError);
 
     return dwError;
 }
@@ -2722,10 +2983,141 @@ DWORD REnumDependentServicesA(
     LPBOUNDED_DWORD_256K pcbBytesNeeded,
     LPBOUNDED_DWORD_256K lpServicesReturned)
 {
-    UNIMPLEMENTED;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwServicesReturned = 0;
+    DWORD dwServiceCount;
+    HKEY hServicesKey = NULL;
+    LPSC_RPC_HANDLE hSCObject;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    PSERVICE *lpServicesArray = NULL;
+    LPENUM_SERVICE_STATUSA lpServicesPtr = NULL;
+    LPSTR lpStr;
+
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    DPRINT("REnumDependentServicesA() called\n");
+
+    hSCObject = &hService;
+    hSvc = (PSERVICE_HANDLE) *hSCObject;
+    lpService = hSvc->ServiceEntry;
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n",
+                hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Open the Services Reg key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+
+    if (dwError != ERROR_SUCCESS) return dwError;
+
+    /* NOTE: Windows calculates the pcbBytesNeeded based on WCHAR strings for
+             both EnumDependentServicesA and EnumDependentServicesW. So returned pcbBytesNeeded
+             are the same for both. Verified in WINXP. */
+
+    /* First determine the bytes needed and get the number of dependent services*/
+    dwError = Int_EnumDependentServicesW(hServicesKey,
+                                         lpService,
+                                         dwServiceState,
+                                         NULL,
+                                         pcbBytesNeeded,
+                                         &dwServicesReturned);
+    if (dwError != ERROR_SUCCESS)
+        goto Done;
+
+    /* If buffer size is less than the bytes needed or pointer is null*/
+    if ((!lpServices) || (cbBufSize < *pcbBytesNeeded))
+    {
+        dwError = ERROR_MORE_DATA;
+        goto Done;
+    }
+
+    /* Allocate memory for array of service pointers */
+    lpServicesArray = HeapAlloc(GetProcessHeap(),
+                                0,
+                                (dwServicesReturned + 1) * sizeof(PSERVICE));
+    if (!lpServicesArray)
+    {
+        DPRINT1("Could not allocate a buffer!!\n");
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Done;
+    }
+
+    dwServicesReturned = 0;
+    *pcbBytesNeeded = 0;
+
+    dwError = Int_EnumDependentServicesW(hServicesKey,
+                                         lpService,
+                                         dwServiceState,
+                                         lpServicesArray,
+                                         pcbBytesNeeded,
+                                         &dwServicesReturned);
+    if (dwError != ERROR_SUCCESS)
+    {
+        goto Done;
+    }
+
+    lpServicesPtr = (LPENUM_SERVICE_STATUSA)lpServices;
+    lpStr = (LPSTR)(lpServices + (dwServicesReturned * sizeof(ENUM_SERVICE_STATUSA)));
+
+    /* Copy EnumDepenedentService to Buffer */
+    for (dwServiceCount = 0; dwServiceCount < dwServicesReturned; dwServiceCount++)
+    {
+        lpService = lpServicesArray[dwServiceCount];
+
+        /* Copy the status info */
+        memcpy(&lpServicesPtr->ServiceStatus,
+               &lpService->Status,
+               sizeof(SERVICE_STATUS));
+
+        /* Copy display name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpService->lpDisplayName,
+                            -1,
+                            lpStr,
+                            wcslen(lpService->lpDisplayName),
+                            0,
+                            0);
+        lpServicesPtr->lpDisplayName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
+        lpStr += strlen(lpStr) + 1;
+
+        /* Copy service name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpService->lpServiceName,
+                            -1,
+                            lpStr,
+                            wcslen(lpService->lpServiceName),
+                            0,
+                            0);
+        lpServicesPtr->lpServiceName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
+        lpStr += strlen(lpStr) + 1;
+
+        lpServicesPtr ++;
+    }
+
+    *lpServicesReturned = dwServicesReturned;
+
+Done:
+    if (lpServicesArray)
+        HeapFree(GetProcessHeap(), 0, lpServicesArray);
+
+    RegCloseKey(hServicesKey);
+
+    DPRINT("REnumDependentServicesA() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
