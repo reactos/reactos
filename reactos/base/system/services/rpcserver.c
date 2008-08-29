@@ -404,6 +404,12 @@ DWORD RCloseServiceHandle(
     LPSC_RPC_HANDLE hSCObject)
 {
     PMANAGER_HANDLE hManager;
+    PSERVICE_HANDLE hService;
+    PSERVICE lpService;
+    HKEY hServicesKey;
+    DWORD dwError;
+    DWORD pcbBytesNeeded = 0;
+    DWORD dwServicesReturned = 0;
 
     DPRINT("RCloseServiceHandle() called\n");
 
@@ -413,6 +419,7 @@ DWORD RCloseServiceHandle(
         return ERROR_INVALID_HANDLE;
 
     hManager = (PMANAGER_HANDLE)*hSCObject;
+    hService = (PSERVICE_HANDLE)*hSCObject;
     if (hManager->Handle.Tag == MANAGER_TAG)
     {
         DPRINT("Found manager handle\n");
@@ -420,24 +427,92 @@ DWORD RCloseServiceHandle(
         hManager->Handle.RefCount--;
         if (hManager->Handle.RefCount == 0)
         {
-            /* FIXME: add cleanup code */
+            /* FIXME: add handle cleanup code */
 
             HeapFree(GetProcessHeap(), 0, hManager);
+            hManager = NULL;
         }
 
         DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
     }
-    else if (hManager->Handle.Tag == SERVICE_TAG)
+    else if (hService->Handle.Tag == SERVICE_TAG)
     {
         DPRINT("Found service handle\n");
 
-        hManager->Handle.RefCount--;
-        if (hManager->Handle.RefCount == 0)
-        {
-            /* FIXME: add cleanup code */
+        /* Get the pointer to the service record */
+        lpService = hService->ServiceEntry;
 
-            HeapFree(GetProcessHeap(), 0, hManager);
+        ASSERT(hService->Handle.RefCount > 0);
+
+        hService->Handle.RefCount--;
+        if (hService->Handle.RefCount == 0)
+        {
+            /* FIXME: add handle cleanup code */
+
+            /* Free the handle */
+            HeapFree(GetProcessHeap(), 0, hService);
+            hService = NULL;
+        }
+
+        ASSERT(lpService->dwRefCount > 0);
+
+        lpService->dwRefCount--;
+        DPRINT1("CloseServiceHandle - lpService->dwRefCount %u\n",
+                lpService->dwRefCount);
+
+        if (lpService->dwRefCount == 0)
+        {
+            /* If this service has been marked for deletion */
+            if (lpService->bDeleted)
+            {
+                /* Open the Services Reg key */
+                dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                        L"System\\CurrentControlSet\\Services",
+                                        0,
+                                        KEY_SET_VALUE | KEY_READ,
+                                        &hServicesKey);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("Failed to open services key\n");
+                    return dwError;
+                }
+
+                /* Call the internal function with NULL, just to get bytes we need */
+                Int_EnumDependentServicesW(hServicesKey,
+                                           lpService,
+                                           SERVICE_ACTIVE,
+                                           NULL,
+                                           &pcbBytesNeeded,
+                                           &dwServicesReturned);
+
+                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
+                if (pcbBytesNeeded)
+                {
+                    DPRINT1("Deletion failed due to running dependencies.\n",
+                            lpService->lpServiceName);
+                    RegCloseKey(hServicesKey);
+                    return ERROR_SUCCESS;
+                }
+
+                /* There are no references and no runnning dependencies,
+                   it is now safe to delete the service */
+
+                /* Delete the Service Key */
+                dwError = RegDeleteKey(hServicesKey,
+                                       lpService->lpServiceName);
+
+                RegCloseKey(hServicesKey);
+
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("Failed to Delete the Service Registry key\n");
+                    return dwError;
+                }
+
+                /* Delete the Service */
+                ScmDeleteServiceRecord(lpService);
+            }
         }
 
         DPRINT("RCloseServiceHandle() done\n");
@@ -461,6 +536,9 @@ DWORD RControlService(
     PSERVICE lpService;
     ACCESS_MASK DesiredAccess;
     DWORD dwError = ERROR_SUCCESS;
+    DWORD pcbBytesNeeded = 0;
+    DWORD dwServicesReturned = 0;
+    HKEY hServicesKey = NULL;
 
     DPRINT("RControlService() called\n");
 
@@ -472,6 +550,14 @@ DWORD RControlService(
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
         DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check the service entry point */
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n"); 
         return ERROR_INVALID_HANDLE;
     }
 
@@ -507,12 +593,40 @@ DWORD RControlService(
                                   DesiredAccess))
         return ERROR_ACCESS_DENIED;
 
-    /* Check the service entry point */
-    lpService = hSvc->ServiceEntry;
-    if (lpService == NULL)
+    if (dwControl == SERVICE_CONTROL_STOP)
     {
-        DPRINT1("lpService == NULL!\n");
-        return ERROR_INVALID_HANDLE;
+        /* Check if the service has dependencies running as windows
+           doesn't stop a service that does */
+
+        /* Open the Services Reg key */
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                L"System\\CurrentControlSet\\Services",
+                                0,
+                                KEY_READ,
+                                &hServicesKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("Failed to open services key\n");
+            return dwError;
+        }
+
+        /* Call the internal function with NULL, just to get bytes we need */
+        Int_EnumDependentServicesW(hServicesKey,
+                                   lpService,
+                                   SERVICE_ACTIVE,
+                                   NULL,
+                                   &pcbBytesNeeded,
+                                   &dwServicesReturned);
+
+        RegCloseKey(hServicesKey);
+
+        /* If pcbBytesNeeded is not zero then there are services running that
+           are dependent on this service */
+        if (pcbBytesNeeded != 0)
+        {
+            DPRINT("Service has running dependencies. Failed to stop service.\n");
+            return ERROR_DEPENDENT_SERVICES_RUNNING;
+        }
     }
 
     if (lpService->Status.dwServiceType & SERVICE_DRIVER)
@@ -529,6 +643,9 @@ DWORD RControlService(
                                     dwControl,
                                     lpServiceStatus);
     }
+
+    if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
+        dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
 
     /* Return service status information */
     RtlCopyMemory(lpServiceStatus,
@@ -1120,7 +1237,7 @@ DWORD RChangeServiceConfigW(
                                  (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
-        /* FIXME: update lpService->lpServiceGroup */
+        /* FIXME: Update lpService->lpServiceGroup */
     }
 
     if (lpdwTagId != NULL)
@@ -1836,6 +1953,9 @@ DWORD RCreateServiceW(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
+    lpService->dwRefCount = 1;
+    DPRINT1("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
+
 done:;
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -2308,6 +2428,9 @@ DWORD ROpenServiceW(
         HeapFree(GetProcessHeap(), 0, hHandle);
         return dwError;
     }
+
+    lpService->dwRefCount++;
+    DPRINT1("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
 
     *lpServiceHandle = (unsigned long)hHandle; /* FIXME: 64 bit portability */
     DPRINT("*hService = %p\n", *lpServiceHandle);
