@@ -1,5 +1,5 @@
 <module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll" unicode="yes">
-	<importlibrary definition="lsasrv.def" />
+	<importlibrary definition="lsasrv.spec.def" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>
 	<define name="WINVER">0x600</define>
@@ -13,4 +13,5 @@
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>
+	<file>lsasrv.spec</file>
 </module>

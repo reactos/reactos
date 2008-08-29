@@ -1,5 +1,5 @@
 <module name="fmifs" type="win32dll" entrypoint="InitializeFmIfs@12" baseaddress="${BASEADDRESS_FMIFS}" installbase="system32" installname="fmifs.dll">
-	<importlibrary definition="fmifs.def" />
+	<importlibrary definition="fmifs.spec.def" />
 	<include base="fmifs">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT">0x0600</define>
@@ -14,5 +14,6 @@
 	<file>media.c</file>
 	<file>query.c</file>
 	<file>fmifs.rc</file>
+	<file>fmifs.spec</file>
 	<pch>precomp.h</pch>
 </module>
