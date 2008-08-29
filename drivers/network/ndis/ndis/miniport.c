@@ -1625,7 +1625,7 @@ NdisIAddDevice(
 
   Status = IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyDriverKeyName,
                                0, NULL, &DriverKeyLength);
-  if (Status != STATUS_BUFFER_TOO_SMALL)
+  if (Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
     {
       NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key length.\n"));
       return Status;
