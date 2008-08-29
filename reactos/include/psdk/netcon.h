@@ -168,4 +168,30 @@ DECLARE_INTERFACE_(INetConnectionManager, IUnknown)
 EXTERN_C const CLSID CLSID_ConnectionManager;
 EXTERN_C const IID IID_INetConnectionManager;
 
+#undef  INTERFACE
+#define INTERFACE INetConnectionPropertyUi
+DECLARE_INTERFACE_(INetConnectionPropertyUi, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, SetConnection) (THIS_ INetConnection *pCon) PURE;
+    STDMETHOD_(HRESULT, AddPages) (THIS_ HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) PURE;
+
+
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define INetConnectionPropertyUi_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetConnectionPropertyUi_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetConnectionPropertyUi_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetConnectionPropertyUi_SetConnection(p,a)         (p)->lpVtbl->SetConnection(p,a)
+#define INetConnectionPropertyUi_AddPages(p,a,b,c)          (p)->lpVtbl->AddPages(p,a,b,c)
+#endif
+
+EXTERN_C const IID IID_INetConnectionPropertyUi;
+
+VOID STDCALL NcFreeNetconProperties (NETCON_PROPERTIES* pProps);
+
 #endif
