@@ -152,6 +152,17 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
     if (lpDatabaseName == NULL)
         lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
+    if (wcsicmp(lpDatabaseName,SERVICES_FAILED_DATABASEW)==0)
+    {
+        DPRINT1("Database %S, does not exist\n",lpDatabaseName);
+        return ERROR_DATABASE_DOES_NOT_EXIST;
+    }
+    else if (wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
+    {
+        DPRINT1("Invalid Database name %S.\n",lpDatabaseName);
+        return ERROR_INVALID_NAME;
+    }
+
     Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
                     sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
@@ -1936,6 +1947,9 @@ DWORD ROpenServiceW(
     if (!lpServiceHandle)
         return ERROR_INVALID_PARAMETER;
 
+    if (!lpServiceName)
+        return ERROR_INVALID_ADDRESS;
+
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
@@ -2489,8 +2503,9 @@ DWORD ROpenServiceA(
 
     DPRINT("ROpenServiceA() called\n");
 
-    RtlCreateUnicodeStringFromAsciiz(&ServiceName,
-                                     lpServiceName);
+    if (lpServiceName)
+        RtlCreateUnicodeStringFromAsciiz(&ServiceName,
+                                         lpServiceName);
 
     dwError = ROpenServiceW(BindingHandle,
                                hSCManager,
@@ -2498,7 +2513,8 @@ DWORD ROpenServiceA(
                                dwDesiredAccess,
                                lpServiceHandle);
 
-    RtlFreeUnicodeString(&ServiceName);
+    if (lpServiceName)
+        RtlFreeUnicodeString(&ServiceName);
 
     return dwError;
 }
