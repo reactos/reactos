@@ -2241,15 +2241,37 @@ DWORD RGetServiceDisplayNameW(
     if (lpService == NULL)
     {
         DPRINT1("Could not find a service!\n");
+
+        /* If the service could not be found and lpcchBuffer is 0, windows
+           puts null in lpDisplayName and puts 1 in lpcchBuffer */
+        if (*lpcchBuffer == 0)
+        {
+            *lpcchBuffer = 1;
+            *lpDisplayName = '\0';
+        }
+
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    dwLength = wcslen(lpService->lpDisplayName) + 1;
-
-    if (lpDisplayName != NULL &&
-        *lpcchBuffer >= dwLength)
+    if (!lpService->lpDisplayName)
     {
-        wcscpy(lpDisplayName, lpService->lpDisplayName);
+        dwLength = wcslen(lpService->lpServiceName);
+
+        if (lpServiceName != NULL &&
+            *lpcchBuffer > dwLength)
+        {
+            wcscpy(lpDisplayName, lpService->lpServiceName);
+        }
+    }
+    else
+    {
+        dwLength = wcslen(lpService->lpDisplayName);
+
+        if (lpDisplayName != NULL &&
+            *lpcchBuffer > dwLength)
+        {
+            wcscpy(lpDisplayName, lpService->lpDisplayName);
+        }
     }
 
     dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
@@ -2291,20 +2313,31 @@ DWORD RGetServiceKeyNameW(
     if (lpService == NULL)
     {
         DPRINT1("Could not find a service!\n");
+
+        /* If the service could not be found and lpcchBuffer is 0, windows
+           puts null in lpDisplayName and puts 2 in lpcchBuffer */
+        if (*lpcchBuffer == 0)
+        {
+            *lpcchBuffer = 2;
+            *lpServiceName = '\0';
+        }
+
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    dwLength = wcslen(lpService->lpServiceName) + 1;
+    dwLength = wcslen(lpService->lpServiceName);
 
     if (lpServiceName != NULL &&
-        *lpcchBuffer >= dwLength)
+        *lpcchBuffer > dwLength)
     {
         wcscpy(lpServiceName, lpService->lpServiceName);
+        *lpcchBuffer = dwLength;
+        return ERROR_SUCCESS;
     }
 
     dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
 
-    *lpcchBuffer = dwLength;
+    *lpcchBuffer = dwLength * 2;
 
     return dwError;
 }
@@ -2559,8 +2592,97 @@ DWORD RGetServiceDisplayNameA(
     LPSTR lpDisplayName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+//    PMANAGER_HANDLE hManager;
+    PSERVICE lpService;
+    DWORD dwLength;
+    DWORD dwError;
+    LPWSTR lpServiceNameW;
+
+    DPRINT("RGetServiceDisplayNameA() called\n");
+    DPRINT("hSCManager = %p\n", hSCManager);
+    DPRINT("lpServiceName: %s\n", lpServiceName);
+    DPRINT("lpDisplayName: %p\n", lpDisplayName);
+    DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
+
+//    hManager = (PMANAGER_HANDLE)hSCManager;
+//    if (hManager->Handle.Tag != MANAGER_TAG)
+//    {
+//        DPRINT1("Invalid manager handle!\n");
+//        return ERROR_INVALID_HANDLE;
+//    }
+
+    dwLength = strlen(lpServiceName) + 1;
+    lpServiceNameW = HeapAlloc(GetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               dwLength * sizeof(WCHAR));
+    if (!lpServiceNameW)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    MultiByteToWideChar(CP_ACP,
+                        0,
+                        lpServiceName,
+                        strlen(lpServiceName),
+                        lpServiceNameW,
+                        dwLength);
+
+    lpService = ScmGetServiceEntryByName(lpServiceNameW);
+
+    HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+
+    if (lpService == NULL)
+    {
+        DPRINT1("Could not find a service!\n");
+
+        /* If the service could not be found and lpcchBuffer is 0, windows
+           puts null in lpDisplayName and puts 1 in lpcchBuffer */
+        if (*lpcchBuffer == 0)
+        {
+            *lpcchBuffer = 1;
+            *lpDisplayName = '\0';
+        }
+        return ERROR_SERVICE_DOES_NOT_EXIST;
+    }
+
+    if (!lpService->lpDisplayName)
+    {
+        dwLength = wcslen(lpService->lpServiceName);
+        if (lpServiceName != NULL &&
+            *lpcchBuffer > dwLength)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpService->lpServiceName,
+                                wcslen(lpService->lpServiceName),
+                                lpDisplayName,
+                                *lpcchBuffer,
+                                NULL,
+                                NULL);
+            return ERROR_SUCCESS;
+        }
+    }
+    else
+    {
+        dwLength = wcslen(lpService->lpDisplayName);
+        if (lpDisplayName != NULL &&
+            *lpcchBuffer > dwLength)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpService->lpDisplayName,
+                                wcslen(lpService->lpDisplayName),
+                                lpDisplayName,
+                                *lpcchBuffer,
+                                NULL,
+                                NULL);
+            return ERROR_SUCCESS;
+        }
+    }
+
+    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
+
+    *lpcchBuffer = dwLength * 2;
+
+    return dwError;
 }
 
 
@@ -2569,11 +2691,73 @@ DWORD RGetServiceKeyNameA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpDisplayName,
-    LPSTR lpKeyName,
+    LPSTR lpServiceName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSERVICE lpService;
+    DWORD dwLength;
+    DWORD dwError;
+    LPWSTR lpDisplayNameW;
+
+    DPRINT("RGetServiceKeyNameA() called\n");
+    DPRINT("hSCManager = %p\n", hSCManager);
+    DPRINT("lpDisplayName: %s\n", lpDisplayName);
+    DPRINT("lpServiceName: %p\n", lpServiceName);
+    DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
+
+    dwLength = strlen(lpDisplayName) + 1;
+    lpDisplayNameW = HeapAlloc(GetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               dwLength * sizeof(WCHAR));
+    if (!lpDisplayNameW)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    MultiByteToWideChar(CP_ACP,
+                        0,
+                        lpDisplayName,
+                        strlen(lpDisplayName),
+                        lpDisplayNameW,
+                        dwLength);
+
+    lpService = ScmGetServiceEntryByDisplayName(lpDisplayNameW);
+
+    HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+
+    if (lpService == NULL)
+    {
+        DPRINT1("Could not find the service!\n");
+
+        /* If the service could not be found and lpcchBuffer is 0,
+           put null in lpDisplayName and puts 1 in lpcchBuffer, verified WINXP. */
+        if (*lpcchBuffer == 0)
+        {
+            *lpcchBuffer = 1;
+            *lpServiceName = '\0';
+        }
+
+        return ERROR_SERVICE_DOES_NOT_EXIST;
+    }
+
+    dwLength = wcslen(lpService->lpServiceName);
+    if (lpService != NULL &&
+        *lpcchBuffer > dwLength)
+    {
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpService->lpServiceName,
+                            wcslen(lpService->lpServiceName),
+                            lpServiceName,
+                            dwLength,
+                            NULL,
+                            NULL);
+        return ERROR_SUCCESS;
+    }
+
+    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
+
+    *lpcchBuffer = dwLength * 2;
+
+    return dwError;
 }
 
 

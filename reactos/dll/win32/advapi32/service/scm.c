@@ -1227,6 +1227,9 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
 
     TRACE("GetServiceDisplayNameA() called\n");
 
+    if (!lpDisplayName)
+        *lpcchBuffer = 0;
+
     HandleBind();
 
     _SEH_TRY
@@ -1253,8 +1256,6 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    (*lpcchBuffer)--;
-
     return TRUE;
 }
 
@@ -1273,6 +1274,9 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
     DWORD dwError;
 
     TRACE("GetServiceDisplayNameW() called\n");
+
+    if (!lpDisplayName)
+        *lpcchBuffer = 0;
 
     HandleBind();
 
@@ -1297,8 +1301,6 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    (*lpcchBuffer)--;
-
     return TRUE;
 }
 
@@ -1317,6 +1319,9 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     DWORD dwError;
 
     TRACE("GetServiceKeyNameA() called\n");
+
+    if (!lpServiceName)
+        *lpcchBuffer = 0;
 
     HandleBind();
 
@@ -1341,8 +1346,6 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    (*lpcchBuffer)--;
-
     return TRUE;
 }
 
@@ -1361,6 +1364,9 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
     DWORD dwError;
 
     TRACE("GetServiceKeyNameW() called\n");
+
+    if (!lpDisplayName)
+        *lpcchBuffer = 0;
 
     HandleBind();
 
@@ -1384,8 +1390,6 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         SetLastError(dwError);
         return FALSE;
     }
-
-    (*lpcchBuffer)--;
 
     return TRUE;
 }
