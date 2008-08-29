@@ -161,11 +161,13 @@ static VOID STDCALL MiQueryResources(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
     int i;
 
+    /* This is only to get the required BufferSize so it shouldn't succeed */
     NdisMQueryAdapterResources(Status,
                                WrapperConfigurationContext,
                                NULL,
                                &BufferSize);
-    if (*Status != NDIS_STATUS_SUCCESS)
+
+    if (*Status == NDIS_STATUS_SUCCESS)
         return;
 
     *Status = NdisAllocateMemory((PVOID)&AssignedResources,
