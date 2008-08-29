@@ -670,23 +670,11 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
                   OUT PVOID *Bcb,
                   OUT PVOID *Buffer)
 {
-    BOOLEAN GotIt = CcPinMappedData
-	(FileObject,
-	 FileOffset,
-	 Length,
-	 Flags,
-	 Bcb);
+    BOOLEAN Result = CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer);
 
-    PNOCC_BCB TheBcb = (PNOCC_BCB)*Bcb;
-    ULONG Start = TheBcb - CcCacheSections;
-	
-    DPRINT("CcPreparePinWrite(#%x)\n", Start);
-	
-    if (GotIt)
+    if (Result)
     {
-	CcCacheSections[Start].Dirty = TRUE;
-	*Buffer = (PVOID)((PCHAR)TheBcb->BaseAddress + (FileOffset->QuadPart - TheBcb->FileOffset.QuadPart));
-	DPRINT("Returning Buffer: %x\n", *Buffer);
+	PNOCC_BCB TheBcb = (PNOCC_BCB)*Bcb;
 	if (!TheBcb->Pinned)
 	{
 	    TheBcb->Pinned = IoAllocateMdl
@@ -695,12 +683,21 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
 		 FALSE,
 		 FALSE,
 		 NULL);
-	    MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	    _SEH_TRY
+	    {
+		MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
+	    }
+	    _SEH_HANDLE
+	    {
+		IoFreeMdl(TheBcb->Pinned);
+		TheBcb->Pinned = NULL;
+		Result = FALSE;
+	    }
+	    _SEH_END;
 	}
     }
 
-    DPRINT("Done\n");
-    return GotIt;
+    return Result;
 }
 
 VOID
