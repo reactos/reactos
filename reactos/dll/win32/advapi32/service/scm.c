@@ -1831,7 +1831,15 @@ QueryServiceConfig2A(SC_HANDLE hService,
     TRACE("QueryServiceConfig2A(%p, %lu, %p, %lu, %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
-    if (lpBuffer == NULL && cbBufSize != 0)
+    if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
+        dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if ((lpBuffer == NULL && cbBufSize != 0) ||
+        pcbBytesNeeded == NULL)
     {
         SetLastError(ERROR_INVALID_ADDRESS);
         return FALSE;
@@ -1921,7 +1929,15 @@ QueryServiceConfig2W(SC_HANDLE hService,
     TRACE("QueryServiceConfig2W(%p, %lu, %p, %lu, %p)\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
-    if (lpBuffer == NULL && cbBufSize != 0)
+    if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
+        dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if ((lpBuffer == NULL && cbBufSize != 0) ||
+        pcbBytesNeeded == NULL)
     {
         SetLastError(ERROR_INVALID_ADDRESS);
         return FALSE;
