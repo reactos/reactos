@@ -194,8 +194,8 @@ PcMemGetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* Copy data to caller's buffer */
       RtlCopyMemory(&BiosMemoryMap[MapCount], (PVOID)BIOSCALLBUFFER, Regs.x.ecx);
 
-      DbgPrint((DPRINT_MEMORY, "BaseAddress: 0x%p\n", (PVOID)BiosMemoryMap[MapCount].BaseAddress));
-      DbgPrint((DPRINT_MEMORY, "Length: 0x%p\n", (PVOID)BiosMemoryMap[MapCount].Length));
+      DbgPrint((DPRINT_MEMORY, "BaseAddress: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].BaseAddress));
+      DbgPrint((DPRINT_MEMORY, "Length: 0x%p\n", (PVOID)(ULONG_PTR)BiosMemoryMap[MapCount].Length));
       DbgPrint((DPRINT_MEMORY, "Type: 0x%x\n", BiosMemoryMap[MapCount].Type));
       DbgPrint((DPRINT_MEMORY, "Reserved: 0x%x\n", BiosMemoryMap[MapCount].Reserved));
       DbgPrint((DPRINT_MEMORY, "\n"));
