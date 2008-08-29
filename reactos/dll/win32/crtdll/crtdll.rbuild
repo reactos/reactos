@@ -5,7 +5,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
-	<define name="_MSVCRT_" />
+	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_CTYPE_DISABLE_MACROS" />
