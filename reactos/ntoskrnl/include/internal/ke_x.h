@@ -1534,6 +1534,8 @@ KeGetCurrentThread(VOID)
 #ifdef _M_IX86
     /* Return the current thread */
     return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+#elif defined (_M_AMD64)
+    return (PRKTHREAD)__readgsqword(FIELD_OFFSET(KIPCR, Prcb.CurrentThread));
 #else
     PKPRCB Prcb = KeGetCurrentPrcb();
     return Prcb->CurrentThread;
