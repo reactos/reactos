@@ -97,6 +97,7 @@ ContinueDebugEvent@12
 ConvertDefaultLocale@4
 ConvertFiberToThread@0
 ConvertThreadToFiber@4
+ConvertThreadToFiberEx@8
 CopyFileA@12
 CopyFileExA@24
 CopyFileExW@24
@@ -210,6 +211,7 @@ EnumResourceTypesA@12
 EnumResourceTypesW@12
 EnumSystemCodePagesA@8
 EnumSystemCodePagesW@8
+EnumSystemFirmwareTables@12
 EnumSystemGeoID@12
 EnumSystemLanguageGroupsA@12
 EnumSystemLanguageGroupsW@12
@@ -272,10 +274,10 @@ FindResourceExW@16
 FindResourceW@12
 FindVolumeClose@4
 FindVolumeMountPointClose@4
-;FlsAlloc@4 ;new for 2003
-;FlsFree@4 ;new for 2003
-;FlsGetValue@4 ;new for 2003
-;FlsSetValue@8 ;new for 2003
+FlsAlloc@4
+FlsFree@4
+FlsGetValue@4
+FlsSetValue@8
 FlushConsoleInputBuffer@4
 FlushFileBuffers@4
 FlushInstructionCache@12
@@ -366,6 +368,7 @@ GetCurrentDirectoryA@8
 GetCurrentDirectoryW@8
 GetCurrentProcess@0
 GetCurrentProcessId@0
+GetCurrentProcessorNumber@0
 GetCurrentThread@0
 GetCurrentThreadId@0
 GetDateFormatA@24
@@ -423,6 +426,7 @@ GetLocaleInfoEx@16
 GetLogicalDriveStringsA@8
 GetLogicalDriveStringsW@8
 GetLogicalDrives@0
+GetLogicalProcessorInformation@8
 GetLongPathNameA@12
 GetLongPathNameW@12
 GetMailslotInfo@20
@@ -438,6 +442,7 @@ GetNamedPipeInfo@20
 GetNativeSystemInfo@4
 GetNextVDMCommand@4
 GetNlsSectionName@24
+GetNumaAvailableMemoryNode@8
 GetNumaHighestNodeNumber@4
 GetNumaNodeProcessorMask@8
 ;GetNumaProcessorMap
@@ -473,6 +478,7 @@ GetProcessShutdownParameters@8
 GetProcessTimes@20
 GetProcessVersion@4
 GetProcessWorkingSetSize@12
+GetProcessWorkingSetSizeEx@16
 GetProfileIntA@12
 GetProfileIntW@12
 GetProfileSectionA@12
@@ -494,6 +500,8 @@ GetSystemDefaultLangID@0
 GetSystemDefaultUILanguage@0
 GetSystemDirectoryA@8
 GetSystemDirectoryW@8
+GetSystemFileCacheSize@12
+GetSystemFirmwareTable@16
 GetSystemInfo@4
 GetSystemPowerStatus@4
 GetSystemRegistryQuota@8
@@ -763,6 +771,7 @@ RemoveDirectoryW@4
 ;RemoveLocalAlternateComputerNameA
 ;RemoveLocalAlternateComputerNameW
 RemoveVectoredExceptionHandler@4=NTDLL.RtlRemoveVectoredExceptionHandler
+ReOpenFile@16
 ReplaceFile=ReplaceFileW@24
 ReplaceFileA@24
 ReplaceFileW@24
@@ -874,7 +883,9 @@ SetProcessAffinityMask@8
 SetProcessPriorityBoost@8
 SetProcessShutdownParameters@8
 SetProcessWorkingSetSize@12
+SetProcessWorkingSetSizeEx@16
 SetStdHandle@8
+SetSystemFileCacheSize@12
 SetSystemPowerState@8
 SetSystemTime@4
 SetSystemTimeAdjustment@8
@@ -888,6 +899,7 @@ SetThreadIdealProcessor@8
 SetThreadLocale@4
 SetThreadPriority@8
 SetThreadPriorityBoost@8
+SetThreadStackGuarantee@4
 SetThreadUILanguage@4
 SetTimerQueueTimer@24
 SetTimeZoneInformation@4

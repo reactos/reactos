@@ -4400,6 +4400,45 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
 
+typedef enum _PROCESSOR_CACHE_TYPE {
+    CacheUnified,
+    CacheInstruction,
+    CacheData,
+    CacheTrace 
+} PROCESSOR_CACHE_TYPE;
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+    RelationProcessorCore,
+    RelationNumaNode,
+    RelationCache,
+    RelationProcessorPackage 
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+#define CACHE_FULLY_ASSOCIATIVE 0xFF
+
+typedef struct _CACHE_DESCRIPTOR {
+    BYTE Level;
+    BYTE Associativity;
+    WORD LineSize;
+    DWORD Size;
+    PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+    ULONG_PTR ProcessorMask;
+    LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+    union {
+        struct {
+            BYTE Flags;
+        } ProcessorCore;
+        struct {
+        DWORD NodeNumber;
+        } NumaNode;
+        CACHE_DESCRIPTOR Cache;
+        ULONGLONG Reserved[2];
+    };
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
+
 NTSYSAPI
 SIZE_T
 STDCALL

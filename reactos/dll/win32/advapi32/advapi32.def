@@ -107,6 +107,7 @@ CreateProcessAsUserA@44
 ;CreateProcessAsUserSecure
 CreateProcessAsUserW@44
 ;CreateProcessWithLogonW
+CreateProcessWithTokenW@36
 CreateRestrictedToken@36
 CreateServiceA@52
 CreateServiceW@52

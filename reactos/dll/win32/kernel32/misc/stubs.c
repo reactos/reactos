@@ -1402,3 +1402,104 @@ Wow64RevertWow64FsRedirection (VOID * pv)
     STUB;
     return FALSE;
 }
+
+UINT
+WINAPI
+EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
+                         OUT PVOID pFirmwareTableBuffer,
+                         IN DWORD BufferSize)
+{
+    STUB;
+    return 0;
+}
+
+BOOL
+WINAPI
+GetSystemFileCacheSize(OUT PSIZE_T lpMinimumFileCacheSize,
+                       OUT PSIZE_T lpMaximumFileCacheSize,
+                       OUT PDWORD lpFlags)
+{
+    STUB;
+    return FALSE;
+}
+
+UINT
+WINAPI
+GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
+                       IN DWORD FirmwareTableID,
+                       OUT PVOID pFirmwareTableBuffer,
+                       IN DWORD BufferSize)
+{
+    STUB;
+    return 0;
+}
+
+BOOL
+WINAPI
+SetSystemFileCacheSize(IN SIZE_T MinimumFileCacheSize,
+                       IN SIZE_T MaximumFileCacheSize,
+                       IN DWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
+{
+    STUB;
+    return FALSE;
+}
+
+HANDLE
+WINAPI
+ReOpenFile(IN HANDLE hOriginalFile,
+           IN DWORD dwDesiredAccess,
+           IN DWORD dwShareMode,
+           IN DWORD dwFlags)
+{
+    STUB;
+    return INVALID_HANDLE_VALUE;
+}
+
+BOOL
+WINAPI
+SetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           IN SIZE_T dwMinimumWorkingSetSize,
+                           IN SIZE_T dwMaximumWorkingSetSize,
+                           IN DWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           OUT PSIZE_T lpMinimumWorkingSetSize,
+                           OUT PSIZE_T lpMaximumWorkingSetSize,
+                           OUT PDWORD Flags)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
+                               IN OUT PDWORD ReturnLength)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+GetNumaAvailableMemoryNode(IN UCHAR Node,
+                           OUT PULONGLONG AvailableBytes)
+{
+    STUB;
+    return FALSE;
+}

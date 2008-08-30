@@ -670,4 +670,18 @@ GetSiteSidFromToken(IN HANDLE TokenHandle)
     return PSiteSid;
 }
 
-
+BOOL
+WINAPI
+CreateProcessWithTokenW(IN HANDLE hToken,
+                        IN DWORD dwLogonFlags,
+                        IN LPCWSTR lpApplicationName OPTIONAL,
+                        IN OUT LPWSTR lpCommandLine OPTIONAL,
+                        IN DWORD dwCreationFlags,
+                        IN LPVOID lpEnvironment OPTIONAL,
+                        IN LPCWSTR lpCurrentDirectory OPTIONAL,
+                        IN LPSTARTUPINFOW lpStartupInfo,
+                        OUT LPPROCESS_INFORMATION lpProcessInfo)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
