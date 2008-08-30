@@ -1,33 +1,33 @@
-1   stdcall  accept(long ptr ptr) WS_accept
-2   stdcall  bind(long ptr long) WS_bind
-3   stdcall  closesocket(long) WS_closesocket
-4   stdcall  connect(long ptr long) WS_connect
-5   stdcall  getpeername(long ptr ptr) WS_getpeername
-6   stdcall  getsockname(long ptr ptr) WS_getsockname
-7   stdcall  getsockopt(long long long ptr ptr) WS_getsockopt
-8   stdcall  htonl(long) WS_htonl
-9   stdcall  htons(long) WS_htons
-10  stdcall  ioctlsocket(long long ptr) WS_ioctlsocket
-11  stdcall  inet_addr(str) WS_inet_addr
-12  stdcall  inet_ntoa(ptr) WS_inet_ntoa
-13  stdcall  listen(long long) WS_listen
-14  stdcall  ntohl(long) WS_ntohl
-15  stdcall  ntohs(long) WS_ntohs
-16  stdcall  recv(long ptr long long) WS_recv
-17  stdcall  recvfrom(long ptr long long ptr ptr) WS_recvfrom
-18  stdcall  select(long ptr ptr ptr ptr) WS_select
-19  stdcall  send(long ptr long long) WS_send
-20  stdcall  sendto(long ptr long long ptr long) WS_sendto
-21  stdcall  setsockopt(long long long ptr long) WS_setsockopt
-22  stdcall  shutdown(long long) WS_shutdown
-23  stdcall  socket(long long long) WS_socket
-51  stdcall  gethostbyaddr(ptr long long) WS_gethostbyaddr
-52  stdcall  gethostbyname(str) WS_gethostbyname
-53  stdcall  getprotobyname(str) WS_getprotobyname
-54  stdcall  getprotobynumber(long) WS_getprotobynumber
-55  stdcall  getservbyname(str str) WS_getservbyname
-56  stdcall  getservbyport(long str) WS_getservbyport
-57  stdcall  gethostname(ptr long) WS_gethostname
+1   stdcall  accept(long ptr ptr)
+2   stdcall  bind(long ptr long)
+3   stdcall  closesocket(long)
+4   stdcall  connect(long ptr long)
+5   stdcall  getpeername(long ptr ptr)
+6   stdcall  getsockname(long ptr ptr)
+7   stdcall  getsockopt(long long long ptr ptr)
+8   stdcall  htonl(long)
+9   stdcall  htons(long)
+10  stdcall  ioctlsocket(long long ptr)
+11  stdcall  inet_addr(str)
+12  stdcall  inet_ntoa(ptr)
+13  stdcall  listen(long long)
+14  stdcall  ntohl(long)
+15  stdcall  ntohs(long)
+16  stdcall  recv(long ptr long long)
+17  stdcall  recvfrom(long ptr long long ptr ptr)
+18  stdcall  select(long ptr ptr ptr ptr)
+19  stdcall  send(long ptr long long)
+20  stdcall  sendto(long ptr long long ptr long)
+21  stdcall  setsockopt(long long long ptr long)
+22  stdcall  shutdown(long long)
+23  stdcall  socket(long long long)
+51  stdcall  gethostbyaddr(ptr long long)
+52  stdcall  gethostbyname(str)
+53  stdcall  getprotobyname(str)
+54  stdcall  getprotobynumber(long)
+55  stdcall  getservbyname(str str)
+56  stdcall  getservbyport(long str)
+57  stdcall  gethostname(ptr long)
 
 101 stdcall WSAAsyncSelect(long long long long)
 102 stdcall WSAAsyncGetHostByAddr(long long ptr long long ptr long)
@@ -50,7 +50,7 @@
 
 500 stub     WEP
 
-@ stdcall GetAddrInfoW(wstr wstr ptr ptr)
+# @ stdcall GetAddrInfoW(wstr wstr ptr ptr)
 @ stdcall WSApSetPostRoutine(ptr)
 @ stdcall WPUCompleteOverlappedRequest(long ptr long long ptr)
 @ stdcall WSAAccept(long ptr ptr ptr long)
@@ -114,6 +114,6 @@
 @ stub    WSCUpdateProvider
 @ stub    WSCWriteNameSpaceOrder
 @ stdcall WSCWriteProviderOrder(ptr long)
-@ stdcall freeaddrinfo(ptr) WS_freeaddrinfo
-@ stdcall getaddrinfo(str str ptr ptr) WS_getaddrinfo
-@ stdcall getnameinfo(ptr long ptr long ptr long long) WS_getnameinfo
+@ stdcall freeaddrinfo(ptr)
+@ stdcall getaddrinfo(str str ptr ptr)
+@ stdcall getnameinfo(ptr long ptr long ptr long long)
