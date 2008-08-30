@@ -4695,10 +4695,7 @@ VOID
 MemoryBarrier(VOID)
 {
     LONG Barrier;
-    __asm__ __volatile__
-    {
-        xchg Barrier, eax
-    }
+    __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #elif defined (_M_AMD64)
 #define MemoryBarrier()
