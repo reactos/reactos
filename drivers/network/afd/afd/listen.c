@@ -17,6 +17,7 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
                            PFILE_OBJECT NewFileObject,
 		                   PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
+    NTSTATUS Status;
 
     if( !SocketAcquireStateLock( FCB ) ) { 
         LostSocket( Irp );
@@ -33,15 +34,21 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     FCB->RemoteAddress =
 	TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
+    if( !FCB->RemoteAddress ) 
+	Status = STATUS_NO_MEMORY;
+    else
+	Status = MakeSocketIntoConnection( FCB );
+
+    if( NT_SUCCESS(Status) ) {
+	FCB->PollState |= AFD_EVENT_SEND;
+	PollReeval( DeviceExt, NewFileObject );
+    }
+
     if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-
+    
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-
-    MakeSocketIntoConnection( FCB );
-    FCB->PollState |= AFD_EVENT_SEND;
-    PollReeval( DeviceExt, NewFileObject );
 
     SocketStateUnlock( FCB );
 }
