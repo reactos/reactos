@@ -33,6 +33,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
+    NTSTATUS Status;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
@@ -50,14 +51,18 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 
     FCB->State = SOCKET_STATE_CONNECTED;
 
-    return TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-		       FCB->Connection.Object,
-		       TDI_RECEIVE_NORMAL,
-		       FCB->Recv.Window,
-		       FCB->Recv.Size,
-		       &FCB->ReceiveIrp.Iosb,
-		       ReceiveComplete,
-		       FCB );
+    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+		         FCB->Connection.Object,
+		         TDI_RECEIVE_NORMAL,
+		         FCB->Recv.Window,
+		         FCB->Recv.Size,
+		         &FCB->ReceiveIrp.Iosb,
+		         ReceiveComplete,
+		         FCB );
+
+   if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+
+   return Status;
 }
 
 static NTSTATUS NTAPI StreamSocketConnectComplete
