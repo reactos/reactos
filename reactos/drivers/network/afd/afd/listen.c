@@ -17,6 +17,7 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
                            PFILE_OBJECT NewFileObject,
 		                   PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
+    NTSTATUS Status;
 
     if( !SocketAcquireStateLock( FCB ) ) { 
         LostSocket( Irp );
@@ -26,20 +27,27 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     /* Transfer the connection to the new socket, launch the opening read */
     AFD_DbgPrint(MID_TRACE,("Completing a real accept (FCB %x)\n", FCB));
 
-    FCB->State = SOCKET_STATE_CONNECTED;
     FCB->Connection = Qelt->Object;
+
+    if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
     FCB->RemoteAddress =
 	TaCopyTransportAddress( Qelt->ConnInfo->RemoteAddress );
 
+    if( !FCB->RemoteAddress ) 
+	Status = STATUS_NO_MEMORY;
+    else
+	Status = MakeSocketIntoConnection( FCB );
+
+    if( NT_SUCCESS(Status) ) {
+	FCB->PollState |= AFD_EVENT_SEND;
+	PollReeval( DeviceExt, NewFileObject );
+    }
+
     if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-
+    
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-
-    MakeSocketIntoConnection( FCB );
-    FCB->PollState |= AFD_EVENT_SEND;
-    PollReeval( DeviceExt, NewFileObject );
 
     SocketStateUnlock( FCB );
 }
@@ -90,7 +98,7 @@ static NTSTATUS NTAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
-    NTSTATUS Status = STATUS_FILE_CLOSED;
+    NTSTATUS Status = STATUS_SUCCESS;
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PAFD_TDI_OBJECT_QELT Qelt;
 
@@ -99,7 +107,7 @@ static NTSTATUS NTAPI ListenComplete
 	return STATUS_CANCELLED;
     }
 
-    if( !SocketAcquireStateLock( FCB ) ) return Status;
+    if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
     FCB->ListenIrp.InFlightRequest = NULL;
 
@@ -114,8 +122,10 @@ static NTSTATUS NTAPI ListenComplete
 
     Qelt = ExAllocatePool( NonPagedPool, sizeof(*Qelt) );
     if( !Qelt ) {
+	/* Is this correct? */
 	TdiCloseDevice( FCB->Connection.Handle,
 			FCB->Connection.Object );
+	Status = STATUS_NO_MEMORY;
     } else {
         UINT AddressType =
             FCB->LocalAddress->Address[0].AddressType;
@@ -128,11 +138,12 @@ static NTSTATUS NTAPI ListenComplete
                                 ConnectionReturnInfo->RemoteAddress));
 
         TdiBuildNullConnectionInfo( &Qelt->ConnInfo, AddressType );
-        TaCopyTransportAddressInPlace
-            ( Qelt->ConnInfo->RemoteAddress,
-              FCB->ListenIrp.ConnectionReturnInfo->RemoteAddress );
-
-	InsertTailList( &FCB->PendingConnections, &Qelt->ListEntry );
+        if( Qelt->ConnInfo ) {
+            TaCopyTransportAddressInPlace
+               ( Qelt->ConnInfo->RemoteAddress,
+                 FCB->ListenIrp.ConnectionReturnInfo->RemoteAddress );
+            InsertTailList( &FCB->PendingConnections, &Qelt->ListEntry );
+        } else Status = STATUS_NO_MEMORY;
     }
 
     /* Satisfy a pre-accept request if one is available */
@@ -160,7 +171,7 @@ static NTSTATUS NTAPI ListenComplete
 
     SocketStateUnlock( FCB );
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
