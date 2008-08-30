@@ -9,4 +9,3 @@
 @ stub SfcIsFileProtected
 @ stub SfcWLEventLogoff
 @ stub SfcWLEventLogon
-@ stdcall start (long long ptr) DllMain

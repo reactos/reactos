@@ -15,4 +15,3 @@
 @ stub SfcWLEventLogoff
 @ stub SfcWLEventLogon
 @ stdcall SfpVerifyFile (str str long)
-@ stdcall start (long long ptr) DllMain
