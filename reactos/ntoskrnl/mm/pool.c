@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;

@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 POBJECT_TYPE DbgkDebugObjectType;
 FAST_MUTEX DbgkpProcessDebugPortMutex;

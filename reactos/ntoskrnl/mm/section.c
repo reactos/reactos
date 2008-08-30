@@ -46,7 +46,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 #include <reactos/exeformat.h>
 
 #if defined (ALLOC_PRAGMA)
