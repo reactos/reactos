@@ -298,6 +298,9 @@
 <directory name="sfc">
 	<xi:include href="sfc/sfc.rbuild" />
 </directory>
+<directory name="sfc_os">
+	<xi:include href="sfc_os/sfc_os.rbuild" />
+</directory>
 <directory name="shdocvw">
 	<xi:include href="shdocvw/shdocvw.rbuild" />
 </directory>

@@ -10,9 +10,9 @@
 @ stdcall SRSetRestorePoint (ptr ptr)  SRSetRestorePointA
 @ stdcall SRSetRestorePointA (ptr ptr)
 @ stdcall SRSetRestorePointW (ptr ptr)
-@ stub SfcGetNextProtectedFile
-@ stub SfcIsFileProtected
+@ stdcall SfcGetNextProtectedFile (ptr ptr) sfc_os.SfcGetNextProtectedFile
+@ stdcall SfcIsFileProtected (ptr wstr) sfc_os.SfcIsFileProtected
 @ stub SfcWLEventLogoff
 @ stub SfcWLEventLogon
-@ stdcall SfpVerifyFile (ptr ptr long)
+@ stdcall SfpVerifyFile (str str long)
 @ stdcall start (long long ptr) DllMain
