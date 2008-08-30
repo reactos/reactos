@@ -767,3 +767,7 @@
 @ varargs wsprintfW(wstr wstr)
 @ stdcall wvsprintfA(ptr str ptr)
 @ stdcall wvsprintfW(ptr wstr ptr)
+
+# ROS specific exports
+@ stdcall PrivateCsrssManualGuiCheck(long)
+@ stdcall PrivateCsrssInitialized()
