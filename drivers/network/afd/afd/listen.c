@@ -27,7 +27,6 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     /* Transfer the connection to the new socket, launch the opening read */
     AFD_DbgPrint(MID_TRACE,("Completing a real accept (FCB %x)\n", FCB));
 
-    FCB->State = SOCKET_STATE_CONNECTED;
     FCB->Connection = Qelt->Object;
 
     if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
