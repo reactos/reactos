@@ -27,6 +27,9 @@ TDI_STATUS InfoTdiQueryGetAddrTable( PNDIS_BUFFER Buffer,
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
+    if (!IpAddress)
+	return TDI_NO_RESOURCES;
+
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
@@ -80,7 +83,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
     if( !RCache || !RouteEntries ) {
 	if( RCache ) ExFreePool( RCache );
 	if( RouteEntries ) ExFreePool( RouteEntries );
-	return STATUS_NO_MEMORY;
+	return TDI_NO_RESOURCES;
     }
 
     RtlZeroMemory( RouteEntries, Size );
