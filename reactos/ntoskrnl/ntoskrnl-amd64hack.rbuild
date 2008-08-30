@@ -95,6 +95,7 @@
 				<file>except.c</file>
 				<file>irql.c</file>
 				<file>kiinit.c</file>
+				<file>spinlock.c</file>
 				<file>thrdini.c</file>
 				<file>trap.S</file>
 			</directory>

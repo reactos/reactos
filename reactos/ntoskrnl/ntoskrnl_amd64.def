@@ -4,16 +4,6 @@
 ;
 EXPORTS
 ;
-KfAcquireSpinLock
-KfReleaseSpinLock
-KefAcquireSpinLockAtDpcLevel
-KefReleaseSpinLockFromDpcLevel
-KeInitializeSpinLock
-KeGetCurrentProcessorNumber
-RtlConvertUlongToLargeInteger
-RtlExtendedIntegerMultiply
-;
-; original:
 CcCanIWrite
 CcCopyRead
 CcCopyWrite

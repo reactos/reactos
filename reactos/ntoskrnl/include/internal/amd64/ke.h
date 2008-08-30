@@ -65,6 +65,9 @@ typedef struct _KIDT_INIT
 //#define KeArchFnInit() Ke386FnInit()
 #define KeArchFnInit() DbgPrint("KeArchFnInit is unimplemented!\n");
 #define KeArchHaltProcessor() Ke386HaltProcessor()
+#define KfLowerIrql KeLowerIrql
+#define KfAcquireSpinLock KeAcquireSpinLock
+#define KfReleaseSpinLock KeReleaseSpinLock
 
 extern ULONG Ke386CacheAlignment;
 
