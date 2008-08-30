@@ -614,7 +614,7 @@
 @ stub SetCursorContents
 @ stdcall SetCursorPos(long long)
 @ stdcall SetDebugErrorLevel(long)
-@ stdcall SetDeskWallPaper(ptr)
+@ stdcall SetDeskWallpaper(ptr)
 # @ stub SetDesktopBitmap
 @ stdcall SetDlgItemInt(long long long long)
 @ stdcall SetDlgItemTextA(long long str)
@@ -680,7 +680,7 @@
 @ stdcall SetWindowsHookExA(long long long long)
 @ stdcall SetWindowsHookExW(long long long long)
 @ stdcall SetWindowsHookW(long ptr)
-@ stdcall ShowCaret(long)
+@ stdcall ShowCaret(long) NtUserShowCaret
 @ stdcall ShowCursor(long)
 @ stdcall ShowOwnedPopups(long long)
 @ stdcall ShowScrollBar(long long long)
@@ -712,17 +712,17 @@
 @ stdcall TranslateMDISysAccel(long ptr)
 @ stdcall TranslateMessage(ptr)
 # @ stub TranslateMessageEx
-@ stdcall UnhookWinEvent(long)
+@ stdcall UnhookWinEvent(long) NtUserUnhookWinEvent
 @ stdcall UnhookWindowsHook(long ptr)
-@ stdcall UnhookWindowsHookEx(long)
+@ stdcall UnhookWindowsHookEx(long) NtUserUnhookWindowsHookEx
 @ stdcall UnionRect(ptr ptr ptr)
-@ stdcall UnloadKeyboardLayout(long)
+@ stdcall UnloadKeyboardLayout(long) NtUserUnloadKeyboardLayout
 @ stub UnlockWindowStation
 @ stdcall UnpackDDElParam(long long ptr ptr)
 @ stdcall UnregisterClassA(str long)
 @ stdcall UnregisterClassW(wstr long)
 @ stdcall UnregisterDeviceNotification(long)
-@ stdcall UnregisterHotKey(long long)
+@ stdcall UnregisterHotKey(long long) NtUserUnregisterHotKey
 # @ stub UnregisterMessagePumpHook
 # @ stub UnregisterUserApiHook
 @ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long)
@@ -737,7 +737,7 @@
 @ stdcall UserRealizePalette(long)
 @ stub UserRegisterWowHandlers
 # @ stub UserSetDeviceHoldState
-@ stdcall UserSignalProc(long long long long)
+# @ stdcall UserSignalProc(long long long long)
 # @ stub VRipOutput
 # @ stub VTagOutput
 @ stdcall ValidateRect(long ptr)
