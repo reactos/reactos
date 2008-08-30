@@ -311,6 +311,7 @@
   @ extern _tzname msvcrt._tzname
   @ cdecl _tzset() msvcrt._tzset
   @ cdecl _ultoa(long ptr long) msvcrt._ultoa
+  @ cdecl _ultow(long ptr long) msvcrt._ultow
   @ cdecl _umask(long) msvcrt._umask
   @ cdecl _ungetch(long) msvcrt._ungetch
   @ cdecl _unlink(str) msvcrt._unlink
