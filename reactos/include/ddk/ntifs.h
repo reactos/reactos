@@ -3631,28 +3631,67 @@ IoVerifyVolume (
     IN BOOLEAN          AllowRawMount
 );
 
-#ifdef _M_AMD64
-NTKERNELAPI
-#else
+#if !defined (_M_AMD64)
+
 NTHALAPI
-#endif
 KIRQL
 FASTCALL
 KeAcquireQueuedSpinLock (
     IN KSPIN_LOCK_QUEUE_NUMBER Number
 );
 
-#ifdef _M_AMD64
-NTKERNELAPI
-#else
 NTHALAPI
-#endif
 VOID
 FASTCALL
 KeReleaseQueuedSpinLock (
     IN KSPIN_LOCK_QUEUE_NUMBER Number,
     IN KIRQL OldIrql
 );
+
+NTHALAPI
+KIRQL
+FASTCALL
+KeAcquireSpinLockRaiseToSynch(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+
+NTHALAPI
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER Number,
+  PKIRQL OldIrql);
+
+#else
+
+NTKERNELAPI
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number,
+    IN KIRQL OldIrql
+);
+
+NTKERNELAPI
+KIRQL
+KeAcquireSpinLockRaiseToSynch(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+
+NTKERNELAPI
+LOGICAL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER Number,
+  PKIRQL OldIrql);
+
+#endif
 
 NTKERNELAPI
 VOID
