@@ -1208,6 +1208,7 @@ BOOL WINAPI CopyFileExW(LPCWSTR,LPCWSTR,LPPROGRESS_ROUTINE,LPVOID,LPBOOL,DWORD);
 #define CopyMemory RtlCopyMemory
 #define FillMemory RtlFillMemory
 #define ZeroMemory RtlZeroMemory
+#define SecureZeroMemory RtlSecureZeroMemory
 BOOL WINAPI CopySid(DWORD,PSID,PSID);
 #if (_WIN32_WINNT >= 0x0501)
 HANDLE WINAPI CreateActCtxA(PCACTCTXA);

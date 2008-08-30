@@ -4453,6 +4453,23 @@ RtlCompareMemory (
 #define RtlFillMemory(d,l,f) memset((d), (f), (l))
 #define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
 
+FORCEINLINE
+PVOID
+RtlSecureZeroMemory(IN PVOID ptr,
+                    IN SIZE_T cnt)
+{
+    volatile char *vptr = (volatile char *)ptr;
+
+    while (cnt)
+    {
+        *vptr = 0;
+        vptr++;
+        cnt--;
+    }
+
+    return ptr;
+}
+
 typedef struct _OBJECT_TYPE_LIST {
     WORD   Level;
     WORD   Sbz;
@@ -4654,6 +4671,43 @@ BitScanReverse(OUT ULONG *Index,
 #endif
 }
 
+#endif
+
+/* TODO: Other architectures than X86 */
+#if defined(_M_IX86)
+#define PF_TEMPORAL_LEVEL_1 
+#define PF_NON_TEMPORAL_LEVEL_ALL
+#define PreFetchCacheLine(l, a)
+#elif defined (_M_AMD64)
+#define PreFetchCacheLine(l, a)
+#elif defined(_M_PPC)
+#define PreFetchCacheLine(l, a)
+#elif defined(_M_ARM)
+#define PreFetchCacheLine(l, a)
+#else
+#error Unknown architecture
+#endif
+
+/* TODO: Other architectures than X86 */
+#if defined(_M_IX86)
+FORCEINLINE
+VOID
+MemoryBarrier(VOID)
+{
+    LONG Barrier;
+    __asm__ __volatile__
+    {
+        xchg Barrier, eax
+    }
+}
+#elif defined (_M_AMD64)
+#define MemoryBarrier()
+#elif defined(_M_PPC)
+#define MemoryBarrier()
+#elif defined(_M_ARM)
+#define MemoryBarrier()
+#else
+#error Unknown architecture
 #endif
 
 #if defined(_M_IX86)
