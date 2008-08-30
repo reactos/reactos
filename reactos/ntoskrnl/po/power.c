@@ -349,7 +349,7 @@ PoSetPowerState(IN PDEVICE_OBJECT DeviceObject,
 {
     POWER_STATE ps;
 
-    ASSERT_IRQL(DISPATCH_LEVEL);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     ps.SystemState = PowerSystemWorking;  // Fully on
     ps.DeviceState = PowerDeviceD0;       // Fully on

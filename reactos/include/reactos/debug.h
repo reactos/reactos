@@ -16,11 +16,6 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-/*  FIXME: should probably remove this later  */
-#if !defined(CHECKED) && !defined(NDEBUG)
-#define CHECKED
-#endif
-
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
 
@@ -87,13 +82,11 @@ RtlAssert(
 
     /* These are always printed */
     #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
-    #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
     /* These are printed only if NDEBUG is NOT defined */
     #ifndef NDEBUG
 
         #define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
-        #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
     #else
         #ifdef _MSC_VER
@@ -104,7 +97,6 @@ RtlAssert(
         #else
             #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
         #endif
-        #define CHECKPOINT
     #endif
 
     #define UNIMPLEMENTED       DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
@@ -122,8 +114,6 @@ RtlAssert(
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
-    #define CHECKPOINT1
-    #define CHECKPOINT
     #define UNIMPLEMENTED
 
     #define ERR_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
@@ -132,17 +122,8 @@ RtlAssert(
     #define INFO_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #endif
 
-/*
- * FUNCTION: Assert a maximum value for the current irql
- * ARGUMENTS:
- *        x = Maximum irql
- */
-#define ASSERT_IRQL(x) assert(KeGetCurrentIrql()<=(x))
-#define assert_irql(x) assert(KeGetCurrentIrql()<=(x))
-
-#ifndef KEBUGCHECK
-#define KEBUGCHECK(a) DbgPrint("KeBugCheck (0x%X) at %s:%i\n", a, __FILE__,__LINE__), KeBugCheck(a)
-#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx (0x%X, 0x%X, 0x%X, 0x%X, 0x%X) at %s:%i\n", a, b, c, d, e, __FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
-#endif
+#define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
+#define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
+#define ASSERT_IRQL_LESS(x) ASSERT(KeGetCurrentIrql()<(x))
 
 #endif /* __INTERNAL_DEBUG */
