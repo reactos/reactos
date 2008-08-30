@@ -295,6 +295,9 @@
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.rbuild" />
 </directory>
+<directory name="sfc">
+	<xi:include href="sfc/sfc.rbuild" />
+</directory>
 <directory name="shdocvw">
 	<xi:include href="shdocvw/shdocvw.rbuild" />
 </directory>
