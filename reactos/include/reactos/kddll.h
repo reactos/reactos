@@ -51,4 +51,16 @@ KdSendPacket(
     IN OUT PKD_CONTEXT Context
 );
 
+NTSTATUS
+NTAPI
+KdD0Transition(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+KdD3Transition(
+    VOID
+);
+
 #endif
