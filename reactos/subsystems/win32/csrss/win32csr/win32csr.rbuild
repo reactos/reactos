@@ -15,7 +15,6 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>psapi</library>
-	<library>msvcrt</library>
 	<library>psapi</library>
 	<library>shell32</library>
 	<pch>w32csr.h</pch>
