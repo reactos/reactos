@@ -9,7 +9,6 @@
 	<file>msvcrt40.c</file>
 	<file>msvcrt40.spec</file>
 	<library>wine</library>
-	<library>msvcrt</library>
 	<library>kernel32</library>
 </module>
 </group>

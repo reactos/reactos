@@ -11,7 +11,6 @@
 	<file>msvcrt20.c</file>
 	<file>msvcrt20.spec</file>
 	<library>wine</library>
-	<library>msvcrt</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
