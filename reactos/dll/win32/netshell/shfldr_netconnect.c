@@ -773,11 +773,13 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS))
     {
+#if 0
         if (pProperties->MediaType == NCM_LAN)
         {
             hr = ShowLANConnectionStatusDialog(pProperties);
             NcFreeNetconProperties(pProperties);
         }
+#endif
         return hr;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES))

@@ -1,12 +1,15 @@
 #include "precomp.h"
+#include <initguid.h>
+#include <devguid.h>
 
 HINSTANCE netshell_hInstance;
 const GUID CLSID_LANConnectUI            = {0x7007ACC5, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 const GUID CLSID_NetworkConnections      = {0x7007ACC7, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
-const GUID GUID_DEVCLASS_NET             = {0x4d36e972, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18}};
+const GUID CLSID_LanConnectStatusUI      = {0x7007ACCF, 0x3202, 0x11D1, {0xAA, 0xD2, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E}};
 
-static const WCHAR szNetConnectClass[] = L"CLSID\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
-static const WCHAR szLanConnectUI[]    = L"CLSID\\{7007ACC5-3202-11D1-AA-D200805FC1270E}";
+static const WCHAR szNetConnectClass[]    = L"CLSID\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
+static const WCHAR szLanConnectUI[]       = L"CLSID\\{7007ACC5-3202-11D1-AA-D200805FC1270E}";
+static const WCHAR szLanConnectStatusUI[] = L"CLSID\\{7007ACCF-3202-11D1-AA-D200805FC1270E}";
 static const WCHAR szNamespaceKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ControlPanel\\NameSpace\\{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
 
 static INTERFACE_TABLE InterfaceTable[] =
@@ -22,6 +25,10 @@ static INTERFACE_TABLE InterfaceTable[] =
     {
         &CLSID_LANConnectUI,
         LanConnectUI_Constructor
+    },
+    {
+        &CLSID_LanConnectStatusUI,
+        LanConnectStatusUI_Constructor
     },
     {
         NULL,
@@ -62,6 +69,7 @@ DllRegisterServer(void)
     WCHAR szNet[20];
     UINT Length, Offset;
 
+
     if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szNetConnectClass, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
         return SELFREG_E_CLASS;
 
@@ -98,6 +106,7 @@ DllRegisterServer(void)
     if (RegCreateKeyExW(hKey, L"InProcServer32", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
     {
         RegSetValueW(hSubKey, NULL, REG_SZ, &szName[1], (Offset+1) * sizeof(WCHAR));
+        RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ, (LPBYTE)L"Both", 10);
         RegCloseKey(hSubKey);
     }
 
@@ -108,6 +117,32 @@ DllRegisterServer(void)
     }
 
     RegCloseKey(hKey);
+
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szLanConnectUI, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return SELFREG_E_CLASS;
+
+    if (RegCreateKeyExW(hKey, L"InProcServer32", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueW(hSubKey, NULL, REG_SZ, &szName[1], (Offset+1) * sizeof(WCHAR));
+        RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ, (LPBYTE)L"Both", 10);
+        RegCloseKey(hSubKey);
+    }
+
+    RegCloseKey(hKey);
+
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szLanConnectStatusUI, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return SELFREG_E_CLASS;
+
+    if (RegCreateKeyExW(hKey, L"InProcServer32", 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueW(hSubKey, NULL, REG_SZ, &szName[1], (Offset+1) * sizeof(WCHAR));
+        RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ, (LPBYTE)L"Both", 10);
+        RegCloseKey(hSubKey);
+    }
+
+    RegCloseKey(hKey);
+
+
     return S_OK;
 }
 
@@ -128,7 +163,7 @@ DllGetClassObject(
 {
     UINT i;
     HRESULT	hres = E_OUTOFMEMORY;
-    IClassFactory * pcf = NULL;
+    IClassFactory * pcf = NULL;	
 
     if (!ppv)
         return E_INVALIDARG;

@@ -33,6 +33,9 @@
 #include <setupapi.h>
 #include <devguid.h>
 #include <netcon.h>
+#include <docobj.h>
+#include <netcfgx.h>
+
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -94,7 +97,9 @@ HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID r
 
 /* lanconnectui.c */
 HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
-HRESULT ShowLANConnectionStatusDialog(NETCON_PROPERTIES * pProperties);
+
+/* lanstatusui.c */
+HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 #define NCCF_NOTIFY_DISCONNECTED 0x100000
 

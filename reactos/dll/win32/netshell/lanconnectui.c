@@ -1,5 +1,9 @@
 #include <precomp.h>
 
+/// CLASSID
+/// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
+/// open network properties and wlan properties
+
 typedef enum
 {
     NET_TYPE_CLIENT = 1,
@@ -21,11 +25,6 @@ typedef struct
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
 
-
-/// CLASSID
-/// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
-/// open network properties and wlan properties
-
 HPROPSHEETPAGE
 InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
 {
@@ -46,56 +45,6 @@ InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWS
     return CreatePropertySheetPageW(&ppage);
 }
 
-HRESULT
-LaunchUIDlg(UINT * pResourceIDs, DLGPROC * pDlgs, UINT Count, NETCON_PROPERTIES * pProperties)
-{
-    HPROPSHEETPAGE * hpsp;
-    PROPSHEETHEADERW psh;
-    BOOL ret;
-    UINT Index, Offset;
-
-    hpsp = CoTaskMemAlloc(Count * sizeof(HPROPSHEETPAGE));
-    if (!hpsp)
-        return E_OUTOFMEMORY;
-
-    ZeroMemory(hpsp, Count * sizeof(HPROPSHEETPAGE));
-
-    Index = 0;
-    Offset = 0;
-    do
-    {
-        hpsp[Offset] = InitializePropertySheetPage(MAKEINTRESOURCEW(pResourceIDs[Index]), pDlgs[Index], (LPARAM)pProperties, NULL);
-        if (hpsp[Offset])
-            Offset++;
-
-    }while(++Index < Count);
-
-    if (!Offset)
-    {
-        CoTaskMemFree(hpsp);
-        return E_FAIL;
-    }
-
-
-   ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
-   psh.dwSize = sizeof(PROPSHEETHEADERW);
-   psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
-   psh.pszCaption = pProperties->pszwName;
-   psh.hwndParent = NULL;
-   psh.u3.phpage = hpsp;
-   psh.nPages = Offset;
-   psh.hInstance = netshell_hInstance;
-
-
-   ret = PropertySheetW(&psh);
-   CoTaskMemFree(hpsp);
-
-   if (ret < 0)
-       return E_FAIL;
-   else
-       return S_OK;
-}
-
 VOID
 AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName)
 {
@@ -106,8 +55,8 @@ AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName)
     lvItem.pszText = szName;
     lvItem.lParam = (LPARAM)pItem;
     lvItem.iItem = ListView_GetItemCount(hDlgCtrl);
-
-    SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    lvItem.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    ListView_SetCheckState(hDlgCtrl, lvItem.iItem, TRUE);
 }
 
 VOID
@@ -117,8 +66,8 @@ EnumClientServiceProtocol(HWND hDlgCtrl, HKEY hKey, UINT Type)
     DWORD dwSize;
     DWORD dwRetVal;
     DWORD dwCharacteristics;
-    WCHAR szName[60];
-    WCHAR szText[40];
+    WCHAR szName[100];
+    WCHAR szText[100];
     WCHAR szHelp[200];
     HKEY hSubKey;
     static WCHAR szNDI[] = L"\\Ndi";
@@ -173,6 +122,10 @@ EnumClientServiceProtocol(HWND hDlgCtrl, HKEY hKey, UINT Type)
                 RegCloseKey(hSubKey);
             }
 
+            if (!wcslen(szText))
+                continue;
+
+
             pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
             if (!pItem)
                 continue;
@@ -192,40 +145,96 @@ EnumClientServiceProtocol(HWND hDlgCtrl, HKEY hKey, UINT Type)
 
 }
 
+VOID
+EnumComponents(HWND hDlgCtrl, INetCfg * pNCfg, const GUID * CompGuid, UINT Type)
+{
+    HRESULT hr;
+    IEnumNetCfgComponent * pENetCfg;
+    INetCfgComponent  *pNCfgComp;
+    ULONG Num;
+    DWORD dwCharacteristics;
+    LPOLESTR pDisplayName, pHelpText;
+    PNET_ITEM pItem;
+
+
+    hr = INetCfg_EnumComponents(pNCfg, CompGuid, &pENetCfg);
+    if (FAILED(hr))
+    {
+        INetCfg_Release(pNCfg);
+        return;
+    }
+    while(IEnumNetCfgComponent_Next(pENetCfg, 1, &pNCfgComp, &Num) == S_OK)
+    {
+          hr = INetCfgComponent_GetCharacteristics(pNCfgComp, &dwCharacteristics);
+          if (SUCCEEDED(hr) && (dwCharacteristics & NCF_HIDDEN))
+          {
+              INetCfgComponent_Release(pNCfgComp);
+              continue;
+          }
+          pDisplayName = NULL;
+          pHelpText = NULL;
+          hr = INetCfgComponent_GetDisplayName(pNCfgComp, &pDisplayName);
+          hr = INetCfgComponent_GetHelpText(pNCfgComp, &pHelpText);
+
+            pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
+            if (!pItem)
+                continue;
+          pItem->dwCharacteristics = dwCharacteristics;
+          pItem->szHelp = pHelpText;
+          pItem->Type = Type;
+          AddItemToListView(hDlgCtrl, pItem, pDisplayName);
+          CoTaskMemFree(pDisplayName);
+
+          INetCfgComponent_Release(pNCfgComp);
+    }
+    IEnumNetCfgComponent_Release(pENetCfg);
+}
+
 
 VOID
 InitializeLANPropertiesUIDlg(HWND hwndDlg)
 {
-    static WCHAR szNetClient[] = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4d36e973-e325-11ce-bfc1-08002be10318}";
-    static WCHAR szNetService[] = L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4d36e974-e325-11ce-bfc1-08002be10318}";
-    static WCHAR szNetProtocol[] =L"System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}";
-    HKEY hKey;
-    HWND hDlgCtrl;
+    HRESULT hr;
+    INetCfg * pNCfg;
+    HWND hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
+    LVCOLUMNW lc;
+    RECT rc;
+    DWORD dwStyle;
 
-    hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
-    /* Enumerate Clients */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szNetClient, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    memset(&lc, 0, sizeof(LV_COLUMN));
+    lc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
+    lc.fmt = LVCFMT_FIXED_WIDTH;
+    if (GetClientRect(hDlgCtrl, &rc))
     {
-        EnumClientServiceProtocol(hwndDlg, hKey, NET_TYPE_CLIENT);
-        RegCloseKey(hKey);
+        lc.mask |= LVCF_WIDTH;
+        lc.cx = rc.right - rc.left;
+    }
+    lc.pszText    = L"";
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&lc);
+    dwStyle = (DWORD) SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+    dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
+    SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
+
+
+
+    hr = CoCreateInstance(&CLSID_CNetCfg, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfg, (LPVOID*)&pNCfg);
+    if (FAILED(hr))
+        return;
+
+    hr = INetCfg_Initialize(pNCfg, NULL);
+    if (FAILED(hr))
+    {
+        INetCfg_Release(pNCfg);
+        return;
     }
 
-    /* Enumerate Service */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szNetService, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-    {
-        EnumClientServiceProtocol(hwndDlg, hKey, NET_TYPE_SERVICE);
-        RegCloseKey(hKey);
-    }
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
+    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
 
-    /* Enumerate Protocol */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szNetProtocol, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-    {
-        EnumClientServiceProtocol(hwndDlg, hKey, NET_TYPE_PROTOCOL);
-        RegCloseKey(hKey);
-    }
-
-
+    INetCfg_Release(pNCfg);
 }
+
 
 
 INT_PTR
@@ -238,7 +247,11 @@ LANPropertiesUIDlg(
 )
 {
     PROPSHEETPAGE *page;
-    NETCON_PROPERTIES * pProperties = (NETCON_PROPERTIES*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    LPNMLISTVIEW lppl;
+    LVITEMW li;
+    PNET_ITEM pItem;
+    NETCON_PROPERTIES * pProperties;
+
     switch(uMsg)
     {
         case WM_INITDIALOG:
@@ -257,52 +270,39 @@ LANPropertiesUIDlg(
             }
             InitializeLANPropertiesUIDlg(hwndDlg);
             return TRUE;
+        case WM_NOTIFY:
+            lppl = (LPNMLISTVIEW) lParam;
+            if (lppl->hdr.code == LVN_ITEMCHANGING)
+            {
+                    ZeroMemory(&li, sizeof(li));
+                    li.mask = LVIF_PARAM;
+                    li.iItem = lppl->iItem;
+                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
+                        return TRUE;
+
+                    pItem = (PNET_ITEM)li.lParam;
+                    if (!pItem)
+                        return TRUE;
+
+                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                    {
+                        /* new focused item */
+                        if (pItem->dwCharacteristics & NCF_NOT_USER_REMOVABLE)
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), FALSE);
+                        else
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), TRUE);
+
+                        if (pItem->dwCharacteristics & NCF_HAS_UI)
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), TRUE);
+                        else
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), FALSE);
+
+                        SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0, (LPARAM)pItem->szHelp);
+                    }
+             }
+             break;
     }
     return FALSE;
-}
-
-
-HRESULT
-ShowLANConnectionPropertyDialog(NETCON_PROPERTIES * pProperties)
-{
-    UINT ResourceId[1] = { IDD_NETPROPERTIES };
-    DLGPROC Dlgs[1] = {LANPropertiesUIDlg};
-    INITCOMMONCONTROLSEX ic;
-
-
-    ic.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    ic.dwICC  = ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&ic);
-
-    return LaunchUIDlg(ResourceId, Dlgs, 1, pProperties);
-}
-
-INT_PTR
-CALLBACK
-LANStatusUIDlg(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
-{
-    NETCON_PROPERTIES * pProperties = (NETCON_PROPERTIES*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-            pProperties = (NETCON_PROPERTIES*)lParam;
-            return TRUE;
-    }
-    return FALSE;
-}
-
-
-HRESULT
-ShowLANConnectionStatusDialog(NETCON_PROPERTIES * pProperties)
-{
-    UINT ResourceId[1] = { IDD_NETSTATUS };
-    DLGPROC Dlgs[1] = {LANStatusUIDlg};
-    return LaunchUIDlg(ResourceId, Dlgs, 1, pProperties);
 }
 
 static
