@@ -1,195 +1,169 @@
-/*
- * string.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Definitions for memory and string functions.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef _INC_STRING
+#define _INC_STRING
 
-#ifndef _STRING_H_
-#define	_STRING_H_
-
-/* All the headers include this file. */
 #include <_mingw.h>
-
-/*
- * Define size_t, wchar_t and NULL
- */
-#define __need_size_t
-#define __need_wchar_t
-#define	__need_NULL
-#ifndef RC_INVOKED
-#include <stddef.h>
-#endif	/* Not RC_INVOKED */
-
-#ifndef RC_INVOKED
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * Prototypes of the ANSI Standard C library string functions.
- */
-_CRTIMP void* __cdecl __MINGW_NOTHROW	memchr (const void*, int, size_t) __MINGW_ATTRIB_PURE;
-_CRTIMP int __cdecl __MINGW_NOTHROW 	memcmp (const void*, const void*, size_t) __MINGW_ATTRIB_PURE;
-_CRTIMP void* __cdecl __MINGW_NOTHROW 	memcpy (void*, const void*, size_t);
-_CRTIMP void* __cdecl __MINGW_NOTHROW	memmove (void*, const void*, size_t);
-_CRTIMP void* __cdecl __MINGW_NOTHROW	memset (void*, int, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strcat (char*, const char*);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strchr (const char*, int)  __MINGW_ATTRIB_PURE;
-_CRTIMP int __cdecl __MINGW_NOTHROW	strcmp (const char*, const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP int __cdecl __MINGW_NOTHROW	strcoll (const char*, const char*);	/* Compare using locale */
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strcpy (char*, const char*);
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	strcspn (const char*, const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strerror (int); /* NOTE: NOT an old name wrapper. */
-
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	strlen (const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strncat (char*, const char*, size_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW	strncmp (const char*, const char*, size_t)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strncpy (char*, const char*, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strpbrk (const char*, const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strrchr (const char*, int)  __MINGW_ATTRIB_PURE;
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	strspn (const char*, const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strstr (const char*, const char*)  __MINGW_ATTRIB_PURE;
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strtok (char*, const char*);
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	strxfrm (char*, const char*, size_t);
-
-#ifndef __STRICT_ANSI__
-/*
- * Extra non-ANSI functions provided by the CRTDLL library
- */
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strerror (const char *);
-_CRTIMP void* __cdecl __MINGW_NOTHROW	_memccpy (void*, const void*, int, size_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW 	_memicmp (const void*, const void*, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW 	_strdup (const char*) __MINGW_ATTRIB_MALLOC;
-_CRTIMP int __cdecl __MINGW_NOTHROW	_strcmpi (const char*, const char*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_stricmp (const char*, const char*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_stricoll (const char*, const char*);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strlwr (char*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_strnicmp (const char*, const char*, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strnset (char*, int, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strrev (char*);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strset (char*, int);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	_strupr (char*);
-_CRTIMP void __cdecl __MINGW_NOTHROW	_swab (const char*, char*, size_t);
-
-#ifdef __MSVCRT__
-_CRTIMP int __cdecl __MINGW_NOTHROW  _strncoll(const char*, const char*, size_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW  _strnicoll(const char*, const char*, size_t);
+#ifndef _NLSCMP_DEFINED
+#define _NLSCMP_DEFINED
+#define _NLSCMPERROR 2147483647
 #endif
 
-#ifndef	_NO_OLDNAMES
-/*
- * Non-underscored versions of non-ANSI functions. They live in liboldnames.a
- * and provide a little extra portability. Also a few extra UNIX-isms like
- * strcasecmp.
- */
-_CRTIMP void* __cdecl __MINGW_NOTHROW	memccpy (void*, const void*, int, size_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW	memicmp (const void*, const void*, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strdup (const char*) __MINGW_ATTRIB_MALLOC;
-_CRTIMP int __cdecl __MINGW_NOTHROW	strcmpi (const char*, const char*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	stricmp (const char*, const char*);
-__CRT_INLINE int __cdecl __MINGW_NOTHROW strcasecmp (const char*, const char *);
-__CRT_INLINE int __cdecl __MINGW_NOTHROW
-strcasecmp (const char * __sz1, const char * __sz2)
-  {return _stricmp (__sz1, __sz2);}
-_CRTIMP int __cdecl __MINGW_NOTHROW	stricoll (const char*, const char*);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strlwr (char*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	strnicmp (const char*, const char*, size_t);
-__CRT_INLINE int  __cdecl __MINGW_NOTHROW strncasecmp (const char *, const char *, size_t);
-__CRT_INLINE int __cdecl __MINGW_NOTHROW
-strncasecmp (const char * __sz1, const char * __sz2, size_t __sizeMaxCompare)
-  {return _strnicmp (__sz1, __sz2, __sizeMaxCompare);}
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strnset (char*, int, size_t);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strrev (char*);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strset (char*, int);
-_CRTIMP char* __cdecl __MINGW_NOTHROW	strupr (char*);
-#ifndef _UWIN
-_CRTIMP void __cdecl __MINGW_NOTHROW	swab (const char*, char*, size_t);
-#endif /* _UWIN */
-#endif /* _NO_OLDNAMES */
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *)0)
+#endif
+#endif
 
-#endif	/* Not __STRICT_ANSI__ */
+#define _WConst_return _CONST_RETURN
+
+#ifndef _CRT_MEMORY_DEFINED
+#define _CRT_MEMORY_DEFINED
+  _CRTIMP void *__cdecl _memccpy(void *_Dst,const void *_Src,int _Val,size_t _MaxCount);
+  _CONST_RETURN void *__cdecl memchr(const void *_Buf ,int _Val,size_t _MaxCount);
+  _CRTIMP int __cdecl _memicmp(const void *_Buf1,const void *_Buf2,size_t _Size);
+  _CRTIMP int __cdecl _memicmp_l(const void *_Buf1,const void *_Buf2,size_t _Size,_locale_t _Locale);
+  int __cdecl memcmp(const void *_Buf1,const void *_Buf2,size_t _Size);
+  void *__cdecl memcpy(void *_Dst,const void *_Src,size_t _Size);
+  void *__cdecl memset(void *_Dst,int _Val,size_t _Size);
+#ifndef	NO_OLDNAMES
+  void *__cdecl memccpy(void *_Dst,const void *_Src,int _Val,size_t _Size);
+  int __cdecl memicmp(const void *_Buf1,const void *_Buf2,size_t _Size);
+#endif
+#endif
+  char *__cdecl _strset(char *_Str,int _Val);
+  char *__cdecl strcpy(char *_Dest,const char *_Source);
+  char *__cdecl strcat(char *_Dest,const char *_Source);
+  int __cdecl strcmp(const char *_Str1,const char *_Str2);
+  size_t __cdecl strlen(const char *_Str);
+#if 0
+  size_t __cdecl strnlen(const char *_Str,size_t _MaxCount);
+#endif
+  void *__cdecl memmove(void *_Dst,const void *_Src,size_t _Size);
+  _CRTIMP char *__cdecl _strdup(const char *_Src);
+  _CONST_RETURN char *__cdecl strchr(const char *_Str,int _Val);
+  _CRTIMP int __cdecl _stricmp(const char *_Str1,const char *_Str2);
+  _CRTIMP int __cdecl _strcmpi(const char *_Str1,const char *_Str2);
+  _CRTIMP int __cdecl _stricmp_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
+  int __cdecl strcoll(const char *_Str1,const char *_Str2);
+  _CRTIMP int __cdecl _strcoll_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
+  _CRTIMP int __cdecl _stricoll(const char *_Str1,const char *_Str2);
+  _CRTIMP int __cdecl _stricoll_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
+  _CRTIMP int __cdecl _strncoll (const char *_Str1,const char *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _strncoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
+  _CRTIMP int __cdecl _strnicoll (const char *_Str1,const char *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _strnicoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
+  size_t __cdecl strcspn(const char *_Str,const char *_Control);
+  _CRTIMP char *__cdecl _strerror(const char *_ErrMsg);
+  char *__cdecl strerror(int);
+  _CRTIMP char *__cdecl _strlwr(char *_String);
+  char *strlwr_l(char *_String,_locale_t _Locale);
+  char *__cdecl strncat(char *_Dest,const char *_Source,size_t _Count);
+  int __cdecl strncmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _strnicmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _strnicmp_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
+  char *strncpy(char *_Dest,const char *_Source,size_t _Count);
+  _CRTIMP char *__cdecl _strnset(char *_Str,int _Val,size_t _MaxCount);
+  _CONST_RETURN char *__cdecl strpbrk(const char *_Str,const char *_Control);
+  _CONST_RETURN char *__cdecl strrchr(const char *_Str,int _Ch);
+  _CRTIMP char *__cdecl _strrev(char *_Str);
+  size_t __cdecl strspn(const char *_Str,const char *_Control);
+  _CONST_RETURN char *__cdecl strstr(const char *_Str,const char *_SubStr);
+  char *__cdecl strtok(char *_Str,const char *_Delim);
+  _CRTIMP char *__cdecl _strupr(char *_String);
+  _CRTIMP char *_strupr_l(char *_String,_locale_t _Locale);
+  size_t __cdecl strxfrm(char *_Dst,const char *_Src,size_t _MaxCount);
+  _CRTIMP size_t __cdecl _strxfrm_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
+
+#ifndef	NO_OLDNAMES
+  char *__cdecl strdup(const char *_Src);
+  int __cdecl strcmpi(const char *_Str1,const char *_Str2);
+  int __cdecl stricmp(const char *_Str1,const char *_Str2);
+  char *__cdecl strlwr(char *_Str);
+  int __cdecl strnicmp(const char *_Str1,const char *_Str,size_t _MaxCount);
+  __CRT_INLINE int __cdecl strncasecmp (const char *__sz1, const char *__sz2, size_t __sizeMaxCompare) { return _strnicmp (__sz1, __sz2, __sizeMaxCompare); }
+  __CRT_INLINE int __cdecl strcasecmp (const char *__sz1, const char *__sz2) { return _stricmp (__sz1, __sz2); }
+  char *__cdecl strnset(char *_Str,int _Val,size_t _MaxCount);
+  char *__cdecl strrev(char *_Str);
+  char *__cdecl strset(char *_Str,int _Val);
+  char *__cdecl strupr(char *_Str);
+#endif
 
 #ifndef _WSTRING_DEFINED
-/*
- * Unicode versions of the standard calls.
- * Also in wchar.h, where they belong according to ISO standard.
- */
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcscat (wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcschr (const wchar_t*, wchar_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcscmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcscoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcscpy (wchar_t*, const wchar_t*);
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcscspn (const wchar_t*, const wchar_t*);
-/* Note:  _wcserror requires __MSVCRT_VERSION__ >= 0x0700.  */
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcslen (const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsncat (wchar_t*, const wchar_t*, size_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcsncmp(const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsncpy(wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcspbrk(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsrchr(const wchar_t*, wchar_t);
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcsspn(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsstr(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcstok(wchar_t*, const wchar_t*);
-_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcsxfrm(wchar_t*, const wchar_t*, size_t);
-
-#ifndef	__STRICT_ANSI__
-/*
- * Unicode versions of non-ANSI string functions provided by CRTDLL.
- */
-
-/* NOTE: _wcscmpi not provided by CRTDLL, this define is for portability */
-#define		_wcscmpi	_wcsicmp
-
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsdup (const wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsicmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsicoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcslwr (wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsnicmp (const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsnset (wchar_t*, wchar_t, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsrev (wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsset (wchar_t*, wchar_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsupr (wchar_t*);
-
-#ifdef __MSVCRT__
-_CRTIMP int __cdecl __MINGW_NOTHROW  _wcsncoll(const wchar_t*, const wchar_t*, size_t);
-_CRTIMP int   __cdecl __MINGW_NOTHROW _wcsnicoll(const wchar_t*, const wchar_t*, size_t);
-#if __MSVCRT_VERSION__ >= 0x0700
-_CRTIMP  wchar_t* __cdecl __MINGW_NOTHROW _wcserror(int);
-_CRTIMP  wchar_t* __cdecl __MINGW_NOTHROW __wcserror(const wchar_t*);
-#endif
-#endif
-
-#ifndef	_NO_OLDNAMES
-/* NOTE: There is no _wcscmpi, but this is for compatibility. */
-int __cdecl __MINGW_NOTHROW wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2);
-__CRT_INLINE int __cdecl __MINGW_NOTHROW
-wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2)
-  {return _wcsicmp (__ws1, __ws2);}
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsdup (const wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcsicmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcsicoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcslwr (wchar_t*);
-_CRTIMP int __cdecl __MINGW_NOTHROW	wcsnicmp (const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsnset (wchar_t*, wchar_t, size_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsrev (wchar_t*);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsset (wchar_t*, wchar_t);
-_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsupr (wchar_t*);
-#endif	/* Not _NO_OLDNAMES */
-
-#endif	/* Not strict ANSI */
-
 #define _WSTRING_DEFINED
-#endif  /* _WSTRING_DEFINED */
+
+  _CRTIMP wchar_t *__cdecl _wcsdup(const wchar_t *_Str);
+  wchar_t *__cdecl wcscat(wchar_t *_Dest,const wchar_t *_Source);
+  _CONST_RETURN wchar_t *__cdecl wcschr(const wchar_t *_Str,wchar_t _Ch);
+  int __cdecl wcscmp(const wchar_t *_Str1,const wchar_t *_Str2);
+  wchar_t *__cdecl wcscpy(wchar_t *_Dest,const wchar_t *_Source);
+  size_t __cdecl wcscspn(const wchar_t *_Str,const wchar_t *_Control);
+  size_t __cdecl wcslen(const wchar_t *_Str);
+  size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
+  wchar_t *wcsncat(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
+  int __cdecl wcsncmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  wchar_t *wcsncpy(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
+  _CONST_RETURN wchar_t *__cdecl wcspbrk(const wchar_t *_Str,const wchar_t *_Control);
+  _CONST_RETURN wchar_t *__cdecl wcsrchr(const wchar_t *_Str,wchar_t _Ch);
+  size_t __cdecl wcsspn(const wchar_t *_Str,const wchar_t *_Control);
+  _CONST_RETURN wchar_t *__cdecl wcsstr(const wchar_t *_Str,const wchar_t *_SubStr);
+  wchar_t *__cdecl wcstok(wchar_t *_Str,const wchar_t *_Delim);
+  _CRTIMP wchar_t *__cdecl _wcserror(int _ErrNum);
+  _CRTIMP wchar_t *__cdecl __wcserror(const wchar_t *_Str);
+  _CRTIMP int __cdecl _wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);
+  _CRTIMP int __cdecl _wcsicmp_l(const wchar_t *_Str1,const wchar_t *_Str2,_locale_t _Locale);
+  _CRTIMP int __cdecl _wcsnicmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _wcsnicmp_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
+  _CRTIMP wchar_t *__cdecl _wcsnset(wchar_t *_Str,wchar_t _Val,size_t _MaxCount);
+  _CRTIMP wchar_t *__cdecl _wcsrev(wchar_t *_Str);
+  _CRTIMP wchar_t *__cdecl _wcsset(wchar_t *_Str,wchar_t _Val);
+  _CRTIMP wchar_t *__cdecl _wcslwr(wchar_t *_String);
+  _CRTIMP wchar_t *_wcslwr_l(wchar_t *_String,_locale_t _Locale);
+  _CRTIMP wchar_t *__cdecl _wcsupr(wchar_t *_String);
+  _CRTIMP wchar_t *_wcsupr_l(wchar_t *_String,_locale_t _Locale);
+  size_t __cdecl wcsxfrm(wchar_t *_Dst,const wchar_t *_Src,size_t _MaxCount);
+  _CRTIMP size_t __cdecl _wcsxfrm_l(wchar_t *_Dst,const wchar_t *_Src,size_t _MaxCount,_locale_t _Locale);
+  int __cdecl wcscoll(const wchar_t *_Str1,const wchar_t *_Str2);
+  _CRTIMP int __cdecl _wcscoll_l(const wchar_t *_Str1,const wchar_t *_Str2,_locale_t _Locale);
+  _CRTIMP int __cdecl _wcsicoll(const wchar_t *_Str1,const wchar_t *_Str2);
+  _CRTIMP int __cdecl _wcsicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,_locale_t _Locale);
+  _CRTIMP int __cdecl _wcsncoll(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _wcsncoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
+  _CRTIMP int __cdecl _wcsnicoll(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  _CRTIMP int __cdecl _wcsnicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
+
+#ifndef	NO_OLDNAMES
+  /* NOTE: There is no _wcscmpi, but this is for compatibility. */
+  int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2);
+  __CRT_INLINE int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2) { return _wcsicmp (__ws1, __ws2); }
+  #define		_wcscmpi	_wcsicmp
+
+  wchar_t *__cdecl wcsdup(const wchar_t *_Str);
+#define wcswcs wcsstr
+  int __cdecl wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);
+  int __cdecl wcsnicmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
+  wchar_t *__cdecl wcsnset(wchar_t *_Str,wchar_t _Val,size_t _MaxCount);
+  wchar_t *__cdecl wcsrev(wchar_t *_Str);
+  wchar_t *__cdecl wcsset(wchar_t *_Str,wchar_t _Val);
+  wchar_t *__cdecl wcslwr(wchar_t *_Str);
+  wchar_t *__cdecl wcsupr(wchar_t *_Str);
+  int __cdecl wcsicoll(const wchar_t *_Str1,const wchar_t *_Str2);
+#endif
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif	/* Not RC_INVOKED */
-
-#endif	/* Not _STRING_H_ */
+#include <sec_api/string_s.h>
+#endif
