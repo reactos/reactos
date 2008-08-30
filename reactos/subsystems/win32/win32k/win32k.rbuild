@@ -53,6 +53,11 @@
 		<file>error.c</file>
 		<file>event.c</file>
 		<file>float.c</file>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>floatobj.S</file>
+			</directory>
+		</if>
 		<file>gradient.c</file>
 		<file>lineto.c</file>
 		<file>mem.c</file>
@@ -82,7 +87,7 @@
 		<file>copy.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">
-		        <directory name="i386">
+			<directory name="i386">
 				<file>cos_asm.s</file>
 				<file>sin_asm.s</file>
 				<file>atan2_asm.s</file>
@@ -173,6 +178,7 @@
 		<file>stockobj.c</file>
 		<file>text.c</file>
 		<file>wingl.c</file>
+		<file>xformobj.c</file>
 	</directory>
 	<directory name="stubs">
 		<file>stubs.c</file>

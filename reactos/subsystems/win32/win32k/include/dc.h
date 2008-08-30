@@ -77,17 +77,17 @@ typedef struct _DCLEVEL
   BOOL              ufiSet;
   FLONG             fl;
   FLONG             flBrush;
-  MATRIX_S          mxWorldToDevice;
-  MATRIX_S          mxDeviceToWorld;
-  MATRIX_S          mxWorldToPage;
-  EFLOAT_S          efM11PtoD;
-  EFLOAT_S          efM22PtoD;
-  EFLOAT_S          efDxPtoD;
-  EFLOAT_S          efDyPtoD;
-  EFLOAT_S          efM11_TWIPS;
-  EFLOAT_S          efM22_TWIPS;
-  EFLOAT_S          efPr11;
-  EFLOAT_S          efPr22;
+  MATRIX            mxWorldToDevice;
+  MATRIX            mxDeviceToWorld;
+  MATRIX            mxWorldToPage;
+  FLOATOBJ          efM11PtoD;
+  FLOATOBJ          efM22PtoD;
+  FLOATOBJ          efDxPtoD;
+  FLOATOBJ          efDyPtoD;
+  FLOATOBJ          efM11_TWIPS;
+  FLOATOBJ          efM22_TWIPS;
+  FLOATOBJ          efPr11;
+  FLOATOBJ          efPr22;
   PBITMAPOBJ        pSurface; // SURFACE*
   SIZE              sizl;
 } DCLEVEL, *PDCLEVEL;
