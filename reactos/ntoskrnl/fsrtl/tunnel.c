@@ -57,7 +57,7 @@ FsRtlAddToTunnelCache(IN PTUNNEL Cache,
                       IN PVOID Data)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -83,7 +83,7 @@ FsRtlDeleteKeyFromTunnelCache(IN PTUNNEL Cache,
                               IN ULONGLONG DirectoryKey)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -105,7 +105,7 @@ NTAPI
 FsRtlDeleteTunnelCache(IN PTUNNEL Cache)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -151,7 +151,7 @@ FsRtlFindInTunnelCache(IN PTUNNEL Cache,
                        OUT PVOID Data)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -174,7 +174,7 @@ NTAPI
 FsRtlInitializeTunnelCache(IN PTUNNEL Cache)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /* EOF */

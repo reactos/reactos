@@ -96,7 +96,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                    IN PLIST_ENTRY NotifyList,
                    IN PVOID FsContext)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -157,7 +157,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
                                  IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -214,7 +214,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                               IN PVOID TargetContext,
                               IN PVOID FilterContext)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -271,7 +271,7 @@ FsRtlNotifyFullChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
                                IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -324,7 +324,7 @@ FsRtlNotifyFullReportChange(IN PNOTIFY_SYNC NotifySync,
                             IN ULONG Action,
                             IN PVOID TargetContext)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -345,7 +345,7 @@ VOID
 NTAPI
 FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -382,7 +382,7 @@ FsRtlNotifyReportChange(IN PNOTIFY_SYNC NotifySync,
                         IN PUSHORT FileNamePartLength,
                         IN ULONG FilterMatch)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -404,6 +404,6 @@ VOID
 NTAPI
 FsRtlNotifyUninitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 

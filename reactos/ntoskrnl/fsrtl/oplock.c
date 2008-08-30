@@ -49,7 +49,7 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
                  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -72,7 +72,7 @@ NTAPI
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -95,7 +95,7 @@ NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -125,7 +125,7 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
                   IN ULONG OpenCount)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -148,7 +148,7 @@ NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -171,6 +171,6 @@ NTAPI
 FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
