@@ -323,7 +323,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 /*
  * @implemented
  */
-int _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
+intptr_t _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
 {
    va_list argp;
    _TCHAR* args;
@@ -345,7 +345,7 @@ int _tspawnl(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ...)
 /*
  * @implemented
  */
-int _tspawnv(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv)
+intptr_t _tspawnv(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv)
 {
    _TCHAR* args;
    int ret = -1;
@@ -365,7 +365,7 @@ int _tspawnv(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv)
 /*
  * @implemented
  */
-int _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, NULL, const char* const* envp*/)
+intptr_t _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, NULL, const char* const* envp*/)
 {
    va_list argp;
    _TCHAR* args;
@@ -400,7 +400,7 @@ int _tspawnle(int mode, const _TCHAR *cmdname, const _TCHAR* arg0, ... /*, NULL,
 /*
  * @implemented
  */
-int _tspawnve(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
+intptr_t _tspawnve(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    _TCHAR *args;
    _TCHAR *envs;
@@ -426,7 +426,7 @@ int _tspawnve(int mode, const _TCHAR *cmdname, const _TCHAR* const* argv, const 
 /*
  * @implemented
  */
-int _tspawnvp(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv)
+intptr_t _tspawnvp(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv)
 {
    _TCHAR pathname[FILENAME_MAX];
 
@@ -438,7 +438,7 @@ int _tspawnvp(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv)
 /*
  * @implemented
  */
-int _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL*/)
+intptr_t _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL*/)
 {
    va_list argp;
    _TCHAR* args;
@@ -461,7 +461,7 @@ int _tspawnlp(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL*/
 /*
  * @implemented
  */
-int _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL, const char* const* envp*/)
+intptr_t _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL, const char* const* envp*/)
 {
    va_list argp;
    _TCHAR* args;
@@ -496,7 +496,7 @@ int _tspawnlpe(int mode, const _TCHAR* cmdname, const _TCHAR* arg0, .../*, NULL,
 /*
  * @implemented
  */
-int _tspawnvpe(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
+intptr_t _tspawnvpe(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    _TCHAR pathname[FILENAME_MAX];
 
@@ -508,7 +508,7 @@ int _tspawnvpe(int mode, const _TCHAR* cmdname, const _TCHAR* const* argv, const
 /*
  * @implemented
  */
-int _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
+intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 {
    _TCHAR* args;
    va_list argp;
@@ -530,7 +530,7 @@ int _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 /*
  * @implemented
  */
-int _texecv(const _TCHAR* cmdname, const _TCHAR* const* argv)
+intptr_t _texecv(const _TCHAR* cmdname, const _TCHAR* const* argv)
 {
    TRACE(MK_STR(_texecv)"('%"sT"')\n", cmdname);
    return _tspawnv(P_OVERLAY, cmdname, argv);
@@ -539,7 +539,7 @@ int _texecv(const _TCHAR* cmdname, const _TCHAR* const* argv)
 /*
  * @implemented
  */
-int _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* const* envp */)
+intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* const* envp */)
 {
    va_list argp;
    _TCHAR* args;
@@ -573,7 +573,7 @@ int _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* cons
 /*
  * @implemented
  */
-int _texecve(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
+intptr_t _texecve(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    TRACE(MK_STR(_texecve)"('%"sT"')\n", cmdname);
    return _tspawnve(P_OVERLAY, cmdname, argv, envp);
@@ -582,7 +582,7 @@ int _texecve(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* con
 /*
  * @implemented
  */
-int _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
+intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 {
    _TCHAR* args;
    va_list argp;
@@ -605,7 +605,7 @@ int _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 /*
  * @implemented
  */
-int _texecvp(const _TCHAR* cmdname, const _TCHAR* const* argv)
+intptr_t _texecvp(const _TCHAR* cmdname, const _TCHAR* const* argv)
 {
    TRACE(MK_STR(_texecvp)"('%"sT"')\n", cmdname);
    return _tspawnvp(P_OVERLAY, cmdname, argv);
@@ -614,7 +614,7 @@ int _texecvp(const _TCHAR* cmdname, const _TCHAR* const* argv)
 /*
  * @implemented
  */
-int _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* const* envp */)
+intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* const* envp */)
 {
    va_list argp;
    _TCHAR* args;
@@ -649,7 +649,7 @@ int _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char* con
 /*
  * @implemented
  */
-int _texecvpe(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
+intptr_t _texecvpe(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    TRACE(MK_STR(_texecvpe)"('%"sT"')\n", cmdname);
    return _tspawnvpe(P_OVERLAY, cmdname, argv, envp);

@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #undef _pctype
+#undef _pwctype
 
 /* MS's CRT header defines all that, and we actually implement that */
 #undef iswalnum
@@ -22,11 +23,13 @@
 #undef iswspace
 #undef iswxdigit
 #undef __toascii
+#undef _tolower
+#undef _toupper
 
 #define upalpha ('A' - 'a')
 
 
-unsigned short _ctype[] = {
+const unsigned short _ctype[] = {
 	0,			/* <EOF>, 0xFFFF */
 	_CONTROL,		/* CTRL+@, 0x00 */
 	_CONTROL,		/* CTRL+A, 0x01 */
@@ -545,7 +548,7 @@ int iswxdigit(wint_t c)
  */
 int __toascii(int c)
 {
-   return((unsigned)(c) & 0x7f);
+   return((unsigned int)(c) & 0x7f);
 }
 
 /*

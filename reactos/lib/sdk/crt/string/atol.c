@@ -11,9 +11,9 @@ _ttol(const _TCHAR *str)
   return (long)_ttoi64(str);
 }
 
-int _atoldbl(long double *value, const char *str)
+int _atoldbl(_LDOUBLE *value, char *str)
 {
     /* FIXME needs error checking for huge/small values */
    //*value = strtold(str,0);
-   return 0;
+   return -1;
 }

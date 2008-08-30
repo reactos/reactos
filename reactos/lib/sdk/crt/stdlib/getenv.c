@@ -9,7 +9,7 @@
  */
 
 #include <precomp.h>
-#undef environ
+//#undef environ
 
 /*
  * @implemented

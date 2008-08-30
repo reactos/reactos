@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="crt" type="staticlibrary">
+<module name="crt" type="staticlibrary" allowwarnings="true">
 	<include base="crt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -56,6 +56,12 @@
 				<file>chkstk_asm.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>seh.s</file>
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
 		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
@@ -68,6 +74,14 @@
 		<file>nafter.c</file>
 		<file>scalb.c</file>
 		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>clearfp.c</file>
+				<file>cntrlfp.c</file>
+				<file>logb.c</file>
+				<file>statfp.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
@@ -112,8 +126,15 @@
 				<file>log10_asm.s</file>
 			</directory>
 		</if>
-		<ifnot property="ARCH" value="i386">
-		</ifnot>
+		<if property="ARCH" value="amd64">
+			<directory name="i386">
+				<file>atan2.c</file>
+				<file>exp.c</file>
+				<file>fmod.c</file>
+				<file>ldexp.c</file>
+			</directory>
+		</if>
+
 	</directory>
 
 	<directory name="mbstring">
