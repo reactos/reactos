@@ -12,18 +12,12 @@
 /*
  * @implemented
  */
-wchar_t* _wstrdate(wchar_t* datestr)
+wchar_t* _wstrdate(wchar_t* date)
 {
-    time_t t;
-    struct tm* d;
-    wchar_t* dt = (wchar_t*)datestr;
+   static const WCHAR format[] = { 'M','M','\'','/','\'','d','d','\'','/','\'','y','y',0 };
 
-    if (datestr == NULL) {
-        __set_errno(EINVAL);
-        return NULL;
-    }
-    t = time(NULL);
-    d = localtime(&t);
-    swprintf(dt,L"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
-    return dt;
+   GetDateFormatW(LOCALE_NEUTRAL, 0, NULL, format, (LPWSTR)date, 9);
+
+   return date;
+
 }
