@@ -15,7 +15,6 @@
 	<file>natstart.c</file>
 	<file>_newmode.c</file>
 	<file>pesect.c</file>
-	<file>tlssup.c</file>
 	<file>wildcard.c</file>
 	<file>xtxtmode.c</file>
 	<file>xncommod.c</file>

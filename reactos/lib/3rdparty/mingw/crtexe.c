@@ -287,9 +287,10 @@ check_managed_app (void)
   PIMAGE_OPTIONAL_HEADER64 pNTHeader64;
 
   /* Force to be linked.  */
-  mingw_initltsdrot_force=1;
-  mingw_initltsdyn_force=1;
-  mingw_initltssuo_force=1;
+  //TLS sections
+  //mingw_initltsdrot_force=1;
+  //mingw_initltsdyn_force=1;
+  //mingw_initltssuo_force=1;
   mingw_initcharmax=1;
 
   pDOSHeader = (PIMAGE_DOS_HEADER) &__ImageBase;
