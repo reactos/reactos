@@ -3,9 +3,28 @@
 
 #include "d3d9_baseobject.h"
 
+struct _D3D9BaseSurface;
+
+typedef struct _D3D9BaseSurfaceVtbl
+{
+    HRESULT (*QueryInterface)(struct _D3D9BaseSurface* iface, REFIID riid, LPVOID* ppvObject);
+    ULONG (*AddRef)(struct _D3D9BaseSurface* iface);
+    ULONG (*Release)(struct _D3D9BaseSurface* iface);
+    IDirect3DDevice9* (*GetDevice)(struct _D3D9BaseSurface* iface);
+    HRESULT (*SetPrivateData)(struct _D3D9BaseSurface* iface, REFIID riid, CONST LPVOID pData, DWORD DataSize, DWORD Flags);
+    HRESULT (*GetPrivateData)(struct _D3D9BaseSurface* iface, REFIID riid, LPVOID pData, DWORD* DataSize);
+    HRESULT (*FreePrivateData)(struct _D3D9BaseSurface* iface, REFIID riid);
+    DWORD (*SetPriority)(struct _D3D9BaseSurface* iface, DWORD NewPriority);
+    DWORD (*GetPriority)(struct _D3D9BaseSurface* iface);
+    VOID (*Load)(struct _D3D9BaseSurface* iface);
+    D3DRESOURCETYPE (*GetResourceType)(struct _D3D9BaseSurface* iface);
+
+} ID3D9BaseSurfaceVtbl;
+
+
 typedef struct _D3D9BaseSurface
 {
-/* 0x0000 */    LPDWORD lpVtbl;
+/* 0x0020 */    ID3D9BaseSurfaceVtbl* lpVtbl;
 /* 0x0024 */    D3DFORMAT DisplayFormat2;   // Back buffer format?
 /* 0x0028 */    DWORD dwUnknown0028;    // Constant/ref count? (1)
 /* 0x002c */    DWORD dwUnknown002c;    // Refresh rate?

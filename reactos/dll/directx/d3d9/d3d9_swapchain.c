@@ -21,7 +21,7 @@
 /* Convert a IDirect3DSwapChain9 pointer safely to the internal implementation struct */
 static LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface)
 {
-    if (IsBadWritePtr(iface, sizeof(LPDIRECT3DSWAPCHAIN9_INT)))
+    if (NULL == iface)
         return NULL;
 
     return (LPDIRECT3DSWAPCHAIN9_INT)((ULONG_PTR)iface - FIELD_OFFSET(Direct3DSwapChain9_INT, lpVtbl));
@@ -110,7 +110,7 @@ static HRESULT WINAPI Direct3DSwapChain9_GetDevice(LPDIRECT3DSWAPCHAIN9 iface, I
     LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
     LOCK_D3DDEVICE9();
 
-    if (IsBadWritePtr(ppDevice, sizeof(IDirect3DDevice9**)))
+    if (NULL == ppDevice)
     {
         DPRINT1("Invalid ppDevice parameter specified");
         UNLOCK_D3DDEVICE9();
@@ -151,7 +151,7 @@ static HRESULT WINAPI Direct3DSwapChain9_GetPresentParameters(LPDIRECT3DSWAPCHAI
     LPDIRECT3DSWAPCHAIN9_INT This = IDirect3DSwapChain9ToImpl(iface);
     LOCK_D3DDEVICE9();
 
-    if (IsBadWritePtr(pPresentationParameters, sizeof(D3DPRESENT_PARAMETERS)))
+    if (NULL == pPresentationParameters)
     {
         DPRINT1("Invalid pPresentationParameters parameter specified");
         UNLOCK_D3DDEVICE9();

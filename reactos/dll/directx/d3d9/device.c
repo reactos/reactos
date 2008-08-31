@@ -49,7 +49,7 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
 
     pThisBaseDevice->pResourceManager = pResourceManager;
 
-    pThisBaseDevice->lpVtbl = &Direct3DDevice9_Vtbl;
+    pThisBaseDevice->lpVtbl = &Direct3DDevice9HAL_Vtbl;
     pThisBaseDevice->lRefCnt = 1;
     pThisBaseDevice->dwProcessId = GetCurrentThreadId();
     pThisBaseDevice->pUnknown = (IUnknown*) &pThisBaseDevice->lpVtbl;
