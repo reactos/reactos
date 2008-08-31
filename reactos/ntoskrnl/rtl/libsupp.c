@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
+
 extern ULONG NtGlobalFlag;
 
 typedef struct _RTL_RANGE_ENTRY
@@ -482,21 +484,21 @@ RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE_ENTRY
 RtlpAllocAtomTableEntry(ULONG Size)
 {
-   PRTL_ATOM_TABLE_ENTRY Entry = ExAllocatePool(NonPagedPool,
-                                                Size);
-   if (Entry != NULL)
-   {
-      RtlZeroMemory(Entry,
-                    Size);
-   }
+    PRTL_ATOM_TABLE_ENTRY Entry;
 
-   return Entry;
+    Entry = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_ATMT);
+    if (Entry != NULL)
+    {
+        RtlZeroMemory(Entry, Size);
+    }
+
+    return Entry;
 }
 
 VOID
 RtlpFreeAtomTableEntry(PRTL_ATOM_TABLE_ENTRY Entry)
 {
-   ExFreePool(Entry);
+    ExFreePoolWithTag(Entry, TAG_ATMT);
 }
 
 VOID

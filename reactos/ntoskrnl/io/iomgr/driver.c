@@ -29,6 +29,8 @@ UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+
 extern BOOLEAN ExpInTextModeSetup;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -246,7 +248,7 @@ IopNormalizeImagePath(
       RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
 
       /* Free caller's string */
-      RtlFreeUnicodeString(&InputImagePath);
+      ExFreePoolWithTag(InputImagePath.Buffer, TAG_RTLREGISTRY);
    }
 
    return STATUS_SUCCESS;

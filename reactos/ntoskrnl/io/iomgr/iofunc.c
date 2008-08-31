@@ -1890,7 +1890,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         {
             /* Clear it in the IRP for completion */
             Irp->UserEvent = NULL;
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_IO);
         }
 
         /* Set the caller IOSB */

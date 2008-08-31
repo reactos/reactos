@@ -129,8 +129,8 @@ CmpHiveRootSecurityDescriptor(VOID)
     if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 11, 8, Status, 0);
 
     /* Free the SIDs and original ACL */
-    for (i = 0; i < 4; i++) ExFreePool(Sid[i]);
-    ExFreePool(Acl);
+    for (i = 0; i < 4; i++) ExFreePoolWithTag(Sid[i], TAG_CM);
+    ExFreePoolWithTag(Acl, TAG_CM);
 
     /* Return the security descriptor */
     return SecurityDescriptor;

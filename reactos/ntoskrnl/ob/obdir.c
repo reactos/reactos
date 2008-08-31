@@ -326,7 +326,7 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
     CurrentEntry->ChainLink = NULL;
 
     /* Free it */
-    ExFreePool(CurrentEntry);
+    ExFreePoolWithTag(CurrentEntry, OB_DIR_TAG);
 
     /* Return */
     return TRUE;
@@ -529,7 +529,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Free the buffer and fail */
-        ExFreePool(LocalBuffer);
+        ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
         return Status;
     }
 
@@ -701,7 +701,7 @@ Quickie:
 
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
-    ExFreePool(LocalBuffer);
+    ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
 
     /* Return status to caller */
     return Status;

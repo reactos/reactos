@@ -1031,7 +1031,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         /* Clear the file name */
         if (FileObject->FileName.Buffer)
         {
-           ExFreePool(FileObject->FileName.Buffer);
+           ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
            FileObject->FileName.Buffer = NULL;
         }
 

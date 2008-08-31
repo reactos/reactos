@@ -720,7 +720,7 @@ ParseFromRoot:
                 if (ObjectNameInfo->Name.Buffer)
                 {
                     /* Free it */
-                    ExFreePool(ObjectNameInfo->Name.Buffer);
+                    ExFreePoolWithTag(ObjectNameInfo->Name.Buffer, OB_NAME_TAG );
                 }
 
                 /* Write new one */

@@ -242,8 +242,8 @@ IopGetDiskInformation(IN ULONG i,
     if (!NT_SUCCESS(Status))
     {
         /* Try again */
-        ExFreePool(PartitionBuffer);
-        ExFreePool(DriveLayout);
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ExFreePoolWithTag(DriveLayout, TAG_FILE_SYSTEM);
         return FALSE;
     }
 
@@ -257,8 +257,8 @@ IopGetDiskInformation(IN ULONG i,
     *PartitionCount = DriveLayout->PartitionCount;
 
     /* Free the buffer */
-    ExFreePool(PartitionBuffer);
-    ExFreePool(DriveLayout);
+    ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+    ExFreePoolWithTag(DriveLayout, TAG_FILE_SYSTEM);
     return TRUE;
 }
 
@@ -574,7 +574,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Free the buffer */
-        ExFreePool(PartitionBuffer);
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
     }
 
     /* Return success */

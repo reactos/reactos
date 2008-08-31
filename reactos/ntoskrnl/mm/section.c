@@ -136,7 +136,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, free memory */
-        ExFreePool(ObjectNameInfo);
+        ExFreePoolWithTag(ObjectNameInfo, TAG('M', 'm', ' ', ' '));
         return Status;
     }
 
@@ -2759,7 +2759,7 @@ ExeFmtpReadFile(IN PVOID File,
    }
    else
    {
-      ExFreePool(Buffer);
+      ExFreePoolWithTag(Buffer, TAG('M', 'm', 'X', 'r'));
    }
 
    return Status;
@@ -3168,7 +3168,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
          break;
    }
 
-   ExFreePool(FileHeaderBuffer);
+   ExFreePoolWithTag(FileHeaderBuffer, TAG('M', 'm', 'X', 'r'));
 
    /*
     * No loader handled the format
@@ -3963,7 +3963,7 @@ MmUnmapViewOfSegment(PMM_AVL_TABLE AddressSpace,
    {
       CurrentEntry = RemoveHeadList(RegionListHead);
       CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, RegionListEntry);
-      ExFreePool(CurrentRegion);
+      ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
    }
 
    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)

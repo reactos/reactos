@@ -1499,7 +1499,7 @@ IoFreeIrp(IN PIRP Irp)
     if (!(Irp->AllocationFlags & IRP_ALLOCATED_FIXED_SIZE))
     {
         /* Free it */
-        ExFreePool(Irp);
+        ExFreePoolWithTag(Irp, TAG_IRP);
     }
     else
     {
@@ -1528,7 +1528,7 @@ IoFreeIrp(IN PIRP Irp)
             {
                 /* All lists failed, use the pool */
                 List->L.FreeMisses++;
-                ExFreePool(Irp);
+                ExFreePoolWithTag(Irp, TAG_IRP);
                 Irp = NULL;
             }
         }

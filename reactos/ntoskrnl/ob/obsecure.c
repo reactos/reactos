@@ -40,7 +40,7 @@ ObAssignObjectSecurityDescriptor(IN PVOID Object,
     if (NT_SUCCESS(Status))
     {
         /* Free the old copy */
-        ExFreePool(SecurityDescriptor);
+        ExFreePoolWithTag(SecurityDescriptor, TAG_SD);
 
         /* Set the new pointer */
         ASSERT(NewSd);
@@ -633,7 +633,7 @@ ObGetObjectSecurity(IN PVOID Object,
     if (!NT_SUCCESS(Status))
     {
         /* Free the descriptor and tell the caller we failed */
-        ExFreePool(*SecurityDescriptor);
+        ExFreePoolWithTag(*SecurityDescriptor, TAG_SEC_QUERY);
         *MemoryAllocated = FALSE;
     }
 
