@@ -146,7 +146,7 @@ MiGetMediaState(PADAPTER Adapter);
 #endif
 
 /* memory pool tag */
-#define PCNET_TAG 0xbaadf00d
+#define PCNET_TAG TAG('P', 'c', 'N', 't')
 
 #endif // _PCNET_H_
 
