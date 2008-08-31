@@ -11,6 +11,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"netshell.dll\0"
 #define REACTOS_STR_PRODUCT_VERSION     "5.1.2600.3264\0"
 #define REACTOS_STR_FILE_VERSION        "5.1.2600.3264\0"
+#define REACTOS_STR_COMPANY_NAME        "Microsoft Corporation"
 
 #include <reactos/version.rc>
 

@@ -16,12 +16,15 @@ typedef struct
     NET_TYPE Type;
     DWORD dwCharacteristics;
     LPWSTR szHelp;
+    INetCfgComponent  *pNCfgComp;
+    UINT NumPropDialogOpen;
 }NET_ITEM, *PNET_ITEM;
 
 typedef struct
 {
     INetConnectionPropertyUi *lpVtbl;
     INetConnection * pCon;
+    INetCfg * pNCfg;
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
 
@@ -57,92 +60,6 @@ AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName)
     lvItem.iItem = ListView_GetItemCount(hDlgCtrl);
     lvItem.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
     ListView_SetCheckState(hDlgCtrl, lvItem.iItem, TRUE);
-}
-
-VOID
-EnumClientServiceProtocol(HWND hDlgCtrl, HKEY hKey, UINT Type)
-{
-    DWORD dwIndex = 0;
-    DWORD dwSize;
-    DWORD dwRetVal;
-    DWORD dwCharacteristics;
-    WCHAR szName[100];
-    WCHAR szText[100];
-    WCHAR szHelp[200];
-    HKEY hSubKey;
-    static WCHAR szNDI[] = L"\\Ndi";
-    PNET_ITEM pItem;
-
-    do
-    {
-        szHelp[0] = L'\0';
-        dwCharacteristics = 0;
-        szText[0] = L'\0';
-
-        dwSize = sizeof(szName)/sizeof(WCHAR);
-        if (RegEnumKeyExW(hKey, dwIndex++, szName, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
-        {
-            /* Get Help Text */
-            if (dwSize + (sizeof(szNDI)/sizeof(WCHAR)) + 1 < sizeof(szName)/sizeof(WCHAR))
-            {
-                wcscpy(&szName[dwSize], szNDI);
-                if (RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
-                {
-#if 0
-                    if (RegLoadMUIStringW(hSubKey, L"HelpText", szHelp, sizeof(szHelp)/sizeof(WCHAR), &dwRetVal, 0, NULL) == ERROR_SUCCESS)
-                        szHelp[(sizeof(szHelp)/sizeof(WCHAR))-1] = L'\0';
-#else
-                    DWORD dwType;
-                    dwRetVal = sizeof(szHelp);
-                    if (RegQueryValueExW(hSubKey, L"HelpText", NULL, &dwType, (LPBYTE)szHelp, &dwRetVal) == ERROR_SUCCESS)
-                        szHelp[(sizeof(szHelp)/sizeof(WCHAR))-1] = L'\0';
-#endif
-                    RegCloseKey(hSubKey);
-                }
-                szName[dwSize] = L'\0';
-            }
-            /* Get Characteristics */
-            if (RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
-            {
-                dwSize = sizeof(dwCharacteristics);
-                if (RegQueryValueExW(hSubKey, L"Characteristics", NULL, NULL, (LPBYTE)&dwCharacteristics, &dwSize) == ERROR_SUCCESS)
-                {
-                    if (dwCharacteristics & NCF_HIDDEN)
-                    {
-                        RegCloseKey(hSubKey);
-                        continue;
-                    }
-                }
-                /* Get the Client/Procotol/Service name */
-                dwSize = sizeof(szText);
-                if (RegQueryValueExW(hSubKey, L"Description", NULL, NULL, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
-                {
-                    szText[(sizeof(szText)/sizeof(WCHAR))-1] = L'\0';
-                }
-                RegCloseKey(hSubKey);
-            }
-
-            if (!wcslen(szText))
-                continue;
-
-
-            pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
-            if (!pItem)
-                continue;
-
-            pItem->dwCharacteristics = dwCharacteristics;
-            pItem->Type = Type;
-            pItem->szHelp = CoTaskMemAlloc((wcslen(szHelp)+1)*sizeof(WCHAR));
-            if (pItem->szHelp)
-                wcscpy(pItem->szHelp, szHelp);
-
-            AddItemToListView(hDlgCtrl, pItem, szText);
-        }
-        else
-           break;
-
-    }while(TRUE);
-
 }
 
 VOID
@@ -182,17 +99,17 @@ EnumComponents(HWND hDlgCtrl, INetCfg * pNCfg, const GUID * CompGuid, UINT Type)
           pItem->dwCharacteristics = dwCharacteristics;
           pItem->szHelp = pHelpText;
           pItem->Type = Type;
+          pItem->pNCfgComp = pNCfgComp;
+          pItem->NumPropDialogOpen = 0;
           AddItemToListView(hDlgCtrl, pItem, pDisplayName);
           CoTaskMemFree(pDisplayName);
-
-          INetCfgComponent_Release(pNCfgComp);
     }
     IEnumNetCfgComponent_Release(pENetCfg);
 }
 
 
 VOID
-InitializeLANPropertiesUIDlg(HWND hwndDlg)
+InitializeLANPropertiesUIDlg(HWND hwndDlg, INetConnectionPropertyUiImpl * This)
 {
     HRESULT hr;
     INetCfg * pNCfg;
@@ -200,6 +117,23 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg)
     LVCOLUMNW lc;
     RECT rc;
     DWORD dwStyle;
+    NETCON_PROPERTIES * pProperties;
+
+    hr = INetConnection_GetProperties(This->pCon, &pProperties);
+    if (FAILED(hr))
+        return;
+
+    SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)pProperties->pszwDeviceName);
+    if (pProperties->dwCharacter & NCCF_SHOW_ICON)
+    {
+        /* check show item on taskbar*/
+        SendDlgItemMessageW(hwndDlg, IDC_SHOWTASKBAR, BM_SETCHECK, BST_CHECKED, 0);
+    }
+    if (pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
+    {
+        /* check notify item */
+        SendDlgItemMessageW(hwndDlg, IDC_NOTIFYNOCONNECTION, BM_SETCHECK, BST_CHECKED, 0);
+    }
 
     memset(&lc, 0, sizeof(LV_COLUMN));
     lc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
@@ -231,10 +165,92 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg)
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
-
-    INetCfg_Release(pNCfg);
+    This->pNCfg = pNCfg;
 }
 
+VOID
+ShowNetworkComponentProperties(
+    HWND hwndDlg,
+    INetConnectionPropertyUiImpl * This)
+{
+    LVITEMW lvItem;
+    HWND hDlgCtrl;
+    UINT Index, Count;
+    HRESULT hr;
+    INetConnectionPropertyUi * pConUI = NULL;
+    INetCfgComponent * pNCfgComp;
+    PNET_ITEM pItem;
+    INetCfgLock * pLock;
+    LPWSTR pLockApp;
+
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
+    Count = ListView_GetItemCount(hDlgCtrl);
+    if (!Count)
+        return;
+
+
+    hr = CoCreateInstance(&CLSID_LANConnectUI, 
+                          NULL,
+                          CLSCTX_INPROC_SERVER | CLSCTX_NO_CODE_DOWNLOAD, 
+                          &IID_INetConnectionPropertyUi, 
+                          (LPVOID)&pConUI);
+
+    if (FAILED(hr))
+    {
+        return;
+    }
+    hr = INetConnectionPropertyUi_SetConnection(pConUI, This->pCon);
+    if (FAILED(hr))
+    {
+        INetConnectionPropertyUi_Release(pConUI);
+        return;
+    }
+
+    ZeroMemory(&lvItem, sizeof(LVITEMW));
+    lvItem.mask = LVIF_PARAM | LVIF_STATE;
+    lvItem.stateMask = (UINT)-1;
+    for (Index = 0; Index < Count; Index++)
+    {
+        lvItem.iItem = Index;
+        if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&lvItem))
+        {
+           if (lvItem.state & LVIS_SELECTED)
+               break;
+        }
+    }
+
+    if (!(lvItem.state & LVIS_SELECTED))
+    {
+        INetConnectionPropertyUi_Release(pConUI);
+        return;
+    }
+
+    pItem = (PNET_ITEM)lvItem.lParam;
+    pNCfgComp = (INetCfgComponent*) pItem->pNCfgComp;
+
+    hr = INetCfg_QueryInterface(This->pNCfg, &IID_INetCfgLock, (LPVOID*)&pLock);
+    if (FAILED(hr))
+        return;
+
+    hr = INetCfgLock_AcquireWriteLock(pLock, 10000, L"", &pLockApp);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(pLockApp);
+        INetConnectionPropertyUi_Release(pConUI);
+        return;
+    }
+
+
+    hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_QUERY_PROPERTY_UI, (IUnknown*)pConUI);
+    if (SUCCEEDED(hr))
+    {
+        hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_SHOW_PROPERTY_UI, (IUnknown*)pConUI);
+    }
+
+    INetCfgLock_ReleaseWriteLock(pLock);
+    INetConnectionPropertyUi_Release(pConUI);
+
+}
 
 
 INT_PTR
@@ -250,25 +266,15 @@ LANPropertiesUIDlg(
     LPNMLISTVIEW lppl;
     LVITEMW li;
     PNET_ITEM pItem;
-    NETCON_PROPERTIES * pProperties;
+    INetConnectionPropertyUiImpl * This;
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
-            pProperties = (NETCON_PROPERTIES*)page->lParam;
-            SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)pProperties->pszwDeviceName);
-            if (pProperties->dwCharacter & NCCF_SHOW_ICON)
-            {
-                /* check show item on taskbar*/
-                SendDlgItemMessageW(hwndDlg, IDC_SHOWTASKBAR, BM_SETCHECK, BST_CHECKED, 0);
-            }
-            if (pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
-            {
-                /* check notify item */
-                SendDlgItemMessageW(hwndDlg, IDC_NOTIFYNOCONNECTION, BM_SETCHECK, BST_CHECKED, 0);
-            }
-            InitializeLANPropertiesUIDlg(hwndDlg);
+            This = (INetConnectionPropertyUiImpl*)page->lParam;
+            InitializeLANPropertiesUIDlg(hwndDlg, This);
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
             return TRUE;
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
@@ -301,6 +307,14 @@ LANPropertiesUIDlg(
                     }
              }
              break;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_PROPERTIES)
+            {
+                This = (INetConnectionPropertyUiImpl*) GetWindowLongPtr(hwndDlg, DWLP_USER);
+                ShowNetworkComponentProperties(hwndDlg, This);
+                return FALSE;
+            }
+            break;
     }
     return FALSE;
 }
@@ -385,37 +399,34 @@ INetConnectionPropertyUi_fnAddPages(
     LPARAM lParam)
 {
     HPROPSHEETPAGE hProp;
-    NETCON_PROPERTIES * pProperties;
     BOOL ret;
-    HRESULT hr;
+    HRESULT hr = E_FAIL;
     INITCOMMONCONTROLSEX initEx;
+    NETCON_PROPERTIES * pProperties;
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
 
 
     initEx.dwSize = sizeof(initEx);
     initEx.dwICC = ICC_LISTVIEW_CLASSES;
-
-
     if(!InitCommonControlsEx(&initEx))
         return E_FAIL;
-
-
 
     hr = INetConnection_GetProperties(This->pCon, &pProperties);
     if (FAILED(hr))
         return hr;
 
-    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)pProperties, pProperties->pszwName);
+    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)This, pProperties->pszwName);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
         if (ret)
         {
-            return NOERROR;
+            hr = NOERROR;
         }
         DestroyPropertySheetPage(hProp);
     }
-    return E_FAIL;
+    //NcFreeNetconProperties(pProperties);
+    return hr;
 }
 
 static const INetConnectionPropertyUiVtbl vt_NetConnectionPropertyUi =
@@ -443,6 +454,7 @@ HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVO
 
     This->ref = 1;
     This->pCon = NULL;
+    This->pNCfg = NULL;
     This->lpVtbl = (INetConnectionPropertyUi*)&vt_NetConnectionPropertyUi;
 
     if (!SUCCEEDED (INetConnectionPropertyUi_fnQueryInterface ((INetConnectionPropertyUi*)This, riid, ppv)))
