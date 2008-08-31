@@ -483,7 +483,7 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Cleanup the value cache */
     CmpCleanUpKcbValueCache(Kcb);
 
-    /* Reference the NCB */
+    /* Dereference the NCB */
     CmpDereferenceNameControlBlockWithLock(Kcb->NameBlock);
 
     /* Check if we have an index hint block and free it */
@@ -492,10 +492,10 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Check if we were already deleted */
     Parent = Kcb->ParentKcb;
     if (!Kcb->Delete) CmpRemoveKeyControlBlock(Kcb);
-    
+
     /* Set invalid KCB signature */
     Kcb->Signature = CM_KCB_INVALID_SIGNATURE;
-    
+
     /* Free the KCB as well */
     CmpFreeKeyControlBlock(Kcb);
 
@@ -504,8 +504,8 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         /* Dereference the parent */
         LockHeldExclusively ?
-            CmpDereferenceKeyControlBlockWithLock(Kcb,LockHeldExclusively) :
-            CmpDelayDerefKeyControlBlock(Kcb);
+            CmpDereferenceKeyControlBlockWithLock(Parent,LockHeldExclusively) :
+            CmpDelayDerefKeyControlBlock(Parent);
     }
 }
 
