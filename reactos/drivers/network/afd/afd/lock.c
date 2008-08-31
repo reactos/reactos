@@ -140,7 +140,7 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	HandleArray[i].Events = HandleArray[i].Events;
         FileObjects[i].Handle = 0;
 	Status = ObReferenceObjectByHandle
-	    ( (PVOID)HandleArray[i].Handle,
+	    ( (PVOID)(ULONG_PTR)HandleArray[i].Handle,
 	      FILE_ALL_ACCESS,
 	      NULL,
 	      KernelMode,
@@ -156,7 +156,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 
     for( i = 0; i < HandleCount; i++ ) {
 	if( HandleArray[i].Handle )
-	    ObDereferenceObject( (PVOID)HandleArray[i].Handle );
+	    ObDereferenceObject( (PVOID)(ULONG_PTR)HandleArray[i].Handle );
     }
 
     ExFreePool( HandleArray );

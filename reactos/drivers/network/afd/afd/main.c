@@ -30,7 +30,7 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
 
     for( i = 0; i < Len; i++ ) {
 	if( i && !(i & 0xf) ) DbgPrint( "\n" );
-	if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
+	if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT_PTR)(Data + i) );
 	DbgPrint( " %02x", Data[i] & 0xff );
     }
     DbgPrint("\n");
