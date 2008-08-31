@@ -103,6 +103,12 @@ ExFreePagedPool(IN PVOID Block)
 	RPoolFree ( MmPagedPool, Block );
 }
 
+ULONG NTAPI
+EiGetPagedPoolTag(IN PVOID Block)
+{
+    return RBodyToHdr(Block)->Tag;
+}
+
 
 #ifdef PPOOL_UMODE_TEST
 
