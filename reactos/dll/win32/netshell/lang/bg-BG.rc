@@ -1,0 +1,20 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Мрежово свързване"
+	IDS_SHV_COLUMN_NAME         "Име"
+	IDS_SHV_COLUMN_TYPE         "Вид"
+	IDS_SHV_COLUMN_STATE        "Състояние"
+	IDS_SHV_COLUMN_DEVNAME      "Име на устройството"
+	IDS_SHV_COLUMN_PHONE        "Телефонен № или приемник"
+	IDS_SHV_COLUMN_OWNER        "Собственик"
+	IDS_TYPE_ETHERNET           "Местна мрежа или високоскоростен интернет"
+	IDS_STATUS_NON_OPERATIONAL  "Забранен"
+	IDS_STATUS_UNREACHABLE      "Несвързан"
+	IDS_STATUS_DISCONNECTED     "Откачен е мрежов кабел"
+	IDS_STATUS_CONNECTING       "Получаване на мрежов адрес"
+	IDS_STATUS_CONNECTED        "Свързан"
+	IDS_STATUS_OPERATIONAL      "Свързан"
+END
+

@@ -149,7 +149,7 @@ END
 
 SHELL_RUN_DLG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION ""
+CAPTION "Kjør"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
@@ -167,11 +167,11 @@ CAPTION "Snarvei"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
-	LTEXT "Target type:", 14004, 10, 30, 50, 10
+	LTEXT "Plasseringstype:", 14004, 10, 30, 50, 10
 	LTEXT "", 14005, 70, 30, 150, 10
-	LTEXT "Target sted:", 14006, 10, 40, 70, 10
+	LTEXT "Plasseringssted:", 14006, 10, 40, 70, 10
 	LTEXT "", 14007, 70, 40, 150, 10
-	LTEXT "Target:", 14008, 10, 55, 45, 10
+	LTEXT "Plassering:", 14008, 10, 55, 45, 10
 	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
 	LTEXT "&Start i:",14010, 10, 65, 57, 10
 	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
@@ -188,16 +188,38 @@ END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Utvidet Egenskaper"
+CAPTION "Avanserte egenskaper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Velg avansert egenskaper som du vil for denne snarveien.", -1, 5, 30, 210, 10
-	CHECKBOX "Kjør med forskjellig credentials", 14000, 25, 50, 150, 10
-	LTEXT "Dette valget vil godta deg å kjøre denne snarveien med en annen bruker, eller fortsette som deg selv mens du beskytter din datamaskin og data fra uautorisert program aktivitet.", -1, 50, 60, 175, 40
-	CHECKBOX "Kjør i seperat ledig minne plass", 14001, 25, 100, 90, 10, WS_DISABLED
+	CHECKBOX "Kjør som administrator", 14000, 25, 50, 150, 10
+	LTEXT "Med dette valget kan du kjøre denne snarveien med som en administrator, mens du beskytter din datamaskin og data fra uautorisert program aktivitet.", -1, 50, 60, 175, 40
+	CHECKBOX "Kjør i seperat minneplass", 14001, 25, 100, 90, 10, WS_DISABLED
 	PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
 	PUSHBUTTON "Avbryt", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 END
+
+SHELL_FOLDER_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generielt"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Filtype:", 14004, 8, 35, 50, 10
+	LTEXT "Mappe", 14005, 68, 35, 160, 10
+	LTEXT "Lokalisjon:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 315, 10
+	LTEXT "Størrelse:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Inneholder:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Opprettet:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	AUTOCHECKBOX "&Bare-lesbar", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Skjult", 14022, 126, 150, 50, 10
+END
+
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -237,7 +259,7 @@ BEGIN
 	LTEXT "", 14003, 77, 27, 152, 10
 	LTEXT "Enerett: ", 14004, 10, 46, 66, 10
 	LTEXT "", 14005, 77, 46, 152, 10
-	GROUPBOX "Other version information: ", 14006, 6, 70, 222, 115
+	GROUPBOX "Annet versjon informasjon: ", 14006, 6, 70, 222, 115
 	LTEXT "Enhetsnavn: ", 14007, 13, 82, 50, 10
 	LTEXT "Verdi: ", 14008, 112, 82, 45, 10
 	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
@@ -288,7 +310,7 @@ BEGIN
 	PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
 	GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
 	LTEXT "Dette alternativet defragmenterer filene på volumet.", -1, 40, 85, 160, 20
-	PUSHBUTTON "Defragmenter Nå...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	PUSHBUTTON "Defragmenter nå...", 14001, 130, 105, 90, 15, WS_TABSTOP
 	GROUPBOX "Sikkerhetskopi", -1, 5, 130, 230, 60
 	LTEXT "Dette alternativet tar sikkerhetskopi av filene på volumet.", -1, 40, 150, 160, 20
 	PUSHBUTTON "Ta sikkerhetskopi...", 14002, 130, 170, 90, 15, WS_TABSTOP
@@ -307,7 +329,7 @@ CAPTION "Kjør som"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Hvilken brukerkonto vil du bruke for å kjøre dette programmet?", -1, 10, 20, 220, 20
-	CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
+	CHECKBOX "Følgende bruker %s", 14000, 10, 45, 150, 10
 	LTEXT "Beskytt min datamaskin og data fra uautorisert program aktivitet", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "Dette valget kan forebygge data virus fra å uskadeliggjøre din datamaskin eller personlige data, men utvelging det skulle kanskje forårsake program til funksjon formatfeil.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Følgende bruker:", 14002, 10, 100, 90, 10
@@ -452,21 +474,21 @@ END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutoPlay"
+CAPTION "Autostart"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+	LTEXT "&Velg en innhold type, også velg en handling for ReactOS for å gjennomføre automatisk når denne type er brukt til denne enheten:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
 	GROUPBOX "Handlinger", -1, 7, 45, 212, 146
 	AUTORADIOBUTTON "Velg en handling for å &utføre:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-	AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
+	AUTORADIOBUTTON "Velg denne handlingen hver gang jeg &utfører denne handlingen", 1006, 14, 177, 202, 10
 	PUSHBUTTON "&Gjenopprett standard", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 MIXED_CONTENT1_DLG DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Mikset innhold"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -479,7 +501,7 @@ END
 
 MIXED_CONTENT2_DLG DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Mikset innhold"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -495,7 +517,7 @@ END
 
 AUTOPLAY2_DLG DIALOGEX 0, 0, 227, 181
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Autoplay"
+CAPTION "Autostart"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
@@ -515,7 +537,7 @@ BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
 	LTEXT "Hva vil du at datamaskinen skal gjøre?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
+	LTEXT "Behandle din sesjon, din datamaskin bruker lite strøm når data er i minnet. Datamaskinen vil våkne hvis du trykker på en tast eller beveger på musen.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
 	PUSHBUTTON "Avbryt", IDCANCEL, 75, 82, 60, 14
 	PUSHBUTTON "&Hjelp", IDHELP, 144, 82, 60, 14
@@ -533,9 +555,9 @@ BEGIN
 	LTEXT "&Filsystem", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+	LTEXT "&Størrelse på tildelingsenheten", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Volum &label", -1, 7, 93, 170, 9
+	LTEXT "Volum&navn", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
 	GROUPBOX "Formatterings &valg", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "&Rask formattering", 28674, 16, 135, 155, 10
@@ -544,24 +566,25 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Kontroller disken"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 50
+	PUSHBUTTON "Avbryt", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Søk etter og forsøk å reparere skadet sektorer", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
 
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Endre Ikon"
+CAPTION "Endre ikon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filename:", -1, 7, 14, 208, 10
+    LTEXT "Filnavn:", -1, 7, 14, 208, 10
     PUSHBUTTON      "Utforsk...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Icons:", -1, 7, 47, 208, 10
@@ -584,25 +607,26 @@ BEGIN
 	IDS_SHV_COLUMN9             "Kommentarer"
 	IDS_SHV_COLUMN10            "Eier"
 	IDS_SHV_COLUMN11            "Gruppe"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Filnavn"
+	IDS_SHV_COLUMN13            "Kategori"
 	IDS_SHV_COLUMN_DELFROM      "Opprinnelig plassering"
 	IDS_SHV_COLUMN_DELDATE      "Dato slettet"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_FONTTYPE     "Skrifttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Arbeidsgruppe"
+	IDS_SHV_NETWORKLOCATION     "Nettverksplassering"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenter"
+
 	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_COMMENTS     "Kommentarer"
+	IDS_SHV_COLUMN_LOCATION     "Plassering"
+	IDS_SHV_COLUMN_MODEL        "Modell"
 
 	/* special folders */
 	IDS_DESKTOP                 "Skrivebord"
 	IDS_MYCOMPUTER              "Min datamaskin"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papirkurv"
 	IDS_CONTROLPANEL            "Kontrollpanel"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Administrative verktøy"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Store ikoner"
@@ -612,14 +636,14 @@ BEGIN
 	IDS_SELECT                  "Velg"
 	IDS_OPEN                    "Åpne"
 	IDS_CREATELINK              "&Opprett snarvei"
-	IDS_COPY                    "&Kopier"
-	IDS_DELETE                  "&Slett"
-	IDS_PROPERTIES              "Egenska&per"
-	IDS_CUT                     "Klipp &ut"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_COPY                    "Kopier"
+	IDS_DELETE                  "Slett"
+	IDS_PROPERTIES              "Egenskaper"
+	IDS_CUT                     "Klipp ut"
+	IDS_RESTORE                 "Gjenopprett"
+	IDS_FORMATDRIVE             "Formatering..."
+	IDS_RENAME                  "Endre navn"
+	IDS_INSERT                  "Sett inn"
 
 	IDS_CREATEFOLDER_DENIED     "Kunne ikke opprette ny mappe: tilgang nektet."
 	IDS_CREATEFOLDER_CAPTION    "Klarte ikke opprette ny mappe"
@@ -651,7 +675,7 @@ BEGIN
 	IDS_FAVORITES               "Favoritter"
 	IDS_STARTUP                 "Start-meny\\Programmer\\Oppstart"
 	IDS_RECENT                  "Siste"
-	IDS_SENDTO                  "SendTil"
+	IDS_SENDTO                  "Sendtil"
 	IDS_STARTMENU               "Start-meny"
 	IDS_MYMUSIC                 "Min musikk"
 	IDS_MYVIDEO                 "Mine videoklipp"
@@ -690,13 +714,14 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "Ny &mappe"
 	FCIDM_SHVIEW_NEWLINK 	    "Ny &snarvei"
 	IDS_FOLDER_OPTIONS          "Mappe valg"
-	IDS_RECYCLEBIN_LOCATION     "Papirkurv localtion"
+	IDS_RECYCLEBIN_LOCATION     "Papirkurv plassering"
 	IDS_RECYCLEBIN_DISKSPACE    "Ledig plass"
+        IDS_EMPTY_BITBUCKET         "Tøm papirkurven"
 	IDS_PICK_ICON_TITLE         "Velg Ikon"
 	IDS_PICK_ICON_FILTER        "Ikon Fil(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Kjørbare filer\0*.exe\0"
 	IDS_DIRECTORY               "Mappe"
-	IDS_VIRTUAL_DRIVER          "Virtuell enhet driver"
+	IDS_VIRTUAL_DRIVER          "Virtuell enhetdriver"
 	IDS_BAT_FILE                "ReactOS Batch fil"
 	IDS_CMD_FILE                "ReactOS Kommando skript"
 	IDS_COM_FILE                "Dos applikasjon"
@@ -712,18 +737,19 @@ BEGIN
 	IDS_LNK_FILE                "Snarvei"
 	IDS_SYS_FILE                "Systemfil"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Åpne"
+	IDS_RUNAS_VERB              "Kjør som"
+	IDS_EDIT_VERB               "Rediger"
+	IDS_FIND_VERB               "Finn"
+	IDS_PRINT_VERB              "Skriv ut"
+	IDS_PLAY_VERB               "Spill"
+	IDS_PREVIEW_VERB            "Forhåndsvis"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u filer, %u mapper"
+	IDS_PRINTERS                "Skrivere"
+	IDS_FONTS                   "Skrifttyper"
+	IDS_INSTALLNEWFONT          "Installere nye skrifttyper..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+        IDS_DEFAULT_CLUSTER_SIZE    "Standard tildelingsstørrelse"
+
 END

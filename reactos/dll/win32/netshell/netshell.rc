@@ -17,6 +17,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_SHELL_NETWORK_FOLDER    ICON "res/netshell.ico"
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"

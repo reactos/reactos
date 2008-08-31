@@ -7,12 +7,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT       "ReactOS bruker følgende informasjon for å identifisere datamaskinen på nettverket.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "Beskrivelse av datamaskinen:", IDC_STATIC, 6, 40, 90, 9
-    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "Beskrivelse av datamaskinen:", IDC_STATIC, 6, 40, 135, 9
+    EDITTEXT    IDC_COMPDESC, 110, 38, 136, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT       "Fullt datamaskinnavn:", IDC_STATIC, 6, 68, 85, 9
-    LTEXT       "(Standard)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "(Standard)", IDC_COMPUTERNAME, 110, 68, 144, 11
     LTEXT       "Arbeidsgruppe:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
-    LTEXT       "(Tom)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "(Tom)", IDC_WORKGROUPDOMAIN_NAME, 110, 84, 144, 9
     LTEXT       "Klikk nettverks-ID for å bruke veiviseren for nettverksidentifikasjon til å bli med i et domene og opprette en lokal brukerkonto.", IDC_STATIC, 6, 113, 172, 24
     PUSHBUTTON  "&Nettverk-ID...", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT       "Klikk Endre for å gi datamaskinen et nytt navn eller bli med i et domenet.", IDC_STATIC, 6, 149, 170, 17
