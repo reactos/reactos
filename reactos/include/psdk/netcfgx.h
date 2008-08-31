@@ -2,6 +2,38 @@
 #define __NETCFGX_H__
 
 #undef  INTERFACE
+#define INTERFACE   INetCfgLock
+DECLARE_INTERFACE_(INetCfgLock, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,AcquireWriteLock)(THIS_ DWORD cmsTimeout, LPCWSTR pszwClientDescription, LPWSTR *ppszwClientDescription) PURE;
+    STDMETHOD_(HRESULT,ReleaseWriteLock)(THIS) PURE;
+    STDMETHOD_(HRESULT,IsWriteLocked)(THIS_ LPWSTR *ppszwClientDescription) PURE;
+};
+#undef INTERFACE
+
+EXTERN_C const IID IID_INetCfgLock;
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgLock_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgLock_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetCfgLock_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetCfgLock_AcquireWriteLock(p,a,b,c)  (p)->lpVtbl->AcquireWriteLock(p,a,b,c)
+#define INetCfgLock_ReleaseWriteLock(p)        (p)->lpVtbl->ReleaseWriteLock(p)
+#define INetCfgLock_IsWriteLocked(p,a)         (p)->lpVtbl->IsWriteLocked(p,a)
+#endif
+
+typedef enum 
+{
+    NCRP_QUERY_PROPERTY_UI  = 1,
+    NCRP_SHOW_PROPERTY_UI   = 2
+}NCRP_FLAGS;
+
+
+#undef  INTERFACE
 #define INTERFACE   INetCfgComponent
 DECLARE_INTERFACE_(INetCfgComponent, IUnknown)
 {
@@ -39,7 +71,7 @@ DECLARE_INTERFACE_(INetCfgComponent, IUnknown)
 #define INetCfgComponent_GetBindName(p,a)           (p)->lpVtbl->GetBindName(p,a)
 #define INetCfgComponent_GetDeviceStatus(p,a)       (p)->lpVtbl->GetDeviceStatus(p,a)
 #define INetCfgComponent_OpenParamKey(p,a)          (p)->lpVtbl->OpenParamKey(p,a)
-#define INetCfgComponent_RaisePropertyUi(p,a,b,c)   (p)->lpVtbl->OpenParamKey(p,a,b,c)
+#define INetCfgComponent_RaisePropertyUi(p,a,b,c)   (p)->lpVtbl->RaisePropertyUi(p,a,b,c)
 #endif
 
 #undef  INTERFACE
