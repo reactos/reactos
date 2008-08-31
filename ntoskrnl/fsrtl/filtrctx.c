@@ -112,7 +112,7 @@ FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
     }
 
     ExAcquireFastMutex(PerStreamContext->FastMutex);
-    InsertHeadList(&PerStreamContext->FilterContexts, &Ptr->Links);
+    InsertHeadList(&(PerStreamContext->FilterContexts), &(Ptr->Links));
     ExReleaseFastMutex(PerStreamContext->FastMutex);
     return STATUS_SUCCESS;
 }
@@ -179,6 +179,16 @@ NTAPI
 FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
+    if (!FileObject)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (FileObject->Flags & FO_NAMED_PIPE)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
     KEBUGCHECK(0);
     return STATUS_NOT_IMPLEMENTED;
 }
