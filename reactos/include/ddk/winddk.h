@@ -5438,6 +5438,8 @@ typedef struct _KPCR {
   ULONG HalReserved[16];            // For use by Hal
 } KPCR, *PKPCR;                 /* 54 */
 
+#define KeGetPcr()                      PCR
+
 typedef struct _KFLOATING_SAVE {
   ULONG  ControlWord;
   ULONG  StatusWord;
@@ -5655,6 +5657,8 @@ typedef struct _KPCR {
   UCHAR  Number;                /* 51 */
 } KPCR, *PKPCR;                 /* 54 */
 
+#define KeGetPcr()                      PCR
+
 static __inline
 ULONG
 DDKAPI
@@ -5688,6 +5692,8 @@ typedef struct _KPCR {
     ULONG  IRR;                   /* 28 */
     ULONG  IDR;                   /* 30 */
 } KPCR, *PKPCR;
+
+#define KeGetPcr()                      PCR
 
 typedef struct _KFLOATING_SAVE {
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
