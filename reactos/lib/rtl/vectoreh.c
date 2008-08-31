@@ -28,10 +28,9 @@ typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
-NTAPI
-RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
-                                 IN PCONTEXT  Context)
+EXCEPTION_DISPOSITION NTAPI
+RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
+                                     IN PCONTEXT  Context)
 {
   PLIST_ENTRY CurrentEntry;
   PRTL_VECTORED_EXCEPTION_HANDLER veh;
@@ -56,7 +55,7 @@ RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
 
       if(VectoredHandler(&ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
       {
-        return TRUE;
+        return ExceptionContinueSearch;
       }
 
       RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
@@ -64,7 +63,7 @@ RtlCallVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
 
-  return FALSE;
+  return ExceptionContinueExecution;
 }
 
 VOID

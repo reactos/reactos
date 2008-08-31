@@ -74,13 +74,6 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
 
-    /* Call any registered vectored handlers */
-    if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
-    {
-        /* Exception handled, continue execution */
-        return TRUE;
-    }
-
     /* Get the current stack limits and registration frame */
     RtlpGetStackLimits(&StackLow, &StackHigh);
     RegistrationFrame = RtlpGetExceptionList();
