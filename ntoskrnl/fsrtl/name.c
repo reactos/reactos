@@ -278,6 +278,8 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
 {
     ULONG i, j, k = 0;
 
+    ASSERT(!FsRtlDoesNameContainWildCards(Name));
+
     for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
     {
         if ((FsRtlpUpcaseUnicodeChar(Expression->Buffer[i], IgnoreCase, UpcaseTable) ==
@@ -298,6 +300,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                 if (Name->Buffer[j] == '.')
                 {
                     k = j;
+                    break;
                 }
             }
         }
