@@ -14,6 +14,28 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+WCHAR
+NTAPI
+FsRtlpUpcaseUnicodeChar(IN WCHAR SourceCharacter,
+                        IN BOOLEAN IgnoreCase,
+                        IN PWCHAR UpcaseTable OPTIONAL)
+{
+    if (IgnoreCase)
+    {
+        if (!UpcaseTable)
+        {
+            return RtlUpcaseUnicodeChar(SourceCharacter);
+        }
+        else
+        {
+            return UpcaseTable[SourceCharacter];
+        }
+    }
+    return SourceCharacter;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -255,69 +277,27 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
     ULONG i, j, k = 0;
-    UNICODE_STRING IntExpression, IntName;
-    WCHAR IntExprBuffer[Expression->Length / sizeof(WCHAR)], IntNameBuffer[Name->Length / sizeof(WCHAR)];
 
-    ASSERT(!FsRtlDoesNameContainWildCards(Name));
-
-    /* We'll first upcase the both strings, if necessary.
-       In all cases, we'll create internal strings to work on. */
-    if (IgnoreCase)
+    for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
     {
-        IntExpression.Buffer = IntExprBuffer;
-        IntName.Buffer = IntNameBuffer;
-        if (!UpcaseTable)
-        {
-            RtlUpcaseUnicodeString(&IntExpression, Expression, FALSE);
-            RtlUpcaseUnicodeString(&IntName, Name, FALSE);
-
-        }
-        else
-        {
-            for (i = 0 ; i < Expression->Length / sizeof (WCHAR) + 1 ; i++)
-            {
-                IntExpression.Buffer[i] = UpcaseTable[Expression->Buffer[i]];
-            }
-            IntExpression.Length = Expression->Length;
-            IntExpression.MaximumLength = Expression->MaximumLength;
-            for (i = 0 ; i < Name->Length / sizeof (WCHAR) + 1 ; i++)
-            {
-                IntName.Buffer[i] = UpcaseTable[Name->Buffer[i]];
-            }
-            IntName.Length = Name->Length;
-            IntName.MaximumLength = Name->MaximumLength;
-        }
-    }
-    else
-    {
-        IntExpression.Length = Expression->Length;
-        IntExpression.MaximumLength = Expression->MaximumLength;
-        IntExpression.Buffer = Expression->Buffer;
-        IntName.Length = Name->Length;
-        IntName.MaximumLength = Name->MaximumLength;
-        IntName.Buffer = Name->Buffer;
-    }
-
-    for (i = 0 ; i < IntExpression.Length / sizeof(WCHAR) ; i++)
-    {
-        if ((IntExpression.Buffer[i] == IntName.Buffer[k]) || (IntExpression.Buffer[i] == '?') ||
-            (IntExpression.Buffer[i] == ANSI_DOS_QM) ||
-            (IntExpression.Buffer[i] == ANSI_DOS_DOT && (IntName.Buffer[k] == '.' || IntName.Buffer[k] == '0')))
+        if ((FsRtlpUpcaseUnicodeChar(Expression->Buffer[i], IgnoreCase, UpcaseTable) ==
+             FsRtlpUpcaseUnicodeChar(Name->Buffer[k], IgnoreCase, UpcaseTable)) ||
+            (Expression->Buffer[i] == '?') || (Expression->Buffer[i] == ANSI_DOS_QM) ||
+            (Expression->Buffer[i] == ANSI_DOS_DOT && (Name->Buffer[k] == '.' || Name->Buffer[k] == '0')))
         {
             k++;
         }
-        else if (IntExpression.Buffer[i] == '*')
+        else if (Expression->Buffer[i] == '*')
         {
-            k = IntName.Length / sizeof(WCHAR);
+            k = Name->Length / sizeof(WCHAR);
         }
-        else if (IntExpression.Buffer[i] == ANSI_DOS_STAR)
+        else if (Expression->Buffer[i] == ANSI_DOS_STAR)
         {
-            for (j = k ; j < IntName.Length / sizeof(WCHAR) ; j++)
+            for (j = k ; j < Name->Length / sizeof(WCHAR) ; j++)
             {
-                if (IntName.Buffer[j] == '.')
+                if (Name->Buffer[j] == '.')
                 {
                     k = j;
-                    break;
                 }
             }
         }
@@ -325,7 +305,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
         {
             k = 0;
         }
-        if (k == IntName.Length / sizeof(WCHAR))
+        if (k == Name->Length / sizeof(WCHAR))
         {
             return TRUE;
         }
