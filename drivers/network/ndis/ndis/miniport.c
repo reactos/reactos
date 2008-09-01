@@ -1420,6 +1420,7 @@ NdisIPnPStartDevice(
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
       return (NTSTATUS)NdisStatus;
     }
 
@@ -1462,6 +1463,7 @@ NdisIPnPStartDevice(
           Adapter->LookaheadBuffer = NULL;
         }
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
       return (NTSTATUS)NdisStatus;
     }
 
