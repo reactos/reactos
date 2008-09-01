@@ -408,6 +408,8 @@ NdisAllocatePacket(
     NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
         Status, Packet, PoolHandle));
 
+    *Packet = NULL;
+
     if (Pool == NULL)
     {
         *Status = NDIS_STATUS_FAILURE;
