@@ -12,6 +12,7 @@
 
 #include "d3d9_helpers.h"
 #include "d3d9_device.h"
+#include "d3d9_cursor.h"
 
 #define LOCK_D3DDEVICE9()   if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
                                 EnterCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
@@ -184,7 +185,7 @@ static IDirect3DSwapChain9Vtbl Direct3DSwapChain9_Vtbl =
 Direct3DSwapChain9_INT* CreateDirect3DSwapChain9(enum REF_TYPE RefType, struct _Direct3DDevice9_INT* pBaseDevice, DWORD ChainIndex)
 {
     Direct3DSwapChain9_INT* pThisSwapChain;
-    if (FAILED(AlignedAlloc((LPVOID *)&pThisSwapChain, sizeof(Direct3DSwapChain9_INT))))
+    if (FAILED(AlignedAlloc((LPVOID*)&pThisSwapChain, sizeof(Direct3DSwapChain9_INT))))
     {
         DPRINT1("Could not create Direct3DSwapChain9_INT");
         return NULL;
@@ -202,15 +203,16 @@ Direct3DSwapChain9_INT* CreateDirect3DSwapChain9(enum REF_TYPE RefType, struct _
     return pThisSwapChain;
 }
 
-VOID Direct3DSwapChain9_SetDisplayMode(Direct3DSwapChain9_INT* pThisSwapChain, D3DDISPLAYMODE* pMode)
+VOID Direct3DSwapChain9_SetDisplayMode(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-    pThisSwapChain->dwWidth = pMode->Width;
-    pThisSwapChain->dwHeight = pMode->Height;
+    pThisSwapChain->dwWidth = pPresentationParameters->BackBufferWidth;
+    pThisSwapChain->dwHeight = pPresentationParameters->BackBufferHeight;
 }
 
 HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     int i;
+    DIRECT3DDEVICE9_INT* pDevice;
 
     for (i = 0; i < 256; i++)
     {
@@ -221,6 +223,20 @@ HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESE
 
     pThisSwapChain->PresentParameters = pPresentationParameters[pThisSwapChain->ChainIndex];
     pThisSwapChain->SwapEffect = pPresentationParameters->SwapEffect;
+    Direct3DSwapChain9_SetDisplayMode(pThisSwapChain, &pThisSwapChain->PresentParameters);
+    
+    if (FAILED(D3D9BaseObject_GetDeviceInt(&pThisSwapChain->BaseObject, &pDevice)))
+    {
+        DPRINT1("Could not get the swapchain device");
+        return DDERR_GENERIC;
+    }
+
+    pThisSwapChain->pCursor = CreateD3D9Cursor(pDevice, pThisSwapChain);
+    if (NULL == pThisSwapChain->pCursor)
+    {
+        DPRINT1("Could not allocate D3D9Cursor");
+        return DDERR_OUTOFMEMORY;
+    }
 
     return Direct3DSwapChain9_Reset(pThisSwapChain, pPresentationParameters);
 }

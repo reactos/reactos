@@ -83,25 +83,6 @@ typedef struct _D3D9ResourceManager
 /* 0x0014 - 0x0174 */   D3D9HeapTexture* pTextureHeap;
 } D3D9ResourceManager;
 
-typedef struct _D3D9Cursor
-{
-/* 0x0000 */    DWORD dwUnknown0000;
-/* 0x0004 */    DWORD dwUnknown0004;
-/* 0x0008 */    DWORD dwUnknown0008;
-/* 0x000c */    DWORD dwUnknown000c;
-/* 0x0010 */    DWORD dwUnknown0010;
-/* 0x0014 */    DWORD dwUnknown0014;
-/* 0x0018 */    DWORD dwWidth;
-/* 0x001c */    DWORD dwHeight;
-/* 0x0020 */    DWORD dwUnknown0020[18];
-/* 0x0070 */    struct _Direct3DDevice9_INT* pBaseDevice;
-/* 0x0074 */    struct _Direct3DSwapChain9_INT* pSwapChain;
-/* 0x0078 */    DWORD dwUnknown0078;
-/* 0x007c */    DWORD dwMonitorVirtualX;
-/* 0x0080 */    DWORD dwMonitorVirtualY;
-/* 0x0084 */    DWORD dwUnknown0084;
-} D3D9Cursor;
-
 typedef struct _Direct3DDevice9_INT
 {
 /* 0x0000 */    struct _IDirect3DDevice9Vtbl_INT* lpVtbl;
@@ -204,12 +185,15 @@ typedef struct _Direct3DDevice9_INT
 /* 0x1f44 */    DWORD unknown002001;
 } DIRECT3DDEVICE9_INT, FAR* LPDIRECT3DDEVICE9_INT;
 
+/* Helper functions */
+LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface);
+
 /* IUnknown interface */
 HRESULT WINAPI IDirect3DDevice9Base_QueryInterface(LPDIRECT3DDEVICE9 iface, REFIID riid, void** ppvObject);
 ULONG WINAPI IDirect3DDevice9Base_AddRef(LPDIRECT3DDEVICE9 iface);
 ULONG WINAPI IDirect3DDevice9Base_Release(LPDIRECT3DDEVICE9 iface);
 
-/* IDirect3D9Device public interface */
+/* IDirect3DDevice9 public interface */
 HRESULT WINAPI IDirect3DDevice9Base_TestCooperativeLevel(LPDIRECT3DDEVICE9 iface);
 UINT WINAPI IDirect3DDevice9Base_GetAvailableTextureMem(LPDIRECT3DDEVICE9 iface);
 HRESULT WINAPI IDirect3DDevice9Base_EvictManagedResources(LPDIRECT3DDEVICE9 iface);
@@ -244,5 +228,9 @@ HRESULT WINAPI IDirect3DDevice9Base_GetFrontBufferData(LPDIRECT3DDEVICE9 iface, 
 HRESULT WINAPI IDirect3DDevice9Base_StretchRect(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter);
 HRESULT WINAPI IDirect3DDevice9Base_ColorFill(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSurface, CONST RECT* pRect, D3DCOLOR color);
 HRESULT WINAPI IDirect3DDevice9Base_CreateOffscreenPlainSurface(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, D3DFORMAT Format, D3DPOOL Pool, IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle);
+
+/* IDirect3DDevice9 private interface */
+VOID WINAPI IDirect3DDevice9Base_Destroy(LPDIRECT3DDEVICE9 iface);
+VOID WINAPI IDirect3DDevice9Base_VirtualDestructor(LPDIRECT3DDEVICE9 iface);
 
 #endif /* _D3D9_DEVICE_H_ */

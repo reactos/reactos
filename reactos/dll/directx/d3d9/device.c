@@ -81,7 +81,6 @@ HRESULT InitD3D9BaseDevice(LPDIRECT3DDEVICE9_INT pThisBaseDevice, LPDIRECT3D9_IN
 
         pThisBaseDevice->pSwapChains[i] = CreateDirect3DSwapChain9(RT_BUILTIN, pThisBaseDevice, i);
         pThisBaseDevice->pSwapChains2[i] = pThisBaseDevice->pSwapChains[i];
-        Direct3DSwapChain9_SetDisplayMode(pThisBaseDevice->pSwapChains[i], &pThisBaseDevice->CurrentDisplayMode[i]);
 
         if (FAILED(Direct3DSwapChain9_Init(pThisBaseDevice->pSwapChains[i], pPresentationParameters)))
         {

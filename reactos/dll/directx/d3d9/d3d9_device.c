@@ -15,7 +15,7 @@
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
 
 /* Convert a IDirect3D9 pointer safely to the internal implementation struct */
-static LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
+LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
 {
     if (NULL == iface)
         return NULL;
@@ -63,6 +63,7 @@ ULONG WINAPI IDirect3DDevice9Base_Release(LPDIRECT3DDEVICE9 iface)
         {
             DestroyD3D9DeviceData(&This->DeviceData[iAdapter]);
         }
+        This->lpVtbl->VirtualDestructor(iface);
 
         LeaveCriticalSection(&This->CriticalSection);
         AlignedFree(This);
@@ -71,7 +72,7 @@ ULONG WINAPI IDirect3DDevice9Base_Release(LPDIRECT3DDEVICE9 iface)
     return ref;
 }
 
-/* IDirect3D9Device interface */
+/* IDirect3DDevice9 public interface */
 HRESULT WINAPI IDirect3DDevice9Base_TestCooperativeLevel(LPDIRECT3DDEVICE9 iface)
 {
     UNIMPLEMENTED
@@ -543,4 +544,15 @@ HRESULT WINAPI IDirect3DDevice9Base_CreateOffscreenPlainSurface(LPDIRECT3DDEVICE
     UNIMPLEMENTED
 
     return D3D_OK;
+}
+
+/* IDirect3DDevice9 private interface */
+VOID WINAPI IDirect3DDevice9Base_Destroy(LPDIRECT3DDEVICE9 iface)
+{
+    UNIMPLEMENTED
+}
+
+VOID WINAPI IDirect3DDevice9Base_VirtualDestructor(LPDIRECT3DDEVICE9 iface)
+{
+    UNIMPLEMENTED
 }

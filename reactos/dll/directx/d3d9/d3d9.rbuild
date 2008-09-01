@@ -13,15 +13,16 @@
 	<library>d3d8thk</library>
 
 	<file>d3d9.c</file>
+	<file>d3d9_baseobject.c</file>
+	<file>d3d9_caps.c</file>
+	<file>d3d9_create.c</file>
+	<file>d3d9_cursor.c</file>
+	<file>d3d9_device.c</file>
+	<file>d3d9_haldevice.c</file>
 	<file>d3d9_helpers.c</file>
 	<file>d3d9_impl.c</file>
-	<file>d3d9_baseobject.c</file>
-	<file>d3d9_create.c</file>
-	<file>d3d9_caps.c</file>
-	<file>d3d9_device.c</file>
-	<file>d3d9_swapchain.c</file>
 	<file>d3d9_puredevice.c</file>
-	<file>d3d9_haldevice.c</file>
+	<file>d3d9_swapchain.c</file>
 	<file>adapter.c</file>
 	<file>device.c</file>
 	<file>format.c</file>
