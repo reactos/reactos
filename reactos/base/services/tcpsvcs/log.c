@@ -15,7 +15,6 @@ static LPWSTR lpEventSource = L"tcpsvcs";
 static LPCWSTR lpLogFileName = L"C:\\tcpsvcs_log.log";
 static HANDLE hLogFile = NULL;
 
-static BOOL bWaitingOnRead = FALSE;
 static OVERLAPPED olWrite;
 
 
