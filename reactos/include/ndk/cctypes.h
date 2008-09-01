@@ -127,8 +127,8 @@ typedef struct _SHARED_CACHE_MAP
     ULONG BcbSpinLock;
     PVOID Reserved;
     KEVENT Event;
-    PEX_PUSH_LOCK VacbPushLock;
-    PPRIVATE_CACHE_MAP PrivateCacheMap;
+    EX_PUSH_LOCK VacbPushLock;
+    PRIVATE_CACHE_MAP PrivateCacheMap;
 } SHARED_CACHE_MAP;
 
 #endif /* _NTIFS_INCLUDED_  */
