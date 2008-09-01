@@ -317,7 +317,7 @@ IntCreateBitmap(IN SIZEL Size,
         SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
         SurfObj->cjBits = SurfObj->lDelta * Size.cy;
         UncompressedFormat = BMF_4BPP;
-        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, TAG_DIB);
         Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
     }
     else if (Format == BMF_8RLE)
