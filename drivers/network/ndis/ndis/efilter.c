@@ -44,6 +44,7 @@ EthCreateFilter(
       *Filter = (PETH_FILTER)NewFilter;
       return TRUE;
     }
+  *Filter = NULL;
   return FALSE;
 }
 

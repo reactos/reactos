@@ -562,13 +562,6 @@ MiniQueryInformation(
 
   /* FIXME: Wait in pending case! */
 
-  /* XXX is status_pending part of success macro? */
-  if ((NT_SUCCESS(NdisStatus)) || (NdisStatus == NDIS_STATUS_PENDING))
-    {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Miniport returned status (0x%X).\n", NdisStatus));
-      return NdisStatus;
-    }
-
   return NdisStatus;
 }
 
@@ -1017,6 +1010,7 @@ NdisInitializeWrapper(
   RegistryPath = ExAllocatePool(PagedPool, sizeof(UNICODE_STRING));
   if(!RegistryPath)
     {
+      ExFreePool(Miniport);
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       return;
     }
@@ -1028,6 +1022,8 @@ NdisInitializeWrapper(
   if(!RegistryBuffer)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+      ExFreePool(Miniport);
+      ExFreePool(RegistryPath);
       return;
     }
 

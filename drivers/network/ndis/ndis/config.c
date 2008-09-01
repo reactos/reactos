@@ -193,13 +193,14 @@ NdisOpenConfiguration(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
+    *ConfigurationHandle = NULL;
+
     *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
                                 NtCurrentProcess(), &KeyHandle, 0, 0,
                                 DUPLICATE_SAME_ACCESS);
     if(!NT_SUCCESS(*Status))
     {
         NDIS_DbgPrint(MID_TRACE, ("Failed to open registry configuration for this miniport\n"));
-        *ConfigurationHandle = NULL;
         *Status = NDIS_STATUS_FAILURE;
         return;
     }
@@ -743,7 +744,8 @@ NdisReadNetworkAddress(
     if(!MiniportResource)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-        *Status = NDIS_STATUS_FAILURE;
+        ExFreePool(IntArray);
+        *Status = NDIS_STATUS_RESOURCES;
         return;
     }
 
@@ -796,6 +798,8 @@ NdisOpenConfigurationKeyByIndex(
     OBJECT_ATTRIBUTES KeyAttributes;
     NDIS_HANDLE RegKeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
+
+    *KeyHandle = NULL;
 
     *Status = ZwEnumerateKey(ConfigurationHandle, Index, KeyBasicInformation, NULL, 0, &KeyInformationLength);
     if(*Status != STATUS_BUFFER_TOO_SMALL && *Status != STATUS_BUFFER_OVERFLOW && *Status != STATUS_SUCCESS)
@@ -884,6 +888,8 @@ NdisOpenConfigurationKeyByName(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
     OBJECT_ATTRIBUTES KeyAttributes;
     NDIS_HANDLE RegKeyHandle;
+
+    *KeyHandle = NULL;
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, 0);
     *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
