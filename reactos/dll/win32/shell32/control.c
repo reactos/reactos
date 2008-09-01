@@ -357,7 +357,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
     memcpy(szName, (LPVOID)ptr, Length * sizeof(WCHAR));
     szName[Length] = L'\0';
-    hMutex = CreateMutexW(NULL, FALSE, szName);
+    hMutex = CreateMutexW(NULL, TRUE, szName);
 
  	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return;
