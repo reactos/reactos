@@ -50,15 +50,15 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
     ULONG SkipFirstSlash = 0;
 
     /* Zero the strings before continuing */
-    RtlZeroMemory(FirstPart, sizeof(*FirstPart));
-    RtlZeroMemory(RemainingPart, sizeof(*RemainingPart));
+    RtlZeroMemory(FirstPart, sizeof(ANSI_STRING));
+    RtlZeroMemory(RemainingPart, sizeof(ANSI_STRING));
 
     /* Just quit if the string is empty */
     if (!Name.Length) return;
 
     /* Find first backslash */
-    FirstPosition = Name.Length / sizeof(CHAR);
-    for (i = 0; i < Name.Length / sizeof(CHAR); i++)
+    FirstPosition = Name.Length;
+    for (i = 0; i < Name.Length; i++)
     {
         /* First make sure the character it's not the Lead DBCS */
         if (FsRtlIsLeadDbcsCharacter(Name.Buffer[i]))
@@ -84,14 +84,14 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
 
     /* Set up the first result string */
     FirstPart->Buffer = Name.Buffer + SkipFirstSlash;
-    FirstPart->Length = (FirstPosition - SkipFirstSlash) * sizeof(CHAR);
+    FirstPart->Length = (FirstPosition - SkipFirstSlash);
     FirstPart->MaximumLength = FirstPart->Length;
 
     /* And second one, if necessary */
-    if (FirstPosition < (Name.Length / sizeof(CHAR)))
+    if (FirstPosition < (Name.Length))
     {
         RemainingPart->Buffer = Name.Buffer + FirstPosition + 1;
-        RemainingPart->Length = Name.Length - (FirstPosition + 1) * sizeof(CHAR);
+        RemainingPart->Length = Name.Length - (FirstPosition + 1);
         RemainingPart->MaximumLength = RemainingPart->Length;
     }
 }
@@ -168,7 +168,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         return !(Expression->Length ^ Name->Length);
     }
 
-    for (ExpressionPosition = 0; ExpressionPosition < Expression->Length / sizeof(CHAR); ExpressionPosition++)
+    for (ExpressionPosition = 0; ExpressionPosition < Expression->Length; ExpressionPosition++)
     {
         if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[MatchingChars]) ||
             (Expression->Buffer[ExpressionPosition] == '?') ||
@@ -180,11 +180,11 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         }
         else if (Expression->Buffer[ExpressionPosition] == '*')
         {
-            MatchingChars = Name->Length / sizeof(CHAR);
+            MatchingChars = Name->Length;
         }
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
-            for (NamePosition = MatchingChars; NamePosition < Name->Length / sizeof(CHAR); NamePosition++)
+            for (NamePosition = MatchingChars; NamePosition < Name->Length; NamePosition++)
             {
                 if (Name->Buffer[NamePosition] == '.')
                 {
@@ -197,7 +197,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         {
             MatchingChars = 0;
         }
-        if (MatchingChars == Name->Length / sizeof(CHAR))
+        if (MatchingChars == Name->Length)
         {
             return TRUE;
         }
@@ -282,7 +282,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         }
 
         /* Filename must be 8.3 filename */
-        if (FirstPart.Length / sizeof(CHAR) < 3 || FirstPart.Length / sizeof(CHAR) > 12)
+        if (FirstPart.Length < 3 || FirstPart.Length > 12)
             return FALSE;
 
         if (!WildCardsPermissible && FsRtlDoesDbcsContainWildCards(&FirstPart))
@@ -291,12 +291,12 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         /* Now, we will parse the filename to find everything bad in
          * It mustn't contain:
          *   0x00-0x1F, 0x22, 0x2B, 0x2C, 0x2F, 0x3A, 0x3B, 0x3D, 0x5B, 0x5D, 0x7C */
-        for (i = 0; i < FirstPart.Length / sizeof(CHAR); i++)
+        for (i = 0; i < FirstPart.Length; i++)
         {
             /* First make sure the character it's not the Lead DBCS */
             if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
             {
-                if (i == (FirstPart.Length / sizeof(CHAR)) - 1)
+                if (i == (FirstPart.Length) - 1)
                     return FALSE;
                 i++;
             }
@@ -319,7 +319,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
 
                 /* We mustn't have spaces before dot or at the end of the filename
                  * and no dot at the beginning of the filename */
-                if ((i == (FirstPart.Length / sizeof(CHAR)) - 1) || i == 0)
+                if ((i == (FirstPart.Length) - 1) || i == 0)
                     return FALSE;
 
                 if (i > 0)
@@ -327,13 +327,13 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
                         return FALSE;
 
                 /* Filename must be 8.3 filename and not 3.8 filename */
-                if ((FirstPart.Length / sizeof(CHAR) - 1) - i > 3)
+                if ((FirstPart.Length - 1) - i > 3)
                     return FALSE;
             }
         }
 
         /* Filename mustn't finish with a space */
-        if (FirstPart.Buffer[FirstPart.Length / sizeof(CHAR) - 1] == ' ')
+        if (FirstPart.Buffer[FirstPart.Length - 1] == ' ')
             return FALSE;
 
         EndLoop:
@@ -433,12 +433,12 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
         /* Now, we will parse the filename to find everything bad in
          * It mustn't contain:
          *   0x00-0x1F, 0x22, 0x2A, 0x2F, 0x3A, 0x3C, 0x3E, 0x3F, 0x7C */
-        for (i = 0; i < FirstPart.Length / sizeof(CHAR); i++)
+        for (i = 0; i < FirstPart.Length; i++)
         {
             /* First make sure the character it's not the Lead DBCS */
             if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
             {
-                if (i == (FirstPart.Length / sizeof(CHAR)) - 1)
+                if (i == (FirstPart.Length) - 1)
                     return FALSE;
                 i++;
             }
@@ -453,8 +453,8 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
         }
 
         /* Filename mustn't finish with a space or a dot */
-        if ((FirstPart.Buffer[FirstPart.Length / sizeof(CHAR) - 1] == ' ') ||
-            (FirstPart.Buffer[FirstPart.Length / sizeof(CHAR) - 1] == '.'))
+        if ((FirstPart.Buffer[FirstPart.Length - 1] == ' ') ||
+            (FirstPart.Buffer[FirstPart.Length - 1] == '.'))
             return FALSE;
 
         EndLoop:

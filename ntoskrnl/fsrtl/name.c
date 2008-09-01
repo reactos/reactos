@@ -166,8 +166,8 @@ FsRtlDissectName(IN UNICODE_STRING Name,
     ULONG SkipFirstSlash = 0;
 
     /* Zero the strings before continuing */
-    RtlZeroMemory(FirstPart, sizeof(*FirstPart));
-    RtlZeroMemory(RemainingPart, sizeof(*RemainingPart));
+    RtlZeroMemory(FirstPart, sizeof(UNICODE_STRING));
+    RtlZeroMemory(RemainingPart, sizeof(UNICODE_STRING));
 
     /* Just quit if the string is empty */
     if (!Name.Length) return;
