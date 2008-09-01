@@ -710,6 +710,7 @@ NdisDprAllocatePacket(
  *     PoolHandle = Handle returned by NdisAllocatePacketPool
  */
 {
+    *Status = NDIS_STATUS_FAILURE;
 }
 
 
