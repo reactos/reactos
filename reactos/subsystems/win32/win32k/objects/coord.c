@@ -668,6 +668,10 @@ IntGdiSetMapMode(PDC  dc,
         Dc_Attr->szlWindowExt.cy = 1;
         Dc_Attr->szlViewportExt.cx = 1;
         Dc_Attr->szlViewportExt.cy = 1;
+        Dc_Attr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+                              PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
+        Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
+                             INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
         break;
 
       case MM_LOMETRIC:
@@ -707,7 +711,12 @@ IntGdiSetMapMode(PDC  dc,
         break;
 
       case MM_ANISOTROPIC:
+        Dc_Attr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
+        Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
         break;
+      default:
+        Dc_Attr->iMapMode = PrevMapMode;
+        PrevMapMode = 0;
     }
 
     DC_UpdateXforms(dc);
