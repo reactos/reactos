@@ -115,10 +115,10 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
 	PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
 	FileObject->SectionObjectPointer->SharedCacheMap = Map;
 	Map->RefCount = 1;
+	ObReferenceObject(FileObject);
 	Map->FileObject = FileObject;
 	Map->NumberOfMaps = 0;
 	Map->FileSizes = *FileSizes;
-	ASSERT(Map->FileSizes.ValidDataLength.HighPart != 0xcccccccc);
 	DPRINT("FileSizes->ValidDataLength %x\n", FileSizes->ValidDataLength.LowPart);
 	InitializeListHead(&Map->AssociatedBcb);
     }
@@ -175,6 +175,8 @@ CcUninitializeCacheMap(IN PFILE_OBJECT FileObject,
 	    }
 	}
 	
+	ObDereferenceObject(Map->FileObject);
+
 	ExFreePool(Map);
 	
 	/* Clear the cache map */

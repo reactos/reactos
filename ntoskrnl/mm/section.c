@@ -45,7 +45,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 #include <reactos/exeformat.h>
 
@@ -98,15 +98,7 @@ PDEVICE_OBJECT
 NTAPI
 MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
 {
-    if (FileObject->Flags & (FO_DIRECT_DEVICE_OPEN | FO_STREAM_FILE))
-    {
-        /* Get the device object */
-        return IoGetAttachedDevice(FileObject->DeviceObject);
-    }
-    else
-    {
-	return IoGetRelatedDeviceObject(FileObject);
-    }
+    return IoGetRelatedDeviceObject(FileObject);
 }
 
 PFILE_OBJECT
