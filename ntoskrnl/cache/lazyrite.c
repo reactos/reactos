@@ -22,7 +22,7 @@ VOID STDCALL
 CcpLazyWriteThread(PVOID Unused)
 {
     ULONG i;
-    BOOLEAN GotLock;
+    BOOLEAN GotLock, WasAlloc;
     PNOCC_BCB RealBcb;
     LARGE_INTEGER Interval;
     IO_STATUS_BLOCK IoStatus;
@@ -34,7 +34,12 @@ CcpLazyWriteThread(PVOID Unused)
 	    RealBcb = &CcCacheSections[i];
 	    CcpLock(&CcMutex);
 	    GotLock = RealBcb->RefCount == 1;
-	    if (GotLock) RealBcb->RefCount++;
+	    WasAlloc = RtlTestBit(CcCacheBitmap, i);
+	    if (GotLock) 
+	    {
+		RtlSetBit(CcCacheBitmap, i);
+		RealBcb->RefCount++;
+	    }
 	    CcpUnlock(&CcMutex);
 	    // Pinned (temporarily)
 	    if (GotLock)
@@ -51,12 +56,15 @@ CcpLazyWriteThread(PVOID Unused)
 		     IoStatus.Status,
 		     IoStatus.Information);
 
-		CcUnpinData(RealBcb);
+		CcpLock(&CcMutex);
+		RealBcb->RefCount--;
+		if (!WasAlloc) RtlClearBit(CcCacheBitmap, i);
+		CcpUnlock(&CcMutex);
 		DPRINT("CcpLazyWrite: done #%x\n", i);
 	    }
 	}
 	KeSetEvent(&CcpLazyWriteEvent, IO_DISK_INCREMENT, TRUE);
-	Interval.QuadPart = -1000000L;
+	Interval.QuadPart = -100000000L;
 	KeDelayExecutionThread(KernelMode, FALSE, &Interval);
     }
 }

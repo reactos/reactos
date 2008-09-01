@@ -183,6 +183,7 @@ MiSimpleRead
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
     IrpSp->FileObject = FileObject;
+    IrpSp->CompletionRoutine = MiSimpleReadComplete;
     
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
@@ -267,6 +268,7 @@ MiSimpleWrite
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
     IrpSp->FileObject = FileObject;
+    IrpSp->CompletionRoutine = MiSimpleReadComplete;
     
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)

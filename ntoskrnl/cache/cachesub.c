@@ -23,6 +23,32 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject);
 
 NTSTATUS
 NTAPI
+CcpSimpleWriteComplete
+(PDEVICE_OBJECT DeviceObject,
+ PIRP Irp,
+ PVOID Context)
+{
+    /* Unlock MDL Pages, page 167. */
+    PMDL Mdl = Irp->MdlAddress;
+    while (Mdl)
+    {
+		MmUnlockPages(Mdl);
+        Mdl = Mdl->Next;
+    }
+	
+    /* Check if there's an MDL */
+    while ((Mdl = Irp->MdlAddress))
+    {
+        /* Clear all of them */
+        Irp->MdlAddress = Mdl->Next;
+        IoFreeMdl(Mdl);
+    }
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 CcpSimpleWrite
 (PFILE_OBJECT FileObject,
  PLARGE_INTEGER FileOffset,
@@ -71,12 +97,13 @@ CcpSimpleWrite
 	Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
 	
 	ObReferenceObject(FileObject);
-	
+
 	Irp->UserEvent = &ReadWait;
 	Irp->Tail.Overlay.OriginalFileObject = FileObject;
 	Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 	IrpSp = IoGetNextIrpStackLocation(Irp);
 	IrpSp->FileObject = FileObject;
+	IrpSp->CompletionRoutine = CcpSimpleWriteComplete;
 	
 	Status = IoCallDriver(DeviceObject, Irp);
 	if (Status == STATUS_PENDING)
@@ -182,6 +209,7 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	PNOCC_BCB Bcb;
 	LARGE_INTEGER ToWrite = *FileOffset;
 	IO_STATUS_BLOCK IOSB;
+	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
 
 	if (!SectionObjectPointer->SharedCacheMap)
 	{
@@ -194,15 +222,17 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	}
 
 	BOOLEAN Result = CcpMapData
-		((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap,
+		(Map,
 		 FileOffset,
 		 Length,
 		 PIN_WAIT,
 		 (PVOID *)&Bcb,
 		 &Buffer);
 
-	if (!Result) return;
-
+	/* Don't flush a pinned bcb, because we'll disturb the locked-ness
+	 * of the pages.  Figured out how to do this right. */
+	if (!Result || Bcb->Pinned || !Bcb->Dirty) return;
+	
 	BufStart = (PCHAR)PAGE_ROUND_DOWN(((ULONG_PTR)Buffer));
 	ToWrite.LowPart = PAGE_ROUND_DOWN(FileOffset->LowPart);
 
@@ -220,20 +250,19 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 	    ToWrite.QuadPart += PAGE_SIZE;
 	}
 
-	DPRINT
-	    ("Page Write: %08x\n", IOSB.Status);
+	Bcb->Dirty = FALSE;
 
-	CcUnpinData(Bcb);
+	DPRINT("Page Write: %08x\n", IOSB.Status);
 
 	if (IoStatus && NT_SUCCESS(IOSB.Status))
 	{
-		IoStatus->Status = STATUS_SUCCESS;
-		IoStatus->Information = Length;
+	    IoStatus->Status = STATUS_SUCCESS;
+	    IoStatus->Information = Length;
 	}
 	else if (IoStatus)
 	{
-		IoStatus->Status = IOSB.Status;
-		IoStatus->Information = 0;
+	    IoStatus->Status = IOSB.Status;
+	    IoStatus->Information = 0;
 	}
 }
 

@@ -59,7 +59,6 @@ CcInitializeCacheManager(VOID)
 		KEBUGCHECK(0);
 	}
 
-#if 0
 	Status = PsCreateSystemThread
 	    (&CcLazyWriteThreadHandle,
 	     THREAD_ALL_ACCESS,
@@ -68,7 +67,6 @@ CcInitializeCacheManager(VOID)
 	     &CcLazyWriteThreadId,
 	     (PKSTART_ROUTINE) CcpLazyWriteThread,
 	     NULL);
-#endif
 
 	if (!NT_SUCCESS(Status))
 	{

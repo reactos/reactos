@@ -691,6 +691,7 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
 	    {
 		IoFreeMdl(TheBcb->Pinned);
 		TheBcb->Pinned = NULL;
+		TheBcb->Dirty = TRUE;
 		Result = FALSE;
 	    }
 	    _SEH_END;
