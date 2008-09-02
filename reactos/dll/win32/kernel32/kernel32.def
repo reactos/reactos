@@ -274,10 +274,10 @@ FindResourceExW@16
 FindResourceW@12
 FindVolumeClose@4
 FindVolumeMountPointClose@4
-FlsAlloc@4
-FlsFree@4
-FlsGetValue@4
-FlsSetValue@8
+;FlsAlloc@4
+;FlsFree@4
+;FlsGetValue@4
+;FlsSetValue@8
 FlushConsoleInputBuffer@4
 FlushFileBuffers@4
 FlushInstructionCache@12
