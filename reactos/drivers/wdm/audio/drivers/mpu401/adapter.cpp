@@ -111,8 +111,8 @@ DriverEntry(
     IN  PDRIVER_OBJECT Context1,
     IN  PUNICODE_STRING Context2)
 {
-    PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\MPU401Static");
+    //PDEVICE_OBJECT DeviceObject;
+    //UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\MPU401Static");
 
 //    KeBugCheck(0x0000007F);
     DPRINT1("MPU401_KS DriverEntry called, redirecting to PcInitializeAdapterDriver\n");
