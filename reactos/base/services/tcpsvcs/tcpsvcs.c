@@ -94,8 +94,9 @@ CreateServers(PSERVICEINFO pServInfo)
 
         if (hThread[i] == NULL)
         {
-            _swprintf(buf, L"\nFailed to start %s server\n", Services[i].lpName);
+            _swprintf(buf, L"\nError creating %s server thread\n", Services[i].lpName);
             LogEvent(buf, GetLastError(), 0, LOG_ALL);
+            return FALSE;
         }
 
         UpdateStatus(pServInfo, 0, 1);
@@ -116,7 +117,7 @@ CreateServers(PSERVICEINFO pServInfo)
     LogEvent(L"Detaching Winsock2", 0, 0, LOG_FILE);
     WSACleanup();
 
-    return 0;
+    return TRUE;
 }
 
 VOID WINAPI
@@ -188,6 +189,7 @@ ServiceMain(DWORD argc, LPWSTR argv[])
 
     if (!CreateServers(&servInfo))
     {
+        LogEvent(L"Error creating servers", GetLastError(), 1, LOG_ALL);
         servInfo.servStatus.dwServiceSpecificExitCode = 1;
         UpdateStatus(&servInfo, SERVICE_STOPPED, 0);
         return;
