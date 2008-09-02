@@ -674,6 +674,8 @@ NdisRegisterProtocol(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+  *NdisProtocolHandle = NULL;
+
   /* first validate the PROTOCOL_CHARACTERISTICS */
   switch (ProtocolCharacteristics->MajorNdisVersion)
     {

@@ -408,6 +408,8 @@ NdisAllocatePacket(
     NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
         Status, Packet, PoolHandle));
 
+    *Packet = NULL;
+
     if (Pool == NULL)
     {
         *Status = NDIS_STATUS_FAILURE;
@@ -488,6 +490,8 @@ NdisAllocatePacketPoolEx(
         "NumberOfDescriptors (%d)  ProtocolReservedLength (%d).\n",
         Status, PoolHandle, NumberOfDescriptors, ProtocolReservedLength));
 
+    *PoolHandle = NULL;
+
     if (NumberOfDescriptors > 0xffff)
     {
         *Status = NDIS_STATUS_RESOURCES;
@@ -528,8 +532,9 @@ NdisAllocatePacketPoolEx(
 
             *Status     = NDIS_STATUS_SUCCESS;
             *PoolHandle = (PNDIS_HANDLE)Pool;
-        } else
+        } else {
             *Status = NDIS_STATUS_RESOURCES;
+        }
     }
 }
 
@@ -705,6 +710,7 @@ NdisDprAllocatePacket(
  *     PoolHandle = Handle returned by NdisAllocatePacketPool
  */
 {
+    *Status = NDIS_STATUS_FAILURE;
 }
 
 
