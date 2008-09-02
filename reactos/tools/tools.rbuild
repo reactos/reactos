@@ -13,9 +13,6 @@
 <directory name="rgenstat">
 	<xi:include href="rgenstat/rgenstat.rbuild" />
 </directory>
-<directory name="sysreg">
-	<xi:include href="sysreg/sysreg.rbuild" />
-</directory>
 <directory name="unicode">
 	<xi:include href="unicode/unicode.rbuild" />
 </directory>
