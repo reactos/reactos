@@ -45,17 +45,27 @@ BEGIN
     MENUITEM "&Historie",         ID_HISTORY, CHECKED
     MENUITEM "&Statuslinje",      ID_STATUSBAR, CHECKED
   END
-  POPUP "&Bilde"
+  POPUP "&Still"
   BEGIN
-    MENUITEM "&Crop...",           -1, GRAYED
-    MENUITEM "&Endre størrelse ...",         -1, GRAYED
-    MENUITEM "R&oter ...",         -1, GRAYED
-    MENUITEM "&Flip...",           -1, GRAYED
-    MENUITEM "&Strekk...",        -1, GRAYED
-    MENUITEM "S&kew...",           -1, GRAYED
-    MENUITEM "&Inverter Farger",     -1, GRAYED
+    MENUITEM "Lysstyrke...",       ID_BRIGHTNESS
+    MENUITEM "Kontrast...",         ID_CONTRAST
+    MENUITEM "Fargetone/metning...",   -1, GRAYED
+    POPUP "Farger"
+    BEGIN
+      MENUITEM "Svart og hvit"    ID_BLACKANDWHITE
+      MENUITEM "Inverter farger"      ID_INVERTCOLORS
+    END
     MENUITEM SEPARATOR
-    MENUITEM "&Attributter...",     -1, GRAYED
+    MENUITEM "Uskarphet",                ID_BLUR
+    MENUITEM "Sharpen",             ID_SHARPEN
+    MENUITEM "Jevne kantlinje",        -1, GRAYED
+    MENUITEM "Legg til skygger",          -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Bilde størrelse...",       -1, GRAYED
+    MENUITEM "Flip",                -1, GRAYED
+    MENUITEM "Speil",              -1, GRAYED
+    MENUITEM "Rotere",              -1, GRAYED
+
   END
   POPUP "&Farger"
   BEGIN
@@ -87,21 +97,21 @@ BEGIN
 END
 
 IDD_BRIGHTNESS DIALOGEX 6, 5, 193, 120
-CAPTION "Brightness"
+CAPTION "Lysstyrke"
 FONT 8,"MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT      "", IDC_PICPREVIEW, 0, 1, 132, 96, SS_OWNERDRAW | SS_SUNKEN
-  LTEXT      "Color form:", IDC_STATIC, 135, 5, 36, 9
+  LTEXT      "Farge form:", IDC_STATIC, 135, 5, 36, 9
   GROUPBOX   "", IDC_BRI_GROUP, 138 ,30, 50, 48
   CONTROL    "Full (RGB)", IDC_BRI_FULL, "Button", BS_AUTORADIOBUTTON, 138, 18, 46, 9
-  CONTROL    "Red", IDC_BRI_RED, "Button", BS_AUTORADIOBUTTON, 142, 38, 42, 9
-  CONTROL    "Green", IDC_BRI_GREEN, "Button", BS_AUTORADIOBUTTON, 142, 51, 42, 9
-  CONTROL    "Blue", IDC_BRI_BLUE, "Button", BS_AUTORADIOBUTTON, 142, 64, 42, 9
+  CONTROL    "Rød", IDC_BRI_RED, "Button", BS_AUTORADIOBUTTON, 142, 38, 42, 9
+  CONTROL    "Grønn", IDC_BRI_GREEN, "Button", BS_AUTORADIOBUTTON, 142, 51, 42, 9
+  CONTROL    "Blå", IDC_BRI_BLUE, "Button", BS_AUTORADIOBUTTON, 142, 64, 42, 9
   EDITTEXT   IDC_BRI_EDIT, 98, 103, 28, 13
   CONTROL    "", IDC_BRI_TRACKBAR, "msctls_trackbar32", TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 2, 105, 90, 11
   PUSHBUTTON "OK", IDOK, 142, 88, 48, 13
-  PUSHBUTTON "Cancel", IDCANCEL, 142, 105, 48, 13
+  PUSHBUTTON "Avbryt", IDCANCEL, 142, 105, 48, 13
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,210,182
@@ -110,7 +120,7 @@ FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 //EXSTYLE WS_EX_LAYERED
 BEGIN
-  LTEXT "ImageSoft v0.1\nCopyright (C) 2006\nThomas Weidenmueller (w3seek@reactos.org)\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  LTEXT "ImageSoft v0.1\nEnerett (C) 2006\nThomas Weidenmueller (w3seek@reactos.org)\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
   PUSHBUTTON "Lukk", IDOK, 75, 162, 44, 15
   ICON IDI_IMAGESOFTICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
