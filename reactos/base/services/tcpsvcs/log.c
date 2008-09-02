@@ -49,7 +49,7 @@ OpenLogFile()
 {
     hLogFile = CreateFileW(lpLogFileName,
                            GENERIC_WRITE,
-                           0,
+                           FILE_SHARE_READ,
                            NULL,
                            OPEN_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
