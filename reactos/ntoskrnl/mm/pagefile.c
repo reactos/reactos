@@ -694,6 +694,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    ANSI_STRING ProcName;
    PIO_STACK_LOCATION StackPtr;
    PLDR_DATA_TABLE_ENTRY ModuleObject = NULL;
+   PVOID BaseAddress;
 
    Status = ZwFsControlFile(PageFileHandle,
                             0,
@@ -766,13 +767,13 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    }
 
    /* Load the diskdump driver. */
-   Status = MmLoadSystemImage(&DiskDumpName, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+   Status = MmLoadSystemImage(&DiskDumpName, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
    if (ModuleObject == NULL)
    {
       return(STATUS_OBJECT_NAME_NOT_FOUND);
    }
    RtlInitAnsiString(&ProcName, "DiskDumpFunctions");
-   MmCoreDumpFunctions = MiFindExportedRoutineByName(ModuleObject->DllBase,
+   MmCoreDumpFunctions = MiFindExportedRoutineByName(BaseAddress,
                                                      &ProcName);
    if (!NT_SUCCESS(Status))
    {
