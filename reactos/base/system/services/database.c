@@ -896,8 +896,8 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cbReserved2 = 0;
     StartupInfo.lpReserved2 = 0;
 
-    Result = CreateProcessW(ImagePath.Buffer,
-                            NULL,
+    Result = CreateProcessW(NULL,
+                            ImagePath.Buffer,
                             NULL,
                             NULL,
                             FALSE,
