@@ -260,6 +260,7 @@ IsVmwSVGAEnabled(VOID)
   {
     return FALSE;
   }
+  Size = sizeof(DWORD);
   if(RegQueryValueEx(hReg, L"Start", 0, &Type, (BYTE*)&Value, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
