@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS HAL
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halarm/include/hal.h
- * PURPOSE:         Hardware Abstraction Layer Header
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Hardware Abstraction Layer
+ * FILE:            hal/halx86/include/hal.h
+ * PURPOSE:         HAL Header
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
@@ -28,14 +28,23 @@
 #include <arc/arc.h>
 #include <iotypes.h>
 #include <kefuncs.h>
-#include <intrin.h>
 #include <halfuncs.h>
 #include <iofuncs.h>
 #include <ldrtypes.h>
 #include <obfuncs.h>
 
+/* Internal kernel headers */
+#include "internal/pci.h"
+#include "internal/i386/intrin_i.h"
+
 /* Internal HAL Headers */
+//#include "apic.h"
+#include "bus.h"
+//#include "halirq.h"
+//#include "haldma.h"
 #include "halp.h"
+//#include "mps.h"
+//#include "ioapic.h"
 
 /* Helper Header */
 #include <reactos/helper.h>
