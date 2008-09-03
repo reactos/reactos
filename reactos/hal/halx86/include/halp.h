@@ -154,6 +154,17 @@ HalpTrap06(
     VOID
 );
 
+#ifdef _M_AMD64
+#define KfLowerIrql KeLowerIrql
+#ifndef CONFIG_SMP
+/* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+#define KiAcquireSpinLock(SpinLock)
+#define KiReleaseSpinLock(SpinLock)
+#define KfAcquireSpinLock(SpinLock) KfRaiseIrql(DISPATCH_LEVEL);
+#define KfReleaseSpinLock(SpinLock, OldIrql) KeLowerIrql(OldIrql);
+#endif // !CONFIG_SMP
+#endif // _M_AMD64
+
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;
 

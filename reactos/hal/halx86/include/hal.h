@@ -35,7 +35,11 @@
 
 /* Internal kernel headers */
 #include "internal/pci.h"
+#ifdef _M_AMD64
+#include "internal/amd64/intrin_i.h"
+#else
 #include "internal/i386/intrin_i.h"
+#endif
 
 /* Internal HAL Headers */
 #include "apic.h"
