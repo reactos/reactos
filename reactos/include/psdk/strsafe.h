@@ -8,11 +8,25 @@
 #error Both STRSAFE_NO_CCH_FUNCTIONS and STRSAFE_NO_CB_FUNCTIONS are defined
 #endif
 
+#ifndef SUCCEEDED
+#define SUCCEEDED(Status) ((HRESULT)(Status) >= 0)
+#endif
 #define STRSAFE_MAX_CCH 2147483647
 #define STRSAFE_E_INVALID_PARAMETER ((HRESULT)0x80070057L)
+#define STRSAFE_E_INSUFFICIENT_BUFFER ((HRESULT)0x8007007AL)
+#define STRSAFE_E_END_OF_FILE ((HRESULT)0x80070026L)
+
+#define STRSAFE_FILL_BEHIND_NULL 0x00000200
+#define STRSAFE_IGNORE_NULLS 0x00000200
+#define STRSAFE_FILL_ON_FAILURE 0x00000400
+#define STRSAFE_NULL_ON_FAILURE 0x00000800
+#define STRSAFE_NO_TRUNCATION 0x00001000
+
 #ifndef S_OK
 #define S_OK  ((HRESULT)0x00000000L)
 #endif
+
+#define STRSAFE_MIN(a,b) (((a) < (b))?(a):(b))
 
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
@@ -75,6 +89,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCbCatEx StringCbCatExW
 #define StringCbCatN StringCbCatNW
 #define StringCbCatNEx StringCbCatNExW
+#define StringCbCatWorker StringCxxCatWorkerW
 #define StringCbCopy StringCbCopyW
 #define StringCbCopyEx StringCbCopyExW
 #define StringCbCopyN StringCbCopyNW
@@ -90,6 +105,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCchCatEx StringCchCatExW
 #define StringCchCatN StringCchCatNW
 #define StringCchCatNEx StringCchCatNExW
+#define StringCchCatWorker StringCchCatWorkerW
 #define StringCchCopy StringCchCopyW
 #define StringCchCopyEx StringCchCopyExW
 #define StringCchCopyN StringCchCopyNW
@@ -112,6 +128,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCbCatEx StringCbCatExA
 #define StringCbCatN StringCbCatNA
 #define StringCbCatNEx StringCbCatNExA
+#define StringCbCatWorker StringCxxCatWorkerA
 #define StringCbCopy StringCbCopyA
 #define StringCbCopyEx StringCbCopyExA
 #define StringCbCopyN StringCbCopyNA
@@ -127,6 +144,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCchCatEx StringCchCatExA
 #define StringCchCatN StringCchCatNA
 #define StringCchCatNEx StringCchCatNExA
+#define StringCchCatWorker StringCchCatWorkerA
 #define StringCchCopy StringCchCopyA
 #define StringCchCopyEx StringCchCopyExA
 #define StringCchCopyN StringCchCopyNA
@@ -156,6 +174,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCxxCatEx StringCbCatEx
 #define StringCxxCatN StringCbCatN
 #define StringCxxCatNEx StringCbCatNEx
+#define StringCxxCatWorker StringCbCatWorker
 #define StringCxxCopy StringCbCopy
 #define StringCxxCopyEx StringCbCopyEx
 #define StringCxxCopyN StringCbCopyN
@@ -178,6 +197,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCxxCatEx StringCchCatEx
 #define StringCxxCatN StringCchCatN
 #define StringCxxCatNEx StringCchCatNEx
+#define StringCxxCatWorker StringCchCatWorker
 #define StringCxxCopy StringCchCopy
 #define StringCxxCopyEx StringCchCopyEx
 #define StringCxxCopyN StringCchCopyN
@@ -218,24 +238,86 @@ STRSAFEAPI StringCxxVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPT
 /* Create inlined versions */
 #define STRSAFEAPI HRESULT static __inline__
 
+STRSAFEAPI StringCxxCatWorker(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cxMaxAppend, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags, int UseN)
+{
+    HRESULT result;
+    STRSAFE_LPTSTR psz = pszDest;
+    size_t cch = STRSAFE_CXXtoCCH(cxDest);
+
+    if (!pszDest || !pszSrc || cch > STRSAFE_MAX_CCH || cch == 0)
+    {
+        return STRSAFE_E_INVALID_PARAMETER;
+    }
+
+    for (--psz; *(++psz) != 0 && --cch > 0;);
+    if (cch == 0)
+    {
+        return STRSAFE_E_INSUFFICIENT_BUFFER;
+    }
+
+    if (UseN)
+    {
+        cch = STRSAFE_MIN(cxDest, STRSAFE_CXXtoCCH(cxMaxAppend));
+    }
+
+    for (--pszSrc, --psz; (*(++psz) = *(++pszSrc)) != 0 && --cch > 0;);
+    if (cch == 0)
+    {
+        result = STRSAFE_E_INSUFFICIENT_BUFFER;
+    }
+    else
+        result = S_OK;
+
+    if (ppszDestEnd)
+    {
+        *ppszDestEnd = psz;
+    }
+
+    if (pcbRemaining)
+    {
+        *pcbRemaining = STRSAFE_CCHtoCXX(cch);
+    }
+
+    if (dwFlags & STRSAFE_FILL_BEHIND_NULL)
+    {
+        for (--psz, ++cch; --cch; *(++psz) = dwFlags & 0xff);
+    }
+
+    if (!SUCCEEDED(result))
+    {
+        if (dwFlags & STRSAFE_FILL_ON_FAILURE)
+        {
+           cch = STRSAFE_CXXtoCCH(cxDest);
+           for (--pszDest, ++cch; --cch; *(++pszDest) = dwFlags & 0xff);
+        }
+
+        if (dwFlags & STRSAFE_NULL_ON_FAILURE)
+        {
+            *pszDest = 0;
+        }
+    }
+
+    return result;
+}
+
+STRSAFEAPI StringCxxCatEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+{
+    return StringCxxCatWorker(pszDest, cxDest, pszSrc, 0, ppszDestEnd, pcbRemaining, dwFlags, 0);
+}
+
 STRSAFEAPI StringCxxCat(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc)
 {
-    return 0; // FIXME
+    return StringCxxCatWorker(pszDest, cxDest, pszSrc, 0, NULL, NULL, 0, 0);
 }
 
-STRSAFEAPI StringCxxCatEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI StringCxxCatN(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend)
 {
-    return 0; // FIXME
+    return StringCxxCatWorker(pszDest, cxDest, pszSrc, cbMaxAppend, NULL, NULL, 0, 1);
 }
 
-STRSAFEAPI StringCxxCatN(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend)
+STRSAFEAPI StringCxxCatNEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
 {
-    return 0; // FIXME
-}
-
-STRSAFEAPI StringCxxCatNEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
-{
-    return 0; // FIXME
+    return StringCxxCatWorker(pszDest, cxDest, pszSrc, cbMaxAppend, ppszDestEnd, pcbRemaining, dwFlags, 1);
 }
 
 STRSAFEAPI StringCxxCopy(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc)
@@ -331,6 +413,7 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
 #undef StringCxxCatEx
 #undef StringCxxCatN
 #undef StringCxxCatNEx
+#undef StringCxxCatWorker
 #undef StringCxxCopy
 #undef StringCxxCopyEx
 #undef StringCxxCopyN
@@ -347,6 +430,7 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
 #undef StringCbCatEx
 #undef StringCbCatN
 #undef StringCbCatNEx
+#undef StringCbCatWorker
 #undef StringCbCopy
 #undef StringCbCopyEx
 #undef StringCbCopyN
@@ -362,6 +446,7 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
 #undef StringCchCatEx
 #undef StringCchCatN
 #undef StringCchCatNEx
+#undef StringCchCatWorker
 #undef StringCchCopy
 #undef StringCchCopyEx
 #undef StringCchCopyN
