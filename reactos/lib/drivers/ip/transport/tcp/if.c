@@ -34,9 +34,9 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     NTSTATUS Status;
     POSK_IFADDR ifaddr = exAllocatePool
 	( NonPagedPool, sizeof(*ifaddr) + 2 * sizeof( struct sockaddr_in ) );
+    if( !ifaddr ) return NULL;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)&ifaddr[1];
     struct sockaddr_in *dstaddr_in = (struct sockaddr_in *)&addr_in[1];
-    if( !ifaddr ) return NULL;
 
     TI_DbgPrint(DEBUG_TCPIF,("Called\n"));
 
