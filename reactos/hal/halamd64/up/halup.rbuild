@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halup" type="kernelmodedll" installbase="system32" installname="hal.dll">
-	<importlibrary definition="../halamd64.def" />
+	<importlibrary base="hal" definition="hal_amd64.def" />
 	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
 	<include base="halup">../include</include>
 	<include base="ntoskrnl">include</include>
