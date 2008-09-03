@@ -68,8 +68,8 @@ static __inline__ __attribute__((always_inline)) void __str(unsigned short *Dest
     : /* no outputs */ \
     : "m" (X));
 
-#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfq ; popq %0":"=g" (x): /* no input */)
-#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushq %0 ; popfq": /* no output */ :"g" (x):"memory")
+#define Ke386SaveFlags(x)        __asm__ __volatile__("pushfq ; popq %0":"=rm" (x): /* no input */)
+#define Ke386RestoreFlags(x)     __asm__ __volatile__("pushq %0 ; popfq": /* no output */ :"irm" (x):"memory")
 
 #define _Ke386GetSeg(N)           ({ \
                                      unsigned int __d; \
