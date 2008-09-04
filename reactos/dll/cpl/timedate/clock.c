@@ -244,8 +244,6 @@ ClockWndProc(HWND hwnd,
         case CLM_STARTCLOCK:
             if (!pClockData->bTimer)
             {
-                InvalidateRect(hwnd, NULL, FALSE);
-
                 SetTimer(hwnd, ID_TIMER, 1000, NULL);
                 pClockData->bTimer = TRUE;
             }
