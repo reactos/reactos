@@ -13,13 +13,14 @@
 			<file>dma.c</file>
 			<file>drive.c</file>
 			<file>display.c</file>
+			<file>pci.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
 			<file>timer.c</file>
 		</directory>
 		<directory name="mp">
-			<!-- file>apic.c</file -->
+			<file>apic.c</file>
 		</directory>
 		<directory name="include">
 			<pch>hal.h</pch>

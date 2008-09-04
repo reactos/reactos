@@ -9,6 +9,7 @@
 		<file>halinit.c</file>
 		<file>irq.S</file>
 		<file>misc.c</file>
+		<file>mps.S</file>
 		<file>systimer.S</file>
 		<pch>../include/hal.h</pch>
 	</module>

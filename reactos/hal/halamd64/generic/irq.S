@@ -34,13 +34,44 @@
 .globl _HalpInitPICs
 .func _HalpInitPICs
 _HalpInitPICs:
-UNIMPLEMENTED "HalpInitPICs"
-
+    UNIMPLEMENTED "HalpInitPICs"
 .endfunc
+
+.global _HalEnableInterrupt
+.func _HalEnableInterrupt
+_HalEnableInterrupt:
+    UNIMPLEMENTED "HalEnableInterrupt"
+.endfunc
+
+.global _HalDisableInterrupt
+.func _HalDisableInterrupt
+_HalDisableInterrupt:
+    UNIMPLEMENTED "HalDisableInterrupt"
+.endfunc
+
+.global _HalRequestSoftwareInterrupt
+.func _HalRequestSoftwareInterrupt
+_HalRequestSoftwareInterrupt:
+    UNIMPLEMENTED "HalRequestSoftwareInterrupt"
+.endfunc
+
+.global _HalSendSoftwareInterrupt
+.func _HalSendSoftwareInterrupt
+_HalSendSoftwareInterrupt:
+    UNIMPLEMENTED "HalSendSoftwareInterrupt"
+.endfunc
+
+.global _HalEndSystemInterrupt
+.func _HalEndSystemInterrupt
+_HalEndSystemInterrupt:
+    UNIMPLEMENTED "HalEndSystemInterrupt"
+.endfunc
+
 
 .globl _HalClearSoftwareInterrupt
 .func _HalClearSoftwareInterrupt
 _HalClearSoftwareInterrupt:
+    UNIMPLEMENTED "HalClearSoftwareInterrupt"
 
     /* Get IRR mask */
     mov eax, 1
@@ -52,42 +83,9 @@ _HalClearSoftwareInterrupt:
     ret
 .endfunc
 
-.globl _HalRequestSoftwareInterrupt
-.func _HalRequestSoftwareInterrupt
-_HalRequestSoftwareInterrupt:
-UNIMPLEMENTED "HalRequestSoftwareInterrupt"
-.endfunc
-
 .globl _HalBeginSystemInterrupt
 .func _HalBeginSystemInterrupt
 _HalBeginSystemInterrupt:
-UNIMPLEMENTED "HalBeginSystemInterrupt"
-.endfunc
-
-.globl _HalpApcInterrupt
-.func _HalpApcInterrupt
-//TRAP_FIXUPS hapc_a, hapc_t, DoFixupV86, DoFixupAbios
-_HalpApcInterrupt:
-UNIMPLEMENTED "HalpApcInterrupt"
-.endfunc
-
-.globl _HalpApcInterrupt2ndEntry
-.func _HalpApcInterrupt2ndEntry
-_HalpApcInterrupt2ndEntry:
-UNIMPLEMENTED "HalpApcInterrupt2ndEntry"
-.endfunc
-
-.globl _HalpDispatchInterrupt
-.func _HalpDispatchInterrupt
-//TRAP_FIXUPS hdpc_a, hdpc_t, DoFixupV86, DoFixupAbios
-_HalpDispatchInterrupt:
-UNIMPLEMENTED "HalpDispatchInterrupt"
-.endfunc
-
-
-.globl _HalpDispatchInterrupt2ndEntry
-.func _HalpDispatchInterrupt2ndEntry
-_HalpDispatchInterrupt2ndEntry:
-UNIMPLEMENTED "HalpDispatchInterrupt2ndEntry"
+    UNIMPLEMENTED "HalBeginSystemInterrupt"
 .endfunc
 

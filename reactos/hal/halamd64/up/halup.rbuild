@@ -8,7 +8,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<library>hal_generic_amd64</library>
-	<library>hal_generic_pc</library>
 	<library>hal_generic</library>
 	<library>ntoskrnl</library>
 	<file>halinit_up.c</file>
