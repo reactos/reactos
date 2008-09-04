@@ -14,9 +14,9 @@ HalAssignSlotResources
 HalCalibratePerformanceCounter
 HalClearSoftwareInterrupt
 ;HalConvertDeviceIdtToIrql
-HalDisableInterrupt
+;HalDisableInterrupt
 HalDisplayString
-HalEnableInterrupt
+;HalEnableInterrupt
 ;HalEnumerateEnvironmentVariablesEx
 ;HalEnumerateProcessors
 HalFlushCommonBuffer
@@ -52,7 +52,7 @@ HalRequestIpi
 HalRequestSoftwareInterrupt
 HalReturnToFirmware
 ;HalSendNMI
-HalSendSoftwareInterrupt
+;HalSendSoftwareInterrupt
 HalSetBusData
 HalSetBusDataByOffset
 HalSetDisplayParameters
