@@ -31,7 +31,44 @@ int _tmain(int argc, TCHAR ** argv)
 		return -1;
 	}
 
-	if (_tcsstr(argv[1], "--process") && (argc == 3)) 
+	if (_tcsstr(argv[1], "--winetest") && (argc == 3)) 
+	{
+		char   psBuffer[128];
+		char   psBuffer2[128];
+		char   cmd[255];
+		FILE   *pPipe;
+		FILE   *pPipe2;
+
+		/* get available tests */
+		pPipe = _tpopen(argv[2], "r");
+		if (pPipe != NULL)
+		{
+			while(fgets(psBuffer, 128, pPipe))
+			{
+				char *nlptr = strchr(psBuffer, '\n');
+				if (nlptr)
+					psBuffer[*psBuffer - *nlptr - 1] = '\0';
+				if (psBuffer[0] == ' ')
+				{
+					strcpy(cmd, argv[2]);
+					strcat(cmd, " ");
+					strcat(cmd, psBuffer+4);
+					/* run the current test */
+					pPipe2 = _tpopen(cmd, "r");
+					if (pPipe2 != NULL)
+					{
+						while(fgets(psBuffer2, 128, pPipe2))
+						{
+							OutputDebugStringA(psBuffer2);
+						}
+						_pclose(pPipe2);
+					}
+				}
+			}
+			_pclose(pPipe);
+		}
+	}
+	else if (_tcsstr(argv[1], "--process") && (argc == 3)) 
 	{
 		char   psBuffer[128];
 		FILE   *pPipe;
