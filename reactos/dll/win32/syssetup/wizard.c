@@ -2232,6 +2232,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
           fwrite(szPath, 1, strlen(szPath) + 1, file);
           strcpy(&szPath[length], "shutdown.exe -s");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
+          fprintf(file, "%s\n", "");
         }
       fclose(file);
     }
