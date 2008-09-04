@@ -40,6 +40,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
+/* critical section to protect non-reentrant gethostbyname() */
+static CRITICAL_SECTION cs_gethostbyname;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &cs_gethostbyname,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": cs_gethostbyname") }
+};
+static CRITICAL_SECTION cs_gethostbyname = { &critsect_debug, -1, 0, 0, 0, 0 };
+
 #define TIME_STRING_LEN  30
 
 time_t ConvertTimeString(LPCWSTR asctime)
@@ -151,12 +161,15 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     name = HeapAlloc(GetProcessHeap(), 0, sz+1);
     WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, name, sz, NULL, NULL );
     name[sz] = 0;
+
+    EnterCriticalSection( &cs_gethostbyname );
     phe = gethostbyname(name);
     HeapFree( GetProcessHeap(), 0, name );
 
     if (NULL == phe)
     {
         TRACE("Failed to get hostname: (%s)\n", debugstr_w(lpszServerName) );
+        LeaveCriticalSection( &cs_gethostbyname );
         return FALSE;
     }
 
@@ -165,6 +178,7 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     psa->sin_family = phe->h_addrtype;
     psa->sin_port = htons(nServerPort);
 
+    LeaveCriticalSection( &cs_gethostbyname );
     return TRUE;
 }
 
