@@ -2217,22 +2217,9 @@ ProcessUnattendInf(HINF hUnattendedInf)
                     (const BYTE*)szPath,
                      strlen(szPath) * sizeof(char));
 
-      if (GetSystemDirectoryA(szPath, MAX_PATH))
-        {
-          UINT length = strlen(szPath);
-
-          if (szPath[length-1] != '\\')
-            {
-              szPath[length]  = '\\';
-              length++;
-          }
-		  strcpy(&szPath[length], "dbgprint.exe --winetest %windir%\\bin\\version_winetest.exe\n");
-          fwrite(szPath, 1, strlen(szPath) + 1, file);
-          strcpy(&szPath[length], "dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
-          fwrite(szPath, 1, strlen(szPath) + 1, file);
-          strcpy(&szPath[length], "shutdown.exe -s");
-          fwrite(szPath, 1, strlen(szPath) + 1, file);
-        }
+      fprintf(file, "dbgprint --winetest %windir%\\bin\\version_winetest.exe\n");
+      fprintf(file, "dbgprint SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
+      fprintf(file, "shutdown -s\n");
       fclose(file);
     }
     RegCloseKey(hKey);
