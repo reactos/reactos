@@ -2217,9 +2217,9 @@ ProcessUnattendInf(HINF hUnattendedInf)
                     (const BYTE*)szPath,
                      strlen(szPath) * sizeof(char));
 
-      fprintf(file, "dbgprint --winetest %windir%\\bin\\version_winetest.exe\n");
-      fprintf(file, "dbgprint SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
-      fprintf(file, "shutdown -s\n");
+      fprintf(file, "%s\n", "dbgprint --winetest %windir%\\bin\\version_winetest.exe");
+      fprintf(file, "%s\n", "dbgprint SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE");
+      fprintf(file, "%s\n", "shutdown -s");
       fclose(file);
     }
     RegCloseKey(hKey);
