@@ -38,9 +38,8 @@ DriverEntry(
   PUNICODE_STRING RegistryPath)
 {
   UNIMPLEMENTED;
-intptr_t y = __readeflags();
-__writeeflags(34);
-  return y;//STATUS_SUCCESS;
+
+  return STATUS_SUCCESS;
 }
 
 /*
