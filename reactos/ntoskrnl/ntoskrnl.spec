@@ -559,9 +559,6 @@
 @ stdcall KeCapturePersistentThreadState(ptr long long long long long ptr)
 @ stdcall KeClearEvent(ptr)
 @ stdcall KeConnectInterrupt(ptr)
-#ifdef _M_ARM
-@ extern KeDcacheFlushCount
-#endif
 @ stdcall KeDelayExecutionThread(long long ptr)
 @ stdcall KeDeregisterBugCheckCallback(ptr)
 @ stdcall KeDeregisterBugCheckReasonCallback(ptr)
@@ -590,9 +587,6 @@
 @ stdcall KeI386ReleaseGdtSelectors(ptr long)
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
-#endif
-#ifdef _M_ARM
-@ extern KeIcacheFlushCount
 #endif
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
@@ -711,15 +705,16 @@
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
+#ifdef _M_IX86
 @ stdcall KiCoprocessorError()
+#endif
 @ stdcall KiDeliverApc(long ptr ptr)
+#ifdef _M_IX86
 @ stdcall KiDispatchInterrupt()
+#endif
 @ extern KiEnableTimerWatchdog
 @ stdcall KiIpiServiceRoutine(ptr ptr)
 @ fastcall KiReleaseSpinLock(ptr)
-#ifdef _M_ARM
-@ extern KiRawTicks
-#endif
 @ cdecl KiUnexpectedInterrupt()
 #ifdef _M_IX86
 ;Kii386SpinOnSpinLock
@@ -1521,6 +1516,7 @@
 ;_CIsin
 ;_CIsqrt
 @ cdecl _abnormal_termination()
+#ifdef _M_IX86
 @ cdecl _alldiv()
 @ cdecl _alldvrm()
 @ cdecl _allmul()
@@ -1532,6 +1528,7 @@
 @ cdecl _aulldvrm()
 @ cdecl _aullrem()
 @ cdecl _aullshr()
+#endif
 @ cdecl _except_handler2()
 @ cdecl _except_handler3()
 @ cdecl _global_unwind2()
