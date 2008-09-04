@@ -2192,6 +2192,8 @@ ProcessUnattendInf(HINF hUnattendedInf)
     {
       char szPath[MAX_PATH];
       FILE * file;
+      WIN32_FIND_DATAA ffd;
+      HANDLE hFind = INVALID_HANDLE_VALUE;
 #if 0
       if (!SHGetSpecialFolderPathA(0, szPath, CSIDL_DESKTOP, FALSE))
         {
@@ -2217,7 +2219,20 @@ ProcessUnattendInf(HINF hUnattendedInf)
                     (const BYTE*)szPath,
                      strlen(szPath) * sizeof(char));
 
-      fprintf(file, "%s\n", "dbgprint --winetest %windir%\\bin\\version_winetest.exe");
+
+      /* winetests */
+      hFind = FindFirstFileA("%windir%\\bin\\*.exe", &ffd);
+      if (hFind != INVALID_HANDLE_VALUE) 
+      {
+        do
+        {
+          if (ffd.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY)
+            fprintf(file, "%s%s\n", "dbgprint --winetest %windir%\\bin\\", ffd.cFileName);
+        }
+        while (FindNextFileA(hFind, &ffd) != 0);
+        FindClose(hFind);
+      }
+
       fprintf(file, "%s\n", "dbgprint SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE");
       fprintf(file, "%s\n", "shutdown -s");
       fclose(file);
