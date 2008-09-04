@@ -2226,13 +2226,12 @@ ProcessUnattendInf(HINF hUnattendedInf)
               szPath[length]  = '\\';
               length++;
           }
-          strcpy(&szPath[length], "dbgprint.exe --winetest %windir%\bin\version_winetest.exe\n");
+		  strcpy(&szPath[length], "dbgprint.exe --winetest c:\reactos\bin\version_winetest.exe\n");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
           strcpy(&szPath[length], "dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
           strcpy(&szPath[length], "shutdown.exe -s");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
-          fprintf(file, "%s\n", "");
         }
       fclose(file);
     }
