@@ -38,8 +38,9 @@ DriverEntry(
   PUNICODE_STRING RegistryPath)
 {
   UNIMPLEMENTED;
-
-  return STATUS_SUCCESS;
+intptr_t y = __readeflags();
+__writeeflags(34);
+  return y;//STATUS_SUCCESS;
 }
 
 /*
@@ -821,7 +822,7 @@ KeQueryPerformanceCounter(
   return Value;
 }
 
-#if 0
+#ifndef _M_AMD64
 #undef KeRaiseIrql
 VOID
 NTAPI
