@@ -29,16 +29,6 @@ static const WCHAR szClockWndClass[] = L"ClockWndClass";
 
 
 static VOID
-SetIsotropic(HDC hdc, PCLOCKDATA pClockData)
-{
-    /* set isotropic mode */
-     SetMapMode(hdc, MM_ISOTROPIC);
-     /* position axis in centre of window */
-     SetViewportOrgEx(hdc, pClockData->cxClient / 2, pClockData->cyClient / 2, NULL);
-}
-
-
-static VOID
 RotatePoint(POINT pt[], INT iNum, INT iAngle)
 {
      INT i;
@@ -141,8 +131,7 @@ ClockWndProc(HWND hwnd,
              LPARAM lParam)
 {
     PCLOCKDATA pClockData;
-    HDC hdc, dcMem;
-    HBITMAP bmMem, bmOld;
+    HDC hdc, hdcMem;
     PAINTSTRUCT ps;
 
     pClockData = (PCLOCKDATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -169,38 +158,68 @@ ClockWndProc(HWND hwnd,
 
         case WM_TIMER:
             GetLocalTime(&pClockData->stCurrent);
-            //InvalidateRect(hwnd, NULL, TRUE);
-            InvalidateRect(hwnd, NULL, FALSE);
+            InvalidateRect(hwnd, NULL, TRUE);
             pClockData->stPrevious = pClockData->stCurrent;
             break;
 
         case WM_PAINT:
             hdc = BeginPaint(hwnd, &ps);
 
-	    /* Use an offscreen dc to avoid flicker */
+            hdcMem = CreateCompatibleDC(hdc);
+            if (hdcMem)
+            {
+                HBITMAP hBmp, hBmpOld;
+                
+                hBmp = CreateCompatibleBitmap(hdc,
+                                              pClockData->cxClient,
+                                              pClockData->cyClient);
+                if (hBmp)
+                {
+                    HBRUSH hWinBrush, hWinBrushOld;
+                    INT oldMap;
+                    POINT oldOrg;
 
-	    dcMem = CreateCompatibleDC(hdc);
-	    bmMem = CreateCompatibleBitmap(hdc, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top);
+                    hBmpOld = SelectObject(hdcMem, hBmp);
 
-	    bmOld = SelectObject(dcMem, bmMem);
-	    SetViewportOrgEx(dcMem, -ps.rcPaint.left, -ps.rcPaint.top, NULL);
-	    FillRect(dcMem, &ps.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
+                    hWinBrush = GetSysColorBrush(COLOR_BTNFACE);
+                    hWinBrushOld = SelectObject(hdcMem, hWinBrush);
+                    PatBlt(hdcMem,
+                           0,
+                           0,
+                           pClockData->cxClient,
+                           pClockData->cyClient,
+                           PATCOPY);
 
-            SetIsotropic(dcMem, pClockData);
-            DrawClock(dcMem, pClockData);
-            DrawHands(dcMem, &pClockData->stPrevious, TRUE);
-            
-	    /* Blit the changes to the screen */
-	    BitBlt(hdc, 
-		ps.rcPaint.left, ps.rcPaint.top,
-		ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top,
-		dcMem,
-		ps.rcPaint.left, ps.rcPaint.top,
-		SRCCOPY);
+                    oldMap = SetMapMode(hdcMem, MM_ISOTROPIC);
+                    SetViewportOrgEx(hdcMem,
+                                     pClockData->cxClient / 2,
+                                     pClockData->cyClient / 2,
+                                     &oldOrg);
 
-            SelectObject(dcMem, bmOld);
-	    DeleteObject(bmMem);
-	    DeleteObject(dcMem);
+                    DrawClock(hdcMem, pClockData);
+                    DrawHands(hdcMem, &pClockData->stPrevious, TRUE);
+
+                    SetMapMode(hdcMem, oldMap);
+                    SetViewportOrgEx(hdcMem, oldOrg.x, oldOrg.y, NULL);
+
+                    BitBlt(hdc,
+                           0,
+                           0,
+                           pClockData->cxClient,
+                           pClockData->cyClient,
+                           hdcMem,
+                           0,
+                           0,
+                           SRCCOPY);
+
+                    SelectObject(hdcMem, hWinBrushOld);
+                    SelectObject(hdcMem, hBmpOld);
+                    DeleteObject(hBmp);
+                }
+
+                DeleteDC(hdcMem);
+            }
+
             EndPaint(hwnd, &ps);
             break;
 
@@ -226,7 +245,7 @@ ClockWndProc(HWND hwnd,
             CopyMemory(&pClockData->stPrevious, (LPSYSTEMTIME)lParam, sizeof(SYSTEMTIME));
 
             /* Redraw the clock */
-            InvalidateRect(hwnd, NULL, FALSE);
+            InvalidateRect(hwnd, NULL, TRUE);
             break;
 
         default:
