@@ -158,7 +158,7 @@ ClockWndProc(HWND hwnd,
 
         case WM_TIMER:
             GetLocalTime(&pClockData->stCurrent);
-            InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
             pClockData->stPrevious = pClockData->stCurrent;
             break;
 
@@ -233,19 +233,22 @@ ClockWndProc(HWND hwnd,
             HeapFree(GetProcessHeap(), 0, pClockData);
             break;
 
-        case CLM_SETTIME:
-            /* Stop the timer if it is still running */
+        case CLM_STOPCLOCK:
             if (pClockData->bTimer)
             {
                 KillTimer(hwnd, ID_TIMER);
                 pClockData->bTimer = FALSE;
             }
+            break;
 
-            /* Set the current time */
-            CopyMemory(&pClockData->stPrevious, (LPSYSTEMTIME)lParam, sizeof(SYSTEMTIME));
+        case CLM_STARTCLOCK:
+            if (!pClockData->bTimer)
+            {
+                InvalidateRect(hwnd, NULL, FALSE);
 
-            /* Redraw the clock */
-            InvalidateRect(hwnd, NULL, TRUE);
+                SetTimer(hwnd, ID_TIMER, 1000, NULL);
+                pClockData->bTimer = TRUE;
+            }
             break;
 
         default:
