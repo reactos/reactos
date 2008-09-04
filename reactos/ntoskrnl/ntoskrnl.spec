@@ -169,12 +169,14 @@
 @ fastcall ExfReleasePushLockShared(ptr)
 @ fastcall ExfTryToWakePushLock(ptr)
 @ fastcall ExfUnblockPushLock(ptr ptr)
+#ifdef _M_IX86
 @ fastcall Exfi386InterlockedDecrementLong(ptr)
 @ fastcall Exfi386InterlockedExchangeUlong(ptr long)
 @ fastcall Exfi386InterlockedIncrementLong(ptr)
 @ stdcall Exi386InterlockedDecrementLong(ptr)
 @ stdcall Exi386InterlockedExchangeUlong(ptr long long)
 @ stdcall Exi386InterlockedIncrementLong(ptr)
+#endif
 @ fastcall ExiAcquireFastMutex(ptr) ExAcquireFastMutex
 @ fastcall ExiReleaseFastMutex(ptr) ExReleaseFastMutex
 @ fastcall ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
@@ -534,10 +536,12 @@
 @ stdcall KdPowerTransition(long)
 @ stdcall KdRefreshDebuggerNotPresent()
 @ stdcall KdSystemDebugControl(long ptr long ptr long ptr long)
+#ifdef _M_IX86
 @ stdcall Ke386CallBios(long ptr)
 ;Ke386IoSetAccessProcess
 ;Ke386QueryIoAccessMap
 ;Ke386SetIoAccessMap
+#endif
 @ fastcall KeAcquireGuardedMutex(ptr)
 @ fastcall KeAcquireGuardedMutexUnsafe(ptr)
 @ fastcall KeAcquireInStackQueuedSpinLockAtDpcLevel(ptr ptr)
@@ -555,6 +559,9 @@
 @ stdcall KeCapturePersistentThreadState(ptr long long long long long ptr)
 @ stdcall KeClearEvent(ptr)
 @ stdcall KeConnectInterrupt(ptr)
+#ifdef _M_ARM
+@ extern KeDcacheFlushCount
+#endif
 @ stdcall KeDelayExecutionThread(long long ptr)
 @ stdcall KeDeregisterBugCheckCallback(ptr)
 @ stdcall KeDeregisterBugCheckReasonCallback(ptr)
@@ -572,6 +579,7 @@
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
+#ifdef _M_IX86
 ;KeI386AbiosCall
 @ stdcall KeI386AllocateGdtSelectors(ptr long)
 ;KeI386Call16BitCStyleFunction
@@ -582,6 +590,10 @@
 @ stdcall KeI386ReleaseGdtSelectors(ptr long)
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
+#endif
+#ifdef _M_ARM
+@ extern KeIcacheFlushCount
+#endif
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
 @ stdcall KeInitializeDeviceQueue(ptr)
@@ -693,7 +705,9 @@
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
 @ fastcall KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
+#ifdef _M_IX86
 @ stdcall Kei386EoiHelper()
+#endif
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
@@ -703,8 +717,13 @@
 @ extern KiEnableTimerWatchdog
 @ stdcall KiIpiServiceRoutine(ptr ptr)
 @ fastcall KiReleaseSpinLock(ptr)
+#ifdef _M_ARM
+@ extern KiRawTicks
+#endif
 @ cdecl KiUnexpectedInterrupt()
+#ifdef _M_IX86
 ;Kii386SpinOnSpinLock
+#endif
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(ptr ptr long ptr)

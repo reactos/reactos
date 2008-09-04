@@ -2,12 +2,7 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<ifnot property="ARCH" value="arm">
-		<importlibrary definition="ntoskrnl.spec.def" />
-	</ifnot>
-	<if property="ARCH" value="arm">
-		<importlibrary definition="ntoskrnl_arm.def" />
-	</if>
+	<importlibrary definition="ntoskrnl.spec.def" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
