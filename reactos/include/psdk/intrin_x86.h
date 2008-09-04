@@ -1064,6 +1064,17 @@ static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void
 	return retval;
 }
 
+static __inline__ __attribute__((always_inline)) void __writeeflags(uintptr_t Value)
+{
+	__asm__ __volatile__("push %0\n popf" : : "rim"(Value));
+}
+
+static __inline__ __attribute__((always_inline)) uintptr_t __readeflags(void)
+{
+	uintptr_t retval;
+	__asm__ __volatile__("pushf\n pop %0" : "=rm"(retval));
+	return retval;
+}
 
 /*** Interrupts ***/
 static __inline__ __attribute__((always_inline)) void __debugbreak(void)
