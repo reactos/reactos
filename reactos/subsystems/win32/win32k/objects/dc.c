@@ -216,7 +216,7 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
                                   QueryTable,
                                   NULL,
                                   NULL);
-  RtlFreeUnicodeString(&RegistryPath);
+  ExFreePoolWithTag(RegistryPath.Buffer, TAG_RTLREGISTRY);
   if (! NT_SUCCESS(Status))
     {
       DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
@@ -323,7 +323,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
         }
     }
 
-  RtlFreeUnicodeString(&RegistryPath);
+  ExFreePoolWithTag(RegistryPath.Buffer, TAG_RTLREGISTRY);
 
   if (! Valid)
     {
@@ -428,14 +428,14 @@ IntPrepareDriver()
       if (!GotDriver)
       {
          ObDereferenceObject(PrimarySurface.VideoFileObject);
-         RtlFreeUnicodeString(&DriverFileNames);
+         ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
          DPRINT1("No suitable DDI driver found\n");
          continue;
       }
 
       DPRINT("Display driver %S loaded\n", CurrentName);
 
-      RtlFreeUnicodeString(&DriverFileNames);
+      ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
 
       DPRINT("Building DDI Functions\n");
 
@@ -2453,7 +2453,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   {
     if(Buf)
     {
-      ExFreePool(Buf);
+      ExFreePoolWithTag(Buf, TAG_DC);
     }
     DPRINT1("GDIOBJ_AllocObjWithHandle failed\n");
     return NULL;
@@ -2644,7 +2644,8 @@ BOOL INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
   PDC pDC = (PDC)ObjectBody;
-  RtlFreeUnicodeString(&pDC->DriverName);
+  if (pDC->DriverName.Buffer)
+    ExFreePoolWithTag(pDC->DriverName.Buffer, TAG_DC);
   return TRUE;
 }
 
@@ -3103,7 +3104,7 @@ IntEnumDisplaySettings(
         }
       }
 
-      RtlFreeUnicodeString(&DriverFileNames);
+      ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
     }
 
     /* return cached info */
