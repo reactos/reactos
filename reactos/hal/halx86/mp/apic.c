@@ -228,7 +228,7 @@ __inline ULONG _APICRead(ULONG Offset)
 {
    PULONG p;
 
-   p = (PULONG)((ULONG)APICBase + Offset);
+   p = (PULONG)((ULONG_PTR)APICBase + Offset);
    return *p;
 }
 
@@ -238,7 +238,7 @@ __inline VOID APICWrite(ULONG Offset,
 {
    PULONG p;
 
-   p = (PULONG)((ULONG)APICBase + Offset);
+   p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
    *p = Value;
 }
@@ -252,7 +252,7 @@ __inline VOID APICWrite(ULONG Offset,
    lastregw[CPU] = Offset;
    lastvalw[CPU] = Value;
 
-   p = (PULONG)((ULONG)APICBase + Offset);
+   p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
    *p = Value;
 }
@@ -264,7 +264,7 @@ __inline ULONG APICRead(ULONG Offset)
 {
    PULONG p;
 
-   p = (PULONG)((ULONG)APICBase + Offset);
+   p = (PULONG)((ULONG_PTR)APICBase + Offset);
    return *p;
 }
 #else
@@ -276,7 +276,7 @@ __inline ULONG APICRead(ULONG Offset)
    lastregr[CPU] = Offset;
    lastvalr[CPU] = 0;
 
-   p = (PULONG)((ULONG)APICBase + Offset);
+   p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
    lastvalr[CPU] = *p;
    return lastvalr[CPU];
@@ -775,6 +775,9 @@ VOID
 MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 			   PKTRAP_FRAME TrapFrame)
 {
+#ifdef _M_AMD64
+    UNIMPLEMENTED;
+#else
    TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
    TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
    TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
@@ -790,6 +793,7 @@ MpsIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->Eip    = IrqTrapFrame->Eip;
    TrapFrame->SegCs     = IrqTrapFrame->Cs;
    TrapFrame->EFlags = IrqTrapFrame->Eflags;
+#endif
 }
 
 VOID
@@ -864,7 +868,7 @@ APICCalibrateTimer(ULONG CPU)
 
    APICSetupLVTT(1000000000);
 
-   TSCPresent = ((PKIPCR)KeGetPcr())->PrcbData.FeatureBits & KF_RDTSC ? TRUE : FALSE;
+   TSCPresent = KeGetCurrentPrcb()->FeatureBits & KF_RDTSC ? TRUE : FALSE;
 
    /*
     * The timer chip counts down to zero. Let's wait
@@ -893,7 +897,7 @@ APICCalibrateTimer(ULONG CPU)
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,
 	     CPUMap[CPU].CoreSpeed%1000000);
-      ((PKIPCR)KeGetPcr())->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
+      KeGetCurrentPrcb()->MHz = CPUMap[CPU].CoreSpeed/1000000;
    }
 
    CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
@@ -909,8 +913,11 @@ APICCalibrateTimer(ULONG CPU)
 }
 
 VOID 
-SetInterruptGate(ULONG index, ULONG address)
+SetInterruptGate(ULONG index, ULONG_PTR address)
 {
+#ifdef _M_AMD64
+UNIMPLEMENTED;
+#else
   KIDTENTRY *idt;
   KIDT_ACCESS Access;
 
@@ -926,6 +933,7 @@ SetInterruptGate(ULONG index, ULONG address)
   idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
   idt->ExtendedOffset = address >> 16;
+#endif
 }
 
 VOID HaliInitBSP(VOID)
@@ -946,11 +954,11 @@ VOID HaliInitBSP(VOID)
    BSPInitialized = TRUE;
 
    /* Setup interrupt handlers */
-   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG)MpsTimerInterrupt);
-   SetInterruptGate(ERROR_VECTOR, (ULONG)MpsErrorInterrupt);
-   SetInterruptGate(SPURIOUS_VECTOR, (ULONG)MpsSpuriousInterrupt);
+   SetInterruptGate(LOCAL_TIMER_VECTOR, (ULONG_PTR)MpsTimerInterrupt);
+   SetInterruptGate(ERROR_VECTOR, (ULONG_PTR)MpsErrorInterrupt);
+   SetInterruptGate(SPURIOUS_VECTOR, (ULONG_PTR)MpsSpuriousInterrupt);
 #ifdef CONFIG_SMP
-   SetInterruptGate(IPI_VECTOR, (ULONG)MpsIpiInterrupt);
+   SetInterruptGate(IPI_VECTOR, (ULONG_PTR)MpsIpiInterrupt);
 #endif
    DPRINT("APIC is mapped at 0x%X\n", APICBase);
 
