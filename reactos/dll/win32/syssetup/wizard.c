@@ -2221,7 +2221,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
 
 
       /* winetests */
-      hFind = FindFirstFileA("%windir%\\bin\\*.exe", &ffd);
+	  hFind = FindFirstFileA("c:\\reactos\\bin\\*.exe", &ffd); /* %windir% isn't working on ros */
       if (hFind != INVALID_HANDLE_VALUE) 
       {
         do
