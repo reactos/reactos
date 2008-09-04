@@ -788,7 +788,7 @@ typedef struct _KTSS64
 typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 //
-// Macro to get current KPRCB
+// Inline function to get current KPRCB
 //
 FORCEINLINE
 struct _KPRCB *
