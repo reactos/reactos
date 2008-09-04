@@ -36,6 +36,7 @@ int _tmain(int argc, TCHAR ** argv)
 		char   psBuffer[128];
 		char   psBuffer2[128];
 		char   cmd[255];
+		char   test[300];
 		FILE   *pPipe;
 		FILE   *pPipe2;
 
@@ -45,20 +46,23 @@ int _tmain(int argc, TCHAR ** argv)
 		{
 			while(fgets(psBuffer, 128, pPipe))
 			{
-				char *nlptr = strchr(psBuffer, '\n');
-				if (nlptr)
-					psBuffer[*psBuffer - *nlptr - 1] = '\0';
 				if (psBuffer[0] == ' ')
 				{
 					strcpy(cmd, argv[2]);
 					strcat(cmd, " ");
 					strcat(cmd, psBuffer+4);
 					/* run the current test */
+					strcpy(test, "\n\nRunning ");
+					strcat(test, cmd);
+					OutputDebugStringA(test);
 					pPipe2 = _tpopen(cmd, "r");
 					if (pPipe2 != NULL)
 					{
 						while(fgets(psBuffer2, 128, pPipe2))
 						{
+							char *nlptr2 = strchr(psBuffer2, '\n');
+							if (nlptr2)
+								*nlptr2 = '\0';
 							OutputDebugStringA(psBuffer2);
 						}
 						_pclose(pPipe2);
