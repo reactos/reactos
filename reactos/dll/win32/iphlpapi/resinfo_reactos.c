@@ -224,6 +224,14 @@ PIPHLP_RES_INFO getResInfo() {
     }
 
     Str = QueryRegistryValueString( hKey, L"NameServer" );
+
+    /* If NameServer is empty */
+    if (*Str == L'\0')
+    {
+        /* Then use DhcpNameServer */
+        Str = QueryRegistryValueString( hKey, L"DhcpNameServer" );
+    }
+
     ExtraServer = Str ? 1 : 0;
 
     ServerCount += ExtraServer;
