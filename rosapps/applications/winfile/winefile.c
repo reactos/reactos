@@ -867,20 +867,14 @@ static LPITEMIDLIST get_path_pidl(LPTSTR path, HWND hwnd)
 static LPITEMIDLIST get_to_absolute_pidl(Entry* entry, HWND hwnd)
 {
 	if (entry->up && entry->up->etype==ET_SHELL) {
-		IShellFolder* folder = entry->up->folder;
-		WCHAR buffer[MAX_PATH];
+		LPITEMIDLIST idl = NULL;
 
-		HRESULT hr = path_from_pidlW(folder, entry->pidl, buffer, MAX_PATH);
-
-		if (SUCCEEDED(hr)) {
-			LPITEMIDLIST pidl;
-			ULONG len;
-
-			hr = IShellFolder_ParseDisplayName(Globals.iDesktop, hwnd, NULL, buffer, &len, &pidl, NULL);
-
-			if (SUCCEEDED(hr))
-				return pidl;
+		while (entry->up) {
+			idl = ILCombine(ILClone(entry->pidl), idl);
+			entry = entry->up;
 		}
+
+		return idl;
 	} else if (entry->etype == ET_WINDOWS) {
 		TCHAR path[MAX_PATH];
 
@@ -2708,7 +2702,7 @@ static BOOL calc_widths(Pane* pane, BOOL anyway)
 	SendMessage(pane->hwnd, LB_SETHORIZONTALEXTENT, x, 0);
 
 	/* no change? */
-	if (!memcmp(orgWidths, pane->widths, sizeof(orgWidths)))
+	if (!anyway && !memcmp(orgWidths, pane->widths, sizeof(orgWidths)))
 		return FALSE;
 
 	/* don't move, if only collapsing an entry */

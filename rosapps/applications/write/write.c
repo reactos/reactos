@@ -40,7 +40,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
 	lstrcatW(path, SZ_BACKSLASH);
     lstrcatW(path, SZ_WORDPAD);
 
-    stinf.cb = sizeof(STARTUPINFO);
+    stinf.cb = sizeof(STARTUPINFOW);
     GetStartupInfoW(&stinf);
 
     if (!CreateProcessW(path, GetCommandLineW(), NULL, NULL, FALSE, 0, NULL, NULL, &stinf, &info))
@@ -48,7 +48,7 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     return 0;
 
 failed:
-    LoadStringW(GetModuleHandle(NULL), IDS_FAILED, path, MAX_PATH);
+    LoadStringW(GetModuleHandleW(NULL), IDS_FAILED, path, MAX_PATH);
     MessageBoxW(NULL, path, NULL, MB_OK|MB_ICONERROR);
     return 1;
 }
