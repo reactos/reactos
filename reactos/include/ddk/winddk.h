@@ -1759,8 +1759,25 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     struct {
       ULONG Level;
       ULONG Vector;
-      ULONG Affinity;
+      KAFFINITY Affinity;
     } Interrupt;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      union {
+        struct {
+          USHORT Reserved;
+          USHORT MessageCount;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Raw;
+        struct {
+          ULONG Level;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Translated;
+      };
+    } MessageInterrupt;
+#endif
     struct {
       PHYSICAL_ADDRESS Start;
       ULONG Length;
@@ -1783,6 +1800,20 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
       ULONG Reserved1;
       ULONG Reserved2;
     } DeviceSpecificData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length40;
+    } Memory40;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length48;
+    } Memory48;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length64;
+    } Memory64;
+#endif
   } u;
 } CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 
