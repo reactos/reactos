@@ -63,29 +63,13 @@ static BOOL  HLPFILE_Uncompress_Topic(HLPFILE*);
 static BOOL  HLPFILE_GetContext(HLPFILE*);
 static BOOL  HLPFILE_GetKeywords(HLPFILE*);
 static BOOL  HLPFILE_GetMap(HLPFILE*);
+static BOOL  HLPFILE_GetTOMap(HLPFILE*);
 static BOOL  HLPFILE_AddPage(HLPFILE*, const BYTE*, const BYTE*, unsigned, unsigned);
 static BOOL  HLPFILE_SkipParagraph(HLPFILE*, const BYTE*, const BYTE*, unsigned*);
 static void  HLPFILE_Uncompress2(HLPFILE*, const BYTE*, const BYTE*, BYTE*, const BYTE*);
 static BOOL  HLPFILE_Uncompress3(HLPFILE*, char*, const char*, const BYTE*, const BYTE*);
 static void  HLPFILE_UncompressRLE(const BYTE* src, const BYTE* end, BYTE* dst, unsigned dstsz);
 static BOOL  HLPFILE_ReadFont(HLPFILE* hlpfile);
-
-/***********************************************************************
- *
- *           HLPFILE_PageByNumber
- */
-static HLPFILE_PAGE *HLPFILE_PageByNumber(HLPFILE* hlpfile, UINT wNum)
-{
-    HLPFILE_PAGE *page;
-    UINT          temp = wNum;
-
-    WINE_TRACE("<%s>[%u]\n", hlpfile->lpszPath, wNum);
-
-    for (page = hlpfile->first_page; page && temp; page = page->next) temp--;
-    if (!page)
-        WINE_ERR("Page of number %u not found in file %s\n", wNum, hlpfile->lpszPath);
-    return page;
-}
 
 /******************************************************************
  *		HLPFILE_PageByOffset
@@ -153,8 +137,8 @@ HLPFILE_PAGE *HLPFILE_PageByHash(HLPFILE* hlpfile, LONG lHash, ULONG* relative)
     /* For win 3.0 files hash values are really page numbers */
     if (hlpfile->version <= 16)
     {
-        *relative = 0;
-        return HLPFILE_PageByNumber(hlpfile, lHash);
+        if (lHash >= hlpfile->wTOMapLen) return NULL;
+        return HLPFILE_PageByOffset(hlpfile, hlpfile->TOMap[lHash], relative);
     }
 
     ptr = HLPFILE_BPTreeSearch(hlpfile->Context, LongToPtr(lHash), comp_PageByHash);
@@ -282,7 +266,7 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
     OFSTRUCT    ofs;
     BYTE*       buf;
     DWORD       ref = 0x0C;
-    unsigned    index, old_index, offset, len, offs;
+    unsigned    index, old_index, offset, len, offs, topicoffset;
 
     hFile = OpenFile(lpszPath, &ofs, OF_READ);
     if (hFile == HFILE_ERROR) return FALSE;
@@ -292,6 +276,8 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
     if (!ret) return FALSE;
 
     if (!HLPFILE_SystemCommands(hlpfile)) return FALSE;
+
+    if (hlpfile->version <= 16 && !HLPFILE_GetTOMap(hlpfile)) return FALSE;
 
     /* load phrases support */
     if (!HLPFILE_UncompressLZ77_Phrases(hlpfile))
@@ -336,7 +322,11 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
         switch (buf[0x14])
 	{
 	case 0x02:
-            if (!HLPFILE_AddPage(hlpfile, buf, end, ref, index * 0x8000L + offs)) return FALSE;
+            if (hlpfile->version <= 16)
+                topicoffset = ref + index * 12;
+            else
+                topicoffset = index * 0x8000 + offs;
+            if (!HLPFILE_AddPage(hlpfile, buf, end, ref, topicoffset)) return FALSE;
             break;
 
 	case 0x01:
@@ -430,6 +420,19 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, const BYTE *buf, const BYTE *end, 
 
     page->browse_bwd = GET_UINT(buf, 0x19);
     page->browse_fwd = GET_UINT(buf, 0x1D);
+
+    if (hlpfile->version <= 16)
+    {
+        if (page->browse_bwd == 0xFFFF || page->browse_bwd == 0xFFFFFFFF)
+            page->browse_bwd = 0xFFFFFFFF;
+        else
+            page->browse_bwd = hlpfile->TOMap[page->browse_bwd];
+
+        if (page->browse_fwd == 0xFFFF || page->browse_fwd == 0xFFFFFFFF)
+            page->browse_fwd = 0xFFFFFFFF;
+        else
+            page->browse_fwd = hlpfile->TOMap[page->browse_fwd];
+    }
 
     WINE_TRACE("Added page[%d]: title='%s' %08x << %08x >> %08x\n",
                page->wNumber, page->lpszTitle, 
@@ -1290,12 +1293,14 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
 
                     WINE_TRACE("Changing font to %d\n", font);
                     format += 3;
+                    /* Font size in hlpfile is given in the same units as
+                       rtf control word \fs uses (half-points). */
                     switch (rd->font_scale)
                     {
-                    case 0: fs = (4 * page->file->fonts[font].LogFont.lfHeight - 13) / 5; break;
+                    case 0: fs = page->file->fonts[font].LogFont.lfHeight - 4; break;
                     default:
-                    case 1: fs = (4 * page->file->fonts[font].LogFont.lfHeight - 3) / 5; break;
-                    case 2: fs = (4 * page->file->fonts[font].LogFont.lfHeight + 17) / 5; break;
+                    case 1: fs = page->file->fonts[font].LogFont.lfHeight; break;
+                    case 2: fs = page->file->fonts[font].LogFont.lfHeight + 4; break;
                     }
                     /* FIXME: missing at least colors, also bold attribute looses information */
 
@@ -1430,7 +1435,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xE1:
                 WINE_WARN("jump topic 1 => %u\n", GET_UINT(format, 1));
                 HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
-                                  page->file->lpszPath, -1, GET_UINT(format, 1)-16, 1, -1);
+                                  page->file->lpszPath, -1, GET_UINT(format, 1), 1, -1);
 
 
                 format += 5;
@@ -2570,6 +2575,26 @@ static BOOL HLPFILE_GetMap(HLPFILE *hlpfile)
         hlpfile->Map[i].lMap = GET_UINT(cbuf+11,i*8);
         hlpfile->Map[i].offset = GET_UINT(cbuf+11,i*8+4);
     }
+    return TRUE;
+}
+
+/***********************************************************************
+ *
+ *           HLPFILE_GetTOMap
+ */
+static BOOL HLPFILE_GetTOMap(HLPFILE *hlpfile)
+{
+    BYTE                *cbuf, *cend;
+    unsigned            clen;
+
+    if (!HLPFILE_FindSubFile(hlpfile, "|TOMAP",  &cbuf, &cend))
+    {WINE_WARN("no tomap section\n"); return FALSE;}
+
+    clen = cend - cbuf - 9;
+    hlpfile->TOMap = HeapAlloc(GetProcessHeap(), 0, clen);
+    if (!hlpfile->TOMap) return FALSE;
+    memcpy(hlpfile->TOMap, cbuf+9, clen);
+    hlpfile->wTOMapLen = clen/4;
     return TRUE;
 }
 

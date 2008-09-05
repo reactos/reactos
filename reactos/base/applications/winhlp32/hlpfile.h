@@ -100,6 +100,8 @@ typedef struct tagHlpFileFile
     BYTE*                       kwdata;
     unsigned                    wMapLen;
     HLPFILE_MAP*                Map;
+    unsigned                    wTOMapLen;
+    unsigned*                   TOMap;
     unsigned long               contents_start;
 
     struct tagHlpFileFile*      prev;

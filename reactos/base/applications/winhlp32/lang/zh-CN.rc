@@ -1,8 +1,9 @@
 /*
  * Help Viewer
- * Simplified Chinese Language Support
+ * Simplified and Traditional Chinese Language Support
  *
  * Copyright 2002 liuspider <liuspider@yahoo.com>
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,68 +20,143 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+MAIN_MENU MENU
 {
- POPUP "�ļ���&F��" {
-  MENUITEM "�򿪣�&O��", MNID_FILE_OPEN
+ POPUP "文件(&F)" {
+  MENUITEM "打开(&O)", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-  MENUITEM "��ӡ��&P��", MNID_FILE_PRINT
-  MENUITEM "��ӡ�����ã�&S��...", MNID_FILE_SETUP
+  MENUITEM "打印(&P)", MNID_FILE_PRINT
+  MENUITEM "打印机设置(&S)...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "�˳���&E��", MNID_FILE_EXIT
+  MENUITEM "退出(&E)", MNID_FILE_EXIT
  }
- POPUP "�༭��&E��" {
-   MENUITEM "���ƣ�&C��...", MNID_EDIT_COPYDLG
+ POPUP "编辑(&E)" {
+   MENUITEM "复制(&C)...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "ע�ͣ�&A��...", MNID_EDIT_ANNOTATE
+   MENUITEM "注释(&A)...", MNID_EDIT_ANNOTATE
  }
- POPUP "��ǩ��&B��" {
-   MENUITEM "���壨&D��...", MNID_BKMK_DEFINE
+ POPUP "书签(&B)" {
+   MENUITEM "定义(&D)...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "选项(&O)" {
+   POPUP	"显示帮助"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "默认",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "显示",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "不显示",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "历史",		MNID_OPTS_HISTORY
+  POPUP    "字体"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "小号",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "中号",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "大号",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "使用系统颜色",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "������&H��" {
-   MENUITEM "���ʹ�ð�����&O��", MNID_HELP_HELPON
-   MENUITEM "��������ǰ�棨&T��", MNID_HELP_HELPTOP
+ POPUP "帮助(&H)" {
+   MENUITEM "如何使用帮助(&O)", MNID_HELP_HELPON
+   MENUITEM "总是在最前面(&T)", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "������Ϣ��&I��...", MNID_HELP_ABOUT
+   MENUITEM "资料信息(&I)...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "���� WINE��&A��", MNID_HELP_WINE
+   MENUITEM "关于 WINE(&A)", MNID_HELP_WINE
 #endif
  }
 }
 
 /* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+STRINGTABLE DISCARDABLE
 {
-STID_WINE_HELP, 	"WINE ����"
-STID_WHERROR, 		"����"
-STID_WARNING,  		"����"
-STID_INFO,  		"��Ϣ"
-STID_NOT_IMPLEMENTED, 	"δʵ��"
-STID_HLPFILE_ERROR_s, 	"��������ļ� ��%s�� ʱ��������"
-STID_INDEX, 		"���ݣ�&C��"
-STID_CONTENTS,		"Summary"
-STID_BACK, 		"���أ�&B��"
-STID_ALL_FILES, 	"�����ļ� (*.*)"
-STID_HELP_FILES_HLP, 	"�����ļ� (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_WINE_HELP, 	"WINE 帮助"
+STID_WHERROR, 		"错误"
+STID_WARNING,  		"警告"
+STID_INFO,  		"信息"
+STID_NOT_IMPLEMENTED, 	"未实现"
+STID_HLPFILE_ERROR_s, 	"读入帮助文件 ‘%s’ 时发生错误"
+STID_INDEX, 		"内容(&C)"
+STID_CONTENTS,		"概要"
+STID_BACK, 		"返回(&B)"
+STID_ALL_FILES, 	"所有文件 (*.*)"
+STID_HELP_FILES_HLP, 	"帮助文件 (*.hlp)"
+STID_FILE_NOT_FOUND_s	"不能打开文件 '%s'. 你想要自己找这个文件吗?"
+STID_NO_RICHEDIT	"找不到 richedit... 终止"
+STID_PSH_INDEX,		"帮助内容: "
 }
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+/* Menu */
+
+MAIN_MENU MENU
+{
+ POPUP "檔案(&F)" {
+  MENUITEM "開啟(&O)", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "列印(&P)", MNID_FILE_PRINT
+  MENUITEM "印表機設定(&S)...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "結束(&E)", MNID_FILE_EXIT
+ }
+ POPUP "編輯(&E)" {
+   MENUITEM "複製(&C)...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "註釋(&A)...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "書籤(&B)" {
+   MENUITEM "定義(&D)...", MNID_BKMK_DEFINE
+ }
+ POPUP "選項(&O)" {
+   POPUP	"顯示幫助"
+   BEGIN
+     MENUITEM "默認",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "顯示",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "不顯示",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "歷史",		MNID_OPTS_HISTORY
+  POPUP    "字型"
+  BEGIN
+    MENUITEM "小號",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "中號",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "大號",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "使用系統顏色",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "幫助(&H)" {
+   MENUITEM "如何使用幫助(&O)", MNID_HELP_HELPON
+   MENUITEM "總是在最上面(&T)", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "資訊(&I)...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "關於 WINE(&A)", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE
+{
+STID_WINE_HELP, 	"WINE 幫助"
+STID_WHERROR, 		"錯誤"
+STID_WARNING,  		"警告"
+STID_INFO,  		"資訊"
+STID_NOT_IMPLEMENTED, 	"未實現"
+STID_HLPFILE_ERROR_s, 	"讀入幫助檔案 ‘%s’ 時發生錯誤"
+STID_INDEX, 		"內容(&C)"
+STID_CONTENTS,		"概要"
+STID_BACK, 		"返回(&B)"
+STID_ALL_FILES, 	"所有檔案 (*.*)"
+STID_HELP_FILES_HLP, 	"幫助檔案 (*.hlp)"
+STID_FILE_NOT_FOUND_s	"不能開啟檔案 '%s'. 你想要自己找這個檔案嗎?"
+STID_NO_RICHEDIT	"找不到 richedit... 終止"
+STID_PSH_INDEX,		"幫助內容: "
+}
+
+#pragma code_page(default)
