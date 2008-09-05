@@ -152,7 +152,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     if (OldIrql < DISPATCH_LEVEL) KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
     /* Acquire the IPI lock */
-    KefAcquireSpinLockAtDpcLevel(&KiIpiLock);
+    KeAcquireSpinLockAtDpcLevel(&KiIpiLock);
 
     /* Raise to IPI level */
     KeRaiseIrql(IPI_LEVEL, &OldIrql2);
@@ -161,7 +161,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     Status = Function(Argument);
 
     /* Release the lock */
-    KefReleaseSpinLockFromDpcLevel(&KiIpiLock);
+    KeReleaseSpinLockFromDpcLevel(&KiIpiLock);
 
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
