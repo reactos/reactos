@@ -60,7 +60,7 @@ PrintElapsedTime (DWORD time,INT format)
 }
 
 
-INT CommandTimer (LPTSTR cmd, LPTSTR param)
+INT CommandTimer (LPTSTR param)
 {
 	// all timers are kept
 	static DWORD clksT[10];

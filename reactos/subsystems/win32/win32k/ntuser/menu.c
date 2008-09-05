@@ -95,7 +95,7 @@ UserMenuInfo(
 { \
   if((MENU_ITEM_TYPE((MenuItem)->fType) == MF_STRING) && \
            (MenuItem)->Text.Length) { \
-    RtlFreeUnicodeString(&(MenuItem)->Text); \
+    ExFreePoolWithTag((MenuItem)->Text.Buffer, TAG_STRING); \
   } \
 }
 
@@ -220,7 +220,6 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, BOOL bRecurse)
    }
 
    /* Free memory */
-   if (MenuItem->Text.Buffer) ExFreePool(MenuItem->Text.Buffer);
    ExFreePool(MenuItem);
 
    return TRUE;

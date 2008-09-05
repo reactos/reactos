@@ -324,7 +324,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePool(ExpNlsTableBase);
+    ExFreePoolWithTag(ExpNlsTableBase, TAG('R', 't', 'l', 'i'));
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */
@@ -981,12 +981,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Now fill it in */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
-    if (!NT_SUCCESS(Status)) KEBUGCHECK(SESSION3_INITIALIZATION_FAILED);
+    if (!NT_SUCCESS(Status)) KeBugCheck(SESSION3_INITIALIZATION_FAILED);
 
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
-    /* Setup initial system settings (FIXME: Needs Cm Rewrite) */
+    /* Setup initial system settings */
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Load static defaults for Service Pack 1 and add our SVN revision */
@@ -1002,7 +1002,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Initialize the executive at phase 0 */
-    if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
+    if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
     /* Initialize the memory manager at phase 0 */
     if (!MmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
@@ -1203,16 +1203,16 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Create the Basic Object Manager Types to allow new Object Types */
-    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
-    if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
-    if (!PsInitSystem(LoaderBlock)) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
+    if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS_INITIALIZATION_FAILED);
 
     /* Initialize the PnP Manager */
-    if (!PpInitSystem()) KEBUGCHECK(PP0_INITIALIZATION_FAILED);
+    if (!PpInitSystem()) KeBugCheck(PP0_INITIALIZATION_FAILED);
 
     /* Initialize the User-Mode Debugging Subsystem */
     DbgkInitialize();
@@ -1520,7 +1520,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(5);
 
     /* Call OB initialization again */
-    if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
     if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 1, 0);
@@ -1536,7 +1536,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Initialize the SRM in Phase 1 */
-    if (!SeInit()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+    if (!SeInitSystem()) KeBugCheck(SECURITY1_INITIALIZATION_FAILED);
 
     /* Update the progress bar */
     InbvUpdateProgressBar(10);

@@ -76,7 +76,7 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
     KeLowerIrql(OldIrql2);
 
     /* Check if we need to adjust interrupt time */
-    if (FixInterruptTime) KEBUGCHECK(0);
+    if (FixInterruptTime) ASSERT(FALSE);
 
     /* Setup a temporary list of absolute timers */
     InitializeListHead(&TempList);

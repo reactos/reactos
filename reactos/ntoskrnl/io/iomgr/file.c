@@ -786,7 +786,7 @@ IopParseDevice(IN PVOID ParseObject,
     else if (Status == STATUS_REPARSE)
     {
         /* FIXME: We don't handle this at all! */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Get the owner of the File Object */
@@ -1031,7 +1031,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         /* Clear the file name */
         if (FileObject->FileName.Buffer)
         {
-           ExFreePool(FileObject->FileName.Buffer);
+           ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
            FileObject->FileName.Buffer = NULL;
         }
 
@@ -1405,7 +1405,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     if ((FileObject->LockOperation) && (SystemHandleCount != 1))
     {
         DPRINT1("We need to unlock this file!\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Make sure this is the last handle */

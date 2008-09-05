@@ -139,7 +139,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 
 }
 
-INT CommandAlias (LPTSTR cmd, LPTSTR param)
+INT CommandAlias (LPTSTR param)
 {
 	LPTSTR ptr;
 

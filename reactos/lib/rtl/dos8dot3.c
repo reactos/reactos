@@ -162,7 +162,6 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
          (Checksum == Context->Checksum) &&
          (Context->LastIndexValue < 999))
    {
-      CHECKPOINT;
       Context->LastIndexValue++;
       if (Context->CheckSumInserted == FALSE &&
             Context->LastIndexValue > 9)
@@ -174,7 +173,6 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
    }
    else
    {
-      CHECKPOINT;
       Context->LastIndexValue = 1;
       Context->CheckSumInserted = FALSE;
    }

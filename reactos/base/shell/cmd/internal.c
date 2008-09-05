@@ -267,7 +267,7 @@ BOOL SetRootPath(TCHAR *InPath)
  * CD / CHDIR
  *
  */
-INT cmd_chdir (LPTSTR cmd, LPTSTR param)
+INT cmd_chdir (LPTSTR param)
 {
 
 	WIN32_FIND_DATA f;
@@ -455,10 +455,9 @@ MakeFullPath(TCHAR * DirPath)
  * MD / MKDIR
  *
  */
-INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
+INT cmd_mkdir (LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR place;	/* used to search for the \ when no space is used */
 	LPTSTR *p = NULL;
 	INT argc;
 	nErrorLevel = 0;
@@ -469,28 +468,6 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	}
 
 
-	/* check if there is no space between the command and the path */
-	if (param[0] == _T('\0'))
-	{
-		/* search for the \ or . so that both short & long names will work */
-		for (place = cmd; *place; place++)
-			if (*place == _T('.') || *place == _T('\\'))
-				break;
-
-		if (*place)
-		{
-			argc = 0;
-			if (add_entry(&argc, &p, place))
-				dir = place;
-			else
-				dir = NULL;
-		}
-		else
-			/* signal that there are no parameters */
-			dir = NULL;
-	}
-	else
-	{
 		p = split (param, &argc, FALSE);
 		if (argc > 1)
 		{
@@ -501,7 +478,6 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 		}
 		else
 			dir = p[0];
-	}
 
 	if (!dir)
 	{
@@ -573,7 +549,7 @@ BOOL DeleteFolder(LPTSTR FileName)
     }
 	return RemoveDirectory(FileName);
 }
-INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
+INT cmd_rmdir (LPTSTR param)
 {
 	TCHAR dir[MAX_PATH];		/* pointer to the directory to change to */
 	TCHAR ch;
@@ -707,7 +683,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
  * set the exitflag to true
  *
  */
-INT CommandExit (LPTSTR cmd, LPTSTR param)
+INT CommandExit (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -741,7 +717,7 @@ INT CommandExit (LPTSTR cmd, LPTSTR param)
  * does nothing
  *
  */
-INT CommandRem (LPTSTR cmd, LPTSTR param)
+INT CommandRem (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -753,13 +729,13 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 #endif /* INCLUDE_CMD_REM */
 
 
-INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
+INT CommandShowCommands (LPTSTR param)
 {
 	PrintCommandList ();
 	return 0;
 }
 
-INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
+INT CommandShowCommandsDetail (LPTSTR param)
 {
 	/* If a param was send, display help of correspondent command */
 	if (_tcslen(param))

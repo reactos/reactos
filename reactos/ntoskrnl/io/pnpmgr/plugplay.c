@@ -1,18 +1,16 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/plugplay.c
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/pnpmgr/plugplay.c
  * PURPOSE:         Plug-and-play interface routines
- *
  * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IopInitPlugPlayEvents)
@@ -114,127 +112,6 @@ IopRemovePlugPlayEvent(VOID)
   return STATUS_SUCCESS;
 }
 
-
-/*
- * Plug and Play event structure used by NtGetPlugPlayEvent.
- *
- * EventGuid
- *    Can be one of the following values:
- *       GUID_HWPROFILE_QUERY_CHANGE
- *       GUID_HWPROFILE_CHANGE_CANCELLED
- *       GUID_HWPROFILE_CHANGE_COMPLETE
- *       GUID_TARGET_DEVICE_QUERY_REMOVE
- *       GUID_TARGET_DEVICE_REMOVE_CANCELLED
- *       GUID_TARGET_DEVICE_REMOVE_COMPLETE
- *       GUID_PNP_CUSTOM_NOTIFICATION
- *       GUID_PNP_POWER_NOTIFICATION
- *       GUID_DEVICE_* (see above)
- *
- * EventCategory
- *    Type of the event that happened.
- *
- * Result
- *    ?
- *
- * Flags
- *    ?
- *
- * TotalSize
- *    Size of the event block including the device IDs and other
- *    per category specific fields.
- */
-/*
- * NtGetPlugPlayEvent
- *
- * Returns one Plug & Play event from a global queue.
- *
- * Parameters
- *    Reserved1
- *    Reserved2
- *       Always set to zero.
- *
- *    Buffer
- *       The buffer that will be filled with the event information on
- *       successful return from the function.
- *
- *    BufferSize
- *       Size of the buffer pointed by the Buffer parameter. If the
- *       buffer size is not large enough to hold the whole event
- *       information, error STATUS_BUFFER_TOO_SMALL is returned and
- *       the buffer remains untouched.
- *
- * Return Values
- *    STATUS_PRIVILEGE_NOT_HELD
- *    STATUS_BUFFER_TOO_SMALL
- *    STATUS_SUCCESS
- *
- * Remarks
- *    This function isn't multi-thread safe!
- *
- * @implemented
- */
-NTSTATUS STDCALL
-NtGetPlugPlayEvent(IN ULONG Reserved1,
-                   IN ULONG Reserved2,
-                   OUT PPLUGPLAY_EVENT_BLOCK Buffer,
-                   IN ULONG BufferSize)
-{
-  PPNP_EVENT_ENTRY Entry;
-  NTSTATUS Status;
-
-  DPRINT("NtGetPlugPlayEvent() called\n");
-
-  /* Function can only be called from user-mode */
-  if (KeGetPreviousMode() == KernelMode)
-  {
-    DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
-    return STATUS_ACCESS_DENIED;
-  }
-
-  /* Check for Tcb privilege */
-  if (!SeSinglePrivilegeCheck(SeTcbPrivilege,
-                              UserMode))
-  {
-    DPRINT1("NtGetPlugPlayEvent: Caller does not hold the SeTcbPrivilege privilege!\n");
-    return STATUS_PRIVILEGE_NOT_HELD;
-  }
-
-  /* Wait for a PnP event */
-  DPRINT("Waiting for pnp notification event\n");
-  Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
-                                 UserRequest,
-                                 KernelMode,
-                                 FALSE,
-                                 NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
-    return Status;
-  }
-
-  /* Get entry from the tail of the queue */
-  Entry = CONTAINING_RECORD(IopPnpEventQueueHead.Blink,
-                            PNP_EVENT_ENTRY,
-                            ListEntry);
-
-  /* Check the buffer size */
-  if (BufferSize < Entry->Event.TotalSize)
-  {
-    DPRINT1("Buffer is too small for the pnp-event\n");
-    return STATUS_BUFFER_TOO_SMALL;
-  }
-
-  /* Copy event data to the user buffer */
-  memcpy(Buffer,
-         &Entry->Event,
-         Entry->Event.TotalSize);
-
-  DPRINT("NtGetPlugPlayEvent() done\n");
-
-  return STATUS_SUCCESS;
-}
-
-
 static PDEVICE_OBJECT
 IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
 {
@@ -251,7 +128,7 @@ IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
     /* Traversal of all children nodes */
     for (ChildNode = Node->Child;
          ChildNode != NULL;
-         ChildNode = ChildNode->NextSibling)
+         ChildNode = ChildNode->Sibling)
     {
         DeviceObject = IopTraverseDeviceNode(ChildNode, DeviceInstance);
         if (DeviceObject != NULL)
@@ -483,7 +360,7 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
             break;
 
         case PNP_GET_SIBLING_DEVICE:
-            RelatedDeviceNode = DeviceNode->NextSibling;
+            RelatedDeviceNode = DeviceNode->Sibling;
             break;
 
         default:
@@ -699,13 +576,135 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     if (NT_SUCCESS(Status))
-        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent, FALSE);
+        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
 
     ObDereferenceObject(DeviceObject);
 
     return Status;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * Plug and Play event structure used by NtGetPlugPlayEvent.
+ *
+ * EventGuid
+ *    Can be one of the following values:
+ *       GUID_HWPROFILE_QUERY_CHANGE
+ *       GUID_HWPROFILE_CHANGE_CANCELLED
+ *       GUID_HWPROFILE_CHANGE_COMPLETE
+ *       GUID_TARGET_DEVICE_QUERY_REMOVE
+ *       GUID_TARGET_DEVICE_REMOVE_CANCELLED
+ *       GUID_TARGET_DEVICE_REMOVE_COMPLETE
+ *       GUID_PNP_CUSTOM_NOTIFICATION
+ *       GUID_PNP_POWER_NOTIFICATION
+ *       GUID_DEVICE_* (see above)
+ *
+ * EventCategory
+ *    Type of the event that happened.
+ *
+ * Result
+ *    ?
+ *
+ * Flags
+ *    ?
+ *
+ * TotalSize
+ *    Size of the event block including the device IDs and other
+ *    per category specific fields.
+ */
+
+/*
+ * NtGetPlugPlayEvent
+ *
+ * Returns one Plug & Play event from a global queue.
+ *
+ * Parameters
+ *    Reserved1
+ *    Reserved2
+ *       Always set to zero.
+ *
+ *    Buffer
+ *       The buffer that will be filled with the event information on
+ *       successful return from the function.
+ *
+ *    BufferSize
+ *       Size of the buffer pointed by the Buffer parameter. If the
+ *       buffer size is not large enough to hold the whole event
+ *       information, error STATUS_BUFFER_TOO_SMALL is returned and
+ *       the buffer remains untouched.
+ *
+ * Return Values
+ *    STATUS_PRIVILEGE_NOT_HELD
+ *    STATUS_BUFFER_TOO_SMALL
+ *    STATUS_SUCCESS
+ *
+ * Remarks
+ *    This function isn't multi-thread safe!
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtGetPlugPlayEvent(IN ULONG Reserved1,
+                   IN ULONG Reserved2,
+                   OUT PPLUGPLAY_EVENT_BLOCK Buffer,
+                   IN ULONG BufferSize)
+{
+  PPNP_EVENT_ENTRY Entry;
+  NTSTATUS Status;
+
+  DPRINT("NtGetPlugPlayEvent() called\n");
+
+  /* Function can only be called from user-mode */
+  if (KeGetPreviousMode() == KernelMode)
+  {
+    DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
+    return STATUS_ACCESS_DENIED;
+  }
+
+  /* Check for Tcb privilege */
+  if (!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                              UserMode))
+  {
+    DPRINT1("NtGetPlugPlayEvent: Caller does not hold the SeTcbPrivilege privilege!\n");
+    return STATUS_PRIVILEGE_NOT_HELD;
+  }
+
+  /* Wait for a PnP event */
+  DPRINT("Waiting for pnp notification event\n");
+  Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
+                                 UserRequest,
+                                 KernelMode,
+                                 FALSE,
+                                 NULL);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+    return Status;
+  }
+
+  /* Get entry from the tail of the queue */
+  Entry = CONTAINING_RECORD(IopPnpEventQueueHead.Blink,
+                            PNP_EVENT_ENTRY,
+                            ListEntry);
+
+  /* Check the buffer size */
+  if (BufferSize < Entry->Event.TotalSize)
+  {
+    DPRINT1("Buffer is too small for the pnp-event\n");
+    return STATUS_BUFFER_TOO_SMALL;
+  }
+
+  /* Copy event data to the user buffer */
+  memcpy(Buffer,
+         &Entry->Event,
+         Entry->Event.TotalSize);
+
+  DPRINT("NtGetPlugPlayEvent() done\n");
+
+  return STATUS_SUCCESS;
+}
 
 /*
  * NtPlugPlayControl
@@ -763,7 +762,8 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
  *
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
@@ -844,5 +844,3 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 
     return STATUS_NOT_IMPLEMENTED;
 }
-
-/* EOF */

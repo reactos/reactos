@@ -12,8 +12,6 @@
 #define INTERNAL_CALL NTAPI
 
 /* Internal Win32k Headers */
-#include <include/driver.h>
-
 #include <include/accelerator.h>
 #include <include/clipboard.h>
 #include <include/cliprgn.h>
@@ -29,13 +27,16 @@
 #include <include/dc.h>
 #include <include/dce.h>
 #include <include/dib.h>
+#include <include/driver.h>
 #include <include/error.h>
+#include <include/floatobj.h>
 #include <include/gdiobj.h>
 #include <include/palette.h>
 #include <include/rect.h>
 #include <include/win32.h>
 #include <include/window.h>
 #include <include/winsta.h>
+#include <include/xformobj.h>
 
 #include <include/region.h>
 #include <include/ntuser.h>
@@ -74,4 +75,5 @@
 #include <eng/objects.h>
 #include <eng/misc.h>
 #include <dib/dib.h>
+
 #endif /* __WIN32K_H */

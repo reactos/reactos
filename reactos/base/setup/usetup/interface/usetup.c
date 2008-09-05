@@ -699,7 +699,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    ULONG ReturnSize;
+    SIZE_T ReturnSize;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -3751,10 +3751,6 @@ RunUSetup(VOID)
                 break;
         }
     }
-
-    /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
-    /// DO NOT REMOVE!!!
-    DPRINT1("SYSREG_CHECKPOINT:USETUP_COMPLETE\n");
 
     FreeConsole();
 

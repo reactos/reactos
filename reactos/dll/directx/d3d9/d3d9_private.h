@@ -8,7 +8,7 @@
 #ifndef _D3D9_PRIVATE_H_
 #define _D3D9_PRIVATE_H_
 
-#include <windows.h>
+#include "d3d9_common.h"
 #include <ddraw.h>
 
 #define D3D9_INT_MAX_NUM_ADAPTERS   12
@@ -25,14 +25,14 @@ typedef enum _D3D9_GETAVAILDRIVERMEMORY_TYPE
 
 typedef struct _D3D9_GETAVAILDRIVERMEMORYDATA
 {
-/* 0x0000 */    struct _D3D9Unknown6BC_* pUnknown6BC;
+/* 0x0000 */    struct _D3D9_Unknown6BC* pUnknown6BC;
 /* 0x0004 */    D3D9_GETAVAILDRIVERMEMORY_TYPE dwMemoryType;
 /* 0x0008 */    DWORD dwTextureType;
 /* 0x000c */    DWORD dwFree;
 } D3D9_GETAVAILDRIVERMEMORYDATA, FAR* LPD3D9_GETAVAILDRIVERMEMORYDATA;
 typedef BOOL (WINAPI FAR* LPD3D9_GETAVAILDRIVERMEMORY)(LPD3D9_GETAVAILDRIVERMEMORYDATA);
 
-typedef struct _D3D9Unknown6BC_
+typedef struct _D3D9_Unknown6BC
 {
 /* 0x0000 */    HANDLE hDirectDrawLocal;
 /* 0x0004 */    LPDWORD pUnknown0004;
@@ -78,7 +78,7 @@ typedef struct _D3D9Unknown6BC_
 /* 0x00BC */    DDGAMMARAMP GammaRamp;
 } D3D9_Unknown6BC;
 
-typedef struct _tagD3D9_DRIVERCAPS
+typedef struct _D3D9_DRIVERCAPS
 {
 /* 0x0000 */    D3DCAPS9 DriverCaps9;
 /* 0x0130 */    DWORD dwDisplayWidth;
@@ -147,20 +147,20 @@ typedef struct _tagD3D9_CALLBACKS
 /* 0x00a4 */    D3DDEVTYPE DeviceType;
 } D3D9_CALLBACKS;
 
-typedef struct _tagD3D9_DEVICEDATA_
+typedef struct _D3D9_DEVICEDATA
 {
 /* 0x0000 */    D3D9_DRIVERCAPS DriverCaps;
 /* 0x0178 */    D3D9_CALLBACKS D3D9Callbacks;
 /* 0x0220 */    CHAR szDeviceName[CCHDEVICENAME];
 /* 0x0240 */    HDC hDC;
 /* 0x0244 */    GUID DisplayGuid;
-/* 0x0254 */    D3D9_Unknown6BC* pUnknown6BC;
+/* 0x0254 */    struct _D3D9_Unknown6BC* pUnknown6BC;
 /* 0x0258 */    D3DDEVTYPE DeviceType;
 /* 0x025c */    HMODULE hD3DRefDll;
 /* 0x0260 */    DWORD unknown0152;
 } D3D9_DEVICEDATA, FAR *LPD3D9_DEVICEDATA;
 
-typedef struct _tagDIRECT3D9DisplayAdapterInfo_
+typedef struct _Direct3D9DisplayAdapterInfo
 {
 /* 0x0000 */    GUID DisplayGuid;
 /* 0x0010 */    CHAR szDeviceName[MAX_PATH];
@@ -179,13 +179,13 @@ typedef struct _tagDIRECT3D9DisplayAdapterInfo_
 /* 0x02b8 */    DWORD unknown000105;
 } Direct3D9DisplayAdapterInfo, FAR* LPDIRECT3D9_DISPLAYADAPTER;
 
-typedef struct _tagDIRECT3D9_INT_
+typedef struct _DIRECT3D9_INT
 {
 /* 0x0000 */    struct IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 function table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId;
-/* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt;
+/* 0x0024 */    struct _DIRECT3D9_INT *lpInt;
 /* 0x0028 */    LONG lRefCnt;          /* Increases and decreases by AddRef() and Release() */
 /* 0x002c */    UINT NumDisplayAdapters;
 /* 0x0030 */    Direct3D9DisplayAdapterInfo DisplayAdapters[D3D9_INT_MAX_NUM_ADAPTERS];
@@ -2667,6 +2667,6 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x47ac */    DWORD unknown004587;
 /* 0x47b0 */    DWORD unknown004588;
 /* 0x47b4 */    UINT SDKVersion;
-} DIRECT3D9_INT, *LPDIRECT3D9_INT;
+} DIRECT3D9_INT, FAR *LPDIRECT3D9_INT;
 
 #endif // _D3D9_PRIVATE_H_

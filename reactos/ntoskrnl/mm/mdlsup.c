@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeMdlImplementation)
@@ -57,7 +57,7 @@ MmInitializeMdlImplementation(VOID)
     if (!NT_SUCCESS(Status))
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     
@@ -692,7 +692,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             {
                 return NULL;
             }
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
         Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
         if (MiMdlMappingRegionHint == StartingOffset) MiMdlMappingRegionHint += PageCount;

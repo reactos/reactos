@@ -18,19 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-
-#include "wine/debug.h"
-
-#include "windef.h"
-#include "shlobj.h"
-#include "base/shell/explorer-new/todo.h"
-
-#include "shell32_main.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-const GUID CLSID_StartMenu = { 0x4622AD11, 0xFF23, 0x11D0, {0x8D,0x34,0x00,0xA0,0xC9,0x0F,0x27,0x19} };
 
 typedef struct _tagStartMenu {
     const IMenuPopupVtbl *vtbl;
@@ -38,25 +28,25 @@ typedef struct _tagStartMenu {
     const IInitializeObjectVtbl *initObjectVtbl;
     IUnknown *pUnkSite;
     LONG refCount;
-} StartMenu;
+} StartMenu, *LPStartMenu;
 
 static const IMenuPopupVtbl StartMenuVtbl;
 static const IObjectWithSiteVtbl StartMenu_ObjectWithSiteVtbl;
 static const IInitializeObjectVtbl StartMenu_InitializeObjectVtbl;
 
-static inline StartMenu *impl_from_IMenuPopup(IMenuPopup *iface)
+static LPStartMenu __inline impl_from_IMenuPopup(IMenuPopup *iface)
 {
-    return (StartMenu *)((char *)iface - FIELD_OFFSET(StartMenu, vtbl));
+    return (LPStartMenu)((char *)iface - FIELD_OFFSET(StartMenu, vtbl));
 }
 
-static inline StartMenu *impl_from_IObjectWithSite(IObjectWithSite *iface)
+static LPStartMenu __inline impl_from_IObjectWithSite(IObjectWithSite *iface)
 {
-    return (StartMenu *)((char *)iface - FIELD_OFFSET(StartMenu, objectSiteVtbl));
+    return (LPStartMenu)((char *)iface - FIELD_OFFSET(StartMenu, objectSiteVtbl));
 }
 
-static inline StartMenu *impl_from_IInitializeObject(IInitializeObject *iface)
+static LPStartMenu __inline impl_from_IInitializeObject(IInitializeObject *iface)
 {
-    return (StartMenu *)((char *)iface - FIELD_OFFSET(StartMenu, initObjectVtbl));
+    return (LPStartMenu)((char *)iface - FIELD_OFFSET(StartMenu, initObjectVtbl));
 }
 
 HRESULT WINAPI StartMenu_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv)

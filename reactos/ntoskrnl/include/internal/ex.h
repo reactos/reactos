@@ -1008,13 +1008,6 @@ ExTryToAcquireResourceExclusiveLite(
     IN PERESOURCE Resource
 );
 
-LONGLONG
-FASTCALL
-ExfpInterlockedExchange64(
-    LONGLONG volatile * Destination,
-    PLONGLONG Exchange
-);
-
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
 
@@ -1068,8 +1061,5 @@ XIPInit(
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
-
-#define ExfpInterlockedExchange64UL(Target, Value) \
-   (ULONGLONG)ExfpInterlockedExchange64((PLONGLONG)(Target), (PLONGLONG)(Value))
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

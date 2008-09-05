@@ -666,9 +666,10 @@ const char* get_xmlsym_end_utf8(const char* p)
 	for(; *p; ++p) {
 		char c = *p;
 
+		// NameChar ::= Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
 		if (c == '\xC3')	// UTF-8 escape character
 			++p;	//TODO only continue on umlaut characters
-		else if (!isalnum(c) && c!='_' && c!='-')
+		else if (!isalnum(c) && c!='.' && c!='-' && c!='_' && c!=':')
 			break;
 	}
 

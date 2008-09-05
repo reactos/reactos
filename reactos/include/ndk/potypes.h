@@ -107,6 +107,22 @@ typedef struct _PO_DEVICE_NOTIFY
     ULONG ActiveChild;
 } PO_DEVICE_NOTIFY, *PPO_DEVICE_NOTIFY;
 
+//
+// Power IRP Queue
+//
+typedef struct _PO_IRP_QUEUE
+{
+    PIRP CurrentIrp;
+    PIRP PendingIrpList;
+} PO_IRP_QUEUE, *PPO_IRP_QUEUE;
+
+// Power IRP Manager
+typedef struct _PO_IRP_MANAGER
+{
+    PO_IRP_QUEUE DeviceIrpQueue;
+    PO_IRP_QUEUE SystemIrpQueue;
+} PO_IRP_MANAGER, *PPO_IRP_MANAGER;
+
 #endif // !NTOS_MODE_USER
 
 #endif // _POTYPES_H

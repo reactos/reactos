@@ -153,7 +153,7 @@ IntEngWindowChanged(
   PLIST_ENTRY CurrentEntry;
   WNDGDI *Current;
 
-  ASSERT_IRQL(PASSIVE_LEVEL);
+  ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
   CurrentEntry = Window->WndObjListHead.Flink;
   while (CurrentEntry != &Window->WndObjListHead)

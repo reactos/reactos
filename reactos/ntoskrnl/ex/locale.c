@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -74,7 +74,7 @@ ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
             /* Success, is the value the right type? */
             if (ValueInfo->Type == REG_SZ)
             {
-                /* It is. Initailize the data and convert it */
+                /* It is. Initialize the data and convert it */
                 RtlInitUnicodeString(&ValueString, (PWSTR)ValueInfo->Data);
                 Status = RtlUnicodeStringToInteger(&ValueString, 16, &Value);
                 if (NT_SUCCESS(Status))
@@ -245,7 +245,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     {
         DPRINT1("TODO\n");
         Status = STATUS_SUCCESS;
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {
@@ -395,7 +395,7 @@ NtSetDefaultUILanguage(IN LANGID LanguageId)
     {
         /* FIXME */
         DPRINT1("TODO\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Otherwise, call the internal routine */

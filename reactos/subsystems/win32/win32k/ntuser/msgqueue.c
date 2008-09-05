@@ -155,14 +155,14 @@ MsqInitializeImpl(VOID)
                                   NULL,
                                   0,
                                   sizeof(USER_MESSAGE),
-                                  0,
+                                  TAG_USRMSG,
                                   256);
    ExInitializePagedLookasideList(&TimerLookasideList,
                                   NULL,
                                   NULL,
                                   0,
                                   sizeof(TIMER_ENTRY),
-                                  0,
+                                  TAG_TIMER,
                                   64);
 
    return(STATUS_SUCCESS);

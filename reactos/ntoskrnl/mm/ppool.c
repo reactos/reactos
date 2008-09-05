@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePagedPool)
@@ -91,7 +91,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
 	else
 		align = 0;
 
-	ASSERT_IRQL(APC_LEVEL);
+	ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
 
 	return RPoolAlloc ( MmPagedPool, NumberOfBytes, Tag, align );
 }
@@ -99,8 +99,14 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
 VOID STDCALL
 ExFreePagedPool(IN PVOID Block)
 {
-	ASSERT_IRQL(APC_LEVEL);
+	ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
 	RPoolFree ( MmPagedPool, Block );
+}
+
+ULONG NTAPI
+EiGetPagedPoolTag(IN PVOID Block)
+{
+    return RBodyToHdr(Block)->Tag;
 }
 
 

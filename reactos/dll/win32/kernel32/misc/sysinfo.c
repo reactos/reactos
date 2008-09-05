@@ -233,4 +233,12 @@ GetNativeSystemInfo(
     GetSystemInfo(lpSystemInfo);
 }
 
+DWORD
+WINAPI
+GetCurrentProcessorNumber(VOID)
+{
+    /* Forward to kernel */
+    return NtGetCurrentProcessorNumber();
+}
+
 /* EOF */

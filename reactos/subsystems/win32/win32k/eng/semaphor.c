@@ -134,7 +134,7 @@ EngInitializeSafeSemaphore(
    {
       /* Wait for the other thread to create the semaphore */
       ASSERT(Semaphore->lCount > 1);
-      ASSERT_IRQL(PASSIVE_LEVEL);
+      ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
       while (Semaphore->hsem == NULL);
    }
 

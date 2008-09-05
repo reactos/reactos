@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -122,7 +122,7 @@ IoShutdownRegisteredDevices(VOID)
         }
 
         /* Free the shutdown entry and reset the event */
-        ExFreePool(ShutdownEntry);
+        ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         KeClearEvent(&Event);
 
         /* Go to the next entry */
@@ -317,7 +317,7 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         if (DeviceObject->SecurityDescriptor)
         {
             /* Free it */
-            ExFreePool(DeviceObject->SecurityDescriptor);
+            ExFreePoolWithTag(DeviceObject->SecurityDescriptor, TAG_SD);
         }
 
         /* Remove the device from the list */
@@ -1195,7 +1195,7 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
             {
                 /* FIXME: Unhandled yet */
                 DPRINT1("FOEs not supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
         }
 
@@ -1328,7 +1328,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
             NextEntry = NextEntry->Blink;
 
             /* Free the entry */
-            ExFreePool(ShutdownEntry);
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         }
 
         /* Go to the next entry */
@@ -1352,7 +1352,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
             NextEntry = NextEntry->Blink;
 
             /* Free the entry */
-            ExFreePool(ShutdownEntry);
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         }
 
         /* Go to the next entry */

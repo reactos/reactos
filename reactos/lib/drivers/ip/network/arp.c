@@ -150,6 +150,8 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
         &Address->Address,               /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
 
+    if( !NdisPacket ) return FALSE;
+
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
     PC(NdisPacket)->DLComplete = ARPTransmitComplete;

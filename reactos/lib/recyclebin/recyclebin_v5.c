@@ -472,6 +472,7 @@ RecycleBin5_RecycleBin5_Restore(
 	PINFO2_HEADER pHeader;
 	DELETED_FILE_RECORD *pRecord, *pLast;
 	DWORD dwEntries, i;
+	SHFILEOPSTRUCTW op;
 
 	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
@@ -496,7 +497,12 @@ RecycleBin5_RecycleBin5_Restore(
 		if (pRecord->dwRecordUniqueId == pDeletedFile->dwRecordUniqueId)
 		{
 			/* Restore file */
-			if (!MoveFileW(pDeletedFileName, pDeletedFile->FileNameW))
+			ZeroMemory(&op, sizeof(op));
+			op.wFunc = FO_COPY;
+			op.pFrom = pDeletedFileName;
+			op.pTo = pDeletedFile->FileNameW;
+
+			if (!SHFileOperationW(&op))
 			{
 				UnmapViewOfFile(pHeader);
 				return HRESULT_FROM_WIN32(GetLastError());

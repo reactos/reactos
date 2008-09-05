@@ -389,9 +389,9 @@ typedef struct _SEGMENT
 //
 typedef struct _EVENT_COUNTER
 {
+    SLIST_ENTRY ListEntry;
     ULONG RefCount;
     KEVENT Event;
-    LIST_ENTRY ListEntry;
 } EVENT_COUNTER, *PEVENT_COUNTER;
 
 //
@@ -642,7 +642,7 @@ typedef struct _MMWSLENTRY
     ULONG Hashed:1;
     ULONG Direct:1;
     ULONG Age:2;
-    ULONG VirtualPageNumber:14;
+    ULONG VirtualPageNumber:20;
 } MMWSLENTRY, *PMMWSLENTRY;
 
 typedef struct _MMWSLE

@@ -19,38 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "ole2.h"
-#include "shlguid.h"
-
-#include "enumidlist.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "shellfolder.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (mydocs);
 
@@ -69,7 +38,7 @@ typedef struct {
 
     UINT cfShellIDList;        /* clipboardformat for IDropTarget */
     BOOL fAcceptFmt;        /* flag for pending Drop */
-} IGenericSFImpl;
+} IGenericSFImpl, *LPIGenericSFImpl;
 
 #define _IUnknown_(This)    (IShellFolder*)&(This->lpVtbl)
 #define _IShellFolder_(This)    (IShellFolder*)&(This->lpVtbl)
@@ -175,7 +144,7 @@ WINAPI ISF_MyDocuments_fnParseDisplayName (IShellFolder2 * iface,
     {
         szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
         TRACE ("-- element: %s\n", debugstr_w (szElement));
-        SHCLSIDFromStringW (szElement + 2, &clsid);
+        CLSIDFromString (szElement + 2, &clsid);
         pidlTemp = _ILCreateGuid (PT_GUID, &clsid);
     }
     else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
@@ -368,8 +337,8 @@ static HRESULT WINAPI ISF_MyDocuments_fnGetAttributesOf (IShellFolder2 * iface,
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
     static const DWORD dwMyDocumentsAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_CANCOPY |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -506,7 +475,7 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
             (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-            strcpyW(pszPath, This->sPathTarget);
+            wcscpy(pszPath, This->sPathTarget);
         else
             HCR_GetClassNameW(&CLSID_MyDocuments, pszPath, MAX_PATH);
         TRACE("CP\n");
@@ -545,9 +514,9 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
                     WCHAR szRegPath[100];
                     LONG r;
 
-                    lstrcpyW (szRegPath, clsidW);
+                    wcscpy (szRegPath, clsidW);
                     SHELL32_GUIDToStringW (clsid, &szRegPath[6]);
-                    lstrcatW (szRegPath, shellfolderW);
+                    wcscat (szRegPath, shellfolderW);
                     r = SHGetValueW(HKEY_CLASSES_ROOT, szRegPath,
                                     wantsForParsingW, NULL, NULL, NULL);
                     if (r == ERROR_SUCCESS)
@@ -599,7 +568,7 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
             if (!_ILIsDesktop(pidl))
             {
                 PathAddBackslashW(pszPath);
-                cLen = lstrlenW(pszPath);
+                cLen = wcslen(pszPath);
                 _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
                 if (!_ILIsFolder(pidl))
                 {
@@ -787,9 +756,9 @@ static const IShellFolder2Vtbl vt_MCFldr_ShellFolder2 =
     ISF_MyDocuments_fnMapColumnToSCID
 };
 
-static inline IGenericSFImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
+static LPIGenericSFImpl __inline impl_from_IPersistFolder2( IPersistFolder2 *iface )
 {
-    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpPF2));
+    return (LPIGenericSFImpl)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpPF2));
 }
 
 static HRESULT WINAPI
@@ -904,8 +873,8 @@ HRESULT WINAPI ISF_MyDocuments_Constructor (
         sf->lpVtbl = &vt_MCFldr_ShellFolder2;
         sf->lpPF2 = &vt_FSFldr_PersistFolder2;
         sf->pidlRoot = _ILCreateMyDocuments();    /* my qualified pidl */
-        sf->sPathTarget = SHAlloc( (lstrlenW(szMyPath) + 1)*sizeof(WCHAR) );
-        lstrcpyW( sf->sPathTarget, szMyPath );
+        sf->sPathTarget = SHAlloc( (wcslen(szMyPath) + 1)*sizeof(WCHAR) );
+        wcscpy( sf->sPathTarget, szMyPath );
 
         if (InterlockedCompareExchangePointer((void *)&cached_sf, sf, NULL) != NULL)
         {

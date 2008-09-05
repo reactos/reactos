@@ -21,7 +21,7 @@ void fs_open(PUNICODE_STRING DriveRoot,int rw);
 /* Opens the file system PATH. If RW is zero, the file system is opened
    read-only, otherwise, it is opened read-write. */
 
-BOOLEAN fs_isdirty(PUNICODE_STRING DriveRoot);
+BOOLEAN fs_isdirty();
 
 /* Checks if filesystem is dirty */
 
@@ -50,6 +50,14 @@ int fs_close(int write);
 int fs_changed(void);
 
 /* Determines whether the file system has changed. See fs_close. */
+
+NTSTATUS fs_lock(BOOLEAN LockVolume);
+
+/* Lock or unlocks the volume */
+
+void fs_dismount();
+
+/* Dismounts the volume */
 
 extern unsigned device_no;
 

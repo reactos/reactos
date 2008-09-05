@@ -24,12 +24,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
 			    InfoReq ? InfoReq->InformationClass : 0));
 
-    _SEH_TRY {
-	if( !SocketAcquireStateLock( FCB ) ) {
-	    Status = LostSocket( Irp );
-	    _SEH_YIELD(return Status);
-	}
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    _SEH_TRY {
 	switch( InfoReq->InformationClass ) {
 	case AFD_INFO_RECEIVE_WINDOW_SIZE:
 	    InfoReq->Information.Ulong = FCB->Recv.Size;
@@ -87,7 +84,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( FCB->AddressFile.Object == NULL) {
-	return UnlockAndMaybeComplete( FCB, STATUS_UNSUCCESSFUL, Irp, 0,
+	return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
 	                               NULL );
     }
 
@@ -113,7 +110,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
-                if( !NT_SUCCESS
+                if( NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
                       ( &ConnInfo,
                         FCB->LocalAddress->Address[0].AddressType ) ) ) {
@@ -128,31 +125,39 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
 
                 if( SysMdl ) {
-                    MmBuildMdlForNonPagedPool( SysMdl );
-                    Status = TdiQueryInformation
-                        ( FCB->AddressFile.Object,
-                          TDI_QUERY_CONNECTION_INFO,
-                          SysMdl );
+                    _SEH_TRY {
+                        MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
+                    } _SEH_HANDLE {
+	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	                Status = _SEH_GetExceptionCode();
+                    } _SEH_END;
                 } else Status = STATUS_NO_MEMORY;
 
                 if( NT_SUCCESS(Status) ) {
-                    TransAddr =
-                        (PTRANSPORT_ADDRESS)MmMapLockedPages
-                        ( Mdl, IoModifyAccess );
+                    Status = TdiQueryInformation
+                        ( FCB->Connection.Object,
+                          TDI_QUERY_CONNECTION_INFO,
+                          SysMdl );
                 }
 
-                if( TransAddr )
-                    RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
-                                   TaLengthOfTransportAddress
-                                   ( ConnInfo->RemoteAddress ) );
+                if( NT_SUCCESS(Status) ) {
+                    TransAddr =
+                        (PTRANSPORT_ADDRESS)MmGetSystemAddressForMdlSafe( Mdl, NormalPagePriority );
+
+                    if( TransAddr )
+                        RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
+                                       TaLengthOfTransportAddress
+                                       ( ConnInfo->RemoteAddress ) );
+                    else Status = STATUS_INSUFFICIENT_RESOURCES;
+		}
 
                 if( ConnInfo ) ExFreePool( ConnInfo );
                 if( SysMdl ) IoFreeMdl( SysMdl );
+                if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
+                MmUnlockPages( Mdl );
+                IoFreeMdl( Mdl );
             }
 	}
-
-	/* MmUnlockPages( Mdl ); */
-	/* IoFreeMdl( Mdl ); */
     } else {
     	Status = STATUS_INSUFFICIENT_RESOURCES;
     }

@@ -2,6 +2,7 @@
 #define _WIN32K_TAGS_H
 
 #define TAG_STRING      TAG('S', 'T', 'R', ' ') /* string */
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v') /* RTL registry */
 
 /* ntuser */
 #define TAG_MOUSE       TAG('M', 'O', 'U', 'S') /* mouse */
@@ -87,6 +88,7 @@
 #define TAG_DRIVER      TAG('G', 'D', 'R', 'V') /* video drivers */
 #define TAG_FNTFILE     TAG('F', 'N', 'T', 'F') /* font file */
 #define TAG_SSECTPOOL   TAG('S', 'S', 'C', 'P') /* shared section pool */
+#define TAG_PFF         TAG('G', 'p', 'f', 'f') /* physical font file */
 
 /* Dx internal tags rember I do not known if it right namees */
 #define TAG_DXPVMLIST   TAG('D', 'X', 'P', 'L') /* pmvlist for the driver */

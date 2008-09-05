@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 POBJECT_TYPE DbgkDebugObjectType;
 FAST_MUTEX DbgkpProcessDebugPortMutex;
@@ -712,7 +712,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         {
             /* We failed. FIXME: Handle this */
             DPRINT1("Unhandled Dbgk codepath!\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
 
         /* Check if this was the first message */
@@ -736,7 +736,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     {
         /* We failed. FIXME: Handle this */
         DPRINT1("Unhandled Dbgk codepath!\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Make sure we have a first thread */

@@ -47,14 +47,14 @@
  *   per list element.
  */
 
-INT cmd_for (LPTSTR cmd, LPTSTR param)
+INT cmd_for (LPTSTR param)
 {
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	TRACE ("cmd_for (\'%s\', \'%s\'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_for (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -138,9 +138,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 		bc->bEcho = bc->prev->bEcho;
 	else
 		bc->bEcho = bEcho;
-		bc->In[0] = _T('\0');
-		bc->Out[0] = _T('\0');
-		bc->Err[0] = _T('\0');
+	bc->RedirList = NULL;
 
 
 	return 0;

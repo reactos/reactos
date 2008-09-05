@@ -190,9 +190,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = STATUS_CANCELLED;
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
-	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	    IoCancelIrp(InFlightRequest[i]->InFlightRequest);
+	    InFlightRequest[i]->InFlightRequest = NULL;
 	}
     }
 
@@ -210,8 +209,12 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->LocalAddress );
     if( FCB->RemoteAddress )
 	ExFreePool( FCB->RemoteAddress );
-
-    ExFreePool(FCB->TdiDeviceName.Buffer);
+    if( FCB->ListenIrp.ConnectionReturnInfo )
+	ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
+    if( FCB->ListenIrp.ConnectionCallInfo )
+	ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
+    if( FCB->TdiDeviceName.Buffer )
+	ExFreePool(FCB->TdiDeviceName.Buffer);
 
     ExFreePool(FCB);
     AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));

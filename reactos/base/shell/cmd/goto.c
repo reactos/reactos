@@ -36,13 +36,13 @@
  *
  */
 
-INT cmd_goto (LPTSTR cmd, LPTSTR param)
+INT cmd_goto (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR tmp, tmp2;
 	LONG   lNewPosHigh = 0;
 
-	TRACE ("cmd_goto (\'%s\', \'%s\'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_goto (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -75,15 +75,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	/* jump to end of the file */
 	if ( _tcsicmp( param, _T(":eof"))==0)
 	{
-		/* when lCallPosition != 0 we have to return to the caller */
-		if (bc->lCallPosition == 0)
-			SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
-		else
-		{
-			SetFilePointer (bc->hBatchFile, (LONG)bc->lCallPosition, &bc->lCallPositionHigh, FILE_BEGIN);
-			bc->lCallPosition = 0;
-			bc->lCallPositionHigh = 0;
-		}
+		SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
 		return 0;
 	}
 

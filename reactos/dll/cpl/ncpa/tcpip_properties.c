@@ -238,6 +238,7 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
     BOOL SetDnsByDhcp;
     TCHAR pszRegKey[MAX_PATH];
     const char *AddressString;
+    char emptyString[]="\0";
     DWORD Address = 0;
     LONG rc;
     HKEY hKey = NULL;
@@ -282,7 +283,7 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
         goto cleanup;
     if (DlgData->Dns1 == INADDR_NONE)
     {
-        rc = RegDeleteValue(hKey, _T("NameServer"));
+        rc = RegSetValueExA(hKey, "NameServer",0, REG_SZ,  (const BYTE*)emptyString, strlen(emptyString) + 1);
         if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
             goto cleanup;
     }
@@ -445,6 +446,7 @@ LoadDataFromInfo(PTCPIP_PROPERTIES_DATA DlgData, IP_ADAPTER_INFO *Info)
     char Dns[MAX_PATH];
     DWORD Size;
     DWORD Type;
+    DWORD dwError;
     char *NextDnsServer;
 
     DlgData->AdapterName = Info->AdapterName;
@@ -469,7 +471,15 @@ LoadDataFromInfo(PTCPIP_PROPERTIES_DATA DlgData, IP_ADAPTER_INFO *Info)
     swprintf(RegKey,
              L"SYSTEM\\CurrentControlSet\\Services\\TCPIP\\Parameters\\Interfaces\\%S",
              Info->AdapterName);
-    if (ERROR_SUCCESS == RegOpenKeyW(HKEY_LOCAL_MACHINE, RegKey, &hKey)) {
+    dwError = RegOpenKeyW(HKEY_LOCAL_MACHINE, RegKey, &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* Try and fall back on the NameServer in Parameters */
+        swprintf(RegKey,
+                 L"SYSTEM\\CurrentControlSet\\Services\\TCPIP\\Parameters\\");
+    }
+    dwError = RegOpenKeyW(HKEY_LOCAL_MACHINE, RegKey, &hKey);
+    if (ERROR_SUCCESS == dwError) {
         Size = sizeof(Dns);
         RegQueryValueExA(hKey, "NameServer", NULL, &Type, (BYTE *)Dns,
                          &Size);

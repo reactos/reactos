@@ -375,7 +375,6 @@
 			</directory>
 		</if>
 		<file>anonmem.c</file>
-		<file>aspace.c</file>
 		<file>balance.c</file>
 		<file>cont.c</file>
 		<file>drvlck.c</file>
@@ -391,9 +390,6 @@
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pager.c</file>
-		<file>pagfault.c</file>
-		<file>paging.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
 		<file>pool.c</file>

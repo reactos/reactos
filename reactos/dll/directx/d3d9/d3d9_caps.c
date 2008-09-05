@@ -7,7 +7,6 @@
 #include <ddrawgdi.h>
 #include <dll/directx/d3d8thk.h>
 #include <debug.h>
-#include <strsafe.h>
 #include <limits.h>
 #include "d3d9_helpers.h"
 #include "d3d9_caps.h"
@@ -98,7 +97,7 @@ static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknow
     }
 
 
-    StringCbCopyA(pUnknown6BC->szDeviceName, CCHDEVICENAME, lpszDeviceName);
+    SafeCopyString(pUnknown6BC->szDeviceName, CCHDEVICENAME, lpszDeviceName);
     //pUnknown6BC->DeviceUniq = DdQueryDisplaySettingsUniqueness();
     pUnknown6BC->DeviceType = DeviceType;
 

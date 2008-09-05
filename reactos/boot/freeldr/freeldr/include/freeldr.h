@@ -47,6 +47,7 @@
 #include <video.h>
 #include <ramdisk.h>
 /* NDK, needed for ReactOS/Windows loaders */
+#include <ndk/asm.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/ldrtypes.h>
 #include <reactos.h>

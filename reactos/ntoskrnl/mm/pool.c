@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;
@@ -21,6 +21,12 @@ extern MM_STATS MmStats;
 
 /* FUNCTIONS ***************************************************************/
 
+ULONG NTAPI
+EiGetPagedPoolTag(IN PVOID Block);
+
+ULONG NTAPI
+EiGetNonPagedPoolTag(IN PVOID Block);
+
 static PVOID STDCALL
 EiAllocatePool(POOL_TYPE PoolType,
                ULONG NumberOfBytes,
@@ -28,22 +34,39 @@ EiAllocatePool(POOL_TYPE PoolType,
                PVOID Caller)
 {
    PVOID Block;
+   PCHAR TagChars = (PCHAR)&Tag;
 
-   /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
-   if (PoolType & PAGED_POOL_MASK)
-   {
-      Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-   }
-   else
-   {
-      Block = ExAllocateNonPagedPoolWithTag(PoolType,NumberOfBytes,Tag,Caller);
-   }
+   if (NumberOfBytes == 0)
+       KeBugCheckEx(BAD_POOL_CALLER, 0x00, 0, PoolType, Tag);
+   if (Tag == 0)
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9b, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
+   if (Tag == TAG('B','I','G',0))
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9c, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
 
-   if ((PoolType & MUST_SUCCEED_POOL_MASK) && Block==NULL)
-   {
-      KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
-   }
-   return(Block);
+#define IS_LETTER_OR_DIGIT(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z') || ((c) >= '0' && (c) <= '9'))
+   if (!IS_LETTER_OR_DIGIT(TagChars[0]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[1]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[2]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[3]))
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9d, Tag, PoolType, (ULONG_PTR)Caller);
+
+    /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
+    if (PoolType & PAGED_POOL_MASK)
+    {
+        if (KeGetCurrentIrql() > APC_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x08, KeGetCurrentIrql(), PoolType, Tag);
+        Block = ExAllocatePagedPoolWithTag(PoolType, NumberOfBytes, Tag);
+    }
+    else
+    {
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x08, KeGetCurrentIrql(), PoolType, Tag);
+        Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes, Tag, Caller);
+    }
+
+    if ((PoolType & MUST_SUCCEED_POOL_MASK) && !Block)
+        KeBugCheckEx(BAD_POOL_CALLER, 0x9a, PoolType, NumberOfBytes, Tag);
+    return Block;
 }
 
 /*
@@ -222,29 +245,40 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
  * @implemented
  */
 #undef ExFreePool
-VOID STDCALL
+VOID NTAPI
 ExFreePool(IN PVOID Block)
 {
-   ASSERT_IRQL(DISPATCH_LEVEL);
-
-   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-   {
-      ExFreePagedPool(Block);
-   }
-   else
-   {
-      ExFreeNonPagedPool(Block);
-   }
+    if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
+    {
+        if (KeGetCurrentIrql() > APC_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x09, KeGetCurrentIrql(), PagedPool, (ULONG_PTR)Block);
+        ExFreePagedPool(Block);
+    }
+    else
+    {
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x09, KeGetCurrentIrql(), NonPagedPool, (ULONG_PTR)Block);
+        ExFreeNonPagedPool(Block);
+    }
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
 {
-   /* FIXME: Validate the tag */
-   ExFreePool(Block);
+    ULONG BlockTag;
+
+    if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
+        BlockTag = EiGetPagedPoolTag(Block);
+    else
+        BlockTag = EiGetNonPagedPoolTag(Block);
+
+    if (BlockTag != Tag)
+        KeBugCheckEx(BAD_POOL_CALLER, 0x0a, (ULONG_PTR)Block, BlockTag, Tag);
+
+    ExFreePool(Block);
 }
 
 /*

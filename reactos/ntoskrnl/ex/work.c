@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, ExpInitializeWorkerThreads)
@@ -177,7 +177,7 @@ ProcessLoop:
         if (KeGetCurrentIrql() != PASSIVE_LEVEL)
         {
             /* It didn't, bugcheck! */
-            KEBUGCHECKEX(WORKER_THREAD_RETURNED_AT_BAD_IRQL,
+            KeBugCheckEx(WORKER_THREAD_RETURNED_AT_BAD_IRQL,
                          (ULONG_PTR)WorkItem->WorkerRoutine,
                          KeGetCurrentIrql(),
                          (ULONG_PTR)WorkItem->Parameter,
@@ -188,7 +188,7 @@ ProcessLoop:
         if (Thread->ActiveImpersonationInfo)
         {
             /* It didn't, bugcheck! */
-            KEBUGCHECKEX(IMPERSONATING_WORKER_THREAD,
+            KeBugCheckEx(IMPERSONATING_WORKER_THREAD,
                          (ULONG_PTR)WorkItem->WorkerRoutine,
                          (ULONG_PTR)WorkItem->Parameter,
                          (ULONG_PTR)WorkItem,
@@ -628,7 +628,7 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
     if ((ULONG_PTR)WorkItem->WorkerRoutine < MmUserProbeAddress)
     {
         /* Bugcheck the system */
-        KEBUGCHECKEX(WORKER_INVALID,
+        KeBugCheckEx(WORKER_INVALID,
                      1,
                      (ULONG_PTR)WorkItem,
                      (ULONG_PTR)WorkItem->WorkerRoutine,

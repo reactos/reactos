@@ -906,7 +906,7 @@ CreatePartitionList (SHORT Left,
   OBJECT_ATTRIBUTES ObjectAttributes;
   SYSTEM_DEVICE_INFORMATION Sdi;
   IO_STATUS_BLOCK Iosb;
-  ULONG ReturnSize;
+  SIZE_T ReturnSize;
   NTSTATUS Status;
   ULONG DiskNumber;
   WCHAR Buffer[MAX_PATH];

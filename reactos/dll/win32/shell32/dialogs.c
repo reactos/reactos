@@ -18,27 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <precomp.h>
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "wine/debug.h"
-
-#include "shellapi.h"
-#include "shlobj.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "undocshell.h"
-#include "shlwapi.h"
 
 typedef struct
     {
@@ -244,6 +225,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                                 DI_NORMAL);
                     break;
             }
+            break;
     }
 
     return FALSE;

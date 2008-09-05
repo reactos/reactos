@@ -1398,4 +1398,17 @@ QueryWorkingSet(HANDLE hProcess,
   return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+QueryWorkingSetEx(IN HANDLE hProcess,
+                  IN OUT PVOID pv,
+                  IN DWORD cb)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */

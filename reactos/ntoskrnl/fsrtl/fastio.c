@@ -1398,7 +1398,7 @@ FsRtlAcquireFileExclusive(IN PFILE_OBJECT FileObject)
     PAGED_CODE();
     FsRtlAcquireFileExclusiveCommon(FileObject,0,0);
     */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*
@@ -1409,7 +1409,7 @@ NTAPI
 FsRtlReleaseFile(IN PFILE_OBJECT FileObject)
 {
 
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++

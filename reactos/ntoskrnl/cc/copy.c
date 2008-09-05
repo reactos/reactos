@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -47,13 +47,13 @@ CcInitCacheZeroPage(VOID)
    if (!NT_SUCCESS(Status))
    {
        DbgPrint("Can't allocate CcZeroPage.\n");
-       KEBUGCHECKCC;
+       KeBugCheck(CACHE_MANAGER);
    }
    Status = MiZeroPage(CcZeroPage);
    if (!NT_SUCCESS(Status))
    {
        DbgPrint("Can't zero out CcZeroPage.\n");
-       KEBUGCHECKCC;
+       KeBugCheck(CACHE_MANAGER);
    }
 }
 

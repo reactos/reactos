@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -279,7 +279,7 @@ Quickie:
     }
 
     /* Free wait block array */
-    if (WaitBlockArray) ExFreePool(WaitBlockArray);
+    if (WaitBlockArray) ExFreePoolWithTag(WaitBlockArray, TAG_WAIT);
 
     /* Re-enable APCs if needed */
     if (LockInUse) KeLeaveCriticalRegion();

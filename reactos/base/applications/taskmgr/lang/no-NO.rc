@@ -80,7 +80,7 @@ BEGIN
     MENUITEM "Sorter &vertikalt",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimer",                   ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ksimer",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
+    MENUITEM "&Overlappet",                    ID_WINDOWS_CASCADE
     MENUITEM "&Plasser lengst frem",             ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -193,8 +193,8 @@ BEGIN
     CONTROL         "Liste2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Ny oppgave...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "&Bytt til",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "&Avslutt oppgave",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Bytt til",IDC_SWITCHTO,129,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Avslutt oppgave",IDC_ENDTASK,60,189,65,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -214,8 +214,8 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Bruk av CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Bruk av vekslefil",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Prosessorbruk",IDC_CPU_USAGE_FRAME,5,5,70,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "Minnebruk",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totalt",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Tildelt minne (kb)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Fysisk minne (kb)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
@@ -241,30 +241,30 @@ BEGIN
     LTEXT           "Totalt",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Tilgjengelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,40,8
     LTEXT           "Systembuffer",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
-    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,187,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,187,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,187,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Totalt",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Sidevekslet",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
-    LTEXT           "Ikke sidevekslet",IDS_KERNEL_MEMORY_NONPAGED,137,193,75,8
-    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
+    LTEXT           "Sidevekslet",IDS_KERNEL_MEMORY_PAGED,137,184,54,8
+    LTEXT           "Ikke sidevekslet",IDS_KERNEL_MEMORY_NONPAGED,137,193,85,8
+    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,187,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,187,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,187,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    GROUPBOX        "Bruk av CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Logg for bruk av sidevekslingsfil",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Vis bruk av CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
+    GROUPBOX        "Logg for bruk av prosessor",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Logg for bruk av fysisk minne",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Vis prosessorbruk",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Vis bruk av MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+    PUSHBUTTON      "Vis minnebruk",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
                     WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Logg for bruk av CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    PUSHBUTTON      "Logg for prosessorbruk",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,0,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "MEM bruk historie",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "Minne bruk historie",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,0,WS_EX_CLIENTEDGE
 END
 
@@ -356,21 +356,21 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Velg spaltevis"
+CAPTION "Velg kolonnene"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,138,178,50,14
-    LTEXT           "Velg spaltevis det vil oppstå på Prosess side av oppgavebehandler.",
+    LTEXT           "Velg kolonnene som skal vises på prosesssiden i Oppgavebehandling.",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "&Bilde navn",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Bildenavn",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
-    CONTROL         "&PID (Prosess identifikator)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
-    CONTROL         "&CPU brukt",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,50,53,10
-    CONTROL         "CPU Ti&d",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,61,48,10
+    CONTROL         "&PID (prosessidentifikator)",IDC_PID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,93,10
+    CONTROL         "&Prosessorbruk",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,50,60,10
+    CONTROL         "Prosessorti&d",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,61,52,10
     CONTROL         "&Minne brukt",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,63,10
     CONTROL         "Minne brukt &Delta",IDC_MEMORYUSAGEDELTA,"Button",
@@ -378,40 +378,40 @@ BEGIN
     CONTROL         "Ma&ks minne bruk",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
     CONTROL         "Side &mangeler",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
+                    WS_TABSTOP,7,105,56,10
     CONTROL         "&Bruker objekt",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "I/O Leser",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O Lest",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "I/O Leser Bytes",IDC_IOREADBYTES,"Button",
+    CONTROL         "I/O skrevet",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
-    CONTROL         "&Sesjon ID",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Økt ID",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
-    CONTROL         "Bruker &Navn",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Bruker&navn",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,51,10
     CONTROL         "Side &mangel Delta",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "&Virtuelt minne Størrelse",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+    CONTROL         "&Virtuelt minne størrelse",IDC_VIRTUALMEMORYSIZE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,86,10
     CONTROL         "Si&de innsats",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
     CONTROL         "I&ngen-side innsats",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
-    CONTROL         "Base P&rioritet",IDC_BASEPRIORITY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,72,10
+    CONTROL         "Basisp&rioritet",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
     CONTROL         "&Handle regne",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,59,10
     CONTROL         "&Tråd medregne",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,59,10
+                    WS_TABSTOP,107,94,65,10
     CONTROL         "GDI Objekt",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
-    CONTROL         "I/O skriver",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O skrevet",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "I/O skriver Bytes",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
+    CONTROL         "I/O skrevne byte",IDC_IOWRITEBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,70,10
     CONTROL         "I/O Annet",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,46,10
-    CONTROL         "I/O Annet Byte",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "I/O Andre byte",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -544,39 +544,39 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_NEW             "Kjør et nytt program"
-    ID_OPTIONS_ALWAYSONTOP  "Oppgavebehandler fortsette å være forran av alle andre vinduer uten minimert"
+    ID_OPTIONS_ALWAYSONTOP  "Oppgavebehandler fortsette å være over alle andre vinduer med mindre de er minimert"
     ID_OPTIONS_MINIMIZEONUSE
-                            "Oppgavebehandelen er minimert når en SwitchTo operasjon er oppført"
+                            "Oppgavebehandling er minimert når en 'Skift til' operasjon utføres"
     ID_OPTIONS_HIDEWHENMINIMIZED "Skjule oppgavebehandelen når det er minimert"
-    ID_VIEW_REFRESH         "Nødvendighet for oppgavebehandelen å oppdateres nå, hensynsløs av oppdatering hastighet innstillingen"
-    ID_VIEW_LARGE           "Vis oppgavene ved å bruke store ikoner"
-    ID_VIEW_SMALL           "Vis oppgavene ved å bruke små ikoner"
-    ID_VIEW_DETAILS         "Vis informasjon om hver oppgave"
+    ID_VIEW_REFRESH         "Oppdater nå, uahengig av innstillingene for oppdatering hastighet"
+    ID_VIEW_LARGE           "Viser oppgavene ved å bruke store ikoner"
+    ID_VIEW_SMALL           "Viser oppgavene ved å bruke små ikoner"
+    ID_VIEW_DETAILS         "Viser informasjon om hver oppgave"
     ID_VIEW_UPDATESPEED_HIGH "Oppdater skjermen to ganger per sekund"
-    ID_VIEW_UPDATESPEED_NORMAL "Oppdater skjermen hver to sekunds"
-    ID_VIEW_UPDATESPEED_LOW "Oppdater skjermen hver fire sekund"
+    ID_VIEW_UPDATESPEED_NORMAL "Oppdater skjermen annenhver sekund"
+    ID_VIEW_UPDATESPEED_LOW "Oppdater skjermen hvert fjerde sekund"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Kan ikke automatisk oppdateres"
+    ID_VIEW_UPDATESPEED_PAUSED "Skjermen oppdaterer ikke automatisk"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Tittel vindu horisontalt på skrivebordet"
-    ID_WINDOWS_TILEVERTICALLY "Tittel vindu vertikalt på skrivebordet"
+                            "Viser tittel vindu horisontalt på skrivebordet"
+    ID_WINDOWS_TILEVERTICALLY "Viser tittel vindu vertikalt på skrivebordet"
     ID_WINDOWS_MINIMIZE     "Minimalisere vinduet"
     ID_WINDOWS_MAXIMIZE     "Maksimere vinduet"
-    ID_WINDOWS_CASCADE      "Cascades vinduet diagonalt på skrivebordet"
-    ID_WINDOWS_BRINGTOFRONT "Bringe vinduet front, men kan ikke bryter til det"
-    ID_HELP_TOPICS          "Vis oppgavebehandler emner i hjelp"
-    ID_HELP_ABOUT           "Vis program informasjon, versjon nummer, og enerett"
-    ID_FILE_EXIT            "Avslutt oppgavebehandler applikasjon"
+    ID_WINDOWS_CASCADE      "Overlapper vinduet diagonalt på skrivebordet"
+    ID_WINDOWS_BRINGTOFRONT "Legger vinduet øverst, men kan ikke skifte til det"
+    ID_HELP_TOPICS          "Viser emner i hjelp for oppgavebehandling"
+    ID_HELP_ABOUT           "Viser program informasjon, versjon nummer, og enerett"
+    ID_FILE_EXIT            "Avslutter oppgavebehandling"
     ID_OPTIONS_SHOW16BITTASKS
-                            "Vis 16-bit oppgaver under assosiert ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS   "Velg hva kolonner vil bli synlig på Prosess side"
-    ID_VIEW_SHOWKERNELTIMES "Vis kernel tid i utførelse diagramer"
+                            "Viser 16-biters oppgaver under tilknyttende ntvdm.exe"
+    ID_VIEW_SELECTCOLUMNS   "Velg hvilken kolonner som vil bli synlig på prosess siden"
+    ID_VIEW_SHOWKERNELTIMES "Viser kjerne tid i ytelses grafene"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "En singel historie graf viser totalt CPU bruk"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Hver CPU har dems egene historie graf"
+                            "En enkelt logg graf viser totalt prosessorbruk"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Hver prosessor har sin egen logg graf"
     ID_APPLICATION_PAGE_SWITCHTO
                             "Skaffe en oppgave til forgrunn, endre fokus til den oppgaven"
 END
@@ -617,10 +617,10 @@ BEGIN
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Brukernavn"
     IDS_TAB_SESSIONID             "Sesjon ID"
-    IDS_TAB_CPU                   "CPU"
-    IDS_TAB_CPUTIME               "CPU Tid"
-    IDS_TAB_MEMUSAGE              "Bruk av vekslefil"
-    IDS_TAB_PEAKMEMUSAGE          "Maks bruk av Mem"
+    IDS_TAB_CPU                   "Prosessor"
+    IDS_TAB_CPUTIME               "Prosessor tid"
+    IDS_TAB_MEMUSAGE              "Minnebruk"
+    IDS_TAB_PEAKMEMUSAGE          "Maks minnebruk"
     IDS_TAB_MEMDELTA              "Mem Delta"
     IDS_TAB_PAGEFAULT             "Side mangel"
     IDS_TAB_PFDELTA               "PF Delta"
@@ -638,21 +638,21 @@ BEGIN
     IDS_TAB_IOREADBYTES           "I/O Leser Byte"
     IDS_TAB_IOWRITESBYTES         "I/O Skriver Byte"
     IDS_TAB_IOOTHERBYTES          "I/O Annet Byte"
-    IDS_MENU_SELECTCOLUMNS        "&Velg kollone..."
+    IDS_MENU_SELECTCOLUMNS        "&Velg kolonner..."
     IDS_MENU_16BITTASK            "&Vis 16-biter oppgave"
     IDS_MENU_WINDOWS              "&Vinduer"
-    IDS_MENU_LARGEICONS           "St&ore Ikoner"
-    IDS_MENU_SMALLICONS           "S&må Ikoner"
+    IDS_MENU_LARGEICONS           "St&ore ikoner"
+    IDS_MENU_SMALLICONS           "S&må ikoner"
     IDS_MENU_DETAILS              "&Detaljer"
-    IDS_MENU_ONEGRAPHALLCPUS      "&En Graf, Alle CPU"
-    IDS_MENU_ONEGRAPHPERCPU       "En Graf &Per CPU"
-    IDS_MENU_CPUHISTORY           "&CPU Historie"
-    IDS_MENU_SHOWKERNELTIMES      "&Vis Kernel tider"
+    IDS_MENU_ONEGRAPHALLCPUS      "&En Graf, alle prosessorer"
+    IDS_MENU_ONEGRAPHPERCPU       "En Graf &per prosessor"
+    IDS_MENU_CPUHISTORY           "&Prosessor Historie"
+    IDS_MENU_SHOWKERNELTIMES      "&Vis Kjerne tider"
     IDS_CREATENEWTASK             "Opprett ny oppgave"
-    IDS_CREATENEWTASK_DESC        "Skriv navnet av et program, mappe, dokument, eller Internett-ressursen, og oppgavebehandelen vil åpne det for deg."
-    IDS_MSG_ACCESSPROCESSAFF      "Ikke i stand til tilgang eller sette Prosess slektskap"
+    IDS_CREATENEWTASK_DESC        "Skriv navnet på et program, mappe, dokument, eller Internett-ressursen, som oppgavebehandelen vil åpne for deg."
+    IDS_MSG_ACCESSPROCESSAFF      "Ikke mulig å fo tilgang eller sette prosess slektskap"
     IDS_MSG_PROCESSONEPRO         "Prosessen må ha tiltrekning med minst en prosessor."
-    IDS_MSG_INVALIDOPTION         "Ugyldig Operasjon"
+    IDS_MSG_INVALIDOPTION         "Ugyldig operasjon"
     IDS_MSG_UNABLEDEBUGPROCESS    "Ute av stand til feilsøking prosess"
     IDS_MSG_WARNINGDEBUG          "ADVARSEL: Feilretning denne prosess kan følge å miste data.\nEr du sikker du vil tilknytte feilsøkingsprogramet?"
     IDS_MSG_TASKMGRWARNING        "Oppgavebehandler advarsel"
@@ -660,7 +660,7 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Ikke i stand til å avslutte prosess"
     IDS_MSG_UNABLECHANGEPRIORITY  "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Bruk av CPU : %d%%"
+    IDS_MSG_TRAYICONCPUUSAGE      "Bruk av CPU: %d%%"
     IDS_STATUS_MEMUSAGE           "Tildelt minne: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Bruk av CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Prosesser: %d"

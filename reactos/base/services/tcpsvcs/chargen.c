@@ -32,16 +32,16 @@ SendLine(SOCKET sock, LPSTR lpLine)
         }
         else
         {
-            LogEvent(_T("Chargen: Not sent enough bytes"), 0, 0, LOG_FILE);
+            LogEvent(L"Chargen: Not sent enough bytes", 0, 0, LOG_FILE);
         }
     }
     else if (retVal == SOCKET_ERROR)
     {
-        LogEvent(_T("Chargen: Socket error\n"), WSAGetLastError(), 0, LOG_ERROR);
+        LogEvent(L"Chargen: Socket error\n", WSAGetLastError(), 0, LOG_ERROR);
     }
     else
     {
-        LogEvent(_T("Chargen: unknown error\n"), WSAGetLastError(), 0, LOG_ERROR);
+        LogEvent(L"Chargen: unknown error\n", WSAGetLastError(), 0, LOG_ERROR);
     }
 
     return bRet;;
@@ -100,21 +100,21 @@ ChargenHandler(VOID* sock_)
 
     if (!GenerateChars(sock))
     {
-        LogEvent(_T("Chargen: Char generation failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Chargen: Char generation failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Chargen: Shutting connection down..."), 0, 0, LOG_FILE);
+    LogEvent(L"Chargen: Shutting connection down...", 0, 0, LOG_FILE);
     if (ShutdownConnection(sock, FALSE))
     {
-        LogEvent(_T("Chargen: Connection is down"), 0, 0, LOG_FILE);
+        LogEvent(L"Chargen: Connection is down", 0, 0, LOG_FILE);
     }
     else
     {
-        LogEvent(_T("Chargen: Connection shutdown failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Chargen: Connection shutdown failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Chargen: Terminating thread"), 0, 0, LOG_FILE);
+    LogEvent(L"Chargen: Terminating thread", 0, 0, LOG_FILE);
     ExitThread(retVal);
 }

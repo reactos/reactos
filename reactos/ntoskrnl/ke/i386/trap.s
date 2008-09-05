@@ -1836,7 +1836,7 @@ NotGdt:
 CheckRing3Io:
     /* Get EFLAGS and IOPL */
     mov ebx, [ebp+KTRAP_FRAME_EFLAGS]
-    and ebx, 0x3000
+    and ebx, EFLAGS_IOPL
     shr ebx, 12
 
     /* Check the CS's RPL mask */

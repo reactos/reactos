@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -28,6 +28,8 @@ UNICODE_STRING IopHardwareDatabaseKey =
    RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
 POBJECT_TYPE IoDriverObjectType = NULL;
+
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
 
 extern BOOLEAN ExpInTextModeSetup;
 
@@ -246,7 +248,7 @@ IopNormalizeImagePath(
       RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
 
       /* Free caller's string */
-      RtlFreeUnicodeString(&InputImagePath);
+      ExFreePoolWithTag(InputImagePath.Buffer, TAG_RTLREGISTRY);
    }
 
    return STATUS_SUCCESS;
@@ -275,6 +277,7 @@ IopLoadServiceModule(
    UNICODE_STRING ServiceImagePath, CCSName;
    NTSTATUS Status;
    HANDLE CCSKey, ServiceKey;
+   PVOID BaseAddress;
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
@@ -356,7 +359,7 @@ IopLoadServiceModule(
   else
   {
      DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
+     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
   }
 
    ExFreePool(ServiceImagePath.Buffer);
@@ -782,10 +785,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     LPWSTR FileExtension;
     PUNICODE_STRING ModuleName = &LdrEntry->BaseDllName;
     UNICODE_STRING ServiceName;
-#if 1 // Disable for FreeLDR 2.5
-    UNICODE_STRING ServiceNameWithExtension;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-#endif
 
    /*
     * Display 'Loading XXX...' message
@@ -806,19 +805,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 
    /*
-    * Load the module. 
-    */
-#if 1 // Remove for FreeLDR 2.5.
-   RtlCreateUnicodeString(&ServiceNameWithExtension, FileNameWithoutPath);
-   Status = LdrProcessDriverModule(LdrEntry, &ServiceNameWithExtension, &ModuleObject);
-   if (!NT_SUCCESS(Status))
-   {
-       CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-       return Status;
-   }
-#endif
-
-   /*
     * Strip the file extension from ServiceName
     */
    RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
@@ -836,7 +822,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
    if (!NT_SUCCESS(Status))
    {
-      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
+      DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return(Status);
    }
    DeviceNode->ServiceName = ServiceName;
@@ -844,7 +830,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Initialize the driver
     */
-   DeviceNode->Flags |= DN_DRIVER_LOADED;
    Status = IopInitializeDriverModule(DeviceNode, LdrEntry,
       &DeviceNode->ServiceName, FALSE, &DriverObject);
 
@@ -1577,6 +1562,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    PLDR_DATA_TABLE_ENTRY ModuleObject;
+   PVOID BaseAddress;
    WCHAR *cur;
 
    /* Check if it's an unload request */
@@ -1687,7 +1673,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         * Load the driver module
         */
 
-       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
@@ -1729,9 +1715,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
        /* Store its DriverSection, so that it could be unloaded */
        DriverObject->DriverSection = ModuleObject;
-
-       /* We have a driver for this DeviceNode */
-       DeviceNode->Flags |= DN_DRIVER_LOADED;
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);

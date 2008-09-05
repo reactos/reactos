@@ -164,6 +164,13 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+
+#define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
+    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+
+#define InterlockedExchangePte(PointerPte, Value) \
+    InterlockedExchange((PLONG)(PointerPte), Value)
+
 typedef struct
 {
     ULONG Entry[NR_SECTION_PAGE_ENTRIES];
@@ -380,6 +387,8 @@ typedef VOID
     SWAPENTRY SwapEntry,
     BOOLEAN Dirty
 );
+
+PMM_AVL_TABLE MmKernelAddressSpace;
 
 /* marea.c *******************************************************************/
 
@@ -1054,13 +1063,6 @@ MmCreateHyperspaceMapping(PFN_TYPE Page);
 
 PFN_TYPE
 NTAPI
-MmChangeHyperspaceMapping(
-    PVOID Address,
-    PFN_TYPE Page
-);
-
-PFN_TYPE
-NTAPI
 MmDeleteHyperspaceMapping(PVOID Address);
 
 NTSTATUS
@@ -1209,13 +1211,6 @@ MmReferencePage(PFN_TYPE Page);
 VOID
 NTAPI
 MmReferencePageUnsafe(PFN_TYPE Page);
-
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
 
 ULONG
 NTAPI
@@ -1552,11 +1547,25 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
-/* ReactOS Mm Hack */
+NTSTATUS
+NTAPI
+MmCallDllInitialize(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+    IN PLIST_ENTRY ListHead
+);
+
+/* ReactOS Mm Hacks */
 VOID
 FASTCALL
-MiSyncThreadProcessViews(
-    IN PKTHREAD NextThread
+MiSyncForProcessAttach(
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
+);
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(
+    IN PKTHREAD Thread
 );
 
 extern PMM_AVL_TABLE MmKernelAddressSpace;

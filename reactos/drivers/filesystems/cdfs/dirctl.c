@@ -189,7 +189,6 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
   if (FileToFind == NULL || FileToFind->Length == 0)
     {
-      CHECKPOINT;
       RtlInitUnicodeString(&TempString, L".");
       FileToFind = &TempString;
     }

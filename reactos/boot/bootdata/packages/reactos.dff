@@ -74,9 +74,11 @@ Signature = "$ReactOS$"
 ;base\applications\winhlp32\winhlp32.exe                 1
 ;base\applications\wordpad\wordpad.exe                   1
 
+;base\services\audiosrv\audiosrv.exe                 1
 ;base\services\dhcp\dhcp.exe                         1
 ;base\services\eventlog\eventlog.exe                 1
 ;base\services\rpcss\rpcss.exe                       1
+;base\services\spoolsv\spoolsv.exe                   1
 ;base\services\tcpsvcs\tcpsvcs.exe                   1
 ;base\services\tcpsvcs\quotes                        5
 ;base\services\umpnpmgr\umpnpmgr.exe                 1
@@ -92,6 +94,7 @@ Signature = "$ReactOS$"
 ;base\shell\explorer-new\explorer_new.exe            4   optional
 
 ;base\system\autochk\autochk.exe                     1
+;base\system\bootok\bootok.exe                       1
 ;base\system\format\format.exe                       1
 ;base\system\lsass\lsass.exe                         1
 ;base\system\msiexec\msiexec.exe                     1
@@ -286,6 +289,7 @@ Signature = "$ReactOS$"
 ;dll\win32\netapi32\netapi32.dll                     1
 ;dll\win32\netcfgx\netcfgx.dll                       1
 ;dll\win32\netid\netid.dll                           1
+;dll\win32\netshell\netshell.dll                     1
 ;dll\win32\newdev\newdev.dll                         1
 ;dll\win32\ntdsapi\ntdsapi.dll                       1
 ;dll\win32\ntmarta\ntmarta.dll                       1
@@ -317,6 +321,8 @@ Signature = "$ReactOS$"
 ;dll\win32\sensapi\sensapi.dll                       1
 ;dll\win32\serialui\serialui.dll                     1
 ;dll\win32\setupapi\setupapi.dll                     1
+;dll\win32\sfc\sfc.dll                               1
+;dll\win32\sfc_os\sfc_os.dll                         1
 ;dll\win32\shdocvw\shdocvw.dll                       1
 ;dll\win32\shell32\shell32.dll                       1
 ;dll\win32\shfolder\shfolder.dll                     1
@@ -325,6 +331,7 @@ Signature = "$ReactOS$"
 ;dll\win32\smdll\smdll.dll                           1
 ;dll\win32\snmpapi\snmpapi.dll                       1
 ;dll\win32\stdole2.tlb\stdole2.tlb                   1
+;dll\win32\sxs\sxs.dll                               1
 ;dll\win32\syssetup\syssetup.dll                     1
 ;dll\win32\tapi32\tapi32.dll                         1
 ;dll\win32\tapiui\tapiui.dll                         1
@@ -673,3 +680,7 @@ tools\dbgprint\dbgprint.exe                         7   optional
 
 ; Native libraries
 ;modules\windows\mfc42.dll                                                  1   optional
+;modules\windows\vmx_fb.dll                                                 1   optional
+;modules\windows\vmx_mode.dll                                               1   optional
+;modules\windows\vmx_svga.sys                                               2   optional
+;modules\windows\vmx_svga.inf                                               6   optional

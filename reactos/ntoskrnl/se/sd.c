@@ -619,8 +619,9 @@ DescriptorCopy.AclType = NULL;                                           \
         
         /* allocate enough memory to store a complete copy of a self-relative
          security descriptor */
-        NewDescriptor = ExAllocatePool(PoolType,
-                                       DescriptorSize);
+        NewDescriptor = ExAllocatePoolWithTag(PoolType,
+                                              DescriptorSize,
+                                              TAG_SD);
         if(NewDescriptor != NULL)
         {
             ULONG_PTR Offset = sizeof(SECURITY_DESCRIPTOR);
@@ -872,7 +873,7 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
         (CurrentMode == KernelMode && CaptureIfKernelMode)))
     {
         /* only delete the descriptor when SeCaptureSecurityDescriptor() allocated one! */
-        ExFreePool(CapturedSecurityDescriptor);
+        ExFreePoolWithTag(CapturedSecurityDescriptor, TAG_SD);
     }
     
     return STATUS_SUCCESS;
@@ -1450,8 +1451,9 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
            DaclLength,
            SaclLength);
     
-    Descriptor = ExAllocatePool(PagedPool,
-                                Length);
+    Descriptor = ExAllocatePoolWithTag(PagedPool,
+                                       Length,
+                                       TAG_SD);
     if (Descriptor == NULL)
     {
         DPRINT1("ExAlloctePool() failed\n");

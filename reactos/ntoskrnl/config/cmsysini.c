@@ -119,9 +119,77 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 OUT PULONG ReturnLength,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-    DPRINT1("CmpQueryKeyName() called\n");
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
+    PUNICODE_STRING KeyName;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
+    PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
+
+    /* Acquire hive lock */
+    CmpLockRegistry();
+
+    /* Lock KCB shared */
+    CmpAcquireKcbLockShared(Kcb);
+
+    /* Check if it's a deleted block */
+    if (Kcb->Delete)
+    {
+        /* Release the locks */
+        CmpReleaseKcbLock(Kcb);
+        CmpUnlockRegistry();
+
+        /* Let the caller know it's deleted */
+        return STATUS_KEY_DELETED;
+    }
+
+    /* Get the name */
+    KeyName = CmpConstructName(Kcb);
+
+    /* Release the locks */
+    CmpReleaseKcbLock(Kcb);
+    CmpUnlockRegistry();
+
+    /* Check if we got the name */
+    if (!KeyName) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set the returned length */
+    *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
+
+    /* Check if it fits into the provided buffer */
+    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
+        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    {
+        /* Free the buffer allocated by CmpConstructName */
+        ExFreePool(KeyName);
+
+        /* Return buffer length failure */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Fill in the result */
+    _SEH_TRY
+    {
+        /* Return data to user */
+        ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
+        ObjectNameInfo->Name.MaximumLength = KeyName->Length;
+        ObjectNameInfo->Name.Length = KeyName->Length;
+
+        /* Copy string content*/
+        RtlCopyMemory(ObjectNameInfo->Name.Buffer,
+                      KeyName->Buffer,
+                      *ReturnLength);
+    }
+    _SEH_HANDLE
+    {
+        /* Get the status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Free the buffer allocated by CmpConstructName */
+    ExFreePool(KeyName);
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -643,7 +711,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!Buffer)
     {
         /* Fail */
-        KEBUGCHECKEX(BAD_SYSTEM_CONFIG_INFO, 3, 1, (ULONG_PTR)LoaderBlock, 0);
+        KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO, 3, 1, (ULONG_PTR)LoaderBlock, 0);
     }
 
     /* Setup the unicode string */
@@ -716,7 +784,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (CmpBootType & 4)
         {
             /* We're disabled, so bugcheck */
-            KEBUGCHECKEX(BAD_SYSTEM_CONFIG_INFO,
+            KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO,
                          3,
                          3,
                          (ULONG_PTR)SystemHive,
@@ -736,7 +804,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Add the hive to the hive list */
@@ -876,7 +944,7 @@ CmpCreateRegistryRoot(VOID)
                             0,
                             0,
                             (PVOID*)&RootKey);
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Sanity check, and get the key cell */
@@ -973,7 +1041,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ExFreePool(ValueInfo);
+            ExFreePoolWithTag(ValueInfo, TAG_CM);
             return Status;
         }
 
@@ -982,7 +1050,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
                       ValueInfo->Data,
                       ValueInfo->DataLength);
         ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = UNICODE_NULL;
-        ExFreePool(ValueInfo);
+        ExFreePoolWithTag(ValueInfo, TAG_CM);
     }
     else
     {
@@ -1288,7 +1356,7 @@ CmpInitializeHiveList(IN USHORT Flag)
     }
     
     /* Get rid of the SD */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
 
     /* FIXME: Link SECURITY to SAM */
     
@@ -1346,7 +1414,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
     }
 
     /* Build the master hive */
@@ -1363,14 +1431,14 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 2, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 2, Status, 0);
     }
 
     /* Create the \REGISTRY key node */
     if (!CmpCreateRegistryRoot())
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
     }
 
     /* Create the default security descriptor */
@@ -1393,7 +1461,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 5, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 5, Status, 0);
     }
 
     /* Close the handle */
@@ -1416,7 +1484,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 6, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 6, Status, 0);
     }
 
     /* Close the handle */
@@ -1426,7 +1494,7 @@ CmInitSystem1(VOID)
     if (!CmpInitializeSystemHive(KeLoaderBlock))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
     }
 
     /* Create the 'CurrentControlSet' link. */
@@ -1434,7 +1502,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
     }
 
     /* Create the hardware hive */
@@ -1451,7 +1519,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
     }
     
     /* Add the hive to the hive list */
@@ -1467,20 +1535,20 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
     }
     
     /* FIXME: Add to HiveList key */
     
     /* Free the security descriptor */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
 
     /* Fill out the Hardware key with the ARC Data from the Loader */
     Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
     }
 
     /* Initialize machine-dependent information into the registry */
@@ -1488,7 +1556,7 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
     }
 
     /* Initialize volatile registry settings */
@@ -1496,11 +1564,11 @@ CmInitSystem1(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 15, Status, 0);
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 15, Status, 0);
     }
 
     /* Free the load options */
-    ExFreePool(CmpLoadOptions.Buffer);
+    ExFreePoolWithTag(CmpLoadOptions.Buffer, TAG_CM);
 
     /* If we got here, all went well */
     return TRUE;

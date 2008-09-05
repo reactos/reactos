@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #ifndef VACB_MAPPING_GRANULARITY
 #define VACB_MAPPING_GRANULARITY (256 * 1024)
@@ -183,7 +183,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 	   else
 	   {
 	      DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
-	      KEBUGCHECKCC;
+	      KeBugCheck(CACHE_MANAGER);
 	   }
 	}
      }
@@ -202,7 +202,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
         if (!NT_SUCCESS(Status))
         {
            DPRINT1("CcRosInternalFreeCacheSegment failed, status = %x\n", Status);
-	   KEBUGCHECK(0);
+	   KeBugCheck(CACHE_MANAGER);
         }
      }
   }

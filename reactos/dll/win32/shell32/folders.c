@@ -17,29 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "objbase.h"
-#include "undocshell.h"
-#include "shlguid.h"
-
-#include "wine/debug.h"
-
-#include "pidl.h"
-#include "shell32_main.h"
-#include "shfldr.h"
-#include "shresdef.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -63,7 +41,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
         WCHAR wszIconIndex[10];
         SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, iconIndex,
             wszIconIndex, 10);
-        *piIndex = atoiW(wszIconIndex);
+        *piIndex = _wtoi(wszIconIndex);
     }
     else if (SHELL32_GetCustomFolderAttribute(pidl, shellClassInfo, clsid,
         wszCLSIDValue, CHARS_IN_GUID) &&
@@ -133,7 +111,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x','}',0 };
             WCHAR xriid[50];
 
-            sprintfW(xriid, fmt,
+            swprintf(xriid, fmt,
                 riid->Data1, riid->Data2, riid->Data3,
                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
@@ -291,8 +269,9 @@ IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
     extractIconW = IExtractIconW_Constructor(pidl);
     if (!extractIconW)
         return NULL;
-    hr = IExtractIconW_QueryInterface(extractIconW, &IID_IExtractIconA, (void **)&extractIconA);
-    IExtractIconW_Release(extractIconW);
+
+    hr = extractIconW->lpVtbl->QueryInterface(extractIconW, &IID_IExtractIconA, (void **)&extractIconA);
+    extractIconW->lpVtbl->Release(extractIconW);
     if (!SUCCEEDED(hr))
         return NULL;
     return extractIconA;

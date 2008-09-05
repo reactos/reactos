@@ -33,29 +33,9 @@
   - implement ACO_RTLREADING style
 
  */
-#include "config.h"
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#define COBJMACROS
+#include <precomp.h>
 
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "undocshell.h"
-#include "shlwapi.h"
-#include "winerror.h"
-#include "objbase.h"
-
-#include "pidl.h"
-#include "shlobj.h"
-#include "shldisp.h"
-#include "debughlp.h"
-
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -78,7 +58,7 @@ typedef struct
 static const IAutoCompleteVtbl acvt;
 static const IAutoComplete2Vtbl ac2vt;
 
-static inline IAutoCompleteImpl *impl_from_IAutoComplete2( IAutoComplete2 *iface )
+static IAutoCompleteImpl * impl_from_IAutoComplete2( IAutoComplete2 *iface )
 {
     return (IAutoCompleteImpl *)((char*)iface - FIELD_OFFSET(IAutoCompleteImpl, lpvtblAutoComplete2));
 }
@@ -281,8 +261,8 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 	LONG len;
 
 	/* pwszRegKeyPath contains the key as well as the value, so we split */
-	key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwzsRegKeyPath)+1)*sizeof(WCHAR));
-	strcpyW(key, pwzsRegKeyPath);
+	key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(pwzsRegKeyPath)+1)*sizeof(WCHAR));
+	wcscpy(key, pwzsRegKeyPath);
 	value = strrchrW(key, '\\');
 	*value = 0;
 	value++;
@@ -296,7 +276,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
 	    res = RegQueryValueW(hKey, value, result, &len);
 	    if (res == ERROR_SUCCESS) {
 		This->quickComplete = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len*sizeof(WCHAR));
-		strcpyW(This->quickComplete, result);
+		wcscpy(This->quickComplete, result);
 	    }
 	    RegCloseKey(hKey);
 	}
@@ -304,8 +284,8 @@ static HRESULT WINAPI IAutoComplete_fnInit(
     }
 
     if ((pwszQuickComplete) && (!This->quickComplete)) {
-	This->quickComplete = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lstrlenW(pwszQuickComplete)+1)*sizeof(WCHAR));
-	lstrcpyW(This->quickComplete, pwszQuickComplete);
+	This->quickComplete = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(pwszQuickComplete)+1)*sizeof(WCHAR));
+	wcscpy(This->quickComplete, pwszQuickComplete);
     }
 
     return S_OK;
@@ -484,8 +464,8 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 		    control = GetKeyState(VK_CONTROL) & 0x8000;
 		    if (control && This->quickComplete) {
 			hwndQCText = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-						       (lstrlenW(This->quickComplete)+lstrlenW(hwndText))*sizeof(WCHAR));
-			sel = sprintfW(hwndQCText, This->quickComplete, hwndText);
+						       (wcslen(This->quickComplete)+wcslen(hwndText))*sizeof(WCHAR));
+			sel = swprintf(hwndQCText, This->quickComplete, hwndText);
 			SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)hwndQCText);
 			SendMessageW(hwnd, EM_SETSEL, 0, sel);
 			HeapFree(GetProcessHeap(), 0, hwndQCText);
@@ -529,11 +509,11 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 				msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
 				SendMessageW(This->hwndListBox, LB_GETTEXT, sel, (LPARAM)msg);
 				SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)msg);
-				SendMessageW(hwnd, EM_SETSEL, lstrlenW(msg), lstrlenW(msg));
+				SendMessageW(hwnd, EM_SETSEL, wcslen(msg), wcslen(msg));
 				HeapFree(GetProcessHeap(), 0, msg);
 			    } else {
 				SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)This->txtbackup);
-				SendMessageW(hwnd, EM_SETSEL, lstrlenW(This->txtbackup), lstrlenW(This->txtbackup));
+				SendMessageW(hwnd, EM_SETSEL, wcslen(This->txtbackup), wcslen(This->txtbackup));
 			    }
 			}
 			return 0;
@@ -564,8 +544,8 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
 	    HeapFree(GetProcessHeap(), 0, This->txtbackup);
 	    This->txtbackup = HeapAlloc(GetProcessHeap(),
-						 HEAP_ZERO_MEMORY, (lstrlenW(hwndText)+1)*sizeof(WCHAR));
-	    lstrcpyW(This->txtbackup, hwndText);
+						 HEAP_ZERO_MEMORY, (wcslen(hwndText)+1)*sizeof(WCHAR));
+	    wcscpy(This->txtbackup, hwndText);
 
 	    /* Returns if there is no text to search and we doesn't want to display all the entries */
 	    if ((!displayall) && (! *hwndText) )
@@ -582,7 +562,7 @@ static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
 		    if (This->options & ACO_AUTOAPPEND) {
 			SetWindowTextW(hwnd, strs);
-			SendMessageW(hwnd, EM_SETSEL, lstrlenW(hwndText), lstrlenW(strs));
+			SendMessageW(hwnd, EM_SETSEL, wcslen(hwndText), wcslen(strs));
 			break;
 		    }
 
@@ -638,7 +618,7 @@ static LRESULT APIENTRY ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	    msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len+1)*sizeof(WCHAR));
 	    SendMessageW(hwnd, LB_GETTEXT, sel, (LPARAM)msg);
 	    SendMessageW(This->hwndEdit, WM_SETTEXT, 0, (LPARAM)msg);
-	    SendMessageW(This->hwndEdit, EM_SETSEL, 0, lstrlenW(msg));
+	    SendMessageW(This->hwndEdit, EM_SETSEL, 0, wcslen(msg));
 	    ShowWindow(hwnd, SW_HIDE);
 	    HeapFree(GetProcessHeap(), 0, msg);
 	    break;

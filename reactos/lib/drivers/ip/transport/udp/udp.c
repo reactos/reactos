@@ -330,6 +330,8 @@ NTSTATUS UDPShutdown(
   /* Deregister this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_UDP, NULL);
 
+  UDPInitialized = FALSE;
+
   return STATUS_SUCCESS;
 }
 

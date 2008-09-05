@@ -134,7 +134,7 @@ SepInitializationPhase1(VOID)
 
 BOOLEAN
 NTAPI
-SeInit(VOID)
+SeInitSystem(VOID)
 {
     /* Check the initialization phase */
     switch (ExpInitializationPhase)

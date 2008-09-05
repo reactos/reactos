@@ -438,9 +438,6 @@ universe:
 		ROS_OUTPUT=output-$(ARCH)-r \
 		world
 
-sysregtest:
-	$(OUTPUT_)tools$(SEP)sysreg$(SEP)sysreg$(EXEPOSTFIX) tools$(SEP)sysreg$(SEP)txtmode.cfg
-
 .PHONY: rgenstat
 rgenstat: $(RGENSTAT_TARGET)
 	$(ECHO_RGENSTAT)

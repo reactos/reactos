@@ -784,68 +784,18 @@ static void delete_stat_item(int n)
 
 static char *ReadConversion(const char *formula)
 {
-    unsigned int  len = 256, n;
-    char         *str;
-    char         *code = NULL;
-    const char   *p = formula;
-    char          c;
-    calc_number_t x;
-    TCHAR         buffer[SIZEOF(calc.buffer)];
-#ifdef UNICODE
-    char          cbuffer[SIZEOF(calc.buffer)];
-#endif
+    int len = strlen(formula);
+    char *str = (char *)malloc(len+3);
 
-    str = (char *)malloc(len);
     if (str == NULL)
         return NULL;
 
-    /* prepare code string */
-    rpn_alloc(&x);
-    convert_text2number(&x);
-    prepare_rpn_result(&x,
-                   buffer, SIZEOF(buffer),
-                   calc.base);
-    rpn_free(&x);
-
-#ifdef UNICODE
-    WideCharToMultiByte(CP_ACP, 0, buffer, -1, cbuffer, SIZEOF(cbuffer), NULL, NULL);
-#endif
-
     str[0] = '(';
-    n = 1;
-    while (1) {
-        if (code != NULL) {
-            c = *code++;
-            if (*code == '\0')
-                code = NULL;
-        } else
-            c = *p++;
+    memcpy(str+1, formula, len);
+    str[len+1] = ')';
+    str[len+2] = '\0';
 
-        if (c == '\0') {
-            str[n++] = ')';
-            if (n >= len-1) {
-                str = (char *)realloc(str, len += 16);
-                if (str == NULL)
-                    return NULL;
-            }
-            break;
-        } else
-        if (c == '$') {
-#ifdef UNICODE
-            code = cbuffer;
-#else
-            code = buffer;
-#endif
-            continue;
-        }
-        str[n++] = c;
-        if (n >= len-1) {
-            str = (char *)realloc(str, len += 16);
-            if (str == NULL)
-                return NULL;
-        }
-    }
-    str[n] = '\0';
+    _tcscpy(calc.source, (*calc.buffer == _T('\0')) ? _T("0") : calc.buffer);
 
     /* clear display content before proceeding */
     calc.ptr = calc.buffer;
@@ -991,6 +941,11 @@ static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
         case 'Q': PostMessage(hwnd, WM_COMMAND, (WPARAM)IDC_BUTTON_CANC, 0); break;
         case 'R': PostMessage(hwnd, WM_COMMAND, (WPARAM)IDC_BUTTON_MR, 0); break;
         }
+    } else
+    if (ch == '$') {
+        calc.ptr =
+        _tcscpy(calc.buffer, calc.source) +
+        _tcslen(calc.source);
     } else {
         for (x=0; x<SIZEOF(key2code); x++) {
             if (!(key2code[x].mask & BITMASK_IS_ASCII) ||
@@ -1650,13 +1605,15 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         return TRUE;
     case WM_HANDLE_FROM:
-        if (handle_sequence_input(hWnd, &calc.Convert[0]) == NULL) {
+        if (calc.is_nan)
+            break;
+        if (handle_sequence_input(hWnd, &calc.Convert[0]) == NULL)
             PostMessage(hWnd, WM_START_CONV, 0,
                         MAKELPARAM(0x0001, WM_HANDLE_TO));
-        }
         return TRUE;
     case WM_HANDLE_TO:
-        handle_sequence_input(hWnd, &calc.Convert[1]);
+        if (!calc.is_nan)
+            handle_sequence_input(hWnd, &calc.Convert[1]);
         return TRUE;
     case WM_CLOSE:
         calc.action = IDC_STATIC;
@@ -1692,7 +1649,11 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     return FALSE;
 }
 
+#if defined(__GNUC__) && !defined(__REACTOS__)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+#else
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
+#endif
 {
     MSG msg;
     DWORD dwLayout;
@@ -1715,7 +1676,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
         else
             dwLayout = IDD_DIALOG_STANDARD;
 
-        CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, DlgMainProc);
+        /* This call will always fail if UNICODE for Win9x */
+        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, (DLGPROC)DlgMainProc))
+            break;
 
         while (GetMessage(&msg, NULL, 0, 0)) {
 #ifndef USE_KEYBOARD_HOOK

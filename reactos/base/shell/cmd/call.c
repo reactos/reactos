@@ -40,11 +40,11 @@
  * context block.
  */
 
-INT cmd_call (LPTSTR cmd, LPTSTR param)
+INT cmd_call (LPTSTR param)
 {
 	LPBATCH_CONTEXT n = NULL;
 
-	TRACE ("cmd_call: (\'%s\',\'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CALL_HELP);
@@ -53,9 +53,18 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 
 	if (*param == _T(':') && (bc))
 	{
-		bc->lCallPosition = SetFilePointer(bc->hBatchFile, 0, &bc->lCallPositionHigh, FILE_CURRENT);
-		cmd_goto(_T("goto"), param);
-		return 0;
+		TCHAR *first = param;
+		while (*param && !_istspace(*param))
+			param++;
+		if (*param)
+		{
+			*param++ = _T('\0');
+			while (_istspace(*param))
+				param++;
+		}
+		if (!Batch(bc->BatchFilePath, first, param, TRUE))
+			return 1;
+		return cmd_goto(first);
 	}
 
     nErrorLevel = 0;
@@ -76,19 +85,8 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 	bc->shiftlevel = 0;
 	bc->forvar = 0;        /* HBP004 */
 	bc->forproto = NULL;   /* HBP004 */
+	bc->RedirList = NULL;
 	ParseCommandLine (param);
-	if (bc->prev)
-	{
-		_tcscpy(bc->In, bc->prev->In);
-		_tcscpy(bc->Out, bc->prev->Out);
-		_tcscpy(bc->Err, bc->prev->Err);
-	}
-	else
-	{
-		bc->In[0] = _T('\0');
-		bc->Out[0] = _T('\0');
-		bc->Err[0] = _T('\0');
-	}
 
 
 	/* Wasn't a batch file so remove conext */

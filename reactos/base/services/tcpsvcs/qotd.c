@@ -9,7 +9,7 @@
 
 #include "tcpsvcs.h"
 
-static LPCTSTR lpFilePath = _T("\\drivers\\etc\\quotes");
+static WCHAR szFilePath[] = L"\\drivers\\etc\\quotes";
 
 static BOOL
 SendQuote(SOCKET sock, char* Quote)
@@ -25,33 +25,33 @@ static BOOL
 RetrieveQuote(SOCKET sock)
 {
     HANDLE hFile;
-    TCHAR lpFullPath[MAX_PATH + 20];
+    WCHAR szFullPath[MAX_PATH + 20];
     DWORD dwBytesRead;
     LPSTR lpQuotes;
     LPSTR lpStr;
-    DWORD quoteNum;
-    DWORD NumQuotes = 0;
+    INT quoteNum;
+    INT NumQuotes = 0;
     INT i;
 
-    if(!GetSystemDirectory(lpFullPath, MAX_PATH))
+    if(!GetSystemDirectoryW(szFullPath, MAX_PATH))
     {
-        LogEvent(_T("QOTD: Getting system path failed"), GetLastError(), 0, LOG_FILE);
+        LogEvent(L"QOTD: Getting system path failed", GetLastError(), 0, LOG_FILE);
         return FALSE;
     }
-    _tcscat(lpFullPath, lpFilePath);
+    wcscat(szFullPath, szFilePath);
 
 
-    LogEvent(_T("QOTD: Opening quotes file"), 0, 0, LOG_FILE);
-    hFile = CreateFile(lpFullPath,
-                       GENERIC_READ,
-                       0,
-                       NULL,
-                       OPEN_EXISTING,
-                       FILE_ATTRIBUTE_NORMAL,
-                       NULL);
+    LogEvent(L"QOTD: Opening quotes file", 0, 0, LOG_FILE);
+    hFile = CreateFileW(szFullPath,
+                        GENERIC_READ,
+                        0,
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        LogEvent(_T("QOTD: Error opening quotes file"), GetLastError(), 0, LOG_FILE);
+        LogEvent(L"QOTD: Error opening quotes file", GetLastError(), 0, LOG_FILE);
     }
     else
     {
@@ -105,7 +105,7 @@ RetrieveQuote(SOCKET sock)
 
                 /* send the quote */
                 if (!SendQuote(sock, lpStart))
-                    LogEvent(_T("QOTD: Error sending data"), 0, 0, LOG_FILE);
+                    LogEvent(L"QOTD: Error sending data", 0, 0, LOG_FILE);
                 break;
             }
             else
@@ -133,22 +133,22 @@ QotdHandler(VOID* sock_)
 
     if (!RetrieveQuote(sock))
     {
-        LogEvent(_T("QOTD: Error retrieving quote"), 0, 0, LOG_FILE);
+        LogEvent(L"QOTD: Error retrieving quote", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("QOTD: Shutting connection down"), 0, 0, LOG_FILE);
+    LogEvent(L"QOTD: Shutting connection down", 0, 0, LOG_FILE);
     if (ShutdownConnection(sock, FALSE))
     {
-        LogEvent(_T("QOTD: Connection is down"), 0, 0, LOG_FILE);
+        LogEvent(L"QOTD: Connection is down", 0, 0, LOG_FILE);
     }
     else
     {
-        LogEvent(_T("QOTD: Connection shutdown failed"), 0, 0, LOG_FILE);
-        LogEvent(_T("QOTD: Terminating thread"), 0, 0, LOG_FILE);
+        LogEvent(L"QOTD: Connection shutdown failed", 0, 0, LOG_FILE);
+        LogEvent(L"QOTD: Terminating thread", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("QOTD: Terminating thread"), 0, 0, LOG_FILE);
+    LogEvent(L"QOTD: Terminating thread", 0, 0, LOG_FILE);
     ExitThread(retVal);
 }

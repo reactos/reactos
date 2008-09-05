@@ -172,10 +172,11 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
     /* Set the resume count */
     lpService->dwResumeCount = dwResumeCount++;
 
-    /* Append service entry */
+    /* Append service record */
     InsertTailList(&ServiceListHead,
                    &lpService->ServiceListEntry);
 
+    /* Initialize the service status */
     lpService->Status.dwCurrentState = SERVICE_STOPPED;
     lpService->Status.dwControlsAccepted = 0;
     lpService->Status.dwWin32ExitCode = ERROR_SERVICE_NEVER_STARTED;
@@ -184,6 +185,42 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
     lpService->Status.dwWaitHint = 2000; /* 2 seconds */
 
     return ERROR_SUCCESS;
+}
+
+
+VOID
+ScmDeleteServiceRecord(PSERVICE lpService)
+{
+    DPRINT1("Deleting Service %S\n", lpService->lpServiceName);
+
+    /* Delete the display name */
+    if (lpService->lpDisplayName != NULL &&
+        lpService->lpDisplayName != lpService->lpServiceName)
+        HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
+
+    /* Decrement the image reference counter */
+    if (lpService->lpImage)
+        lpService->lpImage->dwServiceRefCount--;
+
+    /* Decrement the group reference counter */
+    if (lpService->lpGroup)
+        lpService->lpGroup->dwRefCount--;
+
+    /* FIXME: SecurityDescriptor */
+
+    /* Close the control pipe */
+    if (lpService->ControlPipeHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(lpService->ControlPipeHandle);
+
+    /* Remove the Service from the List */
+    RemoveEntryList(&lpService->ServiceListEntry);
+
+    DPRINT1("Deleted Service %S\n", lpService->lpServiceName);
+
+    /* Delete the service record */
+    HeapFree(GetProcessHeap(), 0, lpService);
+
+    DPRINT1("Done\n");
 }
 
 
@@ -859,8 +896,8 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cbReserved2 = 0;
     StartupInfo.lpReserved2 = 0;
 
-    Result = CreateProcessW(ImagePath.Buffer,
-                            NULL,
+    Result = CreateProcessW(NULL,
+                            ImagePath.Buffer,
                             NULL,
                             NULL,
                             FALSE,

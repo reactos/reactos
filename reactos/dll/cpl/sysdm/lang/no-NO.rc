@@ -49,7 +49,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avansert"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Du må være logget på som administrator for å kunne endre de fleste av disse innstillingene.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "Du må være logget på som administrator for å kunne endre innstillingene.", IDC_STATIC, 12, 5, 255, 8
     GROUPBOX    "Ytelse", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Visuelle effekter, prosesorplanlegging, minnebruk og virtuelt minne.", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON  "Innstillinger", IDC_PERFOR, 194, 48, 50, 15
@@ -177,15 +177,15 @@ BEGIN
     LTEXT       "Sidevekslingsfilstørrelse (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX    "Sidevekslingsfilstørrelse for valgte enhet", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Stasjon:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Tilgjengelig ledig plass:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT       "Stasjon:", IDC_STATIC, 20, 80, 24, 8
+    LTEXT       "", IDC_DRIVE, 100, 81, 100, 9
+    LTEXT       "Tilgjengelig ledig plass:", IDC_STATIC, 20, 92, 75, 9
+    LTEXT       "", IDC_SPACEAVAIL, 100, 92, 104, 9
     LTEXT       "&Startstørrelse (MB):", -1, 22, 118, 75, 9
     LTEXT       "Ma&ksimalt størrelse (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Tilpass størrelse", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "&Tilpass størrelse", IDC_CUSTOM, 20, 105, 69, 9, WS_GROUP
     AUTORADIOBUTTON "S&ystem styrt størrelse", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Ingen sidevekslingsfil", IDC_NOPAGEFILE, 20, 158, 78,9
+    AUTORADIOBUTTON "&Ingen sidevekslingsfil", IDC_NOPAGEFILE, 20, 158, 79,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Still", IDC_SET, 158, 155, 50, 13
@@ -234,9 +234,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Rediger variabel"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Variabel &Navn:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT       "Variabel &navn:", IDC_STATIC, 7, 14, 50, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "Variabel &Verdi:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT       "Variabel &verdi:", IDC_STATIC, 7, 32, 50, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON  "Avbryt", IDCANCEL, 170, 50, 50, 14
@@ -256,12 +256,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
-    IDS_CPLSYSTEMDESCRIPTION "See information about your computer and change various system and hardware settings."
+    IDS_CPLSYSTEMDESCRIPTION "Se informasjon om din datamaskin og endre forskjellig system og maskinvare innstilling."
     IDS_MEGABYTE "MB Systemminne"
     IDS_GIGABYTE "GB Systemminne"
     IDS_TERABYTE "TB Systemminne"
     IDS_PETABYTE "PB Systemminne"
-    IDS_VARIABLE "Variable"
+    IDS_VARIABLE "Variabel"
     IDS_VALUE    "Verdi"
     IDS_NO_DUMP "(Ingen)"
     IDS_MINI_DUMP "Minidump(64KB)"

@@ -9,7 +9,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #define HIGH_PHYS_MASK 0x80000000
 #define PAGE_TABLE_MASK 0x3ff

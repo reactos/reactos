@@ -627,7 +627,6 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
                    (Buf->dwCoord.X * 2);
 
-          CHECKPOINT
 
           for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
             {

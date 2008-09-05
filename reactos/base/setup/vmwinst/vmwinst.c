@@ -260,6 +260,7 @@ IsVmwSVGAEnabled(VOID)
   {
     return FALSE;
   }
+  Size = sizeof(DWORD);
   if(RegQueryValueEx(hReg, L"Start", 0, &Type, (BYTE*)&Value, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
@@ -503,7 +504,7 @@ done:
   }
 
 cleanup:
-  hThread = (HANDLE)(ULONG_PTR)InterlockedExchange((LONG*)&hInstallationThread, 0);
+  hThread = (HANDLE)InterlockedExchange((LONG*)&hInstallationThread, 0);
   if(hThread != NULL)
   {
     CloseHandle(hThread);

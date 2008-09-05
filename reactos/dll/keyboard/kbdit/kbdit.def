@@ -1,4 +1,0 @@
-LIBRARY kbdit.dll
-
-EXPORTS
-KbdLayerDescriptor@0

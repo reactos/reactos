@@ -13,7 +13,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MiInitializeNonPagedPool)
@@ -936,7 +936,7 @@ static void validate_free_list(void)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
                   current);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
 
       if (base_addr < MiNonPagedPoolStart ||
@@ -946,13 +946,13 @@ static void validate_free_list(void)
          DbgPrint("Size %d\n",current->hdr.Size);
          DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
                   (ULONG_PTR)MiNonPagedPoolStart+MiNonPagedPoolLength);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       blocks_seen++;
       if (blocks_seen > EiNrFreeBlocks)
       {
          DbgPrint("Too many blocks on free list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       p = avl_get_next(FreeBlockListRoot, p);
    }
@@ -979,7 +979,7 @@ static void validate_used_list(void)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
                   current);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       if (base_addr < MiNonPagedPoolStart ||
             ((ULONG_PTR)base_addr+current->hdr.Size) >
@@ -989,13 +989,13 @@ static void validate_used_list(void)
          DbgPrint("Size %d\n",current->hdr.Size);
          DbgPrint("Limits are %x %x\n",MiNonPagedPoolStart,
                   (ULONG_PTR)MiNonPagedPoolStart+MiNonPagedPoolLength);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       blocks_seen++;
       if (blocks_seen > EiNrUsedBlocks)
       {
          DbgPrint("Too many blocks on used list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       if (current->ListEntry.Flink != &UsedBlockListHead &&
             current->ListEntry.Flink->Blink != &current->ListEntry)
@@ -1004,7 +1004,7 @@ static void validate_used_list(void)
                   "current->next->previous %x)\n",
                   __FILE__,__LINE__,current, current->ListEntry.Flink,
                   current->ListEntry.Flink->Blink);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
 
       current_entry = current_entry->Flink;
@@ -1035,19 +1035,19 @@ static void check_duplicates(HDR* blk)
       {
          DbgPrint("Bad block magic (probable pool corruption) at %x\n",
                   free);
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
 
       if ( (ULONG_PTR)free > base && (ULONG_PTR)free < last )
       {
          DbgPrint("intersecting blocks on list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       if  ( (ULONG_PTR)free < base &&
             ((ULONG_PTR)free + free->hdr.Size) > base )
       {
          DbgPrint("intersecting blocks on list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       p = avl_get_next(FreeBlockListRoot, p);
    }
@@ -1060,13 +1060,13 @@ static void check_duplicates(HDR* blk)
       if ( (ULONG_PTR)used > base && (ULONG_PTR)used < last )
       {
          DbgPrint("intersecting blocks on list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
       if  ( (ULONG_PTR)used < base &&
             ((ULONG_PTR)used + used->hdr.Size) > base )
       {
          DbgPrint("intersecting blocks on list\n");
-         KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
+         ASSERT(FALSE);
       }
 
       current_entry = current_entry->Flink;
@@ -1460,7 +1460,7 @@ ExRosQueryNonPagedPoolTag ( PVOID Addr )
 {
    HDR_USED* blk=(HDR_USED*)((ULONG_PTR)Addr - HDR_USED_SIZE);
    if (blk->hdr.Magic != BLOCK_HDR_USED_MAGIC)
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
 
    return blk->Tag;
 }
@@ -1510,7 +1510,7 @@ void check_redzone_header(HDR_USED* hdr)
          DbgPrint("NPPOL: High-side redzone overwritten, Block %x, Size %d, Tag %x(%s), Caller %x\n",
                   (ULONG_PTR)hdr + HDR_USED_SIZE, hdr->UserSize, hdr->Tag, c, hdr->Caller);
       }
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 }
 #endif
@@ -1556,14 +1556,12 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    {
       if (blk->hdr.Magic == BLOCK_HDR_FREE_MAGIC)
       {
-         DbgPrint("ExFreePool of already freed address %x\n", block);
+         KeBugCheckEx(BAD_POOL_CALLER, 0x07, 0, (ULONG_PTR)blk, (ULONG_PTR)block);
       }
       else
       {
-         DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n",
-                  block, blk->hdr.Magic);
+         KeBugCheckEx(BAD_POOL_CALLER, 0x46, (ULONG_PTR)block, 0, 0);
       }
-      KEBUGCHECK(0);
       return;
    }
 
@@ -1684,6 +1682,12 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
    return(block);
 }
 
+ULONG NTAPI
+EiGetNonPagedPoolTag(PVOID Block)
+{
+     return ((HDR_USED*)((ULONG_PTR)Block - HDR_USED_SIZE))->Tag;
+}
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -1724,7 +1728,7 @@ MiInitializeNonPagedPool(VOID)
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to allocate a page\n");
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
       }
 
       Status = MmCreateVirtualMapping(NULL,
@@ -1735,7 +1739,7 @@ MiInitializeNonPagedPool(VOID)
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");
-         KEBUGCHECK(0);
+         ASSERT(FALSE);
       }
       Address = (PVOID)((ULONG_PTR)Address + PAGE_SIZE);
    }

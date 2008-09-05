@@ -39,27 +39,30 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS STDCALL
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
-    NTSTATUS Status = STATUS_NO_MEMORY;
+    NTSTATUS Status = STATUS_BUFFER_TOO_SMALL;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    if( FCB->Context ) {
+	ExFreePool( FCB->Context );
+	FCB->Context = NULL;
+    }
+
     if( FCB->ContextSize <
 	IrpSp->Parameters.DeviceIoControl.InputBufferLength ) {
-	if( FCB->Context )
-	    ExFreePool( FCB->Context );
 	FCB->Context =
 	    ExAllocatePool
 	    ( PagedPool,
 	      IrpSp->Parameters.DeviceIoControl.InputBufferLength );
-    }
 
-    if( FCB->Context ) {
-	Status = STATUS_SUCCESS;
+	if( !FCB->Context ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0, NULL );
+
 	RtlCopyMemory( FCB->Context,
 		       IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength );
+	Status = STATUS_SUCCESS;
     }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));

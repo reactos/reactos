@@ -25,6 +25,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoDisplayClass",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}",,0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Icon",0x00000000,"-5"
+
 ; Default computer name settings
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
@@ -691,6 +695,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "PNP_TDI", \
  "TDI", \
  "PlugPlay", \
+ "SpoolerGroup", \
  "Extended Base"
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
@@ -1009,6 +1014,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
 
+; Spooler service
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"Printer Spooler"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,"Printer Spooler"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Group",0x00000000,"SpoolerGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ImagePath",0x00020000,"%SystemRoot%\system32\spoolsv.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Type",0x00010001,0x00000110
+
 ; Simple TCP services
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simple TCP/IP Services"
@@ -1024,6 +1040,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File S
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
+
+; RAM Disk class driver
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","ImagePath",0x00020000,"system32\drivers\ramdisk.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
 
 ; EXT2 Filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000

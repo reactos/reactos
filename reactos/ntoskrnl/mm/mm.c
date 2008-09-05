@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *****************************************************************/
 
@@ -26,15 +26,31 @@ MM_STATS MmStats;
 
 VOID
 FASTCALL
-MiSyncThreadProcessViews(IN PKTHREAD NextThread)
+MiSyncForProcessAttach(IN PKTHREAD Thread,
+                       IN PEPROCESS Process)
 {
-    /* Hack Sync because Mm is broken  */
-    MmUpdatePageDir(PsGetCurrentProcess(),
-                    ((PETHREAD)NextThread)->ThreadsProcess,
-                    sizeof(EPROCESS));
-    MmUpdatePageDir(PsGetCurrentProcess(),
-                    (PVOID)((PETHREAD)NextThread)->Tcb.StackLimit,
-                    NextThread->LargeStack ?
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(IN PKTHREAD Thread)
+{
+    PVOID Process = PsGetCurrentProcess();
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
 }
 
@@ -101,7 +117,7 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      CPRINT("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+      DPRINT1("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
       return(STATUS_UNSUCCESSFUL);
    }
    if (PsGetCurrentProcess() == NULL)
@@ -203,7 +219,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
    {
-      CPRINT("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
+      DPRINT1("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -217,7 +233,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
-	 CPRINT("Address: %x\n", Address);
+	 DPRINT1("Address: %x\n", Address);
          return(STATUS_ACCESS_VIOLATION);
       }
       AddressSpace = MmGetKernelAddressSpace();
@@ -363,6 +379,31 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 
 
 /* Miscellanea functions: they may fit somewhere else */
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+MmIsRecursiveIoFault (VOID)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+
+    return (Thread->DisablePageFaultClustering | Thread->ForwardClusterOnly);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+MmMapUserAddressesToPage(IN PVOID BaseAddress,
+                         IN SIZE_T NumberOfBytes,
+                         IN PVOID PageAddress)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented

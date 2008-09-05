@@ -373,59 +373,59 @@ BEGIN
 	PUSHBUTTON "Отмена", 14006, 206, 236, 50, 14
 END
 
-FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Задачи", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Обзор папок", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "&Открывать папки в одном и том же окне", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Подчеркив&ать подписи значков", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Восстановить умолчания", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Задачи", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 24, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", 14001, 40, 24, 185, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", 14002, 40, 36, 185, 10, WS_TABSTOP
+	GROUPBOX "Обзор папок", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 75, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Открывать папки в одном и том же окне", 14004, 40, 75, 185, 10, WS_TABSTOP
+	AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", 14005, 40, 87, 185, 10, WS_TABSTOP
+	GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", 14007, 40, 120, 200, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Подчеркив&ать подписи значков", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", 14009, 50, 144, 185, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", 14010, 40, 156, 195, 10, WS_TABSTOP
+	PUSHBUTTON "&Восстановить умолчания", 14011, 148, 180, 104, 14, WS_TABSTOP
 END
 
-FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Вид"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 GROUPBOX "Представление папок", -1, 7, 10, 249, 60
 //ICON
-LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 60, 20, 180, 20
-PUSHBUTTON "&Применить ко всем папкам", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Сброс для всех папок", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Дополнительные параметры:", -1, 7, 80, 100, 10
+LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 60, 24, 180, 20
+PUSHBUTTON "&Применить ко всем папкам", 14001, 60, 50, 100, 14, WS_TABSTOP
+PUSHBUTTON "&Сброс для всех папок", 14002, 164, 50, 80, 14, WS_TABSTOP
+LTEXT "Дополнительные параметры:", -1, 9, 78, 120, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "&Восстановить умолчания", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Восстановить умолчания", 14004, 156, 216, 101, 14, WS_TABSTOP
 END
 
-FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
+FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 238
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Типы файлов"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Зарегистрированные типы файлов:", -1, 7, 10, 70, 10
+LTEXT "&Зарегистрированные типы файлов:", -1, 9, 7, 133, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&Создать", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Удалить", 14002, 180, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Создать", 14001, 147, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Удалить", 14002, 202, 110, 50, 14, WS_TABSTOP
 GROUPBOX "Описание расширения '%s'", 14003, 7, 130, 249, 70
-LTEXT "Открывать в:", -1, 12, 140, 40, 10
+LTEXT "Открывать в:", -1, 12, 142, 54, 10
 //ICON
-LTEXT "Приложение:", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Изменить...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Файлы с расширением '%s' имеют тип '%s'. Для\nизменения параметров всех файлов '%s', нажмите\n""Дополнительно"".", 14007, 12, 155, 160, 30
-PUSHBUTTON "До&полнительно", 14008, 180, 175, 50, 14, WS_TABSTOP
+LTEXT "Приложение:", 14005, 100, 142, 54, 10
+PUSHBUTTON "&Изменить...", 14006, 180, 140, 63, 14, WS_TABSTOP
+LTEXT "Файлы с расширением '%s' имеют тип '%s'. Для изменения параметров всех файлов '%s', нажмите ""Дополнительно"".", 14007, 12, 155, 162, 36
+PUSHBUTTON "До&полнительно", 14008, 180, 175, 63, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
@@ -563,18 +563,18 @@ BEGIN
 	AUTOCHECKBOX "&Использовать сжатие", 28675, 16, 152, 155, 10
 END
 
-CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+CHKDSK_DLG DIALOGEX 50, 50, 232, 111
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Проверка диска"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
-	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
-	LTEXT "", 14003, 60, 80, 170, 10
+	DEFPUSHBUTTON "Запуск", IDOK, 101, 91, 60, 14
+	GROUPBOX "Параметры проверки диска", -1, 7, 5, 218, 50
+	PUSHBUTTON "Отмена", IDCANCEL, 165, 91, 60, 14
+	AUTOCHECKBOX "&Автоматически исправлять системные ошибки", 14000, 16, 19, 178, 10
+	AUTOCHECKBOX "&Проверять и востанавливать поврежденные сектора", 14001, 16, 35, 200, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 218, 8
+	LTEXT "", 14003, 7, 75, 218, 10
 END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
@@ -623,7 +623,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Мой компьютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Корзина"
 	IDS_CONTROLPANEL            "Панель управления"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Администрирование"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Большие значки"
@@ -638,6 +638,9 @@ BEGIN
 	IDS_PROPERTIES              "Свойства"
 	IDS_CUT                     "Вырезать"
 	IDS_RESTORE                 "Востановить"
+	IDS_FORMATDRIVE             "Форматировать..."
+	IDS_RENAME                  "Переименовать"
+	IDS_INSERT                  "Вставить"
 
 	IDS_CREATEFOLDER_DENIED     "Невозможно создать папку - нет полномочий."
 	IDS_CREATEFOLDER_CAPTION    "Ошибка во время создания папки"
@@ -743,5 +746,5 @@ BEGIN
 	IDS_FONTS                   "Шрифты"
 	IDS_INSTALLNEWFONT          "Установить новый шрифт..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Выделяемый по умолчанию размер"
 END

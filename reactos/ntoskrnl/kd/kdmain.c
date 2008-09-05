@@ -9,7 +9,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* VARIABLES ***************************************************************/
 
@@ -59,7 +59,7 @@ KdpServiceDispatcher(ULONG Service,
                     break;
 
                 case ManualBugCheck:
-                    KEBUGCHECK(MANUALLY_INITIATED_CRASH);
+                    KeBugCheck(MANUALLY_INITIATED_CRASH);
                     break;
 
                 case DumpNonPagedPoolStats:

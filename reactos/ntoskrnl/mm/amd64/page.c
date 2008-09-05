@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
@@ -308,7 +308,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     /* Sanity check */
     if (Address < MmSystemRangeStart)
     {
-        KEBUGCHECK(0);
+        KeBugCheck(0);
     }
 
     /* Get pointer to the page directory to update */

@@ -61,7 +61,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 }
 
 
-INT cmd_vol (LPTSTR cmd, LPTSTR param)
+INT cmd_vol (LPTSTR param)
 {
 	TCHAR szRootPath[] = _T("A:\\");
 	TCHAR szPath[MAX_PATH];

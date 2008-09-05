@@ -41,6 +41,7 @@
 				<file>aulldvrm_asm.s</file>
 				<file>aullrem_asm.s</file>
 				<file>aullshr_asm.s</file>
+				<file>ci.c</file>
 				<file>ceil_asm.s</file>
 				<file>cos_asm.s</file>
 				<file>fabs_asm.s</file>

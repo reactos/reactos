@@ -297,9 +297,9 @@ BEGIN
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
 	LTEXT "Unidad %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Liberar espacio en disco", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Comprimir contenido para ahorrar espacio en disco", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Permitir a Index Server indizar el disco para acelerar la búsqueda", 14012, 15, 220, 200, 10, WS_DISABLED
+	PUSHBUTTON "Liberar espacio en disco", 14011, 160, 175, 80, 15, WS_TABSTOP
+	CHECKBOX "Comprimir contenido para ahorrar espacio en disco", 14012, 5, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Permitir a Index Server indizar el disco para acelerar la búsqueda", 14012, 5, 220, 220, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
@@ -315,7 +315,7 @@ BEGIN
 	PUSHBUTTON "Desfragmentar ahora...", 14001, 130, 105, 90, 15, WS_TABSTOP
 	GROUPBOX "Copia de seguridad ", -1, 5, 130, 230, 60
 	LTEXT "Esta opción realizará una copia de seguridad de\nlos archivos almacenados en la unidad.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Realizar copia de seguridad ahora...", 14002, 130, 170, 90, 15, WS_TABSTOP
+	PUSHBUTTON "Realizar copia de seguridad ahora...", 14002, 90, 170, 130, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
@@ -381,22 +381,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Tareas", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Tareas", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
+	GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -567,17 +566,17 @@ BEGIN
 	AUTOCHECKBOX "&Habilitar compresión", 28675, 16, 152, 155, 10
 END
 
-CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+CHKDSK_DLG DIALOGEX 50, 50, 240, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Comprobar disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
-	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	DEFPUSHBUTTON "Iniciar", IDOK, 53, 100, 60, 14
+	GROUPBOX "Opciones de comprobación de disco ", -1, 7, 6, 225, 50
+	PUSHBUTTON "Cancelar", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Reparar &automáticamente errores en el sistema de archivos", 14000, 16, 15, 200, 10
+	AUTOCHECKBOX "&Examinar e intentar recuperar los sectores defectuosos", 14001, 16, 30, 200, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 225, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -609,25 +608,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Comentarios"
 	IDS_SHV_COLUMN10            "Propietario"
 	IDS_SHV_COLUMN11            "Grupo"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Nombre del archivo"
+	IDS_SHV_COLUMN13            "Categoría"
 	IDS_SHV_COLUMN_DELFROM      "Ubicación original"
 	IDS_SHV_COLUMN_DELDATE      "Fecha de eliminación"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_FONTTYPE     "Tipo de fuente"
+	IDS_SHV_COLUMN_WORKGROUP    "Grupo de trabajo"
+	IDS_SHV_NETWORKLOCATION     "Ubicación en red"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documentos"
+	IDS_SHV_COLUMN_STATUS       "Estado"
+	IDS_SHV_COLUMN_COMMENTS     "Comentarios"
+	IDS_SHV_COLUMN_LOCATION     "Ubicación"
+	IDS_SHV_COLUMN_MODEL        "Modelo"
 
 	/* special folders */
 	IDS_DESKTOP                 "Escritorio"
 	IDS_MYCOMPUTER              "Mi PC"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papelera de reciclaje"
 	IDS_CONTROLPANEL            "Panel de control"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Herramientas Administrativas"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Iconos &grandes"
@@ -642,8 +641,11 @@ BEGIN
 	IDS_PROPERTIES              "&Propiedades"
 	IDS_CUT                     "C&ortar"
 	IDS_RESTORE                 "Restaurar"
+	IDS_FORMATDRIVE             "Formatear..."
+	IDS_RENAME                  "Renombrar"
+	IDS_INSERT                  "Insertar"
 
-	IDS_CREATEFOLDER_DENIED     "No se puede crear nueva carpeta: Permiso denegado."
+	IDS_CREATEFOLDER_DENIED     "No se puede crear una nueva carpeta: Permiso denegado."
 	IDS_CREATEFOLDER_CAPTION    "Error durante la creación de una nueva carpeta"
 	IDS_DELETEITEM_CAPTION      "Confirmar eliminación de archivos"
 	IDS_DELETEFOLDER_CAPTION    "Confirmar eliminación de carpetas"
@@ -744,9 +746,9 @@ BEGIN
 	IDS_PREVIEW_VERB            "Vista previa"
 
 	IDS_FILE_FOLDER             "%u Archivos, %u Carpetas"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_PRINTERS                "Impresoras"
+	IDS_FONTS                   "Fuentes"
+	IDS_INSTALLNEWFONT          "Instalar Nueva Fuente..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Tamaño asignado por defecto"
 END

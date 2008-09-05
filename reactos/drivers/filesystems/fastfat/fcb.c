@@ -81,7 +81,7 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 	{
 		/* FIXME: what to do if no more memory? */
 		DPRINT1("Unable to initialize FCB for filename '%wZ'\n", NameU);
-		KEBUGCHECKEX(0, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
+		KeBugCheckEx(0, (ULONG_PTR)Fcb, (ULONG_PTR)NameU, 0, 0);
 	}
 
 	Fcb->PathNameU.Length = 0;
@@ -300,14 +300,12 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 				if (RtlEqualUnicodeString(&FileNameU, FcbNameU, TRUE))
 				{
 					rcFCB->RefCount++;
-					CHECKPOINT;
 					return rcFCB;
 				}
 			}
 		}
 		entry = entry->next;
 	}
-	CHECKPOINT;
 	return  NULL;
 }
 
@@ -536,7 +534,6 @@ vfatAttachFCBToFileObject (
 	newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
 	if (newCCB == NULL)
 	{
-		CHECKPOINT;
 		return  STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RtlZeroMemory (newCCB, sizeof (VFATCCB));

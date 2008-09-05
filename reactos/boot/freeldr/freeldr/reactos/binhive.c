@@ -285,6 +285,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
                          NULL);
   if (!NT_SUCCESS(Status))
     {
+      CmpFree(CmHive, 0);
       DbgPrint((DPRINT_REGISTRY, "Invalid hive Signature!\n"));
       return FALSE;
     }

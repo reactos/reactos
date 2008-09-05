@@ -89,8 +89,10 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	    if( Status == STATUS_PENDING ) {
 		InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
 		break;
-	    } else
+	    } else {
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
+	    }
 	}
     }
 
@@ -141,6 +143,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
+		PoolFreeBuffer( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->ReceiveRequest, &Bucket->Entry );
@@ -150,6 +153,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Receive request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
 	    }
 	}
     }
@@ -198,6 +202,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Sent );
+		PoolFreeBuffer( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->SendRequest, &Bucket->Entry );
@@ -207,6 +212,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Send request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
+		PoolFreeBuffer( Bucket );
 	    }
 	}
     }
@@ -225,13 +231,15 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
         ListsToErase[2] = &Connection->ConnectRequest;
         IrpStatus   [2] = STATUS_UNSUCCESSFUL;
         ListsToErase[3] = 0;
+	IrpStatus   [3] = 0;
 
         for( i = 0; ListsToErase[i]; i++ ) {
             while( !IsListEmpty( ListsToErase[i] ) ) {
                 Entry = RemoveHeadList( ListsToErase[i] );
                 Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                 Complete = Bucket->Request.RequestNotifyObject;
-                Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+                Complete( Bucket->Request.RequestContext, IrpStatus[i], 0 );
+		PoolFreeBuffer( Bucket );
             }
         }
     }
@@ -584,10 +592,7 @@ NTSTATUS TCPConnect
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
-    if( Status == OSK_EINPROGRESS )
-	return STATUS_PENDING;
-    else
-	return Status;
+    return Status;
 }
 
 NTSTATUS TCPDisconnect
@@ -836,6 +841,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 
 	    if( Bucket->Request.RequestContext == Irp ) {
 		RemoveEntryList( &Bucket->Entry );
+		PoolFreeBuffer( Bucket );
 		break;
 	    }
 	}

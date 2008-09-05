@@ -899,6 +899,12 @@ CmpCleanUpSubKeyInfo(
     IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
+PUNICODE_STRING
+NTAPI
+CmpConstructName(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
 VOID
 NTAPI
 CmpDereferenceKeyControlBlockWithLock(
@@ -1405,6 +1411,12 @@ CmLoadKey(
 //
 // Startup and Shutdown
 //
+BOOLEAN
+NTAPI
+CmInitSystem1(
+    VOID
+);
+
 VOID
 NTAPI
 CmShutdownSystem(

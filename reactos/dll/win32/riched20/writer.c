@@ -41,6 +41,7 @@ ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
   pStream->written = 0;
   pStream->nFontTblLen = 0;
   pStream->nColorTblLen = 1;
+  pStream->nNestingLevel = 0;
   return pStream;
 }
 
@@ -283,35 +284,64 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
   return TRUE;
 }
 
+static BOOL
+ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
+                          const ME_DisplayItem *para)
+{
+  ME_DisplayItem *cell;
+  char props[STREAMOUT_BUFFER_SIZE] = "";
+
+  if (!ME_StreamOutPrint(pStream, "\\trowd"))
+    return FALSE;
+  if (!editor->bEmulateVersion10) { /* v4.1 */
+    assert(para->member.para.nFlags & MEPF_ROWSTART);
+    cell = para->member.para.next_para->member.para.pCell;
+    assert(cell);
+    do {
+      sprintf(props + strlen(props), "\\cellx%d", cell->member.cell.nRightBoundary);
+      cell = cell->member.cell.next_cell;
+    } while (cell->member.cell.next_cell);
+  } else { /* v1.0 - 3.0 */
+    PARAFORMAT2 *pFmt = para->member.para.pFmt;
+    int i;
+
+    assert(!(para->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)));
+    if (pFmt->dxOffset)
+      sprintf(props + strlen(props), "\\trgaph%d", pFmt->dxOffset);
+    if (pFmt->dxStartIndent)
+      sprintf(props + strlen(props), "\\trleft%d", pFmt->dxStartIndent);
+    for (i = 0; i < pFmt->cTabCount; i++)
+    {
+      sprintf(props + strlen(props), "\\cellx%d", pFmt->rgxTabs[i] & 0x00FFFFFF);
+    }
+  }
+  if (!ME_StreamOutPrint(pStream, props))
+    return FALSE;
+  props[0] = '\0';
+  return TRUE;
+}
 
 static BOOL
-ME_StreamOutRTFParaProps(ME_OutStream *pStream, const ME_DisplayItem *para)
+ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
+                         const ME_DisplayItem *para)
 {
   PARAFORMAT2 *fmt = para->member.para.pFmt;
   char props[STREAMOUT_BUFFER_SIZE] = "";
   int i;
-
-  if (para->member.para.pCells)
-  {
-    ME_TableCell *cell = para->member.para.pCells;
-    
-    if (!ME_StreamOutPrint(pStream, "\\trowd"))
-      return FALSE;
-    do {
-      sprintf(props, "\\cellx%d", cell->nRightBoundary);
-      if (!ME_StreamOutPrint(pStream, props))
-        return FALSE;
-      cell = cell->next;
-    } while (cell);
-    props[0] = '\0';
-  }
   
   /* TODO: Don't emit anything if the last PARAFORMAT2 is inherited */
   if (!ME_StreamOutPrint(pStream, "\\pard"))
     return FALSE;
 
-  if (para->member.para.bTable)
-    strcat(props, "\\intbl");
+  if (!editor->bEmulateVersion10) { /* v4.1 */
+    if (pStream->nNestingLevel > 0)
+      strcat(props, "\\intbl");
+    if (pStream->nNestingLevel > 1)
+      sprintf(props + strlen(props), "\\itap%d", pStream->nNestingLevel);
+  } else { /* v1.0 - 3.0 */
+    if (fmt->dwMask & PFM_TABLE && fmt->wEffects & PFE_TABLE)
+      strcat(props, "\\intbl");
+  }
   
   /* TODO: PFM_BORDER. M$ does not emit any keywords for these properties, and
    * when streaming border keywords in, PFM_BORDER is set, but wBorder field is
@@ -376,46 +406,46 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, const ME_DisplayItem *para)
     strcat(props, "\\rtlpar");
   if (fmt->dwMask & PFM_SIDEBYSIDE && fmt->wEffects & PFE_SIDEBYSIDE)
     strcat(props, "\\sbys");
-  if (fmt->dwMask & PFM_TABLE && fmt->dwMask & PFE_TABLE)
-    strcat(props, "\\intbl");
   
-  if (fmt->dwMask & PFM_OFFSET)
-    sprintf(props + strlen(props), "\\li%d", fmt->dxOffset);
-  if (fmt->dwMask & PFM_OFFSETINDENT || fmt->dwMask & PFM_STARTINDENT)
-    sprintf(props + strlen(props), "\\fi%d", fmt->dxStartIndent);
-  if (fmt->dwMask & PFM_RIGHTINDENT)
-    sprintf(props + strlen(props), "\\ri%d", fmt->dxRightIndent);
+  if (!(editor->bEmulateVersion10 && /* v1.0 - 3.0 */
+        fmt->dwMask & PFM_TABLE && fmt->wEffects & PFE_TABLE))
+  {
+    if (fmt->dwMask & PFM_OFFSET)
+      sprintf(props + strlen(props), "\\li%d", fmt->dxOffset);
+    if (fmt->dwMask & PFM_OFFSETINDENT || fmt->dwMask & PFM_STARTINDENT)
+      sprintf(props + strlen(props), "\\fi%d", fmt->dxStartIndent);
+    if (fmt->dwMask & PFM_RIGHTINDENT)
+      sprintf(props + strlen(props), "\\ri%d", fmt->dxRightIndent);
+    if (fmt->dwMask & PFM_TABSTOPS) {
+      static const char * const leader[6] = { "", "\\tldot", "\\tlhyph", "\\tlul", "\\tlth", "\\tleq" };
+
+      for (i = 0; i < fmt->cTabCount; i++) {
+        switch ((fmt->rgxTabs[i] >> 24) & 0xF) {
+          case 1:
+            strcat(props, "\\tqc");
+            break;
+          case 2:
+            strcat(props, "\\tqr");
+            break;
+          case 3:
+            strcat(props, "\\tqdec");
+            break;
+          case 4:
+            /* Word bar tab (vertical bar). Handled below */
+            break;
+        }
+        if (fmt->rgxTabs[i] >> 28 <= 5)
+          strcat(props, leader[fmt->rgxTabs[i] >> 28]);
+        sprintf(props+strlen(props), "\\tx%d", fmt->rgxTabs[i]&0x00FFFFFF);
+      }
+    }
+  }
   if (fmt->dwMask & PFM_SPACEAFTER)
     sprintf(props + strlen(props), "\\sa%d", fmt->dySpaceAfter);
   if (fmt->dwMask & PFM_SPACEBEFORE)
     sprintf(props + strlen(props), "\\sb%d", fmt->dySpaceBefore);
   if (fmt->dwMask & PFM_STYLE)
     sprintf(props + strlen(props), "\\s%d", fmt->sStyle);
-
-  if (fmt->dwMask & PFM_TABSTOPS) {
-    static const char * const leader[6] = { "", "\\tldot", "\\tlhyph", "\\tlul", "\\tlth", "\\tleq" };
-    
-    for (i = 0; i < fmt->cTabCount; i++) {
-      switch ((fmt->rgxTabs[i] >> 24) & 0xF) {
-        case 1:
-          strcat(props, "\\tqc");
-          break;
-        case 2:
-          strcat(props, "\\tqr");
-          break;
-        case 3:
-          strcat(props, "\\tqdec");
-          break;
-        case 4:
-          /* Word bar tab (vertical bar). Handled below */
-          break;
-      }
-      if (fmt->rgxTabs[i] >> 28 <= 5)
-        strcat(props, leader[fmt->rgxTabs[i] >> 28]);
-      sprintf(props+strlen(props), "\\tx%d", fmt->rgxTabs[i]&0x00FFFFFF);
-    }
-  }
-    
   
   if (fmt->dwMask & PFM_SHADING) {
     static const char * const style[16] = { "", "\\bgdkhoriz", "\\bgdkvert", "\\bgdkfdiag",
@@ -680,7 +710,7 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
 
   /* TODO: section formatting properties */
 
-  if (!ME_StreamOutRTFParaProps(pStream, ME_GetParagraph(p)))
+  if (!ME_StreamOutRTFParaProps(editor, pStream, ME_GetParagraph(p)))
     return FALSE;
 
   while(1)
@@ -688,8 +718,39 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
     switch(p->type)
     {
       case diParagraph:
-        if (!ME_StreamOutRTFParaProps(pStream, p))
-          return FALSE;
+        if (!editor->bEmulateVersion10) { /* v4.1 */
+          if (p->member.para.nFlags & MEPF_ROWSTART) {
+            pStream->nNestingLevel++;
+            if (pStream->nNestingLevel == 1) {
+              if (!ME_StreamOutRTFTableProps(editor, pStream, p))
+                return FALSE;
+            }
+          } else if (p->member.para.nFlags & MEPF_ROWEND) {
+            pStream->nNestingLevel--;
+            if (pStream->nNestingLevel > 1) {
+              if (!ME_StreamOutPrint(pStream, "{\\*\\nesttableprops"))
+                return FALSE;
+              if (!ME_StreamOutRTFTableProps(editor, pStream, p))
+                return FALSE;
+              if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
+                return FALSE;
+            } else {
+              if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+                return FALSE;
+            }
+          } else if (!ME_StreamOutRTFParaProps(editor, pStream, p)) {
+            return FALSE;
+          }
+        } else { /* v1.0 - 3.0 */
+          if (p->member.para.pFmt->dwMask & PFM_TABLE &&
+              p->member.para.pFmt->wEffects & PFE_TABLE)
+          {
+            if (!ME_StreamOutRTFTableProps(editor, pStream, p))
+              return FALSE;
+          }
+          if (!ME_StreamOutRTFParaProps(editor, pStream, p))
+            return FALSE;
+        }
         pPara = p;
         break;
       case diRun:
@@ -697,14 +758,35 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
           break;
         TRACE("flags %xh\n", p->member.run.nFlags);
         /* TODO: emit embedded objects */
-        if (p->member.run.nFlags & MERF_GRAPHICS)
+        if (pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
+          break;
+        if (p->member.run.nFlags & MERF_GRAPHICS) {
           FIXME("embedded objects are not handled\n");
-        if (p->member.run.nFlags & MERF_CELL) {
-          if (!ME_StreamOutPrint(pStream, "\\cell "))
-            return FALSE;
+        } else if (p->member.run.nFlags & MERF_TAB) {
+          if (editor->bEmulateVersion10 && /* v1.0 - 3.0 */
+              pPara->member.para.pFmt->dwMask & PFM_TABLE &&
+              pPara->member.para.pFmt->wEffects & PFE_TABLE)
+          {
+            if (!ME_StreamOutPrint(pStream, "\\cell "))
+              return FALSE;
+          } else {
+            if (!ME_StreamOutPrint(pStream, "\\tab "))
+              return FALSE;
+          }
+        } else if (p->member.run.nFlags & MERF_ENDCELL) {
+          if (pStream->nNestingLevel > 1) {
+            if (!ME_StreamOutPrint(pStream, "\\nestcell "))
+              return FALSE;
+          } else {
+            if (!ME_StreamOutPrint(pStream, "\\cell "))
+              return FALSE;
+          }
           nChars--;
         } else if (p->member.run.nFlags & MERF_ENDPARA) {
-          if (pPara->member.para.bTable) {
+          if (pPara->member.para.pFmt->dwMask & PFM_TABLE &&
+              pPara->member.para.pFmt->wEffects & PFE_TABLE &&
+              !(pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)))
+          {
             if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
               return FALSE;
           } else {

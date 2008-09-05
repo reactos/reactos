@@ -122,8 +122,10 @@ NTSTATUS TdiBuildNullConnectionInfo
     ExAllocatePool(NonPagedPool,
 		   sizeof(TDI_CONNECTION_INFORMATION) +
 		   TdiAddressSize);
-  if (!ConnInfo)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  if (!ConnInfo) {
+      *ConnectionInfo = NULL;
+      return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   Status = TdiBuildNullConnectionInfoInPlace( ConnInfo, Type );
 

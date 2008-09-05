@@ -9,7 +9,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 VOID NTAPI
 KdbInitialize(PKD_DISPATCH_TABLE DispatchTable, ULONG BootPhase);

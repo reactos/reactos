@@ -142,7 +142,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 	return TRUE;
 }
 
-VOID FreeServices()
+VOID FreeServices(VOID)
 {
 	while (FirstService)
 	{

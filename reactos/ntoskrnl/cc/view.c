@@ -33,7 +33,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, CcInitView)
@@ -485,7 +485,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
   CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
   if (CacheSeg == NULL)
     {
-      KEBUGCHECKCC;
+      KeBugCheck(CACHE_MANAGER);
     }
   if (!CacheSeg->Dirty)
     {
@@ -674,7 +674,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   if (StartingOffset == 0xffffffff)
   {
      DPRINT1("Out of CacheSeg mapping space\n");
-     KEBUGCHECKCC;
+     KeBugCheck(CACHE_MANAGER);
   }
 
   current->BaseAddress = CiCacheSegMappingRegionBase + StartingOffset * PAGE_SIZE;
@@ -700,7 +700,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
   {
-     KEBUGCHECKCC;
+     KeBugCheck(CACHE_MANAGER);
   }
 #endif
 
@@ -834,9 +834,9 @@ CcRosRequestCacheSegment(PBCB Bcb,
 
   if ((FileOffset % Bcb->CacheSegmentSize) != 0)
     {
-      CPRINT("Bad fileoffset %x should be multiple of %x",
+      DPRINT1("Bad fileoffset %x should be multiple of %x",
         FileOffset, Bcb->CacheSegmentSize);
-      KEBUGCHECKCC;
+      KeBugCheck(CACHE_MANAGER);
     }
 
   return(CcRosGetCacheSegment(Bcb,
@@ -1339,7 +1339,7 @@ CmLazyCloseThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
 	  DbgPrint("LazyCloseThread: Wait failed\n");
-	  KEBUGCHECKCC;
+	  KeBugCheck(CACHE_MANAGER);
 	  break;
       }
       if (LazyCloseThreadShouldTerminate)
@@ -1401,7 +1401,7 @@ CcInitView(VOID)
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {
-      KEBUGCHECKCC;
+      KeBugCheck(CACHE_MANAGER);
     }
 
   Buffer = ExAllocatePool(NonPagedPool, CI_CACHESEG_MAPPING_REGION_SIZE / (PAGE_SIZE * 8));

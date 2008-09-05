@@ -18,21 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shlwapi.h"
-
-#include "pidl.h"
-#include "enumidlist.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -143,9 +129,9 @@ BOOL CreateFolderEnumList(
 
     if(!lpszPath || !lpszPath[0]) return FALSE;
 
-    strcpyW(szPath, lpszPath);
+    wcscpy(szPath, lpszPath);
     PathAddBackslashW(szPath);
-    strcatW(szPath,stars);
+    wcscat(szPath,stars);
 
     hFile = FindFirstFileW(szPath,&stffile);
     if ( hFile != INVALID_HANDLE_VALUE )

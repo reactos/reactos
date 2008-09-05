@@ -104,7 +104,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     DbgPrint("EXCEPTION! Record %08x Frame %08x\n", 
              ExceptionRecord, ExceptionFrame);
     MmuDumpMap();
-    KEBUGCHECK(0);
+    KeBugCheck(0);
 }
 
 /*

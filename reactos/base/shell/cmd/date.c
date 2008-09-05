@@ -176,7 +176,7 @@ ParseDate (LPTSTR s)
 }
 
 
-INT cmd_date (LPTSTR cmd, LPTSTR param)
+INT cmd_date (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    argc;

@@ -1,7 +1,7 @@
 /*
  *	Rebar band site
  *
- *	Copyright 2007	Hervé Poussineua
+ *	Copyright 2007	Hervé Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

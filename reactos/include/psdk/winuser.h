@@ -8,6 +8,13 @@
 extern "C" {
 #endif
 
+#if !defined(_USER32_)
+#define WINUSERAPI DECLSPEC_IMPORT
+#else
+#define WINUSERAPI
+#endif
+
+
 #define WC_DIALOG MAKEINTATOM(0x8002)
 #define FALT	16
 #define FCONTROL	8

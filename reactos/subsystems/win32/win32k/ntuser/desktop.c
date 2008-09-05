@@ -355,7 +355,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                   NULL,
                                   (HANDLE*)hWinSta);
 
-      RtlFreeUnicodeString(&FullName);
+      ExFreePoolWithTag(FullName.Buffer, TAG_STRING);
 
       if(!NT_SUCCESS(Status))
       {
@@ -389,7 +389,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                   NULL,
                                   (HANDLE*)hDesktop);
 
-      RtlFreeUnicodeString(&FullName);
+      ExFreePoolWithTag(FullName.Buffer, TAG_STRING);
 
       if(!NT_SUCCESS(Status))
       {
@@ -931,11 +931,12 @@ NtUserCreateDesktop(
    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
-	  if (lpszDesktopName)
-         RtlFreeUnicodeString(&SafeDesktopName);
+      if (lpszDesktopName)
+         ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
       RETURN( NULL);
    }
-   RtlFreeUnicodeString(&SafeDesktopName);
+   if (lpszDesktopName)
+      ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
    ObDereferenceObject(WinStaObject);
 
    /*
@@ -963,7 +964,7 @@ NtUserCreateDesktop(
    if (!NT_SUCCESS(Status)) RETURN(NULL);
    if (Status == STATUS_OBJECT_NAME_EXISTS)
    {
-      ExFreePool(DesktopName.Buffer);
+      ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
       RETURN( Desktop);
    }
 
@@ -1019,7 +1020,7 @@ NtUserCreateDesktop(
 
    /* Initialize some local (to win32k) desktop state. */
    DesktopObject->ActiveMessageQueue = NULL;
-   ExFreePool(DesktopName.Buffer);
+   ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
    if (! NT_SUCCESS(Status))
    {
@@ -1138,7 +1139,8 @@ NtUserOpenDesktop(
    Result = IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
                                         &SafeDesktopName);
 
-   RtlFreeUnicodeString(&SafeDesktopName);
+   if (lpszDesktopName)
+      ExFreePoolWithTag(SafeDesktopName.Buffer, TAG_STRING);
    ObDereferenceObject(WinStaObject);
 
 

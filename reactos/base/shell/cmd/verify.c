@@ -27,7 +27,7 @@
 static BOOL bVerify = FALSE;
 
 
-INT cmd_verify (LPTSTR cmd, LPTSTR param)
+INT cmd_verify (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

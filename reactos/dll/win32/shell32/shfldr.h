@@ -48,7 +48,7 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
 HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
-static inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
+static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
     return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
             guid->Data1, guid->Data2, guid->Data3,
@@ -56,14 +56,14 @@ static inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
             guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
 }
 
-static inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
+static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 {
     static const WCHAR fmtW[] =
      { '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',
      '%','0','2','x','%','0','2','x','-',
      '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
      '%','0','2','x','%','0','2','x','}',0 };
-    return sprintfW(str, fmtW,
+    return swprintf(str, fmtW,
             guid->Data1, guid->Data2, guid->Data3,
             guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
             guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
@@ -71,6 +71,3 @@ static inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
-
-DEFINE_GUID( CLSID_UnixFolder, 0xcc702eb2, 0x7dc5, 0x11d9, 0xc6, 0x87, 0x00, 0x04, 0x23, 0x8a, 0x01, 0xcd );
-DEFINE_GUID( CLSID_UnixDosFolder, 0x9d20aae8, 0x0625, 0x44b0, 0x9c, 0xa7, 0x71, 0x88, 0x9c, 0x22, 0x54, 0xd9 );

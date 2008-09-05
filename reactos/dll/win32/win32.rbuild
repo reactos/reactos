@@ -196,6 +196,9 @@
 <directory name="netid">
 	<xi:include href="netid/netid.rbuild" />
 </directory>
+<directory name="netshell">
+	<xi:include href="netshell/netshell.rbuild" />
+</directory>
 <directory name="newdev">
 	<xi:include href="newdev/newdev.rbuild" />
 </directory>
@@ -210,6 +213,9 @@
 </directory>
 <directory name="odbccp32">
 	<xi:include href="odbccp32/odbccp32.rbuild" />
+</directory>
+<directory name="odbc32">
+	<xi:include href="odbc32/odbc32.rbuild" />
 </directory>
 <directory name="ole32">
 	<xi:include href="ole32/ole32.rbuild" />
@@ -288,6 +294,12 @@
 </directory>
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.rbuild" />
+</directory>
+<directory name="sfc">
+	<xi:include href="sfc/sfc.rbuild" />
+</directory>
+<directory name="sfc_os">
+	<xi:include href="sfc_os/sfc_os.rbuild" />
 </directory>
 <directory name="shdocvw">
 	<xi:include href="shdocvw/shdocvw.rbuild" />

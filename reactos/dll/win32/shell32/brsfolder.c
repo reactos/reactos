@@ -23,19 +23,8 @@
  *    - implement new dialog style resizing
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include <precomp.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "wine/debug.h"
-#include "undocshell.h"
-#include "pidl.h"
-#include "shell32_main.h"
-#include "shellapi.h"
-#include "shresdef.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -74,7 +63,7 @@ static const WCHAR szBrowseFolderInfo[] = {
     'I','N','F','O',0
 };
 
-static inline DWORD BrowseFlagsToSHCONTF(UINT ulFlags)
+static DWORD __inline BrowseFlagsToSHCONTF(UINT ulFlags)
 {
     return SHCONTF_FOLDERS | (ulFlags & BIF_BROWSEINCLUDEFILES ? SHCONTF_NONFOLDERS : 0);
 }
@@ -290,7 +279,7 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 	tvins.hInsertAfter = NULL;
 	tvins.hParent      = hParent;
 
-	return (HTREEITEM)TreeView_InsertItemW( info->hwndTreeView, &tvins );
+	return (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_INSERTITEM, 0, (LPARAM)&tvins );
 }
 
 /******************************************************************************
@@ -361,7 +350,7 @@ done:
     SHFree(pidlTemp);
 }
 
-static inline BOOL PIDLIsType(LPCITEMIDLIST pidl, PIDLTYPE type)
+static BOOL __inline PIDLIsType(LPCITEMIDLIST pidl, PIDLTYPE type)
 {
     LPPIDLDATA data = _ILGetDataPointer(pidl);
     if (!data)

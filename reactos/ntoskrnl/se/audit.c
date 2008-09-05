@@ -84,7 +84,7 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
         (!(NT_SUCCESS(Status)) || (ReturnLength == sizeof(LocalNameInfo))))
     {
         /* First, free any buffer we might've allocated */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
         if (ObjectNameInfo) ExFreePool(ObjectNameInfo);
 
         /* Now allocate a temporary one */

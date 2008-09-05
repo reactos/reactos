@@ -29,7 +29,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitPagingFile)
@@ -205,7 +205,7 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
          first = mid + 1;
       }
    }
-   KEBUGCHECK(0);
+   ASSERT(FALSE);
 #if defined(__GNUC__)
 
    return (LARGE_INTEGER)0LL;
@@ -237,7 +237,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -247,13 +247,13 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -298,7 +298,7 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -308,13 +308,13 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -450,13 +450,13 @@ MmFreeSwapPage(SWAPENTRY Entry)
    if (i >= MAX_PAGING_FILES)
    {
 	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-	KEBUGCHECK(0);
+	ASSERT(FALSE);
    }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
 
@@ -504,7 +504,7 @@ MmAllocSwapPage(VOID)
          off = MiAllocPageFromPagingFile(PagingFileList[i]);
          if (off == 0xFFFFFFFF)
          {
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             KeReleaseSpinLock(&PagingFileListLock, oldIrql);
             return(STATUS_UNSUCCESSFUL);
          }
@@ -518,7 +518,7 @@ MmAllocSwapPage(VOID)
    }
 
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-   KEBUGCHECK(0);
+   ASSERT(FALSE);
    return(0);
 }
 
@@ -694,6 +694,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    ANSI_STRING ProcName;
    PIO_STACK_LOCATION StackPtr;
    PLDR_DATA_TABLE_ENTRY ModuleObject = NULL;
+   PVOID BaseAddress;
 
    Status = ZwFsControlFile(PageFileHandle,
                             0,
@@ -766,13 +767,13 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    }
 
    /* Load the diskdump driver. */
-   Status = MmLoadSystemImage(&DiskDumpName, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+   Status = MmLoadSystemImage(&DiskDumpName, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
    if (ModuleObject == NULL)
    {
       return(STATUS_OBJECT_NAME_NOT_FOUND);
    }
    RtlInitAnsiString(&ProcName, "DiskDumpFunctions");
-   MmCoreDumpFunctions = MiFindExportedRoutineByName(ModuleObject->DllBase,
+   MmCoreDumpFunctions = MiFindExportedRoutineByName(BaseAddress,
                                                      &ProcName);
    if (!NT_SUCCESS(Status))
    {

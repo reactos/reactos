@@ -206,7 +206,7 @@ FdoQueryBusRelations(
 
   Size = sizeof(DEVICE_RELATIONS) + sizeof(Relations->Objects) *
     (DeviceExtension->DeviceListCount - 1);
-  Relations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, Size, TAG_PCI);
+  Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
   if (!Relations)
     return STATUS_INSUFFICIENT_RESOURCES;
 

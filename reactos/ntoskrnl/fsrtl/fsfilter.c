@@ -69,7 +69,7 @@ FsRtlCreateSectionForDataScan(OUT PHANDLE SectionHandle,
                               IN ULONG Flags)
 {
     /* Unimplemented */
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 

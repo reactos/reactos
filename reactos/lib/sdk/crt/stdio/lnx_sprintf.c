@@ -167,18 +167,16 @@ numberf(char * buf, char * end, double num, int base, int size, int precision, i
 		return 0;
 	c = (type & ZEROPAD) ? '0' : ' ';
 	sign = 0;
-	if (type & SIGN) {
-		if (num < 0) {
-			sign = '-';
-			num = -num;
-			size--;
-		} else if (type & PLUS) {
-			sign = '+';
-			size--;
-		} else if (type & SPACE) {
-			sign = ' ';
-			size--;
-		}
+	if (num < 0) {
+		sign = '-';
+		num = -num;
+		size--;
+	} else if (type & PLUS) {
+		sign = '+';
+		size--;
+	} else if (type & SPACE) {
+		sign = ' ';
+		size--;
 	}
 	if (type & SPECIAL)  {
 		if (base == 16)
@@ -231,10 +229,12 @@ numberf(char * buf, char * end, double num, int base, int size, int precision, i
 			++buf;
 		}
 	}
-	while (i < precision--) {
-		if (buf <= end)
-			*buf = '0';
-		++buf;
+	if (type & ZEROPAD) {
+		while (i < precision--) {
+			if (buf <= end)
+				*buf = '0';
+			++buf;
+		}
 	}
 	while (i-- > 0) {
 		if (buf <= end)

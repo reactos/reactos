@@ -39,7 +39,10 @@
  */
 
 static const char *inet_ntop4(const u_char *src, char *dst, size_t size);
+
+#ifdef INET6
 static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
+#endif
 
 /* char *
  * inet_ntop(af, src, dst, size)

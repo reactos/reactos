@@ -32,3 +32,4 @@ GetProcessMemoryInfo@12          @21
 GetWsChanges@12                  @22
 InitializeProcessForWsWatch@4    @23
 QueryWorkingSet@12               @24
+QueryWorkingSetEx@12             @25

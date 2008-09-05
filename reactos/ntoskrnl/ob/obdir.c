@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/dirobj.c
+ * FILE:            ntoskrnl/ob/obdir.c
  * PURPOSE:         Manages the Object Manager's Directory Implementation,
  *                  such as functions for addition, deletion and lookup into
  *                  the Object Manager's namespace. These routines are separate
@@ -62,7 +62,7 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
         /* Invalid context */
         DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
                 Context, Context->DirectoryLocked);
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
         return FALSE;
     }
 
@@ -252,7 +252,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if ((SearchShadow) && (Directory->DeviceMap))
         {
             /* FIXME: We don't support this yet */
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
     }
 
@@ -326,7 +326,7 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
     CurrentEntry->ChainLink = NULL;
 
     /* Free it */
-    ExFreePool(CurrentEntry);
+    ExFreePoolWithTag(CurrentEntry, OB_DIR_TAG);
 
     /* Return */
     return TRUE;
@@ -529,7 +529,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Free the buffer and fail */
-        ExFreePool(LocalBuffer);
+        ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
         return Status;
     }
 
@@ -701,7 +701,7 @@ Quickie:
 
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
-    ExFreePool(LocalBuffer);
+    ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
 
     /* Return status to caller */
     return Status;

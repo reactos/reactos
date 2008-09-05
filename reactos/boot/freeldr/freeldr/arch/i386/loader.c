@@ -96,7 +96,7 @@ FrLdrSetupPae(ULONG Magic)
     __writecr3(PageDirectoryBaseAddress);
 
     /* Enable Paging and Write Protect*/
-    __writecr0(__readcr0() | X86_CR0_PG | X86_CR0_WP);
+    __writecr0(__readcr0() | CR0_PG | CR0_WP);
 
     /* Jump to Kernel */
     (*KernelEntryPoint)(Magic, &LoaderBlock);

@@ -290,7 +290,7 @@ static INT CopyOverwrite (LPTSTR fn)
 }
 
 
-INT cmd_copy (LPTSTR cmd, LPTSTR param)
+INT cmd_copy (LPTSTR param)
 {
     LPTSTR *arg;
     INT argc, i, nFiles, nOverwrite = 0, nSrc = -1, nDes = -1;

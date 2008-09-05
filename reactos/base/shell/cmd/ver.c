@@ -57,7 +57,7 @@ VOID ShortVersion (VOID)
  *
  *
  */
-INT cmd_ver (LPTSTR cmd, LPTSTR param)
+INT cmd_ver (LPTSTR param)
 {
 	INT i;
 

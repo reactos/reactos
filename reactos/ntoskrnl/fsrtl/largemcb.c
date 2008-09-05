@@ -24,7 +24,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
                       IN LONGLONG Lbn,
                       IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -57,7 +57,7 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
                           OUT PLONGLONG Lbn,
                           OUT PLONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *Vbn = 0;
     *Lbn = 0;
     *SectorCount= 0;
@@ -105,7 +105,7 @@ NTAPI
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*
@@ -134,7 +134,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                          OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
                          OUT PULONG Index OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *Lbn = 0;
     *SectorCountFromLbn = 0;
     return FALSE;
@@ -150,7 +150,7 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
                                      OUT PLONGLONG LargeLbn,
                                      OUT PULONG Index)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *LargeVbn = 0;
     *LargeLbn = 0;
     *Index = 0;
@@ -166,7 +166,7 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
                              OUT PLONGLONG Vbn,
                              OUT PLONGLONG Lbn)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return(FALSE);
 }
 
@@ -269,7 +269,7 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*
@@ -295,7 +295,7 @@ NTAPI
 FsRtlResetLargeMcb(IN PLARGE_MCB Mcb,
                    IN BOOLEAN SelfSynchronized)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*
@@ -307,7 +307,7 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
                    IN LONGLONG Vbn,
                    IN LONGLONG Amount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -319,7 +319,7 @@ NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*
@@ -342,7 +342,7 @@ VOID
 NTAPI
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*

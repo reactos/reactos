@@ -41,18 +41,6 @@
 # include <sys/types.h>
 # include <netinet/in.h>
 #endif
-#ifdef HAVE_OPENSSL_SSL_H
-#define DSA __ssl_DSA  /* avoid conflict with commctrl.h */
-#undef FAR
-/* avoid conflict with wincrypt.h */
-#undef PKCS7_SIGNER_INFO
-#undef X509_NAME
-#undef X509_CERT_PAIR
-# include <openssl/ssl.h>
-#undef FAR
-#define FAR do_not_use_this_in_wine
-#undef DSA
-#endif
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -72,12 +60,10 @@ typedef struct
 {
     BOOL useSSL;
     int socketFD;
-#ifdef HAVE_OPENSSL_SSL_H
-    SSL *ssl_s;
+    void *ssl_s;
     char *peek_msg;
     char *peek_msg_mem;
     size_t peek_len;
-#endif
 } WININET_NETCONNECTION;
 
 static inline LPWSTR WININET_strdupW( LPCWSTR str )
@@ -363,6 +349,8 @@ LPWININETHANDLEHEADER WININET_GetObject( HINTERNET hinternet );
 LPWININETHANDLEHEADER WININET_AddRef( LPWININETHANDLEHEADER info );
 BOOL WININET_Release( LPWININETHANDLEHEADER info );
 BOOL WININET_FreeHandle( HINTERNET hinternet );
+
+DWORD INET_QueryOption(DWORD,void*,DWORD*,BOOL);
 
 time_t ConvertTimeString(LPCWSTR asctime);
 

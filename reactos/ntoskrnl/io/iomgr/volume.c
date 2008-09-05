@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitFileSystemImplementation)
@@ -140,7 +140,7 @@ IopDereferenceVpb(IN PVPB Vpb)
     if (!Vpb->ReferenceCount)
     {
         /* FIXME: IMPLEMENT CLEANUP! */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Release VPB lock */

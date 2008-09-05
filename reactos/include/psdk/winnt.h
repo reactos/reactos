@@ -4401,6 +4401,45 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
 
+typedef enum _PROCESSOR_CACHE_TYPE {
+    CacheUnified,
+    CacheInstruction,
+    CacheData,
+    CacheTrace 
+} PROCESSOR_CACHE_TYPE;
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+    RelationProcessorCore,
+    RelationNumaNode,
+    RelationCache,
+    RelationProcessorPackage 
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+#define CACHE_FULLY_ASSOCIATIVE 0xFF
+
+typedef struct _CACHE_DESCRIPTOR {
+    BYTE Level;
+    BYTE Associativity;
+    WORD LineSize;
+    DWORD Size;
+    PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+    ULONG_PTR ProcessorMask;
+    LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+    union {
+        struct {
+            BYTE Flags;
+        } ProcessorCore;
+        struct {
+        DWORD NodeNumber;
+        } NumaNode;
+        CACHE_DESCRIPTOR Cache;
+        ULONGLONG Reserved[2];
+    };
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
+
 NTSYSAPI
 SIZE_T
 STDCALL
@@ -4414,6 +4453,23 @@ RtlCompareMemory (
 #define RtlCopyMemory memcpy
 #define RtlFillMemory(d,l,f) memset((d), (f), (l))
 #define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
+
+FORCEINLINE
+PVOID
+RtlSecureZeroMemory(IN PVOID ptr,
+                    IN SIZE_T cnt)
+{
+    volatile char *vptr = (volatile char *)ptr;
+
+    while (cnt)
+    {
+        *vptr = 0;
+        vptr++;
+        cnt--;
+    }
+
+    return ptr;
+}
 
 typedef struct _OBJECT_TYPE_LIST {
     WORD   Level;
@@ -4620,6 +4676,40 @@ BitScanReverse(OUT ULONG *Index,
 #endif
 }
 
+#endif
+
+/* TODO: Other architectures than X86 */
+#if defined(_M_IX86)
+#define PF_TEMPORAL_LEVEL_1 
+#define PF_NON_TEMPORAL_LEVEL_ALL
+#define PreFetchCacheLine(l, a)
+#elif defined (_M_AMD64)
+#define PreFetchCacheLine(l, a)
+#elif defined(_M_PPC)
+#define PreFetchCacheLine(l, a)
+#elif defined(_M_ARM)
+#define PreFetchCacheLine(l, a)
+#else
+#error Unknown architecture
+#endif
+
+/* TODO: Other architectures than X86 */
+#if defined(_M_IX86)
+FORCEINLINE
+VOID
+MemoryBarrier(VOID)
+{
+    LONG Barrier;
+    __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
+}
+#elif defined (_M_AMD64)
+#define MemoryBarrier()
+#elif defined(_M_PPC)
+#define MemoryBarrier()
+#elif defined(_M_ARM)
+#define MemoryBarrier()
+#else
+#error Unknown architecture
 #endif
 
 #if defined(_M_IX86)

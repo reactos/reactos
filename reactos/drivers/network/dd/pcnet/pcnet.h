@@ -145,8 +145,12 @@ MiGetMediaState(PADAPTER Adapter);
 #define BREAKPOINT
 #endif
 
+#ifndef TAG
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
+
 /* memory pool tag */
-#define PCNET_TAG 0xbaadf00d
+#define PCNET_TAG TAG('P', 'c', 'N', 't')
 
 #endif // _PCNET_H_
 

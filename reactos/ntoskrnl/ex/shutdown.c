@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/debug.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -185,7 +185,7 @@ ShutdownThreadMain(PVOID Context)
 	        PKDPC Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC));
 		if (Dpc == NULL)
 		  {
-                    KEBUGCHECK(0);
+                    ASSERT(FALSE);
 		  }
 		KeInitializeDpc(Dpc, KiHaltProcessorDpcRoutine, (PVOID)Dpc);
 		KeSetTargetProcessorDpc(Dpc, i);
@@ -197,7 +197,7 @@ ShutdownThreadMain(PVOID Context)
 #endif /* CONFIG_SMP */
         PopSetSystemPowerState(PowerSystemShutdown);
 
-	CHECKPOINT1;
+	DPRINT1("Shutting down\n");
 
 	KiHaltProcessorDpcRoutine(NULL, NULL, NULL, NULL);
 	/* KiHaltProcessor does never return */
@@ -245,7 +245,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
                                  (PVOID)Action);
    if (!NT_SUCCESS(Status))
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_ALL_ACCESS,
@@ -256,7 +256,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    NtClose(ThreadHandle);
    if (!NT_SUCCESS(Status))
      {
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
      }
 
    KeSetPriorityThread(&ShutdownThread->Tcb, LOW_REALTIME_PRIORITY + 1);

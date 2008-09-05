@@ -285,10 +285,13 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
             if( ReturnedBytes ) *ReturnedBytes = Received; break;
         case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; break;
         case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
-        case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
-        case STATUS_INSUFFICIENT_RESOURCES: *Errno = WSA_NOT_ENOUGH_MEMORY; break;
-        case STATUS_INVALID_CONNECTION: *Errno = WSAEAFNOSUPPORT; break;
-        case STATUS_REMOTE_NOT_LISTENING: *Errno = WSAECONNRESET; break;
+	case STATUS_BUFFER_OVERFLOW: DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n"); *Errno = WSAEMSGSIZE; break;
+  	case STATUS_NO_MEMORY: /* Fall through to STATUS_INSUFFICIENT_RESOURCES */
+	case STATUS_INSUFFICIENT_RESOURCES: DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n"); *Errno = WSA_NOT_ENOUGH_MEMORY; break;
+	case STATUS_INVALID_CONNECTION: DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n"); *Errno = WSAEAFNOSUPPORT; break;
+	case STATUS_REMOTE_NOT_LISTENING: DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n"); *Errno = WSAECONNRESET; break;
+ 	case STATUS_FILE_CLOSED: DbgPrint("MSAFD: STATUS_FILE_CLOSED\n"); *Errno = WSAENOTSOCK; break;
+ 	case STATUS_INVALID_PARAMETER: DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n"); *Errno = WSAEINVAL; break;
         default:
             DbgPrint("MSAFD: Error %x is unknown\n", Status);
             *Errno = WSAEINVAL; break;
@@ -595,7 +598,7 @@ WSPSelect(
     IO_STATUS_BLOCK			IOSB;
     PAFD_POLL_INFO			PollInfo;
     NTSTATUS				Status;
-    ULONG				HandleCount, OutCount = 0;
+    LONG				HandleCount, OutCount = 0;
     ULONG				PollBufferSize;
     PVOID				PollBuffer;
     ULONG				i, j = 0, x;
@@ -658,7 +661,6 @@ WSPSelect(
     RtlZeroMemory( PollInfo, PollBufferSize );
 
     /* Number of handles for AFD to Check */
-    PollInfo->HandleCount = HandleCount;
     PollInfo->Exclusive = FALSE;
     PollInfo->Timeout = Timeout;
     
@@ -686,6 +688,9 @@ WSPSelect(
 	}
     }
     
+    PollInfo->HandleCount = j;
+    PollBufferSize = ((PCHAR)&PollInfo->Handles[j+1]) - ((PCHAR)PollInfo);
+
     /* Send IOCTL */
     Status = NtDeviceIoControlFile( (HANDLE)PollInfo->Handles[0].Handle,
 				    SockEvent,

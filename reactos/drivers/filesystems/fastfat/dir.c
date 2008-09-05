@@ -478,7 +478,6 @@ NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT IrpContext)
  */
 {
   NTSTATUS RC = STATUS_SUCCESS;
-  CHECKPOINT;
   IrpContext->Irp->IoStatus.Information = 0;
   switch (IrpContext->MinorFunction)
     {

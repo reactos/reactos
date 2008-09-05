@@ -62,7 +62,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     if (!Kcb->PrivateAlloc)
     {
         /* Free it from the pool */
-        ExFreePool(Kcb);
+        ExFreePoolWithTag(Kcb, TAG_CM);
         return;
     }
     
@@ -99,7 +99,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
         }
         
         /* Free the page */
-        ExFreePool(AllocPage);
+        ExFreePoolWithTag(AllocPage, TAG_CM);
     }
     
     /* Release the lock */
@@ -296,7 +296,7 @@ CmpFreeDelayItem(PVOID Entry)
         }
         
         /* Now free the page */
-        ExFreePool(AllocPage);
+        ExFreePoolWithTag(AllocPage, TAG_CM);
     }
     
     /* Release the lock */

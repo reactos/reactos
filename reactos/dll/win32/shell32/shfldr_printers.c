@@ -20,40 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winspool.h"
-
-#include "ole2.h"
-#include "shlguid.h"
-
-#include "enumidlist.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "shellfolder.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
-#include "shresdef.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -117,7 +84,7 @@ static HRESULT WINAPI IEI_Printers_fnQueryInterface(IExtractIconW *iface, REFIID
 
     if(*ppvObj)
     {
-        IExtractIconW_AddRef((IExtractIconW*) *ppvObj);
+        ((IExtractIconW*)*ppvObj)->lpVtbl->AddRef(*ppvObj);
         TRACE("-- Interface: (%p)->(%p)\n",ppvObj,*ppvObj);
         return S_OK;
     }
@@ -225,7 +192,7 @@ static HRESULT WINAPI IEIA_Printers_fnQueryInterface(IExtractIconA * iface, REFI
 {
     _ICOM_THIS_From_IExtractIconA(IExtractIconW, iface);
 
-    return IExtractIconW_QueryInterface(This, riid, ppvObj);
+    return This->lpVtbl->QueryInterface(This, riid, ppvObj);
 }
 
 /**************************************************************************
@@ -235,7 +202,7 @@ static ULONG WINAPI IEIA_Printers_fnAddRef(IExtractIconA * iface)
 {
     _ICOM_THIS_From_IExtractIconA(IExtractIconW, iface);
 
-    return IExtractIconW_AddRef(This);
+    return This->lpVtbl->AddRef(This);
 }
 /**************************************************************************
  *  IExtractIconA_Release
@@ -244,7 +211,7 @@ static ULONG WINAPI IEIA_Printers_fnRelease(IExtractIconA * iface)
 {
     _ICOM_THIS_From_IExtractIconA(IExtractIconW, iface);
 
-    return IExtractIconW_AddRef(This);
+    return This->lpVtbl->AddRef(This);
 }
 
 /**************************************************************************
@@ -264,7 +231,7 @@ static HRESULT WINAPI IEIA_Printers_fnGetIconLocation(
 
     TRACE("(%p) (flags=%u %p %u %p %p)\n", This, uFlags, szIconFile, cchMax, piIndex, pwFlags);
 
-    ret = IExtractIconW_GetIconLocation(This, uFlags, lpwstrFile, cchMax, piIndex, pwFlags);
+    ret = This->lpVtbl->GetIconLocation(This, uFlags, lpwstrFile, cchMax, piIndex, pwFlags);
     WideCharToMultiByte(CP_ACP, 0, lpwstrFile, -1, szIconFile, cchMax, NULL, NULL);
     HeapFree(GetProcessHeap(), 0, lpwstrFile);
 
@@ -286,7 +253,7 @@ static HRESULT WINAPI IEIA_Printers_fnExtract(IExtractIconA *iface, LPCSTR pszFi
     TRACE("(%p) (file=%p index=%u %p %p size=%u)\n", This, pszFile, nIconIndex, phiconLarge, phiconSmall, nIconSize);
 
     MultiByteToWideChar(CP_ACP, 0, pszFile, -1, lpwstrFile, len);
-    ret = IExtractIconW_Extract(This, lpwstrFile, nIconIndex, phiconLarge, phiconSmall, nIconSize);
+    ret = This->lpVtbl->Extract(This, lpwstrFile, nIconIndex, phiconLarge, phiconSmall, nIconSize);
     HeapFree(GetProcessHeap(), 0, lpwstrFile);
     return ret;
 }
@@ -923,8 +890,11 @@ static HRESULT WINAPI IPF_Printers_Initialize (
                IPersistFolder2 * iface, LPCITEMIDLIST pidl)
 {
     _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
-    FIXME ("(%p)->(%p): stub\n", This, pidl);
-    return E_NOTIMPL;
+    if (This->pidlRoot)
+        SHFree((LPVOID)This->pidlRoot);
+
+    This->pidlRoot = ILClone(pidl);
+    return S_OK;
 }
 
 /**************************************************************************

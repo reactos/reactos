@@ -562,13 +562,6 @@ MiniQueryInformation(
 
   /* FIXME: Wait in pending case! */
 
-  /* XXX is status_pending part of success macro? */
-  if ((NT_SUCCESS(NdisStatus)) || (NdisStatus == NDIS_STATUS_PENDING))
-    {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Miniport returned status (0x%X).\n", NdisStatus));
-      return NdisStatus;
-    }
-
   return NdisStatus;
 }
 
@@ -1017,6 +1010,7 @@ NdisInitializeWrapper(
   RegistryPath = ExAllocatePool(PagedPool, sizeof(UNICODE_STRING));
   if(!RegistryPath)
     {
+      ExFreePool(Miniport);
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       return;
     }
@@ -1028,6 +1022,8 @@ NdisInitializeWrapper(
   if(!RegistryBuffer)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+      ExFreePool(Miniport);
+      ExFreePool(RegistryPath);
       return;
     }
 
@@ -1424,6 +1420,7 @@ NdisIPnPStartDevice(
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
       return (NTSTATUS)NdisStatus;
     }
 
@@ -1466,6 +1463,7 @@ NdisIPnPStartDevice(
           Adapter->LookaheadBuffer = NULL;
         }
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
       return (NTSTATUS)NdisStatus;
     }
 
@@ -1625,7 +1623,7 @@ NdisIAddDevice(
 
   Status = IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyDriverKeyName,
                                0, NULL, &DriverKeyLength);
-  if (Status != STATUS_BUFFER_TOO_SMALL)
+  if (Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
     {
       NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key length.\n"));
       return Status;

@@ -18,23 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "undocshell.h"
-#include "shlwapi.h"
-#include "shell32_main.h"
-
-#include "pidl.h"
-#include "wine/debug.h"
+#include <precomp.h>
 
 #ifdef FM_SEPARATOR
 #undef FM_SEPARATOR
@@ -330,9 +314,9 @@ static BOOL FileMenu_AppendItemW(
 
 	if (lpText != FM_SEPARATOR)
 	{
-	  int len = strlenW (lpText);
+	  int len = wcslen (lpText);
 	  myItem = (LPFMITEM) SHAlloc( sizeof(FMITEM) + len*sizeof(WCHAR));
-	  strcpyW (myItem->szItemText, lpText);
+	  wcscpy (myItem->szItemText, lpText);
 	  myItem->cchItemText = len;
 	  myItem->iIconIndex = icon;
 	  myItem->hMenu = hMenu;
@@ -825,7 +809,7 @@ void WINAPI FileMenu_AbortInitMenu (void)
  *  LPXXXXX			 pointer to struct containing a func addr at offset 8
  *					 or NULL at failure.
  */
-LPVOID WINAPI SHFind_InitMenuPopup (HMENU hMenu, HWND hWndParent, DWORD w, DWORD x)
+IContextMenu * WINAPI SHFind_InitMenuPopup (HMENU hMenu, HWND hWndParent, UINT w, UINT x)
 {
 	FIXME("hmenu=%p hwnd=%p 0x%08x 0x%08x stub\n",
 		hMenu,hWndParent,w,x);
@@ -859,7 +843,8 @@ static BOOL _SHIsMenuSeparator(HMENU hm, int i)
  * Shell_MergeMenus				[SHELL32.67]
  */
 HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags)
-{	int		nItem;
+{
+	INT			nItem;
 	HMENU		hmSubMenu;
 	BOOL		bAlreadySeparated;
 	MENUITEMINFOW	miiSrc;
@@ -907,6 +892,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 
 	  if (!GetMenuItemInfoW(hmSrc, nItem, TRUE, &miiSrc))
 	  {
+MessageBoxW(NULL, L"GetMenuItemInfoW failed", NULL, MB_OK);
 	    continue;
 	  }
 
@@ -916,8 +902,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	  {
 	    /* This is a separator; don't put two of them in a row */
 	    if (bAlreadySeparated)
+		{
+MessageBoxW(NULL, L"bAlreadySeparated failed", NULL, MB_OK);
 	      continue;
-
+		}
 	    bAlreadySeparated = TRUE;
 	  }
 	  else if (miiSrc.hSubMenu)
@@ -926,9 +914,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	    {
 	      miiSrc.wID += uIDAdjust;			/* add uIDAdjust to the ID */
 
-	      if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		  if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		  {MessageBoxW(NULL, L"uIDAdjustMax 111 failed", NULL, MB_OK);
 	        continue;
-
+		  }
 	      if (uIDMax <= miiSrc.wID)			/* remember the highest ID */
 	        uIDMax = miiSrc.wID + 1;
 	    }
@@ -953,9 +942,10 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	  {
 	    miiSrc.wID += uIDAdjust;			/* add uIDAdjust to the ID */
 
-	    if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */
+		if (miiSrc.wID > uIDAdjustMax)		/* skip ID's higher uIDAdjustMax */{
+MessageBoxW(NULL, L"uIDAdjustMax max 222 failed", NULL, MB_OK);
 	      continue;
-
+		}
 	    if (uIDMax <= miiSrc.wID)			/* remember the highest ID */
 	      uIDMax = miiSrc.wID + 1;
 
@@ -966,6 +956,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 */
 	  if (!InsertMenuItemW(hmDst, uInsert, TRUE, &miiSrc))
 	  {
+MessageBoxW(NULL, L"InsertMenuItemW failed", NULL, MB_OK);
 	    return(uIDMax);
 	  }
 	}

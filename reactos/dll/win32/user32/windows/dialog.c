@@ -755,13 +755,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         {
             rect.left += MulDiv(template.x, xBaseUnit, 4);
             rect.top += MulDiv(template.y, yBaseUnit, 8);
+            if( !(template.style & (WS_CHILD|DS_ABSALIGN)) )
+                ClientToScreen( owner, (POINT *)&rect );
         }
         if ( !(template.style & WS_CHILD) )
         {
             INT dX, dY;
-
-            if( !(template.style & DS_ABSALIGN) )
-                ClientToScreen( owner, (POINT *)&rect );
 
             /* try to fit it into the desktop */
 

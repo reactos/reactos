@@ -256,7 +256,7 @@ AssignIrqVector(ULONG irq)
    else if (current_vector == FIRST_SYSTEM_VECTOR) 
    {
       DPRINT1("Ran out of interrupt sources!");
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
 
    vector = current_vector;
@@ -489,7 +489,7 @@ IOAPICSetupIds(VOID)
     if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) 
     {
       DPRINT1("Could not set I/O APIC ID!\n");
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
     }
   }
 }
@@ -648,15 +648,13 @@ HaliReconfigurePciInterrupts(VOID)
 	        i, IRQMap[i].IrqType, IRQMap[i].IrqFlag, IRQMap[i].SrcBusId, 
 	        IRQMap[i].SrcBusIrq, IRQMap[i].DstApicId, IRQMap[i].DstApicInt);
 
-	 if(1 != HalSetBusDataByOffset(PCIConfiguration, 
+	 HalSetBusDataByOffset(PCIConfiguration, 
 	                               IRQMap[i].SrcBusId, 
 				       (IRQMap[i].SrcBusIrq >> 2) & 0x1f, 
 				       &IRQMap[i].DstApicInt, 
 				       0x3c /*PCI_INTERRUPT_LINE*/, 
-				       1))
-	 {
-	    CHECKPOINT;
-	 }
+				       1);
+
       }
    }
 }

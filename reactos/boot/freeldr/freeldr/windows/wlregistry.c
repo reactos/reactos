@@ -685,7 +685,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 		return FALSE;
 
 	// DTE will be filled during actual load of the driver
-	BootDriverEntry->DataTableEntry = NULL;
+	BootDriverEntry->LdrEntry = NULL;
 
 	// Check - if we have a valid ImagePath, if not - we need to build it
 	// like "System32\\Drivers\\blah.sys"
@@ -768,7 +768,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 		return FALSE;
 
 	// Insert entry at top of the list
-	InsertTailList(BootDriverListHead, &BootDriverEntry->ListEntry);
+	InsertTailList(BootDriverListHead, &BootDriverEntry->Link);
 
 	return TRUE;
 }

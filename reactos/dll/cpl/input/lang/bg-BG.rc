@@ -47,22 +47,22 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Key Sequence"
+CAPTION "Смяна на клавишното съчетание"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "&Switch input languages", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    AUTOCHECKBOX "&Смяна езика на въвеждане", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "Shift", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON "Left &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "S&witch keyboard layouts", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    AUTORADIOBUTTON "Ляв &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTOCHECKBOX "С&мяна на подредбите", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON "Left A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
-    DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 172, 27, 50, 14
+    AUTORADIOBUTTON "Ляв A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    DEFPUSHBUTTON "Добре", IDOK, 172, 9, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 172, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -89,13 +89,13 @@ BEGIN
 	IDS_WHATS_THIS           "Какво е това?"
 	IDS_LANGUAGE             "Език"
 	IDS_LAYOUT               "Клавиатурна подредба"
-    IDS_REM_QUESTION         "Do you want to remove selected keyboard layout?"
-    IDS_CONFIRMATION         "Confirmation"
-	IDS_LAYOUT_EXISTS        "This layout already exists."
-	IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
+        IDS_REM_QUESTION         "Искате ли да премахнете избраната подредба?"
+        IDS_CONFIRMATION         "Потвърждение"
+	IDS_LAYOUT_EXISTS        "Подредбата вече съществува."
+	IDS_LAYOUT_EXISTS2       "Подредбата вече съществува и не може да бъде добавена."
 	IDS_CTRL_SHIFT           "Ctrl+Shift"
-	IDS_LEFT_ALT_SHIFT       "Left Alt+Shift"
-	IDS_SWITCH_BET_INLANG    "Switch between input languages"
+	IDS_LEFT_ALT_SHIFT       "Ляв Alt+Shift"
+	IDS_SWITCH_BET_INLANG    "Превключване на езиците за въвеждане"
 END
 
 STRINGTABLE
@@ -232,10 +232,10 @@ BEGIN
 	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Дхивехска малтийска"
 	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Българска ЯВЕРТЪ"
 	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Българска ЧШЕРТЪ"
-    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgarian BDS 5237-1978"
-    IDS_GERMAN_RISTOME_LAYOUT,                      "German (RISTOME)"
-    IDS_GERMAN_NEO_11_LAYOUT,                       "German (NEO-1.1)"
-    IDS_GERMAN_DE_ERGO_LAYOUT,                      "German (de_ergo)"
-    IDS_BURMESE_LAYOUT,                             "Burmese"
-    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrainian (Student)"
+        IDS_BULGARIAN_BDS_LAYOUT,                       "Българска 5237-1978"
+        IDS_GERMAN_RISTOME_LAYOUT,                      "Немска (RISTOME)"
+        IDS_GERMAN_NEO_11_LAYOUT,                       "Немска (NEO-1.1)"
+        IDS_GERMAN_DE_ERGO_LAYOUT,                      "Немска (de_ergo)"
+        IDS_BURMESE_LAYOUT,                             "Бирманска"
+        IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Украинска (Student)"
 END

@@ -83,7 +83,7 @@ __allmul:
         mov     ecx,BLO
         jnz     short hard      //both are zero, just mult ALO and BLO
 
-        mov     eax,AHI
+        mov     eax,ALO
         mul     ecx
 
         ret     16              // callee restores the stack

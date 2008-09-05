@@ -48,13 +48,33 @@ seta_eval ( LPCTSTR expr );
 static LPCTSTR
 skip_ws ( LPCTSTR p )
 {
-	return p + _tcsspn ( p, _T(" \t") );
+	while (*p && *p <= _T(' '))
+		p++;
+	return p;
 }
 
-INT cmd_set (LPTSTR cmd, LPTSTR param)
+/* Used to check for and handle:
+ * SET "var=value", SET /P "var=prompt", and SET /P var="prompt" */
+static LPTSTR
+GetQuotedString(TCHAR *p)
 {
-	INT i;
+	TCHAR *end;
+	if (*p == _T('"'))
+	{
+		p = (LPTSTR)skip_ws(p + 1);
+		/* If a matching quote is found, truncate the string */
+		end = _tcsrchr(p, _T('"'));
+		if (end)
+			*end = _T('\0');
+	}
+	return p;
+}
+
+INT cmd_set (LPTSTR param)
+{
 	LPTSTR p;
+	LPTSTR lpEnv;
+	LPTSTR lpOutput;
 
 	if ( !_tcsncmp (param, _T("/?"), 2) )
 	{
@@ -62,35 +82,20 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* remove escapes */
-	if ( param[0] ) for ( i = 0; param[i+1]; i++ )
-	{
-		if ( param[i] == _T('^') )
-		{
-			memmove ( &param[i], &param[i+1], _tcslen(&param[i]) * sizeof(TCHAR) );
-		}
-	}
+	param = (LPTSTR)skip_ws(param);
 
 	/* if no parameters, show the environment */
 	if (param[0] == _T('\0'))
 	{
-		LPTSTR lpEnv;
-		LPTSTR lpOutput;
-		INT len;
-
 		lpEnv = (LPTSTR)GetEnvironmentStrings ();
 		if (lpEnv)
 		{
 			lpOutput = lpEnv;
 			while (*lpOutput)
 			{
-				len = _tcslen(lpOutput);
-				if (len)
-				{
-					if (*lpOutput != _T('='))
-						ConOutPuts (lpOutput);
-					lpOutput += (len + 1);
-				}
+				if (*lpOutput != _T('='))
+					ConOutPuts(lpOutput);
+				lpOutput += _tcslen(lpOutput) + 1;
 			}
 			FreeEnvironmentStrings (lpEnv);
 		}
@@ -107,15 +112,34 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 			/*might seem random but this is what windows xp does */
 			nErrorLevel = 9165;
 		}
-		/* TODO FIXME - what are we supposed to return? */
-		return Success;
+		return !Success;
 	}
 
-	if ( !_tcsnicmp (param, _T("/"), 1) )
+	if (!_tcsnicmp(param, _T("/P"), 2))
 	{
-		ConErrResPrintf (STRING_SYNTAX_COMMAND_INCORRECT, param);
+		TCHAR value[1023];
+		param = GetQuotedString((LPTSTR)skip_ws(param + 2));
+		p = _tcschr(param, _T('='));
+		if (!p)
+		{
+			ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
+			nErrorLevel = 1;
+			return 1;
+		}
+
+		*p++ = _T('\0');
+		ConOutPrintf(_T("%s"), GetQuotedString(p));
+		ConInString(value, 1023);
+
+		if (!*value || !SetEnvironmentVariable(param, value))
+		{
+			nErrorLevel = 1;
+			return 1;
+		}
 		return 0;
 	}
+
+	param = GetQuotedString(param);
 
 	p = _tcschr (param, _T('='));
 	if (p)
@@ -124,41 +148,53 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		if (p == param)
 		{
 			/* handle set =val case */
-			ConErrResPrintf (STRING_SYNTAX_COMMAND_INCORRECT, param);
-			return 0;
+			ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
+			nErrorLevel = 1;
+			return 1;
 		}
 
-		*p = _T('\0');
-		p++;
-		if (*p == _T('\0'))
+		*p++ = _T('\0');
+		if (!SetEnvironmentVariable(param, *p ? p : NULL))
 		{
-			p = NULL;
+			nErrorLevel = 1;
+			return 1;
 		}
-		SetEnvironmentVariable (param, p);
 	}
 	else
 	{
-		/* display environment variable */
-		LPTSTR pszBuffer;
-		DWORD dwBuffer;
+		/* display all environment variable with the given prefix */
+		BOOL bFound = FALSE;
 
-		pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
-		dwBuffer = GetEnvironmentVariable (param, pszBuffer, ENV_BUFFER_SIZE);
-		if (dwBuffer == 0)
+		while (_istspace(*param) || *param == _T(',') || *param == _T(';'))
+			param++;
+
+		p = _tcsrchr(param, _T(' '));
+		if (!p)
+			p = param + _tcslen(param);
+		*p = _T('\0');
+
+		lpEnv = GetEnvironmentStrings();
+		if (lpEnv)
+		{
+			lpOutput = lpEnv;
+			while (*lpOutput)
+			{
+				if (!_tcsnicmp(lpOutput, param, p - param))
+				{
+					ConOutPuts(lpOutput);
+					bFound = TRUE;
+				}
+				lpOutput += _tcslen(lpOutput) + 1;
+			}
+			FreeEnvironmentStrings(lpEnv);
+		}
+
+		if (!bFound)
 		{
 			ConErrResPrintf (STRING_PATH_ERROR, param);
-			return 0;
+			nErrorLevel = 1;
+			return 1;
 		}
-		else if (dwBuffer > ENV_BUFFER_SIZE)
-		{
-			pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
-			GetEnvironmentVariable (param, pszBuffer, dwBuffer);
-		}
-		ConOutPrintf (_T("%s\n"), pszBuffer);
-
-		cmd_free (pszBuffer);
-
-		return 0;
 	}
 
 	return 0;

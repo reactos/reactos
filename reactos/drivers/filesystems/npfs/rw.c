@@ -80,7 +80,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 		}
 		break;
 	default:
-		KEBUGCHECK(0);
+		ASSERT(FALSE);
 	}
 	ExReleaseFastMutex(&Ccb->DataListLock);
 	KeUnlockMutex(&DeviceExt->PipeListLock);
@@ -130,7 +130,7 @@ NpfsWaiterThread(PVOID InitContext)
 					NpfsRead(IoStack->DeviceObject, Irp);
 					break;
 				default:
-					KEBUGCHECK(0);
+					ASSERT(FALSE);
 				}
 			}
 		}
@@ -148,7 +148,7 @@ NpfsWaiterThread(PVOID InitContext)
 			ThreadContext->WaitBlockArray);
 		if (!NT_SUCCESS(Status))
 		{
-			KEBUGCHECK(0);
+			ASSERT(FALSE);
 		}
 		KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
 		Count = Status - STATUS_SUCCESS;
@@ -185,7 +185,7 @@ NpfsWaiterThread(PVOID InitContext)
 					}
 					break;
 				default:
-					KEBUGCHECK(0);
+					ASSERT(FALSE);
 				}
 				ExReleaseFastMutex(&Ccb->DataListLock);
 			}
@@ -357,7 +357,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				NULL);
 			if (!NT_SUCCESS(Status))
 			{
-				KEBUGCHECK(0);
+				ASSERT(FALSE);
 			}
 			ExAcquireFastMutex(&Ccb->DataListLock);
 		}

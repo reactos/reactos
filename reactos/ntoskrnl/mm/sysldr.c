@@ -660,7 +660,7 @@ MiSnapThunk(IN PVOID DllBase,
                                          &MissingForwarder);
 
                     /* Free the forwarder name and set the thunk */
-                    ExFreePool(ForwardName);
+                    ExFreePoolWithTag(ForwardName, TAG_LDR_WSTR);
                     Address->u1 = ForwardThunk.u1;
                     break;
                 }
@@ -876,7 +876,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         {
             /* Failed */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePool(LoadedImports);
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             return Status;
         }
 
@@ -997,7 +997,7 @@ CheckDllState:
                 /* Cleanup and return */
                 RtlFreeUnicodeString(&NameString);
                 MiDereferenceImports(LoadedImports);
-                if (LoadedImports) ExFreePool(LoadedImports);
+                if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                 return Status;
             }
 
@@ -1030,7 +1030,7 @@ CheckDllState:
         {
             /* Cleanup and return */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePool(LoadedImports);
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
 
@@ -1059,7 +1059,7 @@ CheckDllState:
                 {
                     /* Cleanup and return */
                     MiDereferenceImports(LoadedImports);
-                    if (LoadedImports) ExFreePool(LoadedImports);
+                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                     return Status;
                 }
 
@@ -1091,13 +1091,13 @@ CheckDllState:
         if (!ImportCount)
         {
             /* Free the list and set it to no imports */
-            ExFreePool(LoadedImports);
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             LoadedImports = (PVOID)-2;
         }
         else if (ImportCount == 1)
         {
             /* Just one entry, we can free the table and only use our entry */
-            ExFreePool(LoadedImports);
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             LoadedImports = (PLOAD_IMPORTS)ImportEntry;
         }
         else if (ImportCount != LoadedImports->Count)
@@ -1125,7 +1125,7 @@ CheckDllState:
                 }
 
                 /* Free the old copy */
-                ExFreePool(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                 LoadedImports = NewImports;
             }
         }
@@ -1834,7 +1834,7 @@ LoaderScan:
         }
 
         /* Free the entry itself */
-        ExFreePool(LdrEntry);
+        ExFreePoolWithTag(LdrEntry, TAG_MODULE_OBJECT);
         LdrEntry = NULL;
         goto Quickie;
     }
@@ -1924,7 +1924,7 @@ Quickie:
     if (NamePrefix) ExFreePool(PrefixName.Buffer);
 
     /* Free the name buffer and return status */
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
     return Status;
 }
 

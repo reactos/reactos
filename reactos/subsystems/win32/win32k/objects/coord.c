@@ -116,33 +116,6 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
   return Ret;
 }
 
-VOID FASTCALL
-CoordDPtoLP(PDC Dc, LPPOINT Point)
-{
-FLOAT x, y;
-  x = (FLOAT)Point->x;
-  y = (FLOAT)Point->y;
-  XFORM xformVport2World;
-
-  MatrixS2XForm(&xformVport2World, &Dc->DcLevel.mxDeviceToWorld);
-
-  Point->x = x * xformVport2World.eM11 +
-    y * xformVport2World.eM21 + xformVport2World.eDx;
-  Point->y = x * xformVport2World.eM12 +
-    y * xformVport2World.eM22 + xformVport2World.eDy;
-}
-
-VOID
-FASTCALL
-IntDPtoLP ( PDC dc, LPPOINT Points, INT Count )
-{
-  INT i;
-
-  ASSERT ( Points );
-
-  for ( i = 0; i < Count; i++ )
-    CoordDPtoLP ( dc, &Points[i] );
-}
 
 int
 FASTCALL
@@ -245,38 +218,6 @@ NtGdiGetTransform(HDC  hDC,
   return NT_SUCCESS(Status);
 }
 
-VOID
-FASTCALL
-CoordLPtoDP ( PDC Dc, LPPOINT Point )
-{
-  FLOAT x, y;
-  XFORM xformWorld2Vport;
-
-  ASSERT(Dc);
-  ASSERT(Point);
-
-  x = (FLOAT)Point->x;
-  y = (FLOAT)Point->y;
-  
-  MatrixS2XForm(&xformWorld2Vport, &Dc->DcLevel.mxWorldToDevice);
-  
-  Point->x = x * xformWorld2Vport.eM11 +
-    y * xformWorld2Vport.eM21 + xformWorld2Vport.eDx;
-  Point->y = x * xformWorld2Vport.eM12 +
-    y * xformWorld2Vport.eM22 + xformWorld2Vport.eDy;
-}
-
-VOID
-FASTCALL
-IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
-{
-  INT i;
-
-  ASSERT ( Points );
-
-  for ( i = 0; i < Count; i++ )
-    CoordLPtoDP ( dc, &Points[i] );
-}
 
 /*!
  * Converts points from logical coordinates into device coordinates. Conversion depends on the mapping mode,
@@ -727,6 +668,10 @@ IntGdiSetMapMode(PDC  dc,
         Dc_Attr->szlWindowExt.cy = 1;
         Dc_Attr->szlViewportExt.cx = 1;
         Dc_Attr->szlViewportExt.cy = 1;
+        Dc_Attr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+                              PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
+        Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
+                             INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
         break;
 
       case MM_LOMETRIC:
@@ -766,7 +711,12 @@ IntGdiSetMapMode(PDC  dc,
         break;
 
       case MM_ANISOTROPIC:
+        Dc_Attr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
+        Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
         break;
+      default:
+        Dc_Attr->iMapMode = PrevMapMode;
+        PrevMapMode = 0;
     }
 
     DC_UpdateXforms(dc);

@@ -93,11 +93,9 @@ COMMAND cmds[] =
 	{_T("dirs"), 0, CommandDirs},
 #endif
 
-	{_T("echo"), 0, CommandEcho},
-	{_T("echo."), CMD_HIDE, CommandEcho},
+	{_T("echo"), CMD_SPECIAL, CommandEcho},
 	{_T("echos"), 0, CommandEchos},
-	{_T("echoerr"), 0, CommandEchoerr},
-	{_T("echoerr."), CMD_HIDE, CommandEchoerr},
+	{_T("echoerr"), CMD_SPECIAL, CommandEchoerr},
 	{_T("echoserr"), 0, CommandEchoserr},
 
 	{_T("endlocal"), 0, cmd_endlocal},

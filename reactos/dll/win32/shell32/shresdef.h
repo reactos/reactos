@@ -162,6 +162,9 @@
 #define IDS_RESTORE                 324
 #define IDS_DEFAULT_CLUSTER_SIZE    325
 #define IDS_ADMINISTRATIVETOOLS     326
+#define IDS_FORMATDRIVE             327
+#define IDS_RENAME                  328
+#define IDS_INSERT                  329
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -238,6 +241,15 @@
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_CONTROL_PANEL1   330
 #define IDI_SHELL_ADMINTOOLS       328
+
+// Icons for Folder Options (ID's identical to Windows XP SP3)
+#define IDI_SHELL_SHOW_COMMON_TASKS    182
+#define IDI_SHELL_CLASSIC_FOLDERS      183
+#define IDI_SHELL_OPEN_IN_SOME_WINDOW  184
+#define IDI_SHELL_OPEN_IN_NEW_WINDOW   185
+#define IDI_SHELL_SINGLE_CLICK_TO_OPEN 186
+#define IDI_SHELL_DOUBLE_CLICK_TO_OPEN 187
+
 /*
 AVI resources, windows shell32 has 14 of them: 150-152 and 160-170
 FIXME: Need to add them, but for now just let them use the same: searching.avi
@@ -250,5 +262,41 @@ FIXME: Need to add them, but for now just let them use the same: searching.avi
 #define IDR_AVI_FILECOPY           161
 #define IDR_AVI_FILENUKE           163
 #define IDR_AVI_FILEDELETE         164
+
+#define FCIDM_SHVIEW_ARRANGE    0x7001
+#define FCIDM_SHVIEW_DELETE     0x7011
+#define FCIDM_SHVIEW_PROPERTIES 0x7013
+#define FCIDM_SHVIEW_CUT        0x7018
+#define FCIDM_SHVIEW_COPY       0x7019
+#define FCIDM_SHVIEW_INSERT     0x701A
+#define FCIDM_SHVIEW_UNDO       0x701B
+#define FCIDM_SHVIEW_INSERTLINK 0x701C
+#define FCIDM_SHVIEW_SELECTALL  0x7021
+#define FCIDM_SHVIEW_INVERTSELECTION 0x7022
+
+#define FCIDM_SHVIEW_BIGICON    0x7029 //FIXME
+#define FCIDM_SHVIEW_SMALLICON  0x702A //FIXME
+#define FCIDM_SHVIEW_LISTVIEW   0x702B //FIXME
+#define FCIDM_SHVIEW_REPORTVIEW 0x702C //FIXME
+/* 0x7030-0x703f are used by the shellbrowser */
+#define FCIDM_SHVIEW_AUTOARRANGE 0x7031
+#define FCIDM_SHVIEW_SNAPTOGRID 0x7032
+
+#define FCIDM_SHVIEW_HELP       0x7041
+#define FCIDM_SHVIEW_RENAME     0x7050
+#define FCIDM_SHVIEW_CREATELINK 0x7051
+#define FCIDM_SHVIEW_NEWLINK    0x7052
+#define FCIDM_SHVIEW_NEWFOLDER  0x7053
+
+#define FCIDM_SHVIEW_REFRESH    0x7100 /* FIXME */
+#define FCIDM_SHVIEW_EXPLORE    0x7101 /* FIXME */
+#define FCIDM_SHVIEW_OPEN       0x7102 /* FIXME */
+
+
+#define FCIDM_TB_UPFOLDER       0xA001
+#define FCIDM_TB_NEWFOLDER      0xA002
+#define FCIDM_TB_SMALLICON      0xA003
+#define FCIDM_TB_REPORTVIEW     0xA004
+#define FCIDM_TB_DESKTOP        0xA005  /* FIXME */
 
 #endif

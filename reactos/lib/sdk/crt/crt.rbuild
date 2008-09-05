@@ -100,6 +100,7 @@
 		<file>cabs.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
+		<file>fdivbug.c</file>
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
@@ -111,13 +112,13 @@
 		<file>rand.c</file>
 		<file>s_modf.c</file>
 		<file>sinh.c</file>
-		<file>stubs.c</file>
 		<file>tanh.c</file>
 		<file>pow_asm.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>atan2.c</file>
+				<file>ci.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>ldexp.c</file>
@@ -134,7 +135,9 @@
 				<file>ldexp.c</file>
 			</directory>
 		</if>
-
+		<ifnot property="ARCH" value="i386">
+			<file>stubs.c</file>
+		</ifnot>
 	</directory>
 
 	<directory name="mbstring">

@@ -19,34 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "dlgs.h"
-#include "shellapi.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "shlobj.h"
-#include "shlwapi.h"
-
-#include "undocshell.h"
-#include "pidl.h"
-#include "shell32_main.h"
-#include "version.h"
-#include "shresdef.h"
-
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -157,11 +130,11 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     /* Allocate in a single lump, the string array, and the strings that go with it.
      * This way the caller can make a single GlobalFree call to free both, as per MSDN.
      */
-    argv=LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
+    argv=LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
     if (!argv)
         return NULL;
     cmdline=(LPWSTR)(argv+argc);
-    strcpyW(cmdline, lpCmdline);
+    wcscpy(cmdline, lpCmdline);
 
     argc=0;
     bcount=0;
@@ -439,7 +412,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     {
         if (flags & SHGFI_USEFILEATTRIBUTES)
         {
-            lstrcpyW (psfi->szDisplayName, PathFindFileNameW(szFullPath));
+            wcscpy (psfi->szDisplayName, PathFindFileNameW(szFullPath));
         }
         else
         {
@@ -466,17 +439,17 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                strcatW (psfi->szTypeName, szFile);
+                wcscat (psfi->szTypeName, szFile);
             else
             {
                 WCHAR sTemp[64];
 
-                lstrcpyW(sTemp,PathFindExtensionW(szFullPath));
+                wcscpy(sTemp,PathFindExtensionW(szFullPath));
                 if (!( HCR_MapTypeToValueW(sTemp, sTemp, 64, TRUE) &&
                     HCR_MapTypeToValueW(sTemp, psfi->szTypeName, 80, FALSE )))
                 {
                     lstrcpynW (psfi->szTypeName, sTemp, 64);
-                    strcatW (psfi->szTypeName, szDashFile);
+                    wcscat (psfi->szTypeName, szDashFile);
                 }
             }
         }
@@ -513,7 +486,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
-                lstrcpyW(psfi->szDisplayName, swShell32Name);
+                wcscpy(psfi->szDisplayName, swShell32Name);
                 psfi->iIcon = -IDI_SHELL_FOLDER;
             }
             else
@@ -529,11 +502,11 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                      HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &psfi->iIcon))
                 {
                     if (lstrcmpW(p1W, sTemp))
-                        strcpyW(psfi->szDisplayName, sTemp);
+                        wcscpy(psfi->szDisplayName, sTemp);
                     else
                     {
                         /* the icon is in the file */
-                        strcpyW(psfi->szDisplayName, szFullPath);
+                        wcscpy(psfi->szDisplayName, szFullPath);
                     }
                 }
                 else
@@ -547,17 +520,17 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 &uDummy, (LPVOID*)&pei);
             if (SUCCEEDED(hr))
             {
-                hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
+                hr = pei->lpVtbl->GetIconLocation(pei, uGilFlags,
                     szLocation, MAX_PATH, &iIndex, &uFlags);
 
                 if (uFlags & GIL_NOTFILENAME)
                     ret = FALSE;
                 else
                 {
-                    lstrcpyW (psfi->szDisplayName, szLocation);
+                    wcscpy (psfi->szDisplayName, szLocation);
                     psfi->iIcon = iIndex;
                 }
-                IExtractIconW_Release(pei);
+                pei->lpVtbl->Release(pei);
             }
         }
     }
@@ -586,7 +559,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                      HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &icon_idx))
                 {
                     if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
-                        strcpyW(sTemp, szFullPath);
+                        wcscpy(sTemp, szFullPath);
 
                     if (flags & SHGFI_SYSICONINDEX)
                     {
@@ -1043,7 +1016,7 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                 SendDlgItemMessageW(hWnd, IDC_SHELL_ABOUT_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
                 GetWindowTextW( hWnd, szAppTitleTemplate, sizeof(szAppTitleTemplate) / sizeof(WCHAR) );
-                wsprintfW( szAppTitle, szAppTitleTemplate, info->szApp );
+                swprintf( szAppTitle, szAppTitleTemplate, info->szApp );
                 SetWindowTextW( hWnd, szAppTitle );
 
                 SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_APPNAME, info->szApp );
@@ -1108,13 +1081,13 @@ INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                             uDecimals = (UCHAR)((UINT)(dTotalPhys * 100) - uIntegral * 100);
 
                             // Display the RAM size with 2 decimals
-                            wsprintfW(szBuf, L"%u%s%02u %s", uIntegral, szDecimalSeparator, uDecimals, szUnits);
+                            swprintf(szBuf, L"%u%s%02u %s", uIntegral, szDecimalSeparator, uDecimals, szUnits);
                         }
                     }
                     else
                     {
                         // We're dealing with MBs, don't show any decimals
-                        wsprintfW( szBuf, L"%u MB", (UINT)MemStat.ullTotalPhys / 1024 / 1024 );
+                        swprintf( szBuf, L"%u MB", (UINT)MemStat.ullTotalPhys / 1024 / 1024 );
                     }
 
                     SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_PHYSMEM, szBuf);

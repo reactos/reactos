@@ -76,7 +76,7 @@ NTAPI
 KiRosGetMdFromArray(VOID)
 {
     /* Return the next MD from the list, but make sure we don't overflow */
-    if (BldrCurrentMd > 60) KEBUGCHECK(0);
+    if (BldrCurrentMd > 60) ASSERT(FALSE);
     return &BldrMemoryDescriptors[BldrCurrentMd++];
 }
 
@@ -1176,6 +1176,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     LoaderBlock->Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
     LoaderBlock->Extension->MajorVersion = 5;
     LoaderBlock->Extension->MinorVersion = 2;
+
+
+// FIXME FIXME FIXME NOW!!!!
 
     /* FreeLDR hackllocates 1536 static pages for the initial boot images */
     LoaderBlock->Extension->LoaderPagesSpanned = 1536 * PAGE_SIZE;

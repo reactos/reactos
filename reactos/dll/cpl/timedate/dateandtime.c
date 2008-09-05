@@ -347,8 +347,8 @@ DateTimePageProc(HWND hwndDlg,
                             KillTimer(hwndDlg, ID_TIMER);
 
                             /* Tell the clock to stop ticking */
-                            SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_SETTIME,
-                                               0, (LPARAM)&((LPNMDATETIMECHANGE)lpnm)->st);
+                            SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_STOPCLOCK,
+                                                0, 0);
 
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -381,6 +381,10 @@ DateTimePageProc(HWND hwndDlg,
                         case PSN_APPLY:
                             SetLocalSystemTime(hwndDlg);
                             SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
+
+                            /* Tell the clock to start ticking */
+                            SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_STARTCLOCK,
+                                                0, 0);
                             return TRUE;
                     }
                     break;

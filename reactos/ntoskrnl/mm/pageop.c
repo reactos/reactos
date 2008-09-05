@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePageOp)
@@ -66,7 +66,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       PrevPageOp = PrevPageOp->Next;
    }
    KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-   KEBUGCHECK(0);
+   ASSERT(FALSE);
 }
 
 PMM_PAGEOP
@@ -211,7 +211,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    if (PageOp == NULL)
    {
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
       return(NULL);
    }
 

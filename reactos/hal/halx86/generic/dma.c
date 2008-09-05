@@ -1487,7 +1487,7 @@ HalpCopyBufferMap(
        */
       /* FIXME: The correct bug check code isn't defined. */
       /* KEBUGCHECKEX(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0); */
-      KEBUGCHECK(0);
+      ASSERT(FALSE);;
    }
 
    CurrentAddress = (ULONG_PTR)VirtualAddress +
@@ -1569,7 +1569,7 @@ IoFlushAdapterBuffers(
    PHYSICAL_ADDRESS PhysicalAddress;
    PPFN_NUMBER MdlPagesPtr;
 
-   ASSERT_IRQL(DISPATCH_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
    if (AdapterObject != NULL && !AdapterObject->MasterDevice)
    {

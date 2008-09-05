@@ -2277,7 +2277,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         
         PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
         Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
         ObfDereferenceObject(PrimaryToken);
         ObfDereferenceObject(Thread);
         if (!NT_SUCCESS(Status))

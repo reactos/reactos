@@ -63,7 +63,7 @@ VOID SetScreenColor (WORD wColor, BOOL bNoFill)
  *
  * internal dir command
  */
-INT CommandColor (LPTSTR first, LPTSTR rest)
+INT CommandColor (LPTSTR rest)
 {
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{

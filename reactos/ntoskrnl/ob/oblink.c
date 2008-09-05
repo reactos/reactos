@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ob/symlink.c
+* FILE:            ntoskrnl/ob/oblink.c
 * PURPOSE:         Implements symbolic links
 * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
 *                  David Welch (welch@mcmail.com)
@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -49,7 +49,7 @@ ObpCreateSymbolicLinkName(IN POBJECT_SYMBOLIC_LINK SymbolicLink)
 
     /* FIXME: We don't support device maps yet */
     DPRINT1("Unhandled path!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
 }
 
 /*++

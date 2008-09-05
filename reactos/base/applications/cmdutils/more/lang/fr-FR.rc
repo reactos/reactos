@@ -7,9 +7,9 @@ BEGIN
   Commande | MORE \n\
   MORE [Lecteur:][Chemin]Nom du fichier\n\n\
   [Lecteur:][Chemin]Nom du fichier    Un fichier, dont le contenu sera affiché.\n\
-  Commande\t\t     Une commande, dont la sortie sera affiché.\n\n\
-  À l'invite ""-- Continuer --"" you pouvez appuyer sur n'importe quelle touche pour afficher la page suivante.\n"
+  Commande\t\t     Une commande, dont la sortie sera affichée.\n\n\
+  À l'invite ""-- Continuer --"" Vous pouvez appuyer sur n'importe quelle touche pour afficher la page suivante.\n"
 
   IDS_CONTINUE, " -- Continuer (100%) -- "
-  IDS_FILE_ACCESS, "Impossible d'accèder au fichier %s."
+  IDS_FILE_ACCESS, "Impossible d'accéder au fichier %s."
 END

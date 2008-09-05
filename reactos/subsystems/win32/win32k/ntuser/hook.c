@@ -1045,7 +1045,7 @@ NtUserSetWindowsHookEx(
       Global = TRUE;
    }
 
-   if  ( Global ||
+   if ( ( Global && (HookId != WH_KEYBOARD_LL || HookId != WH_MOUSE_LL) ) ||
         WH_DEBUG == HookId ||
         WH_JOURNALPLAYBACK == HookId ||
         WH_JOURNALRECORD == HookId)

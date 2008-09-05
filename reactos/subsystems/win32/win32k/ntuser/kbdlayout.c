@@ -92,7 +92,7 @@ static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
    if( !NT_SUCCESS(Status) )
    {
       NtClose(KeyHandle);
-      ExFreePool(KeyValuePartialInfo);
+      ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
       return Status;
    }
 
@@ -104,7 +104,7 @@ static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
    if(!ReturnBuffer)
    {
       NtClose(KeyHandle);
-      ExFreePool(KeyValuePartialInfo);
+      ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
       return STATUS_NO_MEMORY;
    }
 
@@ -113,7 +113,7 @@ static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
       KeyValuePartialInfo->DataLength);
    RtlInitUnicodeString(ReturnedValue, ReturnBuffer);
 
-   ExFreePool(KeyValuePartialInfo);
+   ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
    NtClose(KeyHandle);
 
    return Status;
@@ -154,7 +154,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
    FullLayoutPath.MaximumLength = sizeof(LayoutPathBuffer);
    RtlAppendUnicodeStringToString(&FullLayoutPath, &LayoutFile);
    DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
-   RtlFreeUnicodeString(&LayoutFile);
+   ExFreePoolWithTag(LayoutFile.Buffer, TAG_STRING);
 
    *phModule = EngLoadImage(FullLayoutPath.Buffer);
 
@@ -321,7 +321,10 @@ PKBL W32kGetDefaultKeyLayout(VOID)
          Status = ReadRegistryValue(&FullKeyboardLayoutPath, &LayoutValueName, &LayoutLocaleIdString);
 
          if( NT_SUCCESS(Status) )
+         {
             RtlUnicodeStringToInteger(&LayoutLocaleIdString, 16, &LayoutLocaleId);
+            ExFreePoolWithTag(LayoutLocaleIdString.Buffer, TAG_STRING);
+         }
          else
             DPRINT1("ReadRegistryValue failed! (%08lx).\n", Status);
       }

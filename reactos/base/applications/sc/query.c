@@ -227,17 +227,11 @@ Query(LPCTSTR *ServiceArgs,
         LPCTSTR ServiceName = *ServiceArgs;
 
         pStatus = QueryService(ServiceName);
-        if (bExtended)
+        if (pStatus)
         {
             PrintService(ServiceName,
                          pStatus,
-                         TRUE);
-        }
-        else
-        {
-            PrintService(ServiceName,
-                         pStatus,
-                         FALSE);
+                         bExtended);
         }
     }
 

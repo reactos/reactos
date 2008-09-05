@@ -21,28 +21,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+//#define NO_SHLWAPI_STREAM
+#include <precomp.h>
 
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include <assert.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shellapi.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "shresdef.h"
-#define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-#include "shell32_main.h"
-#include "undocshell.h"
-#include "wine/debug.h"
-#include "xdg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -190,7 +171,7 @@ static INT_PTR CALLBACK ConfirmMsgBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
     return FALSE;
 }
 
-static int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll)
+int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll)
 {
     static const WCHAR wszTemplate[] = {'S','H','E','L','L','_','Y','E','S','T','O','A','L','L','_','M','S','G','B','O','X',0};
     struct confirm_msg_info info;
@@ -660,11 +641,9 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
  *  Win9x exports ANSI
  *  WinNT/2000 exports Unicode
  */
-DWORD WINAPI SHCreateDirectory(HWND hWnd, LPCVOID path)
+DWORD WINAPI SHCreateDirectory(HWND hWnd, LPCWSTR path)
 {
-	if (SHELL_OsIsUnicode())
-	  return SHCreateDirectoryExW(hWnd, path, NULL);
-	return SHCreateDirectoryExA(hWnd, path, NULL);
+     return SHCreateDirectoryExW(hWnd, path, NULL);
 }
 
 /*************************************************************************
@@ -699,7 +678,7 @@ DWORD WINAPI SHCreateDirectory(HWND hWnd, LPCVOID path)
  *  If hWnd is set to NULL, no user interface is displayed and the function
  *  returns ERROR_CANCELLED.
  */
-int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES sec)
+int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, const SECURITY_ATTRIBUTES *sec)
 {
 	LPWSTR wPath;
 	DWORD retCode;
@@ -720,7 +699,7 @@ int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES se
  *
  * See SHCreateDirectoryExA.
  */
-int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
+int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, const SECURITY_ATTRIBUTES *sec)
 {
 	int ret = ERROR_BAD_PATHNAME;
 	TRACE("(%p, %s, %p)\n", hWnd, debugstr_w(path), sec);
@@ -731,7 +710,7 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 	}
 	else
 	{
-	  ret = SHNotifyCreateDirectoryW(path, sec);
+	  ret = SHNotifyCreateDirectoryW(path, (LPSECURITY_ATTRIBUTES)sec);
 	  /* Refuse to work on certain error codes before trying to create directories recursively */
 	  if (ret != ERROR_SUCCESS &&
 	      ret != ERROR_FILE_EXISTS &&
@@ -751,7 +730,7 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 	      {
 	        *pSlash = 0;    /* terminate path at separator */
 
-	        ret = SHNotifyCreateDirectoryW(szTemp, pSlash + 1 == pEnd ? sec : NULL);
+	        ret = SHNotifyCreateDirectoryW(szTemp, pSlash + 1 == pEnd ? (LPSECURITY_ATTRIBUTES)sec : NULL);
 	      }
 	      *pSlash++ = '\\'; /* put the separator back */
 	    }
@@ -919,7 +898,7 @@ typedef struct
 } FILE_LIST;
 
 
-static inline void grow_list(FILE_LIST *list)
+static void __inline grow_list(FILE_LIST *list)
 {
     FILE_ENTRY *new = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, list->feFiles,
                                   list->num_alloc * 2 * sizeof(*new) );
@@ -931,11 +910,11 @@ static inline void grow_list(FILE_LIST *list)
  */
 static void add_file_to_entry(FILE_ENTRY *feFile, LPWSTR szFile)
 {
-    DWORD dwLen = lstrlenW(szFile) + 1;
+    DWORD dwLen = wcslen(szFile) + 1;
     LPWSTR ptr;
 
     feFile->szFullPath = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
-    lstrcpyW(feFile->szFullPath, szFile);
+    wcscpy(feFile->szFullPath, szFile);
 
     ptr = StrRChrW(szFile, NULL, '\\');
     if (ptr)
@@ -944,9 +923,9 @@ static void add_file_to_entry(FILE_ENTRY *feFile, LPWSTR szFile)
         feFile->szDirectory = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
         lstrcpynW(feFile->szDirectory, szFile, dwLen);
 
-        dwLen = lstrlenW(feFile->szFullPath) - dwLen + 1;
+        dwLen = wcslen(feFile->szFullPath) - dwLen + 1;
         feFile->szFilename = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
-        lstrcpyW(feFile->szFilename, ptr + 1); /* skip over backslash */
+        wcscpy(feFile->szFilename, ptr + 1); /* skip over backslash */
     }
     feFile->bFromWildcard = FALSE;
 }
@@ -959,11 +938,11 @@ static LPWSTR wildcard_to_file(LPWSTR szWildCard, LPWSTR szFileName)
     ptr = StrRChrW(szWildCard, NULL, '\\');
     dwDirLen = ptr - szWildCard + 1;
 
-    dwFullLen = dwDirLen + lstrlenW(szFileName) + 1;
+    dwFullLen = dwDirLen + wcslen(szFileName) + 1;
     szFullPath = HeapAlloc(GetProcessHeap(), 0, dwFullLen * sizeof(WCHAR));
 
     lstrcpynW(szFullPath, szWildCard, dwDirLen + 1);
-    lstrcatW(szFullPath, szFileName);
+    wcscat(szFullPath, szFileName);
 
     return szFullPath;
 }
@@ -1030,7 +1009,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
         }
         else
         {
-            lstrcpyW(szCurFile, ptr);
+            wcscpy(szCurFile, ptr);
             flList->feFiles[i].bFromRelative = FALSE;
         }
 
@@ -1052,7 +1031,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
         }
 
         /* advance to the next string */
-        ptr += lstrlenW(ptr) + 1;
+        ptr += wcslen(ptr) + 1;
         i++;
     }
     flList->dwNumFiles = i;
@@ -1091,7 +1070,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPWSTR
     if (PathFileExistsW(szDestPath))
         PathCombineW(szTo, szDestPath, feFrom->szFilename);
     else
-        lstrcpyW(szTo, szDestPath);
+        wcscpy(szTo, szDestPath);
 
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo)) {
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
@@ -1103,11 +1082,11 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPWSTR
         }
     }
 
-    szTo[lstrlenW(szTo) + 1] = '\0';
+    szTo[wcslen(szTo) + 1] = '\0';
     SHNotifyCreateDirectoryW(szTo, NULL);
 
     PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
-    szFrom[lstrlenW(szFrom) + 1] = '\0';
+    szFrom[wcslen(szFrom) + 1] = '\0';
 
     memcpy(&fileOp, op->req, sizeof(fileOp));
     fileOp.pFrom = szFrom;
@@ -1274,7 +1253,7 @@ static BOOL confirm_delete_list(HWND hWnd, DWORD fFlags, BOOL fTrash, const FILE
         WCHAR tmp[8];
         const WCHAR format[] = {'%','d',0};
 
-        wnsprintfW(tmp, sizeof(tmp)/sizeof(tmp[0]), format, flFrom->dwNumFiles);
+        _snwprintf(tmp, sizeof(tmp)/sizeof(tmp[0]), format, flFrom->dwNumFiles);
         return SHELL_ConfirmDialogW(hWnd, (fTrash?ASK_TRASH_MULTIPLE_ITEM:ASK_DELETE_MULTIPLE_ITEM), tmp, NULL);
     }
     else
@@ -1365,10 +1344,10 @@ static void move_dir_to_dir(LPSHFILEOPSTRUCTW lpFileOp, const FILE_ENTRY *feFrom
     SHNotifyCreateDirectoryW(szDestPath, NULL);
 
     PathCombineW(szFrom, feFrom->szFullPath, wildCardFiles);
-    szFrom[lstrlenW(szFrom) + 1] = '\0';
+    szFrom[wcslen(szFrom) + 1] = '\0';
 
-    lstrcpyW(szTo, szDestPath);
-    szTo[lstrlenW(szDestPath) + 1] = '\0';
+    wcscpy(szTo, szDestPath);
+    szTo[wcslen(szDestPath) + 1] = '\0';
 
     memcpy(&fileOp, lpFileOp, sizeof(fileOp));
     fileOp.pFrom = szFrom;
@@ -1674,7 +1653,7 @@ DWORD WINAPI SheChangeDirW(LPWSTR path)
 /*************************************************************************
  * IsNetDrive			[SHELL32.66]
  */
-BOOL WINAPI IsNetDrive(DWORD drive)
+INT WINAPI IsNetDrive(INT drive)
 {
 	char root[4];
 	strcpy(root, "A:\\");

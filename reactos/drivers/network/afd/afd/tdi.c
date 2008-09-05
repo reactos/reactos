@@ -136,7 +136,8 @@ static NTSTATUS TdiOpenDevice(
                                            NULL);                         /* Handle information */
         if (!NT_SUCCESS(Status)) {
           AFD_DbgPrint(MIN_TRACE, ("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status));
-            ZwClose(*Handle);
+          ZwClose(*Handle);
+          *Handle = NULL;
         } else {
           AFD_DbgPrint(MAX_TRACE, ("Got handle (0x%X)  Object (0x%X)\n",
             *Handle, *Object));
@@ -608,7 +609,7 @@ NTSTATUS TdiQueryInformation(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(IOCTL_TCP_QUERY_INFORMATION, /* Sub function */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_QUERY_INFORMATION,       /* Sub function */
                                            DeviceObject,                /* Device object */
                                            ConnectionObject,            /* File object */
                                            &Event,                      /* Event */

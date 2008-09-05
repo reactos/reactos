@@ -35,7 +35,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* TYPES *********************************************************************/
 typedef enum _RPN_OP_TYPE

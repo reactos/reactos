@@ -292,6 +292,7 @@ NtWriteFileGather
 NtWriteRequestData
 NtWriteVirtualMemory
 NtYieldExecution
+NtGetCurrentProcessorNumber
 ;PfxFindPrefix
 ;PfxInitialize
 ;PfxInsertPrefix

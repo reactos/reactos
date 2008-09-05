@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* TYPES *********************************************************************/
 
@@ -1333,7 +1333,7 @@ KdbEnterDebuggerException(
                                                   BreakPoint->Data.SavedInstruction, NULL)))
          {
             KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
-            KEBUGCHECK(0);
+            KeBugCheck(0); // FIXME: Proper bugcode!
          }
       }
 
@@ -1351,7 +1351,7 @@ KdbEnterDebuggerException(
       else if (BreakPoint->Type == KdbBreakPointTemporary &&
                BreakPoint->Process == KdbCurrentProcess)
       {
-         ASSERT((TrapFrame->EFlags & X86_EFLAGS_TF) == 0);
+         ASSERT((TrapFrame->EFlags & EFLAGS_TF) == 0);
 
          /*
           * Delete the temporary breakpoint which was used to step over or into the instruction.
@@ -1363,7 +1363,7 @@ KdbEnterDebuggerException(
             if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               Context->EFlags |= X86_EFLAGS_TF;
+               Context->EFlags |= EFLAGS_TF;
             }
             goto continue_execution; /* return */
          }
@@ -1379,7 +1379,7 @@ KdbEnterDebuggerException(
                BreakPoint->Type == KdbBreakPointTemporary)
       {
          ASSERT(ExceptionCode == STATUS_BREAKPOINT);
-         Context->EFlags |= X86_EFLAGS_TF;
+         Context->EFlags |= EFLAGS_TF;
          KdbBreakPointToReenable = BreakPoint;
       }
 
@@ -1452,30 +1452,30 @@ KdbEnterDebuggerException(
 
          /* Unset TF if we are no longer single stepping. */
          if (KdbNumSingleSteps == 0)
-            Context->EFlags &= ~X86_EFLAGS_TF;
+            Context->EFlags &= ~EFLAGS_TF;
          goto continue_execution; /* return */
       }
 
       /* Check if we expect a single step */
       if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
       {
-         /*ASSERT((Context->Eflags & X86_EFLAGS_TF) != 0);*/
+         /*ASSERT((Context->Eflags & EFLAGS_TF) != 0);*/
          if (--KdbNumSingleSteps > 0)
          {
             if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
                 (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
             {
-               Context->EFlags &= ~X86_EFLAGS_TF;
+               Context->EFlags &= ~EFLAGS_TF;
             }
             else
             {
-               Context->EFlags |= X86_EFLAGS_TF;
+               Context->EFlags |= EFLAGS_TF;
             }
 			goto continue_execution; /* return */
          }
 		 else 
 		 {
-			 Context->EFlags &= ~X86_EFLAGS_TF;
+			 Context->EFlags &= ~EFLAGS_TF;
 			 KdbEnteredOnSingleStep = TRUE;
 		 }
       }
@@ -1576,12 +1576,12 @@ KdbEnterDebuggerException(
       if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
           (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
       {
-         ASSERT((KdbCurrentTrapFrame->Tf.EFlags & X86_EFLAGS_TF) == 0);
-         /*KdbCurrentTrapFrame->Tf.EFlags &= ~X86_EFLAGS_TF;*/
+         ASSERT((KdbCurrentTrapFrame->Tf.EFlags & EFLAGS_TF) == 0);
+         /*KdbCurrentTrapFrame->Tf.EFlags &= ~EFLAGS_TF;*/
       }
       else
       {
-         Context->EFlags |= X86_EFLAGS_TF;
+         Context->EFlags |= EFLAGS_TF;
       }
    }
 
@@ -1610,7 +1610,7 @@ continue_execution:
       /* Set the RF flag so we don't trigger the same breakpoint again. */
       if (Resume)
       {
-         TrapFrame->EFlags |= X86_EFLAGS_RF;
+         TrapFrame->EFlags |= EFLAGS_RF;
       }
 
       /* Clear dr6 status flags. */

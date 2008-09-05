@@ -73,8 +73,11 @@ typedef PVOID PKSWORKER;
 
 #ifndef _NTRTL_
     #ifndef DEFINE_GUIDEX
-        /* CDECL is used here in MS DDK but does this really work?? */
-        #define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+        #ifdef _MSC_VER
+            #define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+        #else
+            #define DEFINE_GUIDEX(name) EXTERN_C const GUID name
+        #endif
     #endif
 
     #ifndef STATICGUIDOF
