@@ -437,7 +437,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
         while (DpcData->DpcQueueDepth != 0)
         {
             /* Lock the DPC data and get the DPC entry*/
-            KefAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
+            KeAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
             DpcEntry = ListHead->Flink;
 
             /* Make sure we have an entry */
@@ -461,7 +461,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 Prcb->DebugDpcTime = 0;
 #endif
                 /* Release the lock */
-                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                KeReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
 
                 /* Re-enable interrupts */
                 _enable();
@@ -482,7 +482,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 ASSERT(DpcData->DpcQueueDepth == 0);
 
                 /* Release DPC Lock */
-                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                KeReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
             }
         }
 
