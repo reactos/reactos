@@ -1080,7 +1080,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     PAGED_CODE();
     
     /* Get the hive index, make sure it makes sense */
-    i = (ULONG)StartContext;
+    i = PtrToUlong(StartContext);
     ASSERT(CmpMachineHiveList[i].Name != NULL);
    
     /* We were started */
@@ -1275,7 +1275,7 @@ CmpInitializeHiveList(IN USHORT Flag)
                                       0,
                                       NULL,
                                       CmpLoadHiveThread,
-                                      (PVOID)i);
+                                      UlongToPtr(i));
         if (NT_SUCCESS(Status))
         {
             /* We don't care about the handle -- the thread self-terminates */
