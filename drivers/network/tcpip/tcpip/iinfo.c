@@ -29,7 +29,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 	(PIFENTRY)ExAllocatePool( NonPagedPool,
 				  sizeof(IFENTRY) + MAX_IFDESCR_LEN );
 
-    if( !OutData ) return TDI_INVALID_REQUEST; /* Out of memory */
+    if( !OutData ) return TDI_NO_RESOURCES; /* Out of memory */
 
     RtlZeroMemory( OutData, sizeof(IFENTRY) + MAX_IFDESCR_LEN );
 
