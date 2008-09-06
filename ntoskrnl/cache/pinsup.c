@@ -383,6 +383,64 @@ ULONG CcpFindMatchingMap(PNOCC_BCB Head, PLARGE_INTEGER FileOffset, ULONG Length
 
 BOOLEAN
 NTAPI
+CcpStartCaching(PFILE_OBJECT FileObject)
+{
+    FILE_STANDARD_INFORMATION FileInfo;
+    ULONG Information;
+    NTSTATUS Status;
+    CC_FILE_SIZES FileSizes;
+
+    if (!FileObject->SectionObjectPointer->SharedCacheMap)
+    {
+	DPRINT("CcpStartCaching %p\n", FileObject);
+	Status = IoQueryFileInformation
+	    (FileObject,
+	     FileStandardInformation,
+	     sizeof(FILE_STANDARD_INFORMATION),
+	     &FileInfo,
+	     &Information);
+	
+	if (!NT_SUCCESS(Status))
+	{
+	    return FALSE;
+	}
+
+	Status = IoQueryFileInformation
+	    (FileObject,
+	     FileAllocationInformation,
+	     sizeof(LARGE_INTEGER),
+	     &FileSizes.AllocationSize,
+	     &Information);
+	
+	if (!NT_SUCCESS(Status))
+	{
+	    return FALSE;
+	}
+	
+	FileSizes.ValidDataLength = FileInfo.EndOfFile;
+	FileSizes.FileSize = FileInfo.EndOfFile;
+
+	DPRINT("Initializing -> File Sizes: VALID %08x%08x FILESIZE %08x%08x ALLOC %08x%08x\n",
+	       FileSizes.ValidDataLength.HighPart,
+	       FileSizes.ValidDataLength.LowPart,
+	       FileSizes.FileSize.HighPart,
+	       FileSizes.FileSize.LowPart,
+	       FileSizes.AllocationSize.HighPart,
+	       FileSizes.AllocationSize.LowPart);
+
+	CcInitializeCacheMap
+	    (FileObject,
+	     &FileSizes,
+	     FALSE,
+	     NULL,
+	     NULL);
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
 CcpMapData
 (IN PNOCC_CACHE_MAP Map,
  IN PLARGE_INTEGER FileOffset,
@@ -418,7 +476,6 @@ CcpMapData
 	/* Find an accomodating section */
 	//DPRINT("Selected BCB #%x\n", BcbHead);
 	Bcb = &CcCacheSections[BcbHead];
-	SectionObject = Bcb->SectionObject;
 	BcbHead = CcpFindMatchingMap(Bcb, FileOffset, Length);
 	
 	if (BcbHead == INVALID_CACHE)
@@ -433,6 +490,7 @@ CcpMapData
 	else
 	{
 	    Bcb = &CcCacheSections[BcbHead];
+	    SectionObject = Bcb->SectionObject;
 	    Success = TRUE;
 	    *BcbResult = Bcb;
 	    *Buffer = ((PCHAR)Bcb->BaseAddress) + (int)(FileOffset->QuadPart - Bcb->FileOffset.QuadPart);
@@ -457,7 +515,7 @@ CcpMapData
 	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
 	ULONG SectionSize;
 
-	DPRINT("%08x: File size %x%x\n", FileObject->SectionObjectPointer, Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
+	DPRINT("%08x: File size %08x%08x\n", FileObject->SectionObjectPointer, Map->FileSizes.ValidDataLength.HighPart, Map->FileSizes.ValidDataLength.LowPart);
 
 	if (Map->FileSizes.ValidDataLength.QuadPart)
 	{
@@ -508,7 +566,7 @@ CcpMapData
 	goto cleanup;
     }
 
-    //DPRINT("Selected BCB #%x\n", BcbHead);
+    DPRINT("Selected BCB #%x\n", BcbHead);
     Bcb = &CcCacheSections[BcbHead];
     Status = CcpMapSegment(BcbHead);
 
@@ -545,14 +603,7 @@ CcMapData
  OUT PVOID *BcbResult,
  OUT PVOID *Buffer)
 {
-    if (!(PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap)
-    {
-	PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
-	FileObject->SectionObjectPointer->SharedCacheMap = Map;
-	Map->FileObject = FileObject;
-	InitializeListHead(&Map->AssociatedBcb);
-    }
-
+    if (!CcpStartCaching(FileObject)) return FALSE;
     return CcpMapData
 	((PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap,
 	 FileOffset,
@@ -570,18 +621,19 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
                 IN ULONG Flags,
                 IN OUT PVOID *Bcb)
 {
-    BOOLEAN Wait = Flags & PIN_WAIT;
+    BOOLEAN Wait = Flags == TRUE ? PIN_WAIT : Flags & PIN_WAIT;
     BOOLEAN Exclusive = Flags & PIN_EXCLUSIVE;
     BOOLEAN Result;
     ULONG BcbHead;
     PNOCC_BCB TheBcb;
     PVOID Buffer;
 
+    if (!CcpStartCaching(FileObject)) return FALSE;
     Result = CcMapData(FileObject, FileOffset, Length, Wait ? MAP_WAIT : 0, Bcb, &Buffer);
 
     if (!Result) return FALSE;
 
-    TheBcb = (PNOCC_BCB)Bcb;
+    TheBcb = (PNOCC_BCB)*Bcb;
     BcbHead = TheBcb - CcCacheSections;
 
     CcpLock();
@@ -591,7 +643,10 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
 	CcpMarkForExclusive(BcbHead);
     }
     else
+    {
+	DPRINT("Reference #%x\n", BcbHead);
 	CcpReferenceCache(BcbHead);
+    }
     CcpUnlock();
 
     if (Exclusive)
@@ -630,31 +685,25 @@ CcPinRead(IN PFILE_OBJECT FileObject,
           OUT PVOID *Bcb,
           OUT PVOID *Buffer)
 {
-    BOOLEAN Result = CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer);
+    PNOCC_BCB RealBcb;
+    BOOLEAN Result;
+
+    if (!CcpStartCaching(FileObject)) return FALSE;
+
+    Result = CcPinMappedData
+	(FileObject, 
+	 FileOffset,
+	 Length,
+	 Flags,
+	 Bcb);
 
     if (Result)
     {
-	PNOCC_BCB TheBcb = (PNOCC_BCB)*Bcb;
-	if (!TheBcb->Pinned)
-	{
-	    TheBcb->Pinned = IoAllocateMdl
-		(TheBcb->BaseAddress,
-		 TheBcb->Length,
-		 FALSE,
-		 FALSE,
-		 NULL);
-	    _SEH_TRY
-	    {
-		MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
-	    }
-	    _SEH_HANDLE
-	    {
-		IoFreeMdl(TheBcb->Pinned);
-		TheBcb->Pinned = NULL;
-		Result = FALSE;
-	    }
-	    _SEH_END;
-	}
+	CcpLock();
+	/* Find out if any range is a superset of what we want */
+	RealBcb = *Bcb;
+	*Buffer = ((PCHAR)RealBcb->BaseAddress) + (int)(FileOffset->QuadPart - RealBcb->FileOffset.QuadPart);
+	CcpUnlock();
     }
 
     return Result;
@@ -670,32 +719,25 @@ CcPreparePinWrite(IN PFILE_OBJECT FileObject,
                   OUT PVOID *Bcb,
                   OUT PVOID *Buffer)
 {
-    BOOLEAN Result = CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer);
+    BOOLEAN Result;
+    PNOCC_BCB RealBcb;
+
+    ASSERT(!Zero);
+
+    Result = CcPinRead
+	(FileObject,
+	 FileOffset,
+	 Length,
+	 Flags,
+	 Bcb,
+	 Buffer);
 
     if (Result)
     {
-	PNOCC_BCB TheBcb = (PNOCC_BCB)*Bcb;
-	if (!TheBcb->Pinned)
-	{
-	    TheBcb->Pinned = IoAllocateMdl
-		(TheBcb->BaseAddress,
-		 TheBcb->Length,
-		 FALSE,
-		 FALSE,
-		 NULL);
-	    _SEH_TRY
-	    {
-		MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
-	    }
-	    _SEH_HANDLE
-	    {
-		IoFreeMdl(TheBcb->Pinned);
-		TheBcb->Pinned = NULL;
-		TheBcb->Dirty = TRUE;
-		Result = FALSE;
-	    }
-	    _SEH_END;
-	}
+	CcpLock();
+	RealBcb = *Bcb;
+	RealBcb->Dirty = TRUE;
+	CcpUnlock();
     }
 
     return Result;
@@ -707,7 +749,9 @@ CcUnpinData(IN PVOID Bcb)
 {
     PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
     ULONG Selected = RealBcb - CcCacheSections;
+
     DPRINT("CcUnpinData Bcb #%x (RefCount %d)\n", Selected, RealBcb->RefCount);
+
     CcpLock();
     if (RealBcb->RefCount <= 2)
     {

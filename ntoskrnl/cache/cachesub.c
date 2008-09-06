@@ -167,12 +167,13 @@ CcSetDirtyPinnedData(IN PVOID BcbVoid,
 	PNOCC_BCB Bcb = (PNOCC_BCB)BcbVoid;
 	Bcb->Dirty = TRUE;
 	for (Buffer = Bcb->BaseAddress; 
-		 Buffer < ((PCHAR)Bcb->BaseAddress) + Bcb->Length;
-		 Buffer += PAGE_SIZE)
+	     Buffer < ((PCHAR)Bcb->BaseAddress) + Bcb->Length;
+	     Buffer += PAGE_SIZE)
 	{
-		/* Do a fake write on the buffer pages to mark them for mm */
-		*Buffer ^= 0;
+	    /* Do a fake write on the buffer pages to mark them for mm */
+	    *Buffer ^= 0;
 	}
+	Bcb->Dirty = TRUE;
 }
 
 LARGE_INTEGER

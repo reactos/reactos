@@ -101,7 +101,6 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
                      IN PCACHE_MANAGER_CALLBACKS Callbacks,
                      IN PVOID LazyWriteContext)
 {
-    DPRINT("Initializing file object for %wZ\n", &FileObject->FileName);
     CcpLock();
     if (FileObject->SectionObjectPointer->SharedCacheMap)
     {
@@ -111,6 +110,8 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
     else
     {
 	PNOCC_CACHE_MAP Map = ExAllocatePool(NonPagedPool, sizeof(NOCC_CACHE_MAP));
+	DPRINT("Initializing file object for (%p) %wZ\n", FileObject, &FileObject->FileName);
+	ASSERT(FileObject);
 	FileObject->SectionObjectPointer->SharedCacheMap = Map;
 	Map->RefCount = 1;
 	ObReferenceObject(FileObject);
