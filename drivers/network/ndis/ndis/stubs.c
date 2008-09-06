@@ -322,9 +322,6 @@ NdisOpenFile(
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
 
-  //if ( !NT_SUCCESS(*Status) )
-  //  goto cleanup;
-
 cleanup:
   if ( FullFileName.Buffer != NULL )
   {
