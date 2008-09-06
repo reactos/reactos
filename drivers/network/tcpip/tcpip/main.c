@@ -760,9 +760,23 @@ DriverEntry(
   IPStartup(RegistryPath);
 
   /* Initialize transport level protocol subsystems */
-  RawIPStartup();
-  UDPStartup();
-  TCPStartup();
+  Status = RawIPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
+
+  Status = UDPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
+
+  Status = TCPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
 
   /* Initialize the lan worker */
   LANStartup();
