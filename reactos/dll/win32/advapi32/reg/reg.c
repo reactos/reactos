@@ -1180,6 +1180,13 @@ RegDeleteKeyA (HKEY hKey,
   HANDLE TargetKey;
   NTSTATUS Status;
 
+  /* Make sure we got a subkey */
+  if (!lpSubKey)
+  {
+    /* Fail */
+    return ERROR_INVALID_PARAMETER;
+  }
+
   Status = MapDefaultKey (&ParentKey,
                           hKey);
   if (!NT_SUCCESS(Status))
@@ -1233,6 +1240,13 @@ RegDeleteKeyW (HKEY hKey,
   HANDLE ParentKey;
   HANDLE TargetKey;
   NTSTATUS Status;
+
+  /* Make sure we got a subkey */
+  if (!lpSubKey)
+  {
+    /* Fail */
+    return ERROR_INVALID_PARAMETER;
+  }
 
   Status = MapDefaultKey (&ParentKey,
                           hKey);
