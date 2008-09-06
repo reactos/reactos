@@ -1293,8 +1293,7 @@ NdisIPnPStartDevice(
    * NdisMQueryAdapterResources.
    */
 
-  if (Stack->Parameters.StartDevice.AllocatedResources != NULL &&
-      Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
+  if (Stack->Parameters.StartDevice.AllocatedResources != NULL)
     {
       ResourceCount = Stack->Parameters.StartDevice.AllocatedResources->List[0].
                       PartialResourceList.Count;
@@ -1310,24 +1309,31 @@ NdisIPnPStartDevice(
           return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+      RtlCopyMemory(Adapter->NdisMiniportBlock.AllocatedResources,
+                    Stack->Parameters.StartDevice.AllocatedResources,
+                    ResourceListSize);
+    }
+
+  if (Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
+    {
+      ResourceCount = Stack->Parameters.StartDevice.AllocatedResources->List[0].
+                      PartialResourceList.Count;
+      ResourceListSize =
+        FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.
+                     PartialDescriptors[ResourceCount]);
+
       Adapter->NdisMiniportBlock.AllocatedResourcesTranslated =
         ExAllocatePool(PagedPool, ResourceListSize);
       if (Adapter->NdisMiniportBlock.AllocatedResourcesTranslated == NULL)
         {
-          ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
-          Adapter->NdisMiniportBlock.AllocatedResources = NULL;
 	  ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
           return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-      RtlCopyMemory(Adapter->NdisMiniportBlock.AllocatedResources,
-                    Stack->Parameters.StartDevice.AllocatedResources,
-                    ResourceListSize);
-
       RtlCopyMemory(Adapter->NdisMiniportBlock.AllocatedResourcesTranslated,
                     Stack->Parameters.StartDevice.AllocatedResourcesTranslated,
                     ResourceListSize);
-    }
+   }
 
   /*
    * Store the Bus Type, Bus Number and Slot information. It's used by
