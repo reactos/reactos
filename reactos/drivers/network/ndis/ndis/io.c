@@ -873,7 +873,7 @@ NdisMRegisterIoPortRange(
   if(AddressSpace)
     {
       ASSERT(TranslatedAddress.u.HighPart == 0);
-      *PortOffset = (PVOID) TranslatedAddress.u.LowPart;
+      *PortOffset = (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart;
       NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x\n", *PortOffset));
       return NDIS_STATUS_SUCCESS;
     }
