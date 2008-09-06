@@ -3410,14 +3410,14 @@ IntChangeDisplaySettings(
 
     InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
       OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
+    Status = ZwOpenKey(&DevInstRegKey, KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
       DPRINT1("Unable to open registry key %wZ (Status 0x%08lx)\n", &RegistryKey, Status);
-      ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+      ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
       return DISP_CHANGE_FAILED;
     }
-    ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+    ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
 
     /* Update needed fields */
     if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
