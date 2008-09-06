@@ -1963,7 +1963,7 @@ done:;
     if (dwError == ERROR_SUCCESS)
     {
         DPRINT("hService %p\n", hServiceHandle);
-        *lpServiceHandle = (unsigned long)hServiceHandle; /* FIXME: 64 bit portability */
+        *lpServiceHandle = (SC_RPC_HANDLE)hServiceHandle;
 
         if (lpdwTagId != NULL)
             *lpdwTagId = lpService->dwTag;
@@ -2356,7 +2356,7 @@ DWORD ROpenSCManagerW(
         return dwError;
     }
 
-    *lpScHandle = (unsigned long)hHandle; /* FIXME: 64 bit portability */
+    *lpScHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hScm = %p\n", *lpScHandle);
 
     DPRINT("ROpenSCManagerW() done\n");
@@ -2432,7 +2432,7 @@ DWORD ROpenServiceW(
     lpService->dwRefCount++;
     DPRINT1("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
 
-    *lpServiceHandle = (unsigned long)hHandle; /* FIXME: 64 bit portability */
+    *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
 
     DPRINT("ROpenServiceW() done\n");
