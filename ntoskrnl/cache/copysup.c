@@ -35,64 +35,66 @@ CcCopyRead(IN PFILE_OBJECT FileObject,
            OUT PVOID Buffer,
            OUT PIO_STATUS_BLOCK IoStatus)
 {
-	INT i, Count;
-	PCHAR ReadBuf;
-	ULONG ReadLen;
-	PVOID Bcbs[CACHE_NUM_SECTIONS];
-	PVOID ReadBuffers[CACHE_NUM_SECTIONS];
+    PCHAR ReadBuffer;
+    ULONG ReadLen;
+    PVOID Bcb;
+    PCHAR BufferTarget = (PCHAR)Buffer;
+    LARGE_INTEGER CacheOffset, EndOfExtent, NextOffset;
+    
+    DPRINT
+	("CcCopyRead(%x,%x,%d,%d,%x)\n", 
+	 FileObject, 
+	 FileOffset->LowPart,
+	 Length,
+	 Wait,
+	 Buffer);
+    
+    CacheOffset.QuadPart = FileOffset->QuadPart;
+    EndOfExtent.QuadPart = FileOffset->QuadPart + Length;
 
-	DPRINT
-		("CcCopyRead(%x,%x,%d,%d,%x)\n", 
-		 FileObject, 
-		 FileOffset->LowPart,
-		 Length,
-		 Wait,
-		 Buffer);
-
-	for (ReadLen = Length, i = 0; 
-		 ReadLen > 0;
-		 ReadLen -= min(ReadLen, CACHE_STRIPE), i++)
+    while (CacheOffset.QuadPart < EndOfExtent.QuadPart)
+    {
+	NextOffset.QuadPart = (CacheOffset.QuadPart + CACHE_STRIPE) & ~(CACHE_STRIPE-1);
+	ReadLen = EndOfExtent.QuadPart - CacheOffset.QuadPart;
+	if (CacheOffset.QuadPart + ReadLen > NextOffset.QuadPart)
 	{
-		if (!CcPinRead
-			(FileObject,
-			 FileOffset,
-			 min(ReadLen, CACHE_STRIPE),
-			 Wait ? PIN_WAIT : PIN_IF_BCB,
-			 &Bcbs[i],
-			 &ReadBuffers[i]))
-		{
-			--i;
-			while (i >= 0)
-				CcUnpinData(Bcbs[i--]);
-			IoStatus->Status = STATUS_UNSUCCESSFUL;
-			IoStatus->Information = 0;
-			DPRINT("Failed CcCopyRead\n");
-			return FALSE;
-		}
+	    ReadLen = NextOffset.QuadPart - CacheOffset.QuadPart;
 	}
 
-	Count = i;
+	DPRINT("Reading %d bytes in this go (at %08x%08x)\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
 
-	DPRINT("Copying %d bytes for Read (%d buffers)\n", Length, Count);
-	for (i = 0; i < Count; i++)
+	if (!CcPinRead
+	    (FileObject,
+	     &CacheOffset,
+	     ReadLen,
+	     Wait ? PIN_WAIT : PIN_IF_BCB,
+	     &Bcb,
+	     (PVOID*)&ReadBuffer))
 	{
-		DPRINT("  %d: [#%02x:%x]\n", i, Bcbs[i], ReadBuffers[i]);
+	    IoStatus->Status = STATUS_UNSUCCESSFUL;
+	    IoStatus->Information = 0;
+	    DPRINT("Failed CcCopyRead\n");
+	    return FALSE;
 	}
 
-	for (ReadBuf = (PCHAR)Buffer, ReadLen = Length, i = 0;
-		 ReadLen > 0;
-		 ReadBuf += CACHE_STRIPE, ReadLen -= min(ReadLen, CACHE_STRIPE), i++)
-		RtlCopyMemory(ReadBuf, ReadBuffers[i], min(ReadLen, CACHE_STRIPE));
+	DPRINT("Copying %d bytes at %08x%08x\n", ReadLen, CacheOffset.HighPart, CacheOffset.LowPart);
+	RtlCopyMemory
+	    (BufferTarget,
+	     ReadBuffer,
+	     ReadLen);
 
-	for (i = 0; i < Count; i++)
-		CcUnpinData(Bcbs[i]);
+	BufferTarget += ReadLen;
+	
+	CacheOffset = NextOffset;
+	CcUnpinData(Bcb);
+    }
 
-	IoStatus->Status = STATUS_SUCCESS;
-	IoStatus->Information = Length;
-
-	DPRINT("Done with CcCopyRead\n");
-
-	return TRUE;
+    IoStatus->Status = STATUS_SUCCESS;
+    IoStatus->Information = Length;
+    
+    DPRINT("Done with CcCopyRead\n");
+    
+    return TRUE;
 }
 
 VOID
