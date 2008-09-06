@@ -319,7 +319,7 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
 
     if( Copy ) {
 	NewBuf = ExAllocatePool( NonPagedPool, Length );
-	if( !NewBuf ) return STATUS_NO_MEMORY;
+	if( !NewBuf ) return NDIS_STATUS_RESOURCES;
 	RtlCopyMemory( NewBuf, Data, Length );
     } else NewBuf = Data;
 
