@@ -147,34 +147,54 @@ MiSimpleRead
  ULONG Length,
  PIO_STATUS_BLOCK ReadStatus)
 {
-    PMDL Mdl;
+    NTSTATUS Status;
+    PIRP Irp = NULL;
     KEVENT ReadWait;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    KeInitializeEvent(&ReadWait, SynchronizationEvent, FALSE);
-
-    Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, NULL);
-
-    if (!Mdl) return STATUS_NO_MEMORY;
-
-    _SEH_TRY
+    PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION IrpSp;
+    
+    ASSERT(FileObject);
+    ASSERT(FileOffset);
+    ASSERT(Buffer);
+    ASSERT(ReadStatus);
+    
+    DeviceObject = MmGetDeviceObjectForFile(FileObject);
+    
+    ASSERT(DeviceObject);
+    
+    DPRINT1
+	("PAGING READ: FileObject %x Offset %x Length %d\n", 
+	 &FileObject, 
+	 FileOffset->LowPart,
+	 Length);
+    
+    KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
+    
+    Irp = IoBuildAsynchronousFsdRequest
+	(IRP_MJ_READ,
+	 DeviceObject,
+	 Buffer,
+	 Length,
+	 FileOffset,
+	 ReadStatus);
+    
+    if (!Irp)
     {
-	MmProbeAndLockPages(Mdl, KernelMode, IoWriteAccess);
-    }
-    _SEH_HANDLE
-    {
-	/* Allocating failed, clean up */
-	Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if (!NT_SUCCESS(Status)) 
-    {
-	IoFreeMdl(Mdl);
-	return Status;
+	return STATUS_NO_MEMORY;
     }
     
-    Status = IoPageRead(FileObject, Mdl, FileOffset, &ReadWait, ReadStatus);
+    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE;
+    
+    ObReferenceObject(FileObject);
+    
+    Irp->UserEvent = &ReadWait;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    IrpSp = IoGetNextIrpStackLocation(Irp);
+    IrpSp->FileObject = FileObject;
+    IrpSp->CompletionRoutine = MiSimpleReadComplete;
+    
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
 	if (!NT_SUCCESS
@@ -186,22 +206,15 @@ MiSimpleRead
 	      NULL)))
 	{
 	    DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-	    MmUnlockPages(Mdl);
-	    IoFreeMdl(Mdl);
+	    ASSERT(FALSE);
+	    ObDereferenceObject(FileObject);
 	    return Status;
 	}
     }
-
-    DPRINT("MmUnlockPages(%p)\n", Mdl);
-    MmUnlockPages(Mdl);
-    IoFreeMdl(Mdl);
-
-    DPRINT("Paging IO Done: %08x [%02x %02x %02x %02x ...]\n", ReadStatus->Status,
-	   ((PCHAR)Buffer)[0] & 0xff, 
-	   ((PCHAR)Buffer)[1] & 0xff, 
-	   ((PCHAR)Buffer)[2] & 0xff, 
-	   ((PCHAR)Buffer)[3] & 0xff);
-
+    
+    ObDereferenceObject(FileObject);
+    
+    DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
     return ReadStatus->Status;
 }
 
