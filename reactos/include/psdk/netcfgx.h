@@ -41,7 +41,7 @@ DECLARE_INTERFACE_(INetCfgComponent, IUnknown)
     STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     STDMETHOD_(HRESULT,GetDisplayName)(THIS_ LPWSTR *ppszwDisplayName) PURE;
-    STDMETHOD_(HRESULT,SetDisplayName)(THIS_ LPWSTR *ppszwDisplayName) PURE;
+    STDMETHOD_(HRESULT,SetDisplayName)(THIS_ LPCWSTR ppszwDisplayName) PURE;
     STDMETHOD_(HRESULT,GetHelpText)(THIS_ LPWSTR *pszwHelpText) PURE;
     STDMETHOD_(HRESULT,GetId)(THIS_ LPWSTR *ppszwId) PURE;
     STDMETHOD_(HRESULT,GetCharacteristics)(THIS_ LPDWORD pdwCharacteristics) PURE;
@@ -74,6 +74,8 @@ DECLARE_INTERFACE_(INetCfgComponent, IUnknown)
 #define INetCfgComponent_RaisePropertyUi(p,a,b,c)   (p)->lpVtbl->RaisePropertyUi(p,a,b,c)
 #endif
 
+EXTERN_C const IID IID_INetCfgComponent;
+
 #undef  INTERFACE
 #define INTERFACE   IEnumNetCfgComponent
 DECLARE_INTERFACE_(IEnumNetCfgComponent, IUnknown)
@@ -99,6 +101,7 @@ DECLARE_INTERFACE_(IEnumNetCfgComponent, IUnknown)
 #define IEnumNetCfgComponent_Clone(p,a)                 (p)->lpVtbl->Clone(p,a)
 #endif
 
+EXTERN_C const IID IID_IEnumNetCfgComponent;
 
 #undef  INTERFACE
 #define INTERFACE   INetCfg
@@ -112,7 +115,7 @@ DECLARE_INTERFACE_(INetCfg, IUnknown)
     STDMETHOD_(HRESULT,Apply) (THIS) PURE;
     STDMETHOD_(HRESULT,Cancel) (THIS) PURE;
     STDMETHOD_(HRESULT,EnumComponents) (THIS_ const GUID *pguidClass, IEnumNetCfgComponent **ppenumComponent) PURE;
-    STDMETHOD_(HRESULT,FindComponent) (THIS_ LPCWSTR pszwInfId, IEnumNetCfgComponent **ppenumComponent) PURE;
+    STDMETHOD_(HRESULT,FindComponent) (THIS_ LPCWSTR pszwInfId, INetCfgComponent **ppenumComponent) PURE;
     STDMETHOD_(HRESULT,QueryNetCfgClass) (THIS_ const GUID *pguidClass, REFIID riid, void **ppvObject) PURE;
 };
 #undef INTERFACE
@@ -133,5 +136,21 @@ DECLARE_INTERFACE_(INetCfg, IUnknown)
 
 EXTERN_C const GUID CLSID_CNetCfg;
 EXTERN_C const IID IID_INetCfg;
+
+#define NETCFG_E_ALREADY_INITIALIZED                 0x8004A020
+#define NETCFG_E_NOT_INITIALIZED                     0x8004A021
+#define NETCFG_E_IN_USE                              0x8004A022
+#define NETCFG_E_NO_WRITE_LOCK                       0x8004A024
+#define NETCFG_E_NEED_REBOOT                         0x8004A025
+#define NETCFG_E_ACTIVE_RAS_CONNECTIONS              0x8004A026
+#define NETCFG_E_ADAPTER_NOT_FOUND                   0x8004A027
+#define NETCFG_E_COMPONENT_REMOVED_PENDING_REBOOT    0x8004A028
+#define NETCFG_E_MAX_FILTER_LIMIT                    0x8004A029
+#define NETCFG_S_REBOOT                              0x8004A020
+#define NETCFG_S_DISABLE_QUERY                       0x8004A022
+#define NETCFG_S_STILL_REFERENCED                    0x8004A023
+#define NETCFG_S_CAUSED_SETUP_CHANGE                 0x8004A024
+#define NETCFG_S_COMMIT_NOW                          0x8004A025
+
 
 #endif
