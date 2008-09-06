@@ -7,11 +7,105 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define INITGUID
-#include "netcfgx.h"
 
+#include "precomp.h"
+#include <initguid.h>
+#include <devguid.h>
 #define NDEBUG
 #include <debug.h>
+
+HINSTANCE netcfgx_hInstance;
+
+static INTERFACE_TABLE InterfaceTable[] =
+{
+    {
+        &CLSID_CNetCfg,
+        INetCfg_Constructor
+    },
+    {
+        NULL,
+        NULL
+    }
+};
+
+BOOL
+WINAPI
+DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
+{
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            netcfgx_hInstance = hinstDLL;
+            DisableThreadLibraryCalls(netcfgx_hInstance);
+            break;
+    default:
+        break;
+    }
+
+    return TRUE;
+}
+
+HRESULT
+WINAPI
+DllCanUnloadNow(void)
+{
+    return S_FALSE;
+}
+
+STDAPI
+DllRegisterServer(void)
+{
+    //FIXME
+    // implement registering services
+    //
+    return S_OK;
+}
+
+STDAPI
+DllUnregisterServer(void)
+{
+    //FIXME
+    // implement unregistering services
+    //
+    return S_OK;
+}
+
+STDAPI
+DllGetClassObject(
+  REFCLSID rclsid,
+  REFIID riid,
+  LPVOID* ppv 
+)
+{
+    UINT i;
+    HRESULT	hres = E_OUTOFMEMORY;
+    IClassFactory * pcf = NULL;	
+
+    if (!ppv)
+        return E_INVALIDARG;
+
+    *ppv = NULL;
+
+    for (i = 0; InterfaceTable[i].riid; i++) 
+    {
+        if (IsEqualIID(InterfaceTable[i].riid, rclsid)) 
+        {
+            pcf = IClassFactory_fnConstructor(InterfaceTable[i].lpfnCI, NULL, NULL);
+            break;
+        }
+    }
+
+    if (!pcf) 
+    {
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
+
+    hres = IClassFactory_QueryInterface(pcf, riid, ppv);
+    IClassFactory_Release(pcf);
+
+    return hres;
+}
+
 
 /* Append a REG_SZ to an existing REG_MULTI_SZ string in the registry.
  * If the value doesn't exist, create it.
