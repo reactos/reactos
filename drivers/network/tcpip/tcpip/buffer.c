@@ -351,7 +351,7 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     PCHAR NewData;
 
     NewData = ExAllocatePool( NonPagedPool, Len );
-    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX
+    if( !NewData ) return NDIS_STATUS_RESOURCES;
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
     if( Data ) RtlCopyMemory(NewData, Data, Len);
