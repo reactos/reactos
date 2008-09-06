@@ -696,7 +696,7 @@ void BuildPedllFile( DLLSPEC *spec )
     output( "#include <windows.h>\n");
     output( "#include <reactos/debug.h>\n");
 
-    output( "DWORD __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
+    output( "DWORD __stdcall __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
     output( "{\n");
     output( "    DPRINT1(\"%%s hit stub for %%s\\n\",module,function);");
     output( "\n");
