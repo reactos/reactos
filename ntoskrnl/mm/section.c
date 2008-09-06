@@ -45,7 +45,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 #include <reactos/exeformat.h>
 
@@ -159,8 +159,6 @@ MiSimpleRead
 
     _SEH_TRY
     {
-	/* Allocate an MDL */
-	Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, NULL);
 	MmProbeAndLockPages(Mdl, KernelMode, IoWriteAccess);
     }
     _SEH_HANDLE
@@ -4914,13 +4912,20 @@ MmCreateSection (OUT PVOID  * Section,
 	return STATUS_INVALID_PAGE_PROTECTION;
     }
     
-    if ((DesiredAccess == SECTION_ALL_ACCESS ||
-	 (DesiredAccess & SECTION_MAP_WRITE)) &&
-	(Protection == PAGE_READWRITE ||
-	 Protection == PAGE_EXECUTE_READWRITE))
-	FileAccess = FILE_GENERIC_WRITE;
+    if (((DesiredAccess == SECTION_ALL_ACCESS ||
+	  (DesiredAccess & SECTION_MAP_WRITE)) &&
+	 (Protection == PAGE_READWRITE ||
+	  Protection == PAGE_EXECUTE_READWRITE)) &&
+	!(AllocationAttributes & SEC_IMAGE))
+    {
+	DPRINT("Creating a section with WRITE access\n");
+	FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
+    }
     else 
-	FileAccess = FILE_GENERIC_READ;
+    {
+	DPRINT("Creating a section with READ access\n");
+	FileAccess = FILE_READ_DATA;
+    }
     
     /*
      * Reference the file handle

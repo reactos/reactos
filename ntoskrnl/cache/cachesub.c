@@ -205,66 +205,73 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
              IN ULONG Length,
              OUT OPTIONAL PIO_STATUS_BLOCK IoStatus)
 {
-	PCHAR BufPage, BufStart;
-	PVOID Buffer;
-	PNOCC_BCB Bcb;
-	LARGE_INTEGER ToWrite = *FileOffset;
-	IO_STATUS_BLOCK IOSB;
-	PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+    BOOLEAN Result;
+    PCHAR BufPage, BufStart;
+    PVOID Buffer;
+    PNOCC_BCB Bcb;
+    LARGE_INTEGER ToWrite = *FileOffset;
+    IO_STATUS_BLOCK IOSB;
+    PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+    
+    if (IoStatus)
+    {
+	IoStatus->Status = STATUS_SUCCESS;
+	IoStatus->Information = 0;
+    }
 
-	if (!SectionObjectPointer->SharedCacheMap)
-	{
-	    if (IoStatus)
-	    {
-		IoStatus->Status = STATUS_SUCCESS;
-		IoStatus->Information = 0;
-	    }
-	    return;
-	}
+    if (!SectionObjectPointer->SharedCacheMap)
+    {
+	DPRINT("Attempt to flush a non-cached file section\n");
+	return;
+    }
+    
+    Result = CcpMapData
+	(Map,
+	 FileOffset,
+	 Length,
+	 0,
+	 (PVOID *)&Bcb,
+	 &Buffer);
 
-	BOOLEAN Result = CcpMapData
-		(Map,
-		 FileOffset,
-		 Length,
-		 PIN_WAIT,
-		 (PVOID *)&Bcb,
-		 &Buffer);
+    if (!Result) 
+    {
+	DPRINT("The requested section wasn't mapped, therefore doesn't need to be flushed\n");
+	return;
+    }
+    
+    /* Don't flush a pinned bcb, because we'll disturb the locked-ness
+     * of the pages.  Figured out how to do this right. */
+    if (Bcb->Pinned || !Bcb->Dirty) 
+    {
+	DPRINT("Bailing because the area is pinned or not dirty\n");
+	return;
+    }
+    
+    BufStart = (PCHAR)PAGE_ROUND_DOWN(((ULONG_PTR)Buffer));
+    ToWrite.LowPart = PAGE_ROUND_DOWN(FileOffset->LowPart);
+    
+    DPRINT
+	("CcpSimpleWrite: [%wZ] %x:%d\n", 
+	 &Bcb->FileObject->FileName,
+	 Buffer,
+	 Bcb->Length);
+    
+    for (BufPage = BufStart;
+	 BufPage < BufStart + PAGE_ROUND_UP(Length);
+	 BufPage += PAGE_SIZE)
+    {
+	CcpSimpleWrite(Bcb->FileObject, &ToWrite, BufPage, &IOSB);
+	ToWrite.QuadPart += PAGE_SIZE;
+    }
+    
+    Bcb->Dirty = FALSE;
+    
+    DPRINT("Page Write: %08x\n", IOSB.Status);
 
-	/* Don't flush a pinned bcb, because we'll disturb the locked-ness
-	 * of the pages.  Figured out how to do this right. */
-	if (!Result || Bcb->Pinned || !Bcb->Dirty) return;
-	
-	BufStart = (PCHAR)PAGE_ROUND_DOWN(((ULONG_PTR)Buffer));
-	ToWrite.LowPart = PAGE_ROUND_DOWN(FileOffset->LowPart);
-
-	DPRINT
-	    ("CcpSimpleWrite: [%wZ] %x:%d\n", 
-	     &Bcb->FileObject->FileName,
-	     Buffer,
-	     Bcb->Length);
-
-	for (BufPage = BufStart;
-	     BufPage < BufStart + PAGE_ROUND_UP(Length);
-	     BufPage += PAGE_SIZE)
-	{
-	    CcpSimpleWrite(Bcb->FileObject, &ToWrite, BufPage, &IOSB);
-	    ToWrite.QuadPart += PAGE_SIZE;
-	}
-
-	Bcb->Dirty = FALSE;
-
-	DPRINT("Page Write: %08x\n", IOSB.Status);
-
-	if (IoStatus && NT_SUCCESS(IOSB.Status))
-	{
-	    IoStatus->Status = STATUS_SUCCESS;
-	    IoStatus->Information = Length;
-	}
-	else if (IoStatus)
-	{
-	    IoStatus->Status = IOSB.Status;
-	    IoStatus->Information = 0;
-	}
+    if (IoStatus)
+    {
+	*IoStatus = IOSB;
+    }
 }
 
 BOOLEAN
