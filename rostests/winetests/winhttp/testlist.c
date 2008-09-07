@@ -6,8 +6,10 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_winhttp(void);
 
 const struct test winetest_testlist[] =
 {
-    { 0, 0 }
+	 { "winhttp", func_winhttp },
+	 { 0, 0 }
 };
