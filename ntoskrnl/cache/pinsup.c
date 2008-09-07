@@ -168,7 +168,7 @@ NTSTATUS CcpMapSegment(ULONG Start)
     DPRINT("System view is at %x\n", Bcb->BaseAddress);
     Bcb->Length = ViewSize;
 
-    return TRUE;
+    return Status;
 }
 
 NTSTATUS CcpAllocateSection
