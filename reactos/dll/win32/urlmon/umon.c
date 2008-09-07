@@ -189,7 +189,7 @@ static HRESULT Binding_MoreCacheData(Binding *This, const char *buf, DWORD dwByt
 					        BINDSTATUS_BEGINDOWNLOADDATA :
 					        BINDSTATUS_DOWNLOADINGDATA,
 					    This->URLName);
-	if (!hr)
+	if (hr == S_OK)
 	{
 	    STGMEDIUM stg;
 	    FORMATETC fmt;
