@@ -258,6 +258,8 @@ PVOID VfatGetUserBuffer(IN PIRP Irp)
 
 NTSTATUS VfatLockUserBuffer(IN PIRP Irp, IN ULONG Length, IN LOCK_OPERATION Operation)
 {
+   NTSTATUS Status = STATUS_SUCCESS;
+
    ASSERT(Irp);
 
    if (Irp->MdlAddress)
@@ -272,9 +274,13 @@ NTSTATUS VfatLockUserBuffer(IN PIRP Irp, IN ULONG Length, IN LOCK_OPERATION Oper
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
-   MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+   _SEH_TRY {
+      MmProbeAndLockPages(Irp->MdlAddress, Irp->RequestorMode, Operation);
+   } _SEH_HANDLE {
+      Status = _SEH_GetExceptionCode();
+   } _SEH_END;
 
-   return STATUS_SUCCESS;
+   return Status;
 }
 
 
