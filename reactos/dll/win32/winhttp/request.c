@@ -20,6 +20,7 @@
 #include "wine/port.h"
 #include "wine/debug.h"
 
+#include <stdio.h>
 #include <stdarg.h>
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
