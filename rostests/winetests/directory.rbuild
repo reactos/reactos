@@ -58,6 +58,9 @@
 	<directory name="msi">
 		<xi:include href="msi/msi.rbuild" />
 	</directory>
+	<directory name="mstask">
+		<xi:include href="mstask/mstask.rbuild" />
+	</directory>
 	<directory name="msvcrt">
 		<xi:include href="msvcrt/msvcrt.rbuild" />
 	</directory>
@@ -123,6 +126,9 @@
 	</directory>
 	<directory name="version">
 		<xi:include href="version/version.rbuild" />
+	</directory>
+	<directory name="winhttp">
+		<xi:include href="winhttp/winhttp.rbuild" />
 	</directory>
 	<directory name="wininet">
 		<xi:include href="wininet/wininet.rbuild" />
