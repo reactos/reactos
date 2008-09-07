@@ -24,6 +24,7 @@ typedef struct
 {
     INetConnectionPropertyUi *lpVtbl;
     INetConnection * pCon;
+    INetCfgLock *NCfgLock;
     INetCfg * pNCfg;
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
@@ -49,7 +50,7 @@ InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWS
 }
 
 VOID
-AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName)
+AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName, BOOL bChecked)
 {
     LVITEMW lvItem;
 
@@ -59,20 +60,63 @@ AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName)
     lvItem.lParam = (LPARAM)pItem;
     lvItem.iItem = ListView_GetItemCount(hDlgCtrl);
     lvItem.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
-    ListView_SetCheckState(hDlgCtrl, lvItem.iItem, TRUE);
+    ListView_SetCheckState(hDlgCtrl, lvItem.iItem, bChecked);
+}
+
+BOOL
+GetINetCfgComponent(INetCfg * pNCfg, INetConnection * pNetCon, INetCfgComponent ** pOut)
+{
+    LPWSTR pName;
+    HRESULT hr;
+    NETCON_PROPERTIES* pProps;
+    INetCfgComponent * pNCg;
+    ULONG Fetched;
+    IEnumNetCfgComponent * pEnumCfg;
+
+    hr = INetConnection_GetProperties(pNetCon, &pProps);
+    if (FAILED(hr))
+        return FALSE;
+
+    hr = INetCfg_EnumComponents(pNCfg, &GUID_DEVCLASS_NET, &pEnumCfg);
+    if (FAILED(hr))
+    {
+        NcFreeNetconProperties(pProps);
+        return FALSE;
+    }
+
+    while(IEnumNetCfgComponent_Next(pEnumCfg, 1, &pNCg, &Fetched) == S_OK)
+    {
+       hr = INetCfgComponent_GetDisplayName(pNCg, &pName);
+       if (SUCCEEDED(hr))
+       {
+           if (!wcsicmp(pName, pProps->pszwDeviceName))
+           {
+               *pOut = pNCg;
+               IEnumNetCfgComponent_Release(pEnumCfg);
+               NcFreeNetconProperties(pProps);
+               return TRUE;
+           }
+           CoTaskMemFree(pName);
+       }
+       INetCfgComponent_Release(pNCg);
+    }
+    IEnumNetCfgComponent_Release(pEnumCfg);
+    NcFreeNetconProperties(pProps);
+    return FALSE;
 }
 
 VOID
-EnumComponents(HWND hDlgCtrl, INetCfg * pNCfg, const GUID * CompGuid, UINT Type)
+EnumComponents(HWND hDlgCtrl, INetConnectionPropertyUiImpl * This, INetCfg * pNCfg, const GUID * CompGuid, UINT Type)
 {
     HRESULT hr;
     IEnumNetCfgComponent * pENetCfg;
-    INetCfgComponent  *pNCfgComp;
+    INetCfgComponent  *pNCfgComp, *pAdapterCfgComp;
+    INetCfgComponentBindings * pCompBind;
     ULONG Num;
     DWORD dwCharacteristics;
     LPOLESTR pDisplayName, pHelpText;
     PNET_ITEM pItem;
-
+    BOOL bChecked;
 
     hr = INetCfg_EnumComponents(pNCfg, CompGuid, &pENetCfg);
     if (FAILED(hr))
@@ -92,16 +136,29 @@ EnumComponents(HWND hDlgCtrl, INetCfg * pNCfg, const GUID * CompGuid, UINT Type)
           pHelpText = NULL;
           hr = INetCfgComponent_GetDisplayName(pNCfgComp, &pDisplayName);
           hr = INetCfgComponent_GetHelpText(pNCfgComp, &pHelpText);
+          hr = INetCfgComponent_QueryInterface(pNCfgComp, &IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
 
-            pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
-            if (!pItem)
-                continue;
+          bChecked = FALSE;
+          if (GetINetCfgComponent(pNCfg, This->pCon, &pAdapterCfgComp))
+          {
+              hr = INetCfgComponentBindings_IsBoundTo(pCompBind, pAdapterCfgComp);
+              if (hr == S_OK)
+                  bChecked = TRUE;
+              else
+                  bChecked = FALSE;
+              INetCfgComponent_Release(pAdapterCfgComp);
+          }
+          pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
+          if (!pItem)
+              continue;
           pItem->dwCharacteristics = dwCharacteristics;
           pItem->szHelp = pHelpText;
           pItem->Type = Type;
           pItem->pNCfgComp = pNCfgComp;
           pItem->NumPropDialogOpen = 0;
-          AddItemToListView(hDlgCtrl, pItem, pDisplayName);
+
+
+          AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked);
           CoTaskMemFree(pDisplayName);
     }
     IEnumNetCfgComponent_Release(pENetCfg);
@@ -113,11 +170,14 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg, INetConnectionPropertyUiImpl * This)
 {
     HRESULT hr;
     INetCfg * pNCfg;
+    INetCfgLock * pNCfgLock;
     HWND hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
     LVCOLUMNW lc;
     RECT rc;
     DWORD dwStyle;
     NETCON_PROPERTIES * pProperties;
+    LPWSTR pDisplayName;
+    LVITEMW li;
 
     hr = INetConnection_GetProperties(This->pCon, &pProperties);
     if (FAILED(hr))
@@ -155,6 +215,15 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg, INetConnectionPropertyUiImpl * This)
     if (FAILED(hr))
         return;
 
+    hr = INetCfgLock_QueryInterface(pNCfg, &IID_INetCfgLock, (LPVOID*)&pNCfgLock);
+    hr = INetCfgLock_AcquireWriteLock(pNCfgLock, 100, L"", &pDisplayName);
+    if (hr == S_FALSE)
+    {
+        CoTaskMemFree(pDisplayName);
+        return;
+    }
+
+    This->NCfgLock = pNCfgLock;
     hr = INetCfg_Initialize(pNCfg, NULL);
     if (FAILED(hr))
     {
@@ -162,10 +231,16 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg, INetConnectionPropertyUiImpl * This)
         return;
     }
 
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
-    EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
+    EnumComponents(hDlgCtrl, This, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
+    EnumComponents(hDlgCtrl, This, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
+    EnumComponents(hDlgCtrl, This, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
     This->pNCfg = pNCfg;
+
+    ZeroMemory(&li, sizeof(li));
+    li.mask = LVIF_STATE;
+    li.stateMask = (UINT)-1;
+    li.state = LVIS_FOCUSED|LVIS_SELECTED;
+    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
 }
 
 VOID
@@ -180,8 +255,7 @@ ShowNetworkComponentProperties(
     INetConnectionPropertyUi * pConUI = NULL;
     INetCfgComponent * pNCfgComp;
     PNET_ITEM pItem;
-    INetCfgLock * pLock;
-    LPWSTR pLockApp;
+    WCHAR szBuffer[200];
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
     Count = ListView_GetItemCount(hDlgCtrl);
@@ -228,26 +302,15 @@ ShowNetworkComponentProperties(
     pItem = (PNET_ITEM)lvItem.lParam;
     pNCfgComp = (INetCfgComponent*) pItem->pNCfgComp;
 
-    hr = INetCfg_QueryInterface(This->pNCfg, &IID_INetCfgLock, (LPVOID*)&pLock);
-    if (FAILED(hr))
-        return;
-
-    hr = INetCfgLock_AcquireWriteLock(pLock, 10000, L"", &pLockApp);
-    if (FAILED(hr))
-    {
-        CoTaskMemFree(pLockApp);
-        INetConnectionPropertyUi_Release(pConUI);
-        return;
-    }
-
-
     hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_QUERY_PROPERTY_UI, (IUnknown*)pConUI);
     if (SUCCEEDED(hr))
     {
         hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_SHOW_PROPERTY_UI, (IUnknown*)pConUI);
     }
 
-    INetCfgLock_ReleaseWriteLock(pLock);
+	swprintf(szBuffer, L"result %08x", hr);
+	MessageBoxW(NULL, szBuffer, NULL, MB_OK);
+
     INetConnectionPropertyUi_Release(pConUI);
 
 }
