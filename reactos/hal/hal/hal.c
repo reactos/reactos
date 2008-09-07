@@ -748,7 +748,7 @@ KeAcquireSpinLockRaiseToSynch(
   return 0;
 }
 
-
+#ifndef _M_AMD64
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
@@ -777,6 +777,7 @@ KeReleaseInStackQueuedSpinLock(
 {
   UNIMPLEMENTED;
 }
+#endif
 
 VOID
 NTAPI
@@ -853,6 +854,7 @@ KeRaiseIrqlToSynchLevel(VOID)
 }
 #endif
 
+#ifndef _M_AMD64
 #undef KeReleaseSpinLock
 VOID
 NTAPI
@@ -862,7 +864,7 @@ KeReleaseSpinLock(
 {
   UNIMPLEMENTED;
 }
-
+#endif
 
 VOID
 NTAPI
