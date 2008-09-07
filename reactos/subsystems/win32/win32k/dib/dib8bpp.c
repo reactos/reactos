@@ -387,6 +387,13 @@ BOOLEAN ScaleRectAvg8(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   ScanLine = (PIXEL*)ExAllocatePool(PagedPool, (DestRect->right - DestRect->left) * sizeof(PIXEL));
   ScanLineAhead = (PIXEL *)ExAllocatePool(PagedPool, (DestRect->right - DestRect->left) * sizeof(PIXEL));
 
+  if (!ScanLine || !ScanLineAhead)
+    {
+      if (ScanLine) ExFreePool(ScanLine);
+      if (ScanLineAhead) ExFreePool(ScanLineAhead);
+      return FALSE;
+    }
+
   DestY = DestRect->top;
   SpanIndex = 0;
   while (NumPixels-- > 0) {
