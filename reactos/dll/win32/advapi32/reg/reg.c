@@ -4084,17 +4084,24 @@ RegQueryValueA (HKEY hKey,
 			      &ValueSize);
   if (ErrorCode == ERROR_SUCCESS)
     {
-      Value.Length = ValueSize;
-      RtlInitAnsiString (&AnsiString,
-			 NULL);
-      AnsiString.Buffer = lpValue;
-      AnsiString.MaximumLength = *lpcbValue;
-      RtlUnicodeStringToAnsiString (&AnsiString,
-				    &Value,
-				    FALSE);
+      if (lpValue != NULL)
+      {
+        Value.Length = ValueSize;
+        RtlInitAnsiString (&AnsiString,
+			   NULL);
+        AnsiString.Buffer = lpValue;
+        AnsiString.MaximumLength = *lpcbValue;
+        RtlUnicodeStringToAnsiString (&AnsiString,
+				      &Value,
+				      FALSE);
+        *lpcbValue = ValueSize;
+      }
+      else if (lpcbValue != NULL)
+      {
+          *lpcbValue = ValueSize;
+      }
     }
 
-  *lpcbValue = ValueSize;
   if (Value.Buffer != NULL)
     {
       RtlFreeHeap (ProcessHeap,
