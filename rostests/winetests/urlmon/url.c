@@ -28,11 +28,16 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "initguid.h"
 #include "urlmon.h"
 #include "wininet.h"
 #include "mshtml.h"
 
 #include "wine/test.h"
+
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID(IID_IBindStatusCallbackHolder,0x79eac9cc,0xbaf9,0x11ce,0x8c,0x82,0x00,0xaa,0x00,0x4b,0xa9,0x0b);
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -154,8 +159,6 @@ static CHAR mime_type[512];
 static IInternetProtocolSink *protocol_sink = NULL;
 static HANDLE complete_event, complete_event2;
 static HRESULT binding_hres;
-
-extern IID IID_IBindStatusCallbackHolder;
 
 static LPCWSTR urls[] = {
     WINE_ABOUT_URL,

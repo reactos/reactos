@@ -29,8 +29,6 @@
 #include "urlmon.h"
 #include "wininet.h"
 
-#include "initguid.h"
-
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
