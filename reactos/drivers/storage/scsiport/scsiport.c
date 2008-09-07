@@ -462,7 +462,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 
     /* i/o space */
     if (AddressSpace != 0)
-        return((PVOID)TranslatedAddress.u.LowPart);
+        return((PVOID)(ULONG_PTR)TranslatedAddress.QuadPart);
 
     MappedAddress = MmMapIoSpace(TranslatedAddress,
                                  NumberOfBytes,
@@ -1133,8 +1133,8 @@ CreatePortConfig:
             PortConfig->AccessRanges = (PVOID)(PortConfig+1);
 
             /* Align to LONGLONG */
-            PortConfig->AccessRanges = (PVOID)((ULONG)(PortConfig->AccessRanges) + 7);
-            PortConfig->AccessRanges = (PVOID)((ULONG)(PortConfig->AccessRanges) & ~7);
+            PortConfig->AccessRanges = (PVOID)((ULONG_PTR)(PortConfig->AccessRanges) + 7);
+            PortConfig->AccessRanges = (PVOID)((ULONG_PTR)(PortConfig->AccessRanges) & ~7);
 
             /* Copy the data */
             RtlCopyMemory(PortConfig->AccessRanges,
