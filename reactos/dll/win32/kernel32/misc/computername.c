@@ -94,9 +94,8 @@ static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
     }
 
     if( *nSize > (KeyInfo->DataLength / sizeof(WCHAR)) ) {
-        *nSize = KeyInfo->DataLength / sizeof(WCHAR);
+        *nSize = KeyInfo->DataLength / sizeof(WCHAR) - 1;
         lpBuffer[*nSize] = 0;
-        (*nSize)--;
     }
 
     RtlCopyMemory (lpBuffer,
