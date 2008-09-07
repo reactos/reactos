@@ -60,6 +60,7 @@ reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync

@@ -274,6 +274,7 @@ dll\win32\modemui\modemui.dll                       1
 dll\win32\mpr\mpr.dll                               1
 dll\win32\msacm32\msacm32.dll                       1
 dll\win32\msafd\msafd.dll                           1
+dll\win32\mscoree\mscoree.dll                       1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\mshtml\mshtml.dll                         1
 dll\win32\msi\msi.dll                               1
