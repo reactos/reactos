@@ -19,6 +19,7 @@
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
 	<file>mshtml.idl</file>
+	<file>mstask.idl</file>
 	<file>msxml.idl</file>
 	<file>msxml2.idl</file>
 	<file>oaidl.idl</file>

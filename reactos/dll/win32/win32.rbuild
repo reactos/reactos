@@ -169,6 +169,9 @@
 <directory name="msimg32">
 	<xi:include href="msimg32/msimg32.rbuild" />
 </directory>
+<directory name="mstask">
+	<xi:include href="mstask/mstask.rbuild" />
+</directory>
 <directory name="msvcrt">
 	<xi:include href="msvcrt/msvcrt.rbuild" />
 </directory>

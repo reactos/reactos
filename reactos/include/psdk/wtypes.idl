@@ -207,6 +207,20 @@ typedef struct tagLOGPALETTE
 } LOGPALETTE, *PLOGPALETTE, *LPLOGPALETTE;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef _SYSTEMTIME_")
+cpp_quote("#define _SYSTEMTIME_")
+typedef struct _SYSTEMTIME{
+  WORD wYear;
+  WORD wMonth;
+  WORD wDayOfWeek;
+  WORD wDay;
+  WORD wHour;
+  WORD wMinute;
+  WORD wSecond;
+  WORD wMilliseconds;
+} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+cpp_quote("#endif")
+
 cpp_quote("#ifndef _FILETIME_")
 cpp_quote("#define _FILETIME_")
 typedef struct _FILETIME {
@@ -775,7 +789,7 @@ typedef struct tagQUERYCONTEXT
     DWORD dwVersionLo;
 } QUERYCONTEXT;
 
-typedef [v1_enum] enum tagTYSPEC
+typedef [v1_enum] enum tagTYSPEC 
 {
     TYSPEC_CLSID,
     TYSPEC_FILEEXT,

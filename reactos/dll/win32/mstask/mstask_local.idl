@@ -1,7 +1,5 @@
 /*
- * Top level resource file for shlwapi
- *
- * Copyright 2004 Jon Griffiths
+ * Copyright (C) 2008 Google (Roy Shea)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,32 +16,4 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "resource.h"
-
-#include "version.rc"
-
-#include "shlwapi_Da.rc"
-#include "shlwapi_De.rc"
-#include "shlwapi_En.rc"
-#include "shlwapi_Eo.rc"
-#include "shlwapi_Es.rc"
-#include "shlwapi_Fi.rc"
-#include "shlwapi_Fr.rc"
-#include "shlwapi_Hu.rc"
-#include "shlwapi_It.rc"
-#include "shlwapi_Ja.rc"
-#include "shlwapi_Ko.rc"
-#include "shlwapi_Nl.rc"
-#include "shlwapi_No.rc"
-#include "shlwapi_Pl.rc"
-#include "shlwapi_Pt.rc"
-#include "shlwapi_Ro.rc"
-#include "shlwapi_Ru.rc"
-#include "shlwapi_Si.rc"
-#include "shlwapi_Sv.rc"
-#include "shlwapi_Tr.rc"
-#include "shlwapi_Uk.rc"
-#include "shlwapi_Zh.rc"
+#include "mstask.idl"

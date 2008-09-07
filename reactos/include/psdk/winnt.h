@@ -1990,6 +1990,11 @@ typedef struct _ACL {
 	WORD AceCount;
 	WORD Sbz2;
 } ACL,*PACL;
+typedef enum _ACL_INFORMATION_CLASS
+{
+  AclRevisionInformation = 1, 
+  AclSizeInformation
+} ACL_INFORMATION_CLASS;
 typedef struct _ACL_REVISION_INFORMATION {
 	DWORD AclRevision;
 } ACL_REVISION_INFORMATION;

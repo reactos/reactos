@@ -96,6 +96,7 @@
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
   <property name="BASEADDRESS_WDMAUD" value="0x72d20000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
+  <property name="BASEADDRESS_MSTASK" value="0x73520000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_DCIMAN32" value="0x73b10000" />

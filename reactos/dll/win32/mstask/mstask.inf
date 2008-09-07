@@ -1,0 +1,16 @@
+[version]
+Signature="$CHICAGO$"
+
+[RegisterDll]
+AddReg=Classes.Reg
+
+[UnregisterDll]
+DelReg=Classes.Reg
+
+[Classes.Reg]
+HKCR,"CLSID\%CLSID_CTaskScheduler%",,,"CTaskScheduler"
+HKCR,"CLSID\%CLSID_CTaskScheduler%\InProcServer32",,,"mstask.dll"
+HKCR,"CLSID\%CLSID_CTaskScheduler%\InProcServer32","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_CTask%",,,"CTask"
+HKCR,"CLSID\%CLSID_CTask%\InProcServer32",,,"mstask.dll"
+HKCR,"CLSID\%CLSID_CTask%\InProcServer32","ThreadingModel",,"Both"
