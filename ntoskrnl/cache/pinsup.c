@@ -660,6 +660,9 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
 	     FALSE,
 	     FALSE,
 	     NULL);
+
+	if(!TheBcb->Pinned) return FALSE;
+
 	_SEH_TRY
 	{
 	    MmProbeAndLockPages(TheBcb->Pinned, KernelMode, IoReadAccess);
@@ -668,7 +671,7 @@ CcPinMappedData(IN PFILE_OBJECT FileObject,
 	{
 	    IoFreeMdl(TheBcb->Pinned);
 	    TheBcb->Pinned = NULL;
-	    Result = FALSE;
+	    _SEH_YIELD(return FALSE);
 	}
 	_SEH_END;
     }
