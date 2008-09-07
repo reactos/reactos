@@ -861,6 +861,11 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
             ExFreePool( Kbio );
             KbioLength = ResultLength;
             Kbio = ExAllocatePool( NonPagedPool, KbioLength );
+            if( !Kbio ) {
+                TI_DbgPrint(DEBUG_DATALINK,("Failed to allocate memory\n"));
+                NtClose( EnumKey );
+                return STATUS_NO_MEMORY;
+            }
 
             Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
                                      Kbio, KbioLength, &ResultLength );
