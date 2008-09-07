@@ -77,6 +77,168 @@ DECLARE_INTERFACE_(INetCfgComponent, IUnknown)
 EXTERN_C const IID IID_INetCfgComponent;
 
 #undef  INTERFACE
+#define INTERFACE   INetCfgBindingInterface
+DECLARE_INTERFACE_(INetCfgBindingInterface, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,GetName)(THIS_ LPWSTR *ppszwInterfaceName) PURE;
+    STDMETHOD_(HRESULT,GetUpperComponent)(THIS_ INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,GetLowerComponent)(THIS_ INetCfgComponent **ppnccItem) PURE;
+};
+#undef INTERFACE
+
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgBindingInterface_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgBindingInterface_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetCfgBindingInterface_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetCfgBindingInterface_GetName(p,a)               (p)->lpVtbl->GetName(p)
+#define INetCfgBindingInterface_GetUpperComponent(p,a)     (p)->lpVtbl->GetUpperComponent(p)
+#define INetCfgBindingInterface_GetLowerComponent(p,a)     (p)->lpVtbl->GetLowerComponent(p)
+#endif
+
+EXTERN_C const IID IID_INetCfgBindingInterface;
+
+
+#undef  INTERFACE
+#define INTERFACE   IEnumNetCfgBindingInterface
+DECLARE_INTERFACE_(IEnumNetCfgBindingInterface, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,Next)(THIS_ ULONG celt, INetCfgBindingInterface **rgelt, ULONG *pceltFetched) PURE;
+    STDMETHOD_(HRESULT,Skip) (THIS_ ULONG celt) PURE;
+    STDMETHOD_(HRESULT,Reset) (THIS) PURE;
+    STDMETHOD_(HRESULT,Clone) (THIS_ IEnumNetCfgBindingInterface **ppenum) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IEnumNetCfgBindingInterface_QueryInterface(p,a,b)         (p)->lpVtbl->QueryInterface(p,a,b)
+#define IEnumNetCfgBindingInterface_AddRef(p)                     (p)->lpVtbl->AddRef(p)
+#define IEnumNetCfgBindingInterface_Release(p)                    (p)->lpVtbl->Release(p)
+#define IEnumNetCfgBindingInterface_Next(p,a,b,c)                   (p)->lpVtbl->Next(p,a,b,c)
+#define IEnumNetCfgBindingInterface_Skip(p,a)                       (p)->lpVtbl->Skip(p,a)
+#define IEnumNetCfgBindingInterface_Reset(p)                        (p)->lpVtbl->Reset(p)
+#define IEnumNetCfgBindingInterface_Clone(p,a)                      (p)->lpVtbl->Clone(p,a)
+#endif
+
+EXTERN_C const IID IID_IEnumNetCfgBindingInterface;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgBindingPath
+DECLARE_INTERFACE_(INetCfgBindingPath, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,IsSamePathAs)(THIS_ INetCfgBindingPath *pPath) PURE;
+    STDMETHOD_(HRESULT,IsSubPathOf)(THIS_ INetCfgBindingPath *pPath) PURE;
+    STDMETHOD_(HRESULT,IsEnabled) (THIS) PURE;
+    STDMETHOD_(HRESULT,Enable) (THIS_ BOOL fEnable) PURE;
+    STDMETHOD_(HRESULT,GetPathToken) (THIS_ LPWSTR *ppszwPathToken) PURE;
+    STDMETHOD_(HRESULT,GetOwner)(THIS_ INetCfgComponent **ppComponent) PURE;
+    STDMETHOD_(HRESULT,GetDepth)(THIS_ ULONG *pcInterfaces) PURE;
+    STDMETHOD_(HRESULT,EnumBindingInterfaces)(THIS_ IEnumNetCfgBindingInterface **ppenumInterface) PURE;
+};
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgBindingPath_QueryInterface(p,a,b)         (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgBindingPath_AddRef(p)                     (p)->lpVtbl->AddRef(p)
+#define INetCfgBindingPath_Release(p)                    (p)->lpVtbl->Release(p)
+#define INetCfgBindingPath_IsSamePathAs(p,a)             (p)->lpVtbl->IsSamePathAs(p,a)
+#define INetCfgBindingPath_IsSubPathOf(p,a)              (p)->lpVtbl->IsSubPathOf(p,a)
+#define INetCfgBindingPath_IsEnabled(p)                  (p)->lpVtbl->IsEnabled(p)
+#define INetCfgBindingPath_Enable(p,a)                   (p)->lpVtbl->Enable(p,a)
+#define INetCfgBindingPath_GetPathToken(p,a)             (p)->lpVtbl->GetPathToken(p,a)
+#define INetCfgBindingPath_GetOwner(p,a)                 (p)->lpVtbl->GetOwner(p,a)
+#define INetCfgBindingPath_GetDepth(p,a)                 (p)->lpVtbl->GetDepth(p,a)
+#define INetCfgBindingPath_EnumBindingInterfaces(p,a)    (p)->lpVtbl->EnumBindingInterfaces(p,a)
+#endif
+
+EXTERN_C const IID IID_INetCfgBindingPath;
+
+#undef  INTERFACE
+#define INTERFACE   IEnumNetCfgBindingPath
+DECLARE_INTERFACE_(IEnumNetCfgBindingPath, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,Next)(THIS_ ULONG celt, INetCfgBindingPath **rgelt, ULONG *pceltFetched) PURE;
+    STDMETHOD_(HRESULT,Skip)(THIS_ ULONG celt)  PURE;
+    STDMETHOD_(HRESULT,Reset)(THIS)  PURE;
+    STDMETHOD_(HRESULT,Clone)(THIS_ IEnumNetCfgBindingPath **ppenum)  PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IEnumNetCfgBindingPath_QueryInterface(p,a,b)           (p)->lpVtbl->QueryInterface(p,a,b)
+#define IEnumNetCfgBindingPath_AddRef(p)                       (p)->lpVtbl->AddRef(p)
+#define IEnumNetCfgBindingPath_Release(p)                      (p)->lpVtbl->Release(p)
+#define IEnumNetCfgBindingPath_Next(p,a,b,c)                   (p)->lpVtbl->Next(p,a,b,c)
+#define IEnumNetCfgBindingPath_Skip(p,a)                       (p)->lpVtbl->Skip(p,a)
+#define IEnumNetCfgBindingPath_Reset(p)                        (p)->lpVtbl->Reset(p)
+#define IEnumNetCfgBindingPath_Clone(p,a)                      (p)->lpVtbl->Clone(p,a)
+#endif
+
+EXTERN_C const IID IID_IEnumNetCfgBindingPath;
+
+typedef enum
+{
+    NCF_LOWER = 0x1,
+    NCF_UPPER = 0x2
+}SUPPORTS_BINDING_INTERFACE_FLAGS;
+
+typedef enum
+{
+    EBP_ABOVE   = 0x1,
+    EBP_BELOW   = 0x2
+}ENUM_BINDING_PATHS_FLAGS;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgComponentBindings
+DECLARE_INTERFACE_(INetCfgComponentBindings, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,BindTo)(THIS_ INetCfgComponent *pnccItem) PURE;
+    STDMETHOD_(HRESULT,UnbindFrom)(THIS_ INetCfgComponent *pnccItem) PURE;
+    STDMETHOD_(HRESULT,SupportsBindingInterface)(THIS_ DWORD dwFlags, LPCWSTR pszwInterfaceName) PURE;
+    STDMETHOD_(HRESULT,IsBoundTo)(THIS_ INetCfgComponent *pnccItem) PURE;
+    STDMETHOD_(HRESULT,IsBindableTo)(THIS_ INetCfgComponent *pnccItem) PURE;
+    STDMETHOD_(HRESULT,EnumBindingPaths)(THIS_ DWORD dwFlags, IEnumNetCfgBindingPath **ppIEnum) PURE;
+    STDMETHOD_(HRESULT,MoveBefore)(THIS_ DWORD dwFlags, INetCfgBindingPath *pncbItemSrc, INetCfgBindingPath *pncbItemDest) PURE;
+    STDMETHOD_(HRESULT,MoveAfter)(THIS_ DWORD dwFlags, INetCfgBindingPath *pncbItemSrc, INetCfgBindingPath *pncbItemDest) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgComponentBindings_QueryInterface(p,a,b)           (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgComponentBindings_AddRef(p)                       (p)->lpVtbl->AddRef(p)
+#define INetCfgComponentBindings_Release(p)                      (p)->lpVtbl->Release(p)
+#define INetCfgComponentBindings_BindTo(p,a)                     (p)->lpVtbl->BindTo(p,a)
+#define INetCfgComponentBindings_UnbindFrom(p,a)                 (p)->lpVtbl->UnbindFrom(p,a)
+#define INetCfgComponentBindings_SupportsBindingInterface(p,a,b) (p)->lpVtbl->UnbindFrom(p,a,b)
+#define INetCfgComponentBindings_IsBoundTo(p,a)                  (p)->lpVtbl->IsBoundTo(p,a)
+#define INetCfgComponentBindings_IsBindableTo(p,a)               (p)->lpVtbl->IsBindableTo(p,a)
+#define INetCfgComponentBindings_EnumBindingPaths(p,a,b)         (p)->lpVtbl->EnumBindingPaths(p,a,b)
+#define INetCfgComponentBindings_MoveBefore(p,a,b,c)             (p)->lpVtbl->MoveBefore(p,a,b,c)
+#define INetCfgComponentBindings_MoveAfter(p,a,b,c)              (p)->lpVtbl->MoveAfter(p,a,b,c)
+#endif
+
+EXTERN_C const IID IID_INetCfgComponentBindings;
+
+#undef  INTERFACE
 #define INTERFACE   IEnumNetCfgComponent
 DECLARE_INTERFACE_(IEnumNetCfgComponent, IUnknown)
 {
