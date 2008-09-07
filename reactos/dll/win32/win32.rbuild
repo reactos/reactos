@@ -154,6 +154,9 @@
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
 </directory>
+<directory name="mscoree">
+	<xi:include href="mscoree/mscoree.rbuild" />
+</directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
 </directory>
