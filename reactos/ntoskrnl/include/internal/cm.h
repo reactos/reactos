@@ -840,6 +840,12 @@ CmpAddToDelayedClose(
 
 VOID
 NTAPI
+CmpArmDelayedCloseTimer(
+    VOID
+);
+
+VOID
+NTAPI
 CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 VOID
