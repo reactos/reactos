@@ -45,5 +45,14 @@
 	<file>uuid.c</file>
 	<file>xmldoc.c</file>
 	<file>xmlelem.c</file>
+	<file>saxreader.c</file>
+	<file>bsc.c</file>
+	<file>cdata.c</file>
+	<file>dispex.c</file>
+	<file>docfrag.c</file>
+	<file>domimpl.c</file>
+	<file>entityref.c</file>
+	<include base="msxml3" root="intermediate">.</include>
+	<file>msxml3_v1.idl</file>
 	<file>msxml3.spec</file>
 </module>
