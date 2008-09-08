@@ -301,7 +301,10 @@ NdisOpenFile(
   memmove ( FullFileName.Buffer, NDIS_FILE_FOLDER, FullFileName.Length );
   *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
   if ( !NT_SUCCESS(*Status) )
+  {
+    *Status = NDIS_STATUS_FAILURE;
     goto cleanup;
+  }
 
   InitializeObjectAttributes ( &ObjectAttributes,
     &FullFileName,
@@ -321,6 +324,11 @@ NdisOpenFile(
     FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
+  
+  if ( !NT_SUCCESS(*Status) )
+  {
+    *Status = NDIS_STATUS_FAILURE;
+  }
 
 cleanup:
   if ( FullFileName.Buffer != NULL )
