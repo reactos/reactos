@@ -192,6 +192,32 @@ DECLARE_INTERFACE_(INetConnectionPropertyUi, IUnknown)
 
 EXTERN_C const IID IID_INetConnectionPropertyUi;
 
+#undef  INTERFACE
+#define INTERFACE INetConnectionPropertyUi2
+DECLARE_INTERFACE_(INetConnectionPropertyUi2, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, SetConnection) (THIS_ INetConnection *pCon) PURE;
+    STDMETHOD_(HRESULT, AddPages) (THIS_ HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) PURE;
+    STDMETHOD_(HRESULT, GetIcon) (THIS_ DWORD dwSize, HICON *phIcon) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define INetConnectionPropertyUi2_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetConnectionPropertyUi2_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetConnectionPropertyUi2_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetConnectionPropertyUi2_SetConnection(p,a)         (p)->lpVtbl->SetConnection(p,a)
+#define INetConnectionPropertyUi2_AddPages(p,a,b,c)          (p)->lpVtbl->AddPages(p,a,b,c)
+#define INetConnectionPropertyUi2_GetIcon(p,a,b)             (p)->lpVtbl->GetIcon(p,a,b)
+#endif
+
+
+EXTERN_C const IID IID_INetConnectionPropertyUi2;
+
+
 VOID STDCALL NcFreeNetconProperties (NETCON_PROPERTIES* pProps);
 
 #endif
