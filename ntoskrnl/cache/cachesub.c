@@ -235,7 +235,6 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 
     if (!Result) 
     {
-	DPRINT("The requested section wasn't mapped, therefore doesn't need to be flushed\n");
 	return;
     }
     
@@ -243,7 +242,6 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
      * of the pages.  Figured out how to do this right. */
     if (Bcb->Pinned || !Bcb->Dirty) 
     {
-	DPRINT("Bailing because the area is pinned or not dirty\n");
 	return;
     }
     

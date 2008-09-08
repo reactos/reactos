@@ -56,7 +56,7 @@ CcInitializeCacheManager(VOID)
 
 	if (!NT_SUCCESS(Status))
 	{
-		KEBUGCHECK(0);
+	    KeBugCheck(0);
 	}
 
 	Status = PsCreateSystemThread
@@ -70,7 +70,7 @@ CcInitializeCacheManager(VOID)
 
 	if (!NT_SUCCESS(Status))
 	{
-		KEBUGCHECK(0);
+	    KeBugCheck(0);
 	}
 
     return TRUE;

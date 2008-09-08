@@ -46,7 +46,7 @@
 
 #include <ntoskrnl.h>
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 #include <reactos/exeformat.h>
 
 #if defined (ALLOC_PRAGMA)
@@ -123,7 +123,7 @@ MiSimpleReadComplete
     PMDL Mdl = Irp->MdlAddress;
     while (Mdl)
     {
-		MmUnlockPages(Mdl);
+	MmUnlockPages(Mdl);
         Mdl = Mdl->Next;
     }
 	
@@ -135,7 +135,7 @@ MiSimpleReadComplete
         IoFreeMdl(Mdl);
     }
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -162,11 +162,13 @@ MiSimpleRead
     
     ASSERT(DeviceObject);
     
+#if 0
     DPRINT1
 	("PAGING READ: FileObject %x Offset %x Length %d\n", 
 	 &FileObject, 
 	 FileOffset->LowPart,
 	 Length);
+#endif
     
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
     
@@ -473,6 +475,7 @@ VOID
 NTAPI
 MmLockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
+   DPRINT("MmLockSectionSegment(%p)\n", Segment);
    ExAcquireFastMutex(&Segment->Lock);
 }
 
@@ -481,6 +484,7 @@ NTAPI
 MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
    ExReleaseFastMutex(&Segment->Lock);
+   DPRINT("MmUnlockSectionSegment(%p)\n", Segment);
 }
 
 VOID
@@ -540,7 +544,6 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    {
       DirectoryOffset = PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(Offset);
       Table = Segment->PageDirectory.PageTables[DirectoryOffset];
-      DPRINT("Table %x\n", Table);
       if (Table == NULL)
       {
          return(0);
@@ -548,6 +551,9 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    }
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
    Entry = Table->Entry[TableOffset];
+
+   DPRINT("MmGetPageEntrySection(%p,%x) -> %x\n", Segment, Offset, Entry);
+
    return(Entry);
 }
 
@@ -587,6 +593,8 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 {
    ULONG Entry;
    BOOLEAN IsDirectMapped = FALSE;
+
+   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x)\n", Segment, Offset);
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
    if (Entry == 0)
@@ -707,6 +715,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
    {
       MmSetPageEntrySectionSegment(Segment, Offset, Entry);
    }
+   DPRINT("MmUnsharePageEntrySectionSegment(%p,%x) -> Done\n", Segment, Offset);
    return(SHARE_COUNT_FROM_SSE(Entry) > 0);
 }
 
@@ -730,6 +739,8 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
    PMM_REGION Region;
    BOOLEAN HasSwapEntry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+
+   DPRINT("Not Present: %p %p\n", AddressSpace, Address);
     
    /*
     * There is a window between taking the page fault and locking the
@@ -833,6 +844,8 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
        */
       if (!MmIsPagePresent(Process, Address))
       {
+	 DPRINT("!MmIsPagePresent(%p, %p)\n", Process, Address);
+
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
          HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
 
@@ -1040,7 +1053,9 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
    /*
     * Get the entry corresponding to the offset within the section
     */
+   DPRINT("MmNotPresentFaultSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+   DPRINT("Got entry %x\n", Entry);
 
    if (Entry == 0)
    {
@@ -1121,6 +1136,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
        * Check the entry. No one should change the status of a page
        * that has a pending page-in.
        */
+      DPRINT("MmNotPresentFaultSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset);
       if (Entry != Entry1)
       {
@@ -1192,6 +1208,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
        * Check the entry. No one should change the status of a page
        * that has a pending page-in.
        */
+      DPRINT("MmNotPresentFaultSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset);
       if (Entry != Entry1)
       {
@@ -1314,6 +1331,7 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
    MmLockSectionSegment(Segment);
 
    OldPage = MmGetPfnForProcess(NULL, Address);
+   DPRINT("MmNotPresentFaultSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
 
    MmUnlockSectionSegment(Segment);
@@ -1550,6 +1568,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
    /*
     * Get the section segment entry and the physical address.
     */
+   DPRINT("MmPageOutSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Context.Segment, Context.Offset);
    Entry = MmGetPageEntrySectionSegment(Context.Segment, Context.Offset);
    if (!MmIsPagePresent(Process, Address))
    {
@@ -1582,6 +1601,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
     * If this wasn't a private page then we should have reduced the entry to
     * zero by deleting all the rmaps.
     */
+   DPRINT("MmPageOutSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Context.Segment, Context.Offset);
    if (!Context.Private && MmGetPageEntrySectionSegment(Context.Segment, Context.Offset) != 0)
    {
       if (!(Context.Segment->Flags & MM_PAGEFILE_SEGMENT) &&
@@ -1894,6 +1914,7 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
    /*
     * Get the section segment entry and the physical address.
     */
+   DPRINT("MmWritePageSectionView -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
    if (!MmIsPagePresent(Process, Address))
    {
@@ -2022,6 +2043,7 @@ MmAlterViewAttributes(PMM_AVL_TABLE AddressSpace,
 
             Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                      + MemoryArea->Data.SectionData.ViewOffset;
+	    DPRINT("MmAlterViewAttributes -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
             Page = MmGetPfnForProcess(Process, Address);
 
@@ -2134,6 +2156,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
    Length = PAGE_ROUND_UP(Segment->Length);
    for (Offset = 0; Offset < Length; Offset += PAGE_SIZE)
    {
+      DPRINT("MmAlterViewAttributes -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
       Entry = MmGetPageEntrySectionSegment(Segment, Offset);
       if (Entry)
       {
@@ -3836,6 +3859,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset);
    }
 
+   DPRINT("MmFreeSectionPage -> MmGetPageEntrySectionSegment(%p, %x)\n", Segment, Offset);
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
 
    /*
@@ -3984,6 +4008,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
        MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
+      DPRINT("STATUS_NOT_MAPPED_VIEW\n");
       return STATUS_NOT_MAPPED_VIEW;
    }
 
@@ -4015,6 +4040,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
                 MemoryArea->Type != MEMORY_AREA_SECTION_VIEW)
             {
                MmUnlockAddressSpace(AddressSpace);
+	       DPRINT("STATUS_NOT_MAPPED_VIEW\n");
                return STATUS_NOT_MAPPED_VIEW;
             }
             break;
