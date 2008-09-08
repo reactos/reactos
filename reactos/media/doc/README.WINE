@@ -82,6 +82,7 @@ reactos/dll/win32/olepro32        # Autosync
 reactos/dll/win32/pdh             # Autosync
 reactos/dll/win32/powrprof        # Forked at Wine-1.0rc5
 reactos/dll/win32/printui         # Autosync
+reactos/dll/win32/pstorec         # Autosync
 reactos/dll/win32/rasapi32        # Autosync
 reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync

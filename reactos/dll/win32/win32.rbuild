@@ -253,6 +253,9 @@
 <directory name="psapi">
 	<xi:include href="psapi/psapi.rbuild" />
 </directory>
+<directory name="pstorec">
+	<xi:include href="pstorec/pstorec.rbuild" />
+</directory>
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
 </directory>
