@@ -67,7 +67,7 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
-	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
+	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
 #ifdef DBG
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd));
@@ -167,7 +167,7 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
-	MemPointer = (PVOID)(StartPageNumber * MM_PAGE_SIZE);
+	MemPointer = (PVOID)((ULONG_PTR)StartPageNumber * MM_PAGE_SIZE);
 
 #ifdef DBG
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, StartPageNumber));
@@ -201,7 +201,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
 
 	// Get the page number for their desired address
-	DesiredAddressPageNumber = (ULONG)DesiredAddress / MM_PAGE_SIZE;
+	DesiredAddressPageNumber = (ULONG_PTR)DesiredAddress / MM_PAGE_SIZE;
 
 	// If we don't have enough available mem
 	// then return NULL
@@ -224,7 +224,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	MmAllocatePagesInLookupTable(PageLookupTableAddress, FirstFreePageFromEnd, PagesNeeded, MemoryType);
 
 	FreePagesInLookupTable -= PagesNeeded;
-	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
+	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
 #ifdef DBG
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd));

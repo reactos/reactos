@@ -231,8 +231,8 @@ LdrPEGetExportByName(PVOID BaseAddress,
                      USHORT Hint)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDir;
-    PULONG * ExFunctions;
-    PULONG * ExNames;
+    ULONG * ExFunctions;
+    ULONG * ExNames;
     USHORT * ExOrdinals;
     PVOID ExName;
     ULONG Ordinal;
@@ -267,10 +267,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
     /*
      * Get header pointers
      */
-    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
+    ExNames = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
     ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
-    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
-    
+    ExFunctions = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
+
     /*
      * Check the hint first
      */
@@ -348,7 +348,7 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
                                  PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory)
 {
     PVOID* ImportAddressList;
-    PULONG FunctionNameList;
+    PULONG_PTR FunctionNameList;
     
     if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
     {
@@ -361,11 +361,11 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
     /* Get the list of functions to import. */
     if (ImportModuleDirectory->OriginalFirstThunk != 0)
     {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
+        FunctionNameList = (PULONG_PTR)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
     }
     else
     {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
+        FunctionNameList = (PULONG_PTR)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
     }
     
     /* Walk through function list and fixup addresses. */

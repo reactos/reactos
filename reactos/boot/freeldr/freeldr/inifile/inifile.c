@@ -20,7 +20,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)
+BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -35,7 +35,7 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 		{
 			// We found it
 			if (SectionId)
-				*SectionId = (ULONG)Section;
+				*SectionId = (ULONG_PTR)Section;
 			DbgPrint((DPRINT_INIFILE, "IniOpenSection() Found it! SectionId = 0x%x\n", SectionId));
 			return TRUE;
 		}
@@ -49,7 +49,7 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 	return FALSE;
 }
 
-ULONG IniGetNumSectionItems(ULONG SectionId)
+ULONG IniGetNumSectionItems(ULONG_PTR SectionId)
 {
 	PINI_SECTION	Section = (PINI_SECTION)SectionId;
 
@@ -59,7 +59,7 @@ ULONG IniGetNumSectionItems(ULONG SectionId)
 	return Section->SectionItemCount;
 }
 
-PINI_SECTION_ITEM IniGetSettingByNumber(ULONG SectionId, ULONG SettingNumber)
+PINI_SECTION_ITEM IniGetSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
@@ -83,7 +83,7 @@ PINI_SECTION_ITEM IniGetSettingByNumber(ULONG SectionId, ULONG SettingNumber)
 	return NULL;
 }
 
-ULONG IniGetSectionSettingNameSize(ULONG SectionId, ULONG SettingIndex)
+ULONG IniGetSectionSettingNameSize(ULONG_PTR SectionId, ULONG SettingIndex)
 {
 	PINI_SECTION_ITEM	SectionItem;
 
@@ -96,7 +96,7 @@ ULONG IniGetSectionSettingNameSize(ULONG SectionId, ULONG SettingIndex)
 	return (strlen(SectionItem->ItemName) + 1);
 }
 
-ULONG IniGetSectionSettingValueSize(ULONG SectionId, ULONG SettingIndex)
+ULONG IniGetSectionSettingValueSize(ULONG_PTR SectionId, ULONG SettingIndex)
 {
 	PINI_SECTION_ITEM	SectionItem;
 
@@ -109,7 +109,7 @@ ULONG IniGetSectionSettingValueSize(ULONG SectionId, ULONG SettingIndex)
 	return (strlen(SectionItem->ItemValue) + 1);
 }
 
-BOOLEAN IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize)
+BOOLEAN IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR SettingName, ULONG NameSize, PCHAR SettingValue, ULONG ValueSize)
 {
 	PINI_SECTION_ITEM	SectionItem;
 	DbgPrint((DPRINT_INIFILE, ".001 NameSize = %d ValueSize = %d\n", NameSize, ValueSize));
@@ -142,7 +142,7 @@ BOOLEAN IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PCHAR Setti
 	return TRUE;
 }
 
-BOOLEAN IniReadSettingByName(ULONG SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize)
+BOOLEAN IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
@@ -174,7 +174,7 @@ BOOLEAN IniReadSettingByName(ULONG SectionId, PCSTR SettingName, PCHAR Buffer, U
 	return FALSE;
 }
 
-BOOLEAN IniAddSection(PCSTR SectionName, ULONG* SectionId)
+BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -202,12 +202,12 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG* SectionId)
 	IniFileSectionCount++;
 	InsertHeadList(&IniFileSectionListHead, &Section->ListEntry);
 
-	*SectionId = (ULONG)Section;
+	*SectionId = (ULONG_PTR)Section;
 
 	return TRUE;
 }
 
-BOOLEAN IniAddSettingValueToSection(ULONG SectionId, PCSTR SettingName, PCSTR SettingValue)
+BOOLEAN IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;

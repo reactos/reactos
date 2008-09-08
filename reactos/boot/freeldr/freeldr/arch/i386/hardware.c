@@ -779,21 +779,21 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
 }
 
 static VOID
-InitializeSerialPort(ULONG Port,
+InitializeSerialPort(PUCHAR Port,
 		     ULONG LineControl)
 {
-  WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);  /* set DLAB on   */
-  WRITE_PORT_UCHAR((PUCHAR)Port,     0x60);  /* speed LO byte */
-  WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* speed HI byte */
-  WRITE_PORT_UCHAR((PUCHAR)Port + 3, LineControl);
-  WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);     /* set comm and DLAB to 0 */
-  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);  /* DR int enable */
-  READ_PORT_UCHAR((PUCHAR)Port + 5);  /* clear error bits */
+  WRITE_PORT_UCHAR(Port + 3, 0x80);  /* set DLAB on   */
+  WRITE_PORT_UCHAR(Port,     0x60);  /* speed LO byte */
+  WRITE_PORT_UCHAR(Port + 1, 0);     /* speed HI byte */
+  WRITE_PORT_UCHAR(Port + 3, LineControl);
+  WRITE_PORT_UCHAR(Port + 1, 0);     /* set comm and DLAB to 0 */
+  WRITE_PORT_UCHAR(Port + 4, 0x09);  /* DR int enable */
+  READ_PORT_UCHAR(Port + 5);  /* clear error bits */
 }
 
 
 static ULONG
-DetectSerialMouse(ULONG Port)
+DetectSerialMouse(PUCHAR Port)
 {
   CHAR Buffer[4];
   ULONG i;
@@ -801,8 +801,8 @@ DetectSerialMouse(ULONG Port)
   UCHAR LineControl;
 
   /* Shutdown mouse or something like that */
-  LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
-  WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
+  LineControl = READ_PORT_UCHAR(Port + 4);
+  WRITE_PORT_UCHAR(Port + 4, (LineControl & ~0x02) | 0x01);
   StallExecutionProcessor(100000);
 
   /*
@@ -812,18 +812,18 @@ DetectSerialMouse(ULONG Port)
    * therefore we must give up after some time.
    */
   TimeOut = 200;
-  while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
+  while (READ_PORT_UCHAR(Port + 5) & 0x01)
     {
       if (--TimeOut == 0)
         return MOUSE_TYPE_NONE;
-      READ_PORT_UCHAR((PUCHAR)Port);
+      READ_PORT_UCHAR(Port);
     }
 
   /*
    * Send modem control with 'Data Terminal Ready', 'Request To Send' and
    * 'Output Line 2' message. This enables mouse to identify.
    */
-  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
+  WRITE_PORT_UCHAR(Port + 4, 0x0b);
 
   /* Wait 10 milliseconds for the mouse getting ready */
   StallExecutionProcessor(10000);
@@ -832,14 +832,14 @@ DetectSerialMouse(ULONG Port)
   TimeOut = 200;
   for (i = 0; i < 4; i++)
     {
-      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+      while (((READ_PORT_UCHAR(Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
 	  StallExecutionProcessor(1000);
 	  --TimeOut;
 	  if (TimeOut == 0)
 	    return MOUSE_TYPE_NONE;
 	}
-      Buffer[i] = READ_PORT_UCHAR((PUCHAR)Port);
+      Buffer[i] = READ_PORT_UCHAR(Port);
     }
 
   DbgPrint((DPRINT_HWDETECT,
@@ -891,26 +891,26 @@ DetectSerialMouse(ULONG Port)
 
 
 static ULONG
-GetSerialMousePnpId(ULONG Port, char *Buffer)
+GetSerialMousePnpId(PUCHAR Port, char *Buffer)
 {
   ULONG TimeOut;
   ULONG i = 0;
   char c;
   char x;
 
-  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);
+  WRITE_PORT_UCHAR(Port + 4, 0x09);
 
   /* Wait 10 milliseconds for the mouse getting ready */
   StallExecutionProcessor(10000);
 
-  WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
+  WRITE_PORT_UCHAR(Port + 4, 0x0b);
 
   StallExecutionProcessor(10000);
 
   for (;;)
     {
       TimeOut = 200;
-      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+      while (((READ_PORT_UCHAR(Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
 	  StallExecutionProcessor(1000);
 	  --TimeOut;
@@ -920,7 +920,7 @@ GetSerialMousePnpId(ULONG Port, char *Buffer)
 	    }
 	}
 
-      c = READ_PORT_UCHAR((PUCHAR)Port);
+      c = READ_PORT_UCHAR(Port);
       if (c == 0x08 || c == 0x28)
 	break;
     }
@@ -931,14 +931,14 @@ GetSerialMousePnpId(ULONG Port, char *Buffer)
   for (;;)
     {
       TimeOut = 200;
-      while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
+      while (((READ_PORT_UCHAR(Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
 	  StallExecutionProcessor(1000);
 	  --TimeOut;
 	  if (TimeOut == 0)
 	    return 0;
 	}
-      c = READ_PORT_UCHAR((PUCHAR)Port);
+      c = READ_PORT_UCHAR(Port);
       Buffer[i++] = c;
       if (c == x)
 	break;
@@ -952,7 +952,7 @@ GetSerialMousePnpId(ULONG Port, char *Buffer)
 
 static VOID
 DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
-			      ULONG Base)
+			      PUCHAR Base)
 {
   CM_PARTIAL_RESOURCE_LIST PartialResourceList;
   char Buffer[256];
@@ -1227,7 +1227,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       if (!Rs232PortInUse(Base))
         {
           /* Detect serial mouse */
-          DetectSerialPointerPeripheral(ControllerKey, Base);
+          DetectSerialPointerPeripheral(ControllerKey, UlongToPtr(Base));
         }
 
       ControllerNumber++;

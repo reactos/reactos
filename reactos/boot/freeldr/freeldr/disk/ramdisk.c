@@ -66,7 +66,7 @@ RamDiskReadLogicalSectors(IN ULONG Reserved,
     //
     // Get actual pointers and lengths
     //
-    StartAddress = (PVOID)((ULONG)SectorNumber * 512);
+    StartAddress = (PVOID)((ULONG_PTR)SectorNumber * 512);
     Length = SectorCount * 512;
     
     //

@@ -71,7 +71,7 @@ GetPciIrqRoutingTable(VOID)
   ULONG i;
 
   Table = (PPCI_IRQ_ROUTING_TABLE)0xF0000;
-  while ((ULONG)Table < 0x100000)
+  while ((ULONG_PTR)Table < 0x100000)
     {
       if (Table->Signature == 0x52495024)
 	{
@@ -98,7 +98,7 @@ GetPciIrqRoutingTable(VOID)
 	  return Table;
 	}
 
-      Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG)Table + 0x10);
+      Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
     }
 
   return NULL;
