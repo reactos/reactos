@@ -794,9 +794,10 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
                 hr = INetConnectionPropertyUi_SetConnection(pNCP, val->pItem);
                 if (SUCCEEDED(hr))
                 {
-                    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
+                    ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
+                    ZeroMemory(hppages, sizeof(hppages));
                     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
                     pinfo.u3.phpage = hppages;
                     pinfo.pszCaption = pProperties->pszwName;
 

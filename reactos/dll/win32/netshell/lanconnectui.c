@@ -22,12 +22,19 @@ typedef struct
 
 typedef struct
 {
-    INetConnectionPropertyUi *lpVtbl;
+    INetConnectionPropertyUi2 *lpVtbl;
+    INetLanConnectionUiInfo * lpLanConUiInfoVtbl;
     INetConnection * pCon;
     INetCfgLock *NCfgLock;
     INetCfg * pNCfg;
+    NETCON_PROPERTIES * pProperties;
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
+
+static LPINetConnectionPropertyUiImpl __inline impl_from_NetLanConnectionUiInfo(INetLanConnectionUiInfo *iface)
+{
+    return (LPINetConnectionPropertyUiImpl)((char *)iface - FIELD_OFFSET(INetConnectionPropertyUiImpl, lpLanConUiInfoVtbl));
+}
 
 HPROPSHEETPAGE
 InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
@@ -41,10 +48,10 @@ InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWS
     ppage.pfnDlgProc = dlgproc;
     ppage.lParam = lParam;
     ppage.hInstance = netshell_hInstance;
-    ppage.pszTitle = szTitle;
     if (szTitle)
     {
         ppage.dwFlags |= PSP_USETITLE;
+        ppage.pszTitle = szTitle;
     }
     return CreatePropertySheetPageW(&ppage);
 }
@@ -64,23 +71,17 @@ AddItemToListView(HWND hDlgCtrl, PNET_ITEM pItem, LPWSTR szName, BOOL bChecked)
 }
 
 BOOL
-GetINetCfgComponent(INetCfg * pNCfg, INetConnection * pNetCon, INetCfgComponent ** pOut)
+GetINetCfgComponent(INetCfg * pNCfg, INetConnectionPropertyUiImpl * This, INetCfgComponent ** pOut)
 {
     LPWSTR pName;
     HRESULT hr;
-    NETCON_PROPERTIES* pProps;
     INetCfgComponent * pNCg;
     ULONG Fetched;
     IEnumNetCfgComponent * pEnumCfg;
 
-    hr = INetConnection_GetProperties(pNetCon, &pProps);
-    if (FAILED(hr))
-        return FALSE;
-
     hr = INetCfg_EnumComponents(pNCfg, &GUID_DEVCLASS_NET, &pEnumCfg);
     if (FAILED(hr))
     {
-        NcFreeNetconProperties(pProps);
         return FALSE;
     }
 
@@ -89,11 +90,10 @@ GetINetCfgComponent(INetCfg * pNCfg, INetConnection * pNetCon, INetCfgComponent 
        hr = INetCfgComponent_GetDisplayName(pNCg, &pName);
        if (SUCCEEDED(hr))
        {
-           if (!wcsicmp(pName, pProps->pszwDeviceName))
+           if (!wcsicmp(pName, This->pProperties->pszwDeviceName))
            {
                *pOut = pNCg;
                IEnumNetCfgComponent_Release(pEnumCfg);
-               NcFreeNetconProperties(pProps);
                return TRUE;
            }
            CoTaskMemFree(pName);
@@ -101,7 +101,6 @@ GetINetCfgComponent(INetCfg * pNCfg, INetConnection * pNetCon, INetCfgComponent 
        INetCfgComponent_Release(pNCg);
     }
     IEnumNetCfgComponent_Release(pEnumCfg);
-    NcFreeNetconProperties(pProps);
     return FALSE;
 }
 
@@ -139,7 +138,7 @@ EnumComponents(HWND hDlgCtrl, INetConnectionPropertyUiImpl * This, INetCfg * pNC
           hr = INetCfgComponent_QueryInterface(pNCfgComp, &IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
 
           bChecked = FALSE;
-          if (GetINetCfgComponent(pNCfg, This->pCon, &pAdapterCfgComp))
+          if (GetINetCfgComponent(pNCfg, This, &pAdapterCfgComp))
           {
               hr = INetCfgComponentBindings_IsBoundTo(pCompBind, pAdapterCfgComp);
               if (hr == S_OK)
@@ -175,21 +174,16 @@ InitializeLANPropertiesUIDlg(HWND hwndDlg, INetConnectionPropertyUiImpl * This)
     LVCOLUMNW lc;
     RECT rc;
     DWORD dwStyle;
-    NETCON_PROPERTIES * pProperties;
     LPWSTR pDisplayName;
     LVITEMW li;
 
-    hr = INetConnection_GetProperties(This->pCon, &pProperties);
-    if (FAILED(hr))
-        return;
-
-    SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)pProperties->pszwDeviceName);
-    if (pProperties->dwCharacter & NCCF_SHOW_ICON)
+    SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)This->pProperties->pszwDeviceName);
+    if (This->pProperties->dwCharacter & NCCF_SHOW_ICON)
     {
         /* check show item on taskbar*/
         SendDlgItemMessageW(hwndDlg, IDC_SHOWTASKBAR, BM_SETCHECK, BST_CHECKED, 0);
     }
-    if (pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
+    if (This->pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
     {
         /* check notify item */
         SendDlgItemMessageW(hwndDlg, IDC_NOTIFYNOCONNECTION, BM_SETCHECK, BST_CHECKED, 0);
@@ -252,33 +246,13 @@ ShowNetworkComponentProperties(
     HWND hDlgCtrl;
     UINT Index, Count;
     HRESULT hr;
-    INetConnectionPropertyUi * pConUI = NULL;
     INetCfgComponent * pNCfgComp;
     PNET_ITEM pItem;
-    WCHAR szBuffer[200];
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
     Count = ListView_GetItemCount(hDlgCtrl);
     if (!Count)
         return;
-
-
-    hr = CoCreateInstance(&CLSID_LANConnectUI, 
-                          NULL,
-                          CLSCTX_INPROC_SERVER | CLSCTX_NO_CODE_DOWNLOAD, 
-                          &IID_INetConnectionPropertyUi, 
-                          (LPVOID)&pConUI);
-
-    if (FAILED(hr))
-    {
-        return;
-    }
-    hr = INetConnectionPropertyUi_SetConnection(pConUI, This->pCon);
-    if (FAILED(hr))
-    {
-        INetConnectionPropertyUi_Release(pConUI);
-        return;
-    }
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_PARAM | LVIF_STATE;
@@ -295,24 +269,17 @@ ShowNetworkComponentProperties(
 
     if (!(lvItem.state & LVIS_SELECTED))
     {
-        INetConnectionPropertyUi_Release(pConUI);
         return;
     }
 
     pItem = (PNET_ITEM)lvItem.lParam;
     pNCfgComp = (INetCfgComponent*) pItem->pNCfgComp;
 
-    hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_QUERY_PROPERTY_UI, (IUnknown*)pConUI);
+    hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_QUERY_PROPERTY_UI, (IUnknown*)This);
     if (SUCCEEDED(hr))
     {
-        hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_SHOW_PROPERTY_UI, (IUnknown*)pConUI);
+        hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_SHOW_PROPERTY_UI, (IUnknown*)This);
     }
-
-	swprintf(szBuffer, L"result %08x", hr);
-	MessageBoxW(NULL, szBuffer, NULL, MB_OK);
-
-    INetConnectionPropertyUi_Release(pConUI);
-
 }
 
 
@@ -330,6 +297,8 @@ LANPropertiesUIDlg(
     LVITEMW li;
     PNET_ITEM pItem;
     INetConnectionPropertyUiImpl * This;
+    LPPSHNOTIFY lppsn;
+    HRESULT hr;
 
     switch(uMsg)
     {
@@ -341,6 +310,33 @@ LANPropertiesUIDlg(
             return TRUE;
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
+            lppsn = (LPPSHNOTIFY) lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                This = (INetConnectionPropertyUiImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                if (This->pNCfg)
+                {
+                    hr = INetCfg_Apply(This->pNCfg);
+                    if (SUCCEEDED(hr))
+                        return PSNRET_NOERROR;
+                    else
+                        return PSNRET_INVALID;
+                }
+                return PSNRET_NOERROR;
+            }
+            else if (lppsn->hdr.code == PSN_APPLY)
+            {
+                This = (INetConnectionPropertyUiImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                if (This->pNCfg)
+                {
+                    hr = INetCfg_Cancel(This->pNCfg);
+                    if (SUCCEEDED(hr))
+                        return PSNRET_NOERROR;
+                    else
+                        return PSNRET_INVALID;
+                }
+                return PSNRET_NOERROR;
+            }
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                     ZeroMemory(&li, sizeof(li));
@@ -385,30 +381,40 @@ LANPropertiesUIDlg(
 static
 HRESULT
 WINAPI
-INetConnectionPropertyUi_fnQueryInterface(
-    INetConnectionPropertyUi * iface,
+INetConnectionPropertyUi2_fnQueryInterface(
+    INetConnectionPropertyUi2 * iface,
     REFIID iid,
     LPVOID * ppvObj)
 {
+    //LPOLESTR pStr;
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
     *ppvObj = NULL;
 
     if (IsEqualIID (iid, &IID_IUnknown) ||
-        IsEqualIID (iid, &IID_INetConnectionPropertyUi))
+        IsEqualIID (iid, &IID_INetConnectionPropertyUi) ||
+        IsEqualIID (iid, &IID_INetConnectionPropertyUi2))
     {
         *ppvObj = This;
         IUnknown_AddRef(iface);
         return S_OK;
     }
-
+    else if (IsEqualIID(iid, &IID_INetLanConnectionUiInfo))
+    {
+        *ppvObj = &This->lpLanConUiInfoVtbl;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+    //StringFromCLSID(iid, &pStr);
+    //MessageBoxW(NULL, pStr, L"INetConnectionPropertyUi_fnQueryInterface", MB_OK);
+    //CoTaskMemFree(pStr);
     return E_NOINTERFACE;
 }
 
 static
 ULONG
 WINAPI
-INetConnectionPropertyUi_fnAddRef(
-    INetConnectionPropertyUi * iface)
+INetConnectionPropertyUi2_fnAddRef(
+    INetConnectionPropertyUi2 * iface)
 {
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
@@ -419,14 +425,17 @@ INetConnectionPropertyUi_fnAddRef(
 static
 ULONG
 WINAPI
-INetConnectionPropertyUi_fnRelease(
-    INetConnectionPropertyUi * iface)
+INetConnectionPropertyUi2_fnRelease(
+    INetConnectionPropertyUi2 * iface)
 {
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     if (!refCount) 
     {
+        INetCfg_Release(This->pNCfg);
+        INetCfgLock_Release(This->NCfgLock);
+        NcFreeNetconProperties(This->pProperties);
         CoTaskMemFree (This);
     }
     return refCount;
@@ -435,8 +444,8 @@ INetConnectionPropertyUi_fnRelease(
 static
 HRESULT
 WINAPI
-INetConnectionPropertyUi_fnSetConnection(
-    INetConnectionPropertyUi * iface,
+INetConnectionPropertyUi2_fnSetConnection(
+    INetConnectionPropertyUi2 * iface,
     INetConnection *pCon)
 {
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
@@ -455,8 +464,8 @@ INetConnectionPropertyUi_fnSetConnection(
 static
 HRESULT
 WINAPI
-INetConnectionPropertyUi_fnAddPages(
-    INetConnectionPropertyUi * iface,
+INetConnectionPropertyUi2_fnAddPages(
+    INetConnectionPropertyUi2 * iface,
     HWND hwndParent, 
     LPFNADDPROPSHEETPAGE pfnAddPage,
     LPARAM lParam)
@@ -465,7 +474,6 @@ INetConnectionPropertyUi_fnAddPages(
     BOOL ret;
     HRESULT hr = E_FAIL;
     INITCOMMONCONTROLSEX initEx;
-    NETCON_PROPERTIES * pProperties;
     INetConnectionPropertyUiImpl * This =  (INetConnectionPropertyUiImpl*)iface;
 
 
@@ -474,11 +482,11 @@ INetConnectionPropertyUi_fnAddPages(
     if(!InitCommonControlsEx(&initEx))
         return E_FAIL;
 
-    hr = INetConnection_GetProperties(This->pCon, &pProperties);
+    hr = INetConnection_GetProperties(This->pCon, &This->pProperties);
     if (FAILED(hr))
         return hr;
 
-    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)This, pProperties->pszwName);
+    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)This, This->pProperties->pszwName);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
@@ -488,19 +496,81 @@ INetConnectionPropertyUi_fnAddPages(
         }
         DestroyPropertySheetPage(hProp);
     }
-    //NcFreeNetconProperties(pProperties);
     return hr;
 }
 
-static const INetConnectionPropertyUiVtbl vt_NetConnectionPropertyUi =
+static
+HRESULT
+WINAPI
+INetConnectionPropertyUi2_fnGetIcon(
+    INetConnectionPropertyUi2 * iface,
+    DWORD dwSize,
+    HICON *phIcon)
 {
-    INetConnectionPropertyUi_fnQueryInterface,
-    INetConnectionPropertyUi_fnAddRef,
-    INetConnectionPropertyUi_fnRelease,
-    INetConnectionPropertyUi_fnSetConnection,
-    INetConnectionPropertyUi_fnAddPages,
+    return E_NOTIMPL;
+}
+
+static const INetConnectionPropertyUi2Vtbl vt_NetConnectionPropertyUi =
+{
+    INetConnectionPropertyUi2_fnQueryInterface,
+    INetConnectionPropertyUi2_fnAddRef,
+    INetConnectionPropertyUi2_fnRelease,
+    INetConnectionPropertyUi2_fnSetConnection,
+    INetConnectionPropertyUi2_fnAddPages,
+    INetConnectionPropertyUi2_fnGetIcon,
 };
 
+static
+HRESULT
+STDCALL
+INetLanConnectionUiInfo_fnQueryInterface(
+    INetLanConnectionUiInfo * iface,
+    REFIID iid,
+    LPVOID * ppvObj)
+{
+    INetConnectionPropertyUiImpl * This =  impl_from_NetLanConnectionUiInfo(iface);
+    return INetConnectionPropertyUi_QueryInterface((INetConnectionPropertyUi*)This, iid, ppvObj);
+}
+
+static
+ULONG
+STDCALL
+INetLanConnectionUiInfo_fnAddRef(
+    INetLanConnectionUiInfo * iface)
+{
+    INetConnectionPropertyUiImpl * This =  impl_from_NetLanConnectionUiInfo(iface);
+    return INetConnectionPropertyUi_AddRef((INetConnectionPropertyUi*)This);
+}
+
+static
+ULONG
+STDCALL
+INetLanConnectionUiInfo_fnRelease(
+    INetLanConnectionUiInfo * iface)
+{
+    INetConnectionPropertyUiImpl * This =  impl_from_NetLanConnectionUiInfo(iface);
+    return INetConnectionPropertyUi_Release((INetConnectionPropertyUi*)This);
+}
+
+static
+HRESULT
+STDCALL
+INetLanConnectionUiInfo_fnGetDeviceGuid(
+    INetLanConnectionUiInfo * iface,
+    GUID * pGuid)
+{
+    INetConnectionPropertyUiImpl * This =  impl_from_NetLanConnectionUiInfo(iface);
+    CopyMemory(pGuid, &This->pProperties->guidId, sizeof(GUID));
+    return S_OK;
+}
+
+static const INetLanConnectionUiInfoVtbl vt_NetLanConnectionUiInfo =
+{
+    INetLanConnectionUiInfo_fnQueryInterface,
+    INetLanConnectionUiInfo_fnAddRef,
+    INetLanConnectionUiInfo_fnRelease,
+    INetLanConnectionUiInfo_fnGetDeviceGuid,
+};
 HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     INetConnectionPropertyUiImpl * This;
@@ -518,9 +588,12 @@ HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVO
     This->ref = 1;
     This->pCon = NULL;
     This->pNCfg = NULL;
-    This->lpVtbl = (INetConnectionPropertyUi*)&vt_NetConnectionPropertyUi;
+    This->NCfgLock = NULL;
+    This->pProperties = NULL;
+    This->lpVtbl = (INetConnectionPropertyUi2*)&vt_NetConnectionPropertyUi;
+    This->lpLanConUiInfoVtbl = (INetLanConnectionUiInfo*)&vt_NetLanConnectionUiInfo;
 
-    if (!SUCCEEDED (INetConnectionPropertyUi_fnQueryInterface ((INetConnectionPropertyUi*)This, riid, ppv)))
+    if (!SUCCEEDED (INetConnectionPropertyUi2_fnQueryInterface ((INetConnectionPropertyUi2*)This, riid, ppv)))
     {
         IUnknown_Release((IUnknown*)This);
         return E_NOINTERFACE;
