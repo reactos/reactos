@@ -259,14 +259,14 @@
 	</directory>
 	<directory name="stdio">
 		<file>access.c</file>
-		<file>file.c</file>
-		<file>find.c</file>
+		<!-- file>file.c</file -->
+		<!-- file>find.c</file -->
 		<file>fmode.c</file>
 		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
 		<file>waccess.c</file>
-		<file>wfind.c</file>
+		<!-- file>wfind.c</file -->
 		<file>wpopen.c</file>
 	</directory>
 	<directory name="stdlib">
