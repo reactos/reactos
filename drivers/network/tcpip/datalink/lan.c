@@ -1267,7 +1267,7 @@ NDIS_STATUS LANUnregisterAdapter(
 
     FreeAdapter(Adapter);
 
-    return NDIS_STATUS_SUCCESS;
+    return NdisStatus;
 }
 
 
