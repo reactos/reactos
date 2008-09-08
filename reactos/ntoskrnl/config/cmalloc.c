@@ -70,9 +70,8 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     KeAcquireGuardedMutex(&CmpAllocBucketLock);
     
     /* Sanity check on lock ownership */
-    ASSERT((GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner ==
-            KeGetCurrentThread()) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    //ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+    //       (CmpTestRegistryLockExclusive() == TRUE));
     
     /* Add us to the free list */
     InsertTailList(&CmpFreeKCBListHead, &Kcb->FreeListEntry);
