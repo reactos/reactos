@@ -73,6 +73,8 @@ CdfsCreateFCB(PCWSTR FileName)
   PFCB Fcb;
 
   Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(FCB), TAG_FCB);
+  if(!Fcb) return NULL;
+
   RtlZeroMemory(Fcb, sizeof(FCB));
 
   if (FileName)
