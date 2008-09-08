@@ -100,6 +100,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
    {
       /* FIXME: What do we do? Unload the driver or just disable the device? */
       DPRINT1("An FDO was not attached\n");
+      ObDereferenceObject(Fdo);
       IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
       return STATUS_UNSUCCESSFUL;
    }
@@ -304,6 +305,12 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
 
        /* Allocate the new copy */
        NewList = ExAllocatePool(PagedPool, NewSize);
+
+       if (!NewList) {
+	   /* Fail */
+	   ExFreePool(IopBusTypeGuidList);
+	   goto Quickie;
+       }
 
        /* Now copy them, decrease the size too */
        NewSize -= sizeof(GUID);
@@ -2186,7 +2193,7 @@ IopEnumerateDetectedDevices(
       Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
       if (Status == STATUS_NO_MORE_ENTRIES)
          break;
-      else if (Status == STATUS_BUFFER_OVERFLOW)
+      else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
          ExFreePool(pDeviceInformation);
          DeviceInfoLength = RequiredSize;
@@ -2220,7 +2227,7 @@ IopEnumerateDetectedDevices(
 
       /* Read boot resources, and add then to parent ones */
       Status = ZwQueryValueKey(hDeviceKey, &ConfigurationDataU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      if (Status == STATUS_BUFFER_OVERFLOW)
+      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
          ExFreePool(pValueInformation);
          ValueInfoLength = RequiredSize;
@@ -2302,7 +2309,7 @@ IopEnumerateDetectedDevices(
             Status = ZwEnumerateKey(hDeviceKey, IndexSubKey, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
             if (Status == STATUS_NO_MORE_ENTRIES)
                break;
-            else if (Status == STATUS_BUFFER_OVERFLOW)
+            else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
             {
                ExFreePool(pDeviceInformation);
                DeviceInfoLength = RequiredSize;
@@ -2338,7 +2345,7 @@ IopEnumerateDetectedDevices(
 
       /* Read identifier */
       Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      if (Status == STATUS_BUFFER_OVERFLOW)
+      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
          ExFreePool(pValueInformation);
          ValueInfoLength = RequiredSize;
@@ -2579,7 +2586,7 @@ IopIsAcpiComputer(VOID)
       Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
       if (Status == STATUS_NO_MORE_ENTRIES)
          break;
-      else if (Status == STATUS_BUFFER_OVERFLOW)
+      else if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
          ExFreePool(pDeviceInformation);
          DeviceInfoLength = RequiredSize;
@@ -2615,7 +2622,7 @@ IopIsAcpiComputer(VOID)
 
       /* Read identifier */
       Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
-      if (Status == STATUS_BUFFER_OVERFLOW)
+      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
          ExFreePool(pValueInformation);
          ValueInfoLength = RequiredSize;
@@ -2839,6 +2846,11 @@ PnpInit(VOID)
 
     /* Initialize the Bus Type GUID List */
     IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
+    if (!IopBusTypeGuidList) {
+	DPRINT1("ExAllocatePool() failed\n");
+	KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
+    }
+
     RtlZeroMemory(IopBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
     ExInitializeFastMutex(&IopBusTypeGuidList->Lock);
 
