@@ -123,7 +123,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Set 'Identifier' value */
         FldrSetIdentifier(BiosKey, "ACPI BIOS");
-        MmFreeMemory(PartialResourceList);
+        MmHeapFree(PartialResourceList);
     }
 }
 
