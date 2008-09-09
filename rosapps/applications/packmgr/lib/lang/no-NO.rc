@@ -16,7 +16,7 @@ BEGIN
   ERR_PARAMETER    "Feil med skript utførelse.\nFeil Parameter(e)."
 
   ERR_DEP1	   "For å installere denne pakken trenger du også å installere disse pakken(e) også:\n\n:\n\n"
-  ERR_DEP2	   "\nDVil du gjøre dette ?"
+  ERR_DEP2	   "\nVil du gjøre dette ?"
   ERR_READY	   "Du har valg å installere %d pakke(r). For å installere disse må du lese og godta hver av disse lisensene. \n\nØnsker du fortsatt å fortsette ?"
 END
 

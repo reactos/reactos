@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Valg"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT	"There are no options yet.", 0, 50, 95, 80, 8
+    LTEXT	"Det er ikke noen valg ennå.", 0, 50, 95, 80, 8
 END
 
 IDD_DOIT DIALOGEX DISCARDABLE  0, 0, 180, 100

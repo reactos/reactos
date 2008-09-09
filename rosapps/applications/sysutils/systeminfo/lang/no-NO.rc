@@ -4,28 +4,28 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S system [/U brukernavn [/P [passord]]]] [/FO format] [/NH]\n\n\
-Description:\n\
-  This command line tool enables an administrator to query for basic\n\
-  system configuration information.\n\n\
-Parameter List:\n\
-  /S      system           Specifies the remote system to connect to.\n\n\
-  /U      [domene\\]bruker   Specifies the user context under which\n\
-	                   the command should execute.\n\n\
-  /P      [passord]       Specifies the password for the given\n\
-	                   user context. Prompts for input if omitted.\n\n\
-  /FO     format           Specifies the format in which the output\n\
-	                   is to be displayed.\n\
-	                   Valid values: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                      Specifies that the \"Column Header\" should\n\
-	                   not be displayed in the output.\n\
-	                   Valid only for \"TABLE\" and \"CSV\" formats.\n\n\
-  /?                       Displays this help/usage.\n\n\
+Beskrivelse:\n\
+  Denne komando linje verktøyet gjør det mulig for en administrator å spørre om basis\n\
+  system konfigurasjon informasjon.\n\n\
+Parameter liste:\n\
+  /S      system           Spesifisere eksternt system for å kunne kobles til.\n\n\
+  /U      [domene\\]bruker   Spesifisere brukeren sammenheng under hvilken\n\
+	                   av kommando som skal kjøres.\n\n\
+  /P      [passord]       Spesifisere passord for gitt\n\
+	                   bruker sammenheng. Prompts for input if omitted.\n\n\
+  /FO     format           Spesifisere formatet som i utgående\n\
+	                   som skal vises.\n\
+	                   Gyldige verdier: \"TABLE\", \"LIST\", \"CSV\".\n\n\
+  /NH                      Spesifisere at \"Column Header\" skal\n\
+	                   ikke vises i utgående.\n\
+	                   Gyldig for bare \"TABLE\" og \"CSV\" formater.\n\n\
+  /?                       Vis denne hjelp/bruk meldingen.\n\n\
 Eksempler:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
   SYSTEMINFO /S system\n\
   SYSTEMINFO /S system /U bruker\n\
-  SYSTEMINFO /S system /U domene\\user /P passord /FO TABLE\n\
+  SYSTEMINFO /S system /U domene\\bruker /P passord /FO TABLE\n\
   SYSTEMINFO /S system /FO LIST\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
@@ -38,10 +38,10 @@ IDS_REG_ORG, 				"Registerert organisasjon:	%s\n"
 IDS_PRODUCT_ID, 			"Produkt ID:			%s\n"
 IDS_INST_DATE, 				"Installert dato:			%s, "
 IDS_INST_TIME, 				"%s\n"
-IDS_SYS_TYPE_UNKNOWN, 		"System type:			Ukjent\n"
-IDS_SYS_TYPE_X86, 			"System type:			X86-basert PC\n"
-IDS_SYS_TYPE_IA64, 			"System type:			IA64-basert PC\n"
-IDS_SYS_TYPE_AMD64, 		"System type:			AMD64-based PC\n"
+IDS_SYS_TYPE_UNKNOWN, 		"Systemtype:			Ukjent\n"
+IDS_SYS_TYPE_X86, 			"Systemtype:			X86-basert PC\n"
+IDS_SYS_TYPE_IA64, 			"Systemtype:			IA64-basert PC\n"
+IDS_SYS_TYPE_AMD64, 		"Systemtype:			AMD64-basert PC\n"
 IDS_PROCESSORS, 			"Prosessor(er):			%u Prosessor(er) installert.\n"
 IDS_ROS_DIR, 				"ReactOS mappe:		%s\n"
 IDS_SYS_DIR, 				"System mappe:		%s\n"

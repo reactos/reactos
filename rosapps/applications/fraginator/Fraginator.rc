@@ -15,3 +15,4 @@
 
 #include "lang/en-US.rc"
 #include "lang/no-NO.rc"
+#include "lang/sk-SK.rc"
