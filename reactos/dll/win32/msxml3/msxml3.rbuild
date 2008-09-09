@@ -1,8 +1,10 @@
+<group>
 <module name="msxml3" type="win32dll" baseaddress="${BASEADDRESS_MSXML3}" installbase="system32" installname="msxml3.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msxml3.spec.def" />
 	<include base="msxml3">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<dependency>msxml3_v1</dependency>
 	<define name="__WINESRC__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
@@ -52,7 +54,10 @@
 	<file>docfrag.c</file>
 	<file>domimpl.c</file>
 	<file>entityref.c</file>
-	<include base="msxml3" root="intermediate">.</include>
-	<file>msxml3_v1.idl</file>
 	<file>msxml3.spec</file>
 </module>
+<module name="msxml3_v1" type="embeddedtypelib">
+	<dependency>stdole2</dependency>
+	<file>msxml3_v1.idl</file>
+</module>
+</group>
