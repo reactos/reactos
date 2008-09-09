@@ -178,7 +178,6 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
     NetCfgComponentItem * pLast = NULL, *pCurrent;
 
     *pHead = NULL;
-
     do
     {
         dwCharacteristics = 0;
@@ -191,29 +190,25 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
             if (!pCurrent)
                 return E_OUTOFMEMORY;
 
-            pCurrent->bChanged = FALSE;
-            pCurrent->pNext = NULL;
-            pCurrent->Status = 0; /* unused */
-            pCurrent->szNodeId = 0; /* unused */
+            ZeroMemory(pCurrent, sizeof(NetCfgComponentItem));
             CopyMemory(&pCurrent->ClassGUID, pGuid, sizeof(GUID));
 
             if (FAILED(CLSIDFromString(szName, &pCurrent->InstanceId)))
             {
-                CoTaskMemFree(pCurrent);
-                return E_FAIL;
+                /// ReactOS tcpip guid is not yet generated
+                //CoTaskMemFree(pCurrent);
+                //return E_FAIL;
             }
-
             if (RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hSubKey) == ERROR_SUCCESS)
             {
                 /* retrieve Characteristics */
                 dwSize = sizeof(DWORD);
-                pCurrent->dwCharacteristics = 0;
+
                 RegQueryValueExW(hSubKey, L"Characteristics", NULL, &dwType, (LPBYTE)&pCurrent->dwCharacteristics, &dwSize);
                 if (dwType != REG_DWORD)
                     pCurrent->dwCharacteristics = 0;
 
                 /* retrieve ComponentId */
-                pCurrent->szId = NULL;
                 dwSize = sizeof(szText);
                 if (RegQueryValueExW(hSubKey, L"ComponentId", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
                 {
@@ -227,7 +222,6 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                 }
 
                 /* retrieve Description */
-                pCurrent->szDisplayName = NULL;
                 dwSize = sizeof(szText);
                 if (RegQueryValueExW(hSubKey, L"Description", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
                 {
@@ -243,7 +237,6 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                 if (RegOpenKeyExW(hKey, L"NDI", 0, KEY_READ, &hNDIKey) == ERROR_SUCCESS)
                 {
                     /* retrieve HelpText */
-                    pCurrent->szHelpText = NULL;
                     dwSize = sizeof(szText);
                     if (RegQueryValueExW(hNDIKey, L"HelpText", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
                     {
@@ -256,8 +249,7 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
                         }
                     }
 
-                    /* retrieve HelpText */
-                    pCurrent->szBindName = NULL;
+                    /* retrieve Service */
                     dwSize = sizeof(szText);
                     if (RegQueryValueExW(hNDIKey, L"Service", NULL, &dwType, (LPBYTE)szText, &dwSize) == ERROR_SUCCESS)
                     {
@@ -303,7 +295,7 @@ EnumerateNetworkComponent(
     if (SUCCEEDED(hr))
     {
         swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
-        if (RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             hr = EnumClientServiceProtocol(hKey, pGuid, pHead);
             RegCloseKey(hKey);

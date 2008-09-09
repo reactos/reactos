@@ -1,5 +1,6 @@
 <module name="netcfgx" type="win32dll" baseaddress="${BASEADDRESS_NETCFGX}" installbase="system32" installname="netcfgx.dll">
 	<importlibrary definition="netcfgx.spec.def" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>setupapi</library>

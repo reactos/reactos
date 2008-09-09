@@ -10,6 +10,7 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <iphlpapi.h>
+#include <olectl.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {

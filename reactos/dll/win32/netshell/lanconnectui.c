@@ -135,17 +135,20 @@ EnumComponents(HWND hDlgCtrl, INetConnectionPropertyUiImpl * This, INetCfg * pNC
           pHelpText = NULL;
           hr = INetCfgComponent_GetDisplayName(pNCfgComp, &pDisplayName);
           hr = INetCfgComponent_GetHelpText(pNCfgComp, &pHelpText);
+          bChecked = TRUE; //ReactOS hack
           hr = INetCfgComponent_QueryInterface(pNCfgComp, &IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
-
-          bChecked = FALSE;
-          if (GetINetCfgComponent(pNCfg, This, &pAdapterCfgComp))
+          if (SUCCEEDED(hr))
           {
-              hr = INetCfgComponentBindings_IsBoundTo(pCompBind, pAdapterCfgComp);
-              if (hr == S_OK)
-                  bChecked = TRUE;
-              else
-                  bChecked = FALSE;
-              INetCfgComponent_Release(pAdapterCfgComp);
+              if (GetINetCfgComponent(pNCfg, This, &pAdapterCfgComp))
+              {
+                  hr = INetCfgComponentBindings_IsBoundTo(pCompBind, pAdapterCfgComp);
+                  if (hr == S_OK)
+                      bChecked = TRUE;
+                  else
+                      bChecked = FALSE;
+                  INetCfgComponent_Release(pAdapterCfgComp);
+                  INetCfgComponentBindings_Release(pCompBind);
+              }
           }
           pItem = CoTaskMemAlloc(sizeof(NET_ITEM));
           if (!pItem)

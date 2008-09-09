@@ -69,16 +69,26 @@ INetCfgComponent_fnGetDisplayName(
     LPWSTR * ppszwDisplayName)
 {
     LPWSTR szName;
+    UINT Length;
     INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
 
     if (This == NULL || ppszwDisplayName == NULL)
         return E_POINTER;
 
-    szName = CoTaskMemAlloc((wcslen(This->pItem->szDisplayName)+1) * sizeof(WCHAR));
+    if (This->pItem->szDisplayName)
+        Length = wcslen(This->pItem->szDisplayName)+1;
+    else
+        Length = 1;
+
+    szName = CoTaskMemAlloc(Length * sizeof(WCHAR));
     if (!szName)
         return E_OUTOFMEMORY;
 
-    wcscpy(szName, This->pItem->szDisplayName);
+    if (Length > 1)
+        wcscpy(szName, This->pItem->szDisplayName);
+    else
+        szName[0] = L'\0';
+
     *ppszwDisplayName = szName;
 
     return S_OK;
@@ -123,16 +133,26 @@ INetCfgComponent_fnGetHelpText(
     LPWSTR * ppszwHelpText)
 {
     LPWSTR szHelp;
+    UINT Length;
     INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
 
     if (This == NULL || ppszwHelpText == NULL)
         return E_POINTER;
 
-    szHelp = CoTaskMemAlloc((wcslen(This->pItem->szHelpText)+1) * sizeof(WCHAR));
+    if (This->pItem->szHelpText)
+        Length = wcslen(This->pItem->szHelpText)+1;
+    else
+        Length = 1;
+
+    szHelp = CoTaskMemAlloc(Length * sizeof(WCHAR));
     if (!szHelp)
         return E_OUTOFMEMORY;
 
-    wcscpy(szHelp, This->pItem->szHelpText);
+    if (Length > 1)
+        wcscpy(szHelp, This->pItem->szHelpText);
+    else
+        szHelp[0] = L'\0';
+
     *ppszwHelpText = szHelp;
 
     return S_OK;
