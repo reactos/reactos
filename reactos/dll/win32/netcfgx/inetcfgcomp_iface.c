@@ -6,6 +6,8 @@ typedef struct
     const INetCfgComponent * lpVtbl;
     LONG  ref;
     NetCfgComponentItem * pItem;
+    INetCfgComponentPropertyUi * pProperty;
+    INetCfg * pNCfg;
 }INetCfgComponentImpl;
 
 typedef struct
@@ -14,6 +16,7 @@ typedef struct
     LONG  ref;
     NetCfgComponentItem * pCurrent;
     NetCfgComponentItem * pHead;
+    INetCfg * pNCfg;
 }IEnumNetCfgComponentImpl;
 
 
@@ -312,6 +315,103 @@ INetCfgComponent_fnOpenParamKey(
         return E_FAIL;
 }
 
+
+HRESULT
+CreateNotificationObject(
+    INetCfgComponentImpl * This,
+    INetCfgComponent * iface,
+    IUnknown  *pUnk,
+    INetCfgComponentPropertyUi ** pOut)
+{
+    WCHAR szName[150];
+    HKEY hKey;
+    DWORD dwSize, dwType;
+    GUID CLSID_NotifyObject;
+    LPOLESTR pStr;
+    INetCfgComponentPropertyUi * pNCCPU;
+    INetCfgComponentControl * pNCCC;
+    HRESULT hr;
+    LONG lRet;
+    CLSID ClassGUID, InstanceGUID;
+
+    wcscpy(szName,L"SYSTEM\\CurrentControlSet\\Control\\Network\\");
+
+    /* get the Class GUID */
+    hr = INetCfgComponent_GetClassGuid(iface, &ClassGUID);
+    if (FAILED(hr))
+        return hr;
+
+    hr = StringFromCLSID(&ClassGUID, &pStr);
+    if (FAILED(hr))
+        return hr;
+
+    wcscat(szName, pStr);
+    CoTaskMemFree(pStr);
+    wcscat(szName, L"\\");
+
+    /* get the Class GUID */
+    hr = INetCfgComponent_GetInstanceGuid(iface, &InstanceGUID);
+    if (FAILED(hr))
+        return hr;
+
+    hr = StringFromCLSID(&InstanceGUID, &pStr);
+    if (FAILED(hr))
+        return hr;
+
+    wcscat(szName, pStr);
+    CoTaskMemFree(pStr);
+    wcscat(szName, L"\\NDI");
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    dwSize = sizeof(szName);
+    lRet = RegQueryValueExW(hKey, L"ClsID", NULL, &dwType, (LPBYTE)szName, &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS && dwType != REG_SZ)
+        return E_FAIL;
+
+    hr = CLSIDFromString(szName, &CLSID_NotifyObject);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    hr = CoCreateInstance(&CLSID_NotifyObject, NULL, CLSCTX_INPROC_SERVER, &IID_INetCfgComponentPropertyUi, (LPVOID*)&pNCCPU);
+    if (FAILED(hr))
+        return E_FAIL;
+
+    hr = INetCfgComponentPropertyUi_QueryInterface(pNCCPU, &IID_INetCfgComponentControl, (LPVOID*)&pNCCC);
+    if (FAILED(hr))
+    {
+        INetCfgComponentPropertyUi_Release(pNCCPU);
+        return hr;
+    }
+
+    hr = INetCfgComponentPropertyUi_QueryPropertyUi(pNCCPU, pUnk);
+    if (FAILED(hr))
+    {
+        INetCfgComponentPropertyUi_Release(pNCCPU);
+        return hr;
+    }
+
+    hr = INetCfgComponentControl_Initialize(pNCCC, iface, This->pNCfg, FALSE);
+    if (FAILED(hr))
+    {
+        INetCfgComponentControl_Release(pNCCC);
+        INetCfgComponentPropertyUi_Release(pNCCPU);
+        return hr;
+    }
+
+    hr = INetCfgComponentPropertyUi_SetContext(pNCCPU, pUnk);
+    if (FAILED(hr))
+    {
+        INetCfgComponentPropertyUi_Release(pNCCPU);
+        return hr;
+    }
+    *pOut = pNCCPU;
+    return S_OK;
+}
+
 HRESULT
 STDCALL
 INetCfgComponent_fnRaisePropertyUi(
@@ -320,8 +420,46 @@ INetCfgComponent_fnRaisePropertyUi(
     IN DWORD  dwFlags,
     IN IUnknown  *pUnk)
 {
+    HRESULT hr;
+    DWORD dwDefPages;
+    UINT Pages;
+    PROPSHEETHEADERW pinfo;
+    HPROPSHEETPAGE * hppages;
+    INT_PTR iResult;
+    INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
 
-    return E_NOTIMPL;
+    if (!This->pProperty)
+    {
+         hr = CreateNotificationObject(This,iface, pUnk, &This->pProperty);
+         if (FAILED(hr))
+             return hr;
+    }
+
+    dwDefPages = 1;
+    hr = INetCfgComponentPropertyUi_MergePropPages(This->pProperty, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+    ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
+    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
+    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
+    pinfo.u3.phpage = hppages;
+    pinfo.hwndParent = hwndParent;
+    pinfo.pszCaption = This->pItem->szDisplayName;
+
+    iResult = PropertySheetW(&pinfo);
+    CoTaskMemFree(hppages);
+    if (iResult < 0)
+    {
+        INetCfgComponentPropertyUi_CancelProperties(This->pProperty);
+        return E_ABORT;
+    }
+    else
+    {
+        INetCfgComponentPropertyUi_ApplyProperties(This->pProperty);
+        return S_OK;
+    }
 }
 static const INetCfgComponentVtbl vt_NetCfgComponent =
 {
@@ -344,7 +482,7 @@ static const INetCfgComponentVtbl vt_NetCfgComponent =
 
 HRESULT
 STDCALL
-INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem)
+INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * pNCfg)
 {
     INetCfgComponentImpl *This;
 
@@ -357,7 +495,9 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
 
     This->ref = 1;
     This->lpVtbl = (const INetCfgComponent*)&vt_NetCfgComponent;
+    This->pProperty = NULL;
     This->pItem = pItem;
+    This->pNCfg = pNCfg;
 
     if (!SUCCEEDED (INetCfgComponent_QueryInterface ((INetCfgComponent*)This, riid, ppv)))
     {
@@ -441,7 +581,7 @@ IEnumNetCfgComponent_fnNext(
     if (!This->pCurrent)
         return S_FALSE;
 
-    hr = INetCfgComponent_Constructor (NULL, &IID_INetCfgComponent, (LPVOID*)rgelt, This->pCurrent);
+    hr = INetCfgComponent_Constructor (NULL, &IID_INetCfgComponent, (LPVOID*)rgelt, This->pCurrent, This->pNCfg);
     if (SUCCEEDED(hr))
     {
         This->pCurrent = This->pCurrent->pNext;
@@ -504,7 +644,7 @@ static const IEnumNetCfgComponentVtbl vt_EnumNetCfgComponent =
 
 HRESULT
 STDCALL
-IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem)
+IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * pNCfg)
 {
     IEnumNetCfgComponentImpl *This;
 
@@ -519,6 +659,7 @@ IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * pp
     This->lpVtbl = (const IEnumNetCfgComponent*)&vt_EnumNetCfgComponent;
     This->pCurrent = pItem;
     This->pHead = pItem;
+    This->pNCfg = pNCfg;
 
     if (!SUCCEEDED (IEnumNetCfgComponent_QueryInterface ((INetCfgComponent*)This, riid, ppv)))
     {

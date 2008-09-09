@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <iphlpapi.h>
 #include <olectl.h>
+#include <netcfgn.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {
@@ -43,7 +44,7 @@ IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcR
 extern HINSTANCE netcfgx_hInstance;
 
 /* inetcfgcomp_iface.c */
-HRESULT STDCALL INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem);
-HRESULT STDCALL IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem);
+HRESULT STDCALL INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem,INetCfg * iface);
+HRESULT STDCALL IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * iface);
 
 #endif

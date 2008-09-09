@@ -425,13 +425,14 @@ HRESULT
 FindNetworkComponent(
     NetCfgComponentItem * pHead,
     LPCWSTR pszwComponentId,
-    INetCfgComponent **pComponent)
+    INetCfgComponent **pComponent,
+    INetCfg * iface)
 {
     while(pHead)
     {
         if (!wcsicmp(pHead->szId, pszwComponentId))
         {
-            return INetCfgComponent_Constructor(NULL, &IID_INetCfgComponent, (LPVOID*)pComponent, pHead);
+            return INetCfgComponent_Constructor(NULL, &IID_INetCfgComponent, (LPVOID*)pComponent, pHead, iface);
         }
         pHead = pHead->pNext;
     }
@@ -586,13 +587,13 @@ INetCfg_fnEnumComponents(
         return NETCFG_E_NOT_INITIALIZED;
 
     if (IsEqualGUID(&GUID_DEVCLASS_NET, pguidClass))
-        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pNet);
+        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pNet, iface);
     else if (IsEqualGUID(&GUID_DEVCLASS_NETCLIENT, pguidClass))
-        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pClient);
+        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pClient, iface);
     else if (IsEqualGUID(&GUID_DEVCLASS_NETSERVICE, pguidClass))
-        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pService);
+        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pService, iface);
     else if (IsEqualGUID(&GUID_DEVCLASS_NETTRANS, pguidClass))
-        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pProtocol);
+        return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, This->pProtocol, iface);
     else
        return E_NOINTERFACE;
 }
@@ -611,15 +612,15 @@ INetCfg_fnFindComponent(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
-    hr = FindNetworkComponent(This->pClient, pszwComponentId, pComponent);
+    hr = FindNetworkComponent(This->pClient, pszwComponentId, pComponent, iface);
     if (hr == S_OK)
         return hr;
 
-    hr = FindNetworkComponent(This->pService, pszwComponentId, pComponent);
+    hr = FindNetworkComponent(This->pService, pszwComponentId, pComponent, iface);
     if (hr == S_OK)
         return hr;
 
-    hr = FindNetworkComponent(This->pProtocol, pszwComponentId, pComponent);
+    hr = FindNetworkComponent(This->pProtocol, pszwComponentId, pComponent, iface);
     if (hr == S_OK)
         return hr;
 
