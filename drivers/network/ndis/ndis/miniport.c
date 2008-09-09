@@ -1281,6 +1281,7 @@ NdisIPnPStartDevice(
   if (!NT_SUCCESS(Status))
     {
       NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return Status;
     }
 
