@@ -195,6 +195,7 @@ MingwModuleHandler::InstanciateHandler (
 			break;
 		case KeyboardLayout:
 		case KernelModeDLL:
+		case KernelModeDriver:
 			handler = new MingwKernelModeDLLModuleHandler ( module );
 			break;
 		case NativeDLL:
@@ -205,9 +206,6 @@ MingwModuleHandler::InstanciateHandler (
 			break;
 		case Win32OCX:
 			handler = new MingwWin32OCXModuleHandler ( module );
-			break;
-		case KernelModeDriver:
-			handler = new MingwKernelModeDriverModuleHandler ( module );
 			break;
 		case BootLoader:
 			handler = new MingwBootLoaderModuleHandler ( module );
@@ -2428,55 +2426,6 @@ void
 MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 {
 	string targetMacro ( GetTargetMacro ( module ) );
-	string workingDirectory = GetWorkingDirectory ( );
-	string linkDepsMacro = GetLinkingDependenciesMacro ();
-
-	GenerateImportLibraryTargetIfNeeded ();
-
-	if ( module.non_if_data.compilationUnits.size () > 0 )
-	{
-		GenerateRules ();
-
-		string dependencies = linkDepsMacro + " " + objectsMacro;
-
-		string linkerParameters = ssprintf ( "-subsystem=native -entry=%s -image-base=%s -file-alignment=0x1000 -section-alignment=0x1000 -shared",
-		                                     module.GetEntryPoint(!(Environment::GetArch() == "arm")).c_str (),
-		                                     module.baseaddress.c_str () );
-		GenerateLinkerCommand ( dependencies,
-		                        linkerParameters,
-		                        " -sections" );
-	}
-	else
-	{
-		GeneratePhonyTarget();
-	}
-}
-
-
-MingwKernelModeDriverModuleHandler::MingwKernelModeDriverModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwKernelModeDriverModuleHandler::AddImplicitLibraries ( Module& module )
-{
-	MingwAddDebugSupportLibraries ( module, DebugKernelMode );
-}
-
-void
-MingwKernelModeDriverModuleHandler::Process ()
-{
-	GenerateKernelModeDriverModuleTarget ();
-}
-
-
-void
-MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
-{
-	string targetMacro ( GetTargetMacro (module) );
 	string workingDirectory = GetWorkingDirectory ();
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 
@@ -2656,6 +2605,8 @@ MingwAddImplicitLibraries( Module &module )
 				links_to_crt = true;
 			}
 		}
+		pLibrary = new Library ( module, "debugsup_ntdll" );
+		module.non_if_data.libraries.push_back(pLibrary);
 		return;
 	}
 
@@ -2679,13 +2630,15 @@ MingwAddImplicitLibraries( Module &module )
 		pLibrary = new Library ( module, "msvcrt" );
 		module.non_if_data.libraries.push_back ( pLibrary );
 	}
+
+	pLibrary = new Library ( module, "debugsup_ntdll" );
+	module.non_if_data.libraries.push_back(pLibrary);
 }
 
 void
 MingwWin32DLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
-	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2727,7 +2680,6 @@ void
 MingwWin32OCXModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
-	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2776,7 +2728,6 @@ void
 MingwWin32CUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
-	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void
@@ -2825,7 +2776,6 @@ void
 MingwWin32GUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
 	MingwAddImplicitLibraries ( module );
-	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void

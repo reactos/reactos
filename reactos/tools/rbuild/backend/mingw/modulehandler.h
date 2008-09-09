@@ -212,17 +212,6 @@ private:
 };
 
 
-class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwKernelModeDriverModuleHandler ( const Module& module );
-	virtual void Process ();
-	void AddImplicitLibraries ( Module& module );
-private:
-	void GenerateKernelModeDriverModuleTarget ();
-};
-
-
 class MingwNativeDLLModuleHandler : public MingwModuleHandler
 {
 public:
