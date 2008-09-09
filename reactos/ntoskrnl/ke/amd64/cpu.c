@@ -49,7 +49,7 @@ NTAPI
 KiSetProcessorType(VOID)
 {
     ULONG64 EFlags;
-    int Reg[4];
+    INT Reg[4];
     ULONG Stepping, Type;
 
     /* Start by assuming no CPUID data */
@@ -89,7 +89,7 @@ NTAPI
 KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    ULONG Vendor[5];
+    INT Vendor[5];
     ULONG Temp;
 
     /* Assume no Vendor ID and fail if no CPUID Support. */
@@ -112,30 +112,30 @@ KiGetCpuVendor(VOID)
     Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
 
     /* Now check the CPU Type */
-    if (!strcmp(Prcb->VendorString, CmpIntelID))
+    if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
     {
         return CPU_INTEL;
     }
-    else if (!strcmp(Prcb->VendorString, CmpAmdID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpAmdID))
     {
         return CPU_AMD;
     }
-    else if (!strcmp(Prcb->VendorString, CmpCyrixID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCyrixID))
     {
         DPRINT1("Cyrix CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpTransmetaID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpTransmetaID))
     {
         DPRINT1("Transmeta CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpCentaurID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
     {
         DPRINT1("VIA CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpRiseID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpRiseID))
     {
         DPRINT1("Rise CPUs not fully supported\n");
         return 0;
@@ -152,7 +152,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4];
+    INT Reg[4];
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -230,7 +230,7 @@ KiGetFeatureBits(VOID)
         {
             /* Perform the special sequence to get the MicroCode Signature */
             __writemsr(0x8B, 0);
-            __writemsr(Reg, 1);
+            __cpuid(Reg, 1);
             Prcb->UpdateSignature.QuadPart = __readmsr(0x8B);
         }
         else if (Prcb->CpuType == 5)
@@ -329,7 +329,7 @@ KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG Vendor;
-    ULONG Data[4];
+    INT Data[4];
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
     UCHAR RegisterByte;
