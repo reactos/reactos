@@ -193,18 +193,27 @@ SetEnvironmentVariableA (
 	                              &VarName,
 	                              TRUE);
 
-	RtlInitAnsiString (&VarValue,
-	                   (LPSTR)lpValue);
-	RtlAnsiStringToUnicodeString (&VarValueU,
-	                              &VarValue,
-	                              TRUE);
+	if (lpValue)
+	{
+		RtlInitAnsiString (&VarValue,
+		                   (LPSTR)lpValue);
+		RtlAnsiStringToUnicodeString (&VarValueU,
+		                              &VarValue,
+		                              TRUE);
 
-	Status = RtlSetEnvironmentVariable (NULL,
-	                                    &VarNameU,
-	                                    &VarValueU);
+		Status = RtlSetEnvironmentVariable (NULL,
+		                                    &VarNameU,
+		                                    &VarValueU);
 
+		RtlFreeUnicodeString (&VarValueU);
+	}
+	else
+	{
+		Status = RtlSetEnvironmentVariable (NULL,
+		                                    &VarNameU,
+		                                    NULL);
+	}
 	RtlFreeUnicodeString (&VarNameU);
-	RtlFreeUnicodeString (&VarValueU);
 
 	if (!NT_SUCCESS(Status))
 	{
@@ -235,12 +244,22 @@ SetEnvironmentVariableW (
 	RtlInitUnicodeString (&VarName,
 	                      lpName);
 
-	RtlInitUnicodeString (&VarValue,
-	                      lpValue);
+	if (lpValue)
+	{
+		RtlInitUnicodeString (&VarValue,
+		                      lpValue);
 
-	Status = RtlSetEnvironmentVariable (NULL,
-	                                    &VarName,
-	                                    &VarValue);
+		Status = RtlSetEnvironmentVariable (NULL,
+		                                    &VarName,
+		                                    &VarValue);
+	}
+	else
+	{
+		Status = RtlSetEnvironmentVariable (NULL,
+		                                    &VarName,
+		                                    NULL);
+	}
+
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);

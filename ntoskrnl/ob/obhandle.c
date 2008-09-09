@@ -289,7 +289,7 @@ ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
     else
     {
         /* Otherwise we had a DB, free it */
-        ExFreePool(OldHandleDatabase);
+        ExFreePoolWithTag(OldHandleDatabase, TAG_OB_HANDLE);
     }
 
     /* Find the end of the copy and zero out the new data */
@@ -2425,7 +2425,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        ExFreePool(TempBuffer);
+        ExFreePoolWithTag(TempBuffer, TAG_OB_TEMP_STORAGE);
         return Status;
     }
 
@@ -2533,7 +2533,7 @@ Quickie:
     /* Release the object attributes and temporary buffer */
     ObpReleaseObjectCreateInformation(&TempBuffer->ObjectCreateInfo);
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    ExFreePool(TempBuffer);
+    ExFreePoolWithTag(TempBuffer, TAG_OB_TEMP_STORAGE);
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,

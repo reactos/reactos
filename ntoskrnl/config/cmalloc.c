@@ -62,7 +62,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     if (!Kcb->PrivateAlloc)
     {
         /* Free it from the pool */
-        ExFreePool(Kcb);
+        ExFreePoolWithTag(Kcb, TAG_CM);
         return;
     }
     
@@ -70,9 +70,8 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     KeAcquireGuardedMutex(&CmpAllocBucketLock);
     
     /* Sanity check on lock ownership */
-    ASSERT((GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner ==
-            KeGetCurrentThread()) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    //ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+    //       (CmpTestRegistryLockExclusive() == TRUE));
     
     /* Add us to the free list */
     InsertTailList(&CmpFreeKCBListHead, &Kcb->FreeListEntry);
@@ -99,7 +98,7 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
         }
         
         /* Free the page */
-        ExFreePool(AllocPage);
+        ExFreePoolWithTag(AllocPage, TAG_CM);
     }
     
     /* Release the lock */
@@ -296,7 +295,7 @@ CmpFreeDelayItem(PVOID Entry)
         }
         
         /* Now free the page */
-        ExFreePool(AllocPage);
+        ExFreePoolWithTag(AllocPage, TAG_CM);
     }
     
     /* Release the lock */

@@ -21,16 +21,23 @@
 
 #include "config.h"
 
+#define COBJMACROS
+
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "msxml.h"
 #include "msxml2.h"
 
 #include "wine/debug.h"
 
 #include "msxml_private.h"
+
+#ifdef HAVE_LIBXSLT
+#include <libxslt/xslt.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -47,13 +54,28 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     case DLL_PROCESS_ATTACH:
 #ifdef HAVE_LIBXML2
         xmlInitParser();
+
+        /* Set the default indent character to a single tab. */
+        xmlThrDefTreeIndentString("\t");
+#endif
+#ifdef HAVE_XSLTINIT
+        xsltInit();
+#endif
+
+#ifdef HAVE_LIBXML2
+        /* Set the current ident to the default */
+        xmlTreeIndentString = "\t";
 #endif
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
+#ifdef HAVE_LIBXSLT
+        xsltCleanupGlobals();
+#endif
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();
 #endif
+        release_typelib();
         break;
     }
     return TRUE;

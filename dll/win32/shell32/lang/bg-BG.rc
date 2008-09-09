@@ -143,7 +143,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Реактос достигна до вас, благодарение на:", IDC_STATIC, 0, 0, 250, 10
+	LTEXT "РеактОС достигна до вас, благодарение на:", IDC_STATIC, 0, 0, 250, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -206,18 +206,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "Folder", 14005, 68, 35, 160, 10
-	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "Вид на файла:", 14004, 8, 35, 50, 10
+	LTEXT "Папка", 14005, 68, 35, 160, 10
+	LTEXT "Място:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
-	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "Размер:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "Съдържа:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Създадено:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "&Само за четене", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Скрит", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
@@ -528,8 +528,6 @@ BEGIN
 	PUSHBUTTON "Отказ", IDCANCEL, 159, 160, 60, 14
 END
 
-
-
 SHUTDOWN_DLG DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Изключване на РеактОС"
@@ -565,17 +563,17 @@ BEGIN
 	AUTOCHECKBOX "&Използване на уплътняване", 28675, 16, 152, 155, 10
 END
 
-CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+CHKDSK_DLG DIALOGEX 50, 50, 244, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Проверка на диска"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
-	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	DEFPUSHBUTTON "Начало", IDOK, 53, 100, 60, 14
+	GROUPBOX "Настройки за проверката", -1, 7, 6, 229, 50
+	PUSHBUTTON "Отказ", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Самопоправяне на системните грешки на файловете", 14000, 16, 15, 210, 10
+	AUTOCHECKBOX "Об&хождане и опит за възстановяване на лошите сектори", 14001, 16, 30, 210, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 42, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -608,25 +606,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Забележки"
 	IDS_SHV_COLUMN10            "Собственик"
 	IDS_SHV_COLUMN11            "Група"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Файлово име"
+	IDS_SHV_COLUMN13            "Раздел"
 	IDS_SHV_COLUMN_DELFROM      "Първоначално място"
 	IDS_SHV_COLUMN_DELDATE      "Дата на изтриване"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
-	IDS_SHV_COLUMN_MODEL        "Model"
+		IDS_SHV_COLUMN_FONTTYPE     "Вид шрифт"
+	IDS_SHV_COLUMN_WORKGROUP    "Работна група"
+	IDS_SHV_NETWORKLOCATION     "Място в мрежата"
+	IDS_SHV_COLUMN_DOCUMENTS    "Книжа"
+	IDS_SHV_COLUMN_STATUS       "Състояние"
+	IDS_SHV_COLUMN_COMMENTS     "Забележки"
+	IDS_SHV_COLUMN_LOCATION     "Място"
+	IDS_SHV_COLUMN_MODEL        "Модел"
 
 	// special folders 
 	IDS_DESKTOP                 "Работна площ"
 	IDS_MYCOMPUTER              "Моят компютър"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошче"
 	IDS_CONTROLPANEL            "Крило за управление"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Управленски средства"
 
 	// context menus 
 	IDS_VIEW_LARGE              "&Големи значета"
@@ -640,10 +638,10 @@ BEGIN
 	IDS_DELETE                  "Из&триване"
 	IDS_PROPERTIES              "&Свойства"
 	IDS_CUT                     "Из&рязване"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_RESTORE                 "Възвръщане"
+	IDS_FORMATDRIVE             "Оразмеряване..."
+	IDS_RENAME                  "Преименуване"
+	IDS_INSERT                  "Вмъкване"
 
 	IDS_CREATEFOLDER_DENIED     "Създаването на нова папка е невъзможно: недостатъчни права."
 	IDS_CREATEFOLDER_CAPTION    "Грешка при създаване на нова папка"
@@ -721,36 +719,36 @@ BEGIN
 	IDS_PICK_ICON_FILTER        "Файлове със значета(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Изпълними файлове\0*.exe\0"
 	IDS_DIRECTORY                "Папка"
-	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
-	IDS_COM_FILE                "Dos Application"
-	IDS_CPL_FILE                "Control Panel Item"
-	IDS_CUR_FILE                "Cursor"
-	IDS_DLL_FILE                "Application Extension"
-	IDS_DRV_FILE                "Device Driver"
-	IDS_EXE_FILE                "Application"
-	IDS_FON_FILE                "Font file"
-	IDS_TTF_FILE                "TrueType Font file"
-	IDS_HLP_FILE                "Help File"
-	IDS_INI_FILE                "Configuration Settings"
-	IDS_LNK_FILE                "Shortcut"
-	IDS_SYS_FILE                "System file"
+	IDS_VIRTUAL_DRIVER          "Водач на привидно устройство"
+	IDS_BAT_FILE                "Пакетен файл на РеактОС"
+	IDS_CMD_FILE                "Писание за управление на РеактОС"
+	IDS_COM_FILE                "Приложение за ДОС"
+	IDS_CPL_FILE                "Предмет от крилото за управление"
+	IDS_CUR_FILE                "Показалец"
+	IDS_DLL_FILE                "Разширение за приложения"
+	IDS_DRV_FILE                "Водача на устройство"
+	IDS_EXE_FILE                "Приложение"
+	IDS_FON_FILE                "Шрифтов файл"
+	IDS_TTF_FILE                "Файл с шрифт TrueType "
+	IDS_HLP_FILE                "Помощен файл"
+	IDS_INI_FILE                "Настроечен файл"
+	IDS_LNK_FILE                "Препратка"
+	IDS_SYS_FILE                "Системен файл"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Отваряне"
+	IDS_RUNAS_VERB              "Изпълняване като "
+	IDS_EDIT_VERB               "Обработка"
+	IDS_FIND_VERB               "Търсене"
+	IDS_PRINT_VERB              "Разпечатване"
+	IDS_PLAY_VERB               "Възпроизвеждане"
+	IDS_PREVIEW_VERB            "Преглед"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u файла, %u папки"
+	IDS_PRINTERS                "Печатачи"
+	IDS_FONTS                   "Шрифтове"
+	IDS_INSTALLNEWFONT          "Слагане на нов шрифт..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Подразбиран разпределителен размер"
 END
 
 

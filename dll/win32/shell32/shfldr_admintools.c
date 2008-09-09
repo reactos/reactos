@@ -18,42 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winspool.h"
-
-#include "ole2.h"
-#include "shlguid.h"
-
-#include "enumidlist.h"
-#include "pidl.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "shellfolder.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
-#include "shresdef.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
+
 
 /* List shortcuts of
  * CSIDL_COMMON_ADMINTOOLS
@@ -455,7 +423,7 @@ static HRESULT WINAPI ISF_AdminTools_fnGetDisplayNameOf (IShellFolder2 * iface,
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
             (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-            strcpyW(pszPath, This->szTarget);
+            wcscpy(pszPath, This->szTarget);
         else
             HCR_GetClassNameW(&CLSID_AdminFolderShortcut, pszPath, MAX_PATH);
     }
@@ -488,9 +456,9 @@ static HRESULT WINAPI ISF_AdminTools_fnGetDisplayNameOf (IShellFolder2 * iface,
         {
             int len = 0;
 
-            strcpyW(pszPath, This->szTarget);
+            wcscpy(pszPath, This->szTarget);
             PathAddBackslashW(pszPath);
-            len = lstrlenW(pszPath);
+            len = wcslen(pszPath);
 
             if (!SUCCEEDED(SHELL32_GetDisplayNameOfChild(iface, pidl, dwFlags | SHGDN_INFOLDER, pszPath + len, MAX_PATH + 1 - len)))
             {

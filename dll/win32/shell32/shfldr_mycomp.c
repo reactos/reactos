@@ -19,34 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-
-#include "wingdi.h"
-#include "pidl.h"
-#include "shlguid.h"
-#include "enumidlist.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -62,14 +35,14 @@ typedef struct {
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;    /* absolute pidl */
     LPWSTR sName;
-} IGenericSFImpl;
+} IGenericSFImpl, *LPIGenericSFImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_PersistFolder2;
 
-static inline IGenericSFImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
+static LPIGenericSFImpl __inline impl_from_IPersistFolder2( IPersistFolder2 *iface )
 {
-    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
+    return (LPIGenericSFImpl)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
 }
 
 
@@ -137,10 +110,10 @@ HRESULT WINAPI ISF_MyComputer_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
                     &dwSize) == ERROR_SUCCESS)
     {
         szName[MAX_PATH-1] = 0;
-        sf->sName = SHAlloc((strlenW(szName)+1) * sizeof(WCHAR));
+        sf->sName = SHAlloc((wcslen(szName)+1) * sizeof(WCHAR));
         if (sf->sName)
         {
-            lstrcpyW( sf->sName, szName );
+            wcscpy( sf->sName, szName );
         }
         TRACE("sName %s\n", debugstr_w(sf->sName));
     }
@@ -239,7 +212,7 @@ static HRESULT WINAPI ISF_MyComputer_fnParseDisplayName (IShellFolder2 *iface,
     {
         szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
         TRACE ("-- element: %s\n", debugstr_w (szElement));
-        SHCLSIDFromStringW (szElement + 2, &clsid);
+        CLSIDFromString (szElement + 2, &clsid);
         pidlTemp = _ILCreateGuid (PT_GUID, &clsid);
     }
     /* do we have an absolute path name ? */
@@ -624,9 +597,9 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                      * Get the "WantsFORPARSING" flag from the registry
                      */
 
-                    lstrcpyW (szRegPath, clsidW);
+                    wcscpy (szRegPath, clsidW);
                     SHELL32_GUIDToStringW (clsid, &szRegPath[6]);
-                    lstrcatW (szRegPath, shellfolderW);
+                    wcscat (szRegPath, shellfolderW);
                     r = SHGetValueW (HKEY_CLASSES_ROOT, szRegPath,
                                      wantsForParsingW, NULL, NULL, NULL);
                     if (r == ERROR_SUCCESS)
@@ -665,7 +638,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                     /* user friendly name */
 
                     if (_ILIsMyComputer(pidl) && This->sName)
-                        strcpyW(pszPath, This->sName);
+                        wcscpy(pszPath, This->sName);
                     else
                         HCR_GetClassNameW (clsid, pszPath, MAX_PATH);
 
@@ -722,10 +695,10 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                             pszPath[MAX_PATH-7] = L'\0';
                     }
                 }
-                strcatW (pszPath, wszOpenBracket);
+                wcscat (pszPath, wszOpenBracket);
                 wszDrive[2] = L'\0';
-                strcatW (pszPath, wszDrive);
-                strcatW (pszPath, wszCloseBracket);
+                wcscat (pszPath, wszDrive);
+                wcscat (pszPath, wszCloseBracket);
             }
         }
         else
@@ -796,7 +769,7 @@ static HRESULT WINAPI ISF_MyComputer_fnSetNameOf (
         *pPidlOut = _ILCreateMyComputer();
     }
 
-    length = (strlenW(lpName)+1) * sizeof(WCHAR);
+    length = (wcslen(lpName)+1) * sizeof(WCHAR);
     sName = SHAlloc(length);
 
     if (!sName)
@@ -818,7 +791,7 @@ static HRESULT WINAPI ISF_MyComputer_fnSetNameOf (
         RegCloseKey(hKey);
     }
 
-    lstrcpyW(sName, lpName);
+    wcscpy(sName, lpName);
     SHFree(This->sName);
     This->sName = sName;
     TRACE("result %s\n", debugstr_w(This->sName));

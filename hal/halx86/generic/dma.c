@@ -1569,7 +1569,7 @@ IoFlushAdapterBuffers(
    PHYSICAL_ADDRESS PhysicalAddress;
    PPFN_NUMBER MdlPagesPtr;
 
-   ASSERT_IRQL(DISPATCH_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
    if (AdapterObject != NULL && !AdapterObject->MasterDevice)
    {

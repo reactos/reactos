@@ -33,6 +33,7 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 }
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
+    NTSTATUS Status;
 
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
@@ -50,14 +51,18 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 
     FCB->State = SOCKET_STATE_CONNECTED;
 
-    return TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-		       FCB->Connection.Object,
-		       TDI_RECEIVE_NORMAL,
-		       FCB->Recv.Window,
-		       FCB->Recv.Size,
-		       &FCB->ReceiveIrp.Iosb,
-		       ReceiveComplete,
-		       FCB );
+    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+		         FCB->Connection.Object,
+		         TDI_RECEIVE_NORMAL,
+		         FCB->Recv.Window,
+		         FCB->Recv.Size,
+		         &FCB->ReceiveIrp.Iosb,
+		         ReceiveComplete,
+		         FCB );
+
+   if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
+
+   return Status;
 }
 
 static NTSTATUS NTAPI StreamSocketConnectComplete
@@ -166,6 +171,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
     case SOCKET_STATE_CREATED:
+	if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
 	FCB->LocalAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
@@ -193,6 +199,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Drop through to SOCKET_STATE_BOUND */
 
     case SOCKET_STATE_BOUND:
+	if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
 	FCB->RemoteAddress =
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 

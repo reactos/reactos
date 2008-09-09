@@ -216,10 +216,9 @@ VOID ExitBatch (LPTSTR msg)
  *
  */
 
-BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
+BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 {
 	HANDLE hFile;
-	LPTSTR tmp;
 	SetLastError(0);
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
@@ -238,7 +237,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	while (bc && bc->forvar)
 		ExitBatch (NULL);
 
-	if (bc == NULL)
+	if (bc == NULL || forcenew)
 	{
 		/* No curent batch file, create a new context */
 		LPBATCH_CONTEXT n = (LPBATCH_CONTEXT)cmd_alloc (sizeof(BATCH_CONTEXT));
@@ -264,16 +263,13 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 			cmd_free (bc->raw_params);
 	}
 
-	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, &tmp);
-	*tmp = '\0';
+	GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);
 
 	bc->hBatchFile = hFile;
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 	bc->bCmdBlock = -1;
-	bc->lCallPosition = 0;
-	bc->lCallPositionHigh = 0;
 	
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
@@ -425,6 +421,7 @@ LPTSTR ReadBatchLine ()
 				}
 			}
 
+			*dp++ = _T('\n');
 			*dp = _T('\0');
 
 			return textline;

@@ -53,9 +53,18 @@ INT cmd_call (LPTSTR param)
 
 	if (*param == _T(':') && (bc))
 	{
-		bc->lCallPosition = SetFilePointer(bc->hBatchFile, 0, &bc->lCallPositionHigh, FILE_CURRENT);
-		cmd_goto(param);
-		return 0;
+		TCHAR *first = param;
+		while (*param && !_istspace(*param))
+			param++;
+		if (*param)
+		{
+			*param++ = _T('\0');
+			while (_istspace(*param))
+				param++;
+		}
+		if (!Batch(bc->BatchFilePath, first, param, TRUE))
+			return 1;
+		return cmd_goto(first);
 	}
 
     nErrorLevel = 0;

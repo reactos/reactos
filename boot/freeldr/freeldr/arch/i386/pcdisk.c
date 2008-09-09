@@ -83,8 +83,8 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	Packet->PacketSize = sizeof(I386_DISK_ADDRESS_PACKET);
 	Packet->Reserved = 0;
 	Packet->LBABlockCount = SectorCount;
-	Packet->TransferBufferOffset = ((ULONG)Buffer) & 0x0F;
-	Packet->TransferBufferSegment = ((ULONG)Buffer) >> 4;
+	Packet->TransferBufferOffset = ((ULONG_PTR)Buffer) & 0x0F;
+	Packet->TransferBufferSegment = ((ULONG_PTR)Buffer) >> 4;
 	Packet->LBAStartBlock = SectorNumber;
 
 	// BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
@@ -211,8 +211,8 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 		RegsIn.b.cl = (PhysicalSector + ((PhysicalTrack & 0x300) >> 2));
 		RegsIn.b.dh = PhysicalHead;
 		RegsIn.b.dl = DriveNumber;
-		RegsIn.w.es = ((ULONG)Buffer) >> 4;
-		RegsIn.w.bx = ((ULONG)Buffer) & 0x0F;
+		RegsIn.w.es = ((ULONG_PTR)Buffer) >> 4;
+		RegsIn.w.bx = ((ULONG_PTR)Buffer) & 0x0F;
 
 		//
 		// Perform the read

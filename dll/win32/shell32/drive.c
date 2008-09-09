@@ -18,8 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 #define LARGEINT_PROTOS
 #define LargeIntegerDivide RtlLargeIntegerDivide
 #define ExtendedIntegerMultiply RtlExtendedIntegerMultiply
@@ -34,20 +32,10 @@
 #define COBJMACROS
 #include <windows.h>
 #include <ndk/ntndk.h>
-
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "wine/debug.h"
-#include "shresdef.h"
-
-#include <shlwapi.h>
-#include <shlobj.h>
-#include <prsht.h>
-#include <initguid.h>
-#include <devguid.h>
-#include <largeint.h>
 #include <fmifs/fmifs.h>
+#include <largeint.h>
+
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -133,7 +121,8 @@ HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM
 
 #define DRIVE_PROPERTY_PAGES (3)
 
-extern HINSTANCE shell32_hInstance;
+static const GUID GUID_DEVCLASS_DISKDRIVE = {0x4d36e967L, 0xe325, 0x11ce, {0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18}};
+
 
 VOID
 GetDriveNameWithLetter(LPWSTR szText, UINT Length, WCHAR Drive)
@@ -410,7 +399,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          HANDLE hVolume;
          DWORD BytesReturned = 0;
 
-         sprintfW(szResult, L"\\\\.\\%c:", towupper(szDrive[0]));
+         swprintf(szResult, L"\\\\.\\%c:", towupper(szDrive[0]));
          hVolume = CreateFileW(szResult, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
          if (hVolume != INVALID_HANDLE_VALUE)
          {

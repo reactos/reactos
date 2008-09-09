@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -28,6 +28,8 @@ UNICODE_STRING IopHardwareDatabaseKey =
    RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
 POBJECT_TYPE IoDriverObjectType = NULL;
+
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
 
 extern BOOLEAN ExpInTextModeSetup;
 
@@ -246,7 +248,7 @@ IopNormalizeImagePath(
       RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
 
       /* Free caller's string */
-      RtlFreeUnicodeString(&InputImagePath);
+      ExFreePoolWithTag(InputImagePath.Buffer, TAG_RTLREGISTRY);
    }
 
    return STATUS_SUCCESS;
@@ -275,6 +277,7 @@ IopLoadServiceModule(
    UNICODE_STRING ServiceImagePath, CCSName;
    NTSTATUS Status;
    HANDLE CCSKey, ServiceKey;
+   PVOID BaseAddress;
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
@@ -356,7 +359,7 @@ IopLoadServiceModule(
   else
   {
      DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
+     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
   }
 
    ExFreePool(ServiceImagePath.Buffer);
@@ -1559,6 +1562,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    PLDR_DATA_TABLE_ENTRY ModuleObject;
+   PVOID BaseAddress;
    WCHAR *cur;
 
    /* Check if it's an unload request */
@@ -1669,7 +1673,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         * Load the driver module
         */
 
-       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);

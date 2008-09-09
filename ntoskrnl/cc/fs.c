@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #ifndef VACB_MAPPING_GRANULARITY
 #define VACB_MAPPING_GRANULARITY (256 * 1024)

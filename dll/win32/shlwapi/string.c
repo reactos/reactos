@@ -2511,8 +2511,9 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
       DWORD dwMode = 0;
       INT nWideCharCount = len - 1;
 
-      if (!ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &nWideCharCount, lpDstStr,
-                                          lpiLen))
+      if (ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr,
+                                        &nWideCharCount, lpDstStr,
+                                        lpiLen) == S_OK)
         return 0;
 
       if (nWideCharCount < len - 1)
@@ -2523,7 +2524,8 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
 
         *lpiLen = 0;
 
-        if (ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &len, mem, lpiLen))
+        if (ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &len,
+                                          mem, lpiLen) != S_OK)
         {
           SHTruncateString(mem, *lpiLen);
           lstrcpynA(lpDstStr, mem, *lpiLen + 1);

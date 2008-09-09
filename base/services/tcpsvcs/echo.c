@@ -15,7 +15,7 @@ static BOOL
 EchoIncomingPackets(SOCKET sock)
 {
     CHAR readBuffer[RECV_BUF];
-    TCHAR logBuf[256];
+    WCHAR logBuf[256];
     INT totalSentBytes;
     INT readBytes;
     INT retVal;
@@ -25,7 +25,7 @@ EchoIncomingPackets(SOCKET sock)
         readBytes = recv(sock, readBuffer, RECV_BUF, 0);
         if (readBytes > 0)
         {
-            _stprintf(logBuf, _T("Received %d bytes from client"), readBytes);
+            _swprintf(logBuf, L"Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
 
             totalSentBytes = 0;
@@ -34,33 +34,33 @@ EchoIncomingPackets(SOCKET sock)
                 retVal = send(sock, readBuffer + totalSentBytes, readBytes - totalSentBytes, 0);
                 if (retVal > 0)
                 {
-                    _stprintf(logBuf, _T("Sent %d bytes back to client"), retVal);
+                    _swprintf(logBuf, L"Sent %d bytes back to client", retVal);
                     LogEvent(logBuf, 0, 0, LOG_FILE);
                     totalSentBytes += retVal;
                 }
                 else if (retVal == SOCKET_ERROR)
                 {
-                    LogEvent(_T("Echo: socket error"), WSAGetLastError(), 0, LOG_ERROR);
+                    LogEvent(L"Echo: socket error", WSAGetLastError(), 0, LOG_ERROR);
                     return FALSE;
                 }
                 else
                 {
                     /* Client closed connection before we could reply to
                        all the data it sent, so quit early. */
-                    LogEvent(_T("Peer unexpectedly dropped connection!"), 0, 0, LOG_FILE);
+                    LogEvent(L"Peer unexpectedly dropped connection!", 0, 0, LOG_FILE);
                     return FALSE;
                 }
             }
         }
         else if (readBytes == SOCKET_ERROR)
         {
-            LogEvent(_T("Echo: socket error"), WSAGetLastError(), 0, LOG_ERROR);
+            LogEvent(L"Echo: socket error", WSAGetLastError(), 0, LOG_ERROR);
             return FALSE;
         }
     } while ((readBytes != 0) && (!bShutdown));
 
     if (!bShutdown)
-        LogEvent(_T("Echo: Connection closed by peer"), 0, 0, LOG_FILE);
+        LogEvent(L"Echo: Connection closed by peer", 0, 0, LOG_FILE);
 
     return TRUE;
 }
@@ -73,22 +73,22 @@ EchoHandler(VOID* sock_)
 
     if (!EchoIncomingPackets(sock))
     {
-        LogEvent(_T("Echo: EchoIncomingPackets failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Echo: EchoIncomingPackets failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Echo: Shutting connection down"), 0, 0, LOG_FILE);
+    LogEvent(L"Echo: Shutting connection down", 0, 0, LOG_FILE);
 
     if (ShutdownConnection(sock, TRUE))
     {
-        LogEvent(_T("Echo: Connection is down"), 0, 0, LOG_FILE);
+        LogEvent(L"Echo: Connection is down", 0, 0, LOG_FILE);
     }
     else
     {
-        LogEvent(_T("Echo: Connection shutdown failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Echo: Connection shutdown failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Echo: Terminating thread"), 0, 0, LOG_FILE);
+    LogEvent(L"Echo: Terminating thread", 0, 0, LOG_FILE);
     ExitThread(retVal);
 }

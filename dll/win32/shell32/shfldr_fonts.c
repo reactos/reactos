@@ -18,33 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-
-#include "pidl.h"
-#include "enumidlist.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "shfldr.h"
-#include "shlwapi.h"
-
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -61,7 +35,7 @@ typedef struct {
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
     LPCITEMIDLIST apidl;    /* currently focused font item */
-} IGenericSFImpl;
+} IGenericSFImpl, *LPIGenericSFImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_NP_PersistFolder2;
@@ -88,8 +62,18 @@ static shvheader FontsSFHeader[] = {
 #define COLUMN_SIZE     2
 #define COLUMN_FILENAME 3
 
-
 #define FontsSHELLVIEWCOLUMNS (4)
+
+
+static LPIGenericSFImpl __inline impl_from_IPersistFolder2( IPersistFolder2 *iface )
+{
+    return (LPIGenericSFImpl)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
+}
+
+static LPIGenericSFImpl __inline impl_from_IContextMenu2(IContextMenu2 *iface)
+{
+    return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblContextMenuFontItem));
+}
 
 /**************************************************************************
 *	ISF_Fonts_Constructor
@@ -971,24 +955,25 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_InvokeCommand(
 	IContextMenu2 *iface,
 	LPCMINVOKECOMMANDINFO lpcmi)
 {
-    _ICOM_THIS_From_IContextMenu2FontItem(IGenericSFImpl, iface);
     SHELLEXECUTEINFOW sei;
     PIDLFontStruct * pfont;
     SHFILEOPSTRUCTW op;
+    IGenericSFImpl * This = impl_from_IContextMenu2(iface);
+
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCE(1) || lpcmi->lpVerb == MAKEINTRESOURCE(2) || lpcmi->lpVerb == MAKEINTRESOURCE(7))
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1) || lpcmi->lpVerb == MAKEINTRESOURCEA(2) || lpcmi->lpVerb == MAKEINTRESOURCEA(7))
     {
         ZeroMemory(&sei, sizeof(sei));
         sei.cbSize = sizeof(sei);
         sei.hwnd = lpcmi->hwnd;
         sei.nShow = SW_SHOWNORMAL;
-        if (lpcmi->lpVerb == MAKEINTRESOURCE(1))
+        if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))
             sei.lpVerb = L"open";
-        else if (lpcmi->lpVerb == MAKEINTRESOURCE(2))
+        else if (lpcmi->lpVerb == MAKEINTRESOURCEA(2))
             sei.lpVerb = L"print";
-        else if (lpcmi->lpVerb == MAKEINTRESOURCE(7))
+        else if (lpcmi->lpVerb == MAKEINTRESOURCEA(7))
             sei.lpVerb = L"properties";
 
         pfont = _ILGetFontStruct(This->apidl);
@@ -998,12 +983,12 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_InvokeCommand(
         if (sei.hInstApp <= (HINSTANCE)32)
            return E_FAIL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCE(4))
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(4))
     {
         FIXME("implement font copying\n");
         return E_NOTIMPL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCE(6))
+    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(6))
     {
        ZeroMemory(&op, sizeof(op));
        op.hwnd = lpcmi->hwnd;

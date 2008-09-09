@@ -169,12 +169,14 @@
 @ fastcall ExfReleasePushLockShared(ptr)
 @ fastcall ExfTryToWakePushLock(ptr)
 @ fastcall ExfUnblockPushLock(ptr ptr)
+#ifdef _M_IX86
 @ fastcall Exfi386InterlockedDecrementLong(ptr)
 @ fastcall Exfi386InterlockedExchangeUlong(ptr long)
 @ fastcall Exfi386InterlockedIncrementLong(ptr)
 @ stdcall Exi386InterlockedDecrementLong(ptr)
 @ stdcall Exi386InterlockedExchangeUlong(ptr long long)
 @ stdcall Exi386InterlockedIncrementLong(ptr)
+#endif
 @ fastcall ExiAcquireFastMutex(ptr) ExAcquireFastMutex
 @ fastcall ExiReleaseFastMutex(ptr) ExReleaseFastMutex
 @ fastcall ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
@@ -534,10 +536,12 @@
 @ stdcall KdPowerTransition(long)
 @ stdcall KdRefreshDebuggerNotPresent()
 @ stdcall KdSystemDebugControl(long ptr long ptr long ptr long)
+#ifdef _M_IX86
 @ stdcall Ke386CallBios(long ptr)
 ;Ke386IoSetAccessProcess
 ;Ke386QueryIoAccessMap
 ;Ke386SetIoAccessMap
+#endif
 @ fastcall KeAcquireGuardedMutex(ptr)
 @ fastcall KeAcquireGuardedMutexUnsafe(ptr)
 @ fastcall KeAcquireInStackQueuedSpinLockAtDpcLevel(ptr ptr)
@@ -572,6 +576,7 @@
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
+#ifdef _M_IX86
 ;KeI386AbiosCall
 @ stdcall KeI386AllocateGdtSelectors(ptr long)
 ;KeI386Call16BitCStyleFunction
@@ -582,6 +587,7 @@
 @ stdcall KeI386ReleaseGdtSelectors(ptr long)
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
+#endif
 @ stdcall KeInitializeApc(ptr ptr long ptr ptr ptr long ptr)
 @ stdcall KeInitializeCrashDumpHeader(long long ptr long ptr)
 @ stdcall KeInitializeDeviceQueue(ptr)
@@ -693,18 +699,26 @@
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
 @ fastcall KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
+#ifdef _M_IX86
 @ stdcall Kei386EoiHelper()
+#endif
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
+#ifdef _M_IX86
 @ stdcall KiCoprocessorError()
+#endif
 @ stdcall KiDeliverApc(long ptr ptr)
+#ifdef _M_IX86
 @ stdcall KiDispatchInterrupt()
+#endif
 @ extern KiEnableTimerWatchdog
 @ stdcall KiIpiServiceRoutine(ptr ptr)
 @ fastcall KiReleaseSpinLock(ptr)
 @ cdecl KiUnexpectedInterrupt()
+#ifdef _M_IX86
 ;Kii386SpinOnSpinLock
+#endif
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall LdrEnumResources(ptr ptr long ptr ptr)
 @ stdcall LdrFindResourceDirectory_U(ptr ptr long ptr)
@@ -1502,6 +1516,7 @@
 ;_CIsin
 ;_CIsqrt
 @ cdecl _abnormal_termination()
+#ifdef _M_IX86
 @ cdecl _alldiv()
 @ cdecl _alldvrm()
 @ cdecl _allmul()
@@ -1513,6 +1528,7 @@
 @ cdecl _aulldvrm()
 @ cdecl _aullrem()
 @ cdecl _aullshr()
+#endif
 @ cdecl _except_handler2()
 @ cdecl _except_handler3()
 @ cdecl _global_unwind2()

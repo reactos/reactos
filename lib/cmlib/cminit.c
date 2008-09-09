@@ -6,6 +6,8 @@
  */
 
 #include "cmlib.h"
+#define NDEBUG
+#include <debug.h>
 
 ULONG CmlibTraceLevel = 0;
 
@@ -95,7 +97,7 @@ CmpPrepareIndexOfKeys(
    }
    else
    {
-      DbgPrint("IndexCell->Signature %x\n", IndexCell->Signature);
+      DPRINT1("IndexCell->Signature %x\n", IndexCell->Signature);
       ASSERT(FALSE);
    }
 }

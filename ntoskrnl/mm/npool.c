@@ -13,7 +13,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MiInitializeNonPagedPool)
@@ -1556,14 +1556,12 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    {
       if (blk->hdr.Magic == BLOCK_HDR_FREE_MAGIC)
       {
-         DbgPrint("ExFreePool of already freed address %x\n", block);
+         KeBugCheckEx(BAD_POOL_CALLER, 0x07, 0, (ULONG_PTR)blk, (ULONG_PTR)block);
       }
       else
       {
-         DbgPrint("ExFreePool of non-allocated address %x (magic %x)\n",
-                  block, blk->hdr.Magic);
+         KeBugCheckEx(BAD_POOL_CALLER, 0x46, (ULONG_PTR)block, 0, 0);
       }
-      ASSERT(FALSE);
       return;
    }
 
@@ -1682,6 +1680,12 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
    block = (PVOID)((ULONG_PTR)best + HDR_USED_SIZE);
    /*   RtlZeroMemory(block, Size);*/
    return(block);
+}
+
+ULONG NTAPI
+EiGetNonPagedPoolTag(PVOID Block)
+{
+     return ((HDR_USED*)((ULONG_PTR)Block - HDR_USED_SIZE))->Tag;
 }
 
 VOID

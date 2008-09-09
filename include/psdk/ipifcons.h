@@ -30,4 +30,9 @@
 #define MIB_IF_TYPE_PPP 23
 #define MIB_IF_TYPE_LOOPBACK 24
 #define MIB_IF_TYPE_SLIP 28
+
+#define IF_TYPE_OTHER 1
+#define IF_TYPE_ETHERNET_CSMACD 6
+#define IF_TYPE_IEEE80211 71
+
 #endif /* _IPIFCONS_H */

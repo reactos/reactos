@@ -51,8 +51,7 @@ BOOL WINAPI ILGetDisplayNameEx(
 
 LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl);
 void WINAPI ILGlobalFree(LPITEMIDLIST pidl);
-
-LPITEMIDLIST WINAPI SHSimpleIDListFromPathA (LPCSTR lpszPath);
+LPITEMIDLIST WINAPI SHSimpleIDListFromPathA (LPCSTR lpszPath); //FIXME
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathW (LPCWSTR lpszPath);
 
 HRESULT WINAPI SHILCreateFromPathA (
@@ -176,7 +175,7 @@ typedef struct
  * System Imagelist Routines
  */
 
-int WINAPI Shell_GetCachedImageIndex(
+int WINAPI Shell_GetCachedImageIndexA(
 	LPCSTR lpszFileName,
 	int nIconIndex,
 	UINT bSimulateDoc);
@@ -415,7 +414,7 @@ VOID WINAPI PathSetDlgItemPathAW(HWND hDlg, int nIDDlgItem, LPCVOID lpszPath);
 /* PathProcessCommand flags */
 #define PPCF_QUOTEPATH        0x01 /* implies PPCF_INCLUDEARGS */
 #define PPCF_INCLUDEARGS      0x02
-#define PPCF_NODIRECTORIES    0x10
+//#define PPCF_NODIRECTORIES    0x10 move to shlobj
 #define PPCF_DONTRESOLVE      0x20
 #define PPCF_PATHISRELATIVE   0x40
 
@@ -545,9 +544,6 @@ DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
-DEFINE_GUID(CLSID_OpenWith, 0x09799AFB, 0xAD67, 0x11d1, 0xAB,0xCD,0x00,0xC0,0x4F,0xC3,0x09,0x36);
-DEFINE_GUID(CLSID_StartMenu, 0x4622AD11, 0xFF23, 0x11D0, 0x8D,0x34,0x00,0xA0,0xC9,0x0F,0x27,0x19);
-
 /* Shell Desktop functions */
 
 #undef INTERFACE
@@ -578,6 +574,8 @@ DECLARE_INTERFACE_(IShellDesktop,IUnknown)
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktop*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
+
+#define CSIDL_FOLDER_MASK	0x00ff
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -7,6 +7,7 @@
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
   <property name="BASEADDRESS_RSAENH" value="0x35780000" />
+  <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
   <property name="BASEADDRESS_TELEPHON" value="0x58750000" />
   <property name="BASEADDRESS_PWRCFG" value="0x587e0000" />
@@ -96,6 +97,7 @@
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
   <property name="BASEADDRESS_WDMAUD" value="0x72d20000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
+  <property name="BASEADDRESS_MSTASK" value="0x73520000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_DCIMAN32" value="0x73b10000" />
@@ -127,11 +129,12 @@
   <property name="BASEADDRESS_COMCTL32" value="0x76160000" />
   <property name="BASEADDRESS_COMDLG32" value="0x76210000" />
   <property name="BASEADDRESS_WINSTA" value="0x762F0000" />
+  <property name="BASEADDRESS_IMM32" value="0x76320000" />
   <property name="BASEADDRESS_RICHED32" value="0x76340000" />
   <property name="BASEADDRESS_D3D8THK" value="0x76340000" />
   <property name="BASEADDRESS_RICHED20" value="0x76360000" />
   <property name="BASEADDRESS_TWAIN_32" value="0x76380000" />
-  <property name="BASEADDRESS_IMM32" value="0x76390000" />
+  <property name="BASEADDRESS_NETSHELL" value="0x76390000" />
   <property name="BASEADDRESS_LSASRV" value="0x76540000" />
   <property name="BASEADDRESS_MIDIMAP" value="0x76600000" />
   <property name="BASEADDRESS_ODBC32" value="0x76660000" />
@@ -147,6 +150,8 @@
   <property name="BASEADDRESS_RASDLG" value="0x768d0000" />
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
   <property name="BASEADDRESS_ATL" value="0x76a80000" />
+  <property name="BASEADDRESS_SFC" value="0x76b50000" />
+  <property name="BASEADDRESS_SFC_OS" value="0x76c10000" />
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />
   <property name="BASEADDRESS_CLUSAPI" value="0x76d10000" />

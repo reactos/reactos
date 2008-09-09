@@ -169,6 +169,12 @@ RTFDestroy(RTF_Info *info)
 	}
 	RTFDestroyAttrs(info);
 	heap_free(info->cpOutputBuffer);
+        while (info->tableDef)
+        {
+                RTFTable *tableDef = info->tableDef;
+                info->tableDef = tableDef->parent;
+                heap_free(tableDef);
+        }
 }
 
 
@@ -235,6 +241,13 @@ void RTFInit(RTF_Info *info)
 		info->dwMaxCPOutputCount = 0x1000;
 		info->cpOutputBuffer = heap_alloc(info->dwMaxCPOutputCount);
 	}
+
+        if (info->tableDef)
+            ZeroMemory(info->tableDef, sizeof(info->tableDef));
+        info->tableDef = NULL;
+        info->nestingLevel = 0;
+        info->canInheritInTbl = FALSE;
+        info->borderType = 0;
 }
 
 /*
@@ -1438,6 +1451,8 @@ static RTFKey	rtfKey[] =
 	/* is this valid? */
 	{ rtfSpecialChar,	rtfCurHeadPict,		"chpict",	0 },
 	{ rtfSpecialChar,	rtfUnicode,		"u",		0 },
+	{ rtfSpecialChar,	rtfNestCell,		"nestcell",	0 },
+	{ rtfSpecialChar,	rtfNestRow,		"nestrow",	0 },
 
 	/*
 	 * Character formatting attributes
@@ -1601,6 +1616,7 @@ static RTFKey	rtfKey[] =
 	{ rtfParAttr,	rtfDarkDiagHatchBgPat,	"bgdkdcross",	0 },
 	{ rtfParAttr,	rtfBgPatLineColor,	"cfpat",	0 },
 	{ rtfParAttr,	rtfBgPatColor,		"cbpat",	0 },
+	{ rtfParAttr,	rtfNestLevel,		"itap",		0 },
 
 	/*
 	 * Section formatting attributes
@@ -1903,6 +1919,8 @@ static RTFKey	rtfKey[] =
 	{ rtfDestination,	rtfIndexRange,		"rxe",		0 },
 	{ rtfDestination,	rtfTOC,			"tc",		0 },
 	{ rtfDestination,	rtfNeXTGraphic,		"NeXTGraphic",	0 },
+	{ rtfDestination,	rtfNestTableProps,	"nesttableprops", 0 },
+	{ rtfDestination,	rtfNoNestTables,	"nonesttables",	0 },
 
 	/*
 	 * Font families
@@ -2605,7 +2623,6 @@ static void SpecialChar (RTF_Info *info)
             break;
 	case rtfPage:
 	case rtfSect:
-	case rtfRow:
 	case rtfPar:
 		RTFPutUnicodeChar (info, '\r');
 		if (info->editor->bEmulateVersion10) RTFPutUnicodeChar (info, '\n');

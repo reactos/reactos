@@ -1,0 +1,472 @@
+/*
+ * wordpad (Simplified and Traditional Chinese Resource)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDM_MAINMENU MENU DISCARDABLE
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)...\tCtrl+N", ID_FILE_NEW
+        MENUITEM "打开(&O)...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "保存(&S)\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "另存为(&A)...", ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)...\tCtrl+P", ID_PRINT
+        MENUITEM "打印预览(&W)...", ID_PREVIEW
+        MENUITEM "页面设置(&E)...", ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)", ID_FILE_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "撤销(&U)\tCtrl+Z", ID_EDIT_UNDO
+        MENUITEM "重做(&E)\tCtrl+Y", ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)\tCtrl+X", ID_EDIT_CUT
+        MENUITEM "复制(&C)\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "粘贴(&P)\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "删除(&D)\tDEL", ID_EDIT_CLEAR
+        MENUITEM "全选(&S)\tCtrl+A", ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "找下一个(&N)\tF3", ID_FIND_NEXT
+        MENUITEM "替换(&R)...\tCtrl+H", ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "只读(&0))", ID_EDIT_READONLY
+        MENUITEM "已改动(M)", ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "其他(&X)"
+        BEGIN
+            MENUITEM "选择信息(&I)", ID_EDIT_SELECTIONINFO
+            MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
+            MENUITEM "默认格式(&D)", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
+            MENUITEM "获取文字(&G)", ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "工具栏(&T)", ID_TOGGLE_TOOLBAR
+        MENUITEM "格式工具栏(&F)", ID_TOGGLE_FORMATBAR
+        MENUITEM "标尺(&R)", ID_TOGGLE_RULER
+        MENUITEM "状态栏(&S)", ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "选项(&O)...", ID_VIEWPROPERTIES
+    END
+    POPUP "插入(&I)"
+    BEGIN
+        MENUITEM "日期时间(&D)...", ID_DATETIME
+    END
+    POPUP "格式(&O)"
+    BEGIN
+        MENUITEM "字体(&F)..", ID_FONTSETTINGS
+        MENUITEM "子弹点(&B)", ID_BULLET
+        MENUITEM "段落(&P)...", ID_PARAFORMAT
+        MENUITEM "标签(&T)...", ID_TABSTOPS
+        POPUP "背景(&D)"
+        BEGIN
+            MENUITEM "系统(&S)\tCtrl+1", ID_BACK_1
+            MENUITEM "淡黄色(&P)\tCtrl+2", ID_BACK_2
+        END
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 &Wine 写字板", ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "剪切(&T)", ID_EDIT_CUT
+        MENUITEM "复制(&C)", ID_EDIT_COPY
+        MENUITEM "粘贴(&P)", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "子弹点(&B)"       ID_BULLET
+        MENUITEM "段落(&P)..."        ID_PARAFORMAT
+    END
+END
+
+IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "日期和时间"
+FONT 9, "MS Song"
+BEGIN
+    LTEXT        "可用格式",0,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "确定(&O)",IDOK,87,12,40,12
+    PUSHBUTTON   "取消(&C)",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "新建"
+FONT 9, "MS Song"
+BEGIN
+    LTEXT        "新文件类型",0,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "确定(&O)",IDOK,97,12,40,12
+    PUSHBUTTON   "取消(&C)",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+Caption "段落格式"
+FONT 9, "MS Song"
+BEGIN
+    GROUPBOX "缩进", 0, 10, 10, 120, 68
+    LTEXT "左", 0, 15, 22, 40, 13
+    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
+    LTEXT "右", 0, 15, 40, 40, 13
+    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
+    LTEXT "第一行", 0, 15, 58, 40, 13
+    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
+    LTEXT "对齐", 0, 15, 87, 40, 13
+    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
+    PUSHBUTTON "确定(&O)", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "取消(&C)", IDCANCEL, 137, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+Caption "标签"
+FONT 9, "MS Song"
+BEGIN
+    GROUPBOX "标签停点", 0, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON "添加(&A)", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "删除(&R)", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "确定(&O)", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "取消(&C)", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "全部删除(&R)", ID_TAB_EMPTY, 137, 51, 50, 15
+END
+
+IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
+STYLE DS_SYSMODAL
+Caption ""
+FONT 9, "MS Song"
+BEGIN
+    GROUPBOX "自动换行", 0, 10, 10, 130, 85
+    RADIOBUTTON "按视窗宽度(&W)", IDC_PAGEFMT_WW, 18, 25, 117, 15
+    RADIOBUTTON "按纸张宽度(&M)", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    GROUPBOX "工具栏", 0, 150, 10, 120, 85
+    CHECKBOX "工具栏(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX "格式工具栏(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX "标尺(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "状态栏(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_RICHTEXT_FILES_RTF,     "RTF丰富格式 (*.rtf)"
+    STRING_TEXT_FILES_TXT,         "文本文件 (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "统一码文本文件 (*.txt)"
+    STRING_ALL_FILES,              "所有文件 (*.*)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "左"
+    STRING_ALIGN_RIGHT,           "右"
+    STRING_ALIGN_CENTER,          "中"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_NEWFILE_RICHTEXT,     "RTF丰富格式文件"
+    STRING_NEWFILE_TXT,          "文本文件 "
+    STRING_NEWFILE_TXT_UNICODE,  "统一码文本文件"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_PRINTER_FILES_PRN,        "打印文件 (*.PRN)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "选项"
+    STRING_VIEWPROPS_TEXT,           "文本文字"
+    STRING_VIEWPROPS_RICHTEXT,       "丰富格式文字"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "打印"
+    STRING_PREVIEW_NEXTPAGE,         "下一页"
+    STRING_PREVIEW_PREVPAGE,         "上一页"
+    STRING_PREVIEW_TWOPAGES,         "双页"
+    STRING_PREVIEW_ONEPAGE,          "单页"
+    STRING_PREVIEW_CLOSE,            "关闭"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_UNITS_CM,             "cm"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "Document"
+    STRING_PROMPT_SAVE_CHANGES,  "保存改动到 '%s'?"
+    STRING_SEARCH_FINISHED,      "文件查找结束."
+    STRING_LOAD_RICHED_FAILED,   "RichEdit 装载失败."
+    STRING_SAVE_LOSEFORMATTING,  "你已经选择保存为文本文件, " \
+                                 "这可能导致格式丢失. " \
+                                 "你确定要这么做吗?"
+    STRING_INVALID_NUMBER,       "数字格式无效"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "不支持OLE 储存文件"
+    STRING_WRITE_FAILED,              "不能保存文件."
+    STRING_WRITE_ACCESS_DENIED,       "你没有保存文件的权力."
+    STRING_OPEN_FAILED,               "不能打开文件."
+    STRING_OPEN_ACCESS_DENIED,        "你没有打开文件的权力."
+END
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDM_MAINMENU MENU DISCARDABLE
+BEGIN
+    POPUP "檔案(&F)"
+    BEGIN
+        MENUITEM "新建(&N)...\tCtrl+N", ID_FILE_NEW
+        MENUITEM "開啟(&O)...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "儲存(&S)\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "另存為(&A)...", ID_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "列印(&P)...\tCtrl+P", ID_PRINT
+        MENUITEM "列印預覽(&W)...", ID_PREVIEW
+        MENUITEM "頁面設定(&E)...", ID_PRINTSETUP
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&X)", ID_FILE_EXIT
+    END
+    POPUP "編輯(&E)"
+    BEGIN
+        MENUITEM "復原(&U)\tCtrl+Z", ID_EDIT_UNDO
+        MENUITEM "重做(&E)\tCtrl+Y", ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪下(&T)\tCtrl+X", ID_EDIT_CUT
+        MENUITEM "複製(&C)\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "貼上(&P)\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "刪除(&D)\tDEL", ID_EDIT_CLEAR
+        MENUITEM "全選(&S)\tCtrl+A", ID_EDIT_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "找下一個(&N)\tF3", ID_FIND_NEXT
+        MENUITEM "替換(&R)...\tCtrl+H", ID_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "唯讀(&0))", ID_EDIT_READONLY
+        MENUITEM "已改動(M)", ID_EDIT_MODIFIED
+        MENUITEM SEPARATOR
+        POPUP "其他(&X)"
+        BEGIN
+            MENUITEM "選擇資訊(&I)", ID_EDIT_SELECTIONINFO
+            MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
+            MENUITEM "默認格式(&D)", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
+            MENUITEM "獲取文字(&G)", ID_EDIT_GETTEXT
+        END
+    END
+    POPUP "檢視(&V)"
+    BEGIN
+        MENUITEM "工具欄(&T)", ID_TOGGLE_TOOLBAR
+        MENUITEM "格式工具欄(&F)", ID_TOGGLE_FORMATBAR
+        MENUITEM "標尺(&R)", ID_TOGGLE_RULER
+        MENUITEM "狀態欄(&S)", ID_TOGGLE_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "選項(&O)...", ID_VIEWPROPERTIES
+    END
+    POPUP "插入(&I)"
+    BEGIN
+        MENUITEM "日期時間(&D)...", ID_DATETIME
+    END
+    POPUP "格式(&O)"
+    BEGIN
+        MENUITEM "字型(&F)..", ID_FONTSETTINGS
+        MENUITEM "子彈點(&B)", ID_BULLET
+        MENUITEM "段落(&P)...", ID_PARAFORMAT
+        MENUITEM "標籤(&T)...", ID_TABSTOPS
+        POPUP "背景(&D)"
+        BEGIN
+            MENUITEM "系統(&S)\tCtrl+1", ID_BACK_1
+            MENUITEM "淡黃色(&P)\tCtrl+2", ID_BACK_2
+        END
+    END
+    POPUP "幫助(&H)"
+    BEGIN
+        MENUITEM "關於 &Wine 寫字板", ID_ABOUT
+    END
+END
+
+IDM_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "剪下(&T)", ID_EDIT_CUT
+        MENUITEM "複製(&C)", ID_EDIT_COPY
+        MENUITEM "貼上(&P)", ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "子彈點(&B)"       ID_BULLET
+        MENUITEM "段落(&P)..."        ID_PARAFORMAT
+    END
+END
+
+IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "日期和時間"
+FONT 8, "PMingLiu"
+BEGIN
+    LTEXT        "可用格式",0,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "確定(&O)",IDOK,87,12,40,12
+    PUSHBUTTON   "取消(&C)",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "新建"
+FONT 8, "PMingLiu"
+BEGIN
+    LTEXT        "新檔案類型",0,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "確定(&O)",IDOK,97,12,40,12
+    PUSHBUTTON   "取消(&C)",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+Caption "段落格式"
+FONT 8, "PMingLiu"
+BEGIN
+    GROUPBOX "縮進", 0, 10, 10, 120, 68
+    LTEXT "左", 0, 15, 22, 40, 13
+    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
+    LTEXT "右", 0, 15, 40, 40, 13
+    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
+    LTEXT "第一行", 0, 15, 58, 40, 13
+    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
+    LTEXT "對齊", 0, 15, 87, 40, 13
+    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
+    PUSHBUTTON "確定(&O)", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "取消(&C)", IDCANCEL, 137, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+Caption "標籤"
+FONT 8, "PMingLiu"
+BEGIN
+    GROUPBOX "標籤停點", 0, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON "添加(&A)", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "刪除(&R)", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "確定(&O)", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "取消(&C)", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "全部刪除(&R)", ID_TAB_EMPTY, 137, 51, 50, 15
+END
+
+IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
+STYLE DS_SYSMODAL
+Caption ""
+FONT 8, "PMingLiu"
+BEGIN
+    GROUPBOX "自動換行", 0, 10, 10, 130, 85
+    RADIOBUTTON "按視窗寬度(&W)", IDC_PAGEFMT_WW, 18, 25, 117, 15
+    RADIOBUTTON "按紙張寬度(&M)", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    GROUPBOX "工具欄", 0, 150, 10, 120, 85
+    CHECKBOX "工具欄(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX "格式工具欄(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX "標尺(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "狀態欄(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_RICHTEXT_FILES_RTF,     "RTF豐富格式 (*.rtf)"
+    STRING_TEXT_FILES_TXT,         "文本檔案 (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "統一碼文本檔案 (*.txt)"
+    STRING_ALL_FILES,              "所有檔案 (*.*)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "左"
+    STRING_ALIGN_RIGHT,           "右"
+    STRING_ALIGN_CENTER,          "中"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_NEWFILE_RICHTEXT,     "RTF豐富格式檔案"
+    STRING_NEWFILE_TXT,          "文本檔案 "
+    STRING_NEWFILE_TXT_UNICODE,  "統一碼文本檔案"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_PRINTER_FILES_PRN,        "列印檔案 (*.PRN)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,          "選項"
+    STRING_VIEWPROPS_TEXT,           "文本文字"
+    STRING_VIEWPROPS_RICHTEXT,       "豐富格式文字"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_PREVIEW_PRINT,            "列印"
+    STRING_PREVIEW_NEXTPAGE,         "下一頁"
+    STRING_PREVIEW_PREVPAGE,         "上一頁"
+    STRING_PREVIEW_TWOPAGES,         "雙頁"
+    STRING_PREVIEW_ONEPAGE,          "單頁"
+    STRING_PREVIEW_CLOSE,            "關閉"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_UNITS_CM,             "cm"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,     "Document"
+    STRING_PROMPT_SAVE_CHANGES,  "儲存改動到 '%s'?"
+    STRING_SEARCH_FINISHED,      "檔案查找結束."
+    STRING_LOAD_RICHED_FAILED,   "RichEdit 裝載失敗."
+    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, " \
+                                 "這可能導致格式丟失. " \
+                                 "你確定要這麼做嗎?"
+    STRING_INVALID_NUMBER,       "數字格式無效"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "不支援OLE 儲存檔案"
+    STRING_WRITE_FAILED,              "不能儲存檔案."
+    STRING_WRITE_ACCESS_DENIED,       "你沒有儲存檔案的權力."
+    STRING_OPEN_FAILED,               "不能開啟檔案."
+    STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
+END
+
+#pragma code_page(default)

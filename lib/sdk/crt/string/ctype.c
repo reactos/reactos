@@ -1,4 +1,6 @@
 #include <string.h>
+#undef __MINGW_IMPORT
+#define __MINGW_IMPORT
 #include <ctype.h>
 
 #undef _pctype

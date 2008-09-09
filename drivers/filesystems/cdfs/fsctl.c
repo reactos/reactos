@@ -309,7 +309,6 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   PVPB Vpb;
   NTSTATUS Status;
   CDINFO CdInfo;
-  CC_FILE_SIZES FileSizes;
 
   DPRINT("CdfsMountVolume() called\n");
 
@@ -404,12 +403,8 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   Fcb->Entry.ExtentLocationL = 0;
   Fcb->Entry.DataLengthL = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
 
-  FileSizes.AllocationSize = Fcb->RFCB.AllocationSize;
-  FileSizes.FileSize = Fcb->RFCB.FileSize;
-  FileSizes.ValidDataLength = Fcb->RFCB.ValidDataLength;
-
   CcInitializeCacheMap(DeviceExt->StreamFileObject,
-                       &FileSizes,
+                       (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
 		       TRUE,
 		       &(CdfsGlobalData->CacheMgrCallbacks),
 		       Fcb);

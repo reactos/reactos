@@ -3,6 +3,10 @@
 #include <tchar.h>
 #include <time.h>
 
+#ifndef _MSC_VER
+#define _swprintf swprintf
+#endif
+
 #define LOG_FILE 1
 #define LOG_EVENTLOG 2
 #define LOG_ERROR 4
@@ -20,19 +24,20 @@
 
 
 /* data structure to pass to threads */
-typedef struct _Services {
+typedef struct _Services
+{
     USHORT Port;
-    TCHAR *Name;
-    LPTHREAD_START_ROUTINE Service;
+    LPWSTR lpName;
+    LPTHREAD_START_ROUTINE lpService;
 } SERVICES, *PSERVICES;
 
 extern volatile BOOL bShutdown;
 extern volatile BOOL bPause;
 
 /* logging functions */
-VOID InitLogging();
+BOOL InitLogging();
 VOID UninitLogging();
-VOID LogEvent(LPCTSTR lpMsg, DWORD errNum, DWORD exitCode, UINT flags);
+VOID LogEvent(LPCWSTR lpMsg, DWORD errNum, DWORD exitCode, UINT flags);
 
 /* skelserver functions */
 DWORD WINAPI StartServer(LPVOID lpParam);

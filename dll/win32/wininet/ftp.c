@@ -1227,8 +1227,7 @@ static DWORD FTPFILE_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, void *b
         return ERROR_SUCCESS;
     }
 
-    FIXME("Not implemented option %d\n", option);
-    return ERROR_INTERNET_INVALID_OPTION;
+    return INET_QueryOption(option, buffer, size, unicode);
 }
 
 static DWORD FTPFILE_ReadFile(WININETHANDLEHEADER *hdr, void *buffer, DWORD size, DWORD *read)
@@ -1553,6 +1552,7 @@ static BOOL FTP_FtpGetFileW(LPWININETFTPSESSIONW lpwfs, LPCWSTR lpszRemoteFile, 
             &iar, sizeof(INTERNET_ASYNC_RESULT));
     }
 
+    if (!bSuccess) DeleteFileW(lpszNewFile);
     return bSuccess;
 }
 
@@ -2194,8 +2194,7 @@ static DWORD FTPSESSION_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, void
         return ERROR_SUCCESS;
     }
 
-    FIXME("Not implemented option %d\n", option);
-    return ERROR_INTERNET_INVALID_OPTION;
+    return INET_QueryOption(option, buffer, size, unicode);
 }
 
 static const HANDLEHEADERVtbl FTPSESSIONVtbl = {
@@ -3275,8 +3274,7 @@ static DWORD FTPFINDNEXT_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, voi
         return ERROR_SUCCESS;
     }
 
-    FIXME("Not implemented option %d\n", option);
-    return ERROR_INTERNET_INVALID_OPTION;
+    return INET_QueryOption(option, buffer, size, unicode);
 }
 
 static DWORD FTPFINDNEXT_FindNextFileW(WININETHANDLEHEADER *hdr, void *data)

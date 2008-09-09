@@ -811,7 +811,7 @@ NdisMRegisterInterrupt(
       return NDIS_STATUS_RESOURCE_CONFLICT;
     }
 
-  NDIS_DbgPrint(MIN_TRACE, ("Function failed\n"));
+  NDIS_DbgPrint(MIN_TRACE, ("Function failed. Status (0x%X).\n", Status));
   return NDIS_STATUS_FAILURE;
 }
 
@@ -840,6 +840,8 @@ NdisMRegisterIoPortRange(
   PHYSICAL_ADDRESS     PortAddress, TranslatedAddress;
   PNDIS_MINIPORT_BLOCK Adapter  = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
   ULONG                AddressSpace = 1;    /* FIXME The HAL handles this wrong atm */
+
+  *PortOffset = 0;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called - InitialPort 0x%x, NumberOfPorts 0x%x\n", InitialPort, NumberOfPorts));
 
@@ -878,7 +880,6 @@ NdisMRegisterIoPortRange(
 
   NDIS_DbgPrint(MAX_TRACE, ("calling MmMapIoSpace\n"));
 
-  *PortOffset = 0;
   *PortOffset = MmMapIoSpace(TranslatedAddress, NumberOfPorts, MmNonCached);
   NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x for port range\n", *PortOffset));
 

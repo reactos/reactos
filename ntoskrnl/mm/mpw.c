@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -71,7 +71,7 @@ MmMpwThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("MpwThread: Wait failed\n");
-         KEBUGCHECK(0);
+	 KeBugCheck(0);
          return(STATUS_UNSUCCESSFUL);
       }
       if (MpwThreadShouldTerminate)

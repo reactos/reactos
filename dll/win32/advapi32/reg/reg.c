@@ -1180,6 +1180,13 @@ RegDeleteKeyA (HKEY hKey,
   HANDLE TargetKey;
   NTSTATUS Status;
 
+  /* Make sure we got a subkey */
+  if (!lpSubKey)
+  {
+    /* Fail */
+    return ERROR_INVALID_PARAMETER;
+  }
+
   Status = MapDefaultKey (&ParentKey,
                           hKey);
   if (!NT_SUCCESS(Status))
@@ -1233,6 +1240,13 @@ RegDeleteKeyW (HKEY hKey,
   HANDLE ParentKey;
   HANDLE TargetKey;
   NTSTATUS Status;
+
+  /* Make sure we got a subkey */
+  if (!lpSubKey)
+  {
+    /* Fail */
+    return ERROR_INVALID_PARAMETER;
+  }
 
   Status = MapDefaultKey (&ParentKey,
                           hKey);
@@ -4070,17 +4084,24 @@ RegQueryValueA (HKEY hKey,
 			      &ValueSize);
   if (ErrorCode == ERROR_SUCCESS)
     {
-      Value.Length = ValueSize;
-      RtlInitAnsiString (&AnsiString,
-			 NULL);
-      AnsiString.Buffer = lpValue;
-      AnsiString.MaximumLength = *lpcbValue;
-      RtlUnicodeStringToAnsiString (&AnsiString,
-				    &Value,
-				    FALSE);
+      if (lpValue != NULL)
+      {
+        Value.Length = ValueSize;
+        RtlInitAnsiString (&AnsiString,
+			   NULL);
+        AnsiString.Buffer = lpValue;
+        AnsiString.MaximumLength = *lpcbValue;
+        RtlUnicodeStringToAnsiString (&AnsiString,
+				      &Value,
+				      FALSE);
+        *lpcbValue = ValueSize;
+      }
+      else if (lpcbValue != NULL)
+      {
+          *lpcbValue = ValueSize;
+      }
     }
 
-  *lpcbValue = ValueSize;
   if (Value.Buffer != NULL)
     {
       RtlFreeHeap (ProcessHeap,

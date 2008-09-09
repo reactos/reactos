@@ -11,7 +11,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+
+#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
 
 extern ULONG NtGlobalFlag;
 
@@ -74,13 +76,18 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
+#define TAG_USTR        TAG('U', 'S', 'T', 'R')
+#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
+#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 VOID
 STDCALL
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
-    ExFreePoolWithTag(Mem,
-                      Tag);
+    if (Tag == TAG_ASTR || Tag == TAG_OSTR || Tag == TAG_USTR)
+        ExFreePool(Mem);
+    else
+        ExFreePoolWithTag(Mem, Tag);
 }
 
 /*
@@ -477,21 +484,21 @@ RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE_ENTRY
 RtlpAllocAtomTableEntry(ULONG Size)
 {
-   PRTL_ATOM_TABLE_ENTRY Entry = ExAllocatePool(NonPagedPool,
-                                                Size);
-   if (Entry != NULL)
-   {
-      RtlZeroMemory(Entry,
-                    Size);
-   }
+    PRTL_ATOM_TABLE_ENTRY Entry;
 
-   return Entry;
+    Entry = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_ATMT);
+    if (Entry != NULL)
+    {
+        RtlZeroMemory(Entry, Size);
+    }
+
+    return Entry;
 }
 
 VOID
 RtlpFreeAtomTableEntry(PRTL_ATOM_TABLE_ENTRY Entry)
 {
-   ExFreePool(Entry);
+    ExFreePoolWithTag(Entry, TAG_ATMT);
 }
 
 VOID

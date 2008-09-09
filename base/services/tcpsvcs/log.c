@@ -11,31 +11,34 @@
 
 #define DEBUG
 
-static LPTSTR lpEventSource = _T("tcpsvcs");
-static LPCTSTR lpLogFileName = _T("C:\\tcpsvcs_log.log");
-static HANDLE hLogFile;
+static LPWSTR lpEventSource = L"tcpsvcs";
+static LPCWSTR lpLogFileName = L"C:\\tcpsvcs_log.log";
+static HANDLE hLogFile = NULL;
+
+static OVERLAPPED olWrite;
+
 
 // needs work
 static VOID
-LogToEventLog(LPCTSTR lpMsg,
+LogToEventLog(LPCWSTR lpMsg,
               DWORD errNum,
               DWORD exitCode,
               UINT flags)
 {
     HANDLE hEventLog;
 
-    hEventLog = RegisterEventSource(NULL, lpEventSource);
+    hEventLog = RegisterEventSourceW(NULL, lpEventSource);
     if (hEventLog)
     {
-        ReportEvent(hEventLog,
-                    (flags & LOG_ERROR) ? EVENTLOG_ERROR_TYPE : EVENTLOG_SUCCESS,
-                    0,
-                    0,
-                    NULL,
-                    1,
-                    0,
-                    &lpMsg,
-                    NULL);
+        ReportEventW(hEventLog,
+                     (flags & LOG_ERROR) ? EVENTLOG_ERROR_TYPE : EVENTLOG_SUCCESS,
+                     0,
+                     0,
+                     NULL,
+                     1,
+                     0,
+                     &lpMsg,
+                     NULL);
 
         CloseEventLog(hEventLog);
     }
@@ -44,45 +47,45 @@ LogToEventLog(LPCTSTR lpMsg,
 static BOOL
 OpenLogFile()
 {
-    hLogFile = CreateFile(lpLogFileName,
-                          GENERIC_WRITE,
-                          0,
-                          NULL,
-                          OPEN_ALWAYS,
-                          FILE_ATTRIBUTE_NORMAL,
-                          NULL);
-    if (hLogFile  == INVALID_HANDLE_VALUE) 
+    hLogFile = CreateFileW(lpLogFileName,
+                           GENERIC_WRITE,
+                           FILE_SHARE_READ,
+                           NULL,
+                           OPEN_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+                           NULL);
+    if (hLogFile  == INVALID_HANDLE_VALUE)
+    {
+        hLogFile = NULL;
         return FALSE;
+    }
 
     return TRUE;
 }
 
 static VOID
-LogToFile(LPCTSTR lpMsg,
+LogToFile(LPCWSTR lpMsg,
           DWORD errNum,
           DWORD exitCode,
           UINT flags)
 {
-    LPTSTR lpFullMsg = NULL;
+    LPWSTR lpFullMsg = NULL;
     DWORD msgLen;
 
-    if (!OpenLogFile())
-        return;
-
-    msgLen = _tcslen(lpMsg) + 1;
+    msgLen = wcslen(lpMsg) + 1;
 
     if (flags & LOG_ERROR)
     {
         LPVOID lpSysMsg;
         DWORD eMsgLen;
 
-        eMsgLen = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                                NULL,
-                                errNum,
-                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                (LPTSTR)&lpSysMsg,
-                                0,
-                                NULL);
+        eMsgLen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                                 NULL,
+                                 errNum,
+                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                 (LPTSTR)&lpSysMsg,
+                                 0,
+                                 NULL);
 
         msgLen = msgLen + eMsgLen + 40;
 
@@ -91,9 +94,9 @@ LogToFile(LPCTSTR lpMsg,
                               msgLen * sizeof(TCHAR));
         if (lpFullMsg)
         {
-            _sntprintf(lpFullMsg,
+            _snwprintf(lpFullMsg,
                        msgLen,
-                       _T("%s : %s\tErrNum = %lu ExitCode = %lu\r\n"),
+                       L"%s : %s\tErrNum = %lu ExitCode = %lu\r\n",
                        lpMsg,
                        lpSysMsg,
                        errNum,
@@ -112,9 +115,9 @@ LogToFile(LPCTSTR lpMsg,
                               msgLen * sizeof(TCHAR));
         if (lpFullMsg)
         {
-            _sntprintf(lpFullMsg,
+            _snwprintf(lpFullMsg,
                        msgLen,
-                      _T("%s\r\n"),
+                      L"%s\r\n",
                       lpMsg);
         }
     }
@@ -122,17 +125,50 @@ LogToFile(LPCTSTR lpMsg,
     if (lpFullMsg)
     {
         DWORD bytesWritten;
+        DWORD dwRet;
+        BOOL bRet;
 
-        SetFilePointer(hLogFile, 0, NULL, FILE_END);
-
-        WriteFile(hLogFile,
-                  lpFullMsg,
-                  _tcslen(lpFullMsg) * sizeof(TCHAR),
-                  &bytesWritten,
-                  NULL);
-        if (bytesWritten == 0)
+        bRet = WriteFile(hLogFile,
+                         lpFullMsg,
+                         wcslen(lpFullMsg) * sizeof(WCHAR),
+                         &bytesWritten,
+                         &olWrite);
+        if (!bRet)
         {
-            LogToEventLog(_T("Failed to write to log file"),
+            if (GetLastError() != ERROR_IO_PENDING)
+            {
+                bRet = FALSE;
+            }
+            else
+            {
+                // Write is pending
+                dwRet = WaitForSingleObject(olWrite.hEvent, INFINITE);
+
+                 switch (dwRet)
+                 {
+                    // event has been signaled
+                    case WAIT_OBJECT_0:
+                    {
+                         bRet = GetOverlappedResult(hLogFile,
+                                                    &olWrite,
+                                                    &bytesWritten,
+                                                    FALSE);
+                         break;
+                    }
+
+                    default:
+                         // An error has occurred in WaitForSingleObject.
+                         // This usually indicates a problem with the
+                         // OVERLAPPED structure's event handle.
+                         bRet = FALSE;
+                         break;
+                 }
+            }
+        }
+
+        if (!bRet || bytesWritten == 0)
+        {
+            LogToEventLog(L"Failed to write to log file",
                           GetLastError(),
                           0,
                           LOG_EVENTLOG | LOG_ERROR);
@@ -143,8 +179,6 @@ LogToFile(LPCTSTR lpMsg,
                  lpFullMsg);
     }
 
-    CloseHandle(hLogFile);
-
     if (exitCode > 0)
         ExitProcess(exitCode);
 }
@@ -152,7 +186,7 @@ LogToFile(LPCTSTR lpMsg,
 
 
 VOID
-LogEvent(LPCTSTR lpMsg,
+LogEvent(LPCWSTR lpMsg,
          DWORD errNum,
          DWORD exitCode,
          UINT flags)
@@ -165,39 +199,64 @@ LogEvent(LPCTSTR lpMsg,
         LogToEventLog(lpMsg, errNum, exitCode, flags);
 }
 
-VOID
+BOOL
 InitLogging()
 {
-    WCHAR wcBom = 0xFEFF;
+#ifdef DEBUG
+    BOOL bRet = FALSE;
 
-    DeleteFile(lpLogFileName);
-
-#ifdef _UNICODE
-    if (OpenLogFile())
+    ZeroMemory(&olWrite, sizeof(OVERLAPPED));
+    olWrite.Offset = 0xFFFFFFFF;
+    olWrite.OffsetHigh = 0xFFFFFFFF;
+    olWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (olWrite.hEvent)
     {
-        DWORD bytesWritten;
+        DeleteFileW(lpLogFileName);
 
-        WriteFile(hLogFile,
-                  &wcBom,
-                  sizeof(WCHAR),
-                  &bytesWritten,
-                  NULL);
-        if (bytesWritten == 0)
+        if (OpenLogFile())
         {
-            LogToEventLog(_T("Failed to write to log file"),
-                          GetLastError(),
-                          0,
-                          LOG_EVENTLOG | LOG_ERROR);
-        }
+            WCHAR wcBom = 0xFEFF;
+            DWORD bytesWritten;
 
-        CloseHandle(hLogFile);
+            bRet = WriteFile(hLogFile,
+                             &wcBom,
+                             sizeof(WCHAR),
+                             &bytesWritten,
+                             &olWrite);
+            if (!bRet)
+            {
+                if (GetLastError() != ERROR_IO_PENDING)
+                {
+                    LogToEventLog(L"Failed to write to log file",
+                                  GetLastError(),
+                                  0,
+                                  LOG_EVENTLOG | LOG_ERROR);
+                }
+                else
+                {
+                    bRet = TRUE;
+                }
+            }
+        }
     }
+
+    return bRet;
+#else
+    return TRUE;
 #endif
 }
 
 VOID
 UninitLogging()
 {
-    FlushFileBuffers(hLogFile);
-    CloseHandle(hLogFile);
+    if (hLogFile)
+    {
+        FlushFileBuffers(hLogFile);
+        CloseHandle(hLogFile);
+    }
+
+    if (olWrite.hEvent)
+    {
+        CloseHandle(olWrite.hEvent);
+    }
 }

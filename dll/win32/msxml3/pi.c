@@ -59,18 +59,18 @@ static HRESULT WINAPI dom_pi_QueryInterface(
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMProcessingInstruction ) ||
+         IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IUnknown ) )
     {
         *ppvObject = iface;
     }
-    else if ( IsEqualGUID( riid, &IID_IDispatch ) ||
-              IsEqualGUID( riid, &IID_IXMLDOMNode ) )
+    else if ( IsEqualGUID( riid, &IID_IXMLDOMNode ) )
     {
         return IUnknown_QueryInterface(This->node_unk, riid, ppvObject);
     }
     else
     {
-        FIXME("Unsupported inteferace %s\n", debugstr_guid(riid));
+        FIXME("Unsupported interface %s\n", debugstr_guid(riid));
         return E_NOINTERFACE;
     }
 
@@ -106,8 +106,13 @@ static HRESULT WINAPI dom_pi_GetTypeInfoCount(
     IXMLDOMProcessingInstruction *iface,
     UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI dom_pi_GetTypeInfo(
@@ -115,8 +120,14 @@ static HRESULT WINAPI dom_pi_GetTypeInfo(
     UINT iTInfo, LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMProcessingInstruction_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI dom_pi_GetIDsOfNames(
@@ -124,8 +135,24 @@ static HRESULT WINAPI dom_pi_GetIDsOfNames(
     REFIID riid, LPOLESTR* rgszNames,
     UINT cNames, LCID lcid, DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMProcessingInstruction_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI dom_pi_Invoke(
@@ -134,8 +161,22 @@ static HRESULT WINAPI dom_pi_Invoke(
     WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult,
     EXCEPINFO* pExcepInfo, UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMProcessingInstruction_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+       hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI dom_pi_get_nodeName(
@@ -159,6 +200,25 @@ static HRESULT WINAPI dom_pi_put_nodeValue(
     VARIANT var1 )
 {
     dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    BSTR sTarget;
+    static const WCHAR szXML[] = {'x','m','l',0};
+    HRESULT hr;
+
+    TRACE("%p\n", This );
+
+    /* Cannot set data to a PI node whose target is 'xml' */
+    hr = dom_pi_get_nodeName(iface, &sTarget);
+    if(hr == S_OK)
+    {
+        if(lstrcmpW( sTarget, szXML) == 0)
+        {
+            SysFreeString(sTarget);
+            return E_FAIL;
+        }
+
+        SysFreeString(sTarget);
+    }
+
     return IXMLDOMNode_put_nodeValue( This->node, var1 );
 }
 
@@ -433,24 +493,62 @@ static HRESULT WINAPI dom_pi_get_target(
     IXMLDOMProcessingInstruction *iface,
     BSTR *p)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    /* target returns the same value as nodeName property */
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    return IXMLDOMNode_get_nodeName( This->node, p );
 }
 
 static HRESULT WINAPI dom_pi_get_data(
     IXMLDOMProcessingInstruction *iface,
     BSTR *p)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    HRESULT hr = E_FAIL;
+    VARIANT vRet;
+
+    if(!p)
+        return E_INVALIDARG;
+
+    hr = IXMLDOMNode_get_nodeValue( This->node, &vRet );
+    if(hr == S_OK)
+    {
+        *p = V_BSTR(&vRet);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI dom_pi_put_data(
     IXMLDOMProcessingInstruction *iface,
     BSTR data)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
+    HRESULT hr = E_FAIL;
+    VARIANT val;
+    BSTR sTarget;
+    static const WCHAR szXML[] = {'x','m','l',0};
+
+    TRACE("%p %s\n", This, debugstr_w(data) );
+
+    /* Cannot set data to a PI node whose target is 'xml' */
+    hr = dom_pi_get_nodeName(iface, &sTarget);
+    if(hr == S_OK)
+    {
+        if(lstrcmpW( sTarget, szXML) == 0)
+        {
+            SysFreeString(sTarget);
+            return E_FAIL;
+        }
+
+        SysFreeString(sTarget);
+    }
+
+    V_VT(&val) = VT_BSTR;
+    V_BSTR(&val) = data;
+
+    hr = IXMLDOMNode_put_nodeValue( This->node, val );
+
+    return hr;
 }
 
 static const struct IXMLDOMProcessingInstructionVtbl dom_pi_vtbl =

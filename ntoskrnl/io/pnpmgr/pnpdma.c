@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 #include <wdmguid.h>
 
 /* PUBLIC FUNCTIONS **********************************************************/

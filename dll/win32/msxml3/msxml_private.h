@@ -21,6 +21,10 @@
 #ifndef __MSXML_PRIVATE__
 #define __MSXML_PRIVATE__
 
+#include "dispex.h"
+
+#include "wine/unicode.h"
+
 #ifndef __WINE_CONFIG_H
 # error You must include config.h to use this header
 #endif
@@ -32,7 +36,7 @@
 #endif
 
 /* constructors */
-extern IUnknown         *create_domdoc( void );
+extern IUnknown         *create_domdoc( xmlNodePtr document );
 extern IUnknown         *create_xmldoc( void );
 extern IXMLDOMNode      *create_node( xmlNodePtr node );
 extern IUnknown         *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter );
@@ -41,8 +45,12 @@ extern IUnknown         *create_attribute( xmlNodePtr attribute );
 extern IUnknown         *create_text( xmlNodePtr text );
 extern IUnknown         *create_pi( xmlNodePtr pi );
 extern IUnknown         *create_comment( xmlNodePtr comment );
+extern IUnknown         *create_cdata( xmlNodePtr text );
 extern IXMLDOMNodeList  *create_children_nodelist( xmlNodePtr );
 extern IXMLDOMNamedNodeMap *create_nodemap( IXMLDOMNode *node );
+extern IUnknown         *create_doc_Implementation();
+extern IUnknown         *create_doc_fragment( xmlNodePtr fragment );
+extern IUnknown         *create_doc_entity_ref( xmlNodePtr entity );
 
 extern HRESULT queryresult_create( xmlNodePtr, LPWSTR, IXMLDOMNodeList ** );
 
@@ -63,6 +71,23 @@ extern HRESULT XMLElementCollection_create( IUnknown *pUnkOuter, xmlNodePtr node
 
 extern xmlDocPtr parse_xml(char *ptr, int len);
 
+/* IXMLDOMNode Internal Structure */
+typedef struct _xmlnode
+{
+    const struct IXMLDOMNodeVtbl *lpVtbl;
+    const struct IUnknownVtbl *lpInternalUnkVtbl;
+    IUnknown *pUnkOuter;
+    LONG ref;
+    xmlNodePtr node;
+} xmlnode;
+
+static inline xmlnode *impl_from_IXMLDOMNode( IXMLDOMNode *iface )
+{
+    return (xmlnode *)((char*)iface - FIELD_OFFSET(xmlnode, lpVtbl));
+}
+
+extern HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **document);
+
 #endif
 
 extern IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR srcText,
@@ -70,5 +95,116 @@ extern IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, B
 extern HRESULT DOMDocument_create( IUnknown *pUnkOuter, LPVOID *ppObj );
 extern HRESULT SchemaCache_create( IUnknown *pUnkOuter, LPVOID *ppObj );
 extern HRESULT XMLDocument_create( IUnknown *pUnkOuter, LPVOID *ppObj );
+extern HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj );
+
+typedef struct bsc_t bsc_t;
+
+HRESULT bind_url(LPCWSTR, HRESULT (*onDataAvailable)(void*,char*,DWORD), void*, bsc_t**);
+void detach_bsc(bsc_t*);
+
+/* typelibs */
+typedef enum tid_t {
+    IXMLDOMAttribute_tid,
+    IXMLDOMCDATASection_tid,
+    IXMLDOMComment_tid,
+    IXMLDOMDocument2_tid,
+    IXMLDOMDocumentFragment_tid,
+    IXMLDOMElement_tid,
+    IXMLDOMEntityReference_tid,
+    IXMLDOMImplementation_tid,
+    IXMLDOMNamedNodeMap_tid,
+    IXMLDOMNode_tid,
+    IXMLDOMNodeList_tid,
+    IXMLDOMParseError_tid,
+    IXMLDOMProcessingInstruction_tid,
+    IXMLDOMSchemaCollection_tid,
+    IXMLDOMText_tid,
+    IXMLElement_tid,
+    IXMLDocument_tid,
+    IVBSAXAttributes_tid,
+    IVBSAXContentHandler_tid,
+    IVBSAXDeclHandler_tid,
+    IVBSAXDTDHandler_tid,
+    IVBSAXEntityResolver_tid,
+    IVBSAXErrorHandler_tid,
+    IVBSAXLexicalHandler_tid,
+    IVBSAXLocator_tid,
+    IVBSAXXMLFilter_tid,
+    IVBSAXXMLReader_tid,
+    IMXAttributes_tid,
+    IMXReaderControl_tid,
+    IMXWriter_tid,
+    LAST_tid
+} tid_t;
+
+extern HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo);
+extern void release_typelib(void);
+
+typedef struct dispex_data_t dispex_data_t;
+typedef struct dispex_dynamic_data_t dispex_dynamic_data_t;
+
+#define MSXML_DISPID_CUSTOM_MIN 0x60000000
+#define MSXML_DISPID_CUSTOM_MAX 0x6fffffff
+
+typedef struct {
+    HRESULT (*get_dispid)(IUnknown*,BSTR,DWORD,DISPID*);
+    HRESULT (*invoke)(IUnknown*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*);
+} dispex_static_data_vtbl_t;
+
+typedef struct {
+    const dispex_static_data_vtbl_t *vtbl;
+    const tid_t disp_tid;
+    dispex_data_t *data;
+    const tid_t* const iface_tids;
+} dispex_static_data_t;
+
+typedef struct {
+    const IDispatchExVtbl  *lpIDispatchExVtbl;
+
+    IUnknown *outer;
+
+    dispex_static_data_t *data;
+    dispex_dynamic_data_t *dynamic_data;
+} DispatchEx;
+
+void init_dispex(DispatchEx*,IUnknown*,dispex_static_data_t*);
+BOOL dispex_query_interface(DispatchEx*,REFIID,void**);
+
+/* memory allocation functions */
+
+static inline void *heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline void *heap_alloc_zero(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
+
+static inline void *heap_realloc(void *mem, size_t len)
+{
+    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
+
+static inline LPWSTR heap_strdupW(LPCWSTR str)
+{
+    LPWSTR ret = NULL;
+
+    if(str) {
+        DWORD size;
+
+        size = (strlenW(str)+1)*sizeof(WCHAR);
+        ret = heap_alloc(size);
+        memcpy(ret, str, size);
+    }
+
+    return ret;
+}
 
 #endif /* __MSXML_PRIVATE__ */

@@ -673,7 +673,7 @@ i8042Pnp(
 					PDEVICE_RELATIONS DeviceRelations;
 
 					TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-					DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), I8042PRT_TAG);
+					DeviceRelations = ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
 					if (DeviceRelations)
 					{
 						DeviceRelations->Count = 0;

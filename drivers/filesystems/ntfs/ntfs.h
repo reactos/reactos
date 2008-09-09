@@ -4,7 +4,6 @@
 #include <ntifs.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
-#include <ccros.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \

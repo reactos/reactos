@@ -117,7 +117,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
       CloseHandle(hReadPipe);
     }
 
-  pf->_tmpfname = ProcessInformation.hProcess;
+  //pf->_tmpfname = ProcessInformation.hProcess;
 
   return( pf );
 }

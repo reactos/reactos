@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *****************************************************************/
 
@@ -21,6 +21,8 @@ PVOID MmSystemRangeStart = NULL;
 ULONG MmReadClusterSize;
 
 MM_STATS MmStats;
+
+PMM_AVL_TABLE MmKernelAddressSpace;
 
 /* FUNCTIONS ****************************************************************/
 

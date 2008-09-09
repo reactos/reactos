@@ -324,7 +324,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePool(ExpNlsTableBase);
+    ExFreePoolWithTag(ExpNlsTableBase, TAG('R', 't', 'l', 'i'));
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */

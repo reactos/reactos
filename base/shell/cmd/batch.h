@@ -23,8 +23,6 @@ typedef struct tagBATCHCONTEXT
 	TCHAR forvar;
 	INT   bCmdBlock;
 	BOOL  bExecuteBlock[MAX_PATH];
-	LONG lCallPosition; /* store position where to return to after Call :Label */
-	LONG lCallPositionHigh;
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 
@@ -43,7 +41,7 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 LPTSTR FindArg (INT);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch (LPTSTR);
-BOOL   Batch (LPTSTR, LPTSTR, LPTSTR);
+BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, BOOL);
 LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
 

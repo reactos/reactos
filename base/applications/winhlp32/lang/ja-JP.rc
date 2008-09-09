@@ -1,0 +1,125 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+{
+ POPUP "ファイル(&F)" {
+  MENUITEM "開く(&O)", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "印刷(&P)", MNID_FILE_PRINT
+  MENUITEM "プリンタの設定(&S)...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "終了(&X)", MNID_FILE_EXIT
+ }
+ POPUP "編集(&E)" {
+   MENUITEM "コピー(&C)...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "コメント(&A)...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "しおり(&B)" {
+   MENUITEM "定義(&D)...", MNID_BKMK_DEFINE
+ }
+ POPUP "オプション(&O)" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "履歴",		MNID_OPTS_HISTORY
+  POPUP    "フォント"
+  BEGIN
+    MENUITEM "小",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "標準",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "大",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "システム カラーを使う",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "ヘルプ(&H)" {
+   MENUITEM "ヘルプについてのヘルプ(&O)", MNID_HELP_HELPON
+   MENUITEM "常に手前に表\示(&T)", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "情報(&I)...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "WINE について(&A)", MNID_HELP_WINE
+#endif
+ }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "索引"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "検索"
+{
+    LTEXT  "未実装", -1, 10, 10, 180, 150
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"WINE ヘルプ"
+STID_WHERROR, 		"エラー"
+STID_WARNING,  		"警告"
+STID_INFO,  		"情報"
+STID_NOT_IMPLEMENTED, 	"非実装"
+STID_HLPFILE_ERROR_s, 	"ヘルプファイル `%s' を読み込んでいるときにエラー"
+STID_INDEX, 		"索引(&I)"
+STID_CONTENTS,		"概要"
+STID_BACK, 		"戻る(&B)"
+STID_ALL_FILES, 	"すべてのファイル (*.*)"
+STID_HELP_FILES_HLP, 	"ヘルプ ファイル (*.hlp)"
+STID_FILE_NOT_FOUND_s	"'%s' が見つかりません。自分でこのファイルを探しますか?"
+STID_NO_RICHEDIT	"リッチエディット実装が見つかりません... 終了します"
+STID_PSH_INDEX,		"ヘルプ トピック: "
+}
+
+CONTEXT_MENU MENU LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "コメント...",       MNID_CTXT_ANNOTATE
+		MENUITEM "コピー",                MNID_CTXT_COPY
+		MENUITEM "印刷...",            MNID_CTXT_PRINT
+		POPUP    "フォント"
+		BEGIN
+			MENUITEM "小",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "標準",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "大",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Help always visible"
+		BEGIN
+			MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Visible",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Non visible", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "システム カラーを使う",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

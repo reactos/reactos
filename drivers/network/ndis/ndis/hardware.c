@@ -125,7 +125,7 @@ NdisMQueryAdapterResources(
                     &MiniportBlock->AllocatedResources->List[0].PartialResourceList,
                     ResourceListSize);
       *BufferSize = ResourceListSize;
-      *Status = STATUS_SUCCESS;
+      *Status = NDIS_STATUS_SUCCESS;
     }
   else
     {

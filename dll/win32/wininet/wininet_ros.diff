@@ -9,28 +9,6 @@
  WINE_DEFAULT_DEBUG_CHANNEL(wininet);
  
  static const WCHAR g_szHttp1_0[] = {'H','T','T','P','/','1','.','0',0};
-@@ -1617,8 +1619,9 @@
- 
-     if(req->lpszCacheFile) {
-         BOOL res;
-+        DWORD dwBytesWritten;
- 
--        res = WriteFile(req->hCacheFile, buffer, bytes_read, NULL, NULL);
-+        res = WriteFile(req->hCacheFile, buffer, bytes_read, &dwBytesWritten, NULL);
-         if(!res)
-             WARN("WriteFile failed: %u\n", GetLastError());
-     }
-@@ -1686,7 +1689,9 @@
- 
-         if (req->lpszCacheFile)
-         {
--            if (!WriteFile(req->hCacheFile, p, bytes_read, NULL, NULL))
-+            DWORD dwBytesWritten;
-+
-+            if (!WriteFile(req->hCacheFile, p, bytes_read, &dwBytesWritten, NULL))
-                 WARN("WriteFile failed: %u\n", GetLastError());
-         }
-         p += bytes_read;
 --- D:/Wine-CVS/wine/dlls/wininet/internet.c	Wed May 28 14:33:28 2008
 +++ D:/ReactOS-Trunk/reactos/dll/win32/wininet/internet.c	Fri May 30 18:04:29 2008
 @@ -3101,19 +3101,22 @@

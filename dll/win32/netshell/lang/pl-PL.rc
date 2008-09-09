@@ -1,0 +1,20 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Po³¹czenie sieciowe"
+	IDS_SHV_COLUMN_NAME         "Nazwa"
+	IDS_SHV_COLUMN_TYPE         "Typ"
+	IDS_SHV_COLUMN_STATE        "Status"
+	IDS_SHV_COLUMN_DEVNAME      "Nazwa urz¹dzenia"
+	IDS_SHV_COLUMN_PHONE        "Numer telefonu lub adres hosta"
+	IDS_SHV_COLUMN_OWNER        "W³aœciciel"
+	IDS_TYPE_ETHERNET           "Sieæ LAN lub szerokopasmowy Internet"
+	IDS_STATUS_NON_OPERATIONAL  "Wy³¹czony"
+	IDS_STATUS_UNREACHABLE      "Niepo³¹czony"
+	IDS_STATUS_DISCONNECTED     "Kabel sieciowy od³¹czony"
+	IDS_STATUS_CONNECTING       "Pobieranie adresu sieciowego"
+	IDS_STATUS_CONNECTED        "Po³¹czony"
+	IDS_STATUS_OPERATIONAL      "Po³¹czony"
+END
+

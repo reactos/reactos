@@ -23,6 +23,7 @@
 #include "config.h"
 #include "wine/port.h"
 
+#include <sys/types.h>
 #ifdef HAVE_POLL_H
 #include <poll.h>
 #endif
@@ -42,6 +43,22 @@
 #ifdef HAVE_SYS_IOCTL_H
 # include <sys/ioctl.h>
 #endif
+#include <time.h>
+#ifdef HAVE_NETDB_H
+# include <netdb.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+#ifdef HAVE_OPENSSL_SSL_H
+# include <openssl/ssl.h>
+#undef FAR
+#undef DSA
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>

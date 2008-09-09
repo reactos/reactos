@@ -131,7 +131,7 @@ FASTCALL
 ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
-    ASSERT_IRQL(APC_LEVEL);
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);
 
     /* Erase the owner */
     FastMutex->Owner = NULL;

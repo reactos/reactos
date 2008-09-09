@@ -71,3 +71,18 @@ HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9**
 
     return E_NOINTERFACE;
 }
+
+HRESULT D3D9BaseObject_GetDeviceInt(D3D9BaseObject* pBaseObject, DIRECT3DDEVICE9_INT** ppDevice)
+{
+    if (pBaseObject->pUnknown)
+    {
+        LPDIRECT3DDEVICE9 pDevice;
+        if (FAILED(pBaseObject->pUnknown->lpVtbl->QueryInterface((IUnknown*) &pBaseObject->pUnknown->lpVtbl, &IID_IDirect3DDevice9, (void**)&pDevice)))
+            return E_NOINTERFACE;
+
+        *ppDevice = IDirect3DDevice9ToImpl(pDevice);
+        return D3D_OK;
+    }
+
+    return E_NOINTERFACE;
+}

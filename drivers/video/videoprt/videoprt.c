@@ -875,7 +875,7 @@ VideoPortSetRegistryParameters(
    TRACE_(VIDEOPRT, "VideoPortSetRegistryParameters ParameterName %S, RegPath: %wZ\n",
       ValueName,
       &VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath);
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
    Status = RtlWriteRegistryValue(
       RTL_REGISTRY_ABSOLUTE,
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath.Buffer,

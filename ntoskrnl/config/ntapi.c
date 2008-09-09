@@ -35,7 +35,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     DPRINT("NtCreateKey(OB name %wZ)\n", ObjectAttributes->ObjectName);
 
     /* Check for user-mode caller */
-    if (PreviousMode == UserMode)
+    if (PreviousMode != KernelMode)
     {
         /* Prepare to probe parameters */
         _SEH_TRY
@@ -56,7 +56,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             *KeyHandle = NULL;
 
             /* Probe object attributes */
-            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 4);
+            ProbeForRead(ObjectAttributes,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -87,9 +89,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     _SEH_TRY
     {
-        if (NT_SUCCESS(Status)) *KeyHandle = Handle;
-
         /* Return data to user */
+        if (NT_SUCCESS(Status)) *KeyHandle = Handle;
         if (Disposition) *Disposition = ParseContext.Disposition;
     }
     _SEH_HANDLE
@@ -117,7 +118,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
 
     /* Check for user-mode caller */
-    if (PreviousMode == UserMode)
+    if (PreviousMode != KernelMode)
     {
         /* Prepare to probe parameters */
         _SEH_TRY
@@ -127,7 +128,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
             *KeyHandle = NULL;
 
             /* Probe object attributes */
-            ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 4);
+            ProbeForRead(ObjectAttributes,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
         }
         _SEH_HANDLE
         {
@@ -147,10 +150,12 @@ NtOpenKey(OUT PHANDLE KeyHandle,
                                 &ParseContext,
                                 &Handle);
 
+    /* Only do this if we succeeded */
     if (NT_SUCCESS(Status))
     {
         _SEH_TRY
         {
+            /* Return the handle to caller */
             *KeyHandle = Handle;
         }
         _SEH_HANDLE

@@ -169,7 +169,7 @@ PUCHAR MmGetSystemMemoryMapTypeString(ULONG Type)
 
 ULONG MmGetPageNumberFromAddress(PVOID Address)
 {
-	return ((ULONG)Address) / MM_PAGE_SIZE;
+	return ((ULONG_PTR)Address) / MM_PAGE_SIZE;
 }
 
 PVOID MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount)
@@ -195,7 +195,7 @@ PVOID MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount)
 
 	DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returning 0x%x\n", (ULONG)EndAddressOfMemory));
 
-	return (PVOID)(ULONG)EndAddressOfMemory;
+	return (PVOID)(ULONG_PTR)EndAddressOfMemory;
 }
 
 ULONG MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount)
@@ -203,7 +203,7 @@ ULONG MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, UL
 	ULONG		PageCount;
 	ULONGLONG		EndAddress;
 
-	EndAddress = (ULONGLONG)(ULONG)MmGetEndAddressOfAnyMemory(BiosMemoryMap, MapCount);
+	EndAddress = (ULONGLONG)(ULONG_PTR)MmGetEndAddressOfAnyMemory(BiosMemoryMap, MapCount);
 
 	// Since MmGetEndAddressOfAnyMemory() won't
 	// return addresses higher than 0xFFFFFFFF
@@ -252,7 +252,7 @@ PVOID MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG Map
 
 		if (TempBiosMemoryMap[Index].Length >= PageLookupTableSize)
 		{
-			PageLookupTableMemAddress = (PVOID)(ULONG)
+			PageLookupTableMemAddress = (PVOID)(ULONG_PTR)
 				(TempBiosMemoryMap[Index].BaseAddress + (TempBiosMemoryMap[Index].Length - PageLookupTableSize));
 			break;
 		}
@@ -304,8 +304,8 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 
 	for (Index=0; Index<MapCount; Index++)
 	{
-		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)(ULONG)BiosMemoryMap[Index].BaseAddress);
-		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(ULONG)(BiosMemoryMap[Index].BaseAddress + BiosMemoryMap[Index].Length - 1));
+		MemoryMapStartPage = MmGetPageNumberFromAddress((PVOID)(ULONG_PTR)BiosMemoryMap[Index].BaseAddress);
+		MemoryMapEndPage = MmGetPageNumberFromAddress((PVOID)(ULONG_PTR)(BiosMemoryMap[Index].BaseAddress + BiosMemoryMap[Index].Length - 1));
 		MemoryMapPageCount = (MemoryMapEndPage - MemoryMapStartPage) + 1;
 
 		switch (BiosMemoryMap[Index].Type)

@@ -143,6 +143,13 @@ NTSTATUS BuildRawIpPacket(
 	break;
     }
 
+    if( !NT_SUCCESS(Status) ) {
+	TI_DbgPrint(MIN_TRACE, ("Cannot add header. Status = (0x%X)\n",
+				Status));
+	FreeNdisPacket(Packet->NdisPacket);
+	return Status;
+    }
+
     TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
 			    Packet->Header, Packet->Data,
 			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));

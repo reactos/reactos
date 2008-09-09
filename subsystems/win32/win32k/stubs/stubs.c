@@ -736,45 +736,6 @@ PATHOBJ_vGetBounds(
   UNIMPLEMENTED;
 }
 
-BOOL
-APIENTRY
-XFORMOBJ_bApplyXform(
-	IN XFORMOBJ  *pxo,
-	IN ULONG  iMode,
-	IN ULONG  cPoints,
-	IN PVOID  pvIn,
-	OUT PVOID  pvOut
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_027b.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-ULONG
-APIENTRY
-XFORMOBJ_iGetFloatObjXform(
-	IN XFORMOBJ  *pxo,
-	OUT FLOATOBJ_XFORM  *pxfo
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_5ig7.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-ULONG
-APIENTRY
-XFORMOBJ_iGetXform(
-	IN XFORMOBJ  *pxo,
-	OUT XFORML  *pxform
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0s2v.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
 /*
  * @unimplemented
  */

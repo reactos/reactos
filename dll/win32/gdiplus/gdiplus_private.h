@@ -52,6 +52,11 @@ extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
 extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
     REAL tension, REAL *x, REAL *y);
 
+extern BOOL lengthen_path(GpPath *path, INT len);
+
+typedef struct region_element region_element;
+extern inline void delete_element(region_element *element);
+
 static inline INT roundr(REAL x)
 {
     return (INT) floor(x + 0.5);
@@ -93,6 +98,8 @@ struct GpGraphics{
     GpUnit unit;    /* page unit */
     REAL scale;     /* page scale */
     GpMatrix * worldtrans; /* world transform */
+    BOOL busy;      /* hdc handle obtained by GdipGetDC */
+    GpRegion *clip;
 };
 
 struct GpBrush{
@@ -160,6 +167,10 @@ struct GpCustomLineCap{
     REAL scale;
 };
 
+struct GpAdustableArrowCap{
+    GpCustomLineCap cap;
+};
+
 struct GpImage{
     IPicture* picture;
     ImageType type;
@@ -215,7 +226,16 @@ struct GpFontFamily{
     WCHAR FamilyName[LF_FACESIZE];
 };
 
-typedef struct region_element
+/* internal use */
+typedef enum RegionType
+{
+    RegionDataRect          = 0x10000000,
+    RegionDataPath          = 0x10000001,
+    RegionDataEmptyRect     = 0x10000002,
+    RegionDataInfiniteRect  = 0x10000003,
+} RegionType;
+
+struct region_element
 {
     DWORD type; /* Rectangle, Path, SpecialRectangle, or CombineMode */
     union
@@ -238,7 +258,7 @@ typedef struct region_element
             struct region_element *right; /* what *left was combined with */
         } combine;
     } elementdata;
-} region_element;
+};
 
 struct GpRegion{
     struct

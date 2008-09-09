@@ -26,8 +26,6 @@
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef __i386__
-
 BOOLEAN DiskResetController(ULONG DriveNumber)
 {
 	REGS	RegsIn;
@@ -177,7 +175,7 @@ BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
         DbgPrint((DPRINT_DISK, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
         if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
-           PUCHAR SpecPtr = (PUCHAR)((Ptr[13] << 4) + Ptr[14]);
+           PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[13] << 4) + Ptr[14]);
            DbgPrint((DPRINT_DISK, "SpecPtr:                                 %x\n", SpecPtr));
            DbgPrint((DPRINT_DISK, "physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]));
            DbgPrint((DPRINT_DISK, "disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]));
@@ -197,7 +195,5 @@ BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
 
 	return TRUE;
 }
-
-#endif /* defined __i386__ */
 
 /* EOF */

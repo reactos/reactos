@@ -66,6 +66,9 @@ static HRESULT WINAPI xmlnodelist_QueryInterface(
 {
     TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
 
+    if(!ppvObject)
+        return E_INVALIDARG;
+
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IXMLDOMNodeList ) )
@@ -111,8 +114,13 @@ static HRESULT WINAPI xmlnodelist_GetTypeInfoCount(
     IXMLDOMNodeList *iface,
     UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnodelist_GetTypeInfo(
@@ -121,8 +129,14 @@ static HRESULT WINAPI xmlnodelist_GetTypeInfo(
     LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMNodeList_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlnodelist_GetIDsOfNames(
@@ -133,8 +147,24 @@ static HRESULT WINAPI xmlnodelist_GetIDsOfNames(
     LCID lcid,
     DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMNodeList_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlnodelist_Invoke(
@@ -148,8 +178,22 @@ static HRESULT WINAPI xmlnodelist_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMNodeList_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlnodelist_get_item(
@@ -162,7 +206,10 @@ static HRESULT WINAPI xmlnodelist_get_item(
     long nodeIndex = 0;
 
     TRACE("%p %ld\n", This, index);
- 
+
+    if(!listItem)
+        return E_INVALIDARG;
+
     *listItem = NULL;
 
     if (index < 0)
@@ -193,6 +240,9 @@ static HRESULT WINAPI xmlnodelist_get_length(
 
     TRACE("%p\n", This);
 
+    if(!listLength)
+        return E_INVALIDARG;
+
     curr = This->parent->children;
     while (curr)
     {
@@ -211,6 +261,9 @@ static HRESULT WINAPI xmlnodelist_nextNode(
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 
     TRACE("%p %p\n", This, nextItem );
+
+    if(!nextItem)
+        return E_INVALIDARG;
 
     *nextItem = NULL;
 

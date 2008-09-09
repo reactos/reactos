@@ -798,6 +798,8 @@ typedef struct _CRITICAL_SECTION {
 	HANDLE LockSemaphore;
 	ULONG_PTR SpinCount;
 } CRITICAL_SECTION,*PCRITICAL_SECTION,*LPCRITICAL_SECTION;
+#ifndef _SYSTEMTIME_
+#define _SYSTEMTIME_
 typedef struct _SYSTEMTIME {
 	WORD wYear;
 	WORD wMonth;
@@ -808,6 +810,7 @@ typedef struct _SYSTEMTIME {
 	WORD wSecond;
 	WORD wMilliseconds;
 } SYSTEMTIME,*LPSYSTEMTIME,*PSYSTEMTIME;
+#endif /* _SYSTEMTIME_ */
 #if (_WIN32_WINNT >= 0x0500)
 typedef WAITORTIMERCALLBACKFUNC WAITORTIMERCALLBACK ;
 #endif
@@ -882,10 +885,6 @@ typedef enum _FINDEX_SEARCH_OPS {
 	FindExSearchLimitToDevices,
 	FindExSearchMaxSearchOp
 } FINDEX_SEARCH_OPS;
-typedef enum _ACL_INFORMATION_CLASS {
-	AclRevisionInformation=1,
-	AclSizeInformation
-} ACL_INFORMATION_CLASS;
 typedef struct tagHW_PROFILE_INFOA {
 	DWORD dwDockInfo;
 	CHAR szHwProfileGuid[HW_PROFILE_GUIDLEN];
@@ -1208,6 +1207,7 @@ BOOL WINAPI CopyFileExW(LPCWSTR,LPCWSTR,LPPROGRESS_ROUTINE,LPVOID,LPBOOL,DWORD);
 #define CopyMemory RtlCopyMemory
 #define FillMemory RtlFillMemory
 #define ZeroMemory RtlZeroMemory
+#define SecureZeroMemory RtlSecureZeroMemory
 BOOL WINAPI CopySid(DWORD,PSID,PSID);
 #if (_WIN32_WINNT >= 0x0501)
 HANDLE WINAPI CreateActCtxA(PCACTCTXA);

@@ -19,19 +19,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <string.h>
 
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "windef.h"
-#include "wingdi.h"
-#include "pidl.h"
-#include "winerror.h"
-#include "shell32_main.h"
-#include "wine/debug.h"
-#include "undocshell.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

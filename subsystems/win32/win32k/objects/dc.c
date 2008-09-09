@@ -216,7 +216,7 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
                                   QueryTable,
                                   NULL,
                                   NULL);
-  RtlFreeUnicodeString(&RegistryPath);
+  ExFreePoolWithTag(RegistryPath.Buffer, TAG_RTLREGISTRY);
   if (! NT_SUCCESS(Status))
     {
       DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
@@ -323,7 +323,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
         }
     }
 
-  RtlFreeUnicodeString(&RegistryPath);
+  ExFreePoolWithTag(RegistryPath.Buffer, TAG_RTLREGISTRY);
 
   if (! Valid)
     {
@@ -428,14 +428,14 @@ IntPrepareDriver()
       if (!GotDriver)
       {
          ObDereferenceObject(PrimarySurface.VideoFileObject);
-         RtlFreeUnicodeString(&DriverFileNames);
+         ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
          DPRINT1("No suitable DDI driver found\n");
          continue;
       }
 
       DPRINT("Display driver %S loaded\n", CurrentName);
 
-      RtlFreeUnicodeString(&DriverFileNames);
+      ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
 
       DPRINT("Building DDI Functions\n");
 
@@ -558,8 +558,8 @@ IntPrepareDriver()
       if (PrimarySurface.pEDDgpl)
       {
           RtlZeroMemory( PrimarySurface.pEDDgpl ,sizeof(EDD_DIRECTDRAW_GLOBAL));
+          ret = TRUE;
       }
-      ret = TRUE;
       goto cleanup;
    }
 
@@ -963,6 +963,11 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
   { // This is a cheesy way to do this.
       PDC dc = DC_LockDc ( hDC );
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+      if (!defaultDCstate)
+      {
+          DC_UnlockDc( dc );
+          return NULL;
+      }
       RtlZeroMemory(defaultDCstate, sizeof(DC));
       IntGdiCopyToSaveState(dc, defaultDCstate);
       DC_UnlockDc( dc );
@@ -2453,7 +2458,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   {
     if(Buf)
     {
-      ExFreePool(Buf);
+      ExFreePoolWithTag(Buf, TAG_DC);
     }
     DPRINT1("GDIOBJ_AllocObjWithHandle failed\n");
     return NULL;
@@ -2644,7 +2649,8 @@ BOOL INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
   PDC pDC = (PDC)ObjectBody;
-  RtlFreeUnicodeString(&pDC->DriverName);
+  if (pDC->DriverName.Buffer)
+    ExFreePoolWithTag(pDC->DriverName.Buffer, TAG_DC);
   return TRUE;
 }
 
@@ -3103,7 +3109,7 @@ IntEnumDisplaySettings(
         }
       }
 
-      RtlFreeUnicodeString(&DriverFileNames);
+      ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
     }
 
     /* return cached info */
@@ -3409,14 +3415,14 @@ IntChangeDisplaySettings(
 
     InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
       OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
+    Status = ZwOpenKey(&DevInstRegKey, KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
       DPRINT1("Unable to open registry key %wZ (Status 0x%08lx)\n", &RegistryKey, Status);
-      ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+      ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
       return DISP_CHANGE_FAILED;
     }
-    ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+    ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
 
     /* Update needed fields */
     if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)

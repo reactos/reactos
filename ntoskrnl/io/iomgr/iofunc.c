@@ -1809,10 +1809,10 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
-    Irp->Flags = (IRP_BUFFERED_IO |
-                  IRP_DEALLOCATE_BUFFER |
-                  IRP_INPUT_OPERATION |
-                  IRP_DEFER_IO_COMPLETION);
+    Irp->Flags |= (IRP_BUFFERED_IO |
+                   IRP_DEALLOCATE_BUFFER |
+                   IRP_INPUT_OPERATION |
+                   IRP_DEFER_IO_COMPLETION);
 
     /* Set the Parameters */
     StackPtr->Parameters.QueryFile.FileInformationClass = FileInformationClass;
@@ -1890,7 +1890,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         {
             /* Clear it in the IRP for completion */
             Irp->UserEvent = NULL;
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_IO);
         }
 
         /* Set the caller IOSB */
@@ -2405,9 +2405,9 @@ NtSetInformationFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
-    Irp->Flags = (IRP_BUFFERED_IO |
-                  IRP_DEALLOCATE_BUFFER |
-                  IRP_DEFER_IO_COMPLETION);
+    Irp->Flags |= (IRP_BUFFERED_IO |
+                   IRP_DEALLOCATE_BUFFER |
+                   IRP_DEFER_IO_COMPLETION);
 
     /* Set the Parameters */
     StackPtr->Parameters.SetFile.FileInformationClass = FileInformationClass;

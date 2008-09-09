@@ -53,6 +53,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0, NULL );
 
+    if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
     if( FCB->LocalAddress )

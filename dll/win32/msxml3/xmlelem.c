@@ -100,23 +100,50 @@ static ULONG WINAPI xmlelem_Release(IXMLElement *iface)
 
 static HRESULT WINAPI xmlelem_GetTypeInfoCount(IXMLElement *iface, UINT* pctinfo)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlelem *This = impl_from_IXMLElement(iface);
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlelem_GetTypeInfo(IXMLElement *iface, UINT iTInfo,
                                           LCID lcid, ITypeInfo** ppTInfo)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlelem *This = impl_from_IXMLElement(iface);
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLElement_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlelem_GetIDsOfNames(IXMLElement *iface, REFIID riid,
                                             LPOLESTR* rgszNames, UINT cNames,
                                             LCID lcid, DISPID* rgDispId)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlelem *This = impl_from_IXMLElement(iface);
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLElement_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlelem_Invoke(IXMLElement *iface, DISPID dispIdMember,
@@ -124,8 +151,22 @@ static HRESULT WINAPI xmlelem_Invoke(IXMLElement *iface, DISPID dispIdMember,
                                      DISPPARAMS* pDispParams, VARIANT* pVarResult,
                                      EXCEPINFO* pExcepInfo, UINT* puArgErr)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlelem *This = impl_from_IXMLElement(iface);
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLElement_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static inline BSTR str_dup_upper(BSTR str)

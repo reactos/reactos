@@ -14,7 +14,7 @@
 static BOOL
 RecieveIncomingPackets(SOCKET sock)
 {
-    char readBuffer[BUFSIZE];
+    CHAR readBuffer[BUFSIZE];
     INT readBytes;
 
     do
@@ -24,18 +24,18 @@ RecieveIncomingPackets(SOCKET sock)
         {
             TCHAR logBuf[256];
 
-            _stprintf(logBuf, _T("Discard: Received %d bytes from client"), readBytes);
+            _swprintf(logBuf, L"Discard: Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
         }
         else if (readBytes == SOCKET_ERROR)
         {
-            LogEvent(_T("Discard: Socket Error"), WSAGetLastError(), 0, LOG_ERROR);
+            LogEvent(L"Discard: Socket Error", WSAGetLastError(), 0, LOG_ERROR);
             return FALSE;
         }
     } while ((readBytes > 0) && (!bShutdown));
 
     if (!bShutdown)
-        LogEvent(_T("Discard: Connection closed by peer"), 0, 0, LOG_FILE);
+        LogEvent(L"Discard: Connection closed by peer", 0, 0, LOG_FILE);
 
     return TRUE;
 }
@@ -48,21 +48,21 @@ DiscardHandler(VOID* sock_)
 
     if (!RecieveIncomingPackets(sock))
     {
-        LogEvent(_T("Discard: RecieveIncomingPackets failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Discard: RecieveIncomingPackets failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Discard: Shutting connection down"), 0, 0, LOG_FILE);
+    LogEvent(L"Discard: Shutting connection down", 0, 0, LOG_FILE);
     if (ShutdownConnection(sock, TRUE))
     {
-        LogEvent(_T("Discard: Connection is down."), 0, 0, LOG_FILE);
+        LogEvent(L"Discard: Connection is down.", 0, 0, LOG_FILE);
     }
     else
     {
-        LogEvent(_T("Discard: Connection shutdown failed"), 0, 0, LOG_FILE);
+        LogEvent(L"Discard: Connection shutdown failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 
-    LogEvent(_T("Discard: Terminating thread"), 0, 0, LOG_FILE);
+    LogEvent(L"Discard: Terminating thread", 0, 0, LOG_FILE);
     ExitThread(retVal);
 }

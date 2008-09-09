@@ -235,6 +235,7 @@ LPWSTR WINAPI PathCombineW(LPWSTR lpszDest, LPCWSTR lpszDir, LPCWSTR lpszFile)
 LPSTR WINAPI PathAddBackslashA(LPSTR lpszPath)
 {
   size_t iLen;
+  LPSTR prev = lpszPath;
 
   TRACE("(%s)\n",debugstr_a(lpszPath));
 
@@ -243,11 +244,15 @@ LPSTR WINAPI PathAddBackslashA(LPSTR lpszPath)
 
   if (iLen)
   {
-    lpszPath += iLen;
-    if (lpszPath[-1] != '\\')
+    do {
+      lpszPath = CharNextA(prev);
+      if (*lpszPath)
+        prev = lpszPath;
+    } while (*lpszPath);
+    if (*prev != '\\')
     {
-     *lpszPath++ = '\\';
-     *lpszPath = '\0';
+      *lpszPath++ = '\\';
+      *lpszPath = '\0';
     }
   }
   return lpszPath;

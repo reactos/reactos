@@ -3752,10 +3752,6 @@ RunUSetup(VOID)
         }
     }
 
-    /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
-    /// DO NOT REMOVE!!!
-    DPRINT1("SYSREG_CHECKPOINT:USETUP_COMPLETE\n");
-
     FreeConsole();
 
     /* Avoid bugcheck */

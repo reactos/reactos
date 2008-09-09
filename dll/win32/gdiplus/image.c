@@ -242,11 +242,50 @@ GpStatus WINGDIPAPI GdipBitmapUnlockBits(GpBitmap* bitmap,
 
 GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
 {
-    if (!(image && cloneImage)) return InvalidParameter;
+    IStream* stream;
+    HRESULT hr;
+    INT size;
 
-    FIXME("stub: %p, %p\n", image, cloneImage);
+    TRACE("%p, %p\n", image, cloneImage);
 
-    return NotImplemented;
+    if (!image || !cloneImage)
+        return InvalidParameter;
+
+    hr = CreateStreamOnHGlobal(0, TRUE, &stream);
+    if (FAILED(hr))
+        return GenericError;
+
+    *cloneImage = GdipAlloc(sizeof(GpImage));
+    if (!*cloneImage)
+    {
+        IStream_Release(stream);
+        return OutOfMemory;
+    }
+    (*cloneImage)->type = image->type;
+    (*cloneImage)->flags = image->flags;
+
+    hr = IPicture_SaveAsFile(image->picture, stream, FALSE, &size);
+    if(FAILED(hr))
+    {
+        WARN("Failed to save image on stream\n");
+        goto out;
+    }
+
+    hr = OleLoadPicture(stream, size, FALSE, &IID_IPicture,
+            (LPVOID*) &(*cloneImage)->picture);
+    if (FAILED(hr))
+    {
+        WARN("Failed to load image from stream\n");
+        goto out;
+    }
+
+    IStream_Release(stream);
+    return Ok;
+out:
+    IStream_Release(stream);
+    GdipFree(*cloneImage);
+    *cloneImage = NULL;
+    return GenericError;
 }
 
 GpStatus WINGDIPAPI GdipCreateBitmapFromFile(GDIPCONST WCHAR* filename,

@@ -21,32 +21,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#define COBJMACROS
-
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-
-#include "ole2.h"
-#include "shlguid.h"
-
-#include "pidl.h"
-#include "undocshell.h"
-#include "shell32_main.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "shfldr.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -70,7 +45,7 @@ static const WCHAR wszDotShellClassInfo[] = {
  *    TRUE if returned non-NULL value.
  *    FALSE otherwise.
  */
-static inline BOOL SHELL32_GetCustomFolderAttributeFromPath(
+static BOOL __inline SHELL32_GetCustomFolderAttributeFromPath(
     LPWSTR pwszFolderPath, LPCWSTR pwszHeading, LPCWSTR pwszAttribute,
     LPWSTR pwszValue, DWORD cchValue)
 {
@@ -224,7 +199,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
 	    }
 
 	    if (pidlChild) {
-                int len = lstrlenW(ppfti.szTargetParsingName);
+                int len = wcslen(ppfti.szTargetParsingName);
 
 		if (!_ILSimpleGetTextW(pidlChild, ppfti.szTargetParsingName + len, MAX_PATH - len))
 			hr = E_INVALIDARG;

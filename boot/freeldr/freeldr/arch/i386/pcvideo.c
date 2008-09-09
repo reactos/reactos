@@ -361,7 +361,7 @@ PcVideoSetVerticalResolution(ULONG ScanLines)
 static VOID
 PcVideoSet480ScanLines(VOID)
 {
-  int CRTC;
+  INT_PTR CRTC;
 
   /* Read CRTC port */
   CRTC = READ_PORT_UCHAR((PUCHAR)0x03CC);
@@ -418,7 +418,7 @@ PcVideoSet480ScanLines(VOID)
 static VOID
 PcVideoSetDisplayEnd(VOID)
 {
-  int	CRTC;
+  INT_PTR	CRTC;
 
   /* Read CRTC port */
   CRTC = READ_PORT_UCHAR((PUCHAR)0x03CC);
@@ -1054,7 +1054,7 @@ PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
   USHORT *BufPtr;
 
-  BufPtr = (USHORT *) (VIDEOTEXT_MEM_ADDRESS + Y * BytesPerScanLine + X * 2);
+  BufPtr = (USHORT *) (ULONG_PTR)(VIDEOTEXT_MEM_ADDRESS + Y * BytesPerScanLine + X * 2);
   *BufPtr = ((USHORT) Attr << 8) | (Ch & 0xff);
 }
 

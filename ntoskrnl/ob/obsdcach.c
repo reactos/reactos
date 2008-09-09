@@ -81,11 +81,12 @@ ObpHash(IN PVOID Buffer,
     PULONG p, pp;
     PUCHAR pb, ppb;
     ULONG Hash = 0;
-    
+
     /* Setup aligned and byte buffers */
     p = Buffer;
+    pb = (PUCHAR)p;
     ppb = (PUCHAR)((ULONG_PTR)Buffer + Length);
-    pp = (PULONG)ALIGN_DOWN(p + Length, ULONG);
+    pp = (PULONG)ALIGN_DOWN(pb + Length, ULONG);
 
     /* Loop aligned data */
     while (p < pp)
@@ -94,7 +95,7 @@ ObpHash(IN PVOID Buffer,
         Hash ^= *p++;
         Hash = _rotl(Hash, 3);
     }
-    
+
     /* Loop non-aligned data */
     pb = (PUCHAR)p;
     while (pb < ppb)

@@ -476,15 +476,10 @@ void set_name_servers( struct client_lease *new_lease ) {
                 if( i != addrs-1 ) strcat( nsbuf, "," );
             }
 
-            DH_DbgPrint(MID_TRACE,("Setting Nameservers: %s\n", nsbuf));
+            DH_DbgPrint(MID_TRACE,("Setting DhcpNameserver: %s\n", nsbuf));
 
-            /* XXX Fixme: I think this may be wrong and that we might have
-             * a problem somewhere else (in iphlpapi for example).
-             *
-             * Recheck the +1 below.
-             */
-            RegSetValueEx( RegKey, "NameServer", 0, REG_SZ,
-                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
+            RegSetValueEx( RegKey, "DhcpNameServer", 0, REG_SZ,
+                           (LPBYTE)nsbuf, strlen(nsbuf) + 1);
 
             free( nsbuf );
         }

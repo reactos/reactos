@@ -119,9 +119,77 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                 OUT PULONG ReturnLength,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-    DPRINT1("CmpQueryKeyName() called\n");
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
+    PUNICODE_STRING KeyName;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)ObjectBody;
+    PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
+
+    /* Acquire hive lock */
+    CmpLockRegistry();
+
+    /* Lock KCB shared */
+    CmpAcquireKcbLockShared(Kcb);
+
+    /* Check if it's a deleted block */
+    if (Kcb->Delete)
+    {
+        /* Release the locks */
+        CmpReleaseKcbLock(Kcb);
+        CmpUnlockRegistry();
+
+        /* Let the caller know it's deleted */
+        return STATUS_KEY_DELETED;
+    }
+
+    /* Get the name */
+    KeyName = CmpConstructName(Kcb);
+
+    /* Release the locks */
+    CmpReleaseKcbLock(Kcb);
+    CmpUnlockRegistry();
+
+    /* Check if we got the name */
+    if (!KeyName) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set the returned length */
+    *ReturnLength = KeyName->Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
+
+    /* Check if it fits into the provided buffer */
+    if ((Length < sizeof(OBJECT_NAME_INFORMATION)) ||
+        (Length < (*ReturnLength - sizeof(OBJECT_NAME_INFORMATION))))
+    {
+        /* Free the buffer allocated by CmpConstructName */
+        ExFreePool(KeyName);
+
+        /* Return buffer length failure */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Fill in the result */
+    _SEH_TRY
+    {
+        /* Return data to user */
+        ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
+        ObjectNameInfo->Name.MaximumLength = KeyName->Length;
+        ObjectNameInfo->Name.Length = KeyName->Length;
+
+        /* Copy string content*/
+        RtlCopyMemory(ObjectNameInfo->Name.Buffer,
+                      KeyName->Buffer,
+                      *ReturnLength);
+    }
+    _SEH_HANDLE
+    {
+        /* Get the status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Free the buffer allocated by CmpConstructName */
+    ExFreePool(KeyName);
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -736,7 +804,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  SecurityDescriptor);
 
     /* Free the security descriptor */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Add the hive to the hive list */
@@ -876,7 +944,7 @@ CmpCreateRegistryRoot(VOID)
                             0,
                             0,
                             (PVOID*)&RootKey);
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Sanity check, and get the key cell */
@@ -973,7 +1041,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ExFreePool(ValueInfo);
+            ExFreePoolWithTag(ValueInfo, TAG_CM);
             return Status;
         }
 
@@ -982,7 +1050,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
                       ValueInfo->Data,
                       ValueInfo->DataLength);
         ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = UNICODE_NULL;
-        ExFreePool(ValueInfo);
+        ExFreePoolWithTag(ValueInfo, TAG_CM);
     }
     else
     {
@@ -1273,11 +1341,11 @@ CmpInitializeHiveList(IN USHORT Flag)
             }
             
             /* Check if we had to allocate a new hive */
-			if (CmpMachineHiveList[i].Allocate)
+            if (CmpMachineHiveList[i].Allocate)
             {
                 /* Sync the new hive */
-				//HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
-			}   
+                //HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
+            }
         }
         
         /* Check if we created a new hive */
@@ -1288,7 +1356,7 @@ CmpInitializeHiveList(IN USHORT Flag)
     }
     
     /* Get rid of the SD */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
 
     /* FIXME: Link SECURITY to SAM */
     
@@ -1473,7 +1541,7 @@ CmInitSystem1(VOID)
     /* FIXME: Add to HiveList key */
     
     /* Free the security descriptor */
-    ExFreePool(SecurityDescriptor);
+    ExFreePoolWithTag(SecurityDescriptor, TAG_CM);
 
     /* Fill out the Hardware key with the ARC Data from the Loader */
     Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);
@@ -1500,7 +1568,7 @@ CmInitSystem1(VOID)
     }
 
     /* Free the load options */
-    ExFreePool(CmpLoadOptions.Buffer);
+    ExFreePoolWithTag(CmpLoadOptions.Buffer, TAG_CM);
 
     /* If we got here, all went well */
     return TRUE;

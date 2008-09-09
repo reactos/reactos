@@ -21,7 +21,7 @@
 #include <ppcmmu/mmu.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 KDPC KiExpireTimerDpc;
 extern ULONG KiMaximumDpcQueueDepth;

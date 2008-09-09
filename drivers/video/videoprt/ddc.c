@@ -183,7 +183,7 @@ VideoPortDDCMonitorHelper(
 
    TRACE_(VIDEOPRT, "VideoPortDDCMonitorHelper()\n");
 
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
    if (ddc->Size != sizeof (ddc))
      {
         WARN_(VIDEOPRT, "ddc->Size != %d (%d)\n", sizeof (ddc), ddc->Size);

@@ -839,6 +839,12 @@ InitInputImpl(VOID)
 
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
+   /* Initialize the default keyboard layout */
+   if(!UserInitDefaultKeyboardLayout())
+   {
+      DPRINT1("Failed to initialize default keyboard layout!\n");
+   }
+
    Status = PsCreateSystemThread(&KeyboardThreadHandle,
                                  THREAD_ALL_ACCESS,
                                  NULL,
@@ -849,12 +855,6 @@ InitInputImpl(VOID)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Win32K: Failed to create keyboard thread.\n");
-   }
-
-   /* Initialize the default keyboard layout */
-   if(!UserInitDefaultKeyboardLayout())
-   {
-      DPRINT1("Failed to initialize default keyboard layout!\n");
    }
 
    Status = PsCreateSystemThread(&MouseThreadHandle,

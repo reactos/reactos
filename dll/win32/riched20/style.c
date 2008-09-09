@@ -197,7 +197,10 @@ ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style)
   COPY_STYLE_ITEM(CFM_LCID, lcid);
   COPY_STYLE_ITEM(CFM_OFFSET, yOffset);
   COPY_STYLE_ITEM(CFM_REVAUTHOR, bRevAuthor);
-  COPY_STYLE_ITEM(CFM_SIZE, yHeight);
+  if (style->dwMask & CFM_SIZE) {
+    s->fmt.dwMask |= CFM_SIZE;
+    s->fmt.yHeight = min(style->yHeight, yHeightCharPtsMost * 20);
+  }
   COPY_STYLE_ITEM(CFM_SPACING, sSpacing);
   COPY_STYLE_ITEM(CFM_STYLE, sStyle);
   COPY_STYLE_ITEM(CFM_UNDERLINETYPE, bUnderlineType);

@@ -9,7 +9,7 @@
 #ifndef _DEVICE_H_
 #define _DEVICE_H_
 
-#include "d3d9_device.h"
+#include "d3d9_haldevice.h"
 
 HRESULT CreateD3D9HalDevice(LPDIRECT3D9_INT pDirect3D9, UINT Adapter,
                             HWND hFocusWindow, DWORD BehaviourFlags,

@@ -338,7 +338,10 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
         return E_FAIL;
 
     if (GetFileAttributesA(dest->Destination) == INVALID_FILE_ATTRIBUTES)
-        return S_OK;
+    {
+        res = S_OK;
+        goto end;
+    }
 
     /* split the cabinet name into path + name */
     str = HeapAlloc(GetProcessHeap(), 0, lstrlenA(szCabName)+1);

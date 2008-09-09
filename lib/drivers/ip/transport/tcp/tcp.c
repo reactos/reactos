@@ -455,7 +455,11 @@ NTSTATUS TCPStartup(VOID)
 	return Status;
     }
 
-    PortsStartup( &TCPPorts, 1, 0xfffe );
+    Status = PortsStartup( &TCPPorts, 1, 0xfffe );
+    if( !NT_SUCCESS(Status) ) {
+	TCPMemShutdown();
+	return Status;
+    }
 
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();
@@ -592,10 +596,7 @@ NTSTATUS TCPConnect
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
-    if( Status == OSK_EINPROGRESS )
-	return STATUS_PENDING;
-    else
-	return Status;
+    return Status;
 }
 
 NTSTATUS TCPDisconnect

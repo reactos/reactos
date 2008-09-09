@@ -88,6 +88,19 @@ DWORD WINAPI AddIPAddress(IPAddr Address, IPMask Netmask, DWORD IfIndex, PULONG 
     return RtlNtStatusToDosError(addIPAddress(Address, Netmask, IfIndex, NteContext, NteInstance));
 }
 
+DWORD getInterfaceGatewayByIndex(DWORD index)
+{
+   DWORD ndx, retVal = 0, numRoutes = getNumRoutes();
+   RouteTable *table = getRouteTable();
+
+    for (ndx = 0; ndx < numRoutes; ndx++)
+    {
+        if ((table->routes[ndx].ifIndex == (index - 1)) && (table->routes[ndx].dest == 0))
+            retVal = table->routes[ndx].gateway;
+    }
+    HeapFree(GetProcessHeap(), 0, table);
+    return retVal;
+}
 
 /******************************************************************
  *    AllocateAndGetIfTableFromStack (IPHLPAPI.@)
@@ -640,6 +653,8 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
                ptr->IpAddressList.IpAddress.String);
               toIPAddressString(getInterfaceMaskByIndex(table->indexes[ndx]),
                ptr->IpAddressList.IpMask.String);
+              toIPAddressString(getInterfaceGatewayByIndex(table->indexes[ndx]),
+               ptr->GatewayList.IpAddress.String);
               getDhcpInfoForAdapter(table->indexes[ndx], &dhcpEnabled,
                                     &dhcpServer, &ptr->LeaseObtained,
                                     &ptr->LeaseExpires);
@@ -1160,7 +1175,7 @@ DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSi
           pIpForwardTable->dwNumEntries = table->numRoutes;
           for (ndx = 0; ndx < numRoutes; ndx++) {
             pIpForwardTable->table[ndx].dwForwardIfIndex =
-             table->routes[ndx].ifIndex;
+             table->routes[ndx].ifIndex + 1;
             pIpForwardTable->table[ndx].dwForwardDest =
              table->routes[ndx].dest;
             pIpForwardTable->table[ndx].dwForwardMask =
@@ -1190,7 +1205,7 @@ DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSi
              sizeof(MIB_IPFORWARDROW), IpForwardTableSorter);
           ret = NO_ERROR;
         }
-        free(table);
+        HeapFree(GetProcessHeap(), 0, table);
       }
       else
         ret = ERROR_OUTOFMEMORY;

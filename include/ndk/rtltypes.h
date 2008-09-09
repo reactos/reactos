@@ -348,17 +348,6 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
 
-#else
-
-//
-// ACL Query Information Classes
-//
-typedef enum _ACL_INFORMATION_CLASS
-{
-    AclRevisionInformation = 1,
-    AclSizeInformation
-} ACL_INFORMATION_CLASS;
-
 #endif
 
 //

@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 typedef struct _SERVICE_GROUP
 {
@@ -36,6 +36,8 @@ typedef struct _SERVICE
 
 /*  BOOLEAN ServiceRunning;*/	// needed ??
 } SERVICE, *PSERVICE;
+
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
 
 /* GLOBALS ********************************************************************/
 
@@ -205,11 +207,11 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
        */
       if (Service->ServiceGroup.Buffer)
         {
-          ExFreePool(Service->ServiceGroup.Buffer);
+          ExFreePoolWithTag(Service->ServiceGroup.Buffer, TAG_RTLREGISTRY);
         }
       if (Service->ImagePath.Buffer)
         {
-          ExFreePool(Service->ImagePath.Buffer);
+          ExFreePoolWithTag(Service->ImagePath.Buffer, TAG_RTLREGISTRY);
         }
       ExFreePool(Service);
       return(Status);

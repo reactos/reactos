@@ -107,8 +107,13 @@ static HRESULT WINAPI parseError_GetTypeInfoCount(
     IXMLDOMParseError *iface,
     UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI parseError_GetTypeInfo(
@@ -117,8 +122,14 @@ static HRESULT WINAPI parseError_GetTypeInfo(
     LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMParseError_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI parseError_GetIDsOfNames(
@@ -129,8 +140,24 @@ static HRESULT WINAPI parseError_GetIDsOfNames(
     LCID lcid,
     DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMParseError_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI parseError_Invoke(
@@ -144,8 +171,22 @@ static HRESULT WINAPI parseError_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMParseError_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI parseError_get_errorCode(

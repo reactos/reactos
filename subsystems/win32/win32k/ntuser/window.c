@@ -2259,7 +2259,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       {
          if (! IS_ATOM(ClassName.Buffer))
          {
-            RtlFreeUnicodeString(&ClassName);
+            ExFreePoolWithTag(ClassName.Buffer, TAG_STRING);
          }
          SetLastNtError(Status);
          RETURN( NULL);
@@ -2273,10 +2273,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    NewWindow = co_IntCreateWindowEx(dwExStyle, &ClassName, &WindowName, dwStyle, x, y, nWidth, nHeight,
                                     hWndParent, hMenu, hInstance, lpParam, dwShowMode, bUnicodeWindow);
 
-   RtlFreeUnicodeString(&WindowName);
+   if (WindowName.Buffer)
+   {
+      ExFreePoolWithTag(WindowName.Buffer, TAG_STRING);
+   }
    if (! IS_ATOM(ClassName.Buffer))
    {
-      RtlFreeUnicodeString(&ClassName);
+      ExFreePoolWithTag(ClassName.Buffer, TAG_STRING);
    }
 
    RETURN( NewWindow);
@@ -4013,7 +4016,7 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 
    Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
 
-   RtlFreeUnicodeString(&SafeMessageName);
+   ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
    RETURN( Ret);
 
 CLEANUP:

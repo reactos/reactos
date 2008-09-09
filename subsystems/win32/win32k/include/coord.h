@@ -3,25 +3,16 @@
 
 #include <include/dc.h>
 
-VOID
-FASTCALL
-IntDPtoLP ( PDC dc, LPPOINT Points, INT Count );
-
-VOID
-FASTCALL
-CoordDPtoLP ( PDC Dc, LPPOINT Point );
+#define IntDPtoLP(dc, pp, c) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->DcLevel.mxDeviceToWorld, XF_LTOL, c, pp, pp);
+#define IntLPtoDP(dc, pp, c) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->DcLevel.mxWorldToDevice, XF_LTOL, c, pp, pp);
+#define CoordDPtoLP(dc, pp) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->DcLevel.mxDeviceToWorld, XF_LTOL, 1, pp, pp);
+#define CoordLPtoDP(dc, pp) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->DcLevel.mxWorldToDevice, XF_LTOL, 1, pp, pp);
+#define XForm2MatrixS(m, x) XFORMOBJ_iSetXform((XFORMOBJ*)m, (XFORML*)x)
+#define MatrixS2XForm(x, m) XFORMOBJ_iGetXform((XFORMOBJ*)m, (XFORML*)x)
 
 int
 FASTCALL
 IntGetGraphicsMode ( PDC dc );
-
-VOID
-FASTCALL
-CoordLPtoDP ( PDC Dc, LPPOINT Point );
-
-VOID
-FASTCALL
-IntLPtoDP ( PDC dc, LPPOINT Points, INT Count );
 
 int STDCALL IntGdiSetMapMode(PDC, int);
 

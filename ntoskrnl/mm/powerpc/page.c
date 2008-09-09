@@ -13,7 +13,7 @@
 #include <ntoskrnl.h>
 #include <ppcmmu/mmu.h>
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)

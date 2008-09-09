@@ -95,7 +95,7 @@ CmpGetBiosDate(IN PCHAR BiosStart,
                 }
             }
 
-            /* Add slashes were we previously had NULLs */
+            /* Add slashes where we previously had NULLs */
             CurrentDate[4] = CurrentDate[7] = '/';
 
             /* Check which date is newer */
@@ -546,7 +546,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Free the configuration data */
-        ExFreePool(CmpConfigurationData);
+        ExFreePoolWithTag(CmpConfigurationData, TAG_CM);
     }
 
     /* Open physical memory */
@@ -636,7 +636,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             if (BiosHandle)
             {
                 /* Get the BIOS Date Identifier */
-                RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16*PAGE_SIZE - 11), 8);
+                RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16 * PAGE_SIZE - 11), 8);
                 Buffer[8] = ANSI_NULL;
 
                 /* Convert it to unicode */
@@ -665,7 +665,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Get the BIOS Version */
-        if (CmpGetBiosVersion(BaseAddress, 16* PAGE_SIZE, Buffer))
+        if (CmpGetBiosVersion(BaseAddress, 16 * PAGE_SIZE, Buffer))
         {
             /* Start at the beginning of our buffer */
             CurrentVersion = BiosVersion;
@@ -764,7 +764,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Get the Video BIOS Version */
-        if (CmpGetBiosVersion(BaseAddress, 8* PAGE_SIZE, Buffer))
+        if (CmpGetBiosVersion(BaseAddress, 8 * PAGE_SIZE, Buffer))
         {
             /* Start at the beginning of our buffer */
             CurrentVersion = BiosVersion;
@@ -824,7 +824,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     ZwClose(SectionHandle);
 
     /* Free the BIOS version string buffer */
-    if (BiosVersion) ExFreePool(BiosVersion);
+    if (BiosVersion) ExFreePoolWithTag(BiosVersion, TAG_CM);
 
 Quickie:
     /* Close the procesor handle */

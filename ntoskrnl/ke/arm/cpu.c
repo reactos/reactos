@@ -261,6 +261,32 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
     KiSaveProcessorControlState(State);
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+    //
+    // Nothing to do on ARM
+    //
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+    //
+    // Nothing to do on ARM
+    //
+    return STATUS_SUCCESS;
+}
+
 /* SYSTEM CALLS NOT VALID ON THIS CPU *****************************************/
 
 /*

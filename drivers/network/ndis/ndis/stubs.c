@@ -322,19 +322,18 @@ NdisOpenFile(
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
 
-  //if ( !NT_SUCCESS(*Status) )
-  //  goto cleanup;
-
 cleanup:
   if ( FullFileName.Buffer != NULL )
   {
     ExFreePool ( FullFileName.Buffer );
     FullFileName.Buffer = NULL;
   }
-  if ( !NT_SUCCESS(*Status) && FileHandleObject != NULL )
+  if ( !NT_SUCCESS(*Status) )
   {
-    ExFreePool ( FileHandleObject );
-    FileHandleObject = NULL;
+    if( FileHandleObject ) {
+	ExFreePool ( FileHandleObject );
+	FileHandleObject = NULL;
+    }
     *FileHandle = NULL;
   }
   else

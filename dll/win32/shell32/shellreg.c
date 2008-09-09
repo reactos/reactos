@@ -18,24 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "shellapi.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "winreg.h"
-
-#include "undocshell.h"
-#include "wine/winbase16.h"
-
-#include "wine/debug.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

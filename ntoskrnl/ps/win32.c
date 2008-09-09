@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #include <winerror.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 

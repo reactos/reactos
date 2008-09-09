@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 Google (Evan Stade)
+ * Copyright (C) 2008 Nikolay Sivov <bunglehead at gmail dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,10 +27,15 @@
 
 #include "gdiplus.h"
 #include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 GpStatus WINGDIPAPI GdipCreatePathIter(GpPathIterator **iterator, GpPath* path)
 {
     INT size;
+
+    TRACE("(%p, %p)\n", iterator, path);
 
     if(!iterator)
         return InvalidParameter;
@@ -62,6 +68,8 @@ GpStatus WINGDIPAPI GdipCreatePathIter(GpPathIterator **iterator, GpPath* path)
 
 GpStatus WINGDIPAPI GdipDeletePathIter(GpPathIterator *iter)
 {
+    TRACE("(%p)\n", iter);
+
     if(!iter)
         return InvalidParameter;
 
@@ -75,6 +83,9 @@ GpStatus WINGDIPAPI GdipDeletePathIter(GpPathIterator *iter)
 GpStatus WINGDIPAPI GdipPathIterCopyData(GpPathIterator* iterator,
     INT* resultCount, GpPointF* points, BYTE* types, INT startIndex, INT endIndex)
 {
+    TRACE("(%p, %p, %p, %p, %d, %d)\n", iterator, resultCount, points, types,
+           startIndex, endIndex);
+
     if(!iterator || !types || !points)
         return InvalidParameter;
 
@@ -97,6 +108,8 @@ GpStatus WINGDIPAPI GdipPathIterHasCurve(GpPathIterator* iterator, BOOL* hasCurv
 {
     INT i;
 
+    TRACE("(%p, %p)\n", iterator, hasCurve);
+
     if(!iterator)
         return InvalidParameter;
 
@@ -115,6 +128,8 @@ GpStatus WINGDIPAPI GdipPathIterGetSubpathCount(GpPathIterator* iterator, INT* c
 {
     INT i;
 
+    TRACE("(%p, %p)\n", iterator, count);
+
     if(!iterator || !count)
         return InvalidParameter;
 
@@ -131,6 +146,8 @@ GpStatus WINGDIPAPI GdipPathIterNextMarker(GpPathIterator* iterator, INT *result
     INT* startIndex, INT* endIndex)
 {
     INT i;
+
+    TRACE("(%p, %p, %p, %p)\n", iterator, resultCount, startIndex, endIndex);
 
     if(!iterator || !startIndex || !endIndex)
         return InvalidParameter;
@@ -153,10 +170,39 @@ GpStatus WINGDIPAPI GdipPathIterNextMarker(GpPathIterator* iterator, INT *result
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipPathIterNextMarkerPath(GpPathIterator* iterator, INT* result,
+    GpPath* path)
+{
+    INT start, end;
+
+    TRACE("(%p, %p, %p)\n", iterator, result, path);
+
+    if(!iterator || !result)
+        return InvalidParameter;
+
+    GdipPathIterNextMarker(iterator, result, &start, &end);
+    /* return path */
+    if(((*result) > 0) && path){
+        GdipResetPath(path);
+
+        if(!lengthen_path(path, *result))
+            return OutOfMemory;
+
+        memcpy(path->pathdata.Points, &(iterator->pathdata.Points[start]), sizeof(GpPointF)*(*result));
+        memcpy(path->pathdata.Types,  &(iterator->pathdata.Types[start]),  sizeof(BYTE)*(*result));
+        path->pathdata.Count = *result;
+    }
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
     INT *resultCount, INT* startIndex, INT* endIndex, BOOL* isClosed)
 {
     INT i, count;
+
+    TRACE("(%p, %p, %p, %p, %p)\n", iterator, resultCount, startIndex,
+           endIndex, isClosed);
 
     if(!iterator || !startIndex || !endIndex || !isClosed || !resultCount)
         return InvalidParameter;
@@ -164,8 +210,10 @@ GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
     count = iterator->pathdata.Count;
 
     /* iterator created with NULL path */
-    if(count == 0)
+    if(count == 0){
+        *resultCount = 0;
         return Ok;
+    }
 
     if(iterator->subpath_pos == count){
         *startIndex = *endIndex = *resultCount = 0;
@@ -192,6 +240,8 @@ GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
 }
 GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator *iterator)
 {
+    TRACE("(%p)\n", iterator);
+
     if(!iterator)
         return InvalidParameter;
 
@@ -204,6 +254,8 @@ GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator *iterator)
 
 GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator* iterator, INT* count)
 {
+    TRACE("(%p, %p)\n", iterator, count);
+
     if(!iterator || !count)
         return InvalidParameter;
 
@@ -215,6 +267,8 @@ GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator* iterator, INT* count)
 GpStatus WINGDIPAPI GdipPathIterEnumerate(GpPathIterator* iterator, INT* resultCount,
     GpPointF *points, BYTE *types, INT count)
 {
+    TRACE("(%p, %p, %p, %p, %d)\n", iterator, resultCount, points, types, count);
+
     if((count < 0) || !resultCount)
         return InvalidParameter;
 
@@ -224,4 +278,53 @@ GpStatus WINGDIPAPI GdipPathIterEnumerate(GpPathIterator* iterator, INT* resultC
     }
 
     return GdipPathIterCopyData(iterator, resultCount, points, types, 0, count-1);
+}
+
+GpStatus WINGDIPAPI GdipPathIterIsValid(GpPathIterator* iterator, BOOL* valid)
+{
+    TRACE("(%p, %p)\n", iterator, valid);
+
+    if(!iterator || !valid)
+        return InvalidParameter;
+
+    *valid = TRUE;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipPathIterNextPathType(GpPathIterator* iter, INT* result,
+    BYTE* type, INT* start, INT* end)
+{
+    FIXME("(%p, %p, %p, %p, %p) stub\n", iter, result, type, start, end);
+
+    if(!iter || !result || !type || !start || !end)
+        return InvalidParameter;
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipPathIterNextSubpathPath(GpPathIterator* iter, INT* result,
+    GpPath* path, BOOL* closed)
+{
+    INT start, end;
+
+    TRACE("(%p, %p, %p, %p)\n", iter, result, path, closed);
+
+    if(!iter || !result || !closed)
+        return InvalidParameter;
+
+    GdipPathIterNextSubpath(iter, result, &start, &end, closed);
+    /* return path */
+    if(((*result) > 0) && path){
+        GdipResetPath(path);
+
+        if(!lengthen_path(path, *result))
+            return OutOfMemory;
+
+        memcpy(path->pathdata.Points, &(iter->pathdata.Points[start]), sizeof(GpPointF)*(*result));
+        memcpy(path->pathdata.Types,  &(iter->pathdata.Types[start]),  sizeof(BYTE)*(*result));
+        path->pathdata.Count = *result;
+    }
+
+    return Ok;
 }

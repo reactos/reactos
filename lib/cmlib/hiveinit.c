@@ -498,10 +498,7 @@ HvInitialize(
    }
 
    if (!NT_SUCCESS(Status))
-   {
-      Hive->Free(Hive, 0);
       return Status;
-   }
 
    if (Operation != HINIT_CREATE) CmPrepareHive(Hive);
 

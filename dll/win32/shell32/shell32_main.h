@@ -23,7 +23,9 @@
 #define __WINE_SHELL_MAIN_H
 
 #include <stdarg.h>
+#include <shlobj.h>
 
+/*
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -38,6 +40,7 @@
 #include "wine/windef16.h"
 #include "wine/unicode.h"
 
+*/
 /*******************************************
 *  global SHELL32.DLL variables
 */
@@ -162,24 +165,10 @@ void FreeChangeNotifications(void);
 BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pwszDir, BOOL bShowUI);
 BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir);
 
-/* 16-bit functions */
-void        WINAPI DragAcceptFiles16(HWND16 hWnd, BOOL16 b);
-UINT16      WINAPI DragQueryFile16(HDROP16 hDrop, WORD wFile, LPSTR lpszFile, WORD wLength);
-void        WINAPI DragFinish16(HDROP16 h);
-BOOL16      WINAPI DragQueryPoint16(HDROP16 hDrop, POINT16 *p);
-HINSTANCE16 WINAPI ShellExecute16(HWND16,LPCSTR,LPCSTR,LPCSTR,LPCSTR,INT16);
-HICON16     WINAPI ExtractIcon16(HINSTANCE16,LPCSTR,UINT16);
-HICON16     WINAPI ExtractAssociatedIcon16(HINSTANCE16,LPSTR,LPWORD);
-HICON16     WINAPI ExtractIconEx16 ( LPCSTR, INT16, HICON16 *, HICON16 *, UINT16 );
-HINSTANCE16 WINAPI FindExecutable16(LPCSTR,LPCSTR,LPSTR);
-HGLOBAL16   WINAPI InternalExtractIcon16(HINSTANCE16,LPCSTR,UINT16,WORD);
-BOOL16      WINAPI ShellAbout16(HWND16,LPCSTR,LPCSTR,HICON16);
-BOOL16      WINAPI AboutDlgProc16(HWND16,UINT16,WPARAM16,LPARAM);
-
 void WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
 			UINT wID, UINT fType, LPCWSTR dwTypeData, UINT fState);
 
-static inline BOOL SHELL_OsIsUnicode(void)
+static BOOL __inline SHELL_OsIsUnicode(void)
 {
     /* if high-bit of version is 0, we are emulating NT */
     return !(GetVersion() & 0x80000000);
@@ -190,26 +179,26 @@ static inline BOOL SHELL_OsIsUnicode(void)
 	  SHFree(*ptr); \
 	  *ptr = NULL; \
 	};
-static inline void __SHCloneStrA(char ** target,const char * source)
+static void __inline __SHCloneStrA(char ** target,const char * source)
 {
 	*target = SHAlloc(strlen(source)+1);
 	strcpy(*target, source);
 }
 
-static inline void __SHCloneStrWtoA(char ** target, const WCHAR * source)
+static void __inline __SHCloneStrWtoA(char ** target, const WCHAR * source)
 {
 	int len = WideCharToMultiByte(CP_ACP, 0, source, -1, NULL, 0, NULL, NULL);
 	*target = SHAlloc(len);
 	WideCharToMultiByte(CP_ACP, 0, source, -1, *target, len, NULL, NULL);
 }
 
-static inline void __SHCloneStrW(WCHAR ** target, const WCHAR * source)
+static void __inline __SHCloneStrW(WCHAR ** target, const WCHAR * source)
 {
 	*target = SHAlloc( (lstrlenW(source)+1) * sizeof(WCHAR) );
 	lstrcpyW(*target, source);
 }
 
-static inline WCHAR * __SHCloneStrAtoW(WCHAR ** target, const char * source)
+static LPWSTR __inline __SHCloneStrAtoW(WCHAR ** target, const char * source)
 {
 	int len = MultiByteToWideChar(CP_ACP, 0, source, -1, NULL, 0);
 	*target = SHAlloc(len*sizeof(WCHAR));

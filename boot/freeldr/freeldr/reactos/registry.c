@@ -460,8 +460,8 @@ RegSetValue(FRLDRHKEY Key,
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
 
-  DbgPrint((DPRINT_REGISTRY, "Key 0x%x, ValueName '%S', Type %d, Data 0x%x, DataSize %d\n",
-    (int)Key, ValueName, (int)Type, (int)Data, (int)DataSize));
+  DbgPrint((DPRINT_REGISTRY, "Key 0x%p, ValueName '%S', Type %ld, Data 0x%p, DataSize %ld\n",
+    Key, ValueName, Type, Data, DataSize));
 
   if ((ValueName == NULL) || (*ValueName == 0))
     {

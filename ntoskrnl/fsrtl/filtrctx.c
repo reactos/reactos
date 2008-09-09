@@ -32,7 +32,7 @@ LOGICAL
 NTAPI
 FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -45,7 +45,7 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
                                     IN PVOID OwnerId OPTIONAL,
                                     IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -58,7 +58,7 @@ FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -70,7 +70,7 @@ NTAPI
 FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
                             IN PFSRTL_PER_STREAM_CONTEXT Ptr)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -83,7 +83,7 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
                             IN PVOID OwnerId OPTIONAL,
                             IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return NULL;
 }
 
@@ -95,7 +95,7 @@ NTAPI
 FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -108,7 +108,7 @@ FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return NULL;
 }
 
@@ -119,6 +119,6 @@ VOID
 NTAPI
 FsRtlTeardownPerStreamContexts(IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 

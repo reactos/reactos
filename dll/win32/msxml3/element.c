@@ -92,8 +92,13 @@ static HRESULT WINAPI domelem_GetTypeInfoCount(
     IXMLDOMElement *iface,
     UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI domelem_GetTypeInfo(
@@ -101,8 +106,14 @@ static HRESULT WINAPI domelem_GetTypeInfo(
     UINT iTInfo, LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMElement_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_GetIDsOfNames(
@@ -110,8 +121,24 @@ static HRESULT WINAPI domelem_GetIDsOfNames(
     REFIID riid, LPOLESTR* rgszNames,
     UINT cNames, LCID lcid, DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMElement_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_Invoke(
@@ -120,8 +147,22 @@ static HRESULT WINAPI domelem_Invoke(
     WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult,
     EXCEPINFO* pExcepInfo, UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMElement_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_get_nodeName(
@@ -458,18 +499,28 @@ static HRESULT WINAPI domelem_getAttribute(
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
     xmlNodePtr element;
-    xmlChar *xml_name, *xml_value;
-    HRESULT hr = E_FAIL;
+    xmlChar *xml_name, *xml_value = NULL;
+    HRESULT hr = S_FALSE;
 
     TRACE("(%p)->(%s,%p)\n", This, debugstr_w(name), value);
+
+    if(!value || !name)
+        return E_INVALIDARG;
 
     element = get_element( This );
     if ( !element )
         return E_FAIL;
 
-    VariantInit(value);
+    V_BSTR(value) = NULL;
+    V_VT(value) = VT_NULL;
+
     xml_name = xmlChar_from_wchar( name );
-    xml_value = xmlGetNsProp(element, xml_name, NULL);
+
+    if(!xmlValidateNameValue(xml_name))
+        hr = E_FAIL;
+    else
+        xml_value = xmlGetNsProp(element, xml_name, NULL);
+
     HeapFree(GetProcessHeap(), 0, xml_name);
     if(xml_value)
     {
@@ -531,8 +582,33 @@ static HRESULT WINAPI domelem_getAttributeNode(
     IXMLDOMElement *iface,
     BSTR p, IXMLDOMAttribute** attributeNode )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    xmlChar *xml_name;
+    xmlNodePtr element;
+    xmlAttrPtr attr;
+    IUnknown *unk;
+    HRESULT hr = E_FAIL;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(p), attributeNode);
+
+    element = get_element( This );
+    if ( !element )
+        return E_FAIL;
+
+    xml_name = xmlChar_from_wchar(p);
+
+    attr = xmlHasProp(element, xml_name);
+    if(attr) {
+        unk = create_attribute((xmlNodePtr)attr);
+        hr = IUnknown_QueryInterface(unk, &IID_IXMLDOMAttribute, (void**)attributeNode);
+        IUnknown_Release(unk);
+    }else {
+        *attributeNode = NULL;
+    }
+
+    HeapFree(GetProcessHeap(), 0, xml_name);
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_setAttributeNode(
@@ -647,12 +723,12 @@ static HRESULT WINAPI Internal_QueryInterface(
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMElement ) ||
+         IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IUnknown ) )
     {
         *ppvObject = &This->lpVtbl;
     }
-    else if ( IsEqualGUID( riid, &IID_IDispatch ) ||
-              IsEqualGUID( riid, &IID_IXMLDOMNode ) )
+    else if ( IsEqualGUID( riid, &IID_IXMLDOMNode ) )
     {
         return IUnknown_QueryInterface(This->node_unk, riid, ppvObject);
     }

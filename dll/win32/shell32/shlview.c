@@ -36,35 +36,7 @@
  * Release() ???
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-
-#include "windef.h"
-#include "winerror.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "objbase.h"
-#include "servprov.h"
-#include "shlguid.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "shlobj.h"
-#include "undocshell.h"
-#include "shresdef.h"
-#include "wine/debug.h"
-
-#include "docobj.h"
-#include "pidl.h"
-#include "shell32_main.h"
-#include "shellfolder.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -110,7 +82,7 @@ typedef struct
         UINT            cScrollDelay;   /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
         POINT           ptLastMousePos; /* Mouse position at last DragOver call */
     IContextMenu2   *pCM;
-} IShellViewImpl;
+} IShellViewImpl, *LPIShellViewImpl;
 
 static const IShellViewVtbl svvt;
 static const IOleCommandTargetVtbl ctvt;
@@ -119,24 +91,24 @@ static const IDropSourceVtbl dsvt;
 static const IViewObjectVtbl vovt;
 
 
-static inline IShellViewImpl *impl_from_IOleCommandTarget( IOleCommandTarget *iface )
+static LPIShellViewImpl __inline impl_from_IOleCommandTarget( IOleCommandTarget *iface )
 {
-    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblOleCommandTarget));
+    return (LPIShellViewImpl)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblOleCommandTarget));
 }
 
-static inline IShellViewImpl *impl_from_IDropTarget( IDropTarget *iface )
+static LPIShellViewImpl __inline impl_from_IDropTarget( IDropTarget *iface )
 {
-    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropTarget));
+    return (LPIShellViewImpl)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropTarget));
 }
 
-static inline IShellViewImpl *impl_from_IDropSource( IDropSource *iface )
+static LPIShellViewImpl __inline impl_from_IDropSource( IDropSource *iface )
 {
-    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropSource));
+    return (LPIShellViewImpl)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropSource));
 }
 
-static inline IShellViewImpl *impl_from_IViewObject( IViewObject *iface )
+static LPIShellViewImpl __inline impl_from_IViewObject( IViewObject *iface )
 {
-    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblViewObject));
+    return (LPIShellViewImpl)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblViewObject));
 }
 
 /* ListView Header ID's */
@@ -566,7 +538,10 @@ static BOOLEAN LV_AddItem(IShellViewImpl * This, LPCITEMIDLIST pidl)
 	lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidl));				/*set the item's data*/
 	lvItem.pszText = LPSTR_TEXTCALLBACKW;			/*get text on a callback basis*/
 	lvItem.iImage = I_IMAGECALLBACK;			/*get the image on a callback basis*/
-	return (-1==ListView_InsertItemW(This->hWndList, &lvItem))? FALSE: TRUE;
+	if (SendMessageW(This->hWndList, LVM_INSERTITEMW, 0, (LPARAM)&lvItem) == -1)
+      return FALSE;
+	else
+	  return TRUE;
 }
 
 /**********************************************************
@@ -835,7 +810,7 @@ static UINT ShellView_GetSelections(IShellViewImpl * This)
 	  lvItem.iItem = 0;
 	  lvItem.iSubItem = 0;
 
-	  while(ListView_GetItemW(This->hWndList, &lvItem) && (i < This->cidl))
+	  while(SendMessageW(This->hWndList, LVM_GETITEMW, 0, (LPARAM)&lvItem) && (i < This->cidl))
 	  {
 	    if(lvItem.state & LVIS_SELECTED)
 	    {

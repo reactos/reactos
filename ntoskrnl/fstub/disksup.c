@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 #include <internal/hal.h>
 
 /* DEPRECATED FUNCTIONS ******************************************************/
@@ -948,7 +948,7 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
     if (!Irp)
     {
         /* Fail, free the event */
-        ExFreePool(Event);
+        ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -977,7 +977,7 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
         if (!Irp)
         {
             /* Fail, free the event */
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1000,7 +1000,7 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Free the event and return the Status */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
     return Status;
 }
 
@@ -1200,7 +1200,7 @@ xHalGetPartialGeometry(IN PDEVICE_OBJECT DeviceObject,
 
 Cleanup:
     /* Free all the pointers */
-    if (Event) ExFreePool(Event);
+    if (Event) ExFreePoolWithTag(Event, TAG_FILE_SYSTEM);
     if (IoStatusBlock) ExFreePool(IoStatusBlock);
     if (DiskGeometry) ExFreePool(DiskGeometry);
     return;
@@ -1251,7 +1251,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     if (!Irp)
     {
         /* Failed */
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
         return;
     }
 
@@ -1275,7 +1275,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* Failed */
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
             return;
         }
 
@@ -1287,7 +1287,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         if (PartitionDescriptor->PartitionType != MbrTypeIdentifier)
         {
             /* It's not, free our buffer */
-        ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
         }
         else
         {
@@ -1367,7 +1367,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     Status = HalpGetFullGeometry(DeviceObject, &DiskGeometry, &MaxOffset);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(*PartitionBuffer);
+        ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
         *PartitionBuffer = NULL;
         return Status;
     }
@@ -1383,7 +1383,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     if (!Buffer)
     {
         /* Fail, free the input buffer */
-        ExFreePool(*PartitionBuffer);
+        ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
+        *PartitionBuffer = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1549,7 +1550,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                               BufferSize);
 
                 /* Free the old buffer and set this one as the new one */
-                ExFreePool(*PartitionBuffer);
+                ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
                 *PartitionBuffer = DriveLayoutInfo;
 
                 /* Double the size */
@@ -1732,8 +1733,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     if (!i) (*PartitionBuffer)->Signature = 0;
 
     /* Free the buffer and check for success */
-    if (Buffer) ExFreePool(Buffer);
-    if (!NT_SUCCESS(Status)) ExFreePool(*PartitionBuffer);
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
+    if (!NT_SUCCESS(Status)) ExFreePoolWithTag(*PartitionBuffer, TAG_FILE_SYSTEM);
 
     /* Return status */
     return Status;
@@ -2212,7 +2213,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* If we had a buffer, free it, then return status */
-    if (Buffer) ExFreePool(Buffer);
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
     return Status;
 }
 

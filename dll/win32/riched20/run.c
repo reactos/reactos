@@ -134,6 +134,9 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
         else
           ofs += ME_StrLen(p->member.run.strText);
         break;
+      case diCell:
+        TRACE_(richedit_check)("cell\n");
+        break;
       default:
         assert(0);
     }
@@ -436,7 +439,7 @@ void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run)
 {
   assert(run->nCharOfs != -1);
 
-  if (RUN_IS_HIDDEN(run))
+  if (RUN_IS_HIDDEN(run) || run->nFlags & MERF_TABLESTART)
     run->nFlags |= MERF_HIDDEN;
   else
     run->nFlags &= ~MERF_HIDDEN;
@@ -483,7 +486,8 @@ int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run)
   if (!run->strText->nLen)
     return 0;
 
-  if (run->nFlags & (MERF_TAB | MERF_CELL))
+  if (run->nFlags & MERF_TAB ||
+      (run->nFlags & (MERF_ENDCELL|MERF_ENDPARA)) == MERF_ENDCELL)
   {
     if (cx < run->nWidth/2) 
       return 0;
@@ -540,7 +544,7 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
   if (!run->strText->nLen)
     return 0;
 
-  if (run->nFlags & (MERF_TAB | MERF_CELL))
+  if (run->nFlags & (MERF_TAB | MERF_ENDCELL))
   {
     if (cx < run->nWidth/2)
       return 0;
@@ -667,13 +671,21 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
 
   if (run->nFlags & MERF_TAB)
   {
-    int pos = 0, i = 0, ppos;
+    int pos = 0, i = 0, ppos, shift = 0;
     PARAFORMAT2 *pFmt = para->pFmt;
 
+    if (c->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
+        pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
+      /* The horizontal gap shifts the tab positions to leave the gap. */
+      shift = pFmt->dxOffset * 2;
     do {
       if (i < pFmt->cTabCount)
       {
-        pos = pFmt->rgxTabs[i]&0x00FFFFFF;
+        /* Only one side of the horizontal gap is needed at the end of
+         * the table row. */
+        if (i == pFmt->cTabCount -1)
+          shift = shift >> 1;
+        pos = shift + (pFmt->rgxTabs[i]&0x00FFFFFF);
         i++;
       }
       else
@@ -695,11 +707,6 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
     if (size.cy > *pAscent)
       *pAscent = size.cy;
     /* descent is unchanged */
-    return size;
-  }
-  if (run->nFlags & MERF_CELL)
-  {
-    size.cx = ME_twips2pointsX(c, run->pCell->nRightBoundary) - run->pt.x;
     return size;
   }
   return size;
@@ -832,17 +839,8 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
 void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
 {
   ME_Style *style;
-  ME_UndoItem *undo;
 
-  /* FIXME: Should this be removed? It breaks a test. */
   assert(mod->cbSize == sizeof(CHARFORMAT2W));
-  undo = ME_AddUndoItem(editor, diUndoSetDefaultCharFormat, NULL);
-  if (undo) {
-    undo->nStart = -1;
-    undo->nLen = -1;
-    undo->di.member.ustyle = editor->pBuffer->pDefaultStyle;
-    ME_AddRefStyle(undo->di.member.ustyle);
-  }
   style = ME_ApplyStyle(editor->pBuffer->pDefaultStyle, mod);
   editor->pBuffer->pDefaultStyle->fmt = style->fmt;
   editor->pBuffer->pDefaultStyle->tm = style->tm;
