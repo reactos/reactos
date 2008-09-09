@@ -1,5 +1,5 @@
-cpp_quote("#ifndef _DTYP_IDL");
-cpp_quote("#define _DTYP_IDL");
+cpp_quote("#ifndef _DTYP_IDL")
+cpp_quote("#define _DTYP_IDL")
 
 /* Common data types */
 
@@ -17,9 +17,9 @@ typedef signed int INT32;
 typedef signed __int64 INT64;
 typedef signed int LONG32;
 typedef signed __int64 LONG64;
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 typedef long NTSTATUS;
-cpp_quote("#endif");
+cpp_quote("#endif")
 typedef unsigned __int64 QWORD;
 typedef short SHORT;
 typedef __int64 TIME;
@@ -50,9 +50,9 @@ typedef LONG LONG_PTR;
 typedef ULONG ULONG_PTR;
 #endif
 typedef ULONG_PTR SIZE_T;
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 typedef UCHAR *STRING;
-cpp_quote("#endif");
+cpp_quote("#endif")
 typedef DWORD NET_API_STATUS;
 typedef ULONG_PTR DWORD_PTR;
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
@@ -65,9 +65,9 @@ typedef void *RPC_BINDING_HANDLE;
 typedef [context_handle] void *PCONTEXT_HANDLE, *PPCONTEXT_HANDLE;
 
 typedef wchar_t WCHAR, *PWCHAR;
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 typedef wchar_t UNICODE;
-cpp_quote("#endif");
+cpp_quote("#endif")
 typedef const char *LPCSTR;
 typedef const wchar_t *LPCWSTR;
 typedef char *PSTR, *LPSTR;
@@ -76,7 +76,7 @@ typedef const wchar_t *LMCSTR;
 typedef WCHAR *LMSTR;
 typedef WCHAR *BSTR;
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 #ifdef Unicode
 typedef LPCWSTR LPCTSTR;
 typedef LPWSTR LPTSTR;
@@ -86,11 +86,11 @@ typedef LPCSTR LPCTSTR;
 typedef LPSTR LPTSTR;
 typedef CHAR TCHAR;
 #endif
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 /* Common data structures */
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _FILETIME {
     DWORD dwLowDateTime;
@@ -110,7 +110,7 @@ typedef struct _LARGE_INTEGER {
 
 typedef DWORD LCID;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 typedef struct _RPC_UNICODE_STRING {
     USHORT Length;
@@ -118,7 +118,7 @@ typedef struct _RPC_UNICODE_STRING {
     [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
 } RPC_UNICODE_STRING, *PRPC_UNICODE_STRING;
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _SYSTEMTIME {
     WORD wYear;
@@ -146,11 +146,11 @@ typedef struct _UNICODE_STRING {
     [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 /* Constructed security types */
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _SID_IDENTIFIER_AUTHORITY {
     BYTE Value[6];
@@ -271,7 +271,7 @@ typedef struct _SECURITY_DESCRIPTOR {
 
 typedef DWORD SECURITY_INFORMATION, *PSECURITY_INFORMATION;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 typedef struct _RPC_SID {
     UCHAR Revision;
@@ -280,4 +280,4 @@ typedef struct _RPC_SID {
     [size_is(SubAuthorityCount)] DWORD SubAuthority[];
 } RPC_SID, *PRPC_SID;
 
-cpp_quote("#endif /* _DTYP_IDL */");
+cpp_quote("#endif /* _DTYP_IDL */")
