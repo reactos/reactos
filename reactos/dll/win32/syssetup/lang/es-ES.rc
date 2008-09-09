@@ -33,7 +33,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al asistente de instalación the ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Bienvenido al asistente de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Este asistente instalará ReactOS en su equipo. El asistente "\
           "necesita recopilar alguna información sobre usted y su equipo "\
           "para configurar ReactOS apropiadamente.", IDC_STATIC, 115, 40, 195, 100
@@ -103,15 +103,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Las opciones regionales y de idioma permiten configurar la manera en que se representan "\
           "fechas ,número ,monedas y horas. También puede agregar compatibilidad con otros idiomas "\
-          "y cambiar la configuración de su ubicación.", IDC_STATIC, 53, 7, 253, 22
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+          "y cambiar la configuración de su ubicación.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
     LTEXT "Para modificar esta configuración, pulse Modificar.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "La disposición de teclado especifica los caracteres que aparecen cuando "\
           "usted escribe.",
-          IDC_STATIC, 53, 86, 253, 20
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+          IDC_STATIC, 53, 86, 253, 32
+    LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
     LTEXT "Para cambiar la disposición de teclado, pulse Modificar.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -157,7 +157,7 @@ BEGIN
     LTEXT "Usted ha finalizado con éxito la instalación de ReactOS.\n\n" \
           "Cuando pulse Terminar, su equipo será reiniciado.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Si hay un CD en su lector, quítelo. Luego, reinicie su equipo "\
+    LTEXT "Si hay un CD en alguna unidad, retírelo. Luego, reinicie su equipo "\
           "pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
 END
 

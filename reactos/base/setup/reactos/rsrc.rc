@@ -8,8 +8,8 @@
 //#include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/no-NO.rc"
-/*#include "lang/es-ES.rc"
-#include "lang/fi-FI.rc"*/
+#include "lang/es-ES.rc"
+/*#include "lang/fi-FI.rc"*/
 #include "lang/fr-FR.rc"
 /*#include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
@@ -20,8 +20,8 @@
 #include "lang/pl-PL.rc"
 /*#include "lang/pt-BR.rc"*/
 #include "lang/ru-RU.rc"
-/*#include "lang/sk-SK.rc"
-#include "lang/sv-SE.rc"
+#include "lang/sk-SK.rc"
+/*#include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"*/

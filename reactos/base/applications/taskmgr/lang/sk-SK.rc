@@ -601,7 +601,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Zaradí proces do triedy priorít ZNÍENÁ."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Zaradí proces do triedy priorít NÍZKA."
-    IDS_LICENSE             "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Menšej všeobecnej verejnej licencie (GNU Lesser General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2.1 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU Ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Menšej všeobecnej verejnej licencie (GNU Lesser General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2.1 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 

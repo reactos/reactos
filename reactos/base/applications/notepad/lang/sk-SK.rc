@@ -148,7 +148,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU Ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -172,7 +172,7 @@ STRING_TEXT_FILES_TXT,			"Textové súbory (*.txt)"
 
 STRING_TOOLARGE,				"Súbor '%s' je pre Poznámkovı blok príliš ve¾kı.\n \
 Na otvorenie súboru pouite inı editor."
-STRING_NOTEXT,					"Nevloili Ste iadny text. \
+STRING_NOTEXT,					"Nevloili ste iadny text. \
 \nProsím, napíšte nieèo a skúste to znova."
 STRING_DOESNOTEXIST,				"Nie je moné nájs súbor '%s'\n\n \
 Chcete vytvori novı súbor?"
