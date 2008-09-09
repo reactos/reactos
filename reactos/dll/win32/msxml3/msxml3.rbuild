@@ -4,6 +4,7 @@
 	<importlibrary definition="msxml3.spec.def" />
 	<include base="msxml3">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="msxml3" root="intermediate">.</include>
 	<dependency>msxml3_v1</dependency>
 	<define name="__WINESRC__" />
 	<define name="__USE_W32API" />
@@ -54,6 +55,7 @@
 	<file>docfrag.c</file>
 	<file>domimpl.c</file>
 	<file>entityref.c</file>
+	<file>version.rc</file>
 	<file>msxml3.spec</file>
 </module>
 <module name="msxml3_v1" type="embeddedtypelib">
