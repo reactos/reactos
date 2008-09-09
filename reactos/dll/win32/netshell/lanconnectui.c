@@ -433,9 +433,19 @@ INetConnectionPropertyUi2_fnRelease(
 
     if (!refCount) 
     {
-        INetCfg_Release(This->pNCfg);
-        INetCfgLock_Release(This->NCfgLock);
-        NcFreeNetconProperties(This->pProperties);
+        if (This->pNCfg)
+        {
+            INetCfg_Uninitialize(This->pNCfg);
+            INetCfg_Release(This->pNCfg);
+        }
+        if (This->NCfgLock)
+        {
+            INetCfgLock_Release(This->NCfgLock);
+        }
+        if (This->pProperties)
+        {
+            NcFreeNetconProperties(This->pProperties);
+        }
         CoTaskMemFree (This);
     }
     return refCount;
@@ -486,7 +496,7 @@ INetConnectionPropertyUi2_fnAddPages(
     if (FAILED(hr))
         return hr;
 
-    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)This, This->pProperties->pszwName);
+	hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)This, This->pProperties->pszwName);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
@@ -494,7 +504,10 @@ INetConnectionPropertyUi2_fnAddPages(
         {
             hr = NOERROR;
         }
-        DestroyPropertySheetPage(hProp);
+        else
+        {
+            DestroyPropertySheetPage(hProp);
+        }
     }
     return hr;
 }
