@@ -264,33 +264,6 @@ MingwModuleHandler::GetBasename ( const string& filename ) const
 }
 
 string
-MingwModuleHandler::GetExtraDependencies (
-	const FileLocation *file ) const
-{
-	string extension = GetExtension ( *file );
-	if ( extension == ".idl" || extension == ".IDL" )
-	{
-		const FileLocation *header;
-		switch ( module.type )
-		{
-			case RpcServer: header = GetRpcServerHeaderFilename ( file ); break;
-			case RpcClient: header = GetRpcClientHeaderFilename ( file ); break;
-			case RpcProxy: header = GetRpcProxyHeaderFilename ( file ); break;
-			case IdlHeader: header = GetIdlHeaderFilename ( file ); break;
-			default: header = NULL; break;
-		}
-		if ( !header )
-			return "";
-
-		string dependencies = backend->GetFullName ( *header );
-		delete header;
-		return " " + dependencies;
-	}
-	else
-		return "";
-}
-
-string
 MingwModuleHandler::GetCompilationUnitDependencies (
 	const CompilationUnit& compilationUnit ) const
 {
@@ -1327,7 +1300,7 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateGccCommand ( &sourceFile,
 		                     customRule,
-		                     GetCompilationUnitDependencies ( compilationUnit ) + GetExtraDependencies ( &sourceFile ) + extraDependencies );
+		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies );
 	}
 	else if ( customRule )
 		customRule->Execute ( fMakefile, backend, module, &sourceFile, clean_files );

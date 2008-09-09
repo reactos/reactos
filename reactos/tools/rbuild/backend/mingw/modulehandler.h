@@ -80,7 +80,6 @@ protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
-	std::string GetExtraDependencies ( const FileLocation *file ) const;
 	std::string GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
 	const FileLocation* GetModuleArchiveFilename () const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
