@@ -2499,18 +2499,16 @@ NtGdiExtCreateRegion(
     PROSRGNDATA Region;
     DWORD nCount = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    if (Count < FIELD_OFFSET(RGNDATA, Buffer))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
+    MATRIX matrix;
 
     _SEH_TRY
     {
         ProbeForRead(RgnData, Count, 1);
         nCount = RgnData->rdh.nCount;
-        if ((Count - FIELD_OFFSET(RGNDATA, Buffer)) / sizeof(RECT) < nCount)
+        if (Count < sizeof(RGNDATAHEADER) + nCount * sizeof(RECT) ||
+            nCount == 0 ||
+            RgnData->rdh.iType != RDH_RECTANGLES ||
+            RgnData->rdh.dwSize != sizeof(RGNDATAHEADER))
         {
             Status = STATUS_INVALID_PARAMETER;
             _SEH_LEAVE;
@@ -2538,12 +2536,38 @@ NtGdiExtCreateRegion(
 
     _SEH_TRY
     {
-        RtlCopyMemory(&Region->rdh,
-        RgnData,
-        FIELD_OFFSET(RGNDATA, Buffer));
-        RtlCopyMemory(Region->Buffer,
-                      RgnData->Buffer,
-                      Count - FIELD_OFFSET(RGNDATA, Buffer));
+        /* Copy header */
+        Region->rdh = RgnData->rdh;
+
+        if (Xform)
+        {
+            ULONG ret;
+
+            /* Init the XFORMOBJ from the Xform struct */
+            Status = STATUS_INVALID_PARAMETER;
+            ret = XFORMOBJ_iSetXform((XFORMOBJ*)&matrix, (XFORML*)Xform);
+
+            /* Check for error, also no scale and shear allowed */
+            if (ret != DDI_ERROR && ret != GX_GENERAL)
+            {
+                /* Apply the coordinate transformation on the rects */
+                if (XFORMOBJ_bApplyXform((XFORMOBJ*)&matrix,
+                                         XF_LTOL,
+                                         nCount * 2,
+                                         RgnData->Buffer,
+                                         Region->Buffer))
+                {
+                    Status = STATUS_SUCCESS;
+                }
+            }
+        }
+        else
+        {
+            /* Copy rect coordinates */
+            RtlCopyMemory(Region->Buffer,
+                          RgnData->Buffer,
+                          nCount * sizeof(RECT));
+        }
     }
     _SEH_HANDLE
     {
