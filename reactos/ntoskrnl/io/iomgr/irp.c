@@ -691,7 +691,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 				MmProbeAndLockPages(Irp->MdlAddress,
 									KernelMode,
 									MajorFunction == IRP_MJ_READ ?
-									IoWriteAccess : IoReadAccess);
+									IoReadAccess : IoWriteAccess);
 			}
 			_SEH_HANDLE
 			{
