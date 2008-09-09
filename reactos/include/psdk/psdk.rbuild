@@ -52,3 +52,6 @@
 	<file>xmldso.idl</file>
 	<file>xmldom.idl</file>
 </module>
+<module name="stdole2" type="embeddedtypelib">
+	<file>stdole2.idl</file>
+</module>
