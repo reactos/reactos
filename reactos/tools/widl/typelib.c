@@ -359,10 +359,10 @@ static void read_importlib(importlib_t *importlib)
 
     file_name = wpp_find_include(importlib->name, NULL);
     if(file_name) {
-        fd = open(file_name, O_RDONLY);
+        fd = open(file_name, O_RDONLY | O_BINARY);
         free(file_name);
     }else {
-        fd = open(importlib->name, O_RDONLY);
+        fd = open(importlib->name, O_RDONLY | O_BINARY);
     }
 
     if(fd < 0)
