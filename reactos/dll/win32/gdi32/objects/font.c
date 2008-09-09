@@ -391,12 +391,17 @@ int STDCALL
 EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamExProc,
                      LPARAM lParam, DWORD dwFlags)
 {
-  LOGFONTW LogFontW;
+  LOGFONTW LogFontW, *pLogFontW;
 
-  LogFontA2W(&LogFontW, lpLogfont);
+  if (lpLogfont)
+  {
+    LogFontA2W(&LogFontW,lpLogfont);
+    pLogFontW = &LogFontW;
+  }
+  else pLogFontW = NULL;
 
   /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-  return IntEnumFontFamilies(hdc, &LogFontW, lpEnumFontFamExProc, lParam, FALSE);
+  return IntEnumFontFamilies(hdc, pLogFontW, lpEnumFontFamExProc, lParam, FALSE);
 }
 
 
