@@ -174,6 +174,7 @@ MingwModuleHandler::InstanciateHandler (
 		case MessageHeader:
 		case IdlHeader:
 		case EmbeddedTypeLib:
+		case BootSector:
 			handler = new MingwModuleHandler( module );
 			break;
 		case BuildTool:
@@ -210,9 +211,6 @@ MingwModuleHandler::InstanciateHandler (
 			break;
 		case BootLoader:
 			handler = new MingwBootLoaderModuleHandler ( module );
-			break;
-		case BootSector:
-			handler = new MingwBootSectorModuleHandler ( module );
 			break;
 		case BootProgram:
 			handler = new MingwBootProgramModuleHandler ( module );
@@ -1315,7 +1313,7 @@ MingwModuleHandler::GenerateCommands (
 
 	for ( i = 0; i < sizeof ( rules ) / sizeof ( rules[0] ); i++ )
 	{
-		if ( rules[i].host != HostDontCare && rules[i].host != module.host )
+		if ( rules[i].host != HostDontCare && rules[i].host != ModuleHandlerInformations[module.type].DefaultHost )
 			continue;
 		if ( rules[i].type != TypeDontCare && rules[i].type != module.type )
 			continue;
@@ -1638,8 +1636,8 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 
 	if ( pchFilename )
 	{
-		string cc = ( module.host == HostTrue ? "${host_gcc}" : "${gcc}" );
-		string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
+		string cc = ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue ? "${host_gcc}" : "${gcc}" );
+		string cppc = ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue ? "${host_gpp}" : "${gpp}" );
 
 		const FileLocation& baseHeaderFile = *module.pch->file;
 		CLEAN_FILE ( *pchFilename );
@@ -1849,7 +1847,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
-	if ( module.host == HostFalse )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 	{
 		GenerateMacros (
 			"+=",
@@ -1885,7 +1883,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	}
 
 	string globalCflags = "";
-	if ( module.host == HostFalse )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 		globalCflags += " $(PROJECT_CFLAGS)";
 	else
 		globalCflags += " -Wall -Wpointer-arith -D__REACTOS__";
@@ -1894,7 +1892,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
 		globalCflags += " -Werror";
-	if ( module.host == HostTrue )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
 	{
 		if ( module.cplusplus )
 			globalCflags += " $(HOST_CPPFLAGS)";
@@ -1922,7 +1920,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		cflagsMacro.c_str (),
 		globalCflags.c_str () );
 
-	if ( module.host == HostFalse )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 	{
 		fprintf (
 			fMakefile,
@@ -1955,31 +1953,31 @@ MingwModuleHandler::GenerateOtherMacros ()
 		linkDepsMacro.c_str (),
 		libsMacro.c_str () );
 
-	string cflags = TypeSpecificCFlags();
-	if ( cflags.size() > 0 )
+	const char *cflags = ModuleHandlerInformations[module.type].cflags;
+	if ( strlen( cflags ) > 0 )
 	{
 		fprintf ( fMakefile,
 		          "%s += %s\n\n",
 		          cflagsMacro.c_str (),
-		          cflags.c_str () );
+		          cflags );
 	}
 
-	string nasmflags = TypeSpecificNasmFlags();
-	if ( nasmflags.size () > 0 )
+	const char* nasmflags = ModuleHandlerInformations[module.type].nasmflags;
+	if ( strlen( nasmflags ) > 0 )
 	{
 		fprintf ( fMakefile,
 		          "%s += %s\n\n",
 		          nasmflagsMacro.c_str (),
-		          nasmflags.c_str () );
+		          nasmflags );
 	}
 
-	string linkerflags = TypeSpecificLinkerFlags();
-	if ( linkerflags.size() > 0 )
+	const char *linkerflags = ModuleHandlerInformations[module.type].linkerflags;
+	if ( strlen( linkerflags ) > 0 )
 	{
 		fprintf ( fMakefile,
 		          "%s += %s\n\n",
 		          linkerflagsMacro.c_str (),
-		          linkerflags.c_str () );
+		          linkerflags );
 	}
 
 	if ( IsStaticLibrary ( module ) && module.isStartupLib )
@@ -2106,7 +2104,7 @@ MingwModuleHandler::GetDefaultDependencies (
 	string_list& dependencies ) const
 {
 	/* Avoid circular dependency */
-	if ( module.host == HostTrue )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
 		return;
 
 	if (module.name != "psdk" && 
@@ -2957,35 +2955,6 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	          backend->GetFullName ( junk_tmp ).c_str () );
 
 	delete target_file;
-}
-
-
-MingwBootSectorModuleHandler::MingwBootSectorModuleHandler (
-	const Module& module_ )
-
-	: MingwModuleHandler ( module_ )
-{
-}
-
-void
-MingwBootSectorModuleHandler::Process ()
-{
-	GenerateBootSectorModuleTarget ();
-}
-
-void
-MingwBootSectorModuleHandler::GenerateBootSectorModuleTarget ()
-{
-	string objectsMacro = GetObjectsMacro ( module );
-
-	GenerateRules ();
-
-	fprintf ( fMakefile, ".PHONY: %s\n\n",
-	          module.name.c_str ());
-	fprintf ( fMakefile,
-	          "%s: %s\n",
-	          module.name.c_str (),
-	          objectsMacro.c_str () );
 }
 
 

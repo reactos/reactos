@@ -142,4 +142,14 @@ private:
 	const Project& project;
 };
 
+typedef struct ModuleHandlerInformations
+{
+	HostType DefaultHost;
+	const char* cflags;
+	const char* nasmflags;
+	const char* linkerflags;
+};
+
+extern const struct ModuleHandlerInformations ModuleHandlerInformations[];
+
 #endif /* MINGW_H */

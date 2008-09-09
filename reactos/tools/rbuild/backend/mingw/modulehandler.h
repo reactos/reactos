@@ -67,9 +67,6 @@ public:
 	                                                MingwBackend* backend_ );
 	void GeneratePreconditionDependencies ();
 	virtual void Process () { GenerateRules (); }
-	virtual std::string TypeSpecificCFlags() { return ""; }
-	virtual std::string TypeSpecificNasmFlags() { return ""; }
-	virtual std::string TypeSpecificLinkerFlags() { return ""; }
 	void GenerateInvocations () const;
 	void GenerateCleanTarget () const;
 	void GenerateInstallTarget () const;
@@ -221,7 +218,6 @@ class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
 public:
 	MingwKernelModeDriverModuleHandler ( const Module& module );
 	virtual void Process ();
-	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateKernelModeDriverModuleTarget ();
@@ -244,7 +240,6 @@ class MingwNativeCUIModuleHandler : public MingwModuleHandler
 public:
 	MingwNativeCUIModuleHandler ( const Module& module );
 	virtual void Process ();
-	std::string TypeSpecificCFlags() { return "-D__NTAPP__"; }
 	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateNativeCUIModuleTarget ();
@@ -300,20 +295,8 @@ class MingwBootLoaderModuleHandler : public MingwModuleHandler
 public:
 	MingwBootLoaderModuleHandler ( const Module& module );
 	virtual void Process ();
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateBootLoaderModuleTarget ();
-};
-
-
-class MingwBootSectorModuleHandler : public MingwModuleHandler
-{
-public:
-	MingwBootSectorModuleHandler ( const Module& module );
-	virtual void Process ();
-	std::string TypeSpecificNasmFlags() { return "-f bin"; }
-private:
-	void GenerateBootSectorModuleTarget ();
 };
 
 
@@ -323,7 +306,6 @@ public:
 	MingwBootProgramModuleHandler ( const Module& module );
 	virtual void Process ();
 	std::string GetProgTextAddrMacro ();
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateBootProgramModuleTarget ();
 };

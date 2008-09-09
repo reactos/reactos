@@ -245,7 +245,6 @@ Module::Module ( const Project& project,
 	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
-	  host (HostDefault),
 	  output (NULL),
 	  install (NULL)
 {
@@ -363,23 +362,6 @@ Module::Module ( const Project& project,
 	else
 		underscoreSymbols = false;
 
-	att = moduleNode.GetAttribute ( "host", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
-			host = HostTrue;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
-			host = HostFalse;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"host",
-				att->value );
-		}
-	}
-
 	att = moduleNode.GetAttribute ( "isstartuplib", false );
 	if ( att != NULL )
 	{
@@ -392,7 +374,7 @@ Module::Module ( const Project& project,
 		{
 			throw InvalidAttributeValueException (
 				moduleNode.location,
-				"host",
+				"isstartuplib",
 				att->value );
 		}
 	}

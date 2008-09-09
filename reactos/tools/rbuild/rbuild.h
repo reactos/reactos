@@ -369,7 +369,6 @@ public:
 	PchFile* pch;
 	bool cplusplus;
 	std::string prefix;
-	HostType host;
 	std::string aliasedModuleName;
 	bool allowWarnings;
 	bool enabled;
