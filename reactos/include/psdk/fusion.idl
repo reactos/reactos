@@ -343,3 +343,12 @@ interface IInstallReferenceEnum : IUnknown
 {
 
 }
+
+cpp_quote("HRESULT WINAPI ClearDownloadCache(void);")
+cpp_quote("HRESULT WINAPI CompareAssemblyIdentity(LPCWSTR,BOOL,LPCWSTR,BOOL,BOOL*,AssemblyComparisonResult*);")
+cpp_quote("HRESULT WINAPI CreateAssemblyCache(IAssemblyCache**,DWORD);")
+cpp_quote("HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum**,IUnknown*,IAssemblyName*,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME*,LPCWSTR,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum**,IAssemblyName*,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI GetAssemblyIdentityFromFile(LPCWSTR,REFIID,IUnknown**);")
+cpp_quote("HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS,LPWSTR,PDWORD);")
