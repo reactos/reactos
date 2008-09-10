@@ -273,6 +273,7 @@ dll\win32\mlang\mlang.dll                           1
 dll\win32\mmdrv\mmdrv.dll                           1
 dll\win32\modemui\modemui.dll                       1
 dll\win32\mpr\mpr.dll                               1
+dll\win32\mprapi\mprapi.dll                         1
 dll\win32\msacm32\msacm32.dll                       1
 dll\win32\msafd\msafd.dll                           1
 dll\win32\mscoree\mscoree.dll                       1

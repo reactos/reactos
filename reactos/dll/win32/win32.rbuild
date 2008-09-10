@@ -151,6 +151,9 @@
 <directory name="mpr">
 	<xi:include href="mpr/mpr.rbuild" />
 </directory>
+<directory name="mprapi">
+	<xi:include href="mprapi/mprapi.rbuild" />
+</directory>
 <directory name="msacm32">
 	<xi:include href="msacm32/msacm32.rbuild" />
 </directory>
