@@ -1,5 +1,6 @@
 <group>
 <module name="mshtml_tlb" type="embeddedtypelib">
+	<dependency>stdole2</dependency>
 	<file>mshtml_tlb.idl</file>
 </module>
 <module name="mshtml.tlb" type="win32dll" extension=".tlb" installbase="system32" installname="mshtml.tlb" entrypoint="0">
