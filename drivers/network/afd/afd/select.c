@@ -317,7 +317,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
+    return UnlockAndMaybeComplete( FCB, Status, Irp,
 				   0, NULL );
 }
 
