@@ -210,14 +210,14 @@ cpp_quote("#endif")
 cpp_quote("#ifndef _SYSTEMTIME_")
 cpp_quote("#define _SYSTEMTIME_")
 typedef struct _SYSTEMTIME{
-  WORD wYear;
-  WORD wMonth;
-  WORD wDayOfWeek;
-  WORD wDay;
-  WORD wHour;
-  WORD wMinute;
-  WORD wSecond;
-  WORD wMilliseconds;
+        WORD wYear;
+        WORD wMonth;
+        WORD wDayOfWeek;
+        WORD wDay;
+        WORD wHour;
+        WORD wMinute;
+        WORD wSecond;
+        WORD wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
 cpp_quote("#endif")
 

@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "objidl.idl";
+#endif
 
 interface IDispatch;
 interface ITypeInfo;
@@ -1162,7 +1164,7 @@ interface ITypeChangeEvents : IUnknown
     [in] ITypeInfo *pTInfoBefore,
     [in] LPOLESTR pStrName,
     [out] INT *pfCancel);
-
+  
   HRESULT AfterTypeChange(
     [in] CHANGEKIND changeKind,
     [in] ITypeInfo *pTInfoAfter,
@@ -1472,25 +1474,25 @@ interface ICreateTypeInfo2 : ICreateTypeInfo
     [in] REFGUID guid,
     [in] VARIANT *pVarVal);
 
-  HRESULT SetFuncCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
+  HRESULT SetFuncCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
+    [in] VARIANT *pVarVal);
+  
+  HRESULT SetParamCustData( 
+    [in] UINT indexFunc, 
+    [in] UINT indexParam, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
-  HRESULT SetParamCustData(
-    [in] UINT indexFunc,
-    [in] UINT indexParam,
-    [in] REFGUID guid,
+  HRESULT SetVarCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
-  HRESULT SetVarCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
-    [in] VARIANT *pVarVal);
-
-  HRESULT SetImplTypeCustData(
-    [in] UINT index,
-    [in] REFGUID guid,
+  HRESULT SetImplTypeCustData( 
+    [in] UINT index, 
+    [in] REFGUID guid, 
     [in] VARIANT *pVarVal);
 
   HRESULT SetHelpStringContext(

@@ -48,7 +48,11 @@ cpp_quote("#define MAX_PIN_NAME    128")
 cpp_quote("#define MAX_FILTER_NAME 128")
 
 typedef LONGLONG REFERENCE_TIME;
+
+cpp_quote("#ifndef REFTIME_DEFINED")
+cpp_quote("#define REFTIME_DEFINED")
 typedef DOUBLE REFTIME;
+cpp_quote("#endif")
 
 typedef DWORD_PTR HSEMAPHORE;
 typedef DWORD_PTR HEVENT;

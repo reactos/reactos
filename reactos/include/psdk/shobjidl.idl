@@ -22,12 +22,18 @@
 import "objidl.idl";
 import "oleidl.idl";
 import "oaidl.idl";
+import "docobj.idl";
 import "shtypes.idl";
 import "servprov.idl";
 import "comcat.idl";
 import "propidl.idl";
-/*import "prsht.idl";*/
-/*import "msxml.idl";*/
+/* FIXME: import "prsht.idl";*/
+import "msxml.idl";
+import "wtypes.idl";
+/* FIXME: import "propsys.idl"; */
+/* FIXME: import "structuredquery.idl"; */
+
+cpp_quote("/* FIXME: #include <sherrors.h> */")
 
 
 /*****************************************************************************
@@ -388,7 +394,7 @@ typedef const FOLDERSETTINGS *LPCFOLDERSETTINGS;
 /*****************************************************************************
  * IShellView interface
  */
-interface IShellBrowser;
+interface IShellBrowser;  /* forward declaration */
 [
     object,
     uuid(000214e3-0000-0000-c000-000000000046),
@@ -412,7 +418,7 @@ interface IShellView : IOleWindow
 
     typedef UINT SVSIF;
 
-    typedef enum tagSVGIO
+    typedef enum
     {
         SVGIO_BACKGROUND     = 0x00000000,
         SVGIO_SELECTION      = 0x00000001,
@@ -422,7 +428,7 @@ interface IShellView : IOleWindow
         SVGIO_FLAG_VIEWORDER = 0x80000000,
     } SVGIO;
 
-    typedef enum tagSVUIA_STATUS
+    typedef enum
     {
         SVUIA_DEACTIVATE       = 0,
         SVUIA_ACTIVATE_NOFOCUS = 1,
@@ -788,7 +794,8 @@ cpp_quote("#define IShellLink WINELIB_NAME_AW(IShellLink)")
 [
     object,
     uuid(000214e8-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IShellExtInit : IUnknown
 {
@@ -941,7 +948,8 @@ cpp_quote("#define CDBOSC_STATECHANGE  0x00000004")
 [
     object,
     uuid(47d2657a-7b27-11d0-8ca9-00a0c92dbfe8),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IDockingWindowFrame : IOleWindow
 {
@@ -1031,7 +1039,8 @@ interface IDropTargetHelper : IUnknown
 [
     object,
     uuid(000214e4-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IContextMenu : IUnknown
 {
@@ -1189,7 +1198,8 @@ interface IContextMenu3 : IContextMenu2
 [
     object,
     uuid(000214f5-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IShellExecuteHookA : IUnknown
 {
@@ -1205,7 +1215,8 @@ interface IShellExecuteHookA : IUnknown
 [
     object,
     uuid(000214fb-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IShellExecuteHookW : IUnknown
 {
@@ -1224,9 +1235,9 @@ interface IShellExecuteHookW : IUnknown
 ]
 interface IShellLinkDataList : IUnknown
 {
-    HRESULT AddDataBlock(
+    [local] HRESULT AddDataBlock(
                 [in] void *pDataBlock);
-    HRESULT CopyDataBlock(
+    [local] HRESULT CopyDataBlock(
                 [in] DWORD dwSig,
                 [out] void **ppDataBlock);
     HRESULT RemoveDataBlock(
@@ -1336,7 +1347,7 @@ interface INewShortcutHookA : IUnknown
     HRESULT GetExtension(
                 [out] LPSTR pszExtension,
                 [in] int cchExtension);
-}
+} 
 
 
 /*****************************************************************************
@@ -1366,8 +1377,24 @@ interface INewShortcutHookW : IUnknown
     HRESULT GetExtension(
                 [out] LPWSTR pszExtension,
                 [in] int cchExtension);
-}
+} 
 
+/*****************************************************************************
+ * IRunnableTask interface
+ */
+[
+    object,
+    uuid(85788d00-6807-11d0-b810-00c04fd706ec),
+    pointer_default(unique)
+]
+interface IRunnableTask : IUnknown
+{
+    HRESULT Run();
+    HRESULT Kill([in] BOOL fWait);
+    HRESULT Suspend();
+    HRESULT Resume();
+    ULONG IsRunning();
+}
 
 /*****************************************************************************
  * IShellChangeNotify interface
@@ -1428,7 +1455,8 @@ interface IContextMenuCB : IUnknown
 [
     object,
     uuid(800AB0B8-F5FA-4e72-8FF3-B1A243B87BD9), /* FIXME: wrong value! */
-    pointer_default(unique)
+    pointer_default(unique),
+	local
 ]
 interface IDefaultExtractIconInit : IUnknown
 {

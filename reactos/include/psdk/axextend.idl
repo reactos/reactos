@@ -958,7 +958,8 @@ cpp_quote("#define KSPROPERTY_SUPPORT_SET  2")
 [
     object,
     uuid(31efac30-515c-11d0-a9aa-00aa0061be93),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IKsPropertySet : IUnknown
 {
@@ -982,3 +983,30 @@ interface IKsPropertySet : IUnknown
                             [out] DWORD *pTypeSupport);
 }
 cpp_quote("#endif /* _IKsPropertySet_ */")
+
+[
+    object,
+    uuid(36b73883-c2c8-11cf-8b46-00805f6cef60),
+    pointer_default(unique)
+]
+interface ISeekingPassThru : IUnknown
+{
+    HRESULT Init( [in] BOOL bSupportRendering, [in] IPin *pPin);
+}
+
+enum _AM_FILTER_MISC_FLAGS
+{
+    AM_FILTER_MISC_FLAGS_IS_RENDERER = 0x1,
+    AM_FILTER_MISC_FLAGS_IS_SOURCE = 0x2
+};
+
+[
+    local,
+    object,
+    uuid(2dd74950-a890-11d1-abe8-00a0c905f375),
+    pointer_default(unique)
+]
+interface IAMFilterMiscFlags : IUnknown
+{
+    ULONG GetMiscFlags();
+};
