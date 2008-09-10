@@ -124,6 +124,9 @@
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
+<directory name="jscript">
+	<xi:include href="jscript/jscript.rbuild" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
