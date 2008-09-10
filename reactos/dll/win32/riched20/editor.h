@@ -23,7 +23,7 @@
 
 extern HANDLE me_heap;
 
-static inline void *heap_alloc( size_t len )
+static inline void __WINE_ALLOC_SIZE(1) *heap_alloc( size_t len )
 {
     return HeapAlloc( me_heap, 0, len );
 }
@@ -33,7 +33,7 @@ static inline BOOL heap_free( void *ptr )
     return HeapFree( me_heap, 0, ptr );
 }
 
-static inline void *heap_realloc( void *ptr, size_t len )
+static inline void __WINE_ALLOC_SIZE(2) *heap_realloc( void *ptr, size_t len )
 {
     return HeapReAlloc( me_heap, 0, ptr, len );
 }
@@ -296,6 +296,7 @@ ME_DisplayItem *ME_GetTableRowEnd(ME_DisplayItem *para);
 ME_DisplayItem *ME_GetTableRowStart(ME_DisplayItem *para);
 void ME_CheckTablesForCorruption(ME_TextEditor *editor);
 void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars);
+ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor, ME_DisplayItem *table_row);
 void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow);
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor);
 void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef);

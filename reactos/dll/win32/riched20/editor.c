@@ -1410,6 +1410,28 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
     style = ME_GetSelectionInsertStyle(editor);
 
     ME_InternalDeleteText(editor, from, to-from, FALSE);
+
+    /* Don't insert text at the end of the table row */
+    if (!editor->bEmulateVersion10) { /* v4.1 */
+      ME_DisplayItem *para = ME_GetParagraph(editor->pCursors->pRun);
+      if (para->member.para.nFlags & MEPF_ROWEND)
+      {
+        para = para->member.para.next_para;
+        editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+        editor->pCursors[0].nOffset = 0;
+      }
+      if (para->member.para.nFlags & MEPF_ROWSTART)
+      {
+        para = para->member.para.next_para;
+        editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+        editor->pCursors[0].nOffset = 0;
+      }
+      editor->pCursors[1] = editor->pCursors[0];
+    } else { /* v1.0 - 3.0 */
+      if (editor->pCursors[0].pRun->member.run.nFlags & MERF_ENDPARA &&
+          ME_IsInTable(editor->pCursors[0].pRun))
+        return 0;
+    }
   }
   else {
     ME_DisplayItem *para_item;
@@ -3663,6 +3685,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (((unsigned)wstr)>=' '
         || (wstr=='\r' && (GetWindowLongW(hWnd, GWL_STYLE) & ES_MULTILINE))
         || wstr=='\t') {
+      ME_Cursor cursor = editor->pCursors[0];
+      ME_DisplayItem *para = ME_GetParagraph(cursor.pRun);
       int from, to;
       BOOL ctrl_is_down = GetKeyState(VK_CONTROL) & 0x8000;
       ME_GetSelection(editor, &from, &to);
@@ -3671,13 +3695,13 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
           && !(ctrl_is_down && !editor->bEmulateVersion10)
           )
       {
-        ME_Cursor cursor = editor->pCursors[0];
         ME_DisplayItem *para;
         BOOL bSelectedRow = FALSE;
 
         para = ME_GetParagraph(cursor.pRun);
         if (ME_IsSelection(editor) &&
             cursor.pRun->member.run.nCharOfs + cursor.nOffset == 0 &&
+            to == ME_GetCursorOfs(editor, 0) &&
             para->member.para.prev_para->type == diParagraph)
         {
           para = para->member.para.prev_para;
@@ -3688,6 +3712,74 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
           ME_TabPressedInTable(editor, bSelectedRow);
           ME_CommitUndo(editor);
           return 0;
+        }
+      } else if (!editor->bEmulateVersion10) { /* v4.1 */
+        if (para->member.para.nFlags & MEPF_ROWEND) {
+          if (wstr=='\r') {
+            /* FIXME: Add a new table row after this row. */
+            return 0;
+          } else if (from == to) {
+            para = para->member.para.next_para;
+            if (para->member.para.nFlags & MEPF_ROWSTART)
+              para = para->member.para.next_para;
+            editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+            editor->pCursors[0].nOffset = 0;
+            editor->pCursors[1] = editor->pCursors[0];
+          }
+        }
+        else if (para == ME_GetParagraph(editor->pCursors[1].pRun) &&
+                 cursor.nOffset + cursor.pRun->member.run.nCharOfs == 0 &&
+                 para->member.para.prev_para->member.para.nFlags & MEPF_ROWSTART &&
+                 !para->member.para.prev_para->member.para.nCharOfs)
+        {
+          /* FIXME: Insert a newline before the table. */
+        }
+      } else { /* v1.0 - 3.0 */
+        ME_DisplayItem *para = ME_GetParagraph(cursor.pRun);
+        if (ME_IsInTable(cursor.pRun))
+        {
+          if (cursor.pRun->member.run.nFlags & MERF_ENDPARA)
+          {
+            if (from == to) {
+              if (wstr=='\r') {
+                ME_ContinueCoalescingTransaction(editor);
+                para = ME_AppendTableRow(editor, para);
+                editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+                editor->pCursors[0].nOffset = 0;
+                editor->pCursors[1] = editor->pCursors[0];
+                ME_CommitCoalescingUndo(editor);
+                ME_UpdateRepaint(editor);
+              } else {
+                /* Text should not be inserted at the end of the table. */
+                MessageBeep(-1);
+              }
+              return 0;
+            }
+          } else if (wstr == '\r') {
+            ME_ContinueCoalescingTransaction(editor);
+            if (cursor.pRun->member.run.nCharOfs + cursor.nOffset == 0 &&
+                !ME_IsInTable(para->member.para.prev_para))
+            {
+              /* Insert newline before table */
+              WCHAR endl = '\r';
+              cursor.pRun = ME_FindItemBack(para, diRun);
+              if (cursor.pRun)
+                editor->pCursors[0].pRun = cursor.pRun;
+              editor->pCursors[0].nOffset = 0;
+              editor->pCursors[1] = editor->pCursors[0];
+              ME_InsertTextFromCursor(editor, 0, &endl, 1,
+                                      editor->pCursors[0].pRun->member.run.style);
+            } else {
+              editor->pCursors[1] = editor->pCursors[0];
+              para = ME_AppendTableRow(editor, para);
+              editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+              editor->pCursors[0].nOffset = 0;
+              editor->pCursors[1] = editor->pCursors[0];
+            }
+            ME_CommitCoalescingUndo(editor);
+            ME_UpdateRepaint(editor);
+            return 0;
+          }
         }
       }
       /* FIXME maybe it would make sense to call EM_REPLACESEL instead ? */

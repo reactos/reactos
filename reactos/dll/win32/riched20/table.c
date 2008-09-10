@@ -29,7 +29,7 @@
  * Richedit version 1.0 - 3.0:
  *   Tables are implemented in these versions using tabs at the end of cells,
  *   and tab stops to position the cells.  The paragraph format flag PFE_TABLE
- *   will indicate the the paragraph is a table row.  Note that in this
+ *   will indicate that the paragraph is a table row.  Note that in this
  *   implementation there is one paragraph per table row.
  *
  * Richedit version 4.1:
@@ -37,7 +37,7 @@
  *   each with it's own paragraph format, and cells may even contain tables
  *   nested within the cell.
  *
- *   There are is also a paragraph at the start of each table row that contains
+ *   There is also a paragraph at the start of each table row that contains
  *   the rows paragraph format (e.g. to change the row alignment to row), and a
  *   paragraph at the end of the table row with the PFE_TABLEROWDELIMITER flag
  *   set. The paragraphs at the start and end of the table row should always be
@@ -345,7 +345,7 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
     ME_DisplayItem *pRun;
     int nCharsToBoundary;
 
-    if (this_para->member.para.nCharOfs != nOfs &&
+    if ((this_para->member.para.nCharOfs != nOfs || this_para == end_para) &&
         this_para->member.para.pFmt->dwMask & PFM_TABLE &&
         this_para->member.para.pFmt->wEffects & PFE_TABLE)
     {
@@ -360,27 +360,13 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
     } else if (end_para->member.para.pFmt->dwMask & PFM_TABLE &&
                end_para->member.para.pFmt->wEffects & PFE_TABLE)
     {
-      if (this_para == end_para)
-      {
-        pRun = c2.pRun;
-        /* Find the previous tab or end paragraph to use as a delete boundary */
-        while (pRun && !(pRun->member.run.nFlags & (MERF_TAB|MERF_ENDPARA)))
-          pRun = ME_FindItemBack(pRun, diRun);
-        if (pRun && pRun->member.run.nFlags & MERF_ENDPARA)
-        {
-          /* We are in the first cell, and have gone back to the previous
-           * paragraph, so nothing needs to be protected. */
-          pRun = NULL;
-        }
-      } else {
-        /* The deletion starts from before the row, so don't join it with
-         * previous non-empty paragraphs. */
-        pRun = NULL;
-        if (nOfs > this_para->member.para.nCharOfs)
-          pRun = ME_FindItemBack(end_para, diRun);
-        if (!pRun)
-          pRun = ME_FindItemFwd(end_para, diRun);
-      }
+      /* The deletion starts from before the row, so don't join it with
+       * previous non-empty paragraphs. */
+      pRun = NULL;
+      if (nOfs > this_para->member.para.nCharOfs)
+        pRun = ME_FindItemBack(end_para, diRun);
+      if (!pRun)
+        pRun = ME_FindItemFwd(end_para, diRun);
       if (pRun)
       {
         nCharsToBoundary = ME_GetParagraph(pRun)->member.para.nCharOfs
@@ -395,8 +381,8 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
   }
 }
 
-static ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
-                                         ME_DisplayItem *table_row)
+ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
+                                  ME_DisplayItem *table_row)
 {
   WCHAR endl = '\r', tab = '\t';
   ME_DisplayItem *run;
@@ -404,9 +390,13 @@ static ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
   int i;
 
   assert(table_row);
+  assert(table_row->type == diParagraph);
   if (!editor->bEmulateVersion10) { /* v4.1 */
     ME_DisplayItem *insertedCell, *para, *cell;
-    cell = ME_FindItemFwd(table_row, diCell);
+    if (table_row->member.para.nFlags & MEPF_ROWEND)
+      cell = ME_FindItemBack(table_row, diCell);
+    else
+      cell = ME_FindItemFwd(table_row, diCell);
     run = ME_GetTableRowEnd(table_row)->member.para.next_para;
     run = ME_FindItemFwd(run, diRun);
     editor->pCursors[0].pRun = run;
@@ -416,12 +406,14 @@ static ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
     insertedCell = ME_FindItemFwd(para, diCell);
       /* Copy cell properties */
     insertedCell->member.cell.nRightBoundary = cell->member.cell.nRightBoundary;
+    insertedCell->member.cell.border = cell->member.cell.border;
     while (cell->member.cell.next_cell) {
       cell = cell->member.cell.next_cell;
       para = ME_InsertTableCellFromCursor(editor);
       insertedCell = ME_FindItemBack(para, diCell);
       /* Copy cell properties */
       insertedCell->member.cell.nRightBoundary = cell->member.cell.nRightBoundary;
+      insertedCell->member.cell.border = cell->member.cell.border;
     };
     ME_InsertTableRowEndFromCursor(editor);
     /* return the table row start for the inserted paragraph */
