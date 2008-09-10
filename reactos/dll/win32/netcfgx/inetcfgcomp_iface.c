@@ -62,6 +62,10 @@ INetCfgComponent_fnRelease(
     INetCfgComponentImpl * This = (INetCfgComponentImpl*)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
+    if (!refCount)
+    {
+       CoTaskMemFree(This);
+    }
     return refCount;
 }
 
@@ -332,7 +336,8 @@ CreateNotificationObject(
     INetCfgComponentControl * pNCCC;
     HRESULT hr;
     LONG lRet;
-    CLSID ClassGUID, InstanceGUID;
+    CLSID ClassGUID;
+    //CLSID InstanceGUID;
 
     wcscpy(szName,L"SYSTEM\\CurrentControlSet\\Control\\Network\\");
 
@@ -349,7 +354,8 @@ CreateNotificationObject(
     CoTaskMemFree(pStr);
     wcscat(szName, L"\\");
 
-    /* get the Class GUID */
+    /* get the Instance GUID */
+#if 0
     hr = INetCfgComponent_GetInstanceGuid(iface, &InstanceGUID);
     if (FAILED(hr))
         return hr;
@@ -360,6 +366,11 @@ CreateNotificationObject(
 
     wcscat(szName, pStr);
     CoTaskMemFree(pStr);
+#else
+    // HACK HACK HACK HACK HACK
+    wcscat(szName, L"{RandomProtocolGUID_TCPIP}");
+#endif
+
     wcscat(szName, L"\\NDI");
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -433,11 +444,14 @@ INetCfgComponent_fnRaisePropertyUi(
          hr = CreateNotificationObject(This,iface, pUnk, &This->pProperty);
          if (FAILED(hr))
              return hr;
+         if (dwFlags == NCRP_QUERY_PROPERTY_UI)
+             return S_OK;
     }
 
-    dwDefPages = 1;
+    dwDefPages = 0;
+    Pages = 0;
     hr = INetCfgComponentPropertyUi_MergePropPages(This->pProperty, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
-    if (FAILED(hr))
+    if (FAILED(hr) || !Pages)
     {
         return hr;
     }
@@ -446,6 +460,7 @@ INetCfgComponent_fnRaisePropertyUi(
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
     pinfo.u3.phpage = hppages;
     pinfo.hwndParent = hwndParent;
+    pinfo.nPages = Pages;
     pinfo.pszCaption = This->pItem->szDisplayName;
 
     iResult = PropertySheetW(&pinfo);
@@ -668,9 +683,6 @@ IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * pp
     }
 
     IEnumNetCfgComponent_Release((IEnumNetCfgComponent*)This);
-    return S_OK;
-
-
     return S_OK;
 }
 

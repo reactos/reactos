@@ -19,4 +19,6 @@
 	<file>classfactory.c</file>
 	<file>netcfg_iface.c</file>
 	<file>inetcfgcomp_iface.c</file>
+	<file>tcpipconf_notify.c</file>
+	<file>netcfgx.rc</file>
 </module>
