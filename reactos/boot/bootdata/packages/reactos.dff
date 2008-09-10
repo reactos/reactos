@@ -277,6 +277,7 @@ dll\win32\msafd\msafd.dll                           1
 dll\win32\mscoree\mscoree.dll                       1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\mshtml\mshtml.dll                         1
+dll\win32\mshtml.tlb\mshtml.tlb                     1
 dll\win32\msi\msi.dll                               1
 dll\win32\msimg32\msimg32.dll                       1
 dll\win32\mstask\mstask.dll                         1
