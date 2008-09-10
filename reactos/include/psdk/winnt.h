@@ -3167,6 +3167,49 @@ typedef union _SLIST_HEADER {
 } SLIST_HEADER,*PSLIST_HEADER;
 #endif /* !_SLIST_HEADER_ */
 
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeSListHead (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlFirstEntrySList (
+    IN const SLIST_HEADER *ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedPopEntrySList (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedPushEntrySList (
+    IN PSLIST_HEADER ListHead,
+    IN PSLIST_ENTRY ListEntry
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedFlushSList (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+WORD  
+NTAPI
+RtlQueryDepthSList (
+    IN PSLIST_HEADER ListHead
+    );
+
 /* FIXME: Please oh please stop including winnt.h from the DDK... */
 #ifndef __NTDDK_H
 typedef struct _RTL_CRITICAL_SECTION_DEBUG {
@@ -4344,9 +4387,6 @@ typedef enum _AUDIT_EVENT_TYPE {
 #endif
 
 #if (_WIN32_WINNT >= 0x0501)
-typedef enum _HEAP_INFORMATION_CLASS {
-	HeapCompatibilityInformation
-} HEAP_INFORMATION_CLASS;
 typedef enum _ACTIVATION_CONTEXT_INFO_CLASS {
 	ActivationContextBasicInformation = 1,
 	ActivationContextDetailedInformation,
@@ -4462,6 +4502,56 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #if (WIN32_WINNT >= 0x0500)
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
+
+typedef enum _HEAP_INFORMATION_CLASS {
+
+    HeapCompatibilityInformation
+
+} HEAP_INFORMATION_CLASS;
+
+NTSYSAPI
+DWORD
+NTAPI
+RtlSetHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    IN PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL
+    );
+
+NTSYSAPI
+DWORD
+NTAPI
+RtlQueryHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    OUT PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL,
+    OUT PSIZE_T ReturnLength OPTIONAL
+    );
+
+//
+//  Multiple alloc-free APIS
+//
+
+DWORD
+NTAPI
+RtlMultipleAllocateHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN SIZE_T Size,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
+
+DWORD
+NTAPI
+RtlMultipleFreeHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
 
 typedef enum _PROCESSOR_CACHE_TYPE {
     CacheUnified,
