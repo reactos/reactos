@@ -127,8 +127,13 @@ static HRESULT WINAPI OmNavigator_Invoke(IOmNavigator *iface, DISPID dispIdMembe
 static HRESULT WINAPI OmNavigator_get_appCodeName(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    static const WCHAR mozillaW[] = {'M','o','z','i','l','l','a',0};
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    *p = SysAllocString(mozillaW);
+    return S_OK;
 }
 
 static HRESULT WINAPI OmNavigator_get_appName(IOmNavigator *iface, BSTR *p)
@@ -232,8 +237,13 @@ static HRESULT WINAPI OmNavigator_get_userLanguage(IOmNavigator *iface, BSTR *p)
 static HRESULT WINAPI OmNavigator_get_platform(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    static const WCHAR win32W[] = {'W','i','n','3','2',0};
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    *p = SysAllocString(win32W);
+    return S_OK;
 }
 
 static HRESULT WINAPI OmNavigator_get_appMinorVersion(IOmNavigator *iface, BSTR *p)

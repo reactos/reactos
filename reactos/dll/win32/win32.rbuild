@@ -163,6 +163,9 @@
 <directory name="mshtml">
 	<xi:include href="mshtml/mshtml.rbuild" />
 </directory>
+<directory name="mshtml.tlb">
+	<xi:include href="mshtml.tlb/mshtml.tlb.rbuild" />
+</directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
 </directory>
