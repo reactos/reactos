@@ -85,6 +85,9 @@
 <directory name="fmifs">
 	<xi:include href="fmifs/fmifs.rbuild" />
 </directory>
+<directory name="fusion">
+	<xi:include href="fusion/fusion.rbuild" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.rbuild" />
 </directory>
