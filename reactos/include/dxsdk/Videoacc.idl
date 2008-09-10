@@ -2,8 +2,6 @@ import "unknwn.idl";
 
 cpp_quote("#if 0")
 
-typedef void*       LPVOID;
-typedef void*       LPGUID;
 typedef void*       LPDIRECTDRAWSURFACE;
 typedef void*       LPDDPIXELFORMAT;
 typedef void*       LPAMVAInternalMemInfo;

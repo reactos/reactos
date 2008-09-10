@@ -1,8 +1,24 @@
+/*
+ * Copyright 2004 Christian Costa
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
 import "unknwn.idl";
 import "mmstream.idl";
 
-// hack
 cpp_quote("#if 0")
 typedef struct tWAVEFORMATEX WAVEFORMATEX;
 cpp_quote ("#endif")
@@ -18,39 +34,22 @@ local,
 uuid(f7537560-a3be-11d0-8212-00c04fc32c45),
 pointer_default(unique)
 ]
-
 interface IAudioMediaStream : IMediaStream
 {
-    HRESULT GetFormat([out]  WAVEFORMATEX *pWaveFormatCurrent);
-    HRESULT SetFormat([in] const WAVEFORMATEX *lpWaveFormat);
-    HRESULT CreateSample([in] IAudioData *pAudioData, [in] DWORD dwFlags, [out] IAudioStreamSample **ppSample);
+	HRESULT GetFormat(
+		[out] /*[optional]*/ WAVEFORMATEX *pWaveFormatCurrent
+	);
+
+	HRESULT SetFormat(
+		[in] const WAVEFORMATEX *lpWaveFormat);
+
+	HRESULT CreateSample(
+		[in] IAudioData *pAudioData,
+		[in] DWORD dwFlags,
+		[out] IAudioStreamSample **ppSample
+	);
 }
 
-[
-object,
-local,
-uuid(54c719c0-af60-11d0-8212-00c04fc32c45),
-pointer_default(unique)
-]
-
-interface IAudioData : IMemoryData
-{
-    HRESULT GetFormat([out]  WAVEFORMATEX *pWaveFormatCurrent);
-    HRESULT SetFormat([in] const WAVEFORMATEX *lpWaveFormat);
-}
-
-[
-object,
-local,
-uuid(327fc560-af60-11d0-8212-00c04fc32c45),
-pointer_default(unique)
-]
-interface IMemoryData : IUnknown
-{
-    HRESULT SetBuffer([in] DWORD cbSize, [in] BYTE *pbData, [in] DWORD dwFlags);
-    HRESULT GetInfo([out] DWORD *pdwLength, [out] BYTE **ppbData, [out] DWORD *pcbActualData);
-    HRESULT SetActual([in] DWORD cbDataValid);
-}
 
 [
 object,
@@ -60,5 +59,50 @@ pointer_default(unique)
 ]
 interface IAudioStreamSample : IStreamSample
 {
-    HRESULT GetAudioData([out] IAudioData **ppAudio);
+	HRESULT GetAudioData(
+		[out] IAudioData **ppAudio
+	);
+}
+
+
+[
+object,
+local,
+uuid(327fc560-af60-11d0-8212-00c04fc32c45),
+pointer_default(unique)
+]
+interface IMemoryData : IUnknown
+{
+	HRESULT SetBuffer(
+		[in] DWORD cbSize,
+		[in] BYTE *pbData,
+		[in] DWORD dwFlags
+	);
+
+	HRESULT GetInfo(
+		[out] DWORD *pdwLength,
+		[out] BYTE **ppbData,
+		[out] DWORD *pcbActualData
+	);
+	HRESULT SetActual(
+		[in] DWORD cbDataValid
+	);
+}
+
+
+[
+object,
+local,
+uuid(54c719c0-af60-11d0-8212-00c04fc32c45),
+pointer_default(unique)
+]
+interface IAudioData : IMemoryData
+{
+	HRESULT GetFormat(
+		[out] /*[optional]*/ WAVEFORMATEX *pWaveFormatCurrent
+	);
+
+	HRESULT SetFormat(
+		[in] const WAVEFORMATEX *lpWaveFormat
+	);
 }
