@@ -2326,6 +2326,8 @@ StartServiceA(SC_HANDLE hService,
 {
     DWORD dwError;
 
+    HandleBind();
+
     _SEH_TRY
     {
         dwError = RStartServiceA(BindingHandle,
@@ -2361,6 +2363,8 @@ StartServiceW(SC_HANDLE hService,
               LPCWSTR *lpServiceArgVectors)
 {
     DWORD dwError;
+
+    HandleBind();
 
     _SEH_TRY
     {
