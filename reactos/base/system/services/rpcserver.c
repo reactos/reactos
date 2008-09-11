@@ -2927,7 +2927,7 @@ DWORD RChangeServiceConfigA(
                             lpDisplayName,
                             -1,
                             lpDisplayNameW,
-                            (wcslen(lpDisplayNameW) + 1) * sizeof(WCHAR));
+                            wcslen(lpDisplayNameW) + 1);
 
         RegSetValueExW(hServiceKey,
                        L"DisplayName",
@@ -2997,7 +2997,7 @@ DWORD RChangeServiceConfigA(
         if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
         {
             lpBinaryPathNameW=HeapAlloc(GetProcessHeap(),0, (strlen(lpBinaryPathName)+1) * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, (wcslen(lpBinaryPathNameW)+1) * sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, wcslen(lpBinaryPathNameW)+1);
             dwError = RegSetValueExW(hServiceKey,
                                      L"ImagePath",
                                      0,
@@ -3041,7 +3041,7 @@ DWORD RChangeServiceConfigA(
                             lpLoadOrderGroup,
                             -1,
                             lpLoadOrderGroupW,
-                            (wcslen(lpLoadOrderGroupW) + 1) * sizeof(WCHAR));
+                            wcslen(lpLoadOrderGroupW) + 1);
 
         dwError = RegSetValueExW(hServiceKey,
                                  L"Group",
@@ -3092,7 +3092,7 @@ DWORD RChangeServiceConfigA(
                             lpDependencies,
                             dwDependSize,
                             lpDependenciesW,
-                            (wcslen(lpDependenciesW)+1) * sizeof(WCHAR));
+                            wcslen(lpDependenciesW)+1);
 
         dwError = ScmWriteDependencies(hServiceKey,
                                        (LPWSTR)lpDependenciesW,
