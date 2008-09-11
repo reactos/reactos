@@ -596,7 +596,7 @@ int __cdecl lnx_vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
          } else {
             if ( precision == -1 )
                precision = 6;
-               	str = numberf(str, end, (int)_double, base, field_width, precision, flags);
+               	str = numberf(str, end, _double, base, field_width, precision, flags);
          }
 
           continue;
