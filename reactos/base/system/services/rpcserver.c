@@ -164,7 +164,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
-                    sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
+                    sizeof(MANAGER_HANDLE) + (wcslen(lpDatabaseName) + 1) * sizeof(WCHAR));
     if (Ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
