@@ -3,7 +3,6 @@
 <module name="pciidex" type="kernelmodedriver" installbase="system32/drivers" installname="pciidex.sys">
 	<importlibrary definition="pciidex.spec.def" />
 	<library>ntoskrnl</library>
-	<file>pciidex.spec</file>
 	<file>fdo.c</file>
 	<file>miniport.c</file>
 	<file>misc.c</file>
