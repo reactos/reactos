@@ -548,10 +548,12 @@ MiniQueryInformation(
 {
   NDIS_STATUS NdisStatus;
   ULONG BytesNeeded;
+  KIRQL OldIrql;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
   /* call the miniport's queryinfo handler */
+  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
       Adapter->NdisMiniportBlock.MiniportAdapterContext,
       Oid,
@@ -559,6 +561,7 @@ MiniQueryInformation(
       Size,
       BytesWritten,
       &BytesNeeded);
+  KeLowerIrql(OldIrql);
 
   /* FIXME: Wait in pending case! */
 
@@ -678,14 +681,17 @@ MiniDoRequest(
  *     Status of operation
  */
 {
+    NDIS_STATUS Status;
+    KIRQL OldIrql;
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     Adapter->MediaRequest = NdisRequest;
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     switch (NdisRequest->RequestType)
     {
     case NdisRequestQueryInformation:
-        return (*Adapter->DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
+        Status = (*Adapter->DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
             Adapter->MiniportAdapterContext,
             NdisRequest->DATA.QUERY_INFORMATION.Oid,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
@@ -695,7 +701,7 @@ MiniDoRequest(
         break;
 
     case NdisRequestSetInformation:
-        return (*Adapter->DriverHandle->MiniportCharacteristics.SetInformationHandler)(
+        Status = (*Adapter->DriverHandle->MiniportCharacteristics.SetInformationHandler)(
             Adapter->MiniportAdapterContext,
             NdisRequest->DATA.SET_INFORMATION.Oid,
             NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
@@ -705,8 +711,11 @@ MiniDoRequest(
         break;
 
     default:
-        return NDIS_STATUS_FAILURE;
+        Status = NDIS_STATUS_FAILURE;
     }
+
+    KeLowerIrql(OldIrql);
+    return Status;
 }
 
 
@@ -722,9 +731,12 @@ NdisMQueryInformationComplete(
 {
     PNDIS_MINIPORT_BLOCK MiniportBlock =
 	(PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+    KIRQL OldIrql;
     ASSERT(MiniportBlock);
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     if( MiniportBlock->QueryCompleteHandler )
 	(MiniportBlock->QueryCompleteHandler)(MiniportAdapterHandle, Status);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -1910,7 +1922,10 @@ NdisMSetInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
 {
+  KIRQL OldIrql;
+  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->SetCompleteHandler)(MiniportAdapterHandle, Status);
+  KeLowerIrql(OldIrql);
 }
 
 
