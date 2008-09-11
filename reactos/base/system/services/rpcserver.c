@@ -489,8 +489,7 @@ DWORD RCloseServiceHandle(
                 /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
                 if (pcbBytesNeeded)
                 {
-                    DPRINT1("Deletion failed due to running dependencies.\n",
-                            lpService->lpServiceName);
+                    DPRINT1("Deletion failed due to running dependencies.\n");
                     RegCloseKey(hServicesKey);
                     return ERROR_SUCCESS;
                 }
