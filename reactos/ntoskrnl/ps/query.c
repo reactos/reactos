@@ -426,6 +426,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                     }
                     _SEH_END;
                 }
+                else
+                {
+                    /* Buffer too small */
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+
+                /* Free the image path */
+                ExFreePool(ImageName);
             }
             break;
 
