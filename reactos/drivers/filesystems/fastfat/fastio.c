@@ -289,7 +289,7 @@ VfatReleaseForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatReleaseForModWrite\n");
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 static NTSTATUS NTAPI
@@ -297,7 +297,7 @@ VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatAcquireForCcFlush\n");
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 static NTSTATUS NTAPI
@@ -305,7 +305,7 @@ VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatReleaseForCcFlush\n");
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 BOOLEAN NTAPI
