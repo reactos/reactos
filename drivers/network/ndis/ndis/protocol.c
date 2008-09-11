@@ -238,7 +238,6 @@ ProSend(
    */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
-    {
       /*
        * if the miniport is marked as busy, we queue the packet as a work item,
        * else we send the packet directly to the miniport.  Sending to the miniport
@@ -251,8 +250,6 @@ ProSend(
           NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to busy\n"));
           Adapter->MiniportBusy = TRUE;
         }
-    }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
 
   /*
    * Test the packet to see if it is a MAC loopback.
@@ -269,8 +266,11 @@ ProSend(
       if (QueueWorkItem)
         {
           MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
+          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
           return NDIS_STATUS_PENDING;
         }
+
+      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
 
       KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
         {
@@ -306,11 +306,14 @@ ProSend(
   if (QueueWorkItem)
     {
       MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
+      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
       NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
       return NDIS_STATUS_PENDING;
     }
 
   ASSERT(Adapter->NdisMiniportBlock.DriverHandle);
+
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
 
   /*
    * Call the appropriate send handler
