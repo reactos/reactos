@@ -1526,9 +1526,6 @@ typedef enum
 #define IMAGE_ARCHIVE_PAD "\n"
 #define IMAGE_ARCHIVE_LINKER_MEMBER "/               "
 #define IMAGE_ARCHIVE_LONGNAMES_MEMBER "//              "
-#define IMAGE_ORDINAL_FLAG 0x80000000
-#define IMAGE_SNAP_BY_ORDINAL(o) ((o&IMAGE_ORDINAL_FLAG)!=0)
-#define IMAGE_ORDINAL(o) (o&0xffff)
 #define IMAGE_RESOURCE_NAME_IS_STRING 0x80000000
 #define IMAGE_RESOURCE_DATA_IS_DIRECTORY 0x80000000
 #define IMAGE_DEBUG_TYPE_UNKNOWN 0
@@ -4843,6 +4840,15 @@ BitScanReverse(OUT ULONG *Index,
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
+#if defined(_MSC_VER)
+FORCEINLINE
+VOID
+MemoryBarrier (VOID)
+{
+    LONG Barrier;
+    __asm { xchg Barrier, eax }
+}
+#else
 FORCEINLINE
 VOID
 MemoryBarrier(VOID)
@@ -4850,6 +4856,7 @@ MemoryBarrier(VOID)
     LONG Barrier;
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
+#endif
 #elif defined (_M_AMD64)
 #define MemoryBarrier()
 #elif defined(_M_PPC)
