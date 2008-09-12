@@ -911,6 +911,12 @@ CmpConstructName(
     IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
+BOOLEAN
+NTAPI
+CmpReferenceKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
 VOID
 NTAPI
 CmpDereferenceKeyControlBlockWithLock(
