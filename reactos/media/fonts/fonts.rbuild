@@ -22,6 +22,10 @@
 	<installfile installbase="fonts">DejaVuSerifCondensed-BoldItalic.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerifCondensed-Italic.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerif-Italic.ttf</installfile>
+	<installfile installbase="fonts">FreeMono.ttf</installfile>
+	<installfile installbase="fonts">FreeMonoBold.ttf</installfile>
+	<installfile installbase="fonts">FreeMonoBoldOblique.ttf</installfile>
+	<installfile installbase="fonts">FreeMonoOblique.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-Bold.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-BoldItalic.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-Italic.ttf</installfile>
