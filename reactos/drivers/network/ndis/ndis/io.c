@@ -407,6 +407,7 @@ NdisMAllocateMapRegisters(
       if(!NT_SUCCESS(NtStatus))
         {
           NDIS_DbgPrint(MIN_TRACE, ("IoAllocateAdapterChannel failed: 0x%x\n", NtStatus));
+          ExFreePool(Adapter->MapRegisters);
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -417,6 +418,7 @@ NdisMAllocateMapRegisters(
       if(!NT_SUCCESS(NtStatus))
         {
           NDIS_DbgPrint(MIN_TRACE, ("KeWaitForSingleObject failed: 0x%x\n", NtStatus));
+          ExFreePool(Adapter->MapRegisters);
           return NDIS_STATUS_RESOURCES;
         }
 

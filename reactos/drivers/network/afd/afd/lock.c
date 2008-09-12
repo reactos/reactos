@@ -174,8 +174,8 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
 
     for( i = 0; FileObjects && i < HandleCount; i++ ) {
-	HandleArray[i].Status = 0;
-	HandleArray[i].Events = HandleArray[i].Events;
+	FileObjects[i].Status = 0;
+	FileObjects[i].Events = HandleArray[i].Events;
         FileObjects[i].Handle = 0;
 	if( !HandleArray[i].Handle ) continue;
 	if( NT_SUCCESS(Status) ) {
@@ -206,6 +206,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     }
 
     ExFreePool( HandleArray );
+    HandleArray = NULL;
 }
 
 /* Returns transitioned state or SOCKET_STATE_INVALID_TRANSITION */

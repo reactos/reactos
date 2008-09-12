@@ -52,6 +52,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ULONG EaLength;
     PWCHAR EaInfoValue = NULL;
     UINT Disposition, i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
@@ -140,16 +141,27 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
         FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	if( !FCB->Send.Window ) {
+	    if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
+	    Status = STATUS_NO_MEMORY;
+	}
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    if( !NT_SUCCESS(Status) ) {
+	if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
+	ExFreePool( FCB );
+	FileObject->FsContext = NULL;
+    }
+
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID DestroySocket( PAFD_FCB FCB ) {
