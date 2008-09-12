@@ -314,15 +314,18 @@ MiniRequestComplete(
     IN NDIS_STATUS Status)
 {
     PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     if( MacBlock->Binding->RequestCompleteHandler ) {
         (*MacBlock->Binding->RequestCompleteHandler)(
             MacBlock->Binding->ProtocolBindingContext,
             Request,
             Status);
     }
+    KeLowerIrql(OldIrql);
 }
 
 VOID NTAPI
@@ -340,15 +343,18 @@ MiniSendComplete(
  */
 {
     PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -370,15 +376,18 @@ MiniTransferDataComplete(
     IN  UINT            BytesTransferred)
 {
     PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
+    KeLowerIrql(OldIrql);
 }
 
 
