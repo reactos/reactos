@@ -25,7 +25,6 @@ extern "C" {
  * It's unsigned allowing to pinpoint case where char * are assigned
  * to xmlChar * (possibly making serialization back impossible).
  */
-
 typedef unsigned char xmlChar;
 
 /**
@@ -114,16 +113,16 @@ XMLPUBFUN int XMLCALL
 XMLPUBFUN int XMLCALL
         xmlUTF8Strsize                   (const xmlChar *utf,
                                          int len);
-XMLPUBFUN xmlChar * XMLCALL
+XMLPUBFUN xmlChar * XMLCALL 
         xmlUTF8Strndup                   (const xmlChar *utf,
                                          int len);
-XMLPUBFUN const xmlChar * XMLCALL
+XMLPUBFUN const xmlChar * XMLCALL 
         xmlUTF8Strpos                    (const xmlChar *utf,
                                          int pos);
 XMLPUBFUN int XMLCALL
         xmlUTF8Strloc                    (const xmlChar *utf,
                                          const xmlChar *utfchar);
-XMLPUBFUN xmlChar * XMLCALL
+XMLPUBFUN xmlChar * XMLCALL 
         xmlUTF8Strsub                    (const xmlChar *utf,
                                          int start,
                                          int len);

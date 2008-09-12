@@ -48,7 +48,8 @@ xmlinc_HEADERS = \
 		xmlwriter.h \
 		chvalid.h \
 		pattern.h \
-		xmlsave.h
+		xmlsave.h \
+		schematron.h
 
 install-exec-hook:
 	$(mkinstalldirs) $(DESTDIR)$(xmlincdir)

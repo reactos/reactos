@@ -144,6 +144,8 @@ XMLPUBFUN int XMLCALL
 XMLPUBFUN void XMLCALL
 	xmlMemDisplay	(FILE *fp);
 XMLPUBFUN void XMLCALL
+	xmlMemDisplayLast(FILE *fp, long nbBytes);
+XMLPUBFUN void XMLCALL
 	xmlMemShow	(FILE *fp, int nr);
 XMLPUBFUN void XMLCALL
 	xmlMemoryDump	(void);

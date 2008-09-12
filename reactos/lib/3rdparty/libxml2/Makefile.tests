@@ -8,12 +8,12 @@ LIBS=`xml2-config --libs`
 THREADLIB= -lpthread
 EXEEXT=
 
-all: runtest$(EXEEXT) runsuite$(EXEEXT) testapi$(EXEEXT)
+all: runtest$(EXEEXT) runsuite$(EXEEXT) testapi$(EXEEXT) testchar$(EXEEXT)
 
 clean:
 	$(RM) runtest$(EXEEXT) runsuite$(EXEEXT) testapi$(EXEEXT)
 
-check: do_runtest do_runsuite do_testapi
+check: do_runtest do_testchar do_testapi do_runsuite
 
 runtest$(EXEEXT): runtest.c
 	$(CC) -o runtest$(EXEEXT) $(CFLAGS) runtest.c $(LIBS) $(THREADLIB)
@@ -32,4 +32,10 @@ testapi$(EXEEXT): testapi.c
 
 do_testapi: testapi$(EXEEXT)
 	./testapi
+
+testchar$(EXEEXT): testchar.c
+	$(CC) -o testchar$(EXEEXT) $(CFLAGS) testchar.c $(LIBS)
+
+do_testchar: testchar$(EXEEXT)
+	./testchar
 

@@ -97,23 +97,11 @@
 /* Define if history library is there (-lhistory) */
 #undef HAVE_LIBHISTORY
 
-/* Define to 1 if you have the `inet' library (-linet). */
-#undef HAVE_LIBINET
-
-/* Define to 1 if you have the `net' library (-lnet). */
-#undef HAVE_LIBNET
-
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBNSL
-
 /* Define if pthread library is there (-lpthread) */
 #undef HAVE_LIBPTHREAD
 
 /* Define if readline library is there (-lreadline) */
 #undef HAVE_LIBREADLINE
-
-/* Define to 1 if you have the `socket' library (-lsocket). */
-#undef HAVE_LIBSOCKET
 
 /* Have compression library */
 #undef HAVE_LIBZ
@@ -237,6 +225,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Whether va_copy() is available */
+#undef HAVE_VA_COPY
+
 /* Define to 1 if you have the `vfprintf' function. */
 #undef HAVE_VFPRINTF
 
@@ -251,6 +242,12 @@
 
 /* Define to 1 if you have the `_stat' function. */
 #undef HAVE__STAT
+
+/* Whether __va_copy() is available */
+#undef HAVE___VA_COPY
+
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
 
 /* Name of package */
 #undef PACKAGE

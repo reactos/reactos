@@ -409,6 +409,9 @@ xmlMemFree(void *ptr)
     size_t size;
 #endif
 
+    if (ptr == NULL)
+	return;
+
     if (ptr == (void *) -1) {
 	xmlGenericError(xmlGenericErrorContext,
 	    "trying to free pointer from freed area\n");
@@ -577,7 +580,7 @@ xmlMemBlocks(void) {
 static void
 xmlMemContentShow(FILE *fp, MEMHDR *p)
 {
-    int i,j,len = p->mh_size;
+    int i,j,k,len = p->mh_size;
     const char *buf = (const char *) HDR_2_CLIENT(p);
 
     if (p == NULL) {
@@ -594,13 +597,15 @@ xmlMemContentShow(FILE *fp, MEMHDR *p)
 	    MEMHDR *q;
 	    void *cur;
 
-            for (j = 0;j < len -3;j += 4) {
+            for (j = 0;(j < len -3) && (j < 40);j += 4) {
 		cur = *((void **) &buf[j]);
 		q = CLIENT_2_HDR(cur);
 		p = memlist;
+		k = 0;
 		while (p != NULL) {
 		    if (p == q) break;
 		    p = p->mh_next;
+		    if (k++ > 100) break;
 		}
 		if ((p != NULL) && (p == q)) {
 		    fprintf(fp, " pointer to #%lu at index %d",
@@ -622,6 +627,79 @@ xmlMemContentShow(FILE *fp, MEMHDR *p)
     }
 }
 #endif
+
+/**
+ * xmlMemDisplayLast:
+ * @fp:  a FILE descriptor used as the output file, if NULL, the result is
+ *       written to the file .memorylist
+ * @nbBytes: the amount of memory to dump
+ *
+ * the last nbBytes of memory allocated and not freed, useful for dumping
+ * the memory left allocated between two places at runtime.
+ */
+
+void
+xmlMemDisplayLast(FILE *fp, long nbBytes)
+{
+#ifdef MEM_LIST
+    MEMHDR *p;
+    unsigned idx;
+    int     nb = 0;
+#endif
+    FILE *old_fp = fp;
+
+    if (nbBytes <= 0)
+        return;
+
+    if (fp == NULL) {
+	fp = fopen(".memorylist", "w");
+	if (fp == NULL)
+	    return;
+    }
+
+#ifdef MEM_LIST
+    fprintf(fp,"   Last %li MEMORY ALLOCATED : %lu, MAX was %lu\n",
+            nbBytes, debugMemSize, debugMaxMemSize);
+    fprintf(fp,"BLOCK  NUMBER   SIZE  TYPE\n");
+    idx = 0;
+    xmlMutexLock(xmlMemMutex);
+    p = memlist;
+    while ((p) && (nbBytes > 0)) {
+	  fprintf(fp,"%-5u  %6lu %6lu ",idx++,p->mh_number,
+		  (unsigned long)p->mh_size);
+        switch (p->mh_type) {
+           case STRDUP_TYPE:fprintf(fp,"strdup()  in ");break;
+           case MALLOC_TYPE:fprintf(fp,"malloc()  in ");break;
+           case REALLOC_TYPE:fprintf(fp,"realloc() in ");break;
+           case MALLOC_ATOMIC_TYPE:fprintf(fp,"atomicmalloc()  in ");break;
+           case REALLOC_ATOMIC_TYPE:fprintf(fp,"atomicrealloc() in ");break;
+           default:
+	        fprintf(fp,"Unknown memory block, may be corrupted");
+		xmlMutexUnlock(xmlMemMutex);
+		if (old_fp == NULL)
+		    fclose(fp);
+		return;
+        }
+	if (p->mh_file != NULL) fprintf(fp,"%s(%u)", p->mh_file, p->mh_line);
+        if (p->mh_tag != MEMTAG)
+	      fprintf(fp,"  INVALID");
+        nb++;
+	if (nb < 100)
+	    xmlMemContentShow(fp, p);
+	else
+	    fprintf(fp," skip");
+
+        fprintf(fp,"\n");
+	nbBytes -= (unsigned long)p->mh_size;
+        p = p->mh_next;
+    }
+    xmlMutexUnlock(xmlMemMutex);
+#else
+    fprintf(fp,"Memory list not compiled (MEM_LIST not defined !)\n");
+#endif
+    if (old_fp == NULL)
+	fclose(fp);
+}
 
 /**
  * xmlMemDisplay:
