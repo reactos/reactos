@@ -232,13 +232,3 @@ GetNativeSystemInfo(
     // GetNativeSystemInfo should return PROCESSOR_ARCHITECTURE_AMD64
     GetSystemInfo(lpSystemInfo);
 }
-
-DWORD
-WINAPI
-GetCurrentProcessorNumber(VOID)
-{
-    /* Forward to kernel */
-    return NtGetCurrentProcessorNumber();
-}
-
-/* EOF */
