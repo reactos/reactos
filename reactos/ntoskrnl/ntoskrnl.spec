@@ -1510,7 +1510,7 @@
 @ stdcall ZwUnmapViewOfSection(ptr ptr)
 @ stdcall ZwWaitForMultipleObjects(long ptr long long ptr)
 @ stdcall ZwWaitForSingleObject(ptr long ptr)
-@ stdcall ZwWriteFile(ptr ptr ptr ptr ptr ptr long ptr ptr);
+@ stdcall ZwWriteFile(ptr ptr ptr ptr ptr ptr long ptr ptr)
 @ stdcall ZwYieldExecution()
 ;_CIcos
 ;_CIsin
