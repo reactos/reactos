@@ -332,6 +332,17 @@ RtlEncodePointer(IN PVOID Pointer)
 /*
  * @unimplemented
  */
+PVOID
+NTAPI
+RtlEncodeSystemPointer(IN PVOID Pointer)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
 NTSYSAPI
 VOID
 NTAPI
@@ -343,4 +354,10 @@ RtlSetProcessIsCritical(
 	//TODO
 }
 
-/* EOF */
+ULONG
+NTAPI
+RtlGetCurrentProcessorNumber(VOID)
+{
+    /* Forward to kernel */
+    return NtGetCurrentProcessorNumber();
+}

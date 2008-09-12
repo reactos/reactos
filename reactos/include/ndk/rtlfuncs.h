@@ -408,6 +408,13 @@ RtlNtStatusToDosError(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlNtStatusToDosErrorNoTeb(
+    IN NTSTATUS Status
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
@@ -568,6 +575,14 @@ RtlGetUserInfoHeap(
 );
 
 NTSYSAPI
+PVOID
+NTAPI
+RtlProtectHeap(
+    IN PVOID HeapHandle,
+    IN BOOLEAN Protect
+);
+
+NTSYSAPI
 PWSTR
 NTAPI
 RtlQueryTagHeap(
@@ -647,6 +662,14 @@ RtlValidateHeap(
     PVOID P
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWalkHeap(
+    IN HANDLE HeapHandle,
+    IN PVOID HeapEntry
+);
+    
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
 //
@@ -1884,6 +1907,13 @@ RtlFillMemoryUlong(
 // Process Management Functions
 //
 NTSYSAPI
+PPEB
+NTAPI
+RtlGetCurrentPeb(
+    VOID
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlAcquirePebLock(VOID);
@@ -1973,12 +2003,32 @@ NTAPI
 RtlReleasePebLock(VOID);
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRemoteCall(
+    IN HANDLE Process,
+    IN HANDLE Thread,
+    IN PVOID CallSite,
+    IN ULONG ArgumentCount,
+    IN PULONG Arguments,
+    IN BOOLEAN PassContext,
+    IN BOOLEAN AlreadySuspended
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlSetProcessIsCritical(
     IN BOOLEAN NewValue,
     OUT PBOOLEAN OldValue OPTIONAL,
     IN BOOLEAN IsWinlogon
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlGetCurrentProcessorNumber(
+    VOID
 );
 
 #define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
@@ -2771,6 +2821,15 @@ LdrRelocateImageWithBias(
 // Activation Context Functions
 //
 #ifdef NTOS_MODE_USER
+
+NTSYSAPI
+VOID
+NTAPI
+RtlAddRefActivationContext(
+    PVOID Context
+);
+
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2798,6 +2857,14 @@ VOID
 NTAPI
 RtlReleaseActivationContext(
     IN PVOID *Context
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeactivateActivationContext(
+    DWORD dwFlags,
+    ULONG_PTR ulCookie
 );
 
 NTSYSAPI
@@ -2832,6 +2899,28 @@ RtlFindActivationContextSectionString(
     IN PUNICODE_STRING SectionName,
     IN PVOID Unknown2
 );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueryInformationActivationContext(
+    DWORD dwFlags,
+    PVOID Context,
+    PVOID pvSubInstance,
+    ULONG ulInfoClass,
+    PVOID pvBuffer,
+    SIZE_T cbBuffer OPTIONAL,
+    SIZE_T *pcbWrittenOrRequired OPTIONAL
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlZombifyActivationContext(
+    PVOID Context
+);
+
+
 #endif
 
 //

@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-PPEB NTAPI RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -508,7 +507,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
-      PPEB Peb = RtlpCurrentPeb();
+      PPEB Peb = RtlGetCurrentPeb();
       if (Peb) {
           Environment = Peb->ProcessParameters->Environment;
           SysEnvUsed = TRUE;

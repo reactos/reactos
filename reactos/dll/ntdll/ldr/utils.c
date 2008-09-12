@@ -3239,4 +3239,29 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
   return (PIMAGE_BASE_RELOCATION)TypeOffset;
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+LdrLockLoaderLock(IN ULONG Flags,
+                  OUT PULONG Disposition OPTIONAL,
+                  OUT PULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrUnlockLoaderLock(IN ULONG Flags,
+                    IN ULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

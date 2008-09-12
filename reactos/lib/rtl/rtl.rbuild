@@ -43,6 +43,7 @@
 
 	<file>access.c</file>
 	<file>acl.c</file>
+	<file>actctx.c</file>
 	<file>atom.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
@@ -61,6 +62,7 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
+	<file>interlck.c</file>
 	<file>message.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
@@ -78,6 +80,7 @@
 	<file>resource.c</file>
 	<file>sd.c</file>
 	<file>security.c</file>
+	<file>slist.c</file>
 	<file>sid.c</file>
 	<file>sprintf.c</file>
 	<file>srw.c</file>

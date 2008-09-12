@@ -169,4 +169,13 @@ RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+RtlSetUnhandledExceptionFilter(IN PVOID TopLevelExceptionFilter)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}

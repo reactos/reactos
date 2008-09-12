@@ -870,7 +870,7 @@ RtlMapSecurityErrorToNtStatus(
  *
  * @implemented
  */
-DWORD NTAPI
+ULONG NTAPI
 RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 {
    PERROR_TABLE Table = (PERROR_TABLE)ErrorTable;

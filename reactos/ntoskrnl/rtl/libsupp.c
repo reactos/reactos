@@ -118,7 +118,7 @@ LdrShutdownThread(VOID)
 
 PPEB
 STDCALL
-RtlpCurrentPeb(VOID)
+RtlGetCurrentPeb(VOID)
 {
    return ((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->Peb;
 }
