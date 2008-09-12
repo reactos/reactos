@@ -420,7 +420,7 @@ NoStack:
  * @param StackLimit
  *        Pointer to the new Stack Limit of the thread.
  *
- * @return The previous Stack Limit of the thread.
+ * @return The previous Stack Base of the thread.
  *
  * @remark This routine should typically only be used when converting from a 
  *         non-GUI to a GUI Thread. The caller is responsible for freeing the
@@ -470,7 +470,7 @@ _KeSwitchKernelStack@8:
     pop edi
 
     /* Save old stack base and get new limit/base */
-    mov eax, [edx+KTHREAD_STACK_LIMIT]
+    mov eax, [edx+KTHREAD_STACK_BASE]
     mov ecx, [esp+12]
     mov esi, [esp+16]
 

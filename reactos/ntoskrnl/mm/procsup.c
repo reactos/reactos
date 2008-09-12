@@ -140,15 +140,17 @@ MiFreeStackPage(PVOID Context,
 
 VOID
 STDCALL
-MmDeleteKernelStack(PVOID Stack,
+MmDeleteKernelStack(PVOID StackBase,
                     BOOLEAN GuiStack)
 {
+    ULONG StackSize = GuiStack ? KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE;
+
     /* Lock the Address Space */
     MmLockAddressSpace(MmGetKernelAddressSpace());
 
     /* Delete the Stack */
     MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
-                          Stack,
+                          (PVOID)((ULONG_PTR)StackBase - StackSize),
                           MiFreeStackPage,
                           NULL);
 

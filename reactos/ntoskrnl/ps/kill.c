@@ -188,7 +188,7 @@ PspReapRoutine(IN PVOID Context)
             Thread = CONTAINING_RECORD(NextEntry, ETHREAD, ReaperLink);
 
             /* Delete this entry's kernel stack */
-            MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+            MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                                 Thread->Tcb.LargeStack);
             Thread->Tcb.InitialStack = NULL;
 
@@ -349,7 +349,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     if (Thread->Tcb.InitialStack)
     {
         /* Release it */
-        MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+        MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                             Thread->Tcb.LargeStack);
     }
 
