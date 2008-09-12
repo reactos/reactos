@@ -12,10 +12,6 @@
 	<installfile installbase="fonts">DejaVuSerif.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerif-Bold.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerif-BoldItalic.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSerifCondensed.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSerifCondensed-Bold.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSerifCondensed-BoldItalic.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSerifCondensed-Italic.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerif-Italic.ttf</installfile>
 	<installfile installbase="fonts">FreeMono.ttf</installfile>
 	<installfile installbase="fonts">FreeMonoBold.ttf</installfile>
