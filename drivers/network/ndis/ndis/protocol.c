@@ -419,6 +419,8 @@ ProTransferData(
 {
     PADAPTER_BINDING AdapterBinding = GET_ADAPTER_BINDING(MacBindingHandle);
     PLOGICAL_ADAPTER Adapter        = AdapterBinding->Adapter;
+    NDIS_STATUS Status;
+    KIRQL OldIrql;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -437,13 +439,19 @@ ProTransferData(
         return NDIS_STATUS_SUCCESS;
     }
 
-    return (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler)(
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler)(
         Packet,
         BytesTransferred,
         Adapter->NdisMiniportBlock.MiniportAdapterContext,
         MacReceiveContext,
         ByteOffset,
         BytesToTransfer);
+
+    KeLowerIrql(OldIrql);
+
+    return Status;
 }
 
 
