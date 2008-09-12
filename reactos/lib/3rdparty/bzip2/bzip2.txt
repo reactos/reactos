@@ -1,7 +1,6 @@
 
-
 NAME
-       bzip2, bunzip2 - a block-sorting file compressor, v1.0
+       bzip2, bunzip2 - a block-sorting file compressor, v1.0.4
        bzcat - decompresses files to stdout
        bzip2recover - recovers data from damaged bzip2 files
 
@@ -127,8 +126,8 @@ OPTIONS
               and forces bzip2 to decompress.
 
        -z --compress
-              The  complement  to -d: forces compression, regard-
-              less of the invokation name.
+              The   complement   to   -d:   forces   compression,
+              regardless of the invocation name.
 
        -t --test
               Check integrity of the specified file(s), but don't
@@ -140,6 +139,11 @@ OPTIONS
               will  not  overwrite  existing  output files.  Also
               forces bzip2 to break hard links to files, which it
               otherwise wouldn't do.
+
+              bzip2  normally  declines to decompress files which
+              don't have the  correct  magic  header  bytes.   If
+              forced  (-f),  however,  it  will  pass  such files
+              through unmodified.  This is how GNU gzip  behaves.
 
        -k --keep
               Keep  (don't delete) input files during compression
@@ -175,10 +179,14 @@ OPTIONS
               Display  the  software  version,  license terms and
               conditions.
 
-       -1 to -9
+       -1 (or --fast) to -9 (or --best)
               Set the block size to 100 k, 200 k ..  900  k  when
               compressing.   Has  no  effect  when decompressing.
-              See MEMORY MANAGEMENT below.
+              See MEMORY MANAGEMENT below.  The --fast and --best
+              aliases  are  primarily for GNU gzip compatibility.
+              In particular, --fast doesn't make things  signifi-
+              cantly  faster.   And  --best  merely  selects  the
+              default behaviour.
 
        --     Treats all subsequent arguments as file names, even
               if they start with a dash.  This is so you can han-
@@ -290,12 +298,12 @@ RECOVERING DATA FROM DAMAGED FILES
        which are undamaged.
 
        bzip2recover takes a single argument, the name of the dam-
-       aged file, and writes a number of files "rec0001file.bz2",
-       "rec0002file.bz2", etc, containing the  extracted  blocks.
-       The  output  filenames  are  designed  so  that the use of
-       wildcards in subsequent processing -- for example,  "bzip2
-       -dc   rec*file.bz2 > recovered_data" -- lists the files in
-       the correct order.
+       aged    file,    and    writes    a    number   of   files
+       "rec00001file.bz2",  "rec00002file.bz2",  etc,  containing
+       the   extracted   blocks.   The   output   filenames   are
+       designed  so  that the use of wildcards in subsequent pro-
+       cessing  -- for example, "bzip2 -dc  rec*file.bz2 > recov-
+       ered_data" -- processes the files in the correct order.
 
        bzip2recover should be of most use dealing with large .bz2
        files,  as  these will contain many blocks.  It is clearly
@@ -337,26 +345,31 @@ CAVEATS
        but  the  details  of  what  the problem is sometimes seem
        rather misleading.
 
-       This manual page pertains to version 1.0 of bzip2.  Com-
+       This manual page pertains to version 1.0.4 of bzip2.  Com-
        pressed  data created by this version is entirely forwards
        and  backwards  compatible  with   the   previous   public
-       releases,  versions  0.1pl2, 0.9.0 and 0.9.5, but with the
-       following exception: 0.9.0 and above can correctly  decom-
-       press multiple concatenated compressed files.  0.1pl2 can-
-       not do this; it will stop  after  decompressing  just  the
-       first file in the stream.
+       releases,  versions  0.1pl2,  0.9.0,  0.9.5, 1.0.0, 1.0.1,
+       1.0.2 and 1.0.3, but with the  following  exception: 0.9.0
+       and above can  correctly decompress  multiple concatenated
+       compressed files.  0.1pl2  cannot do this;  it  will  stop
+       after  decompressing just the first file in the stream.
 
-       bzip2recover  uses  32-bit integers to represent bit posi-
-       tions in compressed files, so it cannot handle  compressed
-       files  more than 512 megabytes long.  This could easily be
-       fixed.
+       bzip2recover  versions prior to 1.0.2 used 32-bit integers
+       to represent bit positions in compressed  files,  so  they
+       could  not handle compressed files more than 512 megabytes
+       long.  Versions 1.0.2 and above use 64-bit  ints  on  some
+       platforms  which  support them (GNU supported targets, and
+       Windows).  To establish whether or  not  bzip2recover  was
+       built  with  such  a limitation, run it without arguments.
+       In any event you can build yourself an  unlimited  version
+       if  you  can  recompile  it  with MaybeUInt64 set to be an
+       unsigned 64-bit integer.
 
 
 AUTHOR
-       Julian Seward, jseward@acm.org.
+       Julian Seward, jsewardbzip.org.
 
-       http://sourceware.cygnus.com/bzip2
-       http://www.muraroa.demon.co.uk
+       http://www.bzip.org
 
        The ideas embodied in bzip2 are due to (at least) the fol-
        lowing  people: Michael Burrows and David Wheeler (for the
@@ -370,7 +383,9 @@ AUTHOR
        documentation.  Christian von Roques encouraged me to look
        for faster sorting algorithms, so as to speed up  compres-
        sion.  Bela Lubkin encouraged me to improve the worst-case
-       compression performance.  Many people sent patches, helped
-       with  portability problems, lent machines, gave advice and
-       were generally helpful.
+       compression performance.  Donna Robinson XMLised the docu-
+       mentation.   The bz* scripts are derived from those of GNU
+       gzip.  Many people sent patches, helped  with  portability
+       problems,  lent  machines,  gave advice and were generally
+       helpful.
 

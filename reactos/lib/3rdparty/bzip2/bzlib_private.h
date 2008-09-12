@@ -4,59 +4,19 @@
 /*---                                       bzlib_private.h ---*/
 /*-------------------------------------------------------------*/
 
-/*--
-  This file is a part of bzip2 and/or libbzip2, a program and
-  library for lossless, block-sorting data compression.
+/* ------------------------------------------------------------------
+   This file is part of bzip2/libbzip2, a program and library for
+   lossless, block-sorting data compression.
 
-  Copyright (C) 1996-2000 Julian R Seward.  All rights reserved.
+   bzip2/libbzip2 version 1.0.5 of 10 December 2007
+   Copyright (C) 1996-2007 Julian Seward <jseward@bzip.org>
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+   Please read the WARNING, DISCLAIMER and PATENTS sections in the 
+   README file.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-
-  2. The origin of this software must not be misrepresented; you must
-     not claim that you wrote the original software.  If you use this
-     software in a product, an acknowledgment in the product
-     documentation would be appreciated but is not required.
-
-  3. Altered source versions must be plainly marked as such, and must
-     not be misrepresented as being the original software.
-
-  4. The name of the author may not be used to endorse or promote
-     products derived from this software without specific prior written
-     permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
-  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-  Julian Seward, Cambridge, UK.
-  jseward@acm.org
-  bzip2/libbzip2 version 1.0 of 21 March 2000
-
-  This program is based on (at least) the work of:
-     Mike Burrows
-     David Wheeler
-     Peter Fenwick
-     Alistair Moffat
-     Radford Neal
-     Ian H. Witten
-     Robert Sedgewick
-     Jon L. Bentley
-
-  For more information on these sources, see the manual.
---*/
+   This program is released under the terms of the license contained
+   in the file LICENSE.
+   ------------------------------------------------------------------ */
 
 
 #ifndef _BZLIB_PRIVATE_H
@@ -76,7 +36,7 @@
 
 /*-- General stuff. --*/
 
-#define BZ_VERSION  "1.0.1, 23-June-2000"
+#define BZ_VERSION  "1.0.5, 10-Dec-2007"
 
 typedef char            Char;
 typedef unsigned char   Bool;
@@ -91,12 +51,14 @@ typedef unsigned short  UInt16;
 
 #ifndef __GNUC__
 #define __inline__  /* */
-#endif
+#endif 
 
 #ifndef BZ_NO_STDIO
+
 extern void BZ2_bz__AssertH__fail ( int errcode );
 #define AssertH(cond,errcode) \
    { if (!(cond)) BZ2_bz__AssertH__fail ( errcode ); }
+
 #if BZ_DEBUG
 #define AssertD(cond,msg) \
    { if (!(cond)) {       \
@@ -107,6 +69,7 @@ extern void BZ2_bz__AssertH__fail ( int errcode );
 #else
 #define AssertD(cond,msg) /* */
 #endif
+
 #define VPrintf0(zf) \
    fprintf(stderr,zf)
 #define VPrintf1(zf,za1) \
@@ -119,17 +82,20 @@ extern void BZ2_bz__AssertH__fail ( int errcode );
    fprintf(stderr,zf,za1,za2,za3,za4)
 #define VPrintf5(zf,za1,za2,za3,za4,za5) \
    fprintf(stderr,zf,za1,za2,za3,za4,za5)
+
 #else
+
 extern void bz_internal_error ( int errcode );
 #define AssertH(cond,errcode) \
    { if (!(cond)) bz_internal_error ( errcode ); }
-#define AssertD(cond,msg) /* */
-#define VPrintf0(zf) /* */
-#define VPrintf1(zf,za1) /* */
-#define VPrintf2(zf,za1,za2) /* */
-#define VPrintf3(zf,za1,za2,za3) /* */
-#define VPrintf4(zf,za1,za2,za3,za4) /* */
-#define VPrintf5(zf,za1,za2,za3,za4,za5) /* */
+#define AssertD(cond,msg)                do { } while (0)
+#define VPrintf0(zf)                     do { } while (0)
+#define VPrintf1(zf,za1)                 do { } while (0)
+#define VPrintf2(zf,za1,za2)             do { } while (0)
+#define VPrintf3(zf,za1,za2,za3)         do { } while (0)
+#define VPrintf4(zf,za1,za2,za3,za4)     do { } while (0)
+#define VPrintf5(zf,za1,za2,za3,za4,za5) do { } while (0)
+
 #endif
 
 
@@ -137,6 +103,13 @@ extern void bz_internal_error ( int errcode );
 #define BZFREE(ppp)  (strm->bzfree)(strm->opaque,(ppp))
 
 
+/*-- Header bytes. --*/
+
+#define BZ_HDR_B 0x42   /* 'B' */
+#define BZ_HDR_Z 0x5a   /* 'Z' */
+#define BZ_HDR_h 0x68   /* 'h' */
+#define BZ_HDR_0 0x30   /* '0' */
+  
 /*-- Constants for the back end. --*/
 
 #define BZ_MAX_ALPHA_SIZE 258
@@ -296,19 +269,19 @@ typedef
 
 /*-- externs for compression. --*/
 
-extern void
+extern void 
 BZ2_blockSort ( EState* );
 
-extern void
+extern void 
 BZ2_compressBlock ( EState*, Bool );
 
-extern void
+extern void 
 BZ2_bsInitWrite ( EState* );
 
-extern void
+extern void 
 BZ2_hbAssignCodes ( Int32*, UChar*, Int32, Int32, Int32 );
 
-extern void
+extern void 
 BZ2_hbMakeCodeLengths ( UChar*, Int32*, Int32, Int32 );
 
 
@@ -452,7 +425,7 @@ typedef
       Int32    save_N;
       Int32    save_curr;
       Int32    save_zt;
-      Int32    save_zn;
+      Int32    save_zn; 
       Int32    save_zvec;
       Int32    save_zj;
       Int32    save_gSel;
@@ -469,11 +442,15 @@ typedef
 /*-- Macros for decompression. --*/
 
 #define BZ_GET_FAST(cccc)                     \
+    /* c_tPos is unsigned, hence test < 0 is pointless. */ \
+    if (s->tPos >= (UInt32)100000 * (UInt32)s->blockSize100k) return True; \
     s->tPos = s->tt[s->tPos];                 \
     cccc = (UChar)(s->tPos & 0xff);           \
     s->tPos >>= 8;
 
 #define BZ_GET_FAST_C(cccc)                   \
+    /* c_tPos is unsigned, hence test < 0 is pointless. */ \
+    if (c_tPos >= (UInt32)100000 * (UInt32)ro_blockSize100k) return True; \
     c_tPos = c_tt[c_tPos];                    \
     cccc = (UChar)(c_tPos & 0xff);            \
     c_tPos >>= 8;
@@ -496,19 +473,21 @@ typedef
    (((UInt32)s->ll16[i]) | (GET_LL4(i) << 16))
 
 #define BZ_GET_SMALL(cccc)                            \
-      cccc = BZ2_indexIntoF ( s->tPos, s->cftab );    \
-      s->tPos = GET_LL(s->tPos);
+    /* c_tPos is unsigned, hence test < 0 is pointless. */ \
+    if (s->tPos >= (UInt32)100000 * (UInt32)s->blockSize100k) return True; \
+    cccc = BZ2_indexIntoF ( s->tPos, s->cftab );    \
+    s->tPos = GET_LL(s->tPos);
 
 
 /*-- externs for decompression. --*/
 
-extern Int32
+extern Int32 
 BZ2_indexIntoF ( Int32, Int32* );
 
-extern Int32
+extern Int32 
 BZ2_decompress ( DState* );
 
-extern void
+extern void 
 BZ2_hbCreateDecodeTables ( Int32*, Int32*, Int32*, UChar*,
                            Int32,  Int32, Int32 );
 
