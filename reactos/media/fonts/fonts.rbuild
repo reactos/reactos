@@ -22,18 +22,6 @@
 	<installfile installbase="fonts">DejaVuSerifCondensed-BoldItalic.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerifCondensed-Italic.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSerif-Italic.ttf</installfile>
-	<installfile installbase="fonts">c0419bt_.ttf</installfile>
-	<installfile installbase="fonts">c0582bt_.ttf</installfile>
-	<installfile installbase="fonts">c0583bt_.ttf</installfile>
-	<installfile installbase="fonts">c0611bt_.ttf</installfile>
-	<installfile installbase="fonts">c0632bt_.ttf</installfile>
-	<installfile installbase="fonts">c0633bt_.ttf</installfile>
-	<installfile installbase="fonts">c0648bt_.ttf</installfile>
-	<installfile installbase="fonts">c0649bt_.ttf</installfile>
-	<installfile installbase="fonts">cour.ttf</installfile>
-	<installfile installbase="fonts">courb.ttf</installfile>
-	<installfile installbase="fonts">courbi.ttf</installfile>
-	<installfile installbase="fonts">helb____.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-Bold.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-BoldItalic.ttf</installfile>
 	<installfile installbase="fonts">LiberationMono-Italic.ttf</installfile>
@@ -49,9 +37,4 @@
 	<installfile installbase="fonts">Marlett.ttf</installfile>
 	<installfile installbase="fonts">tahoma.ttf</installfile>
 	<installfile installbase="fonts">tahomabd.ttf</installfile>
-	<installfile installbase="fonts">timr____.ttf</installfile>
-	<installfile installbase="fonts">UTB_____.ttf</installfile>
-	<installfile installbase="fonts">UTBI____.ttf</installfile>
-	<installfile installbase="fonts">UTI_____.ttf</installfile>
-	<installfile installbase="fonts">UTRG____.ttf</installfile>
 </group>
