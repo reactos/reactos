@@ -425,11 +425,6 @@ drivers\wmi\wmilib.sys                              2
 media\fonts\DejaVuSans.ttf                          3
 media\fonts\DejaVuSans-Bold.ttf                     3
 media\fonts\DejaVuSans-BoldOblique.ttf              3
-media\fonts\DejaVuSansCondensed.ttf                 3
-media\fonts\DejaVuSansCondensed-Bold.ttf            3
-media\fonts\DejaVuSansCondensed-BoldOblique.ttf     3
-media\fonts\DejaVuSansCondensed-Oblique.ttf         3
-media\fonts\DejaVuSans-ExtraLight.ttf               3
 media\fonts\DejaVuSansMono.ttf                      3
 media\fonts\DejaVuSansMono-Bold.ttf                 3
 media\fonts\DejaVuSansMono-BoldOblique.ttf          3
@@ -444,6 +439,11 @@ media\fonts\DejaVuSerifCondensed-BoldItalic.ttf     3
 media\fonts\DejaVuSerifCondensed-Italic.ttf         3
 media\fonts\DejaVuSerif-Italic.ttf                  3
 
+media\fonts\FreeMono.ttf                            3
+media\fonts\FreeMonoBold.ttf                        3
+media\fonts\FreeMonoBoldOblique.ttf                 3
+media\fonts\FreeMonoOblique.ttf                     3
+
 media\fonts\LiberationMono-Bold.ttf                 3
 media\fonts\LiberationMono-BoldItalic.ttf           3
 media\fonts\LiberationMono-Italic.ttf               3
@@ -457,27 +457,10 @@ media\fonts\LiberationSerif-BoldItalic.ttf          3
 media\fonts\LiberationSerif-Italic.ttf              3
 media\fonts\LiberationSerif-Regular.ttf             3
 
+media\fonts\Marlett.ttf                             3
 media\fonts\tahoma.ttf                              3
 media\fonts\tahomabd.ttf                            3
 
-media\fonts\c0419bt_.ttf                            3
-media\fonts\c0582bt_.ttf                            3
-media\fonts\c0583bt_.ttf                            3
-media\fonts\c0611bt_.ttf                            3
-media\fonts\c0632bt_.ttf                            3
-media\fonts\c0633bt_.ttf                            3
-media\fonts\c0648bt_.ttf                            3
-media\fonts\c0649bt_.ttf                            3
-media\fonts\courbi.ttf                              3
-media\fonts\courb.ttf                               3
-media\fonts\cour.ttf                                3
-media\fonts\helb____.ttf                            3
-media\fonts\Marlett.ttf                             3
-media\fonts\timr____.ttf                            3
-media\fonts\UTBI____.ttf                            3
-media\fonts\UTB_____.ttf                            3
-media\fonts\UTI_____.ttf                            3
-media\fonts\UTRG____.ttf                            3
 media\nls\c_037.nls                                 1
 media\nls\c_500.nls                                 1
 media\nls\c_737.nls                                 1

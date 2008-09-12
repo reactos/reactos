@@ -4,11 +4,6 @@
 	<installfile installbase="fonts">DejaVuSans.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSans-Bold.ttf </installfile>
 	<installfile installbase="fonts">DejaVuSans-BoldOblique.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSansCondensed.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSansCondensed-Bold.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSansCondensed-BoldOblique.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSansCondensed-Oblique.ttf</installfile>
-	<installfile installbase="fonts">DejaVuSans-ExtraLight.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSansMono.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSansMono-Bold.ttf</installfile>
 	<installfile installbase="fonts">DejaVuSansMono-BoldOblique.ttf</installfile>
