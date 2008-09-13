@@ -23,7 +23,6 @@
 /* there can't be any alignment with the structures in this file */
 #include "pshpack1.h"
 
-/* From http://msdn.microsoft.com/library/default.asp?url=/library/en-us/rpc/rpc/parameter_descriptors.asp */
 typedef struct _NDR_PROC_HEADER
 {
     /* type of handle to use:
@@ -36,7 +35,7 @@ typedef struct _NDR_PROC_HEADER
      * RPC_FC_BIND_PRIMITIVE = 32 - Implicit handle using handle_t created by
      *   calling application
      * RPC_FC_AUTO_HANDLE = 33 - Automatic handle
-     * RPC_FC_CALLBACK_HANDLE = 34 - undocmented
+     * RPC_FC_CALLBACK_HANDLE = 34 - undocumented
      */
     unsigned char handle_type;
 
@@ -236,3 +235,8 @@ typedef struct _NDR_EHD_CONTEXT
 } NDR_EHD_CONTEXT;
 
 #include "poppack.h"
+
+void client_do_args_old_format(PMIDL_STUB_MESSAGE pStubMsg,
+    PFORMAT_STRING pFormat, int phase, unsigned char *args,
+    unsigned short stack_size, unsigned char *pRetVal, BOOL object_proc,
+    BOOL ignore_retval);

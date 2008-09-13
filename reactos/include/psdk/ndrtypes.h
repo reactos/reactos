@@ -15,11 +15,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __NDRTYPES_H__
 #define __NDRTYPES_H__
+
+#include <limits.h>
 
 typedef struct
 {
@@ -29,9 +31,7 @@ typedef struct
     unsigned short MustFree : 1; /* 0x0002 - server interpreter MUST size this
      *  parameter, other parameters may be skipped, using the value in
      *  NDR_PROC_PARTIAL_OIF_HEADER::constant_server_buffer_size instead. */
-    unsigned short IsPipe : 1; /* 0x0004 - The parameter is a pipe handle. See
-     *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/rpc/rpc/pipes.asp
-     *  for more information on pipes. */
+    unsigned short IsPipe : 1; /* 0x0004 - The parameter is a pipe handle */
     unsigned short IsIn : 1; /* 0x0008 - The parameter is an input */
     unsigned short IsOut : 1; /* 0x0010 - The parameter is an output */
     unsigned short IsReturn : 1; /* 0x0020 - The parameter is to be returned */
@@ -177,6 +177,5 @@ typedef enum
 #define NDR_CONTEXT_HANDLE_NOSERIALIZE      0x04
 #define NDR_CONTEXT_HANDLE_SERIALIZE        0x02
 #define NDR_CONTEXT_HANDLE_CANNOT_BE_NULL   0x01
-
 
 #endif

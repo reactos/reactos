@@ -1571,7 +1571,7 @@ RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection)
   if (Connection->QOS) RpcQualityOfService_Release(Connection->QOS);
 
   /* server-only */
-  if (Connection->server_binding) RPCRT4_DestroyBinding(Connection->server_binding);
+  if (Connection->server_binding) RPCRT4_ReleaseBinding(Connection->server_binding);
 
   HeapFree(GetProcessHeap(), 0, Connection);
   return RPC_S_OK;

@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,7 +65,7 @@ static HRESULT WINAPI CStdPSFactory_QueryInterface(LPPSFACTORYBUFFER iface,
   if (IsEqualGUID(&IID_IUnknown,riid) ||
       IsEqualGUID(&IID_IPSFactoryBuffer,riid)) {
     *obj = This;
-    This->RefCount++;
+    InterlockedIncrement( &This->RefCount );
     return S_OK;
   }
   return E_NOINTERFACE;
@@ -72,14 +75,14 @@ static ULONG WINAPI CStdPSFactory_AddRef(LPPSFACTORYBUFFER iface)
 {
   CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   TRACE("(%p)->AddRef()\n",iface);
-  return ++(This->RefCount);
+  return InterlockedIncrement( &This->RefCount );
 }
 
 static ULONG WINAPI CStdPSFactory_Release(LPPSFACTORYBUFFER iface)
 {
   CStdPSFactoryBuffer *This = (CStdPSFactoryBuffer *)iface;
   TRACE("(%p)->Release()\n",iface);
-  return --(This->RefCount);
+  return InterlockedDecrement( &This->RefCount );
 }
 
 static HRESULT WINAPI CStdPSFactory_CreateProxy(LPPSFACTORYBUFFER iface,
