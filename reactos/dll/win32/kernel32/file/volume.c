@@ -1083,7 +1083,7 @@ GetVolumeNameForVolumeMountPointA(
     if ((ret = GetVolumeNameForVolumeMountPointW( pathW, volumeW, len )))
         FilenameW2A_N( lpszVolumeName, len, volumeW, -1 );
 
-    HeapFree( GetProcessHeap(), 0, pathW );
+    RtlFreeHeap( GetProcessHeap(), 0, pathW );
     return ret;
 }
 
@@ -1107,7 +1107,7 @@ FindFirstVolumeW(
         MOUNTMGR_MOUNT_POINT input;
         MOUNTMGR_MOUNT_POINTS *output;
 
-        if (!(output = HeapAlloc( GetProcessHeap(), 0, size )))
+        if (!(output = RtlAllocateHeap( GetProcessHeap(), 0, size )))
         {
             SetLastError( ERROR_NOT_ENOUGH_MEMORY );
             break;
@@ -1119,7 +1119,7 @@ FindFirstVolumeW(
         {
             if (GetLastError() != ERROR_MORE_DATA) break;
             size = output->Size;
-            HeapFree( GetProcessHeap(), 0, output );
+            RtlFreeHeap( GetProcessHeap(), 0, output );
             continue;
         }
         CloseHandle( mgr );
@@ -1127,7 +1127,7 @@ FindFirstVolumeW(
         output->Size = 0;
         if (!FindNextVolumeW( output, volume, len ))
         {
-            HeapFree( GetProcessHeap(), 0, output );
+            RtlFreeHeap( GetProcessHeap(), 0, output );
             return INVALID_HANDLE_VALUE;
         }
         return (HANDLE)output;
@@ -1146,7 +1146,7 @@ FindFirstVolumeA(
 	DWORD len
     )
 {
-    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    WCHAR *buffer = RtlAllocateHeap( GetProcessHeap(), 0, len * sizeof(WCHAR) );
     HANDLE handle = FindFirstVolumeW( buffer, len );
 
     if (handle != INVALID_HANDLE_VALUE)
@@ -1157,7 +1157,7 @@ FindFirstVolumeA(
             handle = INVALID_HANDLE_VALUE;
         }
     }
-    HeapFree( GetProcessHeap(), 0, buffer );
+    RtlFreeHeap( GetProcessHeap(), 0, buffer );
     return handle;
 }
 
@@ -1170,7 +1170,7 @@ FindVolumeClose(
     HANDLE hFindVolume
     )
 {
-    return HeapFree(GetProcessHeap(), 0, hFindVolume);
+    return RtlFreeHeap(GetProcessHeap(), 0, hFindVolume);
 }
 
 /* EOF */

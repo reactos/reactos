@@ -733,21 +733,6 @@ SetThreadExecutionState(
  */
 BOOL
 STDCALL
-TzSpecificLocalTimeToSystemTime(
-    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
-    CONST SYSTEMTIME *lpLocalTime,
-    LPSYSTEMTIME lpUniversalTime
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 WriteFileGather(
     HANDLE hFile,
     FILE_SEGMENT_ELEMENT aSegmentArray[],
