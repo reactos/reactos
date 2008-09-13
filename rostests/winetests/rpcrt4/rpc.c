@@ -261,6 +261,10 @@ todo_wine {
     ok(status == RPC_S_OK, "RpcBindingFromStringBinding failed (%lu)\n",
        status);
 
+    status = RpcBindingSetAuthInfo(IFoo_IfHandle, NULL, RPC_C_AUTHN_LEVEL_NONE,
+                                   RPC_C_AUTHN_WINNT, NULL, RPC_C_AUTHZ_NAME);
+    ok(status == RPC_S_OK, "RpcBindingSetAuthInfo failed (%lu)\n", status);
+
     status = RpcMgmtStopServerListening(NULL);
     ok(status == RPC_S_OK, "RpcMgmtStopServerListening failed (%lu)\n",
        status);
@@ -325,7 +329,9 @@ static void test_towers(void)
     BOOL same;
 
     ret = TowerConstruct(&mapi_if_id, &ndr_syntax, "ncacn_ip_tcp", "135", "10.0.0.1", &tower);
-    ok(ret == RPC_S_OK, "TowerConstruct failed with error %ld\n", ret);
+    ok(ret == RPC_S_OK ||
+       broken(ret == RPC_S_INVALID_RPC_PROTSEQ), /* Vista */
+       "TowerConstruct failed with error %ld\n", ret);
     if (ret == RPC_S_INVALID_RPC_PROTSEQ)
     {
         /* Windows Vista fails with this error and crashes if we continue */
@@ -388,7 +394,9 @@ static void test_towers(void)
     ret = TowerConstruct(&mapi_if_id, &ndr_syntax, "ncacn_np", "\\pipe\\test", NULL, &tower);
     ok(ret == RPC_S_OK, "TowerConstruct failed with error %ld\n", ret);
     ret = TowerExplode(tower, NULL, NULL, NULL, NULL, &address);
-    ok(ret == RPC_S_OK, "TowerExplode failed with error %ld\n", ret);
+    ok(ret == RPC_S_OK ||
+       broken(ret != RPC_S_OK), /* win2k, indeterminate */
+       "TowerExplode failed with error %ld\n", ret);
     /* Windows XP SP3 sets address to NULL */
     ok(!address || !strcmp(address, ""), "address was \"%s\" instead of \"\"\n or NULL (XP SP3)", address);
 
@@ -400,7 +408,13 @@ static void test_I_RpcMapWin32Status(void)
 {
     LONG win32status;
     RPC_STATUS rpc_status;
+    BOOL on_win9x = FALSE;
     BOOL w2k3_up = FALSE;
+
+    /* Win9x always returns the given status */
+    win32status = I_RpcMapWin32Status(ERROR_ACCESS_DENIED);
+    if (win32status == ERROR_ACCESS_DENIED)
+        on_win9x = TRUE;
 
     /* Windows 2003 and Vista return STATUS_UNSUCCESSFUL if given an unknown status */
     win32status = I_RpcMapWin32Status(9999);
@@ -410,9 +424,14 @@ static void test_I_RpcMapWin32Status(void)
         w2k3_up = TRUE;
     }
 
+    /* On Windows XP-SP1 and below some statuses are not mapped and return
+     * the given status
+     */
     for (rpc_status = 0; rpc_status < 10000; rpc_status++)
     {
         LONG expected_win32status;
+        BOOL missing = FALSE;
+
         win32status = I_RpcMapWin32Status(rpc_status);
         switch (rpc_status)
         {
@@ -425,10 +444,10 @@ static void test_I_RpcMapWin32Status(void)
         case ERROR_MAX_THRDS_REACHED: expected_win32status = STATUS_NO_MEMORY; break;
         case ERROR_NOACCESS: expected_win32status = STATUS_ACCESS_VIOLATION; break;
         case ERROR_NOT_ENOUGH_SERVER_MEMORY: expected_win32status = STATUS_INSUFF_SERVER_RESOURCES; break;
-        case ERROR_WRONG_PASSWORD: expected_win32status = STATUS_WRONG_PASSWORD; break;
-        case ERROR_INVALID_LOGON_HOURS: expected_win32status = STATUS_INVALID_LOGON_HOURS; break;
-        case ERROR_PASSWORD_EXPIRED: expected_win32status = STATUS_PASSWORD_EXPIRED; break;
-        case ERROR_ACCOUNT_DISABLED: expected_win32status = STATUS_ACCOUNT_DISABLED; break;
+        case ERROR_WRONG_PASSWORD:  expected_win32status = STATUS_WRONG_PASSWORD; missing = TRUE; break;
+        case ERROR_INVALID_LOGON_HOURS: expected_win32status = STATUS_INVALID_LOGON_HOURS; missing = TRUE; break;
+        case ERROR_PASSWORD_EXPIRED: expected_win32status = STATUS_PASSWORD_EXPIRED; missing = TRUE; break;
+        case ERROR_ACCOUNT_DISABLED: expected_win32status = STATUS_ACCOUNT_DISABLED; missing = TRUE; break;
         case ERROR_INVALID_SECURITY_DESCR: expected_win32status = STATUS_INVALID_SECURITY_DESCR; break;
         case RPC_S_INVALID_STRING_BINDING: expected_win32status = RPC_NT_INVALID_STRING_BINDING; break;
         case RPC_S_WRONG_KIND_OF_BINDING: expected_win32status = RPC_NT_WRONG_KIND_OF_BINDING; break;
@@ -502,10 +521,10 @@ static void test_I_RpcMapWin32Status(void)
         case RPC_S_FP_OVERFLOW: expected_win32status = RPC_NT_FP_OVERFLOW; break;
         case RPC_S_CALL_IN_PROGRESS: expected_win32status = RPC_NT_CALL_IN_PROGRESS; break;
         case RPC_S_NO_MORE_BINDINGS: expected_win32status = RPC_NT_NO_MORE_BINDINGS; break;
-        case RPC_S_CALL_CANCELLED: expected_win32status = RPC_NT_CALL_CANCELLED; break;
+        case RPC_S_CALL_CANCELLED: expected_win32status = RPC_NT_CALL_CANCELLED; missing = TRUE; break;
         case RPC_S_INVALID_OBJECT: expected_win32status = RPC_NT_INVALID_OBJECT; break;
-        case RPC_S_INVALID_ASYNC_HANDLE: expected_win32status = RPC_NT_INVALID_ASYNC_HANDLE; break;
-        case RPC_S_INVALID_ASYNC_CALL: expected_win32status = RPC_NT_INVALID_ASYNC_CALL; break;
+        case RPC_S_INVALID_ASYNC_HANDLE: expected_win32status = RPC_NT_INVALID_ASYNC_HANDLE; missing = TRUE; break;
+        case RPC_S_INVALID_ASYNC_CALL: expected_win32status = RPC_NT_INVALID_ASYNC_CALL; missing = TRUE; break;
         case RPC_S_GROUP_MEMBER_NOT_FOUND: expected_win32status = RPC_NT_GROUP_MEMBER_NOT_FOUND; break;
         case RPC_X_NO_MORE_ENTRIES: expected_win32status = RPC_NT_NO_MORE_ENTRIES; break;
         case RPC_X_SS_CHAR_TRANS_OPEN_FAIL: expected_win32status = RPC_NT_SS_CHAR_TRANS_OPEN_FAIL; break;
@@ -518,19 +537,26 @@ static void test_I_RpcMapWin32Status(void)
         case RPC_X_ENUM_VALUE_OUT_OF_RANGE: expected_win32status = RPC_NT_ENUM_VALUE_OUT_OF_RANGE; break;
         case RPC_X_BYTE_COUNT_TOO_SMALL: expected_win32status = RPC_NT_BYTE_COUNT_TOO_SMALL; break;
         case RPC_X_BAD_STUB_DATA: expected_win32status = RPC_NT_BAD_STUB_DATA; break;
-        case RPC_X_PIPE_CLOSED: expected_win32status = RPC_NT_PIPE_CLOSED; break;
-        case RPC_X_PIPE_DISCIPLINE_ERROR: expected_win32status = RPC_NT_PIPE_DISCIPLINE_ERROR; break;
-        case RPC_X_PIPE_EMPTY: expected_win32status = RPC_NT_PIPE_EMPTY; break;
-        case ERROR_PASSWORD_MUST_CHANGE: expected_win32status = STATUS_PASSWORD_MUST_CHANGE; break;
-        case ERROR_ACCOUNT_LOCKED_OUT: expected_win32status = STATUS_ACCOUNT_LOCKED_OUT; break;
+        case RPC_X_PIPE_CLOSED: expected_win32status = RPC_NT_PIPE_CLOSED; missing = TRUE; break;
+        case RPC_X_PIPE_DISCIPLINE_ERROR: expected_win32status = RPC_NT_PIPE_DISCIPLINE_ERROR; missing = TRUE; break;
+        case RPC_X_PIPE_EMPTY: expected_win32status = RPC_NT_PIPE_EMPTY; missing = TRUE; break;
+        case ERROR_PASSWORD_MUST_CHANGE: expected_win32status = STATUS_PASSWORD_MUST_CHANGE; missing = TRUE; break;
+        case ERROR_ACCOUNT_LOCKED_OUT: expected_win32status = STATUS_ACCOUNT_LOCKED_OUT; missing = TRUE; break;
         default:
             if (w2k3_up)
                 expected_win32status = STATUS_UNSUCCESSFUL;
             else
                 expected_win32status = rpc_status;
         }
-        ok(win32status == expected_win32status, "I_RpcMapWin32Status(%ld) should have returned 0x%x instead of 0x%x\n",
-            rpc_status, expected_win32status, win32status);
+
+        if (on_win9x)
+            missing = TRUE;
+
+        ok(win32status == expected_win32status ||
+            broken(missing && win32status == rpc_status),
+            "I_RpcMapWin32Status(%ld) should have returned 0x%x instead of 0x%x%s\n",
+            rpc_status, expected_win32status, win32status,
+            broken(missing) ? " (or have returned with the given status)" : "");
     }
 }
 
@@ -554,7 +580,6 @@ static void test_RpcStringBindingParseA(void)
     ok(!strcmp((char *)uuid, "00000000-0000-0000-c000-000000000046"), "uuid should have been 00000000-0000-0000-C000-000000000046 instead of %s\n", uuid);
     ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
     ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
-    todo_wine
     ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
     todo_wine
     ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
@@ -570,7 +595,6 @@ static void test_RpcStringBindingParseA(void)
     ok(!strcmp((char *)uuid, "00000000-0000-0000-c000-000000000046"), "uuid should have been 00000000-0000-0000-C000-000000000046 instead of %s\n", uuid);
     ok(!strcmp((char *)protseq, "ncacn_np"), "protseq should have been ncacn_np instead of %s\n", protseq);
     ok(!strcmp((char *)network_addr, "."), "network_addr should have been . instead of %s\n", network_addr);
-    todo_wine
     ok(!strcmp((char *)endpoint, "pipetest"), "endpoint should have been pipetest instead of %s\n", endpoint);
     todo_wine
     ok(options && !strcmp((char *)options, ""), "options should have been \"\" of \"%s\"\n", options);
@@ -588,9 +612,7 @@ static void test_RpcStringBindingParseA(void)
 
     /* test with invalid uuid */
     status = RpcStringBindingParseA(invalid_uuid_binding, NULL, &protseq, NULL, NULL, NULL);
-    todo_wine
     ok(status == RPC_S_INVALID_STRING_UUID, "RpcStringBindingParseA should have returned RPC_S_INVALID_STRING_UUID instead of %ld\n", status);
-    todo_wine
     ok(protseq == NULL, "protseq was %p instead of NULL\n", protseq);
 
     /* test with invalid endpoint */
@@ -644,6 +666,10 @@ static void test_I_RpcExceptionFilter(void)
             ok(retval == EXCEPTION_CONTINUE_SEARCH, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
                exception, EXCEPTION_CONTINUE_SEARCH, retval);
             break;
+        case STATUS_IN_PAGE_ERROR:
+        case STATUS_HANDLE_NOT_CLOSABLE:
+            trace("I_RpcExceptionFilter(0x%x) returned %d\n", exception, retval);
+            break;
         default:
             ok(retval == EXCEPTION_EXECUTE_HANDLER, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
                exception, EXCEPTION_EXECUTE_HANDLER, retval);
@@ -651,15 +677,104 @@ static void test_I_RpcExceptionFilter(void)
     }
 }
 
+static void test_endpoint_mapper(RPC_CSTR protseq, RPC_CSTR address,
+                                 RPC_CSTR endpoint)
+{
+    static unsigned char annotation[] = "Test annotation string.";
+    RPC_STATUS status;
+    RPC_BINDING_VECTOR *binding_vector;
+    handle_t handle;
+    unsigned char *binding;
+
+    status = RpcServerUseProtseqEp(protseq, 20, endpoint, NULL);
+    ok(status == RPC_S_OK, "%s: RpcServerUseProtseqEp failed (%lu)\n", protseq, status);
+
+    status = RpcServerRegisterIf(IFoo_v0_0_s_ifspec, NULL, NULL);
+    ok(status == RPC_S_OK, "%s: RpcServerRegisterIf failed (%lu)\n", protseq, status);
+
+    status = RpcServerInqBindings(&binding_vector);
+    ok(status == RPC_S_OK, "%s: RpcServerInqBindings failed with error %lu\n", protseq, status);
+
+    status = RpcEpRegisterA(IFoo_v0_0_s_ifspec, binding_vector, NULL, annotation);
+    ok(status == RPC_S_OK, "%s: RpcEpRegisterA failed with error %lu\n", protseq, status);
+
+    status = RpcStringBindingCompose(NULL, protseq, address,
+                                     NULL, NULL, &binding);
+    ok(status == RPC_S_OK, "%s: RpcStringBindingCompose failed (%lu)\n", protseq, status);
+
+    status = RpcBindingFromStringBinding(binding, &handle);
+    ok(status == RPC_S_OK, "%s: RpcBindingFromStringBinding failed (%lu)\n", protseq, status);
+
+    RpcStringFree(&binding);
+
+    status = RpcBindingReset(handle);
+    ok(status == RPC_S_OK, "%s: RpcBindingReset failed with error %lu\n", protseq, status);
+
+    RpcStringFree(&binding);
+
+    status = RpcEpResolveBinding(handle, IFoo_v0_0_s_ifspec);
+    ok(status == RPC_S_OK, "%s: RpcEpResolveBinding failed with error %lu\n", protseq, status);
+
+    status = RpcBindingReset(handle);
+    ok(status == RPC_S_OK, "%s: RpcBindingReset failed with error %lu\n", protseq, status);
+
+    status = RpcBindingFree(&handle);
+    ok(status == RPC_S_OK, "%s: RpcBindingFree failed with error %lu\n", protseq, status);
+
+    status = RpcServerUnregisterIf(NULL, NULL, FALSE);
+    ok(status == RPC_S_OK, "%s: RpcServerUnregisterIf failed (%lu)\n", protseq, status);
+
+    status = RpcEpUnregister(IFoo_v0_0_s_ifspec, binding_vector, NULL);
+    ok(status == RPC_S_OK, "%s: RpcEpUnregisterA failed with error %lu\n", protseq, status);
+
+    status = RpcBindingVectorFree(&binding_vector);
+    ok(status == RPC_S_OK, "%s: RpcBindingVectorFree failed with error %lu\n", protseq, status);
+}
+
+static void test_RpcStringBindingFromBinding(void)
+{
+    static unsigned char ncacn_np[] = "ncacn_np";
+    static unsigned char address[] = ".";
+    static unsigned char endpoint[] = "\\pipe\\wine_rpc_test";
+    RPC_STATUS status;
+    handle_t handle;
+    RPC_CSTR binding;
+
+    status = RpcStringBindingCompose(NULL, ncacn_np, address,
+                                     endpoint, NULL, &binding);
+    ok(status == RPC_S_OK, "RpcStringBindingCompose failed (%lu)\n", status);
+
+    status = RpcBindingFromStringBinding(binding, &handle);
+    ok(status == RPC_S_OK, "RpcBindingFromStringBinding failed (%lu)\n", status);
+    RpcStringFree(&binding);
+
+    status = RpcBindingToStringBinding(handle, &binding);
+    ok(status == RPC_S_OK, "RpcStringBindingFromBinding failed with error %lu\n", status);
+
+    ok(!strcmp((const char *)binding, "ncacn_np:.[\\\\pipe\\\\wine_rpc_test]"),
+       "binding string didn't match what was expected: \"%s\"\n", binding);
+    RpcStringFree(&binding);
+
+    status = RpcBindingFree(&handle);
+    ok(status == RPC_S_OK, "RpcBindingFree failed with error %lu\n", status);
+}
+
 START_TEST( rpc )
 {
-    trace ( " ** Uuid Conversion and Comparison Tests **\n" );
+    static unsigned char ncacn_np[] = "ncacn_np";
+    static unsigned char ncalrpc[] = "ncalrpc";
+    static unsigned char np_address[] = ".";
+    static unsigned char np_endpoint[] = "\\pipe\\wine_rpc_test";
+    static unsigned char lrpc_endpoint[] = "wine_rpc_test";
+
     UuidConversionAndComparison();
-    trace ( " ** DceErrorInqText **\n");
     TestDceErrorInqText();
     test_rpc_ncacn_ip_tcp();
     test_towers();
     test_I_RpcMapWin32Status();
     test_RpcStringBindingParseA();
     test_I_RpcExceptionFilter();
+    test_endpoint_mapper(ncacn_np, np_address, np_endpoint);
+    test_endpoint_mapper(ncalrpc, NULL, lrpc_endpoint);
+    test_RpcStringBindingFromBinding();
 }

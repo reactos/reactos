@@ -30,6 +30,7 @@
 #include <winerror.h>
 
 
+#include "initguid.h"
 #include "rpc.h"
 #include "rpcdce.h"
 #include "rpcproxy.h"

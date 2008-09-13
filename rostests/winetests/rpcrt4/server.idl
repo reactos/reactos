@@ -195,6 +195,12 @@ cpp_quote("#endif")
   case ENCU_F: float f;
   } encu_t;
 
+  typedef [switch_type(int)] union unencu
+  {
+    [case (ENCU_I)] int i;
+    [case (ENCU_F)] float f;
+  } unencu_t;
+
   typedef enum
   {
     E1 = 23,
@@ -215,6 +221,7 @@ cpp_quote("#endif")
   } se_t;
 
   double square_encu(encu_t *eu);
+  double square_unencu(int t, [switch_is(t)] unencu_t *eu);
   int sum_parr(int *a[3]);
   int sum_pcarr([size_is(n)] int *a[], int n);
   int enum_ord(e_t e);
@@ -319,8 +326,17 @@ cpp_quote("#endif")
      type as a return value.  */
   s123_t *get_s123(void);
 
+  typedef struct
+  {
+    unsigned int length;
+    unsigned int size;
+    [size_is(size), length_is(length)] pints_t numbers[];
+  } numbers_struct_t;
+
   void get_5numbers([in] int count, [out, length_is(count)] pints_t pn[5]);
   void get_numbers([in] int length, [in] int size, [out, length_is(length), size_is(size)] pints_t pn[]);
+  void get_numbers_struct([out] numbers_struct_t **ns);
+
   str_t get_filename(void);
   void context_handle_test(void);
   void stop(void);

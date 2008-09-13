@@ -308,12 +308,12 @@ static void test_pack_ARRAY_INFO(void)
 {
     /* ARRAY_INFO (pack 4) */
     TEST_TYPE(ARRAY_INFO, 24, 4);
-    TEST_FIELD(ARRAY_INFO, long, Dimension, 0, 4, 4);
-    TEST_FIELD(ARRAY_INFO, unsigned long *, BufferConformanceMark, 4, 4, 4);
-    TEST_FIELD(ARRAY_INFO, unsigned long *, BufferVarianceMark, 8, 4, 4);
-    TEST_FIELD(ARRAY_INFO, unsigned long *, MaxCountArray, 12, 4, 4);
-    TEST_FIELD(ARRAY_INFO, unsigned long *, OffsetArray, 16, 4, 4);
-    TEST_FIELD(ARRAY_INFO, unsigned long *, ActualCountArray, 20, 4, 4);
+    TEST_FIELD(ARRAY_INFO, LONG, Dimension, 0, 4, 4);
+    TEST_FIELD(ARRAY_INFO, ULONG *, BufferConformanceMark, 4, 4, 4);
+    TEST_FIELD(ARRAY_INFO, ULONG *, BufferVarianceMark, 8, 4, 4);
+    TEST_FIELD(ARRAY_INFO, ULONG *, MaxCountArray, 12, 4, 4);
+    TEST_FIELD(ARRAY_INFO, ULONG *, OffsetArray, 16, 4, 4);
+    TEST_FIELD(ARRAY_INFO, ULONG *, ActualCountArray, 20, 4, 4);
 }
 
 static void test_pack_COMM_FAULT_OFFSETS(void)
@@ -328,8 +328,8 @@ static void test_pack_CS_STUB_INFO(void)
 {
     /* CS_STUB_INFO (pack 4) */
     TEST_TYPE(CS_STUB_INFO, 12, 4);
-    TEST_FIELD(CS_STUB_INFO, unsigned long, WireCodeset, 0, 4, 4);
-    TEST_FIELD(CS_STUB_INFO, unsigned long, DesiredReceivingCodeset, 4, 4, 4);
+    TEST_FIELD(CS_STUB_INFO, ULONG, WireCodeset, 0, 4, 4);
+    TEST_FIELD(CS_STUB_INFO, ULONG, DesiredReceivingCodeset, 4, 4, 4);
     TEST_FIELD(CS_STUB_INFO, void *, CSArrayInfo, 8, 4, 4);
 }
 
@@ -344,7 +344,7 @@ static void test_pack_FULL_PTR_TO_REFID_ELEMENT(void)
     TEST_TYPE(FULL_PTR_TO_REFID_ELEMENT, 16, 4);
     TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, struct _FULL_PTR_TO_REFID_ELEMENT *, Next, 0, 4, 4);
     TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, void *, Pointer, 4, 4, 4);
-    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, unsigned long, RefId, 8, 4, 4);
+    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, ULONG, RefId, 8, 4, 4);
     TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, unsigned char, State, 12, 1, 1);
 }
 
@@ -404,20 +404,19 @@ static void test_pack_MIDL_STUB_MESSAGE(void)
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferStart, 8, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferEnd, 12, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferMark, 16, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned long, BufferLength, 20, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned long, MemorySize, 24, 4, 4);
+    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, BufferLength, 20, 4, 4);
+    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, MemorySize, 24, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, Memory, 28, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, int, IsClient, 32, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, int, ReuseBuffer, 36, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, struct NDR_ALLOC_ALL_NODES_CONTEXT *, pAllocAllNodesContext, 40, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, struct NDR_POINTER_QUEUE_STATE *, pPointerQueueState, 44, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, int, IgnoreEmbeddedPointers, 48, 4, 4);
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, PointerBufferMark, 52, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char, fBufferValid, 56, 1, 1);
+    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char, CorrDespIncrement, 56, 1, 1);
     TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char, uFlags, 57, 1, 1);
     TEST_FIELD(MIDL_STUB_MESSAGE, ULONG_PTR, MaxCount, 60, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned long, Offset, 64, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned long, ActualCount, 68, 4, 4);
+    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, Offset, 64, 4, 4);
+    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, ActualCount, 68, 4, 4);
 }
 
 static void test_pack_MIDL_STUBLESS_PROXY_INFO(void)
@@ -462,6 +461,19 @@ static void test_pack_NDR_SCONTEXT(void)
 {
     /* NDR_SCONTEXT */
     TEST_TYPE(NDR_SCONTEXT, 4, 4);
+}
+
+static void test_pack_NDR_USER_MARSHAL_INFO(void)
+{
+    /* NDR_USER_MARSHAL_INFO (pack 4) */
+    TEST_FIELD(NDR_USER_MARSHAL_INFO, ULONG, InformationLevel, 0, 4, 4);
+}
+
+static void test_pack_NDR_USER_MARSHAL_INFO_LEVEL1(void)
+{
+    /* NDR_USER_MARSHAL_INFO_LEVEL1 (pack 4) */
+    TEST_FIELD(NDR_USER_MARSHAL_INFO_LEVEL1, void *, Buffer, 0, 4, 4);
+    TEST_FIELD(NDR_USER_MARSHAL_INFO_LEVEL1, ULONG, BufferSize, 4, 4, 4);
 }
 
 static void test_pack_PARRAY_INFO(void)
@@ -563,7 +575,7 @@ static void test_pack_SCONTEXT_QUEUE(void)
 {
     /* SCONTEXT_QUEUE (pack 4) */
     TEST_TYPE(SCONTEXT_QUEUE, 8, 4);
-    TEST_FIELD(SCONTEXT_QUEUE, unsigned long, NumberOfObjects, 0, 4, 4);
+    TEST_FIELD(SCONTEXT_QUEUE, ULONG, NumberOfObjects, 0, 4, 4);
     TEST_FIELD(SCONTEXT_QUEUE, NDR_SCONTEXT *, ArrayOfObjects, 4, 4, 4);
 }
 
@@ -580,10 +592,10 @@ static void test_pack_STUB_THUNK(void)
 static void test_pack_USER_MARSHAL_CB(void)
 {
     /* USER_MARSHAL_CB (pack 4) */
-    TEST_FIELD(USER_MARSHAL_CB, unsigned long, Flags, 0, 4, 4);
+    TEST_FIELD(USER_MARSHAL_CB, ULONG, Flags, 0, 4, 4);
     TEST_FIELD(USER_MARSHAL_CB, PMIDL_STUB_MESSAGE, pStubMsg, 4, 4, 4);
     TEST_FIELD(USER_MARSHAL_CB, PFORMAT_STRING, pReserve, 8, 4, 4);
-    TEST_FIELD(USER_MARSHAL_CB, unsigned long, Signature, 12, 4, 4);
+    TEST_FIELD(USER_MARSHAL_CB, ULONG, Signature, 12, 4, 4);
 }
 
 static void test_pack_USER_MARSHAL_FREEING_ROUTINE(void)
@@ -649,6 +661,8 @@ static void test_pack(void)
     test_pack_NDR_NOTIFY_ROUTINE();
     test_pack_NDR_RUNDOWN();
     test_pack_NDR_SCONTEXT();
+    test_pack_NDR_USER_MARSHAL_INFO();
+    test_pack_NDR_USER_MARSHAL_INFO_LEVEL1();
     test_pack_PARRAY_INFO();
     test_pack_PFORMAT_STRING();
     test_pack_PFULL_PTR_TO_REFID_ELEMENT();
