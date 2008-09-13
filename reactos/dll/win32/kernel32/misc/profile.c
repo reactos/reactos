@@ -756,6 +756,9 @@ static BOOL PROFILE_Open( LPCWSTR filename )
 
     GetWindowsDirectoryW( windirW, MAX_PATH );
 
+    if (!filename)
+        filename = L"win.ini";
+
     if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
         !wcschr(filename, '\\') && !wcschr(filename, '/'))
     {
@@ -933,7 +936,7 @@ static INT PROFILE_GetSectionNames( LPWSTR buffer, UINT len )
     while ((section!=NULL)) {
         if (section->name[0]) {
             tmplen = wcslen(section->name)+1;
-            if (tmplen > buflen) {
+            if (tmplen >= buflen) {
                 if (buflen > 0) {
                     memcpy(buf, section->name, (buflen - 1) * sizeof(WCHAR));
                     buf += buflen - 1;
@@ -1110,9 +1113,6 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
 {
     int     ret;
     LPCWSTR pDefVal = NULL;
-
-    if (!filename)
-        filename = L"win.ini";
 
     DPRINT("%S, %S, %S, %p, %u, %S\n",
            section, entry,
@@ -1337,7 +1337,13 @@ UINT WINAPI GetPrivateProfileIntA( LPCSTR section, LPCSTR entry,
 DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
                   DWORD len, LPCWSTR filename )
 {
-    int     ret = 0;
+    int ret = 0;
+
+    if (!section || !buffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
     DPRINT("(%S, %p, %ld, %S)\n",
            section, buffer, len, filename);
@@ -1363,18 +1369,23 @@ DWORD WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
     LPWSTR bufferW;
     INT retW, ret = 0;
 
-    bufferW = buffer ? HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR)) : NULL;
-    if (section) RtlCreateUnicodeStringFromAsciiz(&sectionW, section);
-    else sectionW.Buffer = NULL;
+    if (!section || !buffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    RtlCreateUnicodeStringFromAsciiz(&sectionW, section);
     if (filename) RtlCreateUnicodeStringFromAsciiz(&filenameW, filename);
     else filenameW.Buffer = NULL;
 
     retW = GetPrivateProfileSectionW(sectionW.Buffer, bufferW, len, filenameW.Buffer);
     if (len > 2)
     {
-        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW + 2, buffer, len, NULL, NULL);
+        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW + 1, buffer, len, NULL, NULL);
         if (ret > 2)
-            ret -= 2;
+            ret -= 1;
         else
         {
             ret = 0;
@@ -1645,13 +1656,17 @@ DWORD WINAPI GetPrivateProfileSectionNamesA( LPSTR buffer, DWORD size,
     retW = GetPrivateProfileSectionNamesW(bufferW, size, filenameW.Buffer);
     if (retW && size)
     {
-        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW, buffer, size, NULL, NULL);
+        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW+1, buffer, size-1, NULL, NULL);
         if (!ret)
         {
-            ret = size;
+            ret = size-2;
             buffer[size-1] = 0;
         }
+        else
+          ret = ret-1;
     }
+    else if(size)
+        buffer[0] = '\0';
 
     RtlFreeUnicodeString(&filenameW);
     HeapFree(GetProcessHeap(), 0, bufferW);
