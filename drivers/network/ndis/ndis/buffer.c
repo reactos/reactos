@@ -791,7 +791,7 @@ NdisDprAllocatePacketNonInterlocked(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -803,11 +803,17 @@ NdisDprFreePacket(
  *     Packet = Pointer to packet to free
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Packet (0x%X).\n", Packet));
+
+    KeAcquireSpinLockAtDpcLevel(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock);
+    Packet->Private.Head           = (PNDIS_BUFFER)((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList;
+    ((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList = Packet;
+    KeReleaseSpinLockFromDpcLevel(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -819,6 +825,10 @@ NdisDprFreePacketNonInterlocked(
  *     Packet = Pointer to packet to free
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Packet (0x%X).\n", Packet));
+
+    Packet->Private.Head           = (PNDIS_BUFFER)((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList;
+    ((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList = Packet;
 }
 
 
