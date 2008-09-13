@@ -782,10 +782,14 @@ static void test_OleCreate(IStorage *pStorage)
     expected_method_list = methods_olerender_format;
     trace("OleCreate with OLERENDER_FORMAT:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_FORMAT, &formatetc, (IOleClientSite *)0xdeadbeef, pStorage, (void **)&pObject);
-    ok_ole_success(hr, "OleCreate");
+    ok(hr == S_OK ||
+       broken(hr == E_INVALIDARG), /* win2k */
+       "OleCreate failed with error 0x%08x\n", hr);
     if (pObject)
+    {
         IOleObject_Release(pObject);
-    ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+        ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+    }
 
     expected_method_list = methods_olerender_asis;
     trace("OleCreate with OLERENDER_ASIS:\n");
@@ -839,10 +843,14 @@ static void test_OleLoad(IStorage *pStorage)
     expected_method_list = methods_oleload;
     trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
-    ok_ole_success(hr, "OleLoad");
+    ok(hr == S_OK ||
+       broken(hr == E_INVALIDARG), /* win98 and win2k */
+       "OleLoad failed with error 0x%08x\n", hr);
     if (pObject)
+    {
         IOleObject_Release(pObject);
-    ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+        ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+    }
 }
 
 static BOOL STDMETHODCALLTYPE draw_continue(ULONG_PTR param)

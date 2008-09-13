@@ -244,7 +244,9 @@ static void test_CoGetClassObject(void)
     ok(pUnk == NULL, "CoGetClassObject should have changed the passed in pointer to NULL, instead of %p\n", pUnk);
 
     hr = CoGetClassObject(&CLSID_MyComputer, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, NULL);
-    ok(hr == E_INVALIDARG, "CoGetClassObject should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG ||
+       broken(hr == CO_E_NOTINITIALIZED), /* win9x */
+       "CoGetClassObject should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 }
 
 static ATOM register_dummy_class(void)
@@ -944,7 +946,9 @@ static void test_CoFreeUnusedLibraries(void)
 
     ok(is_module_loaded("urlmon.dll"), "urlmon.dll should be loaded\n");
 
-    ok(pUnk != NULL, "Expected a valid pointer\n");
+    ok(pUnk != NULL ||
+       broken(pUnk == NULL), /* win9x */
+       "Expected a valid pointer\n");
     if (pUnk)
         IUnknown_Release(pUnk);
 

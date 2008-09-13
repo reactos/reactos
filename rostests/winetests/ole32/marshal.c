@@ -27,11 +27,15 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "initguid.h"
 #include "objbase.h"
+#include "olectl.h"
 #include "shlguid.h"
 #include "shobjidl.h"
 
 #include "wine/test.h"
+
+DEFINE_GUID(CLSID_StdGlobalInterfaceTable,0x00000323,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
 /* functions that are not present on all versions of Windows */
 HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
@@ -2333,20 +2337,23 @@ static void test_handler_marshaling(void)
     ok_ole_success(hr, "CoUnmarshalInterface");
     IStream_Release(pStream);
 
-    ok_more_than_one_lock();
+    if(hr == S_OK)
+    {
+        ok_more_than_one_lock();
 
-    hr = IUnknown_QueryInterface(pProxy, &IID_IWineTest, (void **)&pObject);
-    ok(hr == E_NOINTERFACE, "IUnknown_QueryInterface with unknown IID should have returned E_NOINTERFACE instead of 0x%08x\n", hr);
+        hr = IUnknown_QueryInterface(pProxy, &IID_IWineTest, (void **)&pObject);
+        ok(hr == E_NOINTERFACE, "IUnknown_QueryInterface with unknown IID should have returned E_NOINTERFACE instead of 0x%08x\n", hr);
 
-    /* it's a handler as it supports IOleObject */
-    hr = IUnknown_QueryInterface(pProxy, &IID_IOleObject, (void **)&pObject);
-    todo_wine
-    ok_ole_success(hr, "IUnknown_QueryInterface(&IID_IOleObject)");
-    if (SUCCEEDED(hr)) IUnknown_Release(pObject);
+        /* it's a handler as it supports IOleObject */
+        hr = IUnknown_QueryInterface(pProxy, &IID_IOleObject, (void **)&pObject);
+        todo_wine
+        ok_ole_success(hr, "IUnknown_QueryInterface(&IID_IOleObject)");
+        if (SUCCEEDED(hr)) IUnknown_Release(pObject);
 
-    IUnknown_Release(pProxy);
+        IUnknown_Release(pProxy);
 
-    ok_no_locks();
+        ok_no_locks();
+    }
 
     end_host_object(tid, thread);
 

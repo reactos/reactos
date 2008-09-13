@@ -451,6 +451,8 @@ static void test_set_clipboard(void)
     ok(hr == S_OK, "expected current clipboard to be data1, hr = 0x%08x\n", hr);
     hr = OleIsCurrentClipboard(data2);
     ok(hr == S_FALSE, "did not expect current clipboard to be data2, hr = 0x%08x\n", hr);
+    hr = OleIsCurrentClipboard(NULL);
+    ok(hr == S_FALSE, "expect S_FALSE, hr = 0x%08x\n", hr);
 
     test_get_clipboard();
 
@@ -460,6 +462,8 @@ static void test_set_clipboard(void)
     ok(hr == S_FALSE, "did not expect current clipboard to be data1, hr = 0x%08x\n", hr);
     hr = OleIsCurrentClipboard(data2);
     ok(hr == S_OK, "expected current clipboard to be data2, hr = 0x%08x\n", hr);
+    hr = OleIsCurrentClipboard(NULL);
+    ok(hr == S_FALSE, "expect S_FALSE, hr = 0x%08x\n", hr);
 
     hr = OleFlushClipboard();
     ok(hr == S_OK, "failed to flush clipboard, hr = 0x%08x\n", hr);
@@ -467,6 +471,8 @@ static void test_set_clipboard(void)
     ok(hr == S_FALSE, "did not expect current clipboard to be data1, hr = 0x%08x\n", hr);
     hr = OleIsCurrentClipboard(data2);
     ok(hr == S_FALSE, "did not expect current clipboard to be data2, hr = 0x%08x\n", hr);
+    hr = OleIsCurrentClipboard(NULL);
+    ok(hr == S_FALSE, "expect S_FALSE, hr = 0x%08x\n", hr);
 
     ok(OleSetClipboard(NULL) == S_OK, "failed to clear clipboard, hr = 0x%08x\n", hr);
 
