@@ -17,4 +17,4 @@
  */
 
 cpp_quote("#include <winuser.h>")
-#include "oleidl.idl"
+cpp_quote("#include <oleidl.h>")
