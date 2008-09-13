@@ -38,6 +38,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	PWCHAR EnvironmentBufferW = NULL;
 	LPCWSTR lpModuleEnd = NULL;
 	UNICODE_STRING ModuleName;
+	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
 
 	if (lpModule != NULL)
 	{
@@ -89,6 +90,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
 	EnvironmentBufferW[Pos] = 0;
 
+	SetLastError(LastError);
 	return EnvironmentBufferW;
 }
 
@@ -175,6 +177,7 @@ LoadLibraryExW (
 	NTSTATUS Status;
 	PWSTR SearchPath;
     ULONG DllCharacteristics;
+	BOOL FreeString = FALSE;
 
         (void)hFile;
 
@@ -197,6 +200,17 @@ LoadLibraryExW (
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
 	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+	if (DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+	{
+		RtlCreateUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+		while (DllName.Length > sizeof(WCHAR) &&
+				DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+		{
+			DllName.Length -= sizeof(WCHAR);
+		}
+		DllName.Buffer[DllName.Length/sizeof(WCHAR)] = UNICODE_NULL;
+		FreeString = TRUE;
+	}
     if (InWindows)
     {
         /* Call the API Properly */
@@ -211,6 +225,8 @@ LoadLibraryExW (
         Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
+	if (FreeString)
+		RtlFreeUnicodeString(&DllName);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
