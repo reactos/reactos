@@ -745,7 +745,7 @@ NdisDprAllocatePacket(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -761,7 +761,32 @@ NdisDprAllocatePacketNonInterlocked(
  *     PoolHandle = Handle returned by NdisAllocatePacketPool
  */
 {
-    *Status = NDIS_STATUS_FAILURE;
+    PNDIS_PACKET Temp;
+    PNDISI_PACKET_POOL Pool = (PNDISI_PACKET_POOL)PoolHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
+        Status, Packet, PoolHandle));
+
+    *Packet = NULL;
+
+    if (Pool == NULL)
+    {
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    if (Pool->FreeList) {
+        Temp           = Pool->FreeList;
+        Pool->FreeList = (PNDIS_PACKET)Temp->Private.Head;
+
+        RtlZeroMemory(&Temp->Private, sizeof(NDIS_PACKET_PRIVATE));
+        Temp->Private.Pool = Pool;
+
+        *Packet = Temp;
+        *Status = NDIS_STATUS_SUCCESS;
+    } else {
+        *Status = NDIS_STATUS_RESOURCES;
+    }
 }
 
 
