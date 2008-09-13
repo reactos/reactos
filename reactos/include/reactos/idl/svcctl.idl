@@ -614,8 +614,11 @@ interface svcctl
         [in, out] LPBOUNDED_DWORD_4K lpcchBuffer);
 
     /* Function 34 */
-    DWORD RGetCurrentGroupStateW(
-        [in] handle_t BindingHandle); /* FIXME */
+    DWORD RI_ScGetCurrentGroupStateW(
+        [in] handle_t BindingHandle,
+        [in] SC_RPC_HANDLE hSCManager,
+        [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpLoadOrderGroup,
+        [out] LPDWORD lpState);
 
     /* Function 35 */
     DWORD REnumServiceGroupW(

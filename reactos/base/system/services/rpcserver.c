@@ -458,8 +458,8 @@ DWORD RCloseServiceHandle(
         ASSERT(lpService->dwRefCount > 0);
 
         lpService->dwRefCount--;
-        DPRINT1("CloseServiceHandle - lpService->dwRefCount %u\n",
-                lpService->dwRefCount);
+        DPRINT("CloseServiceHandle - lpService->dwRefCount %u\n",
+               lpService->dwRefCount);
 
         if (lpService->dwRefCount == 0)
         {
@@ -1953,7 +1953,7 @@ DWORD RCreateServiceW(
         goto done;
 
     lpService->dwRefCount = 1;
-    DPRINT1("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
+    DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
 
 done:;
     if (hServiceKey != NULL)
@@ -2429,7 +2429,7 @@ DWORD ROpenServiceW(
     }
 
     lpService->dwRefCount++;
-    DPRINT1("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
+    DPRINT("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
 
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
@@ -3829,8 +3829,11 @@ DWORD RGetServiceKeyNameA(
 
 
 /* Function 34 */
-DWORD RGetCurrentGroupStateW(
-    handle_t BindingHandle)
+DWORD RI_ScGetCurrentGroupStateW(
+    handle_t BindingHandle,
+    SC_RPC_HANDLE hSCManager,
+    LPWSTR lpLoadOrderGroup,
+    LPDWORD lpState)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
