@@ -84,7 +84,7 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     sm->oxid_info.ipidRemUnknown.Data2 = 0xffff;
     sm->oxid_info.ipidRemUnknown.Data3 = 0xffff;
     assert(sizeof(sm->oxid_info.ipidRemUnknown.Data4) == sizeof(apt->oxid));
-    memcpy(&sm->oxid_info.ipidRemUnknown.Data4, &apt->oxid, sizeof(OXID));
+    memcpy(sm->oxid_info.ipidRemUnknown.Data4, &apt->oxid, sizeof(OXID));
     sm->oxid_info.dwAuthnHint = RPC_C_AUTHN_LEVEL_NONE;
     sm->oxid_info.psa = NULL /* FIXME */;
 

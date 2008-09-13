@@ -1391,7 +1391,7 @@ HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR *idstr)
 		return ret;
 
 	ret=WINE_StringFromCLSID(id,buf);
-	if (!ret) {
+	if (ret == S_OK) {
             DWORD len = MultiByteToWideChar( CP_ACP, 0, buf, -1, NULL, 0 );
             *idstr = IMalloc_Alloc( mllc, len * sizeof(WCHAR) );
             MultiByteToWideChar( CP_ACP, 0, buf, -1, *idstr, len );
@@ -2806,7 +2806,7 @@ HRESULT WINAPI CoTreatAsClass(REFCLSID clsidOld, REFCLSID clsidNew)
     if (!memcmp( clsidOld, clsidNew, sizeof(*clsidOld) ))
     {
        if (!RegQueryValueW(hkey, wszAutoTreatAs, auto_treat_as, &auto_treat_as_size) &&
-           !CLSIDFromString(auto_treat_as, &id))
+           CLSIDFromString(auto_treat_as, &id) == S_OK)
        {
            if (RegSetValueW(hkey, wszTreatAs, REG_SZ, auto_treat_as, sizeof(auto_treat_as)))
            {
@@ -3742,7 +3742,8 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
  */
 HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
 {
-    FIXME( "stub\n" );
+    static int calls;
+    if(!(calls++)) FIXME( "stub\n" );
     if (token) *token = 0;
     return E_NOTIMPL;
 }

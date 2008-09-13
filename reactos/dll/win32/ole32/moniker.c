@@ -464,7 +464,7 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
             const void *pv = GlobalLock(hglobal);
             rot_entry->object = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(MInterfacePointer, abData[size]));
             rot_entry->object->ulCntData = size;
-            memcpy(&rot_entry->object->abData, pv, size);
+            memcpy(rot_entry->object->abData, pv, size);
             GlobalUnlock(hglobal);
         }
     }
@@ -530,7 +530,7 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
             const void *pv = GlobalLock(hglobal);
             moniker = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(InterfaceData, abData[size]));
             moniker->ulCntData = size;
-            memcpy(&moniker->abData, pv, size);
+            memcpy(moniker->abData, pv, size);
             GlobalUnlock(hglobal);
         }
     }
@@ -642,7 +642,7 @@ RunningObjectTableImpl_IsRunning( IRunningObjectTable* iface, IMoniker *pmkObjec
     LIST_FOR_EACH_ENTRY(rot_entry, &This->rot, const struct rot_entry, entry)
     {
         if ((rot_entry->moniker_data->ulCntData == moniker_data->ulCntData) &&
-            !memcmp(&moniker_data->abData, &rot_entry->moniker_data->abData, moniker_data->ulCntData))
+            !memcmp(moniker_data->abData, rot_entry->moniker_data->abData, moniker_data->ulCntData))
         {
             hr = S_OK;
             break;
@@ -714,7 +714,7 @@ RunningObjectTableImpl_GetObject( IRunningObjectTable* iface,
     LIST_FOR_EACH_ENTRY(rot_entry, &This->rot, struct rot_entry, entry)
     {
         if ((rot_entry->moniker_data->ulCntData == moniker_data->ulCntData) &&
-            !memcmp(&moniker_data->abData, &rot_entry->moniker_data->abData, moniker_data->ulCntData))
+            !memcmp(moniker_data->abData, rot_entry->moniker_data->abData, moniker_data->ulCntData))
         {
             IStream *pStream;
             hr = create_stream_on_mip_ro(rot_entry->object, &pStream);
@@ -860,7 +860,7 @@ RunningObjectTableImpl_GetTimeOfLastChange(IRunningObjectTable* iface,
     LIST_FOR_EACH_ENTRY(rot_entry, &This->rot, const struct rot_entry, entry)
     {
         if ((rot_entry->moniker_data->ulCntData == moniker_data->ulCntData) &&
-            !memcmp(&moniker_data->abData, &rot_entry->moniker_data->abData, moniker_data->ulCntData))
+            !memcmp(moniker_data->abData, rot_entry->moniker_data->abData, moniker_data->ulCntData))
         {
             *pfiletime = rot_entry->last_modified;
             hr = S_OK;

@@ -1,6 +1,14 @@
 
 #if !defined( RPC_NO_WINDOWS_H ) && !defined( MAC ) && !defined( _MAC )
-#include <windows.h>
+# ifdef __WINESRC__
+#  ifndef RC_INVOKED
+#   include <stdarg.h>
+#  endif
+#  include <windef.h>
+#  include <winbase.h>
+# else
+#  include <windows.h>
+# endif
 #endif
 
 #ifdef __GNUC__

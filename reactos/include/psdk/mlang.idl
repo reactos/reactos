@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "unknwn.idl";
+#endif
 
 interface IStream;
 
@@ -32,19 +34,19 @@ cpp_quote("#endif")
 ]
 interface IMLangCodePages : IUnknown
 {
-    HRESULT GetCharCodePages(
+    HRESULT GetCharCodePages(      
         [in] WCHAR chSrc,
         DWORD *pdwCodePages);
-    HRESULT GetStrCodePages(
+    HRESULT GetStrCodePages(      
         [in, size_is(cchSrc)] const WCHAR *pszSrc,
         [in] long cchSrc,
         [in] DWORD dwPriorityCodePages,
         [out] DWORD *pdwCodePages,
         [out] long *pcchCodePages);
-    HRESULT CodePageToCodePages(
+    HRESULT CodePageToCodePages(      
         [in] UINT uCodePage,
         [out] DWORD *pdwCodePages);
-    HRESULT CodePagesToCodePage(
+    HRESULT CodePagesToCodePage(      
         [in] DWORD dwCodePages,
         [in] UINT uDefaultCodePage,
         [out] UINT *puCodePage);
@@ -62,13 +64,13 @@ interface IMLangFontLink : IMLangCodePages
         [in] HFONT hFont,
         [out] DWORD *pdwCodePages );
 
-    HRESULT MapFont(
+    HRESULT MapFont(      
         [in] HDC hDC,
         [in] DWORD dwCodePages,
         [in] HFONT hSrcFont,
         [out] HFONT *phDestFont);
 
-    HRESULT ReleaseFont(
+    HRESULT ReleaseFont(      
         [in] HFONT hFont);
 
     HRESULT ResetFontMapping();
@@ -158,18 +160,153 @@ interface IEnumScript : IUnknown
         WCHAR wszProportionalFont[MAX_MIMEFACE_NAME];
     } SCRIPTINFO, *PSCRIPTINFO;
 
-    HRESULT Clone(
+    HRESULT Clone( 
         [out] IEnumScript **ppEnum);
 
-    HRESULT Next(
+    HRESULT Next(      
         [in] ULONG celt,
         [out] PSCRIPTINFO rgelt,
         [out] ULONG *pceltFetched);
 
     HRESULT Reset();
 
-    HRESULT Skip(
+    HRESULT Skip(      
         [in] ULONG celt);
+}
+
+[
+  object,
+  uuid(dccfc162-2b38-11d2-b7ec-00c04f8f5d9a),
+  pointer_default(unique)
+]
+interface IMLangFontLink2 : IMLangCodePages
+{
+    typedef struct tagUNICODERANGE
+    {
+        WCHAR wcFrom;
+        WCHAR wcTo;
+    } UNICODERANGE;
+
+    typedef [unique] IMLangFontLink2 *PMLANGFONTLINK2;
+
+    HRESULT GetFontCodePages(
+        [in] HDC hDC,
+        [in] HFONT hFont,
+        [out] DWORD *pdwCodePages );
+
+    HRESULT ReleaseFont(
+        [in] HFONT hFont);
+
+    HRESULT ResetFontMapping();
+
+    HRESULT MapFont(
+        [in] HDC hDC,
+        [in] DWORD dwCodePages,
+        [in] WCHAR chSrc,
+        [out] HFONT *pFont);
+
+    HRESULT GetFontUnicodeRanges(
+        [in] HDC hDC,
+        [in,out] UINT *puiRanges,
+        [out] UNICODERANGE* pUranges);
+
+    HRESULT GetScriptFontInfo(
+        [in] SCRIPT_ID sid,
+        [in] DWORD dwFlags,
+        [in,out] UINT *puiFonts,
+        [out] SCRIPTFONTINFO* pScriptFont);
+
+    HRESULT CodePageToScriptID(
+        [in] UINT uiCodePage,
+        [out] SCRIPT_ID *pSid);
+}
+
+[
+ object,
+ uuid(c04d65ce-b70d-11d0-b188-00aa0038c969),
+ pointer_default(unique)
+]
+interface IMLangString : IUnknown
+{
+#ifdef NEWMLSTR
+    HRESULT LockMLStr(
+        [in] long lPos,
+        [in] DWORD dwFlags,
+        [out] DWORD* pdwCookie,
+        [out] long* plActualPos,
+        [out] long* plActualLen);
+
+    HRESULT UnlockMLStr(
+        [in] DWORD dwCookie);
+#else
+    HRESULT Sync(
+        [in] BOOL fNoAccess);
+#endif
+    HRESULT GetLength(
+        [out, retval] long* plLen);
+    HRESULT SetMLStr(
+        [in] long lDestPos,
+        [in] long lDestLen,
+        [in] IUnknown *pSrcMLStr,
+        [in] long lSrcPos,
+        [in] long lSrcLen);
+#ifdef NEWMLSTR
+    HRESULT RegisterAttr(
+        [in] IUnknown *pUnk,
+        [out] DWORD* pdwCookie);
+    HRESULT UnregisterAttr(
+        [in] DWORD dwCookie);
+    HRESULT EnumAttr(
+        [out] IEnumUnknown **ppEnumUnk);
+    HRESULT FindAttr(
+        [in] REFIID riid,
+        [in] LPARAM lParam,
+        [out] IUnknown **ppUnk);
+#else
+    HRESULT GetMLStr(
+        [in] long lSrcPos,
+        [in] long lSrcLen,
+        [in] IUnknown *pUnkOuter,
+        [in] DWORD dwClsContext,
+        [in] const IID* piid,
+        [out] IUnknown** ppDestMLStr,
+        [out] long* plDestPos,
+        [out] long* plDestLen);
+#endif
+}
+
+[
+ object,
+ uuid(f5be2ee1-bfd7-11d0-b188-00aa0038c969),
+ pointer_default(unique)
+]
+interface IMLangLineBreakConsole : IUnknown
+{
+    HRESULT BreakLineML(
+        [in] IMLangString* pSrcMLStr,
+        [in] long lSrcPos,
+        [in] long lSrcLen,
+        [in] long cMinColumns,
+        [in] long cMaxColumns,
+        [out] long* plLineLen,
+        [out] long* plSkipLen);
+
+    HRESULT BreakLineW(
+        [in] LCID locale,
+        [in, size_is(cchSrc)] const WCHAR* pszSrc,
+        [in] long cchSrc,
+        [in] long cMaxColumns,
+        [out] long* pcchLine,
+        [out] long* pcchSkip );
+
+    HRESULT BreakLineA(
+        [in] LCID locale,
+        [in] UINT uCodePage,
+        [in, size_is(cchSrc)] const CHAR* pszSrc,
+        [in] long cchSrc,
+        [in] long cMaxColumns,
+        [out] long* pcchLine,
+        [out] long* pcchSkip);
 }
 
 [
@@ -219,17 +356,17 @@ interface IEnumCodePage : IUnknown
         WCHAR wszCharset[MAX_MIMECSET_NAME];
     } MIMECSETINFO, *PMIMECSETINFO;
 
-    HRESULT Clone(
+    HRESULT Clone( 
         [out] IEnumCodePage **ppEnum);
 
-    HRESULT Next(
+    HRESULT Next(      
         [in] ULONG celt,
         [out] PMIMECPINFO rgelt,
         [out] ULONG *pceltFetched);
 
     HRESULT Reset();
 
-    HRESULT Skip(
+    HRESULT Skip(      
         [in] ULONG celt);
 }
 
@@ -240,33 +377,33 @@ interface IEnumCodePage : IUnknown
 ]
 interface IMLangConvertCharset : IUnknown
 {
-    HRESULT Initialize(
+    HRESULT Initialize(      
         [in] UINT uiSrcCodePage,
         [in] UINT uiDstCodePage,
         [in] DWORD dwProperty);
 
-    HRESULT GetSourceCodePage(
+    HRESULT GetSourceCodePage(      
         [out] UINT *puiSrcCodePage);
 
-    HRESULT GetDestinationCodePage(
+    HRESULT GetDestinationCodePage(      
         [out] UINT *puiDstCodePage);
 
-    HRESULT GetProperty(
+    HRESULT GetProperty(      
         [out] DWORD *pdwProperty);
 
-    HRESULT DoConversion(
+    HRESULT DoConversion(      
         [in] BYTE *pSrcStr,
         [in,out] UINT *pcSrcSize,
         [in] BYTE *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT DoConversionToUnicode(
+    HRESULT DoConversionToUnicode(      
         [in] CHAR *pSrcStr,
         [in,out] UINT *pcSrcSize,
         [in] WCHAR *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT DoConversionFromUnicode(
+    HRESULT DoConversionFromUnicode(      
         [in] WCHAR *pSrcStr,
         [in,out] UINT *pcSrcSize,
         [in] CHAR *pDstStr,
@@ -298,17 +435,17 @@ interface IEnumRfc1766 : IUnknown
         WCHAR wszLocaleName[MAX_LOCALE_NAME];
     } RFC1766INFO, *PRFC1766INFO;
 
-    HRESULT Clone(
+    HRESULT Clone( 
         [out] IEnumRfc1766 **ppEnum);
 
-    HRESULT Next(
+    HRESULT Next(      
         [in] ULONG celt,
         [out] PRFC1766INFO rgelt,
         [out] ULONG *pceltFetched);
 
     HRESULT Reset();
 
-    HRESULT Skip(
+    HRESULT Skip(      
         [in] ULONG celt);
 }
 
@@ -319,30 +456,30 @@ interface IEnumRfc1766 : IUnknown
 ]
 interface IMultiLanguage : IUnknown
 {
-    HRESULT GetNumberOfCodePageInfo(
+    HRESULT GetNumberOfCodePageInfo(      
         [out] UINT *pcCodePage);
 
-    HRESULT GetCodePageInfo(
+    HRESULT GetCodePageInfo(      
         [in] UINT uiCodePage,
         [out] PMIMECPINFO pCodePageInfo);
 
-    HRESULT GetFamilyCodePage(
+    HRESULT GetFamilyCodePage(      
         [in] UINT uiCodePage,
         [out] UINT *puiFamilyCodePage);
 
-    HRESULT EnumCodePages(
+    HRESULT EnumCodePages(      
         [in] DWORD grfFlags,
         [out] IEnumCodePage **ppEnumCodePage);
 
-    HRESULT GetCharsetInfo(
+    HRESULT GetCharsetInfo(      
         [in] BSTR Charset,
         [in] PMIMECSETINFO pCharsetInfo);
 
-    HRESULT IsConvertible(
+    HRESULT IsConvertible(      
         [in] DWORD dwSrcEncoding,
         [in] DWORD dwDstEncoding);
 
-    HRESULT ConvertString(
+    HRESULT ConvertString(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwSrcEncoding,
         [in] DWORD dwDstEncoding,
@@ -351,7 +488,7 @@ interface IMultiLanguage : IUnknown
         [in] BYTE *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT ConvertStringToUnicode(
+    HRESULT ConvertStringToUnicode(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwEncoding,
         [in] CHAR *pSrcStr,
@@ -359,7 +496,7 @@ interface IMultiLanguage : IUnknown
         [in] WCHAR *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT ConvertStringFromUnicode(
+    HRESULT ConvertStringFromUnicode(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwEncoding,
         [in] WCHAR *pSrcStr,
@@ -369,22 +506,22 @@ interface IMultiLanguage : IUnknown
 
     HRESULT ConvertStringReset();
 
-    HRESULT GetRfc1766FromLcid(
+    HRESULT GetRfc1766FromLcid(      
         [in] LCID Locale,
         [out] BSTR *pbstrRfc1766);
 
-    HRESULT GetLcidFromRfc1766(
+    HRESULT GetLcidFromRfc1766(      
         [out] LCID *pLocale,
         [in] BSTR bstrRfc1766);
 
-    HRESULT EnumRfc1766(
+    HRESULT EnumRfc1766(      
         [out] IEnumRfc1766 **ppEnumRfc1766);
 
-    HRESULT GetRfc1766Info(
+    HRESULT GetRfc1766Info(      
         [in] LCID Locale,
         [out] PRFC1766INFO pRfc1766Info);
 
-    HRESULT CreateConvertCharset(
+    HRESULT CreateConvertCharset(      
         [in] UINT uiSrcCodePage,
         [in] UINT uiDstCodePage,
         [in] DWORD dwProperty,
@@ -407,32 +544,32 @@ interface IMultiLanguage2 : IUnknown
         INT nConfidence;
     } DetectEncodingInfo, *pDetectEncodingInfo;
 
-    HRESULT GetNumberOfCodePageInfo(
+    HRESULT GetNumberOfCodePageInfo(      
         [out] UINT *pcCodePage);
 
-    HRESULT GetCodePageInfo(
+    HRESULT GetCodePageInfo(      
         [in] UINT uiCodePage,
         [in] LANGID LangId,
         [out] PMIMECPINFO pCodePageInfo);
 
-    HRESULT GetFamilyCodePage(
+    HRESULT GetFamilyCodePage(      
         [in] UINT uiCodePage,
         [out] UINT *puiFamilyCodePage);
 
-    HRESULT EnumCodePages(
+    HRESULT EnumCodePages(      
         [in] DWORD grfFlags,
         [in] LANGID LangId,
         [out] IEnumCodePage **ppEnumCodePage);
 
-    HRESULT GetCharsetInfo(
+    HRESULT GetCharsetInfo(      
         [in] BSTR Charset,
         [in] PMIMECSETINFO pCharsetInfo);
 
-    HRESULT IsConvertible(
+    HRESULT IsConvertible(      
         [in] DWORD dwSrcEncoding,
         [in] DWORD dwDstEncoding);
 
-    HRESULT ConvertString(
+    HRESULT ConvertString(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwSrcEncoding,
         [in] DWORD dwDstEncoding,
@@ -441,7 +578,7 @@ interface IMultiLanguage2 : IUnknown
         [in] BYTE *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT ConvertStringToUnicode(
+    HRESULT ConvertStringToUnicode(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwEncoding,
         [in] CHAR *pSrcStr,
@@ -449,7 +586,7 @@ interface IMultiLanguage2 : IUnknown
         [in] WCHAR *pDstStr,
         [in,out] UINT *pcDstSize);
 
-    HRESULT ConvertStringFromUnicode(
+    HRESULT ConvertStringFromUnicode(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwEncoding,
         [in] WCHAR *pSrcStr,
@@ -459,30 +596,30 @@ interface IMultiLanguage2 : IUnknown
 
     HRESULT ConvertStringReset();
 
-    HRESULT GetRfc1766FromLcid(
+    HRESULT GetRfc1766FromLcid(      
         [in] LCID Locale,
         [out] BSTR *pbstrRfc1766);
 
-    HRESULT GetLcidFromRfc1766(
+    HRESULT GetLcidFromRfc1766(      
         [out] LCID *pLocale,
         [in] BSTR bstrRfc1766);
 
-    HRESULT EnumRfc1766(
+    HRESULT EnumRfc1766(      
         [in] LANGID LangId,
         [out] IEnumRfc1766 **ppEnumRfc1766);
 
-    HRESULT GetRfc1766Info(
+    HRESULT GetRfc1766Info(      
         [in] LCID Locale,
         [in] LANGID LangId,
         [out] PRFC1766INFO pRfc1766Info);
 
-    HRESULT CreateConvertCharset(
+    HRESULT CreateConvertCharset(      
         [in] UINT uiSrcCodePage,
         [in] UINT uiDstCodePage,
         [in] DWORD dwProperty,
         [out] IMLangConvertCharset **ppMLangConvertCharset);
 
-    HRESULT ConvertStringInIStream(
+    HRESULT ConvertStringInIStream(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwFlag,
         [in] WCHAR *lpFallBack,
@@ -491,7 +628,7 @@ interface IMultiLanguage2 : IUnknown
         [in] IStream *pstmIn,
         [in] IStream *pstmOut);
 
-    HRESULT ConvertStringToUnicodeEx(
+    HRESULT ConvertStringToUnicodeEx(      
         [in,out] DWORD *pdwMode,
         [in] DWORD dwEncoding,
         [in] CHAR *pSrcStr,
@@ -511,14 +648,14 @@ interface IMultiLanguage2 : IUnknown
         [in] DWORD dwFlag,
         [in] WCHAR *lpFallBack);
 
-    HRESULT DetectCodepageInIStream(
+    HRESULT DetectCodepageInIStream(      
         [in] DWORD dwFlag,
         [in] DWORD dwPrefWinCodePage,
         [in] IStream *pstmIn,
         [in,out] DetectEncodingInfo *lpEncoding,
         [in,out] INT *pnScores);
 
-    HRESULT DetectInputCodepage(
+    HRESULT DetectInputCodepage(      
         [in] DWORD dwFlag,
         [in] DWORD dwPrefWinCodePage,
         [in] CHAR *pSrcStr,
@@ -530,7 +667,7 @@ interface IMultiLanguage2 : IUnknown
         [in] UINT uiCodePage,
         [in] HWND hwnd);
 
-    HRESULT GetCodePageDescription(
+    HRESULT GetCodePageDescription(      
         [in] UINT uiCodePage,
         [in] LCID lcid,
         [in,out] LPWSTR lpWideCharStr,
@@ -539,13 +676,13 @@ interface IMultiLanguage2 : IUnknown
     HRESULT IsCodePageInstallable(
         [in] UINT uiCodePage);
 
-    HRESULT SetMimeDBSource(
+    HRESULT SetMimeDBSource(      
         [in] MIMECONTF dwSource);
 
-    HRESULT GetNumberOfScripts(
+    HRESULT GetNumberOfScripts(      
         [out] UINT *pnScripts);
 
-    HRESULT EnumScripts(
+    HRESULT EnumScripts(      
         [in] DWORD dwFlags,
         [in] LANGID LangId,
         [out] IEnumScript **ppEnumScript);
@@ -593,6 +730,7 @@ coclass CMultiLanguage
     interface IMLangCodePages;
     interface IMLangFontLink;
     /* interface IMLangLineBreakConsole; */
+    interface IMLangFontLink2;
 }
 
 cpp_quote("STDAPI LcidToRfc1766A(LCID, LPSTR, INT);")

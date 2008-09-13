@@ -16,10 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "ocidl.idl";
 import "oleidl.idl";
 import "oaidl.idl";
 import "servprov.idl";
+#endif
 
 cpp_quote("#define fdexNameCaseSensitive       0x00000001L")
 cpp_quote("#define fdexNameEnsure              0x00000002L")
@@ -171,6 +173,18 @@ pointer_default(unique)
 ]
 interface IObjectIdentity : IUnknown
 {
-    HRESULT IsEqualObject(
+    HRESULT IsEqualObject( 
             [in] IUnknown *punk);
+}
+
+[
+    object,
+    uuid(c5598e60-b307-11d1-b27d-006008c3fbfb),
+    pointer_default(unique)
+]
+interface ICanHandleException : IUnknown
+{
+    HRESULT CanHandleException(
+            [in] EXCEPINFO *pExcepInfo,
+            [in] VARIANT *pvar);
 }
