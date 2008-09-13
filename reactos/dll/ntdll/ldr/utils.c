@@ -697,7 +697,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                            NULL,
                            NULL,
                            PAGE_READONLY,
-                           SEC_COMMIT | (MapAsDataFile ? 0 : SEC_IMAGE),
+                           MapAsDataFile ? SEC_COMMIT : SEC_IMAGE,
                            FileHandle);
   NtClose(FileHandle);
 
@@ -2048,8 +2048,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     0,
                                     NULL,
                                     &ViewSize,
+                                    ViewShare,
                                     0,
-                                    MEM_COMMIT,
                                     PAGE_READONLY);
         NtCurrentTeb()->Tib.ArbitraryUserPointer = ArbitraryUserPointer;
         if (!NT_SUCCESS(Status))
