@@ -767,15 +767,16 @@ VOID NTAPI MiniportDpc(
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
-  KIRQL OldIrql;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   NdisStatus =
       MiniDequeueWorkItem
       (Adapter, &WorkItemType, &WorkItemContext);
+
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -869,8 +870,6 @@ VOID NTAPI MiniportDpc(
             break;
         }
     }
-
-   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
