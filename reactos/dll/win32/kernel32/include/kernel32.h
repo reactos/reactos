@@ -76,6 +76,7 @@ PTEB GetTeb(VOID);
 HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
 
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
+DWORD FilenameW2A_N(LPSTR dest, INT destlen, LPCWSTR src, INT srclen);
 
 DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sourceLen);
 DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
