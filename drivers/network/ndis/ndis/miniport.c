@@ -1207,6 +1207,17 @@ DoQueries(
       return NdisStatus;
     }
 
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_SEND_PACKETS, sizeof(ULONG),
+                                    &Adapter->NdisMiniportBlock.MaxSendPackets, &BytesWritten);
+
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_MAXIMUM_SEND_PACKETS failed. NdisStatus (0x%X).\n", NdisStatus));
+
+      /* Set it to 1 if it fails because some drivers don't support this (?)*/
+      Adapter->NdisMiniportBlock.MaxSendPackets = 1;
+    }
+
   NDIS_DbgPrint(DEBUG_MINIPORT, ("CurLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.CurrentLookahead));
 
   if (Adapter->NdisMiniportBlock.MaximumLookahead != 0)
