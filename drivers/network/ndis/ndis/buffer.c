@@ -894,7 +894,7 @@ NdisGetFirstBufferFromPacket(
 
     if (Buffer != NULL) {
         *_FirstBufferLength = MmGetMdlByteCount(Buffer);
-        *_FirstBufferVA = MmGetMdlVirtualAddress(Buffer);
+        *_FirstBufferVA = MmGetSystemAddressForMdl(Buffer);
         Buffer = Buffer->Next;
     } else {
         *_FirstBufferLength = 0;
