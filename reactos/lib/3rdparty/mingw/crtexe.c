@@ -202,7 +202,9 @@ __mingw_CRTStartup (void)
     if (__dyn_tls_init_callback != NULL && _IsNonwritableInCurrentImage ((PBYTE) &__dyn_tls_init_callback))
       __dyn_tls_init_callback (NULL, DLL_THREAD_ATTACH, NULL);
     
+#if defined(__i386__) || defined(__x86_64__)
     _pei386_runtime_relocator ();
+#endif
     
     #if defined(__x86_64__)
     __asm__ __volatile__ (

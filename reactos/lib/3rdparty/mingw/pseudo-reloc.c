@@ -12,6 +12,9 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
+/* Only necesary on x86 and amd64 targets */
+#if defined(__i386__) || defined(__x86_64__)
+
 #include <windows.h>
 
 extern char __RUNTIME_PSEUDO_RELOC_LIST__;
@@ -44,3 +47,4 @@ _pei386_runtime_relocator ()
 		   &__RUNTIME_PSEUDO_RELOC_LIST_END__,
 		   &_image_base__);
 }
+#endif

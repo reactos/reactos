@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true" allowwarnings="true">
+<module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true">
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="mingw_common">include</include>
 	<file>CRT_fp10.c</file>
