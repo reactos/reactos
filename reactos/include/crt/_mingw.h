@@ -272,14 +272,12 @@ extern "C" {
 #define _SIZE_T_DEFINED
 #undef size_t
 #ifdef _WIN64
-#define _INTEGRAL_MAX_BITS 64
 #if defined(__GNUC__) && defined(__STRICT_ANSI__)
   typedef unsigned int size_t __attribute__ ((mode (DI)));
 #else
   typedef unsigned __int64 size_t;
 #endif
 #else
-  #define _INTEGRAL_MAX_BITS 32
   typedef unsigned int size_t;
 #endif
 #endif
