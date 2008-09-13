@@ -529,9 +529,87 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 
 
 /**********************************************************************
+ *	I_ScSetServiceBitsA
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+BOOL STDCALL
+I_ScSetServiceBitsA(SC_RPC_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
+                    LPSTR lpString)
+{
+    BOOL bResult;
+
+    HandleBind();
+
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        bResult = RI_ScSetServiceBitsA(BindingHandle,
+                                       (SC_RPC_HANDLE)hServiceStatus,
+                                       dwServiceBits,
+                                       bSetBitsOn,
+                                       bUpdateImmediately,
+                                       lpString);
+    }
+    _SEH_HANDLE
+    {
+        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        bResult = FALSE;
+    }
+    _SEH_END;
+
+    return bResult;
+}
+
+
+/**********************************************************************
+ *	I_ScSetServiceBitsW
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+BOOL STDCALL
+I_ScSetServiceBitsW(SC_RPC_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
+                    LPWSTR lpString)
+{
+    BOOL bResult;
+
+    HandleBind();
+
+    _SEH_TRY
+    {
+        /* Call to services.exe using RPC */
+        bResult = RI_ScSetServiceBitsW(BindingHandle,
+                                       (SC_RPC_HANDLE)hServiceStatus,
+                                       dwServiceBits,
+                                       bSetBitsOn,
+                                       bUpdateImmediately,
+                                       lpString);
+    }
+    _SEH_HANDLE
+    {
+        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        bResult = FALSE;
+    }
+    _SEH_END;
+
+    return bResult;
+}
+
+
+/**********************************************************************
  *	SetServiceBits
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
@@ -539,8 +617,11 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
                BOOL bSetBitsOn,
                BOOL bUpdateImmediately)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return I_ScSetServiceBitsW(hServiceStatus,
+                               dwServiceBits,
+                               bSetBitsOn,
+                               bUpdateImmediately,
+                               NULL);
 }
 
 

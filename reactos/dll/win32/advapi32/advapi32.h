@@ -50,6 +50,10 @@ BOOL
 EvtGetLocalHandle(RPC_BINDING_HANDLE *BindingHandle);
 RPC_STATUS EvtUnbindLocalHandle(void);
 
+/* scm.c */
+DWORD
+ScmRpcStatusToWinError(RPC_STATUS Status);
+
 /* Interface to ntmarta.dll **************************************************/
 
 typedef struct _NTMARTA

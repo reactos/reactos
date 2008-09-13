@@ -1035,7 +1035,7 @@ DWORD RNotifyBootConfigStatus(
 
 
 /* Function 10 */
-DWORD RSetServiceBitsW(
+DWORD RI_ScSetServiceBitsW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,
@@ -2819,7 +2819,7 @@ DWORD RGetServiceKeyNameW(
 
 
 /* Function 22 */
-DWORD RSetServiceBitsA(
+DWORD RI_ScSetServiceBitsA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,

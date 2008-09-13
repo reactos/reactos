@@ -53,7 +53,6 @@
 			<file>rpc.c</file>
 			<file>scm.c</file>
 			<file>sctrl.c</file>
-			<file>undoc.c</file>
 	</directory>
 	<directory name="token">
 			<file>privilege.c</file>

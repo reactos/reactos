@@ -366,7 +366,7 @@ interface svcctl
         [in] DWORD BootAcceptable);
 
     /* Function 10 */
-    DWORD RSetServiceBitsW(
+    DWORD RI_ScSetServiceBitsW(
         [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,
@@ -490,7 +490,7 @@ interface svcctl
         [in, out] DWORD* lpcchBuffer);
 
     /* Function 22 */
-    DWORD RSetServiceBitsA(
+    DWORD RI_ScSetServiceBitsA(
         [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,

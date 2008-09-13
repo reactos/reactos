@@ -307,8 +307,8 @@ GetWindowsAccountDomainSid@12
 ;I_ScIsSecurityProcess
 ;I_ScPnPGetServiceName
 ;I_ScSendTSMessage
-;I_ScSetServiceBitsA@20
-;I_ScSetServiceBitsW@20
+I_ScSetServiceBitsA@20
+I_ScSetServiceBitsW@20
 ;IdentifyCodeAuthzLevelW
 ImpersonateAnonymousToken@4
 ImpersonateLoggedOnUser@4

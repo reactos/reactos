@@ -78,7 +78,7 @@ HandleUnbind(VOID)
 #endif
 
 
-static DWORD
+DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
     switch (Status)
