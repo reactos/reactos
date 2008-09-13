@@ -59,7 +59,7 @@ EthDeleteFilter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -100,7 +100,7 @@ EthFilterDprIndicateReceive(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT

@@ -465,7 +465,7 @@ NdisAllocatePacketPool(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
