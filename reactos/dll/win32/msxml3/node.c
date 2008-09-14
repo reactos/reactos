@@ -802,7 +802,7 @@ static HRESULT WINAPI xmlnode_get_nodeTypeString(
         str = (const xmlChar*) "text";
         break;
     default:
-        FIXME("nodeName not mapped correctly (%d)\n", This->node->type);
+        FIXME("Unknown node type (%d)\n", This->node->type);
         str = This->node->name;
         break;
     }

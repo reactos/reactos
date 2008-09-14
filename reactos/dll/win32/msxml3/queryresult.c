@@ -302,12 +302,51 @@ static const struct IXMLDOMNodeListVtbl queryresult_vtbl =
     queryresult__newEnum,
 };
 
+static HRESULT queryresult_get_dispid(IUnknown *iface, BSTR name, DWORD flags, DISPID *dispid)
+{
+    queryresult *This = impl_from_IXMLDOMNodeList( (IXMLDOMNodeList*)iface );
+    WCHAR *ptr;
+    DWORD idx=0;
+
+    for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
+        idx = idx*10 + (*ptr-'0');
+    if(*ptr)
+        return DISP_E_UNKNOWNNAME;
+
+    if(idx >= xmlXPathNodeSetGetLength(This->result->nodesetval))
+        return DISP_E_UNKNOWNNAME;
+
+    *dispid = MSXML_DISPID_CUSTOM_MIN + idx;
+    TRACE("ret %x\n", *dispid);
+    return S_OK;
+}
+
+static HRESULT queryresult_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
+        VARIANT *res, EXCEPINFO *ei)
+{
+    queryresult *This = impl_from_IXMLDOMNodeList( (IXMLDOMNodeList*)iface );
+
+    if(flags != DISPATCH_PROPERTYGET) {
+        FIXME("flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    V_VT(res) = VT_DISPATCH;
+    V_DISPATCH(res) = (IDispatch*)create_node(This->result->nodesetval->nodeTab[This->resultPos]);
+    return S_OK;
+}
+
+static const dispex_static_data_vtbl_t queryresult_dispex_vtbl = {
+    queryresult_get_dispid,
+    queryresult_invoke
+};
+
 static const tid_t queryresult_iface_tids[] = {
     IXMLDOMNodeList_tid,
     0
 };
 static dispex_static_data_t queryresult_dispex = {
-    NULL,
+    &queryresult_dispex_vtbl,
     IXMLDOMNodeList_tid,
     NULL,
     queryresult_iface_tids
