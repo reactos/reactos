@@ -748,11 +748,10 @@ NdisMQueryInformationComplete(
     KeLowerIrql(OldIrql);
 }
 
-VOID NTAPI MiniportWorker(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Context)
+VOID NTAPI MiniportWorker(IN PVOID WorkItem)
 {
-  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(Context);
+  PNDIS_WORK_ITEM NdisWorkItem = WorkItem;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(NdisWorkItem->Context);
   KIRQL OldIrql;
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
@@ -858,6 +857,8 @@ VOID NTAPI MiniportWorker(
             break;
         }
     }
+
+  ExFreePool(WorkItem);
 }
 
 
@@ -876,15 +877,20 @@ VOID NTAPI MiniportDpc(
  *     SystemArgument2 = Unused
  */
 {
-  PIO_WORKITEM WorkItem;
-  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
+  PNDIS_WORK_ITEM NdisWorkItem;
+  PWORK_QUEUE_ITEM WorkItem;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  WorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
-  if( !WorkItem ) return;
+  NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(PNDIS_WORK_ITEM));
 
-  IoQueueWorkItem(WorkItem, MiniportWorker, CriticalWorkQueue, DeferredContext);
+  WorkItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
+
+  NdisWorkItem->Context = DeferredContext;
+
+  ExInitializeWorkItem(WorkItem, MiniportWorker, NdisWorkItem);
+
+  ExQueueWorkItem(WorkItem, CriticalWorkQueue);
 }
 
 
