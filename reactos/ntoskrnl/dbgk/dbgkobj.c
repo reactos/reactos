@@ -1643,7 +1643,12 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Don't allow debugging the initial system process */
-    if (Process == PsInitialSystemProcess) return STATUS_ACCESS_DENIED;
+    if (Process == PsInitialSystemProcess)
+    {
+        /* Dereference and fail */
+        ObDereferenceObject(Process);
+        return STATUS_ACCESS_DENIED;
+    }
 
     /* Reference the debug object */
     Status = ObReferenceObjectByHandle(DebugHandle,
