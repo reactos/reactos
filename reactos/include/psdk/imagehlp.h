@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#include <wintrust.h>
+
 #define API_VERSION_NUMBER 7
 #define BIND_NO_BOUND_IMPORTS 0x00000001
 #define BIND_NO_UPDATE 0x00000002
