@@ -179,17 +179,21 @@ VOID NTAPI DispCancelRequest(
 	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
 			 DispDoDisconnect, &DisType ) )
 	    ASSERT(0);
+
+	IoReleaseCancelSpinLock(Irp->CancelIrql);
         return;
 
     case TDI_SEND_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
+            break;
         }
         break;
 
     case TDI_RECEIVE_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
             TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
+            break;
         }
 
         DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
