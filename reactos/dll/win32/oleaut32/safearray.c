@@ -1500,6 +1500,8 @@ HRESULT WINAPI SafeArrayGetVartype(SAFEARRAY* psa, VARTYPE* pvt)
 
   if (psa->fFeatures & FADF_RECORD)
     *pvt = VT_RECORD;
+  else if ((psa->fFeatures & (FADF_HAVEIID|FADF_DISPATCH)) == (FADF_HAVEIID|FADF_DISPATCH))
+    *pvt = VT_DISPATCH;
   else if (psa->fFeatures & FADF_HAVEIID)
     *pvt = VT_UNKNOWN;
   else if (psa->fFeatures & FADF_HAVEVARTYPE)

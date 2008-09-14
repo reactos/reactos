@@ -1,5 +1,7 @@
 /*
- * Copyright 2001 Dmitry Timoshkov
+ * oleaut32 (Simplified and Traditional Chinese Resources)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,10 +18,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_OLESELFREGISTER
-#define WINE_FILEDESCRIPTION_STR "Wine OLE dll"
-#define WINE_FILENAME_STR "oleaut32.dll"
-#define WINE_FILEVERSION 6, 0, 6001, 18000 /* version from Vista SP1 */
-#define WINE_FILEVERSION_STR "6.0.6001.18000"
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
 
-#include "wine/wine_common_ver.rc"
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_TRUE  "真"
+  IDS_FALSE "假"
+  IDS_YES   "是"
+  IDS_NO    "否"
+  IDS_ON    "开"
+  IDS_OFF   "关"
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_TRUE  "真"
+  IDS_FALSE "假"
+  IDS_YES   "是"
+  IDS_NO    "否"
+  IDS_ON    "開"
+  IDS_OFF   "關"
+}
+
+#pragma code_page(default)

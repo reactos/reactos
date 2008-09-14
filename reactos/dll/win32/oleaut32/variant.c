@@ -1191,7 +1191,7 @@ INT WINAPI DosDateTimeToVariantTime(USHORT wDosDate, USHORT wDosTime,
   ud.st.wSecond = DOS_SECOND(wDosTime);
   ud.st.wDayOfWeek = ud.st.wMilliseconds = 0;
 
-  return !VarDateFromUdate(&ud, 0, pDateOut);
+  return VarDateFromUdate(&ud, 0, pDateOut) == S_OK;
 }
 
 /**********************************************************************
@@ -1255,7 +1255,7 @@ INT WINAPI SystemTimeToVariantTime(LPSYSTEMTIME lpSt, double *pDateOut)
     return FALSE;
 
   ud.st = *lpSt;
-  return !VarDateFromUdate(&ud, 0, pDateOut);
+  return VarDateFromUdate(&ud, 0, pDateOut) == S_OK;
 }
 
 /***********************************************************************

@@ -36,6 +36,7 @@
 #include "oleauto.h"
 #include "rpcproxy.h"
 #include "typelib.h"
+#include "ocidl.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -50,9 +51,11 @@ static CStdPSFactoryBuffer PSFactoryBuffer;
 CSTDSTUBBUFFERRELEASE(&PSFactoryBuffer)
 
 extern const ExtendedProxyFileInfo oleaut32_oaidl_ProxyFileInfo;
+extern const ExtendedProxyFileInfo oleaut32_ocidl_ProxyFileInfo;
 
 static const ProxyFileInfo *OLEAUT32_ProxyFileList[] = {
   &oleaut32_oaidl_ProxyFileInfo,
+  &oleaut32_ocidl_ProxyFileInfo,
   NULL
 };
 
@@ -1128,6 +1131,32 @@ void WINAPI LPSAFEARRAY_UserFree(ULONG *pFlags, LPSAFEARRAY *ppsa)
     SafeArrayDestroy(*ppsa);
 }
 
+
+ULONG WINAPI HFONT_UserSize(ULONG *pFlags, ULONG Start, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return 0;
+}
+
+unsigned char * WINAPI HFONT_UserMarshal(ULONG *pFlags, unsigned char *Buffer, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return NULL;
+}
+
+unsigned char * WINAPI HFONT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return NULL;
+}
+
+void WINAPI HFONT_UserFree(ULONG *pFlags, HFONT *phfont)
+{
+    FIXME(":stub\n");
+    return;
+}
+
+
 /* IDispatch */
 /* exactly how Invoke is marshalled is not very clear to me yet,
  * but the way I've done it seems to work for me */
@@ -2028,4 +2057,159 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
 {
   FIXME("not implemented\n");
   return E_FAIL;
+}
+
+/* call_as/local stubs for ocidl.idl */
+
+HRESULT CALLBACK IClassFactory2_CreateInstanceLic_Proxy(
+    IClassFactory2* This,
+    IUnknown *pUnkOuter,
+    IUnknown *pUnkReserved,
+    REFIID riid,
+    BSTR bstrKey,
+    PVOID *ppvObj)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IClassFactory2_CreateInstanceLic_Stub(
+    IClassFactory2* This,
+    REFIID riid,
+    BSTR bstrKey,
+    IUnknown **ppvObj)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumConnections_Next_Proxy(
+    IEnumConnections* This,
+    ULONG cConnections,
+    LPCONNECTDATA rgcd,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumConnections_Next_Stub(
+    IEnumConnections* This,
+    ULONG cConnections,
+    LPCONNECTDATA rgcd,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumConnectionPoints_Next_Proxy(
+    IEnumConnectionPoints* This,
+    ULONG cConnections,
+    LPCONNECTIONPOINT *ppCP,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumConnectionPoints_Next_Stub(
+    IEnumConnectionPoints* This,
+    ULONG cConnections,
+    LPCONNECTIONPOINT *ppCP,
+    ULONG *pcFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IPersistMemory_Load_Proxy(
+    IPersistMemory* This,
+    LPVOID pMem,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IPersistMemory_Load_Stub(
+    IPersistMemory* This,
+    BYTE *pMem,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IPersistMemory_Save_Proxy(
+    IPersistMemory* This,
+    LPVOID pMem,
+    BOOL fClearDirty,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IPersistMemory_Save_Stub(
+    IPersistMemory* This,
+    BYTE *pMem,
+    BOOL fClearDirty,
+    ULONG cbSize)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+void CALLBACK IAdviseSinkEx_OnViewStatusChange_Proxy(
+    IAdviseSinkEx* This,
+    DWORD dwViewStatus)
+{
+    FIXME("not implemented\n");
+}
+
+HRESULT __RPC_STUB IAdviseSinkEx_OnViewStatusChange_Stub(
+    IAdviseSinkEx* This,
+    DWORD dwViewStatus)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IEnumOleUndoUnits_Next_Proxy(
+    IEnumOleUndoUnits* This,
+    ULONG cElt,
+    IOleUndoUnit **rgElt,
+    ULONG *pcEltFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IEnumOleUndoUnits_Next_Stub(
+    IEnumOleUndoUnits* This,
+    ULONG cElt,
+    IOleUndoUnit **rgElt,
+    ULONG *pcEltFetched)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT CALLBACK IQuickActivate_QuickActivate_Proxy(
+    IQuickActivate* This,
+    QACONTAINER *pQaContainer,
+    QACONTROL *pQaControl)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT __RPC_STUB IQuickActivate_QuickActivate_Stub(
+    IQuickActivate* This,
+    QACONTAINER *pQaContainer,
+    QACONTROL *pQaControl)
+{
+    FIXME("not implemented\n");
+    return E_NOTIMPL;
 }

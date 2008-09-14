@@ -1,6 +1,6 @@
 2  stub CREATETYPELIB
 3  pascal LoadTypeLib(ptr ptr) LoadTypeLib16
-4  stub LHASHVALOFNAMESYS
+4  pascal LHashValOfNameSys(word long str) LHashValOfNameSysA
 5  stub _IID_ICREATETYPEINFO
 6  stub _IID_ICREATETYPELIB
 7  stub _IID_ITYPECOMP
