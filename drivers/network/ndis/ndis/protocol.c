@@ -340,13 +340,10 @@ ProSend(
           KeLowerIrql(RaiseOldIrql);
         }
 
-      /* SendPackets handlers return void - they always "succeed" */
-      NdisStatus = NDIS_STATUS_SUCCESS;
+      NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)Packet);
     }
   else
     {
-      /* XXX FIXME THIS IS WRONG */
-      /* uh oh... forgot why i thought that... */
       if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
         {
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
@@ -363,12 +360,13 @@ ProSend(
           NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
             Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
-	  if( NdisStatus != NDIS_STATUS_PENDING ) {
-	      Adapter->MiniportBusy = FALSE;
-	  }
           KeLowerIrql(RaiseOldIrql);
         }
     }
+
+  if( NdisStatus != NDIS_STATUS_PENDING ) {
+      Adapter->MiniportBusy = FALSE;
+  }
 
   /* XXX why the hell do we do this? */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
