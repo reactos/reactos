@@ -673,3 +673,5 @@ modules\windows\vmx_fb.dll                                                 1   o
 modules\windows\vmx_mode.dll                                               1   optional
 modules\windows\vmx_svga.sys                                               2   optional
 modules\windows\vmx_svga.inf                                               6   optional
+modules\windows\kvmnet.sys                                                 2   optional
+modules\windows\kvmnet.inf                                                 6   optional
