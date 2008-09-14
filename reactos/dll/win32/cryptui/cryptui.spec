@@ -1,5 +1,5 @@
 1 stub ACUIProviderInvokeUI
-2 stub CryptUIDlgCertMgr
+2 stdcall CryptUIDlgCertMgr(ptr)
 3 stub CryptUIDlgFreeCAContext
 4 stub CryptUIDlgSelectCA
 5 stub CryptUIDlgSelectCertificateA

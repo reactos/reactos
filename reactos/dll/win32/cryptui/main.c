@@ -22,6 +22,8 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winuser.h"
+#include "cryptuiapi.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptui);
@@ -43,4 +45,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
     }
     return TRUE;
+}
+
+/***********************************************************************
+ *		CryptUIDlgCertMgr (CRYPTUI.@)
+ */
+BOOL WINAPI CryptUIDlgCertMgr(PCCRYPTUI_CERT_MGR_STRUCT pCryptUICertMgr)
+{
+    FIXME("(%p): stub\n", pCryptUICertMgr);
+    return FALSE;
 }
