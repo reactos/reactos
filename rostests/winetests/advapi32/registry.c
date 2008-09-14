@@ -159,9 +159,8 @@ static const char *wine_debugstr_wn( const WCHAR *str, int n )
 
 
 #define ADVAPI32_GET_PROC(func) \
-    p ## func = (void*)GetProcAddress(hadvapi32, #func); \
-    if(!p ## func) \
-      trace("GetProcAddress(%s) failed\n", #func);
+    p ## func = (void*)GetProcAddress(hadvapi32, #func);
+
 
 static void InitFunctionPtrs(void)
 {
@@ -263,7 +262,11 @@ static void test_hkey_main_Value_W(LPCWSTR name, LPCWSTR string,
     ret = RegQueryValueExW(hkey_main, name, NULL, &type, NULL, &cbData);
     GLE = GetLastError();
     ok(ret == ERROR_SUCCESS, "RegQueryValueExW failed: %d, GLE=%d\n", ret, GLE);
-    if(GLE == ERROR_CALL_NOT_IMPLEMENTED) return;
+    if(GLE == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("RegQueryValueExW() is not implemented\n");
+        return;
+    }
 
     ok(type == REG_SZ, "RegQueryValueExW returned type %d\n", type);
     ok(cbData == full_byte_len,
@@ -328,13 +331,21 @@ static void test_set_value(void)
     test_hkey_main_Value_A(NULL, substring2A, sizeof(substring2A));
     test_hkey_main_Value_W(NULL, substring2W, sizeof(substring2W));
 
-    /* only REG_SZ is supported */
+    /* only REG_SZ is supported on NT*/
     ret = RegSetValueA(hkey_main, NULL, REG_BINARY, string2A, sizeof(string2A));
-    ok(ret == ERROR_INVALID_PARAMETER, "RegSetValueA should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
+    /* NT: ERROR_INVALID_PARAMETER, 9x: ERROR_SUCCESS */
+    ok(ret == ERROR_INVALID_PARAMETER || broken(ret == ERROR_SUCCESS),
+        "got %d (expected ERROR_INVALID_PARAMETER or ERROR_SUCCESS)\n", ret);
+
     ret = RegSetValueA(hkey_main, NULL, REG_EXPAND_SZ, string2A, sizeof(string2A));
-    ok(ret == ERROR_INVALID_PARAMETER, "RegSetValueA should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
+    /* NT: ERROR_INVALID_PARAMETER, 9x: ERROR_SUCCESS */
+    ok(ret == ERROR_INVALID_PARAMETER || broken(ret == ERROR_SUCCESS),
+        "got %d (expected ERROR_INVALID_PARAMETER or ERROR_SUCCESS)\n", ret);
+
     ret = RegSetValueA(hkey_main, NULL, REG_MULTI_SZ, string2A, sizeof(string2A));
-    ok(ret == ERROR_INVALID_PARAMETER, "RegSetValueA should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
+    /* NT: ERROR_INVALID_PARAMETER, 9x: ERROR_SUCCESS */
+    ok(ret == ERROR_INVALID_PARAMETER || broken(ret == ERROR_SUCCESS),
+        "got %d (expected ERROR_INVALID_PARAMETER or ERROR_SUCCESS)\n", ret);
 
     /* Test RegSetValueExA with a 'zero-byte' string (as Office 2003 does).
      * Surprisingly enough we're supposed to get zero bytes out of it.
@@ -433,7 +444,7 @@ static void create_test_entries(void)
         "RegSetValueExA failed\n");
     ok(!RegSetValueExA(hkey_main,"TP1_SZ",0,REG_SZ, (const BYTE *)sTestpath1, strlen(sTestpath1)+1), 
         "RegSetValueExA failed\n");
-    ok(!RegSetValueExA(hkey_main,"TP1_ZB_SZ",0,REG_SZ, NULL, 0),
+    ok(!RegSetValueExA(hkey_main,"TP1_ZB_SZ",0,REG_SZ, (const BYTE *)"", 0),
        "RegSetValueExA failed\n");
     ok(!RegSetValueExA(hkey_main,"TP2_EXP_SZ",0,REG_EXPAND_SZ, (const BYTE *)sTestpath2, strlen(sTestpath2)+1), 
         "RegSetValueExA failed\n");
@@ -556,7 +567,7 @@ static void test_enum_value(void)
     res = RegSetValueExW( test_key, testW, 0, REG_SZ, (const BYTE *)foobarW, 7*sizeof(WCHAR) );
     if (res==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("RegSetValueExW is not implemented\n");
+        win_skip("RegSetValueExW is not implemented\n");
         goto cleanup;
     }
     ok( res == 0, "RegSetValueExW failed error %d\n", res );
@@ -675,7 +686,7 @@ static void test_get_value(void)
    
     if(!pRegGetValueA)
     {
-        skip("RegGetValue not available on this platform\n");
+        win_skip("RegGetValue not available on this platform\n");
         return;
     }
 
@@ -775,7 +786,7 @@ static void test_get_value(void)
     ret = pRegGetValueA(hkey_main, NULL, "TP1_SZ", RRF_RT_REG_SZ, &type, NULL, &size);
     ok(ret == ERROR_SUCCESS, "ret=%d\n", ret);
     /* v5.2.3790.1830 (2003 SP1) returns sTestpath1 length + 2 here. */
-    ok(size == strlen(sTestpath1)+1 || size == strlen(sTestpath1)+2,
+    ok(size == strlen(sTestpath1)+1 || broken(size == strlen(sTestpath1)+2),
        "strlen(sTestpath1)=%d size=%d\n", lstrlenA(sTestpath1), size);
     ok(type == REG_SZ, "type=%d\n", type);
 
@@ -816,7 +827,7 @@ static void test_get_value(void)
     ret = pRegGetValueA(hkey_main, NULL, "TP1_EXP_SZ", RRF_RT_REG_SZ, &type, buf, &size);
     ok(ret == ERROR_SUCCESS, "ret=%d\n", ret);
     /* At least v5.2.3790.1830 (2003 SP1) returns the unexpanded sTestpath1 length + 1 here. */
-    ok((size == strlen(expanded)+1) || (size == strlen(sTestpath1)+1), 
+    ok(size == strlen(expanded)+1 || broken(size == strlen(sTestpath1)+1),
         "strlen(expanded)=%d, strlen(sTestpath1)=%d, size=%d\n", lstrlenA(expanded), lstrlenA(sTestpath1), size);
     ok(type == REG_SZ, "type=%d\n", type);
     ok(!strcmp(expanded, buf), "expanded=\"%s\" buf=\"%s\"\n", expanded, buf);
@@ -826,7 +837,7 @@ static void test_get_value(void)
     ret = pRegGetValueA(hkey_main, NULL, "TP2_EXP_SZ", RRF_RT_REG_SZ, &type, buf, &size);
     ok(ret == ERROR_SUCCESS, "ret=%d\n", ret);
     /* At least v5.2.3790.1830 (2003 SP1) returns the unexpanded sTestpath2 length + 1 here. */
-    ok((size == strlen(expanded2)+1) || (size == strlen(sTestpath2)+1),
+    ok(size == strlen(expanded2)+1 || broken(size == strlen(sTestpath2)+1),
         "strlen(expanded2)=%d, strlen(sTestpath1)=%d, size=%d\n", lstrlenA(expanded2), lstrlenA(sTestpath2), size);
     ok(type == REG_SZ, "type=%d\n", type);
     ok(!strcmp(expanded2, buf), "expanded2=\"%s\" buf=\"%s\"\n", expanded2, buf);
@@ -844,7 +855,7 @@ static void test_get_value(void)
     ret = pRegGetValueA(hkey_main, NULL, "TP1_EXP_SZ", RRF_RT_REG_EXPAND_SZ|RRF_NOEXPAND, NULL, NULL, &size);
     ok(ret == ERROR_SUCCESS, "ret=%d\n", ret);
     /* v5.2.3790.1830 (2003 SP1) returns sTestpath1 length + 2 here. */
-    ok(size == strlen(sTestpath1)+1 || size == strlen(sTestpath1)+2,
+    ok(size == strlen(sTestpath1)+1 || broken(size == strlen(sTestpath1)+2),
        "strlen(sTestpath1)=%d size=%d\n", lstrlenA(sTestpath1), size);
 
     /* Query REG_EXPAND_SZ using RRF_RT_REG_SZ|RRF_NOEXPAND (type mismatch) */
@@ -854,6 +865,16 @@ static void test_get_value(void)
     /* Query REG_EXPAND_SZ using RRF_RT_REG_EXPAND_SZ (not allowed without RRF_NOEXPAND) */
     ret = pRegGetValueA(hkey_main, NULL, "TP1_EXP_SZ", RRF_RT_REG_EXPAND_SZ, NULL, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "ret=%d\n", ret);
+
+    /* Query REG_EXPAND_SZ using RRF_RT_ANY */
+    buf[0] = 0; type = 0xdeadbeef; size = sizeof(buf);
+    ret = pRegGetValueA(hkey_main, NULL, "TP1_EXP_SZ", RRF_RT_ANY, &type, buf, &size);
+    ok(ret == ERROR_SUCCESS, "ret=%d\n", ret);
+    /* At least v5.2.3790.1830 (2003 SP1) returns the unexpanded sTestpath1 length + 1 here. */
+    ok(size == strlen(expanded)+1 || broken(size == strlen(sTestpath1)+1),
+        "strlen(expanded)=%d, strlen(sTestpath1)=%d, size=%d\n", lstrlenA(expanded), lstrlenA(sTestpath1), size);
+    ok(type == REG_SZ, "type=%d\n", type);
+    ok(!strcmp(expanded, buf), "expanded=\"%s\" buf=\"%s\"\n", expanded, buf);
 } 
 
 static void test_reg_open_key(void)
@@ -935,6 +956,19 @@ static void test_reg_open_key(void)
        ok(ret == ERROR_BAD_PATHNAME || /* NT/2k/XP */
            ret == ERROR_FILE_NOT_FOUND /* Win9x,ME */
            , "expected ERROR_BAD_PATHNAME or ERROR_FILE_NOT_FOUND, got %d\n", ret);
+
+    /* WOW64 flags */
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software", 0, KEY_READ|KEY_WOW64_32KEY, &hkResult);
+    ok((ret == ERROR_SUCCESS && hkResult != NULL) || broken(ret == ERROR_ACCESS_DENIED /* NT4, win2k */),
+        "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+    RegCloseKey(hkResult);
+
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software", 0, KEY_READ|KEY_WOW64_64KEY, &hkResult);
+    ok((ret == ERROR_SUCCESS && hkResult != NULL) || broken(ret == ERROR_ACCESS_DENIED /* NT4, win2k */),
+        "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+    RegCloseKey(hkResult);
 }
 
 static void test_reg_create_key(void)
@@ -960,6 +994,19 @@ static void test_reg_create_key(void)
         ok(!ret, "RegCreateKeyExA failed with error %d\n", ret);
         RegDeleteKey(hkey1, NULL);
     }
+
+    /* WOW64 flags - open an existing key */
+    hkey1 = NULL;
+    ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software", 0, NULL, 0, KEY_READ|KEY_WOW64_32KEY, NULL, &hkey1, NULL);
+    ok((ret == ERROR_SUCCESS && hkey1 != NULL) || broken(ret == ERROR_ACCESS_DENIED /* NT4, win2k */),
+        "RegOpenKeyEx with KEY_WOW64_32KEY failed (err=%u)\n", ret);
+    RegCloseKey(hkey1);
+
+    hkey1 = NULL;
+    ret = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software", 0, NULL, 0, KEY_READ|KEY_WOW64_64KEY, NULL, &hkey1, NULL);
+    ok((ret == ERROR_SUCCESS && hkey1 != NULL) || broken(ret == ERROR_ACCESS_DENIED /* NT4, win2k */),
+        "RegOpenKeyEx with KEY_WOW64_64KEY failed (err=%u)\n", ret);
+    RegCloseKey(hkey1);
 }
 
 static void test_reg_close_key(void)
@@ -1124,7 +1171,7 @@ static void test_regconnectregistry( void)
     schnd = OpenSCManagerA( compName, NULL, GENERIC_READ); 
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("OpenSCManagerA is not implemented\n");
+        win_skip("OpenSCManagerA is not implemented\n");
         return;
     }
 
@@ -1157,7 +1204,9 @@ static void test_reg_query_value(void)
     SetLastError(0xdeadbeef);
     size = MAX_PATH;
     ret = RegQueryValueA((HKEY)0xcafebabe, "subkey", val, &size);
-    ok(ret == ERROR_INVALID_HANDLE || ret == ERROR_BADKEY, /* Windows 98 returns BADKEY */
+    ok(ret == ERROR_INVALID_HANDLE ||
+       ret == ERROR_BADKEY || /* Windows 98 returns BADKEY */
+       ret == ERROR_ACCESS_DENIED, /* non-admin winxp */
        "Expected ERROR_INVALID_HANDLE or ERROR_BADKEY, got %d\n", ret);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -1218,7 +1267,7 @@ static void test_reg_query_value(void)
     ret = RegQueryValueW(subkey, NULL, valW, &size);
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("RegQueryValueW is not implemented\n");
+        win_skip("RegQueryValueW is not implemented\n");
         goto cleanup;
     }
     ok(ret == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", ret);
@@ -1266,7 +1315,7 @@ static void test_reg_delete_tree(void)
     LONG size, ret;
 
     if(!pRegDeleteTreeA) {
-        skip("Skipping RegDeleteTreeA tests, function not present\n");
+        win_skip("Skipping RegDeleteTreeA tests, function not present\n");
         return;
     }
 

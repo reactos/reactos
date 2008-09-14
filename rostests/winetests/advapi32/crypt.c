@@ -903,7 +903,7 @@ static void test_machine_guid(void)
    /* Create and release a provider */
    ret = pCryptAcquireContextA(&hCryptProv, szKeySet, NULL, PROV_RSA_FULL, 0);
    ok(ret, "CryptAcquireContextA failed: %08x\n", GetLastError());
-   CryptReleaseContext(hCryptProv, 0);
+   pCryptReleaseContext(hCryptProv, 0);
 
    if (restoreGuid)
        RegSetValueExA(key, "MachineGuid", 0, REG_SZ, (const BYTE *)originalGuid,

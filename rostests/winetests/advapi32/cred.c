@@ -97,8 +97,12 @@ static void test_CredWriteA(void)
 
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
-    ok(!ret && ( GetLastError() == ERROR_BAD_USERNAME || GetLastError() == ERROR_NO_SUCH_LOGON_SESSION /* Vista */ ),
-        "CredWrite with username without domain should return ERROR_BAD_USERNAME or ERROR_NO_SUCH_LOGON_SESSION not %d\n", GetLastError());
+    ok(!ret, "CredWrite with username without domain should have failed\n");
+    ok(GetLastError() == ERROR_BAD_USERNAME ||
+       GetLastError() == ERROR_NO_SUCH_LOGON_SESSION || /* Vista */
+       broken(GetLastError() == ERROR_IO_PENDING),
+       "CredWrite with username without domain should return ERROR_BAD_USERNAME"
+       "or ERROR_NO_SUCH_LOGON_SESSION not %d\n", GetLastError());
 
     new_cred.UserName = NULL;
     SetLastError(0xdeadbeef);
@@ -175,10 +179,12 @@ static void test_generic(void)
     {
         if (!strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
         {
-            ok(creds[i]->Type == CRED_TYPE_GENERIC, "expected creds[%d]->Type CRED_TYPE_GENERIC but got %d\n", i, creds[i]->Type);
+            ok(creds[i]->Type == CRED_TYPE_GENERIC ||
+               creds[i]->Type == CRED_TYPE_DOMAIN_PASSWORD, /* Vista */
+               "expected creds[%d]->Type CRED_TYPE_GENERIC or CRED_TYPE_DOMAIN_PASSWORD but got %d\n", i, creds[i]->Type);
             ok(!creds[i]->Flags, "expected creds[%d]->Flags 0 but got 0x%x\n", i, creds[i]->Flags);
             ok(!strcmp(creds[i]->Comment, "Comment"), "expected creds[%d]->Comment \"Comment\" but got \"%s\"\n", i, creds[i]->Comment);
-            check_blob(__LINE__, CRED_TYPE_GENERIC, creds[i]);
+            check_blob(__LINE__, creds[i]->Type, creds[i]);
             ok(creds[i]->Persist, "expected creds[%d]->Persist CRED_PERSIST_ENTERPRISE but got %d\n", i, creds[i]->Persist);
             ok(!strcmp(creds[i]->UserName, "winetest"), "expected creds[%d]->UserName \"winetest\" but got \"%s\"\n", i, creds[i]->UserName);
             found = TRUE;
@@ -216,6 +222,12 @@ static void test_domain_password(DWORD cred_type)
     new_cred.TargetAlias = NULL;
     new_cred.UserName = (char *)"test\\winetest";
     ret = pCredWriteA(&new_cred, 0);
+    if (!ret && GetLastError() == ERROR_NO_SUCH_LOGON_SESSION)
+    {
+        skip("CRED_TYPE_DOMAIN_PASSWORD credentials are not supported "
+             "or are disabled. Skipping\n");
+        return;
+    }
     ok(ret, "CredWriteA failed with error %d\n", GetLastError());
 
     ret = pCredEnumerateA(NULL, 0, &count, &creds);
