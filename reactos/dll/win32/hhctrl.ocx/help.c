@@ -89,7 +89,7 @@ BOOL NavigateToUrl(HHInfo *info, LPCWSTR surl)
     BOOL ret;
     HRESULT hres;
 
-    static const WCHAR url_indicator[] = {':', '/', '/'};
+    static const WCHAR url_indicator[] = {':', '/', '/', 0};
 
     TRACE("%s\n", debugstr_w(surl));
 
@@ -587,7 +587,7 @@ static BOOL HH_AddToolbar(HHInfo *pHHInfo)
         heap_free(szBuf);
     }
 
-    SendMessageW(hToolbar, TB_ADDBUTTONSW, dwNumButtons, (LPARAM)&buttons);
+    SendMessageW(hToolbar, TB_ADDBUTTONSW, dwNumButtons, (LPARAM)buttons);
     SendMessageW(hToolbar, TB_AUTOSIZE, 0, 0);
     ShowWindow(hToolbar, SW_SHOW);
 
