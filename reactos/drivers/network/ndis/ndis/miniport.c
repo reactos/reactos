@@ -900,7 +900,7 @@ VOID NTAPI MiniportDpc(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(PNDIS_WORK_ITEM));
+  NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_WORK_ITEM));
 
   WorkItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
 
