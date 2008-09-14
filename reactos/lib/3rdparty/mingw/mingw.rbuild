@@ -25,10 +25,9 @@
 	<file>crt0_c.c</file>
 	<file>crtexe.c</file>
 </module>
-<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true">
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true" unicode="yes">
 	<include base="mingw_common">include</include>
 	<define name="WPRFLAG"/>
-	<define name="UNICODE"/>
 	<file>crt0_w.c</file>
 	<file>crtexe.c</file>
 </module>
