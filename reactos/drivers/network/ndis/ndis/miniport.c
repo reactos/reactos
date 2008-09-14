@@ -748,35 +748,22 @@ NdisMQueryInformationComplete(
     KeLowerIrql(OldIrql);
 }
 
-
-VOID NTAPI MiniportDpc(
-    IN PKDPC Dpc,
-    IN PVOID DeferredContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2)
-/*
- * FUNCTION: Deferred routine to handle serialization
- * ARGUMENTS:
- *     Dpc             = Pointer to DPC object
- *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- */
+VOID NTAPI MiniportWorker(IN PVOID WorkItem)
 {
+  PNDIS_WORK_ITEM NdisWorkItem = WorkItem;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(NdisWorkItem->Context);
+  KIRQL OldIrql, RaiseOldIrql;
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
-  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
-
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
   NdisStatus =
       MiniDequeueWorkItem
       (Adapter, &WorkItemType, &WorkItemContext);
 
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -791,27 +778,45 @@ VOID NTAPI MiniportDpc(
 #endif
             if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
               {
-                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
+                {
+                    NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                    (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+                     Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+                }
+                else
+                {
+                    /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
+                    KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+                    {
+                      NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
+                      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+                       Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+                    }
+                    KeLowerIrql(RaiseOldIrql);
+                }
 
-                /*
-                 * XXX assumes single-packet - prolly OK since we'll call something
-                 * different on multi-packet sends
-                 */
-                (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
-                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
-		NdisStatus =
-		    NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
-
-                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's SendPackets handler\n"));
+               NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
               }
             else
               {
-                NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-
-                NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-                    Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
-
-                NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
+                if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
+                {
+                  NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+                  NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                  NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
+                }
+                else
+                {
+                  /* Send is called at DISPATCH_LEVEL for all serialized miniports */
+                  KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
+                  NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
+                  NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+                                Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
+                  NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
+                  KeLowerIrql(RaiseOldIrql);
+                }
               }
 	    if( NdisStatus != NDIS_STATUS_PENDING ) {
 		NdisMSendComplete
@@ -870,6 +875,40 @@ VOID NTAPI MiniportDpc(
             break;
         }
     }
+
+  ExFreePool(WorkItem);
+}
+
+
+
+VOID NTAPI MiniportDpc(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2)
+/*
+ * FUNCTION: Deferred routine to handle serialization
+ * ARGUMENTS:
+ *     Dpc             = Pointer to DPC object
+ *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
+ *     SystemArgument1 = Unused
+ *     SystemArgument2 = Unused
+ */
+{
+  PNDIS_WORK_ITEM NdisWorkItem;
+  PWORK_QUEUE_ITEM WorkItem;
+
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+
+  NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(PNDIS_WORK_ITEM));
+
+  WorkItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
+
+  NdisWorkItem->Context = DeferredContext;
+
+  ExInitializeWorkItem(WorkItem, MiniportWorker, NdisWorkItem);
+
+  ExQueueWorkItem(WorkItem, CriticalWorkQueue);
 }
 
 
