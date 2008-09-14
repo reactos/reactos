@@ -735,7 +735,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                                      PreviousMode,
                                      &BytesRead);
         
-        /* Derefernece the process */
+        /* Dereference the process */
         ObDereferenceObject(Process);
     }
     
@@ -822,7 +822,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                                      PreviousMode,
                                      &BytesWritten);
         
-        /* Derefernece the process */
+        /* Dereference the process */
         ObDereferenceObject(Process);
     }
     
