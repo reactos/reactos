@@ -748,35 +748,23 @@ NdisMQueryInformationComplete(
     KeLowerIrql(OldIrql);
 }
 
-
-VOID NTAPI MiniportDpc(
-    IN PKDPC Dpc,
-    IN PVOID DeferredContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2)
-/*
- * FUNCTION: Deferred routine to handle serialization
- * ARGUMENTS:
- *     Dpc             = Pointer to DPC object
- *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- */
+VOID NTAPI MiniportWorker(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context)
 {
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(Context);
+  KIRQL OldIrql;
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
-  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
-
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
   NdisStatus =
       MiniDequeueWorkItem
       (Adapter, &WorkItemType, &WorkItemContext);
 
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -870,6 +858,33 @@ VOID NTAPI MiniportDpc(
             break;
         }
     }
+}
+
+
+
+VOID NTAPI MiniportDpc(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2)
+/*
+ * FUNCTION: Deferred routine to handle serialization
+ * ARGUMENTS:
+ *     Dpc             = Pointer to DPC object
+ *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
+ *     SystemArgument1 = Unused
+ *     SystemArgument2 = Unused
+ */
+{
+  PIO_WORKITEM WorkItem;
+  PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
+
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
+
+  WorkItem = IoAllocateWorkItem(Adapter->NdisMiniportBlock.DeviceObject);
+  if( !WorkItem ) return;
+
+  IoQueueWorkItem(WorkItem, MiniportWorker, CriticalWorkQueue, DeferredContext);
 }
 
 
