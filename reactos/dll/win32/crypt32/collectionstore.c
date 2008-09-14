@@ -341,6 +341,84 @@ static BOOL CRYPT_CollectionDeleteCRL(PWINECRYPT_CERTSTORE store,
     return ret;
 }
 
+static BOOL CRYPT_CollectionAddCTL(PWINECRYPT_CERTSTORE store, void *ctl,
+ void *toReplace, const void **ppStoreContext)
+{
+    BOOL ret;
+    void *childContext = NULL;
+    PWINE_COLLECTIONSTORE cs = (PWINE_COLLECTIONSTORE)store;
+
+    ret = CRYPT_CollectionAddContext(cs, offsetof(WINECRYPT_CERTSTORE, ctls),
+     ctl, toReplace, sizeof(CTL_CONTEXT), &childContext);
+    if (ppStoreContext && childContext)
+    {
+        PWINE_STORE_LIST_ENTRY storeEntry = *(PWINE_STORE_LIST_ENTRY *)
+         Context_GetExtra(childContext, sizeof(CTL_CONTEXT));
+        PCTL_CONTEXT context =
+         CRYPT_CollectionCreateContextFromChild(cs, storeEntry, childContext,
+         sizeof(CTL_CONTEXT), TRUE);
+
+        if (context)
+            context->hCertStore = store;
+        *ppStoreContext = context;
+    }
+    CertFreeCTLContext((PCCTL_CONTEXT)childContext);
+    return ret;
+}
+
+static void *CRYPT_CollectionEnumCTL(PWINECRYPT_CERTSTORE store, void *pPrev)
+{
+    PWINE_COLLECTIONSTORE cs = (PWINE_COLLECTIONSTORE)store;
+    void *ret;
+
+    TRACE("(%p, %p)\n", store, pPrev);
+
+    EnterCriticalSection(&cs->cs);
+    if (pPrev)
+    {
+        PWINE_STORE_LIST_ENTRY storeEntry =
+         *(PWINE_STORE_LIST_ENTRY *)Context_GetExtra(pPrev,
+         sizeof(CTL_CONTEXT));
+
+        ret = CRYPT_CollectionAdvanceEnum(cs, storeEntry,
+         &storeEntry->store->ctls, pCTLInterface, pPrev, sizeof(CTL_CONTEXT));
+    }
+    else
+    {
+        if (!list_empty(&cs->stores))
+        {
+            PWINE_STORE_LIST_ENTRY storeEntry = LIST_ENTRY(cs->stores.next,
+             WINE_STORE_LIST_ENTRY, entry);
+
+            ret = CRYPT_CollectionAdvanceEnum(cs, storeEntry,
+             &storeEntry->store->ctls, pCTLInterface, NULL,
+             sizeof(CTL_CONTEXT));
+        }
+        else
+        {
+            SetLastError(CRYPT_E_NOT_FOUND);
+            ret = NULL;
+        }
+    }
+    LeaveCriticalSection(&cs->cs);
+    if (ret)
+        ((PCTL_CONTEXT)ret)->hCertStore = store;
+    TRACE("returning %p\n", ret);
+    return ret;
+}
+
+static BOOL CRYPT_CollectionDeleteCTL(PWINECRYPT_CERTSTORE store,
+ void *pCtlContext)
+{
+    BOOL ret;
+
+    TRACE("(%p, %p)\n", store, pCtlContext);
+
+    ret = CertDeleteCTLFromStore((PCCTL_CONTEXT)
+     Context_GetLinkedContext(pCtlContext, sizeof(CTL_CONTEXT)));
+    return ret;
+}
+
 PWINECRYPT_CERTSTORE CRYPT_CollectionOpenStore(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara)
 {
@@ -365,6 +443,9 @@ PWINECRYPT_CERTSTORE CRYPT_CollectionOpenStore(HCRYPTPROV hCryptProv,
             store->hdr.crls.addContext     = CRYPT_CollectionAddCRL;
             store->hdr.crls.enumContext    = CRYPT_CollectionEnumCRL;
             store->hdr.crls.deleteContext  = CRYPT_CollectionDeleteCRL;
+            store->hdr.ctls.addContext     = CRYPT_CollectionAddCTL;
+            store->hdr.ctls.enumContext    = CRYPT_CollectionEnumCTL;
+            store->hdr.ctls.deleteContext  = CRYPT_CollectionDeleteCTL;
             InitializeCriticalSection(&store->cs);
             store->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PWINE_COLLECTIONSTORE->cs");
             list_init(&store->stores);

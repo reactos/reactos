@@ -36,6 +36,8 @@ typedef struct _WINE_PROVIDERSTORE
     PFN_CERT_STORE_PROV_DELETE_CERT provDeleteCert;
     PFN_CERT_STORE_PROV_WRITE_CRL   provWriteCrl;
     PFN_CERT_STORE_PROV_DELETE_CRL  provDeleteCrl;
+    PFN_CERT_STORE_PROV_WRITE_CTL   provWriteCtl;
+    PFN_CERT_STORE_PROV_DELETE_CTL  provDeleteCtl;
     PFN_CERT_STORE_PROV_CONTROL     provControl;
 } WINE_PROVIDERSTORE, *PWINE_PROVIDERSTORE;
 
@@ -178,6 +180,73 @@ static BOOL CRYPT_ProvDeleteCRL(PWINECRYPT_CERTSTORE store, void *crl)
     return ret;
 }
 
+static BOOL CRYPT_ProvAddCTL(PWINECRYPT_CERTSTORE store, void *ctl,
+ void *toReplace, const void **ppStoreContext)
+{
+    PWINE_PROVIDERSTORE ps = (PWINE_PROVIDERSTORE)store;
+    BOOL ret;
+
+    TRACE("(%p, %p, %p, %p)\n", store, ctl, toReplace, ppStoreContext);
+
+    if (toReplace)
+        ret = ps->memStore->ctls.addContext(ps->memStore, ctl, toReplace,
+         ppStoreContext);
+    else
+    {
+        if (ps->hdr.dwOpenFlags & CERT_STORE_READONLY_FLAG)
+        {
+            SetLastError(ERROR_ACCESS_DENIED);
+            ret = FALSE;
+        }
+        else
+        {
+            ret = TRUE;
+            if (ps->provWriteCtl)
+                ret = ps->provWriteCtl(ps->hStoreProv, (PCCTL_CONTEXT)ctl,
+                 CERT_STORE_PROV_WRITE_ADD_FLAG);
+            if (ret)
+                ret = ps->memStore->ctls.addContext(ps->memStore, ctl, NULL,
+                 ppStoreContext);
+        }
+    }
+    /* dirty trick: replace the returned context's hCertStore with
+     * store.
+     */
+    if (ppStoreContext)
+        (*(PCTL_CONTEXT *)ppStoreContext)->hCertStore = store;
+    return ret;
+}
+
+static void *CRYPT_ProvEnumCTL(PWINECRYPT_CERTSTORE store, void *pPrev)
+{
+    PWINE_PROVIDERSTORE ps = (PWINE_PROVIDERSTORE)store;
+    void *ret;
+
+    ret = ps->memStore->ctls.enumContext(ps->memStore, pPrev);
+    if (ret)
+    {
+        /* same dirty trick: replace the returned context's hCertStore with
+         * store.
+         */
+        ((PCTL_CONTEXT)ret)->hCertStore = store;
+    }
+    return ret;
+}
+
+static BOOL CRYPT_ProvDeleteCTL(PWINECRYPT_CERTSTORE store, void *ctl)
+{
+    PWINE_PROVIDERSTORE ps = (PWINE_PROVIDERSTORE)store;
+    BOOL ret = TRUE;
+
+    TRACE("(%p, %p)\n", store, ctl);
+
+    if (ps->provDeleteCtl)
+        ret = ps->provDeleteCtl(ps->hStoreProv, ctl, 0);
+    if (ret)
+        ret = ps->memStore->ctls.deleteContext(ps->memStore, ctl);
+    return ret;
+}
+
 static BOOL WINAPI CRYPT_ProvControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
@@ -217,6 +286,9 @@ PWINECRYPT_CERTSTORE CRYPT_ProvCreateStore(DWORD dwFlags,
         ret->hdr.crls.addContext = CRYPT_ProvAddCRL;
         ret->hdr.crls.enumContext = CRYPT_ProvEnumCRL;
         ret->hdr.crls.deleteContext = CRYPT_ProvDeleteCRL;
+        ret->hdr.ctls.addContext = CRYPT_ProvAddCTL;
+        ret->hdr.ctls.enumContext = CRYPT_ProvEnumCTL;
+        ret->hdr.ctls.deleteContext = CRYPT_ProvDeleteCTL;
         ret->hdr.control = CRYPT_ProvControl;
         if (pProvInfo->cStoreProvFunc > CERT_STORE_PROV_CLOSE_FUNC)
             ret->provCloseStore =
@@ -240,13 +312,25 @@ PWINECRYPT_CERTSTORE CRYPT_ProvCreateStore(DWORD dwFlags,
             ret->provWriteCrl = pProvInfo->rgpvStoreProvFunc[
              CERT_STORE_PROV_WRITE_CRL_FUNC];
         else
-            ret->provWriteCert = NULL;
+            ret->provWriteCrl = NULL;
         if (pProvInfo->cStoreProvFunc >
          CERT_STORE_PROV_DELETE_CRL_FUNC)
             ret->provDeleteCrl = pProvInfo->rgpvStoreProvFunc[
              CERT_STORE_PROV_DELETE_CRL_FUNC];
         else
-            ret->provDeleteCert = NULL;
+            ret->provDeleteCrl = NULL;
+        if (pProvInfo->cStoreProvFunc >
+         CERT_STORE_PROV_WRITE_CTL_FUNC)
+            ret->provWriteCtl = pProvInfo->rgpvStoreProvFunc[
+             CERT_STORE_PROV_WRITE_CTL_FUNC];
+        else
+            ret->provWriteCtl = NULL;
+        if (pProvInfo->cStoreProvFunc >
+         CERT_STORE_PROV_DELETE_CTL_FUNC)
+            ret->provDeleteCtl = pProvInfo->rgpvStoreProvFunc[
+             CERT_STORE_PROV_DELETE_CTL_FUNC];
+        else
+            ret->provDeleteCtl = NULL;
         if (pProvInfo->cStoreProvFunc >
          CERT_STORE_PROV_CONTROL_FUNC)
             ret->provControl = pProvInfo->rgpvStoreProvFunc[

@@ -1,6 +1,6 @@
 /*
  * Copyright 2002 Mike McCormack for CodeWeavers
- * Copyright 2005 Juan Lang
+ * Copyright 2005-2008 Juan Lang
  * Copyright 2006 Paul Vriens
  *
  * This library is free software; you can redistribute it and/or
@@ -254,6 +254,39 @@ end_function:
     return TRUE;
 }
 
+static void *CRYPT_LoadSIPFuncFromKey(HKEY key, HMODULE *pLib)
+{
+    LONG r;
+    DWORD size;
+    WCHAR dllName[MAX_PATH];
+    char functionName[MAX_PATH];
+    HMODULE lib;
+    void *func = NULL;
+
+    /* Read the DLL entry */
+    size = sizeof(dllName);
+    r = RegQueryValueExW(key, szDllName, NULL, NULL, (LPBYTE)dllName, &size);
+    if (r) goto end;
+
+    /* Read the Function entry */
+    size = sizeof(functionName);
+    r = RegQueryValueExA(key, "FuncName", NULL, NULL, (LPBYTE)functionName,
+     &size);
+    if (r) goto end;
+
+    lib = LoadLibraryW(dllName);
+    if (!lib)
+        goto end;
+    func = GetProcAddress(lib, functionName);
+    if (func)
+        *pLib = lib;
+    else
+        FreeLibrary(lib);
+
+end:
+    return func;
+}
+
 /***********************************************************************
  *             CryptSIPRetrieveSubjectGuid (CRYPT32.@)
  *
@@ -276,13 +309,18 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
       (LPCWSTR FileName, HANDLE hFileIn, GUID *pgSubject)
 {
     HANDLE hFile;
-    HANDLE hFilemapped;
-    LPVOID pMapped;
     BOOL   bRet = FALSE;
-    DWORD  fileSize;
-    IMAGE_DOS_HEADER *dos;
+    DWORD  count;
+    LARGE_INTEGER zero, oldPos;
     /* FIXME, find out if there is a name for this GUID */
     static const GUID unknown = { 0xC689AAB8, 0x8E78, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
+    static const GUID cabGUID = { 0xc689aaba, 0x8e78, 0x11d0, {0x8c,0x47,0x00,0xc0,0x4f,0xc2,0x95,0xee }};
+    static const WORD dosHdr = IMAGE_DOS_SIGNATURE;
+    static const BYTE cabHdr[] = { 'M','S','C','F' };
+    BYTE hdr[SIP_MAX_MAGIC_NUMBER];
+    WCHAR szFullKey[ 0x100 ];
+    LONG r = ERROR_SUCCESS;
+    HKEY key;
 
     TRACE("(%s %p %p)\n", wine_dbgstr_w(FileName), hFileIn, pgSubject);
 
@@ -305,52 +343,122 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
         if (hFile == INVALID_HANDLE_VALUE) return FALSE;
     }
 
-    hFilemapped = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-    /* Last error is set by CreateFileMapping */
-    if (!hFilemapped) goto cleanup3;
+    zero.QuadPart = 0;
+    SetFilePointerEx(hFile, zero, &oldPos, FILE_CURRENT);
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    if (!ReadFile(hFile, hdr, sizeof(hdr), &count, NULL))
+        goto cleanup;
 
-    pMapped = MapViewOfFile(hFilemapped, FILE_MAP_READ, 0, 0, 0);
-    /* Last error is set by MapViewOfFile */
-    if (!pMapped) goto cleanup2;
-
-    /* Native checks it right here */
-    fileSize = GetFileSize(hFile, NULL);
-    if (fileSize < 4)
+    if (count < SIP_MAX_MAGIC_NUMBER)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        goto cleanup1;
+        goto cleanup;
     }
 
     /* As everything is in place now we start looking at the file header */
-    dos = (IMAGE_DOS_HEADER *)pMapped;
-    if (dos->e_magic == IMAGE_DOS_SIGNATURE)
+    if (!memcmp(hdr, &dosHdr, sizeof(dosHdr)))
     {
         *pgSubject = unknown;
         SetLastError(S_OK);
         bRet = TRUE;
-        goto cleanup1;
+        goto cleanup;
+    }
+    /* Quick-n-dirty check for a cab file. */
+    if (!memcmp(hdr, cabHdr, sizeof(cabHdr)))
+    {
+        *pgSubject = cabGUID;
+        SetLastError(S_OK);
+        bRet = TRUE;
+        goto cleanup;
     }
 
-    /* FIXME
-     * There is a lot more to be checked:
-     * - Check for MSFC in the header
-     * - Check for the keys CryptSIPDllIsMyFileType and CryptSIPDllIsMyFileType2
-     *   under HKLM\Software\Microsoft\Cryptography\OID\EncodingType 0. Here are 
-     *   functions listed that need check if a SIP Provider can deal with the 
-     *   given file.
+    /* Check for supported functions using CryptSIPDllIsMyFileType */
+    /* max length of szFullKey depends on our code only, so we won't overrun */
+    lstrcpyW(szFullKey, szOID);
+    lstrcatW(szFullKey, szIsMyFile);
+    r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, &key);
+    if (r == ERROR_SUCCESS)
+    {
+        DWORD index = 0, size;
+        WCHAR subKeyName[MAX_PATH];
+
+        do {
+            size = sizeof(subKeyName) / sizeof(subKeyName[0]);
+            r = RegEnumKeyExW(key, index++, subKeyName, &size, NULL, NULL,
+             NULL, NULL);
+            if (r == ERROR_SUCCESS)
+            {
+                HKEY subKey;
+
+                r = RegOpenKeyExW(key, subKeyName, 0, KEY_READ, &subKey);
+                if (r == ERROR_SUCCESS)
+                {
+                    HMODULE lib;
+                    pfnIsFileSupported isMy = CRYPT_LoadSIPFuncFromKey(subKey,
+                     &lib);
+
+                    if (isMy)
+                    {
+                        bRet = isMy(hFile, pgSubject);
+                        FreeLibrary(lib);
+                    }
+                    RegCloseKey(subKey);
+                }
+            }
+        } while (!bRet && r == ERROR_SUCCESS);
+        RegCloseKey(key);
+    }
+
+    /* Check for supported functions using CryptSIPDllIsMyFileType2 */
+    if (!bRet)
+    {
+        lstrcpyW(szFullKey, szOID);
+        lstrcatW(szFullKey, szIsMyFile2);
+        r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, &key);
+        if (r == ERROR_SUCCESS)
+        {
+            DWORD index = 0, size;
+            WCHAR subKeyName[MAX_PATH];
+
+            do {
+                size = sizeof(subKeyName) / sizeof(subKeyName[0]);
+                r = RegEnumKeyExW(key, index++, subKeyName, &size, NULL, NULL,
+                 NULL, NULL);
+                if (r == ERROR_SUCCESS)
+                {
+                    HKEY subKey;
+
+                    r = RegOpenKeyExW(key, subKeyName, 0, KEY_READ, &subKey);
+                    if (r == ERROR_SUCCESS)
+                    {
+                        HMODULE lib;
+                        pfnIsFileSupportedName isMy2 =
+                         CRYPT_LoadSIPFuncFromKey(subKey, &lib);
+
+                        if (isMy2)
+                        {
+                            bRet = isMy2((LPWSTR)FileName, pgSubject);
+                            FreeLibrary(lib);
+                        }
+                        RegCloseKey(subKey);
+                    }
+                }
+            } while (!bRet && r == ERROR_SUCCESS);
+            RegCloseKey(key);
+        }
+    }
+
+    if (!bRet)
+        SetLastError(TRUST_E_SUBJECT_FORM_UNKNOWN);
+
+cleanup:
+    /* If we didn't open this one we shouldn't close it (hFile is a copy),
+     * but we should reset the file pointer to its original position.
      */
-
-    /* Let's set the most common error for now */
-    SetLastError(TRUST_E_SUBJECT_FORM_UNKNOWN);
-
-    /* The 3 different cleanups are here because we shouldn't overwrite the last error */
-cleanup1:
-    UnmapViewOfFile(pMapped);
-cleanup2:
-    CloseHandle(hFilemapped);
-cleanup3:
-    /* If we didn't open this one we shouldn't close it (hFile is a copy) */
-    if (!hFileIn) CloseHandle(hFile);
+    if (!hFileIn)
+        CloseHandle(hFile);
+    else
+        SetFilePointerEx(hFile, oldPos, NULL, FILE_BEGIN);
 
     return bRet;
 }
@@ -374,40 +482,17 @@ static void *CRYPT_LoadSIPFunc(const GUID *pgSubject, LPCWSTR function,
  HMODULE *pLib)
 {
     LONG r;
-    HKEY key = NULL;
-    DWORD size;
-    WCHAR dllName[MAX_PATH];
-    char functionName[MAX_PATH];
-    HMODULE lib;
+    HKEY key;
     void *func = NULL;
 
     TRACE("(%s, %s)\n", debugstr_guid(pgSubject), debugstr_w(function));
 
     r = CRYPT_OpenSIPFunctionKey(pgSubject, function, &key);
-    if (r) goto error;
-
-    /* Read the DLL entry */
-    size = sizeof(dllName);
-    r = RegQueryValueExW(key, szDllName, NULL, NULL, (LPBYTE)dllName, &size);
-    if (r) goto error;
-
-    /* Read the Function entry */
-    size = sizeof(functionName);
-    r = RegQueryValueExA(key, "FuncName", NULL, NULL, (LPBYTE)functionName,
-     &size);
-    if (r) goto error;
-
-    lib = LoadLibraryW(dllName);
-    if (!lib)
-        goto error;
-    func = GetProcAddress(lib, functionName);
-    if (func)
-        *pLib = lib;
-    else
-        FreeLibrary(lib);
-
-error:
-    RegCloseKey(key);
+    if (!r)
+    {
+        func = CRYPT_LoadSIPFuncFromKey(key, pLib);
+        RegCloseKey(key);
+    }
     TRACE("returning %p\n", func);
     return func;
 }

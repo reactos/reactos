@@ -169,10 +169,8 @@ static DWORD CRYPT_AddPrefixA(LPCSTR prefix, LPSTR psz, DWORD csz)
     {
         chars = min(lstrlenA(prefix), csz);
         memcpy(psz, prefix, chars);
-        csz -= chars;
         *(psz + chars) = '=';
         chars++;
-        csz--;
     }
     else
         chars = lstrlenA(prefix) + 1;
@@ -183,7 +181,7 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
  DWORD dwStrType, LPSTR psz, DWORD csz)
 {
     static const DWORD unsupportedFlags = CERT_NAME_STR_NO_QUOTING_FLAG |
-     CERT_NAME_STR_REVERSE_FLAG | CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
+     CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
     static const char commaSep[] = ", ";
     static const char semiSep[] = "; ";
     static const char crlfSep[] = "\r\n";
@@ -204,6 +202,10 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     {
         DWORD i, j, sepLen, rdnSepLen;
         LPCSTR sep, rdnSep;
+        BOOL reverse = dwStrType & CERT_NAME_STR_REVERSE_FLAG;
+        const CERT_RDN *rdn = info->rgRDN;
+
+        if(reverse && info->cRDN > 1) rdn += (info->cRDN - 1);
 
         if (dwStrType & CERT_NAME_STR_SEMICOLON_FLAG)
             sep = semiSep;
@@ -219,19 +221,19 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
         rdnSepLen = strlen(rdnSep);
         for (i = 0; (!psz || ret < csz) && i < info->cRDN; i++)
         {
-            for (j = 0; (!psz || ret < csz) && j < info->rgRDN[i].cRDNAttr; j++)
+            for (j = 0; (!psz || ret < csz) && j < rdn->cRDNAttr; j++)
             {
                 DWORD chars;
                 char prefixBuf[10]; /* big enough for GivenName */
                 LPCSTR prefix = NULL;
 
                 if ((dwStrType & 0x000000ff) == CERT_OID_NAME_STR)
-                    prefix = info->rgRDN[i].rgRDNAttr[j].pszObjId;
+                    prefix = rdn->rgRDNAttr[j].pszObjId;
                 else if ((dwStrType & 0x000000ff) == CERT_X500_NAME_STR)
                 {
                     PCCRYPT_OID_INFO oidInfo = CryptFindOIDInfo(
                      CRYPT_OID_INFO_OID_KEY,
-                     info->rgRDN[i].rgRDNAttr[j].pszObjId,
+                     rdn->rgRDNAttr[j].pszObjId,
                      CRYPT_RDN_ATTR_OID_GROUP_ID);
 
                     if (oidInfo)
@@ -241,7 +243,7 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                         prefix = prefixBuf;
                     }
                     else
-                        prefix = info->rgRDN[i].rgRDNAttr[j].pszObjId;
+                        prefix = rdn->rgRDNAttr[j].pszObjId;
                 }
                 if (prefix)
                 {
@@ -249,16 +251,15 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     chars = CRYPT_AddPrefixA(prefix,
                      psz ? psz + ret : NULL, psz ? csz - ret - 1 : 0);
                     ret += chars;
-                    csz -= chars;
                 }
                 /* FIXME: handle quoting */
                 chars = CertRDNValueToStrA(
-                 info->rgRDN[i].rgRDNAttr[j].dwValueType, 
-                 &info->rgRDN[i].rgRDNAttr[j].Value, psz ? psz + ret : NULL,
+                 rdn->rgRDNAttr[j].dwValueType,
+                 &rdn->rgRDNAttr[j].Value, psz ? psz + ret : NULL,
                  psz ? csz - ret : 0);
                 if (chars)
                     ret += chars - 1;
-                if (j < info->rgRDN[i].cRDNAttr - 1)
+                if (j < rdn->cRDNAttr - 1)
                 {
                     if (psz && ret < csz - rdnSepLen - 1)
                         memcpy(psz + ret, rdnSep, rdnSepLen);
@@ -271,13 +272,14 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     memcpy(psz + ret, sep, sepLen);
                 ret += sepLen;
             }
+            if(reverse) rdn--;
+            else rdn++;
         }
         LocalFree(info);
     }
     if (psz && csz)
     {
         *(psz + ret) = '\0';
-        csz--;
         ret++;
     }
     else
@@ -305,10 +307,8 @@ static DWORD CRYPT_AddPrefixAToW(LPCSTR prefix, LPWSTR psz, DWORD csz)
         chars = min(lstrlenA(prefix), csz);
         for (i = 0; i < chars; i++)
             *(psz + i) = prefix[i];
-        csz -= chars;
         *(psz + chars) = '=';
         chars++;
-        csz--;
     }
     else
         chars = lstrlenA(prefix) + 1;
@@ -330,10 +330,8 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
     {
         chars = min(lstrlenW(prefix), csz);
         memcpy(psz, prefix, chars * sizeof(WCHAR));
-        csz -= chars;
         *(psz + chars) = '=';
         chars++;
-        csz--;
     }
     else
         chars = lstrlenW(prefix) + 1;
@@ -344,7 +342,7 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
  DWORD dwStrType, LPWSTR psz, DWORD csz)
 {
     static const DWORD unsupportedFlags = CERT_NAME_STR_NO_QUOTING_FLAG |
-     CERT_NAME_STR_REVERSE_FLAG | CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
+     CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
     static const WCHAR commaSep[] = { ',',' ',0 };
     static const WCHAR semiSep[] = { ';',' ',0 };
     static const WCHAR crlfSep[] = { '\r','\n',0 };
@@ -365,6 +363,10 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     {
         DWORD i, j, sepLen, rdnSepLen;
         LPCWSTR sep, rdnSep;
+        BOOL reverse = dwStrType & CERT_NAME_STR_REVERSE_FLAG;
+        const CERT_RDN *rdn = info->rgRDN;
+
+        if(reverse && info->cRDN > 1) rdn += (info->cRDN - 1);
 
         if (dwStrType & CERT_NAME_STR_SEMICOLON_FLAG)
             sep = semiSep;
@@ -380,25 +382,25 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
         rdnSepLen = lstrlenW(rdnSep);
         for (i = 0; (!psz || ret < csz) && i < info->cRDN; i++)
         {
-            for (j = 0; (!psz || ret < csz) && j < info->rgRDN[i].cRDNAttr; j++)
+            for (j = 0; (!psz || ret < csz) && j < rdn->cRDNAttr; j++)
             {
                 DWORD chars;
                 LPCSTR prefixA = NULL;
                 LPCWSTR prefixW = NULL;
 
                 if ((dwStrType & 0x000000ff) == CERT_OID_NAME_STR)
-                    prefixA = info->rgRDN[i].rgRDNAttr[j].pszObjId;
+                    prefixA = rdn->rgRDNAttr[j].pszObjId;
                 else if ((dwStrType & 0x000000ff) == CERT_X500_NAME_STR)
                 {
                     PCCRYPT_OID_INFO oidInfo = CryptFindOIDInfo(
                      CRYPT_OID_INFO_OID_KEY,
-                     info->rgRDN[i].rgRDNAttr[j].pszObjId,
+                     rdn->rgRDNAttr[j].pszObjId,
                      CRYPT_RDN_ATTR_OID_GROUP_ID);
 
                     if (oidInfo)
                         prefixW = oidInfo->pwszName;
                     else
-                        prefixA = info->rgRDN[i].rgRDNAttr[j].pszObjId;
+                        prefixA = rdn->rgRDNAttr[j].pszObjId;
                 }
                 if (prefixW)
                 {
@@ -406,7 +408,6 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     chars = CRYPT_AddPrefixW(prefixW,
                      psz ? psz + ret : NULL, psz ? csz - ret - 1 : 0);
                     ret += chars;
-                    csz -= chars;
                 }
                 else if (prefixA)
                 {
@@ -414,16 +415,15 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     chars = CRYPT_AddPrefixAToW(prefixA,
                      psz ? psz + ret : NULL, psz ? csz - ret - 1 : 0);
                     ret += chars;
-                    csz -= chars;
                 }
                 /* FIXME: handle quoting */
                 chars = CertRDNValueToStrW(
-                 info->rgRDN[i].rgRDNAttr[j].dwValueType, 
-                 &info->rgRDN[i].rgRDNAttr[j].Value, psz ? psz + ret : NULL,
+                 rdn->rgRDNAttr[j].dwValueType,
+                 &rdn->rgRDNAttr[j].Value, psz ? psz + ret : NULL,
                  psz ? csz - ret : 0);
                 if (chars)
                     ret += chars - 1;
-                if (j < info->rgRDN[i].cRDNAttr - 1)
+                if (j < rdn->cRDNAttr - 1)
                 {
                     if (psz && ret < csz - rdnSepLen - 1)
                         memcpy(psz + ret, rdnSep, rdnSepLen * sizeof(WCHAR));
@@ -436,13 +436,14 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     memcpy(psz + ret, sep, sepLen * sizeof(WCHAR));
                 ret += sepLen;
             }
+            if(reverse) rdn--;
+            else rdn++;
         }
         LocalFree(info);
     }
     if (psz && csz)
     {
         *(psz + ret) = '\0';
-        csz--;
         ret++;
     }
     else

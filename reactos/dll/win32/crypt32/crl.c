@@ -386,7 +386,7 @@ static BOOL CRLContext_SetProperty(PCCRL_CONTEXT context, DWORD dwPropId,
  DWORD dwFlags, const void *pvData)
 {
     PCONTEXT_PROPERTY_LIST properties =
-     Context_GetProperties(context, sizeof(CERT_CONTEXT));
+     Context_GetProperties(context, sizeof(CRL_CONTEXT));
     BOOL ret;
 
     TRACE("(%p, %d, %08x, %p)\n", context, dwPropId, dwFlags, pvData);

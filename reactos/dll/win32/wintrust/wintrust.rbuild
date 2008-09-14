@@ -12,10 +12,13 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
+	<library>imagehlp</library>
 	<library>ntdll</library>
 	<file>crypt.c</file>
 	<file>register.c</file>
 	<file>wintrust_main.c</file>
+	<file>asn.c</file>
+	<file>softpub.c</file>
 	<file>version.rc</file>
 	<file>wintrust.spec</file>
 </module>

@@ -38,7 +38,7 @@
 @ stdcall CertEnumSystemStore(long ptr ptr ptr)
 @ stdcall CertFindAttribute(str long ptr)
 @ stdcall CertFindCRLInStore(long long long long ptr ptr)
-@ stub CertFindCTLInStore
+@ stdcall CertFindCTLInStore(long long long long ptr ptr)
 @ stdcall CertFindCertificateInStore(long long long long ptr ptr)
 @ stdcall CertFindCertificateInCRL(ptr ptr long ptr ptr)
 @ stdcall CertFindExtension(str long ptr)
@@ -129,9 +129,9 @@
 @ stdcall CryptGetOIDFunctionAddress(long long str long ptr ptr)
 @ stdcall CryptGetOIDFunctionValue(long str str wstr ptr ptr ptr)
 @ stdcall CryptHashCertificate(long long long ptr long ptr ptr)
-@ stub CryptHashMessage
+@ stdcall CryptHashMessage(ptr long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptHashPublicKeyInfo(long long long long ptr ptr ptr)
-@ stub CryptHashToBeSigned
+@ stdcall CryptHashToBeSigned(ptr long ptr long ptr ptr)
 @ stub CryptImportPKCS8
 @ stdcall CryptImportPublicKeyInfo(long long ptr ptr)
 @ stdcall CryptImportPublicKeyInfoEx(long long ptr long long ptr ptr)
@@ -148,13 +148,14 @@
 @ stub CryptMsgCountersignEncoded
 @ stdcall CryptMsgDuplicate(ptr)
 @ stub CryptMsgEncodeAndSignCTL
-@ stub CryptMsgGetAndVerifySigner
+@ stdcall CryptMsgGetAndVerifySigner(ptr long ptr long ptr ptr)
 @ stdcall CryptMsgGetParam(ptr long long ptr ptr)
 @ stdcall CryptMsgOpenToDecode(long long long long ptr ptr)
 @ stdcall CryptMsgOpenToEncode(long long long ptr str ptr)
 @ stub CryptMsgSignCTL
 @ stdcall CryptMsgUpdate(ptr ptr long long)
 @ stub CryptMsgVerifyCountersignatureEncoded
+@ stdcall CryptMsgVerifyCountersignatureEncodedEx(ptr long ptr long ptr long long ptr long ptr)
 @ stdcall CryptProtectData(ptr wstr ptr ptr ptr long ptr)
 @ stdcall CryptQueryObject(long ptr long long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptRegisterDefaultOIDFunction(long str long wstr)
@@ -184,7 +185,7 @@
 @ stub CryptUnregisterOIDInfo
 @ stdcall CryptVerifyCertificateSignature(long long ptr long ptr)
 @ stdcall CryptVerifyCertificateSignatureEx(long long long ptr long ptr long ptr)
-@ stub CryptVerifyDetachedMessageHash
+@ stdcall CryptVerifyDetachedMessageHash(ptr ptr long long ptr ptr ptr ptr)
 @ stub CryptVerifyDetachedMessageSignature
 @ stub CryptVerifyMessageHash
 @ stdcall CryptVerifyMessageSignature(ptr long ptr long ptr ptr ptr)
