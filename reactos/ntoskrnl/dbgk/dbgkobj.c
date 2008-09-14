@@ -1262,7 +1262,7 @@ ThreadScan:
                           PSF_NO_DEBUG_INHERIT_BIT | PSF_CREATE_REPORTED_BIT);
 
             /* Reference the debug object */
-            ObDereferenceObject(DebugObject);
+            ObReferenceObject(DebugObject);
         }
     }
 
