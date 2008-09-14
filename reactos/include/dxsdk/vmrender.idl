@@ -244,7 +244,6 @@ typedef struct _VMRVIDEOSTREAMINFO
 [
     local,
     object,
-    local,
     uuid(CE704FE7-E71E-41fb-BAA2-C4403E1182F5),
     pointer_default(unique)
 ]
@@ -258,7 +257,6 @@ interface IVMRImagePresenter : IUnknown
 [
     local,
     object,
-    local,
     uuid(31ce832e-4484-458b-8cca-f4d7e3db0b52),
     pointer_default(unique)
 ]
@@ -273,7 +271,6 @@ interface IVMRSurfaceAllocator : IUnknown
 [
     local,
     object,
-    local,
     uuid(aada05a8-5a4e-4729-af0b-cea27aed51e2),
     pointer_default(unique)
 ]
@@ -290,7 +287,6 @@ interface IVMRSurfaceAllocatorNotify : IUnknown
 [
     local,
     object,
-    local,
     uuid(0eb1088c-4dcd-46f0-878f-39dae86a51b7),
     pointer_default(unique)
 ]
@@ -316,7 +312,6 @@ interface IVMRWindowlessControl : IUnknown
 [
     local,
     object,
-    local,
     uuid(1c1a17b0-bed0-415d-974b-dc6696131599),
     pointer_default(unique)
 ]
@@ -414,7 +409,6 @@ interface IVMRMixerBitmap : IUnknown
 [
     local,
     object,
-    local,
     uuid(7a4fb5af-479f-4074-bb40-ce6722e43c82),
     pointer_default(unique)
 ]
@@ -443,7 +437,6 @@ interface IVMRVideoStreamControl: IUnknown
 [
     local,
     object,
-    local,
     uuid(a9849bbe-9ec8-4263-b764-62730f0d15d0),
     pointer_default(unique)
 ]
@@ -458,7 +451,6 @@ interface IVMRSurface : IUnknown
 [
     local,
     object,
-    local,
     uuid(9f3a1c85-8555-49ba-935f-be5b5b29d178),
     pointer_default(unique)
 ]
@@ -472,7 +464,6 @@ interface IVMRImagePresenterConfig : IUnknown
 [
     local,
     object,
-    local,
     uuid(e6f7ce40-4673-44f1-8f77-5499d68cb4ea),
     pointer_default(unique)
 ]
@@ -486,7 +477,6 @@ interface IVMRImagePresenterExclModeConfig : IVMRImagePresenterConfig
 [
     local,
     object,
-    local,
     uuid(aac18c18-e186-46d2-825d-a1f8dc8e395a),
     pointer_default(unique)
 ]
