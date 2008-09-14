@@ -51,7 +51,10 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "shldisp.h"
 #include "comcat.h"
 #include "urlmon.h"
-
+#define _NO_AUTHOR_GUIDS
+#include "activaut.h"
+#include "activdbg.h"
+#define _NO_SCRIPT_GUIDS
 #include "activscp.h"
 #include "dispex.h"
 #include "mlang.h"
@@ -68,6 +71,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "htiframe.h"
 #include "urlhist.h"
 #include "hlguids.h"
+#include "dimm.h"
 #include "isguids.h"
 #include "objsafe.h"
 #include "mstask.h"
