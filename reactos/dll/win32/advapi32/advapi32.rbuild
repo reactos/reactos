@@ -8,6 +8,7 @@
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
+	<define name="_ADVAPI32_" />
 	<library>scm_client</library>
 	<library>lsa_client</library>
 	<library>eventlog_client</library>
