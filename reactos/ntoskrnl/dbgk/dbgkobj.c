@@ -722,7 +722,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
             IsFirstThread = FALSE;
 
             /* Reference this thread and set it as first */
-            ObDereferenceObject(ThisThread);
+            ObReferenceObject(ThisThread);
             pFirstThread = ThisThread;
         }
 
