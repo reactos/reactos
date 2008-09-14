@@ -19,7 +19,7 @@ VOID NBCompleteSend( PVOID Context,
     TI_DbgPrint(MID_TRACE, ("Called\n"));
     ASSERT_KM_POINTER(Packet);
     ASSERT_KM_POINTER(Packet->Complete);
-    Packet->Complete( Packet->Context, Packet->Packet, STATUS_SUCCESS );
+    Packet->Complete( Packet->Context, Packet->Packet, Status );
     TI_DbgPrint(MID_TRACE, ("Completed\n"));
     PoolFreeBuffer( Packet );
     TI_DbgPrint(MID_TRACE, ("Freed\n"));
