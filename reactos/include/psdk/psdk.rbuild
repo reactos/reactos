@@ -27,6 +27,7 @@
 	<file>objsafe.idl</file>
 	<file>ocidl.idl</file>
 	<file>ocmm.idl</file>
+	<file>oleacc.idl</file>
 	<file>oledb.idl</file>
 	<file>oleidl.idl</file>
 	<file>optary.idl</file>
