@@ -767,15 +767,16 @@ VOID NTAPI MiniportDpc(
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
-  KIRQL OldIrql;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   NdisStatus =
       MiniDequeueWorkItem
       (Adapter, &WorkItemType, &WorkItemContext);
+
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS)
     {
@@ -869,8 +870,6 @@ VOID NTAPI MiniportDpc(
             break;
         }
     }
-
-   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -1205,6 +1204,17 @@ DoQueries(
     {
       NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_CURRENT_LOOKAHEAD failed. NdisStatus (0x%X).\n", NdisStatus));
       return NdisStatus;
+    }
+
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_SEND_PACKETS, sizeof(ULONG),
+                                    &Adapter->NdisMiniportBlock.MaxSendPackets, &BytesWritten);
+
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_MAXIMUM_SEND_PACKETS failed. NdisStatus (0x%X).\n", NdisStatus));
+
+      /* Set it to 1 if it fails because some drivers don't support this (?)*/
+      Adapter->NdisMiniportBlock.MaxSendPackets = 1;
     }
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("CurLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.CurrentLookahead));

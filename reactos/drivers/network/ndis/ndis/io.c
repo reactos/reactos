@@ -198,7 +198,7 @@ NdisImmediateWritePortUlong(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -819,7 +819,7 @@ NdisMRegisterInterrupt(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT

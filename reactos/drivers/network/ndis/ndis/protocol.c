@@ -63,7 +63,6 @@ ProIndicatePacket(
  *     - XXX ATM, this only handles loopback packets - is that its designed function?
  */
 {
-  KIRQL OldIrql;
   UINT BufferedLength;
   UINT PacketLength;
 
@@ -76,12 +75,12 @@ ProIndicatePacket(
   NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     {
       Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = Packet;
       BufferedLength = CopyPacketToBuffer(Adapter->LookaheadBuffer, Packet, 0, Adapter->NdisMiniportBlock.CurrentLookahead);
     }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   if (BufferedLength > Adapter->MediumHeaderSize)
     {
@@ -96,11 +95,11 @@ ProIndicatePacket(
     }
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     {
       Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = NULL;
     }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   return STATUS_SUCCESS;
 }

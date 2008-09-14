@@ -59,7 +59,7 @@ EthDeleteFilter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -100,7 +100,7 @@ EthFilterDprIndicateReceive(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -112,7 +112,6 @@ EthFilterDprIndicateReceiveComplete(
  *     Filter = Pointer to Ethernet filter
  */
 {
-  KIRQL OldIrql;
   PLIST_ENTRY CurrentEntry;
   PLOGICAL_ADAPTER Adapter;
   PADAPTER_BINDING AdapterBinding;
@@ -124,7 +123,7 @@ EthFilterDprIndicateReceiveComplete(
   Adapter = (PLOGICAL_ADAPTER)((PETHI_FILTER)Filter)->Miniport;
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     {
       CurrentEntry = Adapter->ProtocolListHead.Flink;
 
@@ -138,7 +137,7 @@ EthFilterDprIndicateReceiveComplete(
           CurrentEntry = CurrentEntry->Flink;
         }
     }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 }
 
 /* EOF */
