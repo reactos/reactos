@@ -596,6 +596,7 @@ VOID LANTransmit(
     PCHAR Data;
     UINT Size;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
+    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
@@ -672,11 +673,13 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
 
+	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
-        NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
+	NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
 	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n",
 				NdisStatus == NDIS_STATUS_PENDING ?
 				"Pending" : "Complete"));
+	TcpipReleaseSpinLock( &Adapter->Lock, OldIrql );
 
 	/* I had a talk with vizzini: these really ought to be here.
 	 * we're supposed to see these completed by ndis *only* when
