@@ -157,9 +157,7 @@ VOID NBTimeout(VOID)
                 NCE->EventTimer--;
                 if (NCE->EventTimer == 0) {
                     /* Call timeout handler for NCE */
-                    TcpipReleaseSpinLock(&NeighborCache[i].Lock, OldIrql);
                     NCETimeout(NCE);
-                    TcpipAcquireSpinLock(&NeighborCache[i].Lock, &OldIrql);
                 }
             }
         }
