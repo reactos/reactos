@@ -2418,15 +2418,38 @@ IoQueryFileDosDeviceName(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoSetFileOrigin(IN PFILE_OBJECT FileObject,
                 IN BOOLEAN Remote)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN FlagSet;
+
+    /* Get the flag status */
+    FlagSet = FileObject->Flags & FO_REMOTE_ORIGIN ? TRUE : FALSE;
+
+    /* Don't set the flag if it was set already, and don't remove it if it wasn't set */
+    if (Remote && !FlagSet)
+    {
+        /* Set the flag */
+        FileObject->Flags |= FO_REMOTE_ORIGIN;
+    }
+    else if (!Remote && FlagSet)
+    {
+        /* Remove the flag */
+        FileObject->Flags &= ~FO_REMOTE_ORIGIN;
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER_MIX;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*
