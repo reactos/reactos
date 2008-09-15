@@ -4,9 +4,6 @@
 	<directory name="cmd">
 		<xi:include href="cmd/cmd.rbuild" />
 	</directory>
-	<directory name="explorer">
-		<xi:include href="explorer/explorer.rbuild" />
-	</directory>
 	<directory name="explorer-new">
 		<xi:include href="explorer-new/explorer.rbuild" />
 	</directory>
