@@ -383,18 +383,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Tareas", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "M&ostrar tareas comunes en las carpetas", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utilizar las carpetas clá&sicas de ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Examinar carpetas ", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Abrir todas las carpetas en la &misma ventana", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Abrir cada carpeta ventanas di&ferentes", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Hacer clic en los elementos como se indica ", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Restaurar valores predeterminados", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

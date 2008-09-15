@@ -382,18 +382,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Tasks", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

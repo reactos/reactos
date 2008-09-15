@@ -383,18 +383,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP
-	AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Symbolunerschriften wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Symbolunerschriften nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Symbolunerschriften wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Symbolunerschriften nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Wiederherstellen", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

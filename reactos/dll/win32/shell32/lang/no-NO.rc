@@ -381,18 +381,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Oppgaver", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Vis felles oppgaver i &mapper", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Bruk ReactOS klass&isk mapper", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Vis felles oppgaver i &mapper", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Bruk ReactOS klass&isk mapper", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Utforsk mapper", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Åpne hver mapper i sa&mme vindu", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Åpne hver mapper i sitt egen &vindu", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Åpne hver mapper i sa&mme vindu", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Åpne hver mapper i sitt egen &vindu", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Klikk enheter som følgende", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Utheve ikon titteler konsekvent med min &utforsker", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "UUtheve ikon titteler bare mens jeg &peker på de", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utheve ikon titteler konsekvent med min &utforsker", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "UUtheve ikon titteler bare mens jeg &peker på de", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Gjenopprette standard", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

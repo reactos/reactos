@@ -380,18 +380,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Задачи", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 24, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", 14001, 40, 24, 185, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", 14002, 40, 36, 185, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Отобра&жение списка типичных задач в папках", 14001, 40, 24, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Использовать обы&чные папки ReactOS", 14002, 40, 36, 185, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Обзор папок", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 75, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Открывать папки в одном и том же окне", 14004, 40, 75, 185, 10, WS_TABSTOP
-	AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", 14005, 40, 87, 185, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Открывать папки в одном и том же окне", 14004, 40, 75, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "О&ткрывать каждую папку в отдельном окне", 14005, 40, 87, 185, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", 14007, 40, 120, 200, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Подчеркив&ать подписи значков", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", 14009, 50, 144, 185, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", 14010, 40, 156, 195, 10, WS_TABSTOP
+	AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", 14007, 40, 120, 200, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Подчеркив&ать подписи значков", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", 14009, 50, 144, 185, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", 14010, 40, 156, 195, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Восстановить умолчания", 14011, 148, 180, 104, 14, WS_TABSTOP
 END
 
