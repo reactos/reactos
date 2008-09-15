@@ -207,9 +207,7 @@ ProSend(
  *     - Break this up
  */
 {
-  KIRQL RaiseOldIrql, SpinOldIrql;
-  BOOLEAN QueueWorkItem = FALSE;
-  NDIS_STATUS NdisStatus;
+  KIRQL SpinOldIrql;
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
 
@@ -229,26 +227,8 @@ ProSend(
   /* XXX what is this crazy black magic? */
   Packet->Reserved[0] = (ULONG_PTR)MacBindingHandle;
 
-  /*
-   * Acquire this lock in order to see if the miniport is busy.
-   * If it is not busy, we mark it as busy and release the lock.
-   * Else we don't do anything because we have to queue a workitem
-   * anyway.
-   */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
-      /*
-       * if the miniport is marked as busy, we queue the packet as a work item,
-       * else we send the packet directly to the miniport.  Sending to the miniport
-       * makes it busy.
-       */
-      if (Adapter->MiniportBusy)
-        QueueWorkItem = TRUE;
-      else
-        {
-          NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to busy\n"));
-          Adapter->MiniportBusy = TRUE;
-        }
 
   /*
    * Test the packet to see if it is a MAC loopback.
@@ -260,128 +240,20 @@ ProSend(
   if ((Adapter->NdisMiniportBlock.MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) &&
       MiniAdapterHasAddress(Adapter, Packet))
     {
-      NDIS_DbgPrint(MIN_TRACE, ("Looping packet.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Queuing packet.\n"));
 
-      if (QueueWorkItem)
-        {
-          MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
-          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-          return NDIS_STATUS_PENDING;
-        }
-
+      MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-
-      KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
-        {
-          /*
-           * atm this *only* handles loopback packets - it calls MiniIndicateData to
-           * send back to the protocol.  FIXME: this will need to be adjusted a bit.
-           * Also, I'm not sure you really have to be at dispatch level for this.  It
-           * might use a ReceivePackets handler, which can run <= DISPATCH_LEVEL.
-           */
-          NdisStatus = ProIndicatePacket(Adapter, Packet);
-
-          NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-          KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-            {
-              NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to free\n"));
-              Adapter->MiniportBusy = FALSE;
-
-              if (Adapter->WorkQueueHead)
-                KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
-              else
-                NDIS_DbgPrint(MID_TRACE,("Failed to insert packet into work queue\n"));
-            }
-          KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-        }
-      KeLowerIrql(RaiseOldIrql);
-
-      return NdisStatus;
+      return NDIS_STATUS_PENDING;
     }
   else
     NDIS_DbgPrint(MID_TRACE,("Not a loopback packet\n"));
 
   /* This is a normal send packet, not a loopback packet. */
-  if (QueueWorkItem)
-    {
-      MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
-      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-      NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
-      return NDIS_STATUS_PENDING;
-    }
-
-  ASSERT(Adapter->NdisMiniportBlock.DriverHandle);
-
+  MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-
-  /*
-   * Call the appropriate send handler
-   *
-   * If a miniport provides a SendPackets handler, we always call it.  If not, we call the
-   * Send handler.
-   */
-  if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
-    {
-      if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
-        {
-          NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
-          (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
-        }
-      else
-        {
-          /* SendPackets is called at DISPATCH_LEVEL for all serialized miniports */
-          KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
-            {
-              NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
-              (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
-                Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
-            }
-          KeLowerIrql(RaiseOldIrql);
-        }
-
-      NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)Packet);
-    }
-  else
-    {
-      if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
-        {
-          NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-          NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
-          NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
-        }
-      else
-        {
-          /* Send handlers always run at DISPATCH_LEVEL so we raise here */
-          KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
-
-          NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-          NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
-          NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
-          KeLowerIrql(RaiseOldIrql);
-        }
-    }
-
-  if( NdisStatus != NDIS_STATUS_PENDING ) {
-      Adapter->MiniportBusy = FALSE;
-  }
-
-  /* XXX why the hell do we do this? */
-  NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &SpinOldIrql);
-    {
-      if (Adapter->WorkQueueHead)
-        {
-          KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
-          NDIS_DbgPrint(MAX_TRACE, ("MiniportDpc queued; returning NDIS_STATUS_SUCCESS\n"));
-        }
-    }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-
-  NDIS_DbgPrint(MAX_TRACE, ("returning 0x%x\n", NdisStatus));
-  return NdisStatus;
+  NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
+  return NDIS_STATUS_PENDING;
 }
 
 
