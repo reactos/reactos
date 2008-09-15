@@ -146,14 +146,14 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
     /* Create the heap, don't serialize in kmode! The caller is responsible
        to synchronize the heap! */
     Parameters.Length = sizeof(Parameters);
-    Parameters.InitialCommit = PAGE_SIZE;
+    Parameters.InitialCommit = ViewSize;
     Parameters.InitialReserve = (SIZE_T)HeapSize;
     Parameters.CommitRoutine = IntUserHeapCommitRoutine;
 
     hHeap = RtlCreateHeap(HEAP_ZERO_MEMORY | HEAP_NO_SERIALIZE,
                           *SystemMappedBase,
                           (SIZE_T)HeapSize,
-                          PAGE_SIZE,
+                          ViewSize,
                           NULL,
                           &Parameters);
 
