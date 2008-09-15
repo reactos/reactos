@@ -2079,7 +2079,7 @@ IoGetFileObjectGenericMapping(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
     /* Return the flag status */
