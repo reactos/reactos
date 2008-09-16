@@ -982,6 +982,26 @@ DWORD RQueryServiceStatus(
 }
 
 
+static BOOL
+ScmIsValidServiceState(DWORD dwCurrentState)
+{
+    switch (dwCurrentState)
+    {
+        case SERVICE_STOPPED:
+        case SERVICE_START_PENDING:
+        case SERVICE_STOP_PENDING:
+        case SERVICE_RUNNING:
+        case SERVICE_CONTINUE_PENDING:
+        case SERVICE_PAUSE_PENDING:
+        case SERVICE_PAUSED:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+
 /* Function 7 */
 DWORD RSetServiceStatus(
     handle_t BindingHandle,
@@ -991,9 +1011,20 @@ DWORD RSetServiceStatus(
     PSERVICE lpService;
 
     DPRINT("RSetServiceStatus() called\n");
+    DPRINT("hServiceStatus = %p\n", hServiceStatus);
+    DPRINT("dwServiceType = %lu\n", lpServiceStatus->dwServiceType);
+    DPRINT("dwCurrentState = %lu\n", lpServiceStatus->dwCurrentState);
+    DPRINT("dwControlsAccepted = %lu\n", lpServiceStatus->dwControlsAccepted);
+    DPRINT("dwWin32ExitCode = %lu\n", lpServiceStatus->dwWin32ExitCode);
+    DPRINT("dwServiceSpecificExitCode = %lu\n", lpServiceStatus->dwServiceSpecificExitCode);
+    DPRINT("dwCheckPoint = %lu\n", lpServiceStatus->dwCheckPoint);
+    DPRINT("dwWaitHint = %lu\n", lpServiceStatus->dwWaitHint);
 
-    if (ScmShutdown)
-        return ERROR_SHUTDOWN_IN_PROGRESS;
+    if (hServiceStatus == 0)
+    {
+        DPRINT1("hServiceStatus == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
 
     lpService = ScmGetServiceEntryByClientHandle((ULONG)hServiceStatus);
     if (lpService == NULL)
@@ -1001,6 +1032,30 @@ DWORD RSetServiceStatus(
         DPRINT1("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
+
+    /* Check current state */
+    if (!ScmIsValidServiceState(lpServiceStatus->dwCurrentState))
+    {
+        DPRINT1("Invalid service state!\n");
+        return ERROR_INVALID_DATA;
+    }
+
+    /* Check service type */
+    if (!(lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
+         (lpServiceStatus->dwServiceType & SERVICE_DRIVER))
+    {
+        DPRINT1("Invalid service type!\n");
+        return ERROR_INVALID_DATA;
+    }
+
+    /* Check accepted controls */
+    if (lpServiceStatus->dwControlsAccepted == 0 ||
+        lpServiceStatus->dwControlsAccepted & ~0xFF)
+    {
+        DPRINT1("Invalid controls accepted!\n");
+        return ERROR_INVALID_DATA;
+    }
+
 
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
