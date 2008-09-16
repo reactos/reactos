@@ -1,30 +1,53 @@
-<module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="yes">
+<module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="no" allowwarnings="true">
 	<importlibrary definition="ws2_32.def" />
-	<include base="ws2_32">include</include>
-	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_DISABLE_TIDENTS" />
-	<define name="LE" />
-	<define name="_WIN32_WINNT">0x0500</define>
-	<library>wine</library>
+	<include base="ws2_32">inc</include>
+	<include base="ReactOS">include/reactos/dll/winsock</include>
+	<define name="_WIN32_WINNT">0x0502</define>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>ws2help</library>
 	<library>advapi32</library>
 	<library>dnsapi</library>
-	<directory name="include">
-		<pch>ws2_32.h</pch>
-	</directory>
-	<directory name="misc">
-		<file>bsd.c</file>
-		<file>catalog.c</file>
-		<file>dllmain.c</file>
-		<file>event.c</file>
-		<file>handle.c</file>
-		<file>ns.c</file>
-		<file>sndrcv.c</file>
-		<file>stubs.c</file>
-		<file>upcall.c</file>
+
+
+	<directory name="src">
+		<file>addrconv.c</file>
+		<file>addrinfo.c</file>
 		<file>async.c</file>
+		<file>bhook.c</file>
+		<file>dcatalog.c</file>
+		<file>dcatitem.c</file>
+		<file>dllmain.c</file>
+		<file>dprocess.c</file>
+		<file>dprovide.c</file>
+		<file>dsocket.c</file>
+		<file>dthread.c</file>
+		<file>dupsock.c</file>
+		<file>enumprot.c</file>
+		<file>event.c</file>
+		<file>getproto.c</file>
+		<file>getxbyxx.c</file>
+		<file>ioctl.c</file>
+		<file>nscatalo.c</file>
+		<file>nscatent.c</file>
+		<file>nspinstl.c</file>
+		<file>nsprovid.c</file>
+		<file>nsquery.c</file>
+		<file>qos.c</file>
+		<file>qshelpr.c</file>
+		<file>rasdial.c</file>
+		<file>recv.c</file>
+		<file>rnr.c</file>
+		<file>scihlpr.c</file>
+		<file>select.c</file>
+		<file>send.c</file>
+		<file>sockctrl.c</file>
+		<file>socklife.c</file>
+		<file>spinstal.c</file>
+		<file>sputil.c</file>
+		<file>startup.c</file>
+		<file>wsautil.c</file>
 	</directory>
 	<file>ws2_32.rc</file>
 </module>
