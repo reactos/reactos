@@ -25,12 +25,11 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 
 VOID
 APIENTRY
-EngMultiByteToUnicodeN(
-  OUT LPWSTR  UnicodeString,
-  IN ULONG  MaxBytesInUnicodeString,
-  OUT PULONG  BytesInUnicodeString,
-  IN PCHAR  MultiByteString,
-  IN ULONG  BytesInMultiByteString)
+EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
+                       IN ULONG MaxBytesInUnicodeString,
+                       OUT PULONG BytesInUnicodeString,
+                       IN PCHAR MultiByteString,
+                       IN ULONG BytesInMultiByteString)
 {
     /* Call Rtl */
     RtlMultiByteToUnicodeN(UnicodeString,

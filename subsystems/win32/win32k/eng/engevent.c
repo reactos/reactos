@@ -12,28 +12,33 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_ENG TAG('E', 'n', 'g', ' ')
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 BOOL
 APIENTRY
 EngCreateEvent(OUT PEVENT* Event)
 {
+    PKEVENT LocalEvent;
+
     /* Allocate memory for the event */
-    *Event = EngAllocMem(FL_NONPAGED_MEMORY,
-	                     sizeof(KEVENT),
-	                     0);
+    LocalEvent = EngAllocMem(FL_NONPAGED_MEMORY,
+	                         sizeof(KEVENT),
+	                         TAG_ENG);
 
     /* Check if we are out of memory  */
-	if (!*Event)
+	if (!LocalEvent)
 	{
 	    /* We are, fail */
         return FALSE;
     }
 
-    /* Initialize the event */
-    KeInitializeEvent((PKEVENT)*Event,
+    /* Initialize the event and return it */
+    KeInitializeEvent(LocalEvent,
                       SynchronizationEvent,
                       FALSE);
+    *Event = (PEVENT)LocalEvent;
 
 	/* Return success */
     return TRUE;	
@@ -43,10 +48,8 @@ BOOL
 APIENTRY
 EngDeleteEvent(IN PEVENT Event)
 {
-    /* Free the event */
+    /* Just free the event */
     EngFreeMem(Event);
-
-    /* Return success */
     return TRUE;
 }
 
@@ -86,8 +89,9 @@ EngMapEvent(IN HDEV hDev,
 {
     PKEVENT Event;
     NTSTATUS Status;
-    
-    /* FIXME: Should we do anything with the reserved parameters? */
+
+    /* Assume failure */
+    Event = NULL;
 
     /* Reference the object  */
     Status = ObReferenceObjectByHandle(hUserObject,
@@ -114,10 +118,8 @@ BOOL
 APIENTRY
 EngUnmapEvent(IN PEVENT Event)
 {
-    /* Dereference the event */
+    /* Just dereference the event */
     ObDereferenceObject(Event);
-
-    /* Return success */
     return TRUE;
 }
 

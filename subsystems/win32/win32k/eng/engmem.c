@@ -23,6 +23,9 @@ EngAllocMem(IN ULONG Flags,
     PVOID AllocatedMemory;
 	POOL_TYPE AllocationType;
 
+    /* Make sure we get a tag */
+    ASSERT(Tag != 0);
+
 	/* Get the requested pool type */
     AllocationType = (Flags & FL_NONPAGED_MEMORY) ? NonPagedPool : PagedPool;
 
