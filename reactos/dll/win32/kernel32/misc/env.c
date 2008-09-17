@@ -425,6 +425,10 @@ ExpandEnvironmentStringsA (
             return 0;
         }
 
+    /* make sure we don't overflow the maximum ANSI_STRING size */
+    if (nSize > 0x7fff)
+        nSize = 0x7fff;
+
 	Destination.Length = 0;
 	Destination.MaximumLength = (USHORT)nSize;
 	Destination.Buffer = lpDst;
@@ -490,6 +494,10 @@ ExpandEnvironmentStringsW (
 
 	RtlInitUnicodeString (&Source,
 	                      (LPWSTR)lpSrc);
+
+    /* make sure we don't overflow the maximum UNICODE_STRING size */
+    if (nSize > 0x7fff)
+        nSize = 0x7fff;
 
 	Destination.Length = 0;
 	Destination.MaximumLength = (USHORT)nSize * sizeof(WCHAR);
