@@ -151,12 +151,12 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         pContext->Status = 1;
         hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC));
     }
-    else if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->Status  != 2)
+    else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
     {
         hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC));
-        pContext->Status = 2;
+        pContext->Status = 2; 
     }
-    else if (pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 3)
+    else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
     {
         hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS));
         pContext->Status = 3;
@@ -246,6 +246,8 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     }
     CoTaskMemFree(pStr);
     pContext->dwAdapterIndex = dwAdapterIndex;
+    pContext->dwInOctets = 0;
+    pContext->dwOutOctets = 0;
 
     /* update adapter info */
     pContext->Status = -1;
