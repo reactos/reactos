@@ -1948,7 +1948,7 @@ static LRESULT OnNotify( HWND hWnd, WPARAM wParam, LPARAM lParam)
         sprintf( buf,"selection = %d..%d, line count=%ld",
                  pSC->chrg.cpMin, pSC->chrg.cpMax,
         SendMessage(hwndEditor, EM_GETLINECOUNT, 0, 0));
-        SetWindowText(GetDlgItem(hWnd, IDC_STATUSBAR), buf);
+        SetWindowTextA(GetDlgItem(hWnd, IDC_STATUSBAR), buf);
         SendMessage(hWnd, WM_USER, 0, 0);
         return 1;
     }
@@ -2528,8 +2528,11 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
     return 0;
 }
-
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdParagraph, int nCmdShow)
+#if defined(__GNUC__) && !defined(__REACTOS__)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdParagraph, int nCmdShow)
+#else
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPTSTR szCmdParagraph, int nCmdShow)
+#endif
 {
     INITCOMMONCONTROLSEX classes = {8, ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_USEREX_CLASSES};
     HACCEL hAccel;
