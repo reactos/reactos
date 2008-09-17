@@ -36,6 +36,7 @@
 #define IDC_STATUS                   1104
 #define IDC_DURATION                 1105
 #define IDC_SPEED                    1106
+#define IDC_NETSTAT                  1107
 
 
 /* resource constants */

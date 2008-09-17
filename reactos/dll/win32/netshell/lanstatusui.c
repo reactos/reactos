@@ -10,6 +10,7 @@ typedef struct tagNotificationItem
 {
     struct tagNotificationItem *pNext;
     CLSID guidItem;
+    UINT uID;
     HWND hwndDlg;
 }NOTIFICATION_ITEM;
 
@@ -24,11 +25,14 @@ typedef struct
 typedef struct
 {
     INetConnection *pNet;
-    HWND hwndDlg;
+    HWND hwndStatusDlg;         /* LanStatusDlg window */
+    HWND hwndDlg;               /* status dialog window */
     DWORD dwAdapterIndex;
     UINT_PTR nIDEvent;
     DWORD dwInOctets;
     DWORD dwOutOctets;
+    UINT uID;
+    UINT Status;
 }LANSTATUSUI_CONTEXT;
 
 VOID
@@ -42,6 +46,9 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     WCHAR Buffer[100];
     WCHAR DayBuffer[30];
     WCHAR LocBuffer[50];
+    HICON hIcon, hOldIcon;
+    NOTIFYICONDATAW nid;
+
 #if 0
     ULONGLONG Ticks;
 #else
@@ -98,8 +105,6 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         SendDlgItemMessageW(hwndDlg, IDC_SEND, WM_SETTEXT, 0, (LPARAM)szBuffer);
     }
 
-    //FIXME
-    //set duration
 #if 0
     Ticks = GetTickCount64();
 #else
@@ -135,6 +140,47 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         SendDlgItemMessageW(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)Buffer);
     }
 
+    hIcon = NULL;
+    if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
+    {
+        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+        pContext->Status = 0;
+    }
+    else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
+    {
+        pContext->Status = 1;
+        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC));
+    }
+    else if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->Status  != 2)
+    {
+        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC));
+        pContext->Status = 2;
+    }
+    else if (pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 3)
+    {
+        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS));
+        pContext->Status = 3;
+    }
+
+    if (hIcon)
+    {
+        hOldIcon = (HICON)SendDlgItemMessageW(hwndDlg, IDC_NETSTAT, STM_SETICON, (WPARAM)hIcon, 0);
+
+
+        ZeroMemory(&nid, sizeof(nid));
+        nid.cbSize = sizeof(nid);
+        nid.uID = pContext->uID;
+        nid.hWnd = pContext->hwndStatusDlg;
+        nid.uFlags = NIF_ICON;
+        nid.u.uVersion = 3;
+        nid.hIcon = CopyIcon(hIcon);
+
+        Shell_NotifyIconW(NIM_MODIFY, &nid);
+        if (hOldIcon)
+            DestroyIcon(hOldIcon);
+    }
+    pContext->dwInOctets = IfEntry.dwInOctets;
+    pContext->dwOutOctets = IfEntry.dwOutOctets;
 }
 
 
@@ -202,8 +248,8 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     pContext->dwAdapterIndex = dwAdapterIndex;
 
     /* update adapter info */
+    pContext->Status = -1;
     UpdateLanStatusUIDlg(hwndDlg, pContext);
-    pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
     CoTaskMemFree(pAdapterInfo);
 }
 
@@ -225,7 +271,7 @@ LANStatusUiDlg(
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
             pContext = (LANSTATUSUI_CONTEXT*)page->lParam;
-            pContext->hwndDlg = GetParent(hwndDlg);
+            pContext->hwndDlg = hwndDlg;
             InitializeLANStatusUiDlg(hwndDlg, pContext);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             return TRUE;
@@ -251,17 +297,9 @@ LANStatusUiDlg(
             if (lppsn->hdr.code == PSN_APPLY || lppsn->hdr.code == PSN_RESET)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                KillTimer(hwndDlg, pContext->nIDEvent);
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 pContext->hwndDlg = NULL;
-                return PSNRET_NOERROR;
-            }
-            break;
-        case WM_TIMER:
-            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-            if (wParam == (WPARAM)pContext->nIDEvent)
-            {
-                UpdateLanStatusUIDlg(hwndDlg, pContext);
+                return TRUE;
             }
             break;
     }
@@ -276,7 +314,6 @@ ShowStatusPropertyDialog(
     HPROPSHEETPAGE hppages[2];
     PROPSHEETHEADERW pinfo;
     NETCON_PROPERTIES * pProperties = NULL;
-    HWND hwnd;
 
     ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
     ZeroMemory(hppages, sizeof(hppages));
@@ -293,7 +330,7 @@ ShowStatusPropertyDialog(
             pinfo.dwFlags |= PSH_PROPTITLE;
         }
 
-        if (pProperties->MediaType == NCM_LAN)
+        if (pProperties->MediaType == NCM_LAN && pProperties->Status == NCS_CONNECTED)
         {
             hppages[0] = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_LAN_NETSTATUS), LANStatusUiDlg, (LPARAM)pContext, NULL);
             if (hppages[0])
@@ -301,12 +338,13 @@ ShowStatusPropertyDialog(
 
             if (pinfo.nPages)
             {
-                hwnd = (HWND)PropertySheetW(&pinfo);
-                if (hwnd)
-                {
-                    pContext->hwndDlg = hwnd;
-                }
+                PropertySheetW(&pinfo);
             }
+        }
+        else if (pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED ||
+                 pProperties->Status == NCS_HARDWARE_DISABLED)
+        {
+            ShowNetConnectionProperties(pContext->pNet, pContext->hwndDlg);
         }
         NcFreeNetconProperties(pProperties);
     }
@@ -326,13 +364,17 @@ LANStatusDlg(
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            pContext = (LANSTATUSUI_CONTEXT*)CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT));
-            if (!pContext)
-                return FALSE;
-            pContext->hwndDlg = NULL;
-            pContext->pNet = (INetConnection*)lParam;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
+            pContext = (LANSTATUSUI_CONTEXT *)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lParam);
+            pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
             return TRUE;
+        case WM_TIMER:
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            if (wParam == (WPARAM)pContext->nIDEvent)
+            {
+                UpdateLanStatusUIDlg(pContext->hwndDlg, pContext);
+            }
+            break;
         case WM_SHOWSTATUSDLG:
             if (LOWORD(lParam) == WM_LBUTTONDOWN)
             {
@@ -342,8 +384,8 @@ LANStatusDlg(
 
                 if (pContext->hwndDlg)
                 {
-                    ShowWindow(pContext->hwndDlg, SW_SHOW);
-                    BringWindowToTop(pContext->hwndDlg);
+                    ShowWindow(GetParent(pContext->hwndDlg), SW_SHOW);
+                    BringWindowToTop(GetParent(pContext->hwndDlg));
                 }
                 else
                 {
@@ -370,6 +412,7 @@ InitializeNetTaskbarNotifications(
     ULONG Count;
     ULONG Index;
     NOTIFICATION_ITEM * pItem, *pLast = NULL;
+    LANSTATUSUI_CONTEXT * pContext;
 
     if (This->pHead)
         return S_OK;
@@ -395,9 +438,20 @@ InitializeNetTaskbarNotifications(
             pItem = (NOTIFICATION_ITEM*)CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM));
             if (!pItem)
                 break;
-            pItem->pNext = NULL;
 
-            hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)INetCon);
+            pContext = (LANSTATUSUI_CONTEXT*)CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT));
+            if (!pContext)
+            {
+                CoTaskMemFree(pItem);
+                break;
+            }
+
+            pItem->pNext = NULL;
+            ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
+            pContext->uID = Index;
+            pContext->pNet = INetCon;
+
+            hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
             if (hwndDlg)
             {
                 ZeroMemory(&nid, sizeof(nid));
@@ -407,17 +461,26 @@ InitializeNetTaskbarNotifications(
                 nid.u.uVersion = 3;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
-                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+
                 hr = INetConnection_GetProperties(INetCon, &pProps);
                 if (SUCCEEDED(hr))
                 {
                     CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
-                    pItem->hwndDlg = hwndDlg;
                     if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
                     {
                         nid.dwState = NIS_HIDDEN;
                     }
+                    if (pProps->Status == NCS_MEDIA_DISCONNECTED || pProps->Status == NCS_DISCONNECTED || pProps->Status == NCS_HARDWARE_DISABLED)
+                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF));
+                    else if (pProps->Status == NCS_CONNECTED)
+                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+
+
+                    wcscpy(nid.szTip, pProps->pszwName);
+                    nid.uFlags |= NIF_TIP;
                 }
+                pContext->hwndStatusDlg = hwndDlg;
+                pItem->hwndDlg = hwndDlg;
 
                 if (Shell_NotifyIconW(NIM_ADD, &nid))
                 {
