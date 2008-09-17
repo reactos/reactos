@@ -869,6 +869,16 @@ VOID
 WSAAPI
 WsAsyncGlobalInitialize(VOID);
 
+INT
+WSAAPI
+GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
+             IN socklen_t SockaddrLength,
+             OUT PWCHAR pNodeBuffer,
+             IN DWORD NodeBufferSize,
+             OUT PWCHAR pServiceBuffer,
+             IN DWORD ServiceBufferSize,
+             IN INT Flags);
+
 FORCEINLINE
 PWSPROCESS
 WsGetProcess()
