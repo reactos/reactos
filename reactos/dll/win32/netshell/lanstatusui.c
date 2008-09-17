@@ -315,6 +315,9 @@ InitializeNetTaskbarNotifications(
     ULONG Index;
     NOTIFICATION_ITEM * pItem, *pLast = NULL;
 
+    if (This->pHead)
+        return S_OK;
+
     /* get an instance to of IConnectionManager */
     hr = INetConnectionManager_Constructor(NULL, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
     if (FAILED(hr))
@@ -348,7 +351,7 @@ InitializeNetTaskbarNotifications(
                 nid.u.uVersion = 3;
                 nid.uCallbackMessage = WM_SHOWSTATUSDLG;
                 nid.hWnd = hwndDlg;
-                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_SHELL_NETWORK_FOLDER)); //FIXME
+                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
                 hr = INetConnection_GetProperties(INetCon, &pProps);
                 if (SUCCEEDED(hr))
                 {

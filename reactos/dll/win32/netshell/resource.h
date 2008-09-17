@@ -5,6 +5,12 @@
 #define IDI_HORIZONTAL           101
 #define IDI_NETSTAT              102
 #define IDI_VERTICAL             103
+#define IDI_NET_ERROR            104
+#define IDI_NET_IDLE             105
+#define IDI_NET_OFF              106
+#define IDI_NET_REC              107
+#define IDI_NET_TRANS            108
+#define IDI_NET_TRANSREC         109
 
 /* dialogs */
 #define IDD_NETPROPERTIES             400
