@@ -68,4 +68,6 @@
 #define IDS_FORMAT_MBIT             10201
 #define IDS_FORMAT_KBIT             10202
 #define IDS_FORMAT_GBIT             10203
+#define IDS_DURATION_DAY            10204
+#define IDS_DURATION_DAYS           10205
 

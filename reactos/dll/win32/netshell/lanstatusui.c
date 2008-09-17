@@ -25,37 +25,57 @@ typedef struct
 {
     INetConnection *pNet;
     HWND hwndDlg;
+    DWORD dwAdapterIndex;
+    UINT_PTR nIDEvent;
     DWORD dwInOctets;
     DWORD dwOutOctets;
 }LANSTATUSUI_CONTEXT;
 
 VOID
-UpdateLanStatusUIDlg(HWND hwndDlg, MIB_IFROW * IfEntry)
+UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
 {
     WCHAR szFormat[MAX_PATH] = {0};
     WCHAR szBuffer[MAX_PATH] = {0};
+    MIB_IFROW IfEntry;
+    SYSTEMTIME TimeConnected;
+    DWORD DurationSeconds;
+    WCHAR Buffer[100];
+    WCHAR DayBuffer[30];
+    WCHAR LocBuffer[50];
+#if 0
+    ULONGLONG Ticks;
+#else
+    DWORD Ticks;
+#endif
 
-    if (IfEntry->dwSpeed < 1000)
+    ZeroMemory(&IfEntry, sizeof(IfEntry));
+    IfEntry.dwIndex = pContext->dwAdapterIndex;
+    if(GetIfEntry(&IfEntry) != NO_ERROR)
+    {
+        return;
+    }
+
+    if (IfEntry.dwSpeed < 1000)
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_BIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed);
+            swprintf(szBuffer, szFormat, IfEntry.dwSpeed);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
-    else if (IfEntry->dwSpeed < 1000000)
+    else if (IfEntry.dwSpeed < 1000000)
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_KBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000);
+            swprintf(szBuffer, szFormat, IfEntry.dwSpeed/1000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
-    else if (IfEntry->dwSpeed < 1000000000)
+    else if (IfEntry.dwSpeed < 1000000000)
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_MBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000);
+            swprintf(szBuffer, szFormat, IfEntry.dwSpeed/1000000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
@@ -63,37 +83,71 @@ UpdateLanStatusUIDlg(HWND hwndDlg, MIB_IFROW * IfEntry)
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_KBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000000);
+            swprintf(szBuffer, szFormat, IfEntry.dwSpeed/1000000000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
 
-    if (StrFormatByteSizeW(IfEntry->dwInOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
+    if (StrFormatByteSizeW(IfEntry.dwInOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
     {
         SendDlgItemMessageW(hwndDlg, IDC_RECEIVED, WM_SETTEXT, 0, (LPARAM)szBuffer);
     }
 
-    if (StrFormatByteSizeW(IfEntry->dwOutOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
+    if (StrFormatByteSizeW(IfEntry.dwOutOctets, szBuffer, sizeof(szFormat)/sizeof(WCHAR)))
     {
         SendDlgItemMessageW(hwndDlg, IDC_SEND, WM_SETTEXT, 0, (LPARAM)szBuffer);
     }
 
     //FIXME
     //set duration
+#if 0
+    Ticks = GetTickCount64();
+#else
+    Ticks = GetTickCount();
+#endif
+
+    DurationSeconds = Ticks / 1000;
+    TimeConnected.wSecond = (DurationSeconds % 60);
+    TimeConnected.wMinute = (DurationSeconds / 60) % 60;
+    TimeConnected.wHour = (DurationSeconds / (60 * 60)) % 24;
+    TimeConnected.wDay = DurationSeconds / (60 * 60 * 24);
+
+    if (!GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &TimeConnected, L"HH':'mm':'ss", LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0])))
+        return;
+
+    if (!TimeConnected.wDay)
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)LocBuffer);
+    }
+    else
+    {
+        if (TimeConnected.wDay == 1)
+        {
+            if (!LoadStringW(netshell_hInstance, IDS_DURATION_DAY, DayBuffer, sizeof(DayBuffer) / sizeof(DayBuffer[0])))
+                DayBuffer[0] = L'\0';
+        }
+        else
+        {
+            if (!LoadStringW(netshell_hInstance, IDS_DURATION_DAYS, DayBuffer, sizeof(DayBuffer) / sizeof(DayBuffer[0])))
+                DayBuffer[0] = L'\0';
+        }
+        swprintf(Buffer, DayBuffer, TimeConnected.wDay, LocBuffer);
+        SendDlgItemMessageW(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)Buffer);
+    }
 
 }
 
+
 VOID
-InitializeLANStatusUiDlg(HWND hwndDlg, INetConnection * pNet)
+InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     WCHAR szBuffer[MAX_PATH] = {0};
     NETCON_PROPERTIES * pProperties = NULL;
-    MIB_IFROW IfEntry;
     DWORD dwSize, dwAdapterIndex, dwResult;
     LPOLESTR pStr;
     IP_ADAPTER_INFO * pAdapterInfo;
 
-    if (INetConnection_GetProperties(pNet, &pProperties) != NOERROR)
+    if (INetConnection_GetProperties(pContext->pNet, &pProperties) != NOERROR)
         return;
 
     if (pProperties->Status == NCS_DISCONNECTED)
@@ -145,18 +199,11 @@ InitializeLANStatusUiDlg(HWND hwndDlg, INetConnection * pNet)
         return;
     }
     CoTaskMemFree(pStr);
+    pContext->dwAdapterIndex = dwAdapterIndex;
 
-    /* get detailed adapter info */
-    ZeroMemory(&IfEntry, sizeof(IfEntry));
-    IfEntry.dwIndex = dwAdapterIndex;
-    if(GetIfEntry(&IfEntry) != NO_ERROR)
-    {
-        CoTaskMemFree(pAdapterInfo);
-        return;
-    }
-
-    UpdateLanStatusUIDlg(hwndDlg, &IfEntry);
-
+    /* update adapter info */
+    UpdateLanStatusUIDlg(hwndDlg, pContext);
+    pContext->nIDEvent = SetTimer(hwndDlg, 0xFABC, 1000, NULL);
     CoTaskMemFree(pAdapterInfo);
 }
 
@@ -178,7 +225,8 @@ LANStatusUiDlg(
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
             pContext = (LANSTATUSUI_CONTEXT*)page->lParam;
-            InitializeLANStatusUiDlg(hwndDlg, pContext->pNet);
+            pContext->hwndDlg = GetParent(hwndDlg);
+            InitializeLANStatusUiDlg(hwndDlg, pContext);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             return TRUE;
         case WM_COMMAND:
@@ -203,9 +251,17 @@ LANStatusUiDlg(
             if (lppsn->hdr.code == PSN_APPLY || lppsn->hdr.code == PSN_RESET)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                DestroyWindow(pContext->hwndDlg);
+                KillTimer(hwndDlg, pContext->nIDEvent);
+                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 pContext->hwndDlg = NULL;
                 return PSNRET_NOERROR;
+            }
+            break;
+        case WM_TIMER:
+            pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+            if (wParam == (WPARAM)pContext->nIDEvent)
+            {
+                UpdateLanStatusUIDlg(hwndDlg, pContext);
             }
             break;
     }
@@ -225,7 +281,7 @@ ShowStatusPropertyDialog(
     ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
     ZeroMemory(hppages, sizeof(hppages));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW | PSH_MODELESS;
+    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
     pinfo.u3.phpage = hppages;
     pinfo.hwndParent = hwndDlg;
 

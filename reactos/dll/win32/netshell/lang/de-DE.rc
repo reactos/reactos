@@ -83,5 +83,6 @@ BEGIN
 	IDS_FORMAT_KBIT             "%u KBit/s"
 	IDS_FORMAT_MBIT             "%u MBit/s"
 	IDS_FORMAT_GBIT             "%u GBit/s"
-
+	IDS_DURATION_DAY            "%d Tag %s"
+	IDS_DURATION_DAYS           "%d Tage %s"
 END
