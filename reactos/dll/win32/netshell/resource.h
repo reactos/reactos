@@ -8,7 +8,9 @@
 
 /* dialogs */
 #define IDD_NETPROPERTIES             400
-#define IDD_NETSTATUS                 401
+#define IDD_LAN_NETSTATUS             401
+#define IDD_STATUS                    402
+
 
 /* dialog controls */
 #define IDC_NETCARDNAME              1000
@@ -55,3 +57,9 @@
 #define IDS_NET_DELETE              10105
 #define IDS_NET_RENAME              10106
 #define IDS_NET_PROPERTIES          10107
+
+#define IDS_FORMAT_BIT              10200
+#define IDS_FORMAT_MBIT             10201
+#define IDS_FORMAT_KBIT             10202
+#define IDS_FORMAT_GBIT             10203
+

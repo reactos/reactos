@@ -19,8 +19,15 @@ BEGIN
         CHECKBOX "&Benachrichtigen, wenn diese Verbindung eingeschränkte oder\nkeine Konnektivität besitzt", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
-IDD_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200, 180
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -71,4 +78,10 @@ BEGIN
 	IDS_NET_DELETE              "Löschen"
 	IDS_NET_RENAME              "Umbenennen"
 	IDS_NET_PROPERTIES          "Eigenschaften"
+
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
+
 END

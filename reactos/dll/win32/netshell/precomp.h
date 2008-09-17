@@ -81,6 +81,7 @@ extern const GUID GUID_DEVCLASS_NET;
 
 
 /* shfldr_netconnect.c */
+HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);
 HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 /* enumlist.c */
@@ -96,8 +97,10 @@ IClassFactory * IClassFactory_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcR
 
 /* connectmanager.c */
 HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+BOOL GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetCfg, PDWORD pIndex);
 
 /* lanconnectui.c */
+HPROPSHEETPAGE InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
 HRESULT WINAPI LanConnectUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 /* lanstatusui.c */

@@ -301,13 +301,19 @@ HRESULT WINAPI IConnection_Constructor (INetConnection **ppv, PINetConnectionIte
 
     CopyMemory(&This->Props, &pItem->Props, sizeof(NETCON_PROPERTIES));
 
-    This->Props.pszwName = CoTaskMemAlloc((wcslen(pItem->Props.pszwName)+1)*sizeof(WCHAR));
-    if (This->Props.pszwName)
-        wcscpy(This->Props.pszwName, pItem->Props.pszwName);
+    if (pItem->Props.pszwName)
+    {
+        This->Props.pszwName = CoTaskMemAlloc((wcslen(pItem->Props.pszwName)+1)*sizeof(WCHAR));
+        if (This->Props.pszwName)
+            wcscpy(This->Props.pszwName, pItem->Props.pszwName);
+    }
 
-    This->Props.pszwDeviceName = CoTaskMemAlloc((wcslen(pItem->Props.pszwDeviceName)+1)*sizeof(WCHAR));
-    if (This->Props.pszwDeviceName)
-        wcscpy(This->Props.pszwDeviceName, pItem->Props.pszwDeviceName);
+    if (pItem->Props.pszwDeviceName)
+    {
+        This->Props.pszwDeviceName = CoTaskMemAlloc((wcslen(pItem->Props.pszwDeviceName)+1)*sizeof(WCHAR));
+        if (This->Props.pszwDeviceName)
+            wcscpy(This->Props.pszwDeviceName, pItem->Props.pszwDeviceName);
+    }
 
     *ppv = (INetConnection *)This;
 
@@ -449,7 +455,7 @@ static const IEnumNetConnectionVtbl vt_EnumNetConnection =
     IEnumNetConnection_fnClone
 };
 
-static
+
 BOOL
 GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetCfg, PDWORD pIndex)
 {
@@ -473,7 +479,6 @@ GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetC
     }
     return FALSE;
 }
-
 
 static
 BOOL
@@ -543,6 +548,7 @@ EnumerateINetConnections(INetConnectionManagerImpl *This)
     dwIndex = 0;
     do
     {
+
         ZeroMemory(&DevInfo, sizeof(SP_DEVINFO_DATA));
         DevInfo.cbSize = sizeof(DevInfo);
 
@@ -566,9 +572,10 @@ EnumerateINetConnections(INetConnectionManagerImpl *This)
             break;
         }
         RegCloseKey(hSubKey);
+
         /* get the current adapter index from NetCfgInstanceId */
         if (!GetAdapterIndexFromNetCfgInstanceId(pAdapterInfo, szNetCfg, &dwAdapterIndex))
-            break;
+            continue;
 
         /* get detailed adapter info */
         ZeroMemory(&IfEntry, sizeof(IfEntry));
