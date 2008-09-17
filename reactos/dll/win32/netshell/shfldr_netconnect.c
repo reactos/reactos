@@ -37,6 +37,7 @@ typedef struct {
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
     LPCITEMIDLIST apidl;    /* currently focused font item */
+    IOleCommandTarget * lpOleCmd;
 } IGenericSFImpl, *LPIGenericSFImpl;
 
 
@@ -749,6 +750,27 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 }
 
 HRESULT
+ShowNetConnectionStatus(
+    IGenericSFImpl * This,
+    INetConnection * pNetConnect,
+    HWND hwnd)
+{
+    NETCON_PROPERTIES * pProperties;
+    HRESULT hr;
+
+    if (!This->lpOleCmd)
+        return E_FAIL;
+
+    if (INetConnection_GetProperties(pNetConnect, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    hr = IOleCommandTarget_Exec(This->lpOleCmd, &pProperties->guidId, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+
+    NcFreeNetconProperties(pProperties);
+    return hr;
+}
+
+HRESULT
 ShowNetConnectionProperties(
     INetConnection * pNetConnect,
     HWND hwnd)
@@ -810,7 +832,6 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
 {
     IGenericSFImpl * This = impl_from_IContextMenu2(iface);
     VALUEStruct * val;
-    HRESULT hr = S_OK;
 
 
     val = _ILGetValueStruct(This->apidl);
@@ -819,13 +840,7 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS))
     {
-#if 0
-        if (pProperties->MediaType == NCM_LAN)
-        {
-            hr = ShowLANConnectionStatusDialog(pProperties);
-        }
-#endif
-        return hr;
+        return ShowNetConnectionStatus(This, val->pItem, lpcmi->hwnd);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES))
     {
@@ -977,6 +992,7 @@ static const IPersistFolder2Vtbl vt_PersistFolder2 =
 HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     IGenericSFImpl *sf;
+    HRESULT hr;
 
     if (!ppv)
         return E_POINTER;
@@ -991,6 +1007,14 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
     sf->lpVtblContextMenu = &vt_ContextMenu2;
+
+    hr = CoCreateInstance(&CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (LPVOID*)&sf->lpOleCmd);
+    if (FAILED(hr))
+       sf->lpOleCmd = NULL;
+    else
+       IOleCommandTarget_Exec(sf->lpOleCmd, &CGID_ShellServiceObject, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+
+
     sf->pidlRoot = _ILCreateNetConnect();	/* my qualified pidl */
 
     if (!SUCCEEDED (IShellFolder2_QueryInterface ((IShellFolder2*)sf, riid, ppv)))

@@ -77,6 +77,7 @@ typedef struct tagVALUEStruct
 extern HINSTANCE netshell_hInstance;
 extern const GUID CLSID_NetworkConnections;
 extern const GUID CLSID_LANConnectUI;
+extern const GUID CLSID_LanConnectStatusUI;
 extern const GUID GUID_DEVCLASS_NET;
 
 

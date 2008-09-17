@@ -5,17 +5,28 @@
 // IID B722BCCB-4E68-101B-A2BC-00AA00404770
 
 #define WM_SHOWSTATUSDLG    (WM_USER+10)
+
+typedef struct tagNotificationItem
+{
+    struct tagNotificationItem *pNext;
+    CLSID guidItem;
+    HWND hwndDlg;
+}NOTIFICATION_ITEM;
+
 typedef struct
 {
     IOleCommandTarget * lpVtbl;
     INetConnectionManager * lpNetMan;
     LONG ref;
+    NOTIFICATION_ITEM * pHead;
 }ILanStatusImpl, *LPILanStatusImpl;
 
 typedef struct
 {
     INetConnection *pNet;
     HWND hwndDlg;
+    DWORD dwInOctets;
+    DWORD dwOutOctets;
 }LANSTATUSUI_CONTEXT;
 
 VOID
@@ -290,7 +301,7 @@ LANStatusDlg(
 }
 static 
 HRESULT
-InitializeNetConnectTray(
+InitializeNetTaskbarNotifications(
     ILanStatusImpl * This)
 {
     NOTIFYICONDATAW nid;
@@ -302,6 +313,7 @@ InitializeNetConnectTray(
     HRESULT hr;
     ULONG Count;
     ULONG Index;
+    NOTIFICATION_ITEM * pItem, *pLast = NULL;
 
     /* get an instance to of IConnectionManager */
     hr = INetConnectionManager_Constructor(NULL, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
@@ -321,6 +333,11 @@ InitializeNetConnectTray(
         hr = IEnumNetConnection_Next(IEnumCon, 1, &INetCon, &Count);
         if (hr == S_OK)
         {
+            pItem = (NOTIFICATION_ITEM*)CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM));
+            if (!pItem)
+                break;
+            pItem->pNext = NULL;
+
             hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)INetCon);
             if (hwndDlg)
             {
@@ -335,13 +352,28 @@ InitializeNetConnectTray(
                 hr = INetConnection_GetProperties(INetCon, &pProps);
                 if (SUCCEEDED(hr))
                 {
+                    CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
+                    pItem->hwndDlg = hwndDlg;
                     if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
                     {
                         nid.dwState = NIS_HIDDEN;
                     }
                 }
+
                 if (Shell_NotifyIconW(NIM_ADD, &nid))
+                {
+                    if (pLast)
+                        pLast->pNext = pItem;
+                    else
+                        This->pHead = pItem;
+
+                    pLast = pItem;
                     Index++;
+                }
+                else
+                {
+                    CoTaskMemFree(pItem);
+                }
             }
         }
     }while(hr == S_OK);
@@ -349,6 +381,26 @@ InitializeNetConnectTray(
     This->lpNetMan = INetConMan;
     IEnumNetConnection_Release(IEnumCon);
     return S_OK;
+}
+
+HRESULT
+ShowStatusDialogByCLSID(
+    ILanStatusImpl * This,
+    const GUID *pguidCmdGroup)
+{
+    NOTIFICATION_ITEM * pItem;
+
+    pItem = This->pHead;
+    while(pItem)
+    {
+        if (IsEqualGUID(&pItem->guidItem, pguidCmdGroup))
+        {
+            SendMessageW(pItem->hwndDlg, WM_SHOWSTATUSDLG, 0, WM_LBUTTONDOWN);
+            return S_OK;
+        }
+        pItem = pItem->pNext;
+    }
+    return E_FAIL;
 }
 static
 HRESULT
@@ -390,6 +442,7 @@ WINAPI
 IOleCommandTarget_fnRelease(
     IOleCommandTarget * iface)
 {
+#if 0
     ILanStatusImpl * This =  (ILanStatusImpl*)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
@@ -398,6 +451,9 @@ IOleCommandTarget_fnRelease(
         CoTaskMemFree (This);
     }
     return refCount;
+#else
+    return 1;
+#endif
 }
 
 static
@@ -410,7 +466,6 @@ IOleCommandTarget_fnQueryStatus(
     OLECMD *prgCmds,
     OLECMDTEXT *pCmdText)
 {
-    MessageBoxW(NULL, L"222222222222222222222", L"IOleCommandTarget_fnQueryStatus", MB_OK);
     MessageBoxW(NULL, pCmdText->rgwz, L"IOleCommandTarget_fnQueryStatus", MB_OK);
     return E_NOTIMPL;
 }
@@ -432,7 +487,12 @@ IOleCommandTarget_fnExec(
     {
         if (IsEqualIID(pguidCmdGroup, &CGID_ShellServiceObject))
         {
-            return InitializeNetConnectTray(This);
+            return InitializeNetTaskbarNotifications(This);
+        }
+        else
+        {
+            /* invoke status dialog */
+            return ShowStatusDialogByCLSID(This, pguidCmdGroup);
         }
     }
     return S_OK;
@@ -452,6 +512,7 @@ static const IOleCommandTargetVtbl vt_OleCommandTarget =
 HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     ILanStatusImpl * This;
+    static ILanStatusImpl *cached_This = NULL;
 
     if (!ppv)
         return E_POINTER;
@@ -466,15 +527,13 @@ HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid
     This->ref = 1;
     This->lpVtbl = (IOleCommandTarget*)&vt_OleCommandTarget;
     This->lpNetMan = NULL;
+    This->pHead = NULL;
 
-    if (FAILED(IOleCommandTarget_fnQueryInterface ((IOleCommandTarget*)This, riid, ppv)))
+    if (InterlockedCompareExchangePointer((void *)&cached_This, This, NULL) != NULL)
     {
-        IOleCommandTarget_Release((IUnknown*)This);
-        return E_NOINTERFACE;
+        CoTaskMemFree(This);
     }
-    IOleCommandTarget_Release((IUnknown*)This);
-    return S_OK;
+
+    return IOleCommandTarget_fnQueryInterface ((IOleCommandTarget*)cached_This, riid, ppv);
 }
-
-
 
