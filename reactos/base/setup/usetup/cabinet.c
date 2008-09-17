@@ -148,7 +148,7 @@ MSZipCodecUncompress(PVOID OutputBuffer,
 		  return CS_BADSTREAM;
 		}
 
-	  ZStream.next_in   = (PUCHAR)((ULONG)InputBuffer + 2);
+	  ZStream.next_in   = ((PUCHAR)InputBuffer )+ 2;
 	  ZStream.avail_in  = *InputLength - 2;
 	  ZStream.next_out  = (PUCHAR)OutputBuffer;
 	  ZStream.avail_out = abs(*OutputLength);
