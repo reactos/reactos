@@ -689,6 +689,8 @@ HRESULT WINAPI INetConnectionManager_Constructor (IUnknown * pUnkOuter, REFIID r
     sf->ref = 1;
     sf->lpVtbl = &vt_NetConnectionManager;
     sf->lpVtblNetConnection = &vt_EnumNetConnection;
+    sf->pHead = NULL;
+    sf->pCurrent = NULL;
 
 
     if (!SUCCEEDED (INetConnectionManager_QueryInterface ((INetConnectionManager*)sf, riid, ppv)))
