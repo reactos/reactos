@@ -879,6 +879,13 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
              IN DWORD ServiceBufferSize,
              IN INT Flags);
 
+BOOL
+WSPAPI
+WPUPostMessage(IN HWND hWnd,
+               IN UINT Msg,
+               IN WPARAM wParam,
+               IN LPARAM lParam);
+
 FORCEINLINE
 PWSPROCESS
 WsGetProcess()
