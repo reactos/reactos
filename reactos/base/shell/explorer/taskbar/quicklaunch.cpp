@@ -141,6 +141,7 @@ void QuickLaunchBar::AddShortcuts()
 		HBITMAP hbmp = CreateCompatibleBitmap(canvas, cx, cy);
 		HBITMAP hbmp_old = SelectBitmap(hdc, hbmp);
 
+		FontSelection font(hdc, GetStockFont(ANSI_VAR_FONT));
 		FmtString num_txt(TEXT("%d"), i+1);
 		TextColor color(hdc, RGB(64,64,64));
 		BkMode mode(hdc, TRANSPARENT);
