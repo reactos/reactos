@@ -368,16 +368,60 @@ NTAPI
 MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                     IN PLIST_ENTRY ListHead)
 {
+    UNICODE_STRING ServicesKeyName = RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
     PMM_DLL_INITIALIZE DllInit;
+    UNICODE_STRING RegPath, ImportName;
+    NTSTATUS Status;
 
     /* Try to see if the image exports a DllInitialize routine */
     DllInit = (PMM_DLL_INITIALIZE)MiLocateExportName(LdrEntry->DllBase,
                                                      "DllInitialize");
     if (!DllInit) return STATUS_SUCCESS;
 
-    /* FIXME: TODO */
-    DPRINT1("DllInitialize not called!\n");
-    return STATUS_UNSUCCESSFUL;
+    /* Do a temporary copy of BaseDllName called ImportName
+     * because we'll alter the length of the string
+     */
+    ImportName.Length = LdrEntry->BaseDllName.Length;
+    ImportName.MaximumLength = LdrEntry->BaseDllName.MaximumLength;
+    ImportName.Buffer = LdrEntry->BaseDllName.Buffer;
+
+    /* Obtain the path to this dll's service in the registry */
+    RegPath.MaximumLength = ServicesKeyName.Length +
+        ImportName.Length + sizeof(UNICODE_NULL);
+    RegPath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                           RegPath.MaximumLength,
+                                           TAG_LDR_WSTR);
+
+    /* Check if this allocation was unsuccessful */
+    if (!RegPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Build and append the service name itself */
+    RegPath.Length = ServicesKeyName.Length;
+    RtlCopyMemory(RegPath.Buffer,
+                  ServicesKeyName.Buffer,
+                  ServicesKeyName.Length);
+
+    /* Check if there is a dot in the filename */
+    if (wcschr(ImportName.Buffer, L'.'))
+    {
+        /* Remove the extension */
+        ImportName.Length = (wcschr(ImportName.Buffer, L'.') -
+            ImportName.Buffer) * sizeof(WCHAR);
+    }
+
+    /* Append service name (the basename without extension) */
+    RtlAppendUnicodeStringToString(&RegPath, &ImportName);
+
+    /* Now call the DllInit func */
+    DPRINT("Calling DllInit(%wZ)\n", &RegPath);
+    Status = DllInit(&RegPath);
+
+    /* Clean up */
+    ExFreePool(RegPath.Buffer);
+
+    /* Return status value which DllInitialize returned */
+    return Status;
 }
 
 VOID
