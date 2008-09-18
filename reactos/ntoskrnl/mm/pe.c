@@ -362,6 +362,9 @@ l_ReadHeaderFromFile:
 	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
 		ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
 
+	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfImage))
+		ImageSectionObject->ImageSize = piohOptHeader->SizeOfImage;
+
 	    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackReserve))
 		ImageSectionObject->StackReserve = piohOptHeader->SizeOfStackReserve;
 
@@ -384,6 +387,14 @@ l_ReadHeaderFromFile:
 		    DIE(("ImageBase exceeds the address space\n"));
 
 		ImageSectionObject->ImageBase = pioh64OptHeader->ImageBase;
+	    }
+
+	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))
+	    {
+		if(pioh64OptHeader->SizeOfImage > MAXULONG_PTR)
+		    DIE(("SizeOfImage exceeds the address space\n"));
+
+		ImageSectionObject->ImageSize = pioh64OptHeader->SizeOfImage;
 	    }
 
 	    if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
