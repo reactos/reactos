@@ -21,21 +21,37 @@
 #include <windows.h>
 #include <stdio.h>
 #include <wchar.h>
-#include <tchar.h>
+#include <debug.h>
+
+#define NDEBUG
 
 #define MAX_ERROR_TEXT_LEN 160
+
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
+{
+    switch(fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hInstDLL);
+            break;
+        case DLL_PROCESS_DETACH:
+            break;
+    }
+    return TRUE;
+}
 
 DWORD WINAPI
 AMGetErrorTextA(HRESULT hr, LPTSTR buffer, DWORD maxlen)
 {
     int len;
-    static const TCHAR format[] = {'E','r','r','o','r',':',' ','0','x','%','l','x',0};
-    TCHAR error[MAX_ERROR_TEXT_LEN];
+    static const char format[] = "Error: 0x%lx";
+    char error[MAX_ERROR_TEXT_LEN];
+
+    DPRINT1("FIXME (%x,%p,%d) stub\n", hr, buffer, maxlen);
 
     if (!buffer) return 0;
-    _stprintf(error, format, hr);
-    if ((len = _tcslen(error)) >= maxlen) return 0; 
-    _tcscpy(buffer, error);
+    sprintf(error, format, hr);
+    if ((len = strlen(error)) >= maxlen) return 0; 
+    strcpy(buffer, error);
     return len;
 }
 
@@ -45,6 +61,8 @@ AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
     int len;
     static const WCHAR format[] = {'E','r','r','o','r',':',' ','0','x','%','l','x',0};
     WCHAR error[MAX_ERROR_TEXT_LEN];
+
+    DPRINT1("FIXME (%x,%p,%d) stub\n", hr, buffer, maxlen);
 
     if (!buffer) return 0;
     swprintf(error, format, hr);
@@ -56,22 +74,24 @@ AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
 LONG WINAPI
 AmpFactorToDB(LONG ampfactor)
 {
+    DPRINT1("FIXME (%d) Stub!\n", ampfactor);
     return 0;
 }
 
 LONG WINAPI
 DBToAmpFactor(LONG db)
 {
+    DPRINT1("FIXME (%d) Stub!\n", db);
     /* Avoid divide by zero (probably during range computation) in Windows Media Player 6.4 */
     if (db < -1000)
-	return 0;
+        return 0;
     return 100;
 }
 
 HRESULT WINAPI
 DllCanUnloadNow(void)
 {
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT WINAPI
@@ -83,11 +103,11 @@ DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 HRESULT WINAPI
 DllRegisterServer(void)
 {
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT WINAPI
 DllUnregisterServer(void)
 {
-	return S_OK;
+    return S_OK;
 }
