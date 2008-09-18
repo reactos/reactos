@@ -40,7 +40,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 }
 
 DWORD WINAPI
-AMGetErrorTextA(HRESULT hr, LPTSTR buffer, DWORD maxlen)
+AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
 {
     int len;
     static const char format[] = "Error: 0x%lx";
