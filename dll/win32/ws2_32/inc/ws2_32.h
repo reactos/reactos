@@ -23,7 +23,6 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #include <Ws2spi.h>
-#include <nspapi.h>
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
 

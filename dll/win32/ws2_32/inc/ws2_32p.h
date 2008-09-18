@@ -22,18 +22,6 @@ typedef enum _WSASYNCOPS
     WsAsyncTerminate,
 } WSASYNCOPS;
 
-typedef struct _ADDRINFOW
-{
-  INT ai_flags;
-  INT ai_family;
-  INT ai_socktype;
-  INT ai_protocol;
-  SIZE_T ai_addrlen;
-  PWSTR ai_canonname;
-  struct SOCKADDR *ai_addr;
-  struct ADDRINFOW *ai_next;
-} ADDRINFOW, *PADDRINFOW;
-
 typedef struct _WSASYNCBLOCK
 {
     LIST_ENTRY AsyncQueue;
@@ -868,23 +856,6 @@ WsAsyncGlobalTerminate(VOID);
 VOID
 WSAAPI
 WsAsyncGlobalInitialize(VOID);
-
-INT
-WSAAPI
-GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
-             IN socklen_t SockaddrLength,
-             OUT PWCHAR pNodeBuffer,
-             IN DWORD NodeBufferSize,
-             OUT PWCHAR pServiceBuffer,
-             IN DWORD ServiceBufferSize,
-             IN INT Flags);
-
-BOOL
-WSPAPI
-WPUPostMessage(IN HWND hWnd,
-               IN UINT Msg,
-               IN WPARAM wParam,
-               IN LPARAM lParam);
 
 FORCEINLINE
 PWSPROCESS
