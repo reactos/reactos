@@ -3,6 +3,7 @@
 typedef struct tagINetConnectionItem
 {
     struct tagINetConnectionItem * Next;
+    DWORD dwAdapterIndex;
     NETCON_PROPERTIES    Props;
 }INetConnectionItem, *PINetConnectionItem;
 
@@ -21,6 +22,7 @@ typedef struct
     const INetConnectionVtbl * lpVtbl;
     LONG                       ref;
     NETCON_PROPERTIES          Props;
+    DWORD dwAdapterIndex;
 } INetConnectionImpl, *LPINetConnectionImpl;
 
 
@@ -29,6 +31,7 @@ static LPINetConnectionManagerImpl __inline impl_from_EnumNetConnection(IEnumNet
     return (LPINetConnectionManagerImpl)((char *)iface - FIELD_OFFSET(INetConnectionManagerImpl, lpVtblNetConnection));
 }
 
+VOID NormalizeOperStatus(MIB_IFROW *IfEntry, NETCON_PROPERTIES * Props);
 
 static
 HRESULT
@@ -211,7 +214,7 @@ INetConnection_fnGetProperties(
     INetConnection * iface,
     NETCON_PROPERTIES **ppProps)
 {
-
+    MIB_IFROW IfEntry;
     NETCON_PROPERTIES * pProperties;
 
     INetConnectionImpl * This = (INetConnectionImpl*)iface;
@@ -238,6 +241,17 @@ INetConnection_fnGetProperties(
     }
 
     *ppProps = pProperties;
+
+    /* get updated adapter characteristics */
+    ZeroMemory(&IfEntry, sizeof(IfEntry));
+    IfEntry.dwIndex = This->dwAdapterIndex;
+    if(GetIfEntry(&IfEntry) != NO_ERROR)
+        return NOERROR;
+
+    NormalizeOperStatus(&IfEntry, pProperties);
+
+
+
     return NOERROR;
 }
 
@@ -298,7 +312,7 @@ HRESULT WINAPI IConnection_Constructor (INetConnection **ppv, PINetConnectionIte
 
     This->ref = 1;
     This->lpVtbl = &vt_NetConnection;
-
+    This->dwAdapterIndex = pItem->dwAdapterIndex;
     CopyMemory(&This->Props, &pItem->Props, sizeof(NETCON_PROPERTIES));
 
     if (pItem->Props.pszwName)
@@ -480,6 +494,37 @@ GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetC
     return FALSE;
 }
 
+VOID
+NormalizeOperStatus(
+    MIB_IFROW *IfEntry,
+    NETCON_PROPERTIES    * Props)
+{
+    switch(IfEntry->dwOperStatus)
+    {
+        case MIB_IF_OPER_STATUS_NON_OPERATIONAL:
+            Props->Status = NCS_HARDWARE_DISABLED;
+            break;
+        case MIB_IF_OPER_STATUS_UNREACHABLE:
+            Props->Status = NCS_DISCONNECTED;
+            break;
+        case MIB_IF_OPER_STATUS_DISCONNECTED:
+            Props->Status = NCS_MEDIA_DISCONNECTED;
+            break;
+        case MIB_IF_OPER_STATUS_CONNECTING:
+            Props->Status = NCS_CONNECTING;
+            break;
+        case MIB_IF_OPER_STATUS_CONNECTED:
+            Props->Status = NCS_CONNECTED;
+            break;
+        case MIB_IF_OPER_STATUS_OPERATIONAL:
+            Props->Status = NCS_CONNECTED;
+            break;
+        default:
+            break;
+    }
+}
+
+
 static
 BOOL
 EnumerateINetConnections(INetConnectionManagerImpl *This)
@@ -589,32 +634,10 @@ EnumerateINetConnections(INetConnectionManagerImpl *This)
             break;
 
         ZeroMemory(pNew, sizeof(INetConnectionItem));
-
+        pNew->dwAdapterIndex = dwAdapterIndex;
         /* store NetCfgInstanceId */
         CLSIDFromString(szNetCfg, &pNew->Props.guidId);
-        switch(IfEntry.dwOperStatus)
-        {
-            case MIB_IF_OPER_STATUS_NON_OPERATIONAL:
-                pNew->Props.Status = NCS_HARDWARE_DISABLED;
-                break;
-            case MIB_IF_OPER_STATUS_UNREACHABLE:
-                pNew->Props.Status = NCS_DISCONNECTED;
-                break;
-            case MIB_IF_OPER_STATUS_DISCONNECTED:
-                pNew->Props.Status = NCS_MEDIA_DISCONNECTED;
-                break;
-            case MIB_IF_OPER_STATUS_CONNECTING:
-                pNew->Props.Status = NCS_CONNECTING;
-                break;
-            case MIB_IF_OPER_STATUS_CONNECTED:
-                pNew->Props.Status = NCS_CONNECTED;
-                break;
-            case MIB_IF_OPER_STATUS_OPERATIONAL:
-                pNew->Props.Status = NCS_CONNECTED;
-                break;
-            default:
-                break;
-        }
+        NormalizeOperStatus(&IfEntry, &pNew->Props);
 
         switch(IfEntry.dwType)
         {

@@ -141,31 +141,49 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     }
 
     hIcon = NULL;
-    if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
+    if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_CONNECTED || IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_OPERATIONAL)
     {
-        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-        pContext->Status = 0;
+        if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
+        {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            pContext->Status = 0;
+        }
+        else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
+        {
+            pContext->Status = 1;
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+        }
+        else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
+        {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            pContext->Status = 2; 
+        }
+        else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
+        {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            pContext->Status = 3;
+        }
     }
-    else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
+    else if (IfEntry.dwOperStatus == MIB_IF_OPER_STATUS_UNREACHABLE || MIB_IF_OPER_STATUS_DISCONNECTED)
     {
-        pContext->Status = 1;
-        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+        if (pContext->Status != 4)
+        {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            pContext->Status = 4;
+        }
     }
-    else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
+    else if (MIB_IF_OPER_STATUS_NON_OPERATIONAL)
     {
-        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-        pContext->Status = 2; 
-    }
-    else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
-    {
-        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-        pContext->Status = 3;
+        if (pContext->Status != 5)
+        {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            pContext->Status = 5;
+        }
     }
 
     if (hIcon)
     {
         hOldIcon = (HICON)SendDlgItemMessageW(hwndDlg, IDC_NETSTAT, STM_SETICON, (WPARAM)hIcon, 0);
-
 
         ZeroMemory(&nid, sizeof(nid));
         nid.cbSize = sizeof(nid);
@@ -420,6 +438,9 @@ InitializeNetTaskbarNotifications(
         return S_OK;
 
     /* get an instance to of IConnectionManager */
+
+    //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
+
     hr = INetConnectionManager_Constructor(NULL, &IID_INetConnectionManager, (LPVOID*)&INetConMan);
     if (FAILED(hr))
         return hr;
