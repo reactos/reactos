@@ -3861,7 +3861,7 @@ RegQueryValueExW (HKEY hKey,
 	}
     }
 
-  if (lpType != NULL)
+  if ((lpType != NULL) && (NT_SUCCESS(Status) || (Status == STATUS_BUFFER_OVERFLOW)))
     {
       *lpType = ValueInfo->Type;
     }
