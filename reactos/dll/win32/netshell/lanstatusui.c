@@ -143,22 +143,22 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     hIcon = NULL;
     if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
     {
-        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
         pContext->Status = 0;
     }
     else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
     {
         pContext->Status = 1;
-        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC));
+        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
     }
     else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
     {
-        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC));
+        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
         pContext->Status = 2; 
     }
     else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
     {
-        hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS));
+        hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
         pContext->Status = 3;
     }
 
@@ -173,7 +173,7 @@ UpdateLanStatusUIDlg(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         nid.hWnd = pContext->hwndStatusDlg;
         nid.uFlags = NIF_ICON;
         nid.u.uVersion = 3;
-        nid.hIcon = CopyIcon(hIcon);
+        nid.hIcon = CopyImage(hIcon, IMAGE_ICON, 0, 0, 0);
 
         Shell_NotifyIconW(NIM_MODIFY, &nid);
         if (hOldIcon)
@@ -281,11 +281,11 @@ LANStatusUiDlg(
             pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (LOWORD(wParam) == IDC_STATUS_PROPERTIES)
             {
-                //FIXME
-                // show net connection property dialog
-                //
                 if (pContext)
-                    ShowNetConnectionProperties(pContext->pNet, pContext->hwndDlg); 
+                {
+                    ShowNetConnectionProperties(pContext->pNet, GetParent(pContext->hwndDlg)); 
+                    BringWindowToTop(GetParent(pContext->hwndDlg));
+                }
                 break;
             }
             else if (LOWORD(wParam) == IDC_ENDISABLE)
