@@ -368,7 +368,10 @@ static void WINAPI BandSite_Destructor(BandSite *This)
     if (This->Bands != NULL)
     {
         for (i = 0; i < This->BandsAllocated; i++)
-            FreeBand(This, &This->Bands[i]);
+        {
+            if (This->Bands[i].DeskBand != NULL)
+                FreeBand(This, &This->Bands[i]);
+        }
         CoTaskMemFree(This->Bands);
         This->Bands = NULL;
     }
