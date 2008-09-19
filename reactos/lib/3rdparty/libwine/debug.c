@@ -36,11 +36,14 @@
 #include <cmfuncs.h>
 
 ULONG
-__cdecl
-DbgPrint(
-    IN PCCH  Format,
-    IN ...
-);
+NTAPI
+vDbgPrintExWithPrefix(
+  IN LPCSTR Prefix,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN LPCSTR Format,
+  IN va_list ap);
+
 
 static const char * const debug_classes[] = { "fixme", "err", "warn", "trace" };
 
@@ -387,10 +390,7 @@ static const char *default_dbgstr_wn( const WCHAR *str, int n )
 /* default implementation of wine_dbg_vprintf */
 static int default_dbg_vprintf( const char *format, va_list args )
 {
-    char buffer[512];
-    vsnprintf( buffer, sizeof(buffer), format, args );
-    buffer[sizeof(buffer) - 1] = '\0';
-    return DbgPrint( "%s", buffer );
+    return vDbgPrintExWithPrefix("", -1, 0, format, args);
 }
 
 

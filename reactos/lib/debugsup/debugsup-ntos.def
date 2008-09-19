@@ -4,6 +4,7 @@ DbgBreakPointWithStatus@4
 DbgPrint
 DbgPrompt@12
 DbgPrintEx
+vDbgPrintExWithPrefix@20
 RtlAssert@16
 RtlUnwind@16
 
