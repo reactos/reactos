@@ -557,6 +557,17 @@ typedef struct {
 	DWORD dwSampleSize;
 	RECT rcFrame;
 } AVIStreamHeader;
+
+/* AVIINDEXENTRY.dwFlags */
+#define AVIIF_LIST	0x00000001	/* chunk is a 'LIST' */
+#define AVIIF_TWOCC	0x00000002
+#define AVIIF_KEYFRAME	0x00000010	/* this frame is a key frame. */
+#define AVIIF_FIRSTPART 0x00000020
+#define AVIIF_LASTPART  0x00000040
+#define AVIIF_MIDPART   (AVIIF_LASTPART|AVIIF_FIRSTPART)
+#define AVIIF_NOTIME	0x00000100	/* this frame doesn't take any time */
+#define AVIIF_COMPUSE	0x0FFF0000
+
 typedef struct _AVIINDEXENTRY {
 	DWORD ckid;
 	DWORD dwFlags;

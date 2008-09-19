@@ -14,5 +14,4 @@
 	<file>vidcap.idl</file>
 	<file>Videoacc.idl</file>
 	<file>strmif.idl</file>
-	<file>devenum.idl</file>
 </module>

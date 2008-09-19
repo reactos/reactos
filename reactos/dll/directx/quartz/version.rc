@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Hans Leidekker
+ * Copyright (c) 2003 John K. Hohm
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,30 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __ERRORS__
-#define __ERRORS__
+#define WINE_OLESELFREGISTER
+#define WINE_FILEDESCRIPTION_STR "Wine Quartz dll"
+#define WINE_FILENAME_STR "quartz.dll"
+#define WINE_FILEVERSION 6,5,1,902
+#define WINE_FILEVERSION_STR "6.5.1.902"
+#define WINE_PRODUCTVERSION 6,5,1,902
+#define WINE_PRODUCTVERSION_STR "6.5"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define AMOVIEAPI
-
-#define VFW_FIRST_CODE      0x200
-#define MAX_ERROR_TEXT_LEN  160
-
-#include <vfwmsgs.h>
-
-typedef BOOL (WINAPI* AMGETERRORTEXTPROCA)(HRESULT,char*,DWORD);
-typedef BOOL (WINAPI* AMGETERRORTEXTPROCW)(HRESULT,WCHAR*,DWORD);
-DECL_WINELIB_TYPE_AW(AMGETERRORTEXTPROC)
-
-DWORD WINAPI AMGetErrorTextA(HRESULT,LPSTR,DWORD);
-DWORD WINAPI AMGetErrorTextW(HRESULT,LPWSTR,DWORD);
-#define AMGetErrorText WINELIB_NAME_AW(AMGetErrorText)
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __ERRORS__ */
+#include "wine/wine_common_ver.rc"
