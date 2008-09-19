@@ -23,7 +23,7 @@
 #include <wchar.h>
 #include <tchar.h>
 #include <ks.h>
-#include <DShow.h>
+#include <dshow.h>
 
 HRESULT WINAPI
 KsSynchronousDeviceControl(
