@@ -922,6 +922,12 @@ GetModuleInformation(HANDLE hProcess,
                      DWORD cb)
 {
   GET_MODULE_INFORMATION_FLAGS Flags = {FALSE, FALSE, FALSE};
+
+  if (cb < sizeof(MODULEINFO)) 
+  {
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return FALSE;
+  }
   return (BOOL)InternalGetModuleInformation(hProcess, hModule, Flags, lpmodinfo, cb);
 }
 
