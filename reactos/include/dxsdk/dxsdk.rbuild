@@ -12,6 +12,6 @@
 	<file>regbag.idl</file>
 	<file>tvratings.idl</file>
 	<file>vidcap.idl</file>
-	<file>Videoacc.idl</file>
+	<file>videoacc.idl</file>
 	<file>strmif.idl</file>
 </module>
