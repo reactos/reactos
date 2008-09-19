@@ -818,7 +818,10 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
                   KeLowerIrql(RaiseOldIrql);
                 }
               }
-	    if( NdisStatus != NDIS_STATUS_PENDING ) {
+
+	    if( NdisStatus == NDIS_STATUS_RESOURCES )
+		MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext);
+	    else if( NdisStatus != NDIS_STATUS_PENDING ) {
 		NdisMSendComplete
 		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
 		Adapter->MiniportBusy = FALSE;
