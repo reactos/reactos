@@ -19,21 +19,20 @@ extern VOID UnloadNtMarta(VOID);
 
 INT STDCALL
 DllMain(PVOID hinstDll,
-	ULONG dwReason,
-	PVOID reserved)
+    ULONG dwReason,
+    PVOID reserved)
 {
-   switch (dwReason)
-     {
-     case DLL_PROCESS_ATTACH:
-	DisableThreadLibraryCalls(hinstDll);
-	RegInitialize();
-	break;
-
-     case DLL_PROCESS_DETACH:
-	RegCleanup();
-	UnloadNtMarta();
-	break;
-     }
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDll);
+            RegInitialize();
+            break;
+        case DLL_PROCESS_DETACH:
+            RegCleanup();
+            UnloadNtMarta();
+            break;
+    }
 
    return TRUE;
 }
