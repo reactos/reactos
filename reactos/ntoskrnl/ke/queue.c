@@ -57,7 +57,7 @@ KiActivateWaiterQueue(IN PKQUEUE Queue)
                                           KWAIT_BLOCK,
                                           WaitListEntry);
             Thread = WaitBlock->Thread;
-            KiUnwaitThread(Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
+            KiUnwaitThread(Thread, (LONG_PTR)QueueEntry, IO_NO_INCREMENT);
         }
     }
 }
@@ -102,7 +102,7 @@ KiInsertQueue(IN PKQUEUE Queue,
         Thread = WaitBlock->Thread;
 
         /* Remove the queue from the thread's wait list */
-        Thread->WaitStatus = (NTSTATUS)Entry;
+        Thread->WaitStatus = (LONG_PTR)Entry;
         if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
 
         /* Increase the active threads and remove any wait reason */
@@ -239,7 +239,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
               IN PLARGE_INTEGER Timeout OPTIONAL)
 {
     PLIST_ENTRY QueueEntry;
-    NTSTATUS Status;
+    LONG_PTR Status;
     PKTHREAD Thread = KeGetCurrentThread();
     PKQUEUE PreviousQueue;
     PKWAIT_BLOCK WaitBlock = &Thread->WaitBlock[0];

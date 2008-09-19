@@ -1353,7 +1353,9 @@ KeTerminateThread(IN KPRIORITY Increment)
         SavedEntry = Entry;
 
         /* Now try to do the exchange */
-        Entry = InterlockedCompareExchangePointer(ListHead, ThreadAddr, Entry);
+        Entry = InterlockedCompareExchangePointer((PVOID*)ListHead,
+                                                  ThreadAddr,
+                                                  Entry);
 
         /* Break out if the change was succesful */
     } while (Entry != SavedEntry);
