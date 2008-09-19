@@ -68,17 +68,6 @@ NdisWriteConfiguration(
     PVOID Data;
     WCHAR Buff[25];
 
-    if(ParameterType != NdisParameterInteger &&
-        ParameterType != NdisParameterHexInteger &&
-        ParameterType != NdisParameterString &&
-        ParameterType != NdisParameterMultiString &&
-        ParameterType != NdisParameterBinary
-      )
-    {
-        *Status = NDIS_STATUS_NOT_SUPPORTED;
-        return;
-    }
-
     /* reset parameter type to standard reg types */
     switch(ParameterType)
     {
@@ -118,7 +107,7 @@ NdisWriteConfiguration(
             break;
 
         default:
-            *Status = NDIS_STATUS_FAILURE;
+            *Status = NDIS_STATUS_NOT_SUPPORTED;
             return;
     }
 
@@ -342,6 +331,7 @@ NdisReadConfiguration(
       )
     {
         NDIS_DbgPrint(MID_TRACE,("unsupported parameter type\n"));
+        *Status = NDIS_STATUS_NOT_SUPPORTED;
         return;
     }
 
