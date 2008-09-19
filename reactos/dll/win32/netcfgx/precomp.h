@@ -13,6 +13,7 @@
 #include <olectl.h>
 #include <netcfgn.h>
 #include "resource.h"
+#include <prsht.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {
