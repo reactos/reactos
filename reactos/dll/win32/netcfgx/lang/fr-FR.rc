@@ -1,0 +1,32 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Général"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 228, 27
+ CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+ GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+ CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "Adresse IP :", -1, 14, 75, 135, 8
+ CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
+ LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
+ CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
+ LTEXT "Passerelle par défaut :", -1, 14, 105, 135, 8
+ CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
+ CONTROL "Obtenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+ GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+ CONTROL "&Utiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Serveur DNS primaire :", -1, 14, 171, 135, 8
+ CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
+ LTEXT "Serveur DNS secondaire :", -1, 14, 186, 135, 8
+ CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
+ PUSHBUTTON "&Avancé", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+	IDS_NET_CONNECT "Network connection"
+END
+
