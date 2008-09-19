@@ -1207,17 +1207,17 @@ NDIS_STATUS LANRegisterAdapter(
     /* Convert returned link speed to bps (it is in 100bps increments) */
     IF->Speed = Speed * 100L;
 
-    /* Add adapter to the adapter list */
-    ExInterlockedInsertTailList(&AdapterListHead,
-                                &IF->ListEntry,
-                                &AdapterListLock);
-
     /* Bind adapter to IP layer */
     if( !BindAdapter(IF, RegistryPath) ) {
 	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (BindAdapter)\n", AdapterName));
 	exFreePool(IF);
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
+
+    /* Add adapter to the adapter list */
+    ExInterlockedInsertTailList(&AdapterListHead,
+                                &IF->ListEntry,
+                                &AdapterListLock);
 
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving.\n"));
 
