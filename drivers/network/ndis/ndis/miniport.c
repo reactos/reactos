@@ -1143,7 +1143,6 @@ NdisMRegisterAdapterShutdownHandler(
  *     ShutdownHandler:  Function to call to handle the bugcheck
  * NOTES:
  *     - I'm not sure about ShutdownContext
- *     - FIXME - memory leak below
  */
 {
   PLOGICAL_ADAPTER            Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
@@ -1164,8 +1163,9 @@ NdisMRegisterAdapterShutdownHandler(
   BugcheckContext->ShutdownHandler = ShutdownHandler;
   BugcheckContext->DriverContext = ShutdownContext;
 
-  /* not sure if this needs to be initialized or not... oh well, it's a leak. */
   BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
+
+  KeInitializeCallbackRecord(BugcheckContext->CallbackRecord);
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback,
       BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
