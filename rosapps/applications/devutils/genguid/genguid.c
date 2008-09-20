@@ -23,8 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-	GUID m_guid;
-	m_guid = GUID_NULL;
+	GUID m_guid = GUID_NULL;
 	int arg;
 	HRESULT result;
 	char *strfmt = "";

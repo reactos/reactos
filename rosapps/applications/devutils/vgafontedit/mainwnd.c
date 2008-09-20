@@ -15,15 +15,16 @@ InitResources(IN PMAIN_WND_INFO Info)
 {
     HDC hMemDC;
     HDC hMainDC;
-    HPEN hPen;
+    HPEN hPen, hPenOld;
     RECT rect;
+    HBITMAP hBitmapOld;
 
     hMemDC = CreateCompatibleDC(NULL);
     hMainDC = GetDC(Info->hMainWnd);
 
     // Create the "Box" bitmap
     Info->hBoxBmp = CreateCompatibleBitmap(hMainDC, CHARACTER_BOX_WIDTH, CHARACTER_BOX_HEIGHT);
-    SelectObject(hMemDC, Info->hBoxBmp);
+    hBitmapOld = SelectObject(hMemDC, Info->hBoxBmp);
 
     rect.left = 0;
     rect.top = 0;
@@ -31,20 +32,24 @@ InitResources(IN PMAIN_WND_INFO Info)
     rect.bottom = CHARACTER_INFO_BOX_HEIGHT;
     FillRect( hMemDC, &rect, (HBRUSH)(COLOR_BTNFACE + 1) );
 
-    SelectObject( hMemDC, GetStockObject(WHITE_PEN) );
+    hPenOld = SelectObject( hMemDC, GetStockObject(WHITE_PEN) );
     Rectangle(hMemDC, 0, 0, CHARACTER_INFO_BOX_WIDTH - 1, 2);
     Rectangle(hMemDC, 0, 2, 2, CHARACTER_INFO_BOX_HEIGHT - 1);
+    hPen = SelectObject(hMemDC, hPenOld);
 
     hPen = CreatePen( PS_SOLID, 1, RGB(128, 128, 128) );
-    SelectObject(hMemDC, hPen);
+    hPenOld = SelectObject(hMemDC, hPen);
     Rectangle(hMemDC, 1, CHARACTER_INFO_BOX_HEIGHT - 2, CHARACTER_INFO_BOX_WIDTH, CHARACTER_INFO_BOX_HEIGHT);
     Rectangle(hMemDC, CHARACTER_INFO_BOX_WIDTH - 2, 1, CHARACTER_INFO_BOX_WIDTH, CHARACTER_INFO_BOX_HEIGHT - 2);
 
     SetPixel( hMemDC, CHARACTER_INFO_BOX_WIDTH - 1, 0, RGB(128, 128, 128) );
     SetPixel( hMemDC, 0, CHARACTER_INFO_BOX_HEIGHT - 1, RGB(128, 128, 128) );
+    SelectObject(hMemDC, hBitmapOld);
 
+    hPen = SelectObject(hMemDC, hPenOld);
     DeleteObject(hPen);
     DeleteDC(hMemDC);
+    ReleaseDC(Info->hMainWnd, hMainDC);
 }
 
 static VOID
