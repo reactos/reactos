@@ -11,7 +11,7 @@
 //
 // Define this if you want debugging support
 //
-#define _CM_DEBUG_                                      0x00
+#define _CM_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
@@ -1438,6 +1438,7 @@ CmShutdownSystem(
 //
 // Global variables accessible from all of Cm
 //
+extern ULONG CmpTraceLevel;
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;

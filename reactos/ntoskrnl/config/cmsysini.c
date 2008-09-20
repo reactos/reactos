@@ -29,6 +29,7 @@ BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
 BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpWasSetupBoot;
+ULONG CmpTraceLevel = 0;
 
 extern BOOLEAN CmFirstTime;
 
