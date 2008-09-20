@@ -253,7 +253,7 @@ FrLdrSetupPageDirectory(VOID)
 	/* Map APIC page */
 	if (!FrLdrMapSinglePage(APIC_BASE, APIC_PHYS_BASE))
 	{
-		DbgPrint("Could not map APIC page.\n", KernelPages);
+		DbgPrint("Could not map APIC page.\n");
 	}
 
 }
