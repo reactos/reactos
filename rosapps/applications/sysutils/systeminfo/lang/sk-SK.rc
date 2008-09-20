@@ -19,10 +19,10 @@ Parameter List:\n\
 	                   user context. Prompts for input if omitted.\n\n\
   /FO     form t           Specifies the format in which the output\n\
 	                   is to be displayed.\n\
-	                   Valid values: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                      Specifies that the \"Column Header\" should\n\
+	                   Valid values: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Specifies that the ""Column Header"" should\n\
 	                   not be displayed in the output.\n\
-	                   Valid only for \"TABLE\" and \"CSV\" formats.\n\n\
+	                   Valid only for ""TABLE"" and ""CSV"" formats.\n\n\
   /?                       Displays this help/usage.\n\n\
 Examples:\n\
   SYSTEMINFO\n\

@@ -15,10 +15,10 @@ Parameter liste:\n\
 	                   bruker sammenheng. Prompts for input if omitted.\n\n\
   /FO     format           Spesifisere formatet som i utgående\n\
 	                   som skal vises.\n\
-	                   Gyldige verdier: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                      Spesifisere at \"Column Header\" skal\n\
+	                   Gyldige verdier: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Spesifisere at ""Column Header"" skal\n\
 	                   ikke vises i utgående.\n\
-	                   Gyldig for bare \"TABLE\" og \"CSV\" formater.\n\n\
+	                   Gyldig for bare ""TABLE"" og ""CSV"" formater.\n\n\
   /?                       Vis denne hjelp/bruk meldingen.\n\n\
 Eksempler:\n\
   SYSTEMINFO\n\

@@ -20,10 +20,10 @@ Lista de Parametros:\n\
 	                      Pregunta por ella si es omitida.\n\n\
   /FO     formato             Especifica el formato en el que la salida\n\
 	                      será mostrada.\n\
-	                      Valores válidos: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                         Especifica que la \"Columna cabezera\" no será\n\
+	                      Valores válidos: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                         Especifica que la ""Columna cabezera"" no será\n\
 	                      mostrada en la salida.\n\
-	                      Válido sólo para formatos \"TABLE\" y \"CSV\" .\n\n\
+	                      Válido sólo para formatos ""TABLE"" y ""CSV"" .\n\n\
   /?                          Muestra esta ayuda.\n\n\
 Ejemplos:\n\
   SYSTEMINFO\n\

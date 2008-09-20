@@ -15,10 +15,10 @@ Parameter List:\n\
 	                   fourni. Le demande si ommis.\n\n\
   /FO     format           Spécifie le format dans lequel la sortie\n\
 	                   doit être affichée.\n\
-	                   Valeurs valides: \"TABLE\", \"LIST\", \"CSV\".\n\n\
-  /NH                      Spécifie que \"L'entête de colonne\" ne doit\n\
+	                   Valeurs valides: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Spécifie que ""L'entête de colonne"" ne doit\n\
 	                   pas être affiché dans la sortie.\n\
-	                   Valide uniquement pour les format \"TABLE\" et \"CSV\".\n\n\
+	                   Valide uniquement pour les format ""TABLE"" et ""CSV"".\n\n\
   /?                       Affiche cette aide.\n\n\
 Exemples:\n\
   SYSTEMINFO\n\

@@ -86,6 +86,7 @@ AllSysInfo(VOID)
 	TCHAR Buf[BUFFER_SIZE],Tmp[BUFFER_SIZE], Msg[BUFFER_SIZE];
 	MEMORYSTATUS memory;
 	unsigned int DIV = 1024;
+	TIME_ZONE_INFORMATION TimeZoneInfo;
 
 	GetSystemInfo(&SysInfo);
 
@@ -201,8 +202,8 @@ AllSysInfo(VOID)
 	//getting Processor(s)
 	if(GetOemStrings(IDS_PROCESSORS,Msg))
 	{
-		fprintf(stderr,Msg,(unsigned int)SysInfo.dwNumberOfProcessors);
 		unsigned int i;
+		fprintf(stderr,Msg,(unsigned int)SysInfo.dwNumberOfProcessors);
 		for(i = 0; i < (unsigned int)SysInfo.dwNumberOfProcessors; i++)
 		{
 			sprintf(Tmp,"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%u",i);
@@ -275,7 +276,6 @@ AllSysInfo(VOID)
 	}
 
 	//getting Time Zone
-	TIME_ZONE_INFORMATION TimeZoneInfo;
 	GetTimeZoneInformation(&TimeZoneInfo);
 	sprintf(Tmp,"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\%S",TimeZoneInfo.StandardName);
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
