@@ -34,10 +34,7 @@ VOID IPSendComplete
 	 ("Called. Context (0x%X)  NdisPacket (0x%X)  NdisStatus (0x%X)\n",
 	  Context, NdisPacket, NdisStatus));
 
-    /* FIXME: Stop sending fragments and cleanup datagram buffers if
-       there was an error */
-
-    if (PrepareNextFragment(IFC)) {
+    if (NT_SUCCESS(NdisStatus) && PrepareNextFragment(IFC)) {
 	/* A fragment was prepared for transmission, so send it */
 	IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
     } else {

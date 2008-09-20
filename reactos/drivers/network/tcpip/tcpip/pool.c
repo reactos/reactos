@@ -26,6 +26,8 @@ PVOID PoolAllocateBuffer(
 
     Buffer = ExAllocatePool(NonPagedPool, Size);
 
+    RtlZeroMemory(Buffer, Size);
+
     TI_DbgPrint(DEBUG_MEMORY, ("Allocated (%i) bytes at (0x%X).\n", Size, Buffer));
 
     return Buffer;
