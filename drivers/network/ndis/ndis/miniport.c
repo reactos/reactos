@@ -853,7 +853,9 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
              */
             /* XXX atm ProIndicatePacket sends a packet up via the loopback adapter only */
             NdisStatus = ProIndicatePacket(Adapter, (PNDIS_PACKET)WorkItemContext);
-            MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
+
+            if( NdisStatus != NDIS_STATUS_PENDING )
+                MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
             break;
 
           case NdisWorkItemReturnPackets:
