@@ -37,202 +37,227 @@
 /*
  * @implemented
  */
-BOOL STDCALL
-CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
+BOOL
+STDCALL
+CopyRect(LPRECT lprcDst,
+         CONST RECT *lprcSrc)
 {
-  if(lprcDst == NULL || lprcSrc == NULL)
-    return(FALSE);
+    if(lprcDst == NULL || lprcSrc == NULL)
+        return(FALSE);
 
-  *lprcDst = *lprcSrc;
-  return(TRUE);
+    *lprcDst = *lprcSrc;
+    return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-EqualRect(
-   CONST RECT *lprc1,
-   CONST RECT *lprc2)
+BOOL
+STDCALL
+EqualRect(CONST RECT *lprc1,
+          CONST RECT *lprc2)
 {
-   if (lprc1 == NULL || lprc2 == NULL)
-      return FALSE;
+    if (lprc1 == NULL || lprc2 == NULL)
+        return FALSE;
 
-   return (lprc1->left == lprc2->left) && (lprc1->top == lprc2->top) &&
-          (lprc1->right == lprc2->right) && (lprc1->bottom == lprc2->bottom);
+    return (lprc1->left == lprc2->left) && (lprc1->top == lprc2->top) &&
+           (lprc1->right == lprc2->right) && (lprc1->bottom == lprc2->bottom);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-InflateRect(LPRECT rect, int dx, int dy)
+BOOL
+STDCALL
+InflateRect(LPRECT rect,
+            int dx,
+            int dy)
 {
-  rect->left -= dx;
-  rect->top -= dy;
-  rect->right += dx;
-  rect->bottom += dy;
-  return(TRUE);
+    rect->left -= dx;
+    rect->top -= dy;
+    rect->right += dx;
+    rect->bottom += dy;
+    return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 IntersectRect(LPRECT lprcDst,
-	      CONST RECT *lprcSrc1,
-	      CONST RECT *lprcSrc2)
+              CONST RECT *lprcSrc1,
+              CONST RECT *lprcSrc2)
 {
-  if (IsRectEmpty(lprcSrc1) || IsRectEmpty(lprcSrc2) ||
-      lprcSrc1->left >= lprcSrc2->right ||
-      lprcSrc2->left >= lprcSrc1->right ||
-      lprcSrc1->top >= lprcSrc2->bottom ||
-      lprcSrc2->top >= lprcSrc1->bottom)
+    if (IsRectEmpty(lprcSrc1) || IsRectEmpty(lprcSrc2) ||
+        lprcSrc1->left >= lprcSrc2->right ||
+        lprcSrc2->left >= lprcSrc1->right ||
+        lprcSrc1->top >= lprcSrc2->bottom ||
+        lprcSrc2->top >= lprcSrc1->bottom)
     {
-      SetRectEmpty(lprcDst);
-      return(FALSE);
+        SetRectEmpty(lprcDst);
+        return(FALSE);
     }
-  lprcDst->left = max(lprcSrc1->left, lprcSrc2->left);
-  lprcDst->right = min(lprcSrc1->right, lprcSrc2->right);
-  lprcDst->top = max(lprcSrc1->top, lprcSrc2->top);
-  lprcDst->bottom = min(lprcSrc1->bottom, lprcSrc2->bottom);
-  return(TRUE);
+    lprcDst->left = max(lprcSrc1->left, lprcSrc2->left);
+    lprcDst->right = min(lprcSrc1->right, lprcSrc2->right);
+    lprcDst->top = max(lprcSrc1->top, lprcSrc2->top);
+    lprcDst->bottom = min(lprcSrc1->bottom, lprcSrc2->bottom);
+    return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 IsRectEmpty(CONST RECT *lprc)
 {
-  return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
+    return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-OffsetRect(LPRECT rect, int dx, int dy)
+BOOL
+STDCALL
+OffsetRect(LPRECT rect,
+           int dx,
+           int dy)
 {
-  if(rect == NULL)
-    return(FALSE);
+    if(rect == NULL)
+        return(FALSE);
 
-  rect->left += dx;
-  rect->top += dy;
-  rect->right += dx;
-  rect->bottom += dy;
-  return(TRUE);
+    rect->left += dx;
+    rect->top += dy;
+    rect->right += dx;
+    rect->bottom += dy;
+    return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-PtInRect(CONST RECT *lprc, POINT pt)
+BOOL
+STDCALL
+PtInRect(CONST RECT *lprc,
+         POINT pt)
 {
-  return((pt.x >= lprc->left) && (pt.x < lprc->right) &&
-	 (pt.y >= lprc->top) && (pt.y < lprc->bottom));
+    return((pt.x >= lprc->left) && (pt.x < lprc->right) &&
+           (pt.y >= lprc->top) && (pt.y < lprc->bottom));
 }
 
-BOOL STDCALL
-SetRect(LPRECT lprc, int xLeft, int yTop, int xRight, int yBottom)
+BOOL
+STDCALL
+SetRect(LPRECT lprc,
+        int xLeft,
+        int yTop,
+        int xRight,
+        int yBottom)
 {
-  lprc->left = xLeft;
-  lprc->top = yTop;
-  lprc->right = xRight;
-  lprc->bottom = yBottom;
-  return(TRUE);
+    lprc->left = xLeft;
+    lprc->top = yTop;
+    lprc->right = xRight;
+    lprc->bottom = yBottom;
+    return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 SetRectEmpty(LPRECT lprc)
 {
-  lprc->left = lprc->right = lprc->top = lprc->bottom = 0;
-  return(TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
-{
-  RECT tempRect;
-
-  if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
-    return(FALSE);
-
-  CopyRect(lprcDst, lprcSrc1);
-
-  if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+    lprc->left = lprc->right = lprc->top = lprc->bottom = 0;
     return(TRUE);
-
-  if (EqualRect(&tempRect, lprcDst))
-  {
-    SetRectEmpty(lprcDst);
-    return FALSE;
-  }
-  if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
-  {
-    if(lprcDst->left == tempRect.left)
-      lprcDst->left = tempRect.right;
-    else if(lprcDst->right == tempRect.right)
-      lprcDst->right = tempRect.left;
-  }
-  else if(lprcDst->left == tempRect.left && lprcDst->right == tempRect.right)
-  {
-    if(lprcDst->top == tempRect.top)
-      lprcDst->top = tempRect.bottom;
-    else if(lprcDst->right == tempRect.right)
-      lprcDst->right = tempRect.left;
-  }
-
-  return(TRUE);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-UnionRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
+BOOL
+STDCALL
+SubtractRect(LPRECT lprcDst,
+             CONST RECT *lprcSrc1,
+             CONST RECT *lprcSrc2)
 {
-  if (IsRectEmpty(lprcSrc1))
+    RECT tempRect;
+
+    if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
+        return(FALSE);
+
+    CopyRect(lprcDst, lprcSrc1);
+
+    if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+        return(TRUE);
+
+    if (EqualRect(&tempRect, lprcDst))
     {
-      if (IsRectEmpty(lprcSrc2))
-	{
-	  SetRectEmpty(lprcDst);
-	  return(FALSE);
-	}
-      else
-	{
-	  *lprcDst = *lprcSrc2;
-	}
+        SetRectEmpty(lprcDst);
+        return FALSE;
     }
-  else
+    if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
     {
-      if (IsRectEmpty(lprcSrc2))
-	{
-	  *lprcDst = *lprcSrc1;
-	}
-      else
-	{
-	  lprcDst->left = min(lprcSrc1->left, lprcSrc2->left);
-	  lprcDst->top = min(lprcSrc1->top, lprcSrc2->top);
-	  lprcDst->right = max(lprcSrc1->right, lprcSrc2->right);
-	  lprcDst->bottom = max(lprcSrc1->bottom, lprcSrc2->bottom);
-	}
+        if(lprcDst->left == tempRect.left)
+            lprcDst->left = tempRect.right;
+        else if(lprcDst->right == tempRect.right)
+            lprcDst->right = tempRect.left;
     }
-  return(TRUE);
+    else if(lprcDst->left == tempRect.left && lprcDst->right == tempRect.right)
+    {
+        if(lprcDst->top == tempRect.top)
+            lprcDst->top = tempRect.bottom;
+        else if(lprcDst->right == tempRect.right)
+            lprcDst->right = tempRect.left;
+    }
+
+    return(TRUE);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+UnionRect(LPRECT lprcDst,
+          CONST RECT *lprcSrc1,
+          CONST RECT *lprcSrc2)
+{
+    if (IsRectEmpty(lprcSrc1))
+    {
+        if (IsRectEmpty(lprcSrc2))
+        {
+            SetRectEmpty(lprcDst);
+            return(FALSE);
+        }
+        else
+        {
+            *lprcDst = *lprcSrc2;
+        }
+    }
+    else
+    {
+        if (IsRectEmpty(lprcSrc2))
+        {
+            *lprcDst = *lprcSrc1;
+        }
+        else
+        {
+            lprcDst->left = min(lprcSrc1->left, lprcSrc2->left);
+            lprcDst->top = min(lprcSrc1->top, lprcSrc2->top);
+            lprcDst->right = max(lprcSrc1->right, lprcSrc2->right);
+            lprcDst->bottom = max(lprcSrc1->bottom, lprcSrc2->bottom);
+        }
+    }
+
+    return(TRUE);
 }

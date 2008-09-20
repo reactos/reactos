@@ -33,95 +33,120 @@
 #include <wine/debug.h>
 /* FUNCTIONS *****************************************************************/
 
-void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)
+void
+DrawCaret(HWND hWnd,
+          PTHRDCARETINFO CaretInfo)
 {
-  HDC hDC, hComp;
+    HDC hDC, hComp;
 
-  hDC = GetDC(hWnd);
-  if(hDC)
-  {
-    if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
+    hDC = GetDC(hWnd);
+    if(hDC)
     {
-      hComp = CreateCompatibleDC(hDC);
-      if(hComp)
-      {
-        SelectObject(hComp, CaretInfo->Bitmap);
-        BitBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, hComp, 0, 0, SRCINVERT);
-        DeleteDC(hComp);
-      }
-      else
-        PatBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, DSTINVERT);
+        if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
+        {
+            hComp = CreateCompatibleDC(hDC);
+            if(hComp)
+            {
+                SelectObject(hComp, CaretInfo->Bitmap);
+                BitBlt(hDC,
+                       CaretInfo->Pos.x,
+                       CaretInfo->Pos.y,
+                       CaretInfo->Size.cx,
+                       CaretInfo->Size.cy,
+                       hComp,
+                       0,
+                       0,
+                       SRCINVERT);
+                DeleteDC(hComp);
+            }
+            else
+                PatBlt(hDC,
+                       CaretInfo->Pos.x,
+                       CaretInfo->Pos.y,
+                       CaretInfo->Size.cx,
+                       CaretInfo->Size.cy,
+                       DSTINVERT);
+        }
+        else
+        {
+            PatBlt(hDC,
+                   CaretInfo->Pos.x,
+                   CaretInfo->Pos.y,
+                   CaretInfo->Size.cx,
+                   CaretInfo->Size.cy,
+                   DSTINVERT);
+        }
+        ReleaseDC(hWnd, hDC);
     }
-    else
-    {
-      PatBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, DSTINVERT);
-    }
-    ReleaseDC(hWnd, hDC);
-  }
 }
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 CreateCaret(HWND hWnd,
-	    HBITMAP hBitmap,
-	    int nWidth,
-	    int nHeight)
+            HBITMAP hBitmap,
+            int nWidth,
+            int nHeight)
 {
-  return (BOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
+    return (BOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 DestroyCaret(VOID)
 {
-  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
 }
 
 
 /*
  * @implemented
  */
-UINT STDCALL
+UINT
+STDCALL
 GetCaretBlinkTime(VOID)
 {
-  return NtUserGetCaretBlinkTime();
+    return NtUserGetCaretBlinkTime();
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 GetCaretPos(LPPOINT lpPoint)
 {
-  return (BOOL)NtUserGetCaretPos(lpPoint);
+    return (BOOL)NtUserGetCaretPos(lpPoint);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
-  return NtUserSetCaretBlinkTime(uMSeconds);
+    return NtUserSetCaretBlinkTime(uMSeconds);
 }
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+STDCALL
 SetCaretPos(int X,
-	    int Y)
+            int Y)
 {
-  return NtUserSetCaretPos(X, Y);
+    return NtUserSetCaretPos(X, Y);
 }
-
 
 /* EOF */

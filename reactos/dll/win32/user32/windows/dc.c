@@ -39,10 +39,9 @@
  */
 HDC
 STDCALL
-GetDC(
-  HWND hWnd)
+GetDC(HWND hWnd)
 {
-  return NtUserGetDC(hWnd);
+    return NtUserGetDC(hWnd);
 }
 
 
@@ -51,12 +50,11 @@ GetDC(
  */
 HDC
 STDCALL
-GetDCEx(
-  HWND hWnd,
-  HRGN hrgnClip,
-  DWORD flags)
+GetDCEx(HWND hWnd,
+        HRGN hrgnClip,
+        DWORD flags)
 {
-  return NtUserGetDCEx(hWnd, hrgnClip, flags);
+    return NtUserGetDCEx(hWnd, hrgnClip, flags);
 }
 
 
@@ -65,32 +63,32 @@ GetDCEx(
  */
 HDC
 STDCALL
-GetWindowDC(
-  HWND hWnd)
+GetWindowDC(HWND hWnd)
 {
-  return (HDC)NtUserGetWindowDC(hWnd);
+    return (HDC)NtUserGetWindowDC(hWnd);
 }
 
 
-BOOL STDCALL GdiReleaseDC(HDC hdc);
+BOOL
+STDCALL
+GdiReleaseDC(HDC hdc);
 
 /*
  * @implemented
  */
 int
 STDCALL
-ReleaseDC(
-  HWND hWnd,
-  HDC hDC)
+ReleaseDC(HWND hWnd,
+          HDC hDC)
 {
-  // From msdn: if the DC was not released return zero.
-  //            if the DC was released return one.
+    // From msdn: if the DC was not released return zero.
+    //            if the DC was released return one.
 
-  if (!hDC) return FALSE; // Null hDC return zero.
+    if (!hDC) return FALSE; // Null hDC return zero.
 
-  GdiReleaseDC ( hDC ); // Release locals.
-  // Win 3.1 throw back, hWnd is ignored and not used.
-  return NtUserCallOneParam( (DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
+    GdiReleaseDC ( hDC ); // Release locals.
+    // Win 3.1 throw back, hWnd is ignored and not used.
+    return NtUserCallOneParam((DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
 }
 
 
@@ -99,8 +97,7 @@ ReleaseDC(
  */
 HWND
 STDCALL
-WindowFromDC(
-  HDC hDC)
+WindowFromDC(HDC hDC)
 {
-  return NtUserWindowFromDC(hDC);
+    return NtUserWindowFromDC(hDC);
 }
