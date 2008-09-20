@@ -66,6 +66,11 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 HDWP STDCALL
 BeginDeferWindowPos(int nNumWindows)
 {
+    if (nNumWindows < 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 #if 0
     UNIMPLEMENTED;
     return (HDWP)0;
@@ -1561,14 +1566,13 @@ OpenIcon(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 RealChildWindowFromPoint(HWND hwndParent,
                          POINT ptParentClientCoords)
 {
-    UNIMPLEMENTED;
-    return (HWND)0;
+    return ChildWindowFromPointEx(hwndParent, ptParentClientCoords, CWP_SKIPTRANSPARENT);
 }
 
 /*
