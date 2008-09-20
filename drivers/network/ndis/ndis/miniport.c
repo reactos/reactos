@@ -309,10 +309,11 @@ MiniResetComplete(
 
 VOID NTAPI
 MiniRequestComplete(
-    IN PNDIS_MINIPORT_BLOCK Adapter,
+    IN PNDIS_HANDLE MiniportAdapterHandle,
     IN PNDIS_REQUEST Request,
     IN NDIS_STATUS Status)
 {
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
     PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)Request->MacReserved;
     KIRQL OldIrql;
 
@@ -326,6 +327,7 @@ MiniRequestComplete(
             Status);
     }
     KeLowerIrql(OldIrql);
+    Adapter->MiniportBusy = FALSE;
 }
 
 VOID NTAPI
@@ -342,6 +344,7 @@ MiniSendComplete(
  *     Status            = Status of send operation
  */
 {
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
     PADAPTER_BINDING AdapterBinding;
     KIRQL OldIrql;
 
@@ -355,6 +358,7 @@ MiniSendComplete(
         Packet,
         Status);
     KeLowerIrql(OldIrql);
+    Adapter->MiniportBusy = FALSE;
 }
 
 
@@ -375,6 +379,7 @@ MiniTransferDataComplete(
     IN  NDIS_STATUS     Status,
     IN  UINT            BytesTransferred)
 {
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
     PADAPTER_BINDING AdapterBinding;
     KIRQL OldIrql;
 
@@ -388,6 +393,7 @@ MiniTransferDataComplete(
         Packet,
         Status);
     KeLowerIrql(OldIrql);
+    Adapter->MiniportBusy = FALSE;
 }
 
 
@@ -628,6 +634,8 @@ MiniQueueWorkItem(
 
     KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
 
+    Adapter->MiniportBusy = TRUE;
+
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -738,14 +746,15 @@ NdisMQueryInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
 {
-    PNDIS_MINIPORT_BLOCK MiniportBlock =
-	(PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+    PLOGICAL_ADAPTER Adapter =
+	(PLOGICAL_ADAPTER)MiniportAdapterHandle;
     KIRQL OldIrql;
-    ASSERT(MiniportBlock);
+    ASSERT(Adapter);
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    if( MiniportBlock->QueryCompleteHandler )
-	(MiniportBlock->QueryCompleteHandler)(MiniportAdapterHandle, Status);
+    if( Adapter->NdisMiniportBlock.QueryCompleteHandler )
+	(Adapter->NdisMiniportBlock.QueryCompleteHandler)(MiniportAdapterHandle, Status);
     KeLowerIrql(OldIrql);
+    Adapter->MiniportBusy = FALSE;
 }
 
 VOID NTAPI MiniportWorker(IN PVOID WorkItem)
@@ -783,6 +792,7 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
                     NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
                     (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
                      Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
+                    NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
                 }
                 else
                 {
@@ -794,9 +804,15 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
                        Adapter->NdisMiniportBlock.MiniportAdapterContext, (PPNDIS_PACKET)&WorkItemContext, 1);
                     }
                     KeLowerIrql(RaiseOldIrql);
-                }
 
-               NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
+                    NdisStatus = NDIS_GET_PACKET_STATUS((PNDIS_PACKET)WorkItemContext);
+                    if( NdisStatus == NDIS_STATUS_RESOURCES ) {
+                        KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+                        MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext);
+                        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+                        break;
+                    }
+                }
               }
             else
               {
@@ -816,15 +832,18 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
                                 Adapter->NdisMiniportBlock.MiniportAdapterContext, (PNDIS_PACKET)WorkItemContext, 0);
                   NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
                   KeLowerIrql(RaiseOldIrql);
+                  if( NdisStatus == NDIS_STATUS_RESOURCES ) {
+                      KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+                      MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext);
+                      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+                      break;
+                  }
                 }
               }
 
-	    if( NdisStatus == NDIS_STATUS_RESOURCES )
-		MiniQueueWorkItem(Adapter, WorkItemType, WorkItemContext);
-	    else if( NdisStatus != NDIS_STATUS_PENDING ) {
+	    if( NdisStatus != NDIS_STATUS_PENDING ) {
 		NdisMSendComplete
 		    ( Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus );
-		Adapter->MiniportBusy = FALSE;
 	    }
             break;
 
@@ -859,12 +878,12 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
               {
                 case NdisRequestQueryInformation:
 		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( &Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
+                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 case NdisRequestSetInformation:
                   NdisMSetInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
-                  MiniRequestComplete( &Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
+                  MiniRequestComplete( (NDIS_HANDLE)Adapter, (PNDIS_REQUEST)WorkItemContext, NdisStatus );
                   break;
 
                 default:
@@ -1988,10 +2007,14 @@ NdisMSetInformationComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status)
 {
+  PLOGICAL_ADAPTER Adapter =
+	(PLOGICAL_ADAPTER)MiniportAdapterHandle;
   KIRQL OldIrql;
+  ASSERT(Adapter);
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->SetCompleteHandler)(MiniportAdapterHandle, Status);
+  (Adapter->NdisMiniportBlock.SetCompleteHandler)(MiniportAdapterHandle, Status);
   KeLowerIrql(OldIrql);
+  Adapter->MiniportBusy = FALSE;
 }
 
 
