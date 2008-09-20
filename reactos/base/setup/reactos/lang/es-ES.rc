@@ -11,9 +11,7 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenido al Asistente de Instalación de ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "¡Aún no puede instalar ReactOS directamente desde este CD! "\
-          "Por favor, reinicie su equipo desde este CD para "\
-	  "instalar ReactOS.", IDC_STATIC, 115, 40, 200, 100
+    LTEXT "¡Aún no puede instalar ReactOS directamente desde este CD! Por favor, reinicie su equipo desde este CD para instalar ReactOS.", IDC_STATIC, 115, 40, 200, 100
     LTEXT "Pulse Finalizar para salir del instalador.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -106,8 +104,7 @@ BEGIN
  
     LTEXT "Cuando presione Finalizar, su equipo será reiniciado.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Si hay un CD en alguna unidad, retírelo. Luego, para reiniciar "\
-          "su equipo, presione Finalizar.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Si hay un CD en alguna unidad, retírelo. Luego, para reiniciar su equipo, presione Finalizar.", IDC_STATIC, 10, 180, 297, 20
 END
 
 

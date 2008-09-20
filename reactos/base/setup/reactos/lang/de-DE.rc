@@ -8,9 +8,7 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Willkommen beim ReactOS Setup Assistenten.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS kann noch nicht direkt von dieser CD installiert werden! "\
-          "Bitte starten Sie Ihren Computer mit dieser CD um ReactOS zu "\
-          "installieren.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS kann noch nicht direkt von dieser CD installiert werden! Bitte starten Sie Ihren Computer mit dieser CD um ReactOS zu installieren.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klicken Sie auf Beenden um das Setup zu verlassen.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -103,8 +101,7 @@ BEGIN
  
     LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "If there is a CD in a drive, remove it. Then, to restart "\
-          "your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
 END
 
 

@@ -8,9 +8,7 @@ CAPTION "ReactOS installering"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Velkommen til ReactOS installering veiviseren.", IDC_STARTTITLE, 115, 8, 220, 24
-    LTEXT "Du kan ennå ikke installere ReactOS direkte fra denne CD-en! "\
-          "Vennligst start datamaskinen på nytt og start fra denne platen for å "\
-	  "installere ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Du kan ennå ikke installere ReactOS direkte fra denne CD-en! Vennligst start datamaskinen på nytt og start fra denne platen for å installere ReactOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Trykk på Fullført for å avslutte installeringen.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -103,8 +101,7 @@ BEGIN
  
     LTEXT "Når du trykker Fullført, vil din datamaskin starte på nytt.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. Også, for å starte "\
-          "din datamaskin på nytt, trykk på Fullført.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Hvis du fortsatt har CD platen i stasjon, fjern denne. Også, for å starte din datamaskin på nytt, trykk på Fullført.", IDC_STATIC, 10, 180, 297, 20
 END
 
 
