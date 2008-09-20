@@ -32,24 +32,21 @@ WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 BOOL
 getUninstaller(WCHAR* RegName, WCHAR* Uninstaller) {
-
-    const DWORD ArraySize = 200;
-
     HKEY hKey1;
     HKEY hKey2;
     DWORD Type = 0;
-    DWORD Size = ArraySize;
-    WCHAR Value[ArraySize];
-    WCHAR KeyName[ArraySize];
+    DWORD Size = MAX_PATH;
+    WCHAR Value[MAX_PATH];
+    WCHAR KeyName[MAX_PATH];
     LONG i = 0;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",0,KEY_READ,&hKey1) == ERROR_SUCCESS) {
         while (RegEnumKeyExW(hKey1,i,KeyName,&Size,NULL,NULL,NULL,NULL) == ERROR_SUCCESS) {
             ++i;
             RegOpenKeyExW(hKey1,KeyName,0,KEY_READ,&hKey2);
-            Size = ArraySize;
+            Size = MAX_PATH;
             if (RegQueryValueExW(hKey2,L"DisplayName",0,&Type,(LPBYTE)Value,&Size) == ERROR_SUCCESS) {
-                Size = ArraySize;
+                Size = MAX_PATH;
                 if (StrCmpW(Value,RegName) == 0) {
                     if (RegQueryValueExW(hKey2,L"UninstallString",0,&Type,(LPBYTE)Uninstaller,&Size) == ERROR_SUCCESS) {
                         RegCloseKey(hKey2);
@@ -63,7 +60,7 @@ getUninstaller(WCHAR* RegName, WCHAR* Uninstaller) {
                 }
             }
             RegCloseKey(hKey2);
-            Size = ArraySize;
+            Size = MAX_PATH;
         }
         RegCloseKey(hKey1);
     }
@@ -107,6 +104,7 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 {
     struct Application* CurrentApplication;
     TV_INSERTSTRUCTW Insert;
+    WCHAR Uninstaller[200];
     SelectedApplication = NULL;
 
     if(Category->Children && !Category->Apps)
@@ -126,8 +124,6 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
     Insert.hParent = TVI_ROOT;
 
     CurrentApplication = Category->Apps;
-
-    WCHAR Uninstaller[200];
     while(CurrentApplication)
     {
         Insert.item.lParam = (UINT)CurrentApplication;
@@ -145,10 +141,13 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 
 BOOL CreateToolTip(HWND hwndTool, HWND hDlg, WCHAR* pText)
 {
+    HWND hwndTip;
+    TOOLINFO toolInfo;
+
     if (!hwndTool || !hDlg || !pText)
         return FALSE;
 
-    HWND hwndTip = CreateWindowExW(0, TOOLTIPS_CLASS, NULL,
+    hwndTip = CreateWindowExW(0, TOOLTIPS_CLASS, NULL,
                                    WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
                                    CW_USEDEFAULT, CW_USEDEFAULT,
                                    CW_USEDEFAULT, CW_USEDEFAULT,
@@ -157,7 +156,7 @@ BOOL CreateToolTip(HWND hwndTool, HWND hDlg, WCHAR* pText)
     if (!hwndTip)
         return FALSE;
 
-    TOOLINFO toolInfo = {0};
+    ZeroMemory(&toolInfo, sizeof(TOOLINFO));
     toolInfo.cbSize = sizeof(toolInfo);
     toolInfo.hwnd = hDlg;
     toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
@@ -176,17 +175,14 @@ SetupControls (HWND hwnd)
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WCHAR Cats[MAX_STRING_LENGHT], Apps[MAX_STRING_LENGHT];
     WCHAR Tooltip1[MAX_STRING_LENGHT], Tooltip2[MAX_STRING_LENGHT], Tooltip3[MAX_STRING_LENGHT];
-    TCHAR Buf[MAX_PATH];
-    char Tmp[MAX_PATH];
-    int i;
+    char Buf[MAX_PATH];
 
-    // Getting downloader.xml path
-    if(!GetSystemDirectory(Buf,sizeof(Buf)/sizeof(char))) return FALSE;
-    lstrcat((LPTSTR)Buf, L"\\downloader.xml");
-    for (i = 0; i < _tcslen(Buf) + 1; i++) Tmp[i] = Buf[i];
+	// Getting downloader.xml path
+    if(!GetSystemDirectoryA(Buf,sizeof(Buf))) return FALSE;
+    strcat(Buf, "\\downloader.xml");
 
     // Parse the XML file
-    if (!ProcessXML(Tmp, &Root))
+    if (!ProcessXML(Buf, &Root))
         return FALSE;
 
     LoadStringW(hInstance, IDS_CATS_TITLE, Cats, MAX_STRING_LENGHT);
@@ -394,6 +390,7 @@ SaveSettings(HWND hwnd)
 {
     HKEY hKey;
     TCHAR szBuf[MAX_PATH];
+    DWORD dwValue;
 
     if (RegOpenKey(HKEY_LOCAL_MACHINE,
                    TEXT("Software\\ReactOS\\Downloader"),
@@ -425,7 +422,6 @@ SaveSettings(HWND hwnd)
                       (DWORD)(sizeof(szBuf) / sizeof(TCHAR))))
         return FALSE;
 
-    DWORD dwValue;
     if (SendDlgItemMessage(hwnd, IDC_DELINST_FILES_CHECKBOX, BM_GETCHECK, 0, 0) == BST_CHECKED)
         dwValue = 0x1;
     else
@@ -449,6 +445,7 @@ InitProfDlg(HWND hwnd)
     HKEY hKey;
     TCHAR Buf[MAX_PATH];
     DWORD dwDisp, dwSize;
+    DWORD dwValue, dwType = REG_DWORD;
 
     if (RegOpenKey(HKEY_LOCAL_MACHINE,
                    TEXT("Software\\ReactOS\\Downloader"),
@@ -476,10 +473,11 @@ InitProfDlg(HWND hwnd)
     }
     else
     {
-        if (!GetWindowsDirectory(Buf, sizeof(Buf) / sizeof(TCHAR))) return FALSE;
-
         TCHAR DPath[256];
         int i;
+
+        if (!GetWindowsDirectory(Buf, sizeof(Buf) / sizeof(TCHAR))) return FALSE;
+
         for (i = 0; i < 4; i++)
         {
             if (i == 3)
@@ -532,7 +530,6 @@ InitProfDlg(HWND hwnd)
         }
     }
 
-    DWORD dwValue, dwType = REG_DWORD;
     dwSize = sizeof(DWORD);
     if (RegQueryValueEx(hKey,
                         L"DeleteInstaller",
@@ -776,6 +773,8 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_NOTIFY:
         {
             LPNMHDR data = (LPNMHDR)lParam;
+            WCHAR Uninstaller[200];
+
             if(data->code == TVN_SELCHANGED)
             {
                 BOOL bShowUninstaller = FALSE;
@@ -809,7 +808,6 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                             StrCatW(ApplicationText, L"\n");
                         StrCatW(ApplicationText, SelectedApplication->Description);
                         ShowMessage(SelectedApplication->Name, ApplicationText);
-                        WCHAR Uninstaller[200];
                         if(StrCmpW(SelectedApplication->RegName, L"")) {
                             if(getUninstaller(SelectedApplication->RegName, Uninstaller)) {
                                 bShowUninstaller = TRUE;
@@ -840,10 +838,11 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             int Split_Hozizontal = (HIWORD(lParam)-(45+60))/2 + 60;
             int Split_Vertical = 200;
+            RECT Rect;
 
             ResizeControl(hCategories, 10, 60, Split_Vertical, HIWORD(lParam)-10);
             ResizeControl(hApps, Split_Vertical+5, 60, LOWORD(lParam)-10, Split_Hozizontal);
-            RECT Rect = {Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50};
+            SetRect(&Rect, Split_Vertical+5, Split_Hozizontal+5, LOWORD(lParam)-10, HIWORD(lParam)-50);
             DescriptionRect = Rect;
 
             MoveWindow(hHelpButton, LOWORD(lParam)-50, 10, 40, 40, TRUE);
