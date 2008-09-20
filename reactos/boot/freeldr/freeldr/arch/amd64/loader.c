@@ -193,11 +193,6 @@ FrLdrMapRangeOfPages(ULONGLONG VirtualAddress, ULONGLONG PhysicalAddress, ULONG 
  *
  * Returns:
  *     None.
- *
- * Remarks:
- *     We are setting PDEs, but using the equvivalent (for our purpose) PTE structure.
- *     As such, please note that PageFrameNumber == PageEntryNumber.
- *
  *--*/
 VOID
 FASTCALL
@@ -253,6 +248,12 @@ FrLdrSetupPageDirectory(VOID)
 	if (!FrLdrMapSinglePage(KI_USER_SHARED_DATA, (ULONG64)UserSharedData))
 	{
 		DbgPrint("Could not map KUSER_SHARED_DATA page.\n", KernelPages);
+	}
+
+	/* Map APIC page */
+	if (!FrLdrMapSinglePage(APIC_BASE, APIC_PHYS_BASE))
+	{
+		DbgPrint("Could not map APIC page.\n", KernelPages);
 	}
 
 }
