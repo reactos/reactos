@@ -93,6 +93,8 @@ WinMain (HINSTANCE hThisInstance,
 	HWND hMainWnd;
 	MSG msg;
 	WNDCLASSEXW wincl;
+	HINSTANCE hDLL;
+	PGFRI GetFontResourceInfoW;
 
 	g_hInstance = hThisInstance;
 
@@ -112,8 +114,8 @@ WinMain (HINSTANCE hThisInstance,
 	}
 
 	/* Load the GetFontResourceInfo function from gdi32.dll */
-	HINSTANCE hDLL = LoadLibraryW(L"GDI32.DLL");
-	PGFRI GetFontResourceInfoW = (PGFRI)GetProcAddress(hDLL, "GetFontResourceInfoW");
+	hDLL = LoadLibraryW(L"GDI32.DLL");
+	GetFontResourceInfoW = (PGFRI)GetProcAddress(hDLL, "GetFontResourceInfoW");
 
 	/* Get the font name */
 	dwSize = sizeof(g_ExtLogFontW.elfFullName);
