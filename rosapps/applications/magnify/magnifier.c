@@ -184,7 +184,8 @@ void Draw(HDC aDc)
 	GetClientRect(hMainWnd, &appRect);
 	GetWindowRect(hDesktopWindow, &R);
 
-    memset(&cinfo, 0, sizeof(cinfo));
+    ZeroMemory(&cinfo, sizeof(CURSORINFO));
+	ZeroMemory(&iinfo, sizeof(ICONINFO));
     cinfo.cbSize = sizeof(cinfo);
     GetCursorInfo(&cinfo);
     GetIconInfo(cinfo.hCursor, &iinfo);
@@ -272,6 +273,10 @@ void Draw(HDC aDc)
 		rop);
 
 	/* Cleanup.*/
+	if (iinfo.hbmMask)
+		DeleteObject(iinfo.hbmMask);
+	if (iinfo.hbmColor)
+		DeleteObject(iinfo.hbmColor);
 	SelectObject (HdcStrech, hOld);
 	DeleteObject (HbmpStrech);
 	DeleteDC (HdcStrech);
