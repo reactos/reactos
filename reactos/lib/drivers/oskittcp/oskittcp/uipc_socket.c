@@ -33,9 +33,6 @@
  *	@(#)uipc_socket.c	8.3 (Berkeley) 4/15/94
  */
 
-#ifndef _MSC_VER
-#include <roscfg.h>
-#endif/*_MSC_VER*/
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>

@@ -7,8 +7,6 @@
 #ifndef __UPCALL_H
 #define __UPCALL_H
 
-#include <ws2_32.h>
-
 BOOL
 WSPAPI
 WPUCloseEvent(

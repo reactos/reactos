@@ -7,7 +7,6 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
-#include <roscfg.h>
 #include <ws2_32.h>
 #include <catalog.h>
 #include <handle.h>

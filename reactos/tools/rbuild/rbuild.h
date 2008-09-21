@@ -243,7 +243,6 @@ public:
 	~Project ();
 	void SetBackend ( Backend* backend ) { _backend = backend; }
 	Backend& GetBackend() { return *_backend; }
-	void WriteConfigurationFile ();
 	void ExecuteInvocations ();
 
 	void ProcessXML ( const std::string& path );
@@ -254,11 +253,6 @@ public:
 	const Property* LookupProperty ( const std::string& name ) const;
 private:
 	std::string ResolveNextProperty ( const std::string& s ) const;
-	void SetConfigurationOption ( char* s,
-	                              std::string name,
-	                              std::string alternativeName );
-	void SetConfigurationOption ( char* s,
-	                              std::string name );
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
