@@ -154,6 +154,15 @@ HalpTrap06(
     VOID
 );
 
+PDMA_ADAPTER STDCALL
+HalpGetDmaAdapter(
+   IN PVOID Context,
+   IN PDEVICE_DESCRIPTION DeviceDescription,
+   OUT PULONG NumberOfMapRegisters);
+
+VOID HaliInitBSP(VOID);
+VOID HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack);
+
 extern PVOID HalpRealModeStart;
 extern PVOID HalpRealModeEnd;
 

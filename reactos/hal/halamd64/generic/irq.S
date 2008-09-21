@@ -14,7 +14,7 @@
 .macro UNIMPLEMENTED func
     jmp 2f
 1:
-    .ascii "Sory, asm function "
+    .ascii "Sorry, asm function "
     .ascii func
     .ascii " is unimplemented!\n\0"
 2:
