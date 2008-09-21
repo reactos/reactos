@@ -1,4 +1,4 @@
-#ifdef _M_AMD64
+#ifdef __x86_64__
 #define MAYBEFWD(x)
 #else
 #define MAYBEFWD(x) x
