@@ -6,7 +6,13 @@
 #define __NTOSKRNL_INCLUDE_INTERNAL_AMD64_MM_H
 
 struct _EPROCESS;
-PULONG_PTR MmGetPageDirectory(VOID);
+
+PULONG64
+FORCEINLINE
+MmGetPageDirectory(VOID)
+{
+    return (PULONG64)__readcr3();
+}
 
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
