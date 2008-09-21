@@ -42,11 +42,6 @@
 #define MSITYPE_KEY      0x2000
 #define MSITYPE_TEMPORARY 0x4000
 
-/* Word Count masks */
-#define MSIWORDCOUNT_SHORTFILENAMES     0x0001
-#define MSIWORDCOUNT_COMPRESSED         0x0002
-#define MSIWORDCOUNT_ADMINISTRATIVE     0x0004
-#define MSIWORDCOUNT_PRIVILEGES         0x0008
 
 /* Install UI level mask for AND operation to exclude flags */
 #define INSTALLUILEVEL_MASK             0x0007

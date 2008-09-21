@@ -2109,11 +2109,14 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     UINT r, sz;
 
     static const WCHAR Streams[] = {'_','S','t','r','e','a','m','s',0};
+    static const WCHAR Storages[] = {'_','S','t','o','r','a','g','e','s',0};
 
     TRACE("%p %s %p\n", db, debugstr_w(name), view );
 
     if ( !lstrcmpW( name, Streams ) )
         return STREAMS_CreateView( db, view );
+    else if ( !lstrcmpW( name, Storages ) )
+        return STORAGES_CreateView( db, view );
 
     sz = sizeof *tv + lstrlenW(name)*sizeof name[0] ;
     tv = msi_alloc_zero( sz );

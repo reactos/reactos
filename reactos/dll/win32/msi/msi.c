@@ -2846,7 +2846,7 @@ UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
             MD5Final( &ctx );
             UnmapViewOfFile( p );
 
-            memcpy( pHash->dwData, &ctx.digest, sizeof pHash->dwData );
+            memcpy( pHash->dwData, ctx.digest, sizeof pHash->dwData );
             r = ERROR_SUCCESS;
         }
         CloseHandle( mapping );

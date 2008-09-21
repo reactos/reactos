@@ -325,6 +325,42 @@ library WindowsInstaller
         msiEvaluateConditionError = 3
     } _MsiEvaluateCondition;           /* Added underscore to avoid conflict with function name */
 
+    typedef enum {
+        msiMessageStatusError = -1,
+        msiMessageStatusNone = 0,
+        msiMessageStatusOk = 1,
+        msiMessageStatusCancel = 2,
+        msiMessageStatusAbort = 3,
+        msiMessageStatusRetry = 4,
+        msiMessageStatusIgnore = 5,
+        msiMessageStatusYes = 6,
+        msiMessageStatusNo = 7
+    } MsiMessageStatus;
+
+    typedef enum {
+        msiMessageTypeFatalExit = 0,
+        msiMessageTypeError          = 0x01000000,
+        msiMessageTypeWarning        = 0x02000000,
+        msiMessageTypeUser           = 0x03000000,
+        msiMessageTypeInfo           = 0x04000000,
+        msiMessageTypeFilesInUse     = 0x05000000,
+        msiMessageTypeResolveSource  = 0x06000000,
+        msiMessageTypeOutOfDiskSpace = 0x07000000,
+        msiMessageTypeActionStart    = 0x08000000,
+        msiMessageTypeActionData     = 0x09000000,
+        msiMessageTypeProgress       = 0x0a000000,
+        msiMessageTypeCommonData     = 0x0b000000,
+        msiMessageTypeOk = 0,
+        msiMessageTypeOkCancel = 1,
+        msiMessageTypeAbortRetryIgnore = 2,
+        msiMessageTypeYesNoCancel = 3,
+        msiMessageTypeYesNo = 4,
+        msiMessageTypeRetryCancel = 5,
+        msiMessageTypeDefault1 = 0,
+        msiMessageTypeDefault2 = 256,
+        msiMessageTypeDefault3 = 512
+    } MsiMessageType;
+
     [ uuid(000C109E-0000-0000-C000-000000000046) ]
     dispinterface Session
     {
@@ -352,6 +388,10 @@ library WindowsInstaller
             MsiDoActionStatus DoAction([in] BSTR Action);
         [id(DISPID_SESSION_EVALUATECONDITION)]
             _MsiEvaluateCondition EvaluateCondition([in] BSTR Expression);
+        [id(DISPID_SESSION_MESSAGE)]
+            MsiMessageStatus Message(
+                [in] MsiMessageType Kind,
+                [in] Record *Record);
         [id(DISPID_SESSION_FEATURECURRENTSTATE), propget]
             MsiInstallState FeatureCurrentState([in] BSTR Feature);
         [id(DISPID_SESSION_FEATUREREQUESTSTATE), propget]

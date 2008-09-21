@@ -1388,6 +1388,20 @@ static HRESULT WINAPI SessionImpl_Invoke(
             else return DISP_E_MEMBERNOTFOUND;
             break;
 
+        case DISPID_SESSION_MESSAGE:
+            if(!(wFlags & DISPATCH_METHOD))
+                return DISP_E_MEMBERNOTFOUND;
+
+            hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
+            if (FAILED(hr)) return hr;
+            hr = DispGetParam(pDispParams, 1, VT_DISPATCH, &varg1, puArgErr);
+            if (FAILED(hr)) return hr;
+
+            V_VT(pVarResult) = VT_I4;
+            V_I4(pVarResult) =
+                MsiProcessMessage(This->msiHandle, V_I4(&varg0), ((AutomationObject *)V_DISPATCH(&varg1))->msiHandle);
+            break;
+
         case DISPID_SESSION_SETINSTALLLEVEL:
             if (wFlags & DISPATCH_METHOD) {
                 hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
