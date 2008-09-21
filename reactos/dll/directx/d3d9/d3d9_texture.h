@@ -10,18 +10,18 @@
 
 #include "d3d9_resource.h"
 
-typedef struct _D3D9Texture
+typedef struct _Direct3DBaseTexture9_INT
 {
-/* 0x0000 */    D3D9Resource BaseResource;
-/* 0x0044 */    DWORD dwUnknown44;
-/* 0x0048 */    DWORD dwUnknown48;
+/* 0x0000 */    struct IDirect3DBaseTexture9Vtbl* lpVtbl;
+/* 0x0004 */    DWORD dwUnknown04;
+/* 0x0008 */    Direct3DResource9_INT BaseResource;
 /* 0x004c */    DWORD dwUnknown4c;
 /* 0x0050 */    DWORD dwUnknown50;
-/* 0x0054 */    DWORD dwUnknown54;
-/* 0x0058 */    DWORD dwUnknown58;
-/* 0x005c */    DWORD dwUnknown5c;
-/* 0x0060 */    DWORD dwUnknown60;
-/* 0x0064 */    DWORD dwUnknown64;
-} D3D9Texture;
+/* 0x0054 */    DWORD Usage;
+/* 0x0058 */    WORD MipMapLevels;
+/* 0x005a */    WORD dUnknown5a;
+/* 0x005c */    WORD MipMapLevels2;
+/* 0x005e */    WORD dUnknown5e;
+} Direct3DBaseTexture9_INT;
 
 #endif // _D3D9_TEXTURE_H_

@@ -15,7 +15,7 @@
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
 
-/* Convert a IDirect3D9 pointer safely to the internal implementation struct */
+/* Convert a IDirect3DDevice9 pointer safely to the internal implementation struct */
 LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
 {
     if (NULL == iface)

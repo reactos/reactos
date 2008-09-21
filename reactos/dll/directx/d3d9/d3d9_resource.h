@@ -10,7 +10,7 @@
 
 #include "d3d9_baseobject.h"
 
-typedef struct _D3D9Resource
+typedef struct _Direct3DResource9_INT
 {
 /* 0x0000 */    D3D9BaseObject BaseObject;
 /* 0x0020 */    DWORD dwUnknown20;
@@ -19,9 +19,11 @@ typedef struct _D3D9Resource
 /* 0x002c */    DWORD dwUnknown2c;
 /* 0x0030 */    DWORD dwUnknown30;
 /* 0x0034 */    DWORD dwUnknown34;
-/* 0x0038 */    DWORD dwUnknown38;
+/* 0x0038 */    D3DPOOL Pool;
 /* 0x003c */    DWORD dwUnknown3c;
-/* 0x0040 */    DWORD dwUnknown40;
-} D3D9Resource;
+/* 0x0040 */    LPDWORD dwUnknown40;
+} Direct3DResource9_INT;
+
+
 
 #endif // _D3D9_RESOURCE_H_
