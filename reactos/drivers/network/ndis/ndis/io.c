@@ -28,37 +28,15 @@ VOID NTAPI HandleDeferredProcessing(
  *     SystemArgument2 = Unused
  */
 {
-  BOOLEAN WasBusy;
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(DeferredContext);
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
-  /* XXX try to grok WasBusy */
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    {
-      WasBusy = Adapter->MiniportBusy;
-      Adapter->MiniportBusy = TRUE;
-    }
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-
   /* Call the deferred interrupt service handler for this adapter */
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HandleInterruptHandler)(
       Adapter->NdisMiniportBlock.MiniportAdapterContext);
-
-  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
-    {
-      if ((!WasBusy) && (Adapter->WorkQueueHead))
-        {
-          KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
-        }
-      else
-        {
-          Adapter->MiniportBusy = WasBusy;
-        }
-    }
-  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
   /* re-enable the interrupt */
   NDIS_DbgPrint(MAX_TRACE, ("re-enabling the interrupt\n"));
