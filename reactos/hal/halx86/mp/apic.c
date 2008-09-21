@@ -916,7 +916,21 @@ VOID
 SetInterruptGate(ULONG index, ULONG_PTR address)
 {
 #ifdef _M_AMD64
-UNIMPLEMENTED;
+  KIDTENTRY64 *idt;
+
+  idt = &KeGetPcr()->IdtBase[index];
+
+  idt->OffsetLow = address & 0xffff;
+  idt->Selector = KGDT_64_R0_CODE;
+  idt->IstIndex = 0;
+  idt->Reserved0 = 0;
+  idt->Type = 0x0e;
+  idt->Dpl = 0;
+  idt->Present = 1;
+  idt->OffsetMiddle = (address >> 16) & 0xffff;
+  idt->OffsetHigh = address >> 32;
+  idt->Reserved1 = 0;
+  idt->Alignment = 0;
 #else
   KIDTENTRY *idt;
   KIDT_ACCESS Access;
@@ -960,7 +974,7 @@ VOID HaliInitBSP(VOID)
 #ifdef CONFIG_SMP
    SetInterruptGate(IPI_VECTOR, (ULONG_PTR)MpsIpiInterrupt);
 #endif
-   DPRINT("APIC is mapped at 0x%X\n", APICBase);
+   DPRINT1("APIC is mapped at 0x%p\n", (PVOID)APICBase);
 
    if (VerifyLocalAPIC()) 
    {
@@ -968,7 +982,7 @@ VOID HaliInitBSP(VOID)
    } 
    else 
    {
-      DPRINT("No APIC found\n");
+      DPRINT1("No APIC found\n");
       ASSERT(FALSE);
    }
 

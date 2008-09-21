@@ -5,7 +5,11 @@
 #ifndef __INTERNAL_HAL_APIC_H
 #define __INTERNAL_HAL_APIC_H
 
+#ifdef _M_AMD64
+#define APIC_DEFAULT_BASE     0xfffffffffee00000ULL;
+#else
 #define APIC_DEFAULT_BASE     0xFEE00000    /* Default Local APIC Base Register Address */
+#endif
 
 /* APIC Register Address Map */
 #define APIC_ID      0x0020 /* Local APIC ID Register (R/W) */
