@@ -92,6 +92,7 @@
 			<directory name="amd64">
 				<file first="true">boot.S</file>
 				<file>cpu.c</file>
+				<file>ctxswitch.S</file>
 				<file>except.c</file>
 				<file>irql.c</file>
 				<file>kiinit.c</file>
@@ -135,6 +136,11 @@
 	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>cmhardwr.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
 			<directory name="i386">
 				<file>cmhardwr.c</file>
 			</directory>
