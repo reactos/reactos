@@ -801,6 +801,13 @@ EnumDependentServicesA(SC_HANDLE hService,
     }
     _SEH_END;
 
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("REnumDependentServicesA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
     lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
     {
@@ -813,13 +820,6 @@ EnumDependentServicesA(SC_HANDLE hService,
                 (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
         lpStatusPtr++;
-    }
-
-    if (dwError != ERROR_SUCCESS)
-    {
-        ERR("REnumDependentServicesA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
     }
 
     TRACE("EnumDependentServicesA() done\n");
@@ -865,6 +865,13 @@ EnumDependentServicesW(SC_HANDLE hService,
     }
     _SEH_END;
 
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("REnumDependentServicesW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
     lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
     {
@@ -877,13 +884,6 @@ EnumDependentServicesW(SC_HANDLE hService,
                 (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
         lpStatusPtr++;
-    }
-
-    if (dwError != ERROR_SUCCESS)
-    {
-        ERR("REnumDependentServicesW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
     }
 
     TRACE("EnumDependentServicesW() done\n");
@@ -957,6 +957,13 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
     }
     _SEH_END;
 
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("REnumServicesStatusA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
     lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
     {
@@ -969,13 +976,6 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
                 (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
         lpStatusPtr++;
-    }
-
-    if (dwError != ERROR_SUCCESS)
-    {
-        ERR("REnumServicesStatusA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
     }
 
     TRACE("EnumServicesStatusA() done\n");
@@ -1025,6 +1025,13 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     }
     _SEH_END;
 
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("REnumServicesStatusW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
     lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
     {
@@ -1037,13 +1044,6 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
                 (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
         lpStatusPtr++;
-    }
-
-    if (dwError != ERROR_SUCCESS)
-    {
-        ERR("REnumServicesStatusW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
     }
 
     TRACE("EnumServicesStatusW() done\n");
