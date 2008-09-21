@@ -912,14 +912,14 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_QueryContextMenu(
 
     if (LoadStringW(shell32_hInstance, IDS_OPEN, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count, MFT_STRING, szBuffer, MFS_DEFAULT);
         Count++;
     }
 
     if (LoadStringW(shell32_hInstance, IDS_PRINT_VERB, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
-        szBuffer[(sizeof(szBuffer)/sizeof(char))-1] = L'\0';
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
