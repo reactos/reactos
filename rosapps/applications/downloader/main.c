@@ -81,7 +81,7 @@ AddItems(HWND hwnd, struct Category* Category, struct Category* Parent)
 {
     TV_INSERTSTRUCTW Insert;
 
-    Insert.item.lParam = (UINT)Category;
+    Insert.item.lParam = (LPARAM)Category;
     Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;;
     Insert.item.pszText = Category->Name;
     Insert.item.cchTextMax = lstrlenW(Category->Name);
@@ -126,7 +126,7 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
     CurrentApplication = Category->Apps;
     while(CurrentApplication)
     {
-        Insert.item.lParam = (UINT)CurrentApplication;
+        Insert.item.lParam = (LPARAM)CurrentApplication;
         Insert.item.pszText = CurrentApplication->Name;
         Insert.item.cchTextMax = lstrlenW(CurrentApplication->Name);
         Insert.item.iImage = 10;
