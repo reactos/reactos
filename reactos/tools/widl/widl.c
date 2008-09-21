@@ -147,13 +147,13 @@ enum {
 static const char short_options[] =
     "cC:d:D:EhH:I:NpP:sS:tT:uU:VW";
 static const struct option long_options[] = {
-    { "dlldata", required_argument, 0, DLLDATA_OPTION },
-    { "dlldata-only", no_argument, 0, DLLDATA_ONLY_OPTION },
-    { "local-stubs", required_argument, 0, LOCAL_STUBS_OPTION },
-    { "oldnames", no_argument, 0, OLDNAMES_OPTION },
-    { "prefix-all", required_argument, 0, PREFIX_ALL_OPTION },
-    { "prefix-client", required_argument, 0, PREFIX_CLIENT_OPTION },
-    { "prefix-server", required_argument, 0, PREFIX_SERVER_OPTION },
+    { "dlldata", 1, 0, DLLDATA_OPTION },
+    { "dlldata-only", 0, 0, DLLDATA_ONLY_OPTION },
+    { "local-stubs", 1, 0, LOCAL_STUBS_OPTION },
+    { "oldnames", 0, 0, OLDNAMES_OPTION },
+    { "prefix-all", 1, 0, PREFIX_ALL_OPTION },
+    { "prefix-client", 1, 0, PREFIX_CLIENT_OPTION },
+    { "prefix-server", 1, 0, PREFIX_SERVER_OPTION },
     { 0, 0, 0, 0 }
 };
 

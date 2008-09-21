@@ -26,11 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
-#include <signal.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT

@@ -1450,7 +1450,6 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
       i = 0;
       LIST_FOR_EACH_ENTRY( arg, func->args, var_t, entry )
       {
-        const attr_t *attr;
         int paramflags = 0;
         int *paramdata = typedata + 6 + extra_attr + (num_defaults ? num_params : 0) + i * 3;
         int *defaultdata = num_defaults ? typedata + 6 + extra_attr + i : NULL;
