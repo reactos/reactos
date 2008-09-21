@@ -10,4 +10,7 @@
 	<file>scsiport.c</file>
 	<file>scsiport.rc</file>
 	<file>scsiport.spec</file>
+	<if property="ARCH" value="amd64">
+		<file>stubs.c</file>
+	</if>
 </module>
