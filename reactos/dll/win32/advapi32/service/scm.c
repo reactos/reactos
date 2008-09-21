@@ -2124,6 +2124,29 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
                            DWORD cbBufSize,
                            LPDWORD pcbBytesNeeded)
 {
+
+    SECURITY_DESCRIPTOR descriptor;
+    DWORD size;
+    BOOL succ;
+    ACL acl;
+
+    FIXME("%p %d %p %u %p - semi-stub\n", hService, dwSecurityInformation,
+          lpSecurityDescriptor, cbBufSize, pcbBytesNeeded);
+
+    if (dwSecurityInformation != DACL_SECURITY_INFORMATION)
+        FIXME("information %d not supported\n", dwSecurityInformation);
+
+    InitializeSecurityDescriptor(&descriptor, SECURITY_DESCRIPTOR_REVISION);
+
+    InitializeAcl(&acl, sizeof(ACL), ACL_REVISION);
+    SetSecurityDescriptorDacl(&descriptor, TRUE, &acl, TRUE);
+
+    size = cbBufSize;
+    succ = RtlMakeSelfRelativeSD(&descriptor, lpSecurityDescriptor, &size);
+    *pcbBytesNeeded = size;
+    return succ;
+
+#if 0
     DWORD dwError;
 
     TRACE("QueryServiceObjectSecurity(%p, %lu, %p)\n",
@@ -2155,6 +2178,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
     }
 
     return TRUE;
+#endif
 }
 
 /**********************************************************************
@@ -2167,6 +2191,9 @@ SetServiceObjectSecurity(SC_HANDLE hService,
                          SECURITY_INFORMATION dwSecurityInformation,
                          PSECURITY_DESCRIPTOR lpSecurityDescriptor)
 {
+	FIXME("%p %d %p\n", hService, dwSecurityInformation, lpSecurityDescriptor);
+    return TRUE;
+#if 0
     PSECURITY_DESCRIPTOR SelfRelativeSD = NULL;
     ULONG Length;
     NTSTATUS Status;
@@ -2226,6 +2253,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
     }
 
     return TRUE;
+#endif
 }
 
 

@@ -59,6 +59,7 @@ static HRESULT WINAPI domcomment_QueryInterface(
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMComment ) ||
+         IsEqualGUID( riid, &IID_IXMLDOMCharacterData) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IUnknown ) )
     {
