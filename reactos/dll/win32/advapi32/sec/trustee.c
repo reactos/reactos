@@ -20,8 +20,8 @@ VOID WINAPI
 BuildImpersonateTrusteeA(PTRUSTEE_A pTrustee,
                          PTRUSTEE_A pImpersonateTrustee)
 {
-  pTrustee->pMultipleTrustee = pImpersonateTrustee;
-  pTrustee->MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
+    pTrustee->pMultipleTrustee = pImpersonateTrustee;
+    pTrustee->MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
 }
 
 
@@ -32,8 +32,8 @@ VOID WINAPI
 BuildImpersonateTrusteeW(PTRUSTEE_W pTrustee,
                          PTRUSTEE_W pImpersonateTrustee)
 {
-  pTrustee->pMultipleTrustee = pImpersonateTrustee;
-  pTrustee->MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
+    pTrustee->pMultipleTrustee = pImpersonateTrustee;
+    pTrustee->MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
 }
 
 
@@ -131,7 +131,8 @@ BuildImpersonateExplicitAccessWithNameW(PEXPLICIT_ACCESS_W pExplicitAccess,
  * BuildTrusteeWithSidA [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithSidA(PTRUSTEE_A pTrustee, PSID pSid)
+BuildTrusteeWithSidA(PTRUSTEE_A pTrustee,
+                     PSID pSid)
 {
     TRACE("%p %p\n", pTrustee, pSid);
 
@@ -147,7 +148,8 @@ BuildTrusteeWithSidA(PTRUSTEE_A pTrustee, PSID pSid)
  * BuildTrusteeWithSidW [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithSidW(PTRUSTEE_W pTrustee, PSID pSid)
+BuildTrusteeWithSidW(PTRUSTEE_W pTrustee,
+                     PSID pSid)
 {
     TRACE("%p %p\n", pTrustee, pSid);
 
@@ -163,7 +165,8 @@ BuildTrusteeWithSidW(PTRUSTEE_W pTrustee, PSID pSid)
  * BuildTrusteeWithNameA [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithNameA(PTRUSTEE_A pTrustee, LPSTR name)
+BuildTrusteeWithNameA(PTRUSTEE_A pTrustee,
+                      LPSTR name)
 {
     TRACE("%p %s\n", pTrustee, name);
 
@@ -179,7 +182,8 @@ BuildTrusteeWithNameA(PTRUSTEE_A pTrustee, LPSTR name)
  * BuildTrusteeWithNameW [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithNameW(PTRUSTEE_W pTrustee, LPWSTR name)
+BuildTrusteeWithNameW(PTRUSTEE_W pTrustee,
+                      LPWSTR name)
 {
     TRACE("%p %s\n", pTrustee, name);
 
@@ -195,9 +199,12 @@ BuildTrusteeWithNameW(PTRUSTEE_W pTrustee, LPWSTR name)
  * BuildTrusteeWithObjectsAndNameA [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee, POBJECTS_AND_NAME_A pObjName,
-                                SE_OBJECT_TYPE ObjectType, LPSTR ObjectTypeName,
-                                LPSTR InheritedObjectTypeName, LPSTR Name)
+BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee,
+                                POBJECTS_AND_NAME_A pObjName,
+                                SE_OBJECT_TYPE ObjectType,
+                                LPSTR ObjectTypeName,
+                                LPSTR InheritedObjectTypeName,
+                                LPSTR Name)
 {
     DWORD ObjectsPresent = 0;
 
@@ -233,9 +240,12 @@ BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee, POBJECTS_AND_NAME_A pObjName
  * BuildTrusteeWithObjectsAndNameW [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee, POBJECTS_AND_NAME_W pObjName,
-                                SE_OBJECT_TYPE ObjectType, LPWSTR ObjectTypeName,
-                                LPWSTR InheritedObjectTypeName, LPWSTR Name)
+BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee,
+                                POBJECTS_AND_NAME_W pObjName,
+                                SE_OBJECT_TYPE ObjectType,
+                                LPWSTR ObjectTypeName,
+                                LPWSTR InheritedObjectTypeName,
+                                LPWSTR Name)
 {
     DWORD ObjectsPresent = 0;
 
@@ -271,8 +281,11 @@ BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee, POBJECTS_AND_NAME_W pObjName
  * BuildTrusteeWithObjectsAndSidA [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithObjectsAndSidA(PTRUSTEEA pTrustee, POBJECTS_AND_SID pObjSid,
-                               GUID* pObjectGuid, GUID* pInheritedObjectGuid, PSID pSid)
+BuildTrusteeWithObjectsAndSidA(PTRUSTEEA pTrustee,
+                               POBJECTS_AND_SID pObjSid,
+                               GUID *pObjectGuid,
+                               GUID *pInheritedObjectGuid,
+                               PSID pSid)
 {
     DWORD ObjectsPresent = 0;
 
@@ -317,8 +330,11 @@ BuildTrusteeWithObjectsAndSidA(PTRUSTEEA pTrustee, POBJECTS_AND_SID pObjSid,
  * BuildTrusteeWithObjectsAndSidW [ADVAPI32.@]
  */
 VOID WINAPI
-BuildTrusteeWithObjectsAndSidW(PTRUSTEEW pTrustee, POBJECTS_AND_SID pObjSid,
-                               GUID* pObjectGuid, GUID* pInheritedObjectGuid, PSID pSid)
+BuildTrusteeWithObjectsAndSidW(PTRUSTEEW pTrustee,
+                               POBJECTS_AND_SID pObjSid,
+                               GUID *pObjectGuid,
+                               GUID *pInheritedObjectGuid,
+                               PSID pSid)
 {
     DWORD ObjectsPresent = 0;
 
@@ -365,7 +381,7 @@ BuildTrusteeWithObjectsAndSidW(PTRUSTEEW pTrustee, POBJECTS_AND_SID pObjSid,
 PTRUSTEEA WINAPI
 GetMultipleTrusteeA(PTRUSTEE_A pTrustee)
 {
-  return pTrustee->pMultipleTrustee;
+    return pTrustee->pMultipleTrustee;
 }
 
 
@@ -375,7 +391,7 @@ GetMultipleTrusteeA(PTRUSTEE_A pTrustee)
 PTRUSTEEW WINAPI
 GetMultipleTrusteeW(PTRUSTEE_W pTrustee)
 {
-  return pTrustee->pMultipleTrustee;
+    return pTrustee->pMultipleTrustee;
 }
 
 
@@ -385,7 +401,7 @@ GetMultipleTrusteeW(PTRUSTEE_W pTrustee)
 MULTIPLE_TRUSTEE_OPERATION WINAPI
 GetMultipleTrusteeOperationA(PTRUSTEE_A pTrustee)
 {
-  return pTrustee->MultipleTrusteeOperation;
+    return pTrustee->MultipleTrusteeOperation;
 }
 
 
@@ -395,7 +411,7 @@ GetMultipleTrusteeOperationA(PTRUSTEE_A pTrustee)
 MULTIPLE_TRUSTEE_OPERATION WINAPI
 GetMultipleTrusteeOperationW(PTRUSTEE_W pTrustee)
 {
-  return pTrustee->MultipleTrusteeOperation;
+    return pTrustee->MultipleTrusteeOperation;
 }
 
 
@@ -405,7 +421,7 @@ GetMultipleTrusteeOperationW(PTRUSTEE_W pTrustee)
 TRUSTEE_FORM WINAPI
 GetTrusteeFormA(PTRUSTEE_A pTrustee)
 {
-  return pTrustee->TrusteeForm;
+    return pTrustee->TrusteeForm;
 }
 
 
@@ -415,7 +431,7 @@ GetTrusteeFormA(PTRUSTEE_A pTrustee)
 TRUSTEE_FORM WINAPI
 GetTrusteeFormW(PTRUSTEE_W pTrustee)
 {
-  return pTrustee->TrusteeForm;
+    return pTrustee->TrusteeForm;
 }
 
 
@@ -445,7 +461,7 @@ GetTrusteeNameW(PTRUSTEE_W pTrustee)
 TRUSTEE_TYPE WINAPI
 GetTrusteeTypeA(PTRUSTEE_A pTrustee)
 {
-  return pTrustee->TrusteeType;
+    return pTrustee->TrusteeType;
 }
 
 
@@ -455,7 +471,7 @@ GetTrusteeTypeA(PTRUSTEE_A pTrustee)
 TRUSTEE_TYPE WINAPI
 GetTrusteeTypeW(PTRUSTEE_W pTrustee)
 {
-  return pTrustee->TrusteeType;
+    return pTrustee->TrusteeType;
 }
 
 /* EOF */

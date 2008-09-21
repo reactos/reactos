@@ -18,26 +18,24 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
  */
 BOOL
 STDCALL
-GetAclInformation (
-	PACL			pAcl,
-	LPVOID			pAclInformation,
-	DWORD			nAclInformationLength,
-	ACL_INFORMATION_CLASS	dwAclInformationClass
-	)
+GetAclInformation(PACL pAcl,
+                  LPVOID pAclInformation,
+                  DWORD nAclInformationLength,
+                  ACL_INFORMATION_CLASS dwAclInformationClass)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlQueryInformationAcl (pAcl,
-	                                 pAclInformation,
-	                                 nAclInformationLength,
-	                                 dwAclInformationClass);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlQueryInformationAcl(pAcl,
+                                    pAclInformation,
+                                    nAclInformationLength,
+                                    dwAclInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -46,24 +44,22 @@ GetAclInformation (
  */
 BOOL
 STDCALL
-InitializeAcl (
-	PACL	pAcl,
-	DWORD	nAclLength,
-	DWORD	dwAclRevision
-	)
+InitializeAcl(PACL pAcl,
+              DWORD nAclLength,
+              DWORD dwAclRevision)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlCreateAcl (pAcl,
-	                       nAclLength,
-	                       dwAclRevision);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlCreateAcl(pAcl,
+                          nAclLength,
+                          dwAclRevision);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -72,11 +68,9 @@ InitializeAcl (
  */
 BOOL
 STDCALL
-IsValidAcl (
-	PACL	pAcl
-	)
+IsValidAcl(PACL pAcl)
 {
-	return RtlValidAcl (pAcl);
+    return RtlValidAcl (pAcl);
 }
 
 
@@ -85,26 +79,24 @@ IsValidAcl (
  */
 BOOL
 STDCALL
-SetAclInformation (
-	PACL			pAcl,
-	LPVOID			pAclInformation,
-	DWORD			nAclInformationLength,
-	ACL_INFORMATION_CLASS	dwAclInformationClass
-	)
+SetAclInformation(PACL pAcl,
+                  LPVOID pAclInformation,
+                  DWORD nAclInformationLength,
+                  ACL_INFORMATION_CLASS dwAclInformationClass)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlSetInformationAcl (pAcl,
-	                               pAclInformation,
-	                               nAclInformationLength,
-	                               dwAclInformationClass);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlSetInformationAcl(pAcl,
+                                  pAclInformation,
+                                  nAclInformationLength,
+                                  dwAclInformationClass);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -115,26 +107,24 @@ SetAclInformation (
  */
 BOOL
 STDCALL
-AddAccessAllowedAce (
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	AccessMask,
-	PSID	pSid
-	)
+AddAccessAllowedAce(PACL pAcl,
+                    DWORD dwAceRevision,
+                    DWORD AccessMask,
+                    PSID pSid)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlAddAccessAllowedAce (pAcl,
-	                                 dwAceRevision,
-	                                 AccessMask,
-	                                 pSid);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlAddAccessAllowedAce(pAcl,
+                                    dwAceRevision,
+                                    AccessMask,
+                                    pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -143,25 +133,25 @@ AddAccessAllowedAce (
  */
 BOOL STDCALL
 AddAccessAllowedAceEx(PACL pAcl,
-		      DWORD dwAceRevision,
-		      DWORD AceFlags,
-		      DWORD AccessMask,
-		      PSID pSid)
+                      DWORD dwAceRevision,
+                      DWORD AceFlags,
+                      DWORD AccessMask,
+                      PSID pSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAccessAllowedAceEx(pAcl,
-                                    dwAceRevision,
-                                    AceFlags,
-                                    AccessMask,
-                                    pSid);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAccessAllowedAceEx(pAcl,
+                                      dwAceRevision,
+                                      AceFlags,
+                                      AccessMask,
+                                      pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -170,31 +160,30 @@ AddAccessAllowedAceEx(PACL pAcl,
  */
 BOOL
 STDCALL
-AddAccessAllowedObjectAce(
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	AceFlags,
-	DWORD	AccessMask,
-	GUID*	ObjectTypeGuid,
-	GUID*	InheritedObjectTypeGuid,
-	PSID	pSid)
+AddAccessAllowedObjectAce(PACL pAcl,
+                          DWORD dwAceRevision,
+                          DWORD AceFlags,
+                          DWORD AccessMask,
+                          GUID *ObjectTypeGuid,
+                          GUID *InheritedObjectTypeGuid,
+                          PSID pSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAccessAllowedObjectAce(pAcl,
-                                        dwAceRevision,
-                                        AceFlags,
-                                        AccessMask,
-                                        ObjectTypeGuid,
-                                        InheritedObjectTypeGuid,
-                                        pSid);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAccessAllowedObjectAce(pAcl,
+                                          dwAceRevision,
+                                          AceFlags,
+                                          AccessMask,
+                                          ObjectTypeGuid,
+                                          InheritedObjectTypeGuid,
+                                          pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -203,26 +192,24 @@ AddAccessAllowedObjectAce(
  */
 BOOL
 STDCALL
-AddAccessDeniedAce (
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	AccessMask,
-	PSID	pSid
-	)
+AddAccessDeniedAce(PACL pAcl,
+                   DWORD dwAceRevision,
+                   DWORD AccessMask,
+                   PSID pSid)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlAddAccessDeniedAce (pAcl,
-	                                dwAceRevision,
-	                                AccessMask,
-	                                pSid);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlAddAccessDeniedAce(pAcl,
+                                   dwAceRevision,
+                                   AccessMask,
+                                   pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -231,25 +218,25 @@ AddAccessDeniedAce (
  */
 BOOL STDCALL
 AddAccessDeniedAceEx(PACL pAcl,
-		     DWORD dwAceRevision,
-		     DWORD AceFlags,
-		     DWORD AccessMask,
-		     PSID pSid)
+                     DWORD dwAceRevision,
+                     DWORD AceFlags,
+                     DWORD AccessMask,
+                     PSID pSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAccessDeniedAceEx(pAcl,
-                                   dwAceRevision,
-                                   AceFlags,
-                                   AccessMask,
-                                   pSid);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAccessDeniedAceEx(pAcl,
+                                     dwAceRevision,
+                                     AceFlags,
+                                     AccessMask,
+                                     pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -258,31 +245,30 @@ AddAccessDeniedAceEx(PACL pAcl,
  */
 BOOL
 STDCALL
-AddAccessDeniedObjectAce(
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	AceFlags,
-	DWORD	AccessMask,
-	GUID*   ObjectTypeGuid,
-	GUID*   InheritedObjectTypeGuid,
-	PSID	pSid)
+AddAccessDeniedObjectAce(PACL pAcl,
+                         DWORD dwAceRevision,
+                         DWORD AceFlags,
+                         DWORD AccessMask,
+                         GUID* ObjectTypeGuid,
+                         GUID* InheritedObjectTypeGuid,
+                         PSID pSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAccessDeniedObjectAce(pAcl,
-                                       dwAceRevision,
-                                       AceFlags,
-                                       AccessMask,
-                                       ObjectTypeGuid,
-                                       InheritedObjectTypeGuid,
-                                       pSid);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAccessDeniedObjectAce(pAcl,
+                                         dwAceRevision,
+                                         AceFlags,
+                                         AccessMask,
+                                         ObjectTypeGuid,
+                                         InheritedObjectTypeGuid,
+                                         pSid);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -291,28 +277,26 @@ AddAccessDeniedObjectAce(
  */
 BOOL
 STDCALL
-AddAce (
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	dwStartingAceIndex,
-	LPVOID	pAceList,
-	DWORD	nAceListLength
-	)
+AddAce(PACL pAcl,
+       DWORD dwAceRevision,
+       DWORD dwStartingAceIndex,
+       LPVOID pAceList,
+       DWORD nAceListLength)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlAddAce (pAcl,
-	                    dwAceRevision,
-	                    dwStartingAceIndex,
-	                    pAceList,
-	                    nAceListLength);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlAddAce(pAcl,
+                       dwAceRevision,
+                       dwStartingAceIndex,
+                       pAceList,
+                       nAceListLength);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -321,30 +305,28 @@ AddAce (
  */
 BOOL
 STDCALL
-AddAuditAccessAce (
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	dwAccessMask,
-	PSID	pSid,
-	BOOL	bAuditSuccess,
-	BOOL	bAuditFailure
-	)
+AddAuditAccessAce(PACL pAcl,
+                  DWORD dwAceRevision,
+                  DWORD dwAccessMask,
+                  PSID pSid,
+                  BOOL bAuditSuccess,
+                  BOOL bAuditFailure)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlAddAuditAccessAce (pAcl,
-	                               dwAceRevision,
-	                               dwAccessMask,
-	                               pSid,
-	                               bAuditSuccess,
-	                               bAuditFailure);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlAddAuditAccessAce(pAcl,
+                                  dwAceRevision,
+                                  dwAccessMask,
+                                  pSid,
+                                  bAuditSuccess,
+                                  bAuditFailure);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -353,29 +335,29 @@ AddAuditAccessAce (
  */
 BOOL STDCALL
 AddAuditAccessAceEx(PACL pAcl,
-		    DWORD dwAceRevision,
-		    DWORD AceFlags,
-		    DWORD dwAccessMask,
-		    PSID pSid,
-		    BOOL bAuditSuccess,
-		    BOOL bAuditFailure)
+                    DWORD dwAceRevision,
+                    DWORD AceFlags,
+                    DWORD dwAccessMask,
+                    PSID pSid,
+                    BOOL bAuditSuccess,
+                    BOOL bAuditFailure)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAuditAccessAceEx(pAcl,
-                                  dwAceRevision,
-                                  AceFlags,
-                                  dwAccessMask,
-                                  pSid,
-                                  bAuditSuccess,
-                                  bAuditFailure);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAuditAccessAceEx(pAcl,
+                                    dwAceRevision,
+                                    AceFlags,
+                                    dwAccessMask,
+                                    pSid,
+                                    bAuditSuccess,
+                                    bAuditFailure);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -384,35 +366,34 @@ AddAuditAccessAceEx(PACL pAcl,
  */
 BOOL
 STDCALL
-AddAuditAccessObjectAce(
-	PACL	pAcl,
-	DWORD	dwAceRevision,
-	DWORD	AceFlags,
-	DWORD	AccessMask,
-	GUID*	ObjectTypeGuid,
-	GUID*	InheritedObjectTypeGuid,
-	PSID	pSid,
-	BOOL	bAuditSuccess,
-	BOOL	bAuditFailure)
+AddAuditAccessObjectAce(PACL pAcl,
+                        DWORD dwAceRevision,
+                        DWORD AceFlags,
+                        DWORD AccessMask,
+                        GUID *ObjectTypeGuid,
+                        GUID *InheritedObjectTypeGuid,
+                        PSID pSid,
+                        BOOL bAuditSuccess,
+                        BOOL bAuditFailure)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAddAuditAccessObjectAce(pAcl,
-                                      dwAceRevision,
-                                      AceFlags,
-                                      AccessMask,
-                                      ObjectTypeGuid,
-                                      InheritedObjectTypeGuid,
-                                      pSid,
-                                      bAuditSuccess,
-                                      bAuditFailure);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
-  }
+    Status = RtlAddAuditAccessObjectAce(pAcl,
+                                        dwAceRevision,
+                                        AceFlags,
+                                        AccessMask,
+                                        ObjectTypeGuid,
+                                        InheritedObjectTypeGuid,
+                                        pSid,
+                                        bAuditSuccess,
+                                        bAuditFailure);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -450,22 +431,20 @@ AddMandatoryAce(IN OUT PACL pAcl,
  */
 BOOL
 STDCALL
-DeleteAce (
-	PACL	pAcl,
-	DWORD	dwAceIndex
-	)
+DeleteAce(PACL pAcl,
+          DWORD dwAceIndex)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlDeleteAce (pAcl,
-	                       dwAceIndex);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlDeleteAce(pAcl,
+                          dwAceIndex);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -474,13 +453,11 @@ DeleteAce (
  */
 BOOL
 STDCALL
-FindFirstFreeAce (
-	PACL	pAcl,
-	LPVOID	* pAce
-	)
+FindFirstFreeAce(PACL pAcl,
+                 LPVOID *pAce)
 {
-	return RtlFirstFreeAce (pAcl,
-	                        (PACE*)pAce);
+    return RtlFirstFreeAce(pAcl,
+                           (PACE*)pAce);
 }
 
 
@@ -489,24 +466,22 @@ FindFirstFreeAce (
  */
 BOOL
 STDCALL
-GetAce (
-	PACL	pAcl,
-	DWORD	dwAceIndex,
-	LPVOID	* pAce
-	)
+GetAce(PACL pAcl,
+       DWORD dwAceIndex,
+       LPVOID *pAce)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlGetAce (pAcl,
-	                    dwAceIndex,
-	                    pAce);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlGetAce(pAcl,
+                       dwAceIndex,
+                       pAce);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 
@@ -515,18 +490,16 @@ GetAce (
  */
 DWORD
 STDCALL
-GetInheritanceSourceW (
-	LPWSTR			pObjectName,
-	SE_OBJECT_TYPE		ObjectType,
-	SECURITY_INFORMATION	SecurityInfo,
-	BOOL			Container,
-	GUID**			pObjectClassGuids  OPTIONAL,
-	DWORD			GuidCount,
-	PACL			pAcl,
-	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL,
-	PGENERIC_MAPPING	pGenericMapping,
-	PINHERITED_FROMW	pInheritArray
-	)
+GetInheritanceSourceW(LPWSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      BOOL Container,
+                      GUID **pObjectClassGuids  OPTIONAL,
+                      DWORD GuidCount,
+                      PACL pAcl,
+                      PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL,
+                      PGENERIC_MAPPING pGenericMapping,
+                      PINHERITED_FROMW pInheritArray)
 {
     DWORD ErrorCode;
 
@@ -555,18 +528,16 @@ GetInheritanceSourceW (
  */
 DWORD
 STDCALL
-GetInheritanceSourceA (
-	LPSTR			pObjectName,
-	SE_OBJECT_TYPE		ObjectType,
-	SECURITY_INFORMATION	SecurityInfo,
-	BOOL			Container,
-	GUID**			pObjectClassGuids  OPTIONAL,
-	DWORD			GuidCount,
-	PACL			pAcl,
-	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL,
-	PGENERIC_MAPPING	pGenericMapping,
-	PINHERITED_FROMA		pInheritArray
-	)
+GetInheritanceSourceA(LPSTR pObjectName,
+                      SE_OBJECT_TYPE ObjectType,
+                      SECURITY_INFORMATION SecurityInfo,
+                      BOOL Container,
+                      GUID **pObjectClassGuids  OPTIONAL,
+                      DWORD GuidCount,
+                      PACL pAcl,
+                      PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL,
+                      PGENERIC_MAPPING pGenericMapping,
+                      PINHERITED_FROMA pInheritArray)
 {
     /* That's all this function does, at least up to w2k3... Even MS was too
        lazy to implement it... */
@@ -579,11 +550,9 @@ GetInheritanceSourceA (
  */
 DWORD
 STDCALL
-FreeInheritedFromArray (
-	PINHERITED_FROMW	pInheritArray,
-	USHORT			AceCnt,
-	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL
-	)
+FreeInheritedFromArray(PINHERITED_FROMW pInheritArray,
+                       USHORT AceCnt,
+                       PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL)
 {
     DWORD ErrorCode;
 
@@ -605,11 +574,10 @@ FreeInheritedFromArray (
  */
 DWORD
 STDCALL
-SetEntriesInAclW(
-	ULONG			cCountOfExplicitEntries,
-	PEXPLICIT_ACCESS_W	pListOfExplicitEntries,
-	PACL			OldAcl,
-	PACL*			NewAcl)
+SetEntriesInAclW(ULONG cCountOfExplicitEntries,
+                 PEXPLICIT_ACCESS_W pListOfExplicitEntries,
+                 PACL OldAcl,
+                 PACL *NewAcl)
 {
     DWORD ErrorCode;
 
@@ -1013,11 +981,10 @@ RawTrusteeCopy:
  */
 DWORD
 STDCALL
-SetEntriesInAclA(
-	ULONG			cCountOfExplicitEntries,
-	PEXPLICIT_ACCESS_A	pListOfExplicitEntries,
-	PACL			OldAcl,
-	PACL*			NewAcl)
+SetEntriesInAclA(ULONG cCountOfExplicitEntries,
+                 PEXPLICIT_ACCESS_A pListOfExplicitEntries,
+                 PACL OldAcl,
+                 PACL *NewAcl)
 {
     PEXPLICIT_ACCESS_W ListOfExplicitEntriesW = NULL;
     DWORD ErrorCode;
@@ -1025,7 +992,6 @@ SetEntriesInAclA(
     ErrorCode = InternalExplicitAccessAToW(cCountOfExplicitEntries,
                                            pListOfExplicitEntries,
                                            &ListOfExplicitEntriesW);
-
     if (ErrorCode == ERROR_SUCCESS)
     {
         ErrorCode = SetEntriesInAclW(cCountOfExplicitEntries,
@@ -1048,11 +1014,9 @@ SetEntriesInAclA(
  */
 DWORD
 STDCALL
-GetExplicitEntriesFromAclW(
-	PACL			pacl,
-	PULONG			pcCountOfExplicitEntries,
-	PEXPLICIT_ACCESS_W*	pListOfExplicitEntries
-	)
+GetExplicitEntriesFromAclW(PACL pacl,
+                           PULONG pcCountOfExplicitEntries,
+                           PEXPLICIT_ACCESS_W *pListOfExplicitEntries)
 {
     DWORD ErrorCode;
 
@@ -1078,8 +1042,8 @@ GetEffectiveRightsFromAclW(IN PACL pacl,
                            IN PTRUSTEE_W pTrustee,
                            OUT PACCESS_MASK pAccessRights)
 {
-	FIXME("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1123,8 +1087,8 @@ GetAuditedPermissionsFromAclW(IN PACL pacl,
                               OUT PACCESS_MASK pSuccessfulAuditedRights,
                               OUT PACCESS_MASK pFailedAuditRights)
 {
-	FIXME("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
