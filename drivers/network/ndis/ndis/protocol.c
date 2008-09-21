@@ -143,11 +143,6 @@ ProRequest(
     {
       if(Adapter->MiniportBusy)
         QueueWorkItem = TRUE;
-      else
-        {
-          NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to busy\n"));
-          Adapter->MiniportBusy = TRUE;
-        }
     }
 
   /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
@@ -160,18 +155,10 @@ ProRequest(
 
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
-      NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, NdisRequest);
+  NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, NdisRequest);
 
-      NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-      KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
-        {
-          NDIS_DbgPrint(MAX_TRACE, ("Setting adapter 0x%x to free\n"));
-          Adapter->MiniportBusy = FALSE;
-
-          if (Adapter->WorkQueueHead)
-            KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
-        }
-      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  if( NdisStatus == NDIS_STATUS_PENDING )
+      Adapter->MiniportBusy = TRUE;
 
   return NdisStatus;
 }
