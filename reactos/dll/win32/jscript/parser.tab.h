@@ -122,20 +122,20 @@ typedef union YYSTYPE {
     int                     ival;
     LPCWSTR                 wstr;
     literal_t               *literal;
-    argument_list_t         *argument_list;
+    struct _argument_list_t *argument_list;
     case_clausule_t         *case_clausule;
-    case_list_t             *case_list;
+    struct _case_list_t     *case_list;
     catch_block_t           *catch_block;
-    element_list_t          *element_list;
+    struct _element_list_t  *element_list;
     expression_t            *expr;
     const WCHAR            *identifier;
     function_declaration_t  *function_declaration;
-    parameter_list_t        *parameter_list;
-    property_list_t         *property_list;
+    struct _parameter_list_t *parameter_list;
+    struct _property_list_t *property_list;
     source_elements_t       *source_elements;
     statement_t             *statement;
-    statement_list_t        *statement_list;
-    variable_list_t         *variable_list;
+    struct _statement_list_t *statement_list;
+    struct _variable_list_t *variable_list;
     variable_declaration_t  *variable_declaration;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */

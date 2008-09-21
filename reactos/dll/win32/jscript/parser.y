@@ -32,7 +32,7 @@ static int parser_error(const char*);
 static BOOL allow_auto_semicolon(parser_ctx_t*);
 static void program_parsed(parser_ctx_t*,source_elements_t*);
 
-typedef struct {
+typedef struct _statement_list_t {
     statement_t *head;
     statement_t *tail;
 } statement_list_t;
@@ -42,7 +42,7 @@ static literal_t *new_null_literal(parser_ctx_t*);
 static literal_t *new_undefined_literal(parser_ctx_t*);
 static literal_t *new_boolean_literal(parser_ctx_t*,VARIANT_BOOL);
 
-typedef struct {
+typedef struct _property_list_t {
     prop_val_t *head;
     prop_val_t *tail;
 } property_list_t;
@@ -50,7 +50,7 @@ typedef struct {
 static property_list_t *new_property_list(parser_ctx_t*,literal_t*,expression_t*);
 static property_list_t *property_list_add(parser_ctx_t*,property_list_t*,literal_t*,expression_t*);
 
-typedef struct {
+typedef struct _element_list_t {
     array_element_t *head;
     array_element_t *tail;
 } element_list_t;
@@ -58,7 +58,7 @@ typedef struct {
 static element_list_t *new_element_list(parser_ctx_t*,int,expression_t*);
 static element_list_t *element_list_add(parser_ctx_t*,element_list_t*,int,expression_t*);
 
-typedef struct {
+typedef struct _argument_list_t {
     argument_t *head;
     argument_t *tail;
 } argument_list_t;
@@ -66,7 +66,7 @@ typedef struct {
 static argument_list_t *new_argument_list(parser_ctx_t*,expression_t*);
 static argument_list_t *argument_list_add(parser_ctx_t*,argument_list_t*,expression_t*);
 
-typedef struct {
+typedef struct _case_list_t {
     case_clausule_t *head;
     case_clausule_t *tail;
 } case_list_t;
@@ -77,7 +77,7 @@ static case_list_t *new_case_list(parser_ctx_t*,case_clausule_t*);
 static case_list_t *case_list_add(parser_ctx_t*,case_list_t*,case_clausule_t*);
 static case_clausule_t *new_case_block(parser_ctx_t*,case_list_t*,case_clausule_t*,case_list_t*);
 
-typedef struct {
+typedef struct _variable_list_t {
     variable_declaration_t *head;
     variable_declaration_t *tail;
 } variable_list_t;
@@ -112,7 +112,7 @@ struct statement_list_t {
 statement_list_t *new_statement_list(parser_ctx_t*,statement_t*);
 statement_list_t *statement_list_add(statement_list_t*,statement_t*);
 
-typedef struct {
+typedef struct _parameter_list_t {
     parameter_t *head;
     parameter_t *tail;
 } parameter_list_t;
@@ -126,7 +126,7 @@ static expression_t *new_unary_expression(parser_ctx_t*,expression_type_t,expres
 static expression_t *new_conditional_expression(parser_ctx_t*,expression_t*,expression_t*,expression_t*);
 static expression_t *new_array_expression(parser_ctx_t*,expression_t*,expression_t*);
 static expression_t *new_member_expression(parser_ctx_t*,expression_t*,const WCHAR*);
-static expression_t *new_member_new_expression(parser_ctx_t*,expression_t*,argument_list_t*);
+static expression_t *new_new_expression(parser_ctx_t*,expression_t*,argument_list_t*);
 static expression_t *new_call_expression(parser_ctx_t*,expression_t*,argument_list_t*);
 static expression_t *new_this_expression(parser_ctx_t*);
 static expression_t *new_identifier_expression(parser_ctx_t*,const WCHAR*);
@@ -148,20 +148,20 @@ static source_elements_t *source_elements_add_function(source_elements_t*,functi
     int                     ival;
     LPCWSTR                 wstr;
     literal_t               *literal;
-    argument_list_t         *argument_list;
+    struct _argument_list_t *argument_list;
     case_clausule_t         *case_clausule;
-    case_list_t             *case_list;
+    struct _case_list_t     *case_list;
     catch_block_t           *catch_block;
-    element_list_t          *element_list;
+    struct _element_list_t  *element_list;
     expression_t            *expr;
     const WCHAR            *identifier;
     function_declaration_t  *function_declaration;
-    parameter_list_t        *parameter_list;
-    property_list_t         *property_list;
+    struct _parameter_list_t *parameter_list;
+    struct _property_list_t *property_list;
     source_elements_t       *source_elements;
     statement_t             *statement;
-    statement_list_t        *statement_list;
-    variable_list_t         *variable_list;
+    struct _statement_list_t *statement_list;
+    struct _variable_list_t *variable_list;
     variable_declaration_t  *variable_declaration;
 }
 
@@ -566,27 +566,27 @@ BitwiseORExpressionNoIn
 BitwiseXORExpression
         : BitwiseANDExpression  { $$ = $1; }
         | BitwiseXORExpression '^' BitwiseANDExpression
-                                { new_binary_expression(ctx, EXPR_BXOR, $1, $3); }
+                                { $$ = new_binary_expression(ctx, EXPR_BXOR, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.10 */
 BitwiseXORExpressionNoIn
         : BitwiseANDExpressionNoIn
                                 { $$ = $1; }
         | BitwiseXORExpressionNoIn '^' BitwiseANDExpressionNoIn
-                                { new_binary_expression(ctx, EXPR_BXOR, $1, $3); }
+                                { $$ = new_binary_expression(ctx, EXPR_BXOR, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.10 */
 BitwiseANDExpression
         : EqualityExpression    { $$ = $1; }
         | BitwiseANDExpression '&' EqualityExpression
-                                { new_binary_expression(ctx, EXPR_BAND, $1, $3); }
+                                { $$ = new_binary_expression(ctx, EXPR_BAND, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.10 */
 BitwiseANDExpressionNoIn
         : EqualityExpressionNoIn
                                 { $$ = $1; }
         | BitwiseANDExpressionNoIn '&' EqualityExpressionNoIn
-                                { new_binary_expression(ctx, EXPR_BAND, $1, $3); }
+                                { $$ = new_binary_expression(ctx, EXPR_BAND, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.9 */
 EqualityExpression
@@ -676,7 +676,7 @@ LeftHandSideExpression
 /* ECMA-262 3rd Edition    11.2 */
 NewExpression
         : MemberExpression      { $$ = $1; }
-        | kNEW NewExpression    { $$ = new_unary_expression(ctx, EXPR_NEW, $2); }
+        | kNEW NewExpression    { $$ = new_new_expression(ctx, $2, NULL); }
 
 /* ECMA-262 3rd Edition    11.2 */
 MemberExpression
@@ -687,7 +687,7 @@ MemberExpression
         | MemberExpression '.' tIdentifier
                                 { $$ = new_member_expression(ctx, $1, $3); }
         | kNEW MemberExpression Arguments
-                                { $$ = new_member_new_expression(ctx, $2, $3); }
+                                { $$ = new_new_expression(ctx, $2, $3); }
 
 /* ECMA-262 3rd Edition    11.2 */
 CallExpression
@@ -775,7 +775,8 @@ Literal
         | BooleanLiteral        { $$ = $1; }
         | tNumericLiteral       { $$ = $1; }
         | tStringLiteral        { $$ = new_string_literal(ctx, $1); }
-        | '/'                   { FIXME("RegExp literal\n"); YYABORT; }
+        | '/'                   { $$ = parse_regexp(ctx);
+                                  if(!$$) YYABORT; }
 
 /* ECMA-262 3rd Edition    7.8.2 */
 BooleanLiteral
@@ -976,14 +977,14 @@ static case_clausule_t *new_case_block(parser_ctx_t *ctx, case_list_t *case_list
     if(!ret)
         return NULL;
 
-    for(iter = ret->next; iter->next; iter = iter->next) {
-        for(iter2 = iter; iter2 && !iter2->expr; iter2 = iter2->next);
+    for(iter = ret; iter; iter = iter->next) {
+        for(iter2 = iter; iter2 && !iter2->stat; iter2 = iter2->next);
         if(!iter2)
             break;
 
         while(iter != iter2) {
             iter->stat = iter2->stat;
-            iter2 = iter2->next;
+            iter = iter->next;
         }
 
         if(stat) {
@@ -1085,8 +1086,9 @@ static statement_t *new_while_statement(parser_ctx_t *ctx, BOOL dowhile, express
 {
     while_statement_t *ret = parser_alloc(ctx, sizeof(while_statement_t));
 
-    ret->stat.eval = dowhile ? dowhile_statement_eval : while_statement_eval;
+    ret->stat.eval = while_statement_eval;
     ret->stat.next = NULL;
+    ret->do_while = dowhile;
     ret->expr = expr;
     ret->statement = stat;
 
@@ -1280,7 +1282,6 @@ static const expression_eval_t expression_eval_table[] = {
    post_decrement_expression_eval,
    pre_increment_expression_eval,
    pre_decrement_expression_eval,
-   new_expression_eval,
    equal_expression_eval,
    equal2_expression_eval,
    not_equal_expression_eval,
@@ -1365,11 +1366,11 @@ static expression_t *new_member_expression(parser_ctx_t *ctx, expression_t *expr
     return &ret->expr;
 }
 
-static expression_t *new_member_new_expression(parser_ctx_t *ctx, expression_t *expression, argument_list_t *argument_list)
+static expression_t *new_new_expression(parser_ctx_t *ctx, expression_t *expression, argument_list_t *argument_list)
 {
     call_expression_t *ret = parser_alloc(ctx, sizeof(call_expression_t));
 
-    ret->expr.eval = member_new_expression_eval;
+    ret->expr.eval = new_expression_eval;
     ret->expression = expression;
     ret->argument_list = argument_list ? argument_list->head : NULL;
 
@@ -1509,8 +1510,13 @@ static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
 
 void parser_release(parser_ctx_t *ctx)
 {
+    obj_literal_t *iter;
+
     if(--ctx->ref)
         return;
+
+    for(iter = ctx->obj_literals; iter; iter = iter->next)
+        jsdisp_release(iter->obj);
 
     jsheap_free(&ctx->heap);
     heap_free(ctx);
@@ -1519,6 +1525,7 @@ void parser_release(parser_ctx_t *ctx)
 HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
 {
     parser_ctx_t *parser_ctx;
+    jsheap_t *mark;
     HRESULT hres;
 
     parser_ctx = heap_alloc_zero(sizeof(parser_ctx_t));
@@ -1534,11 +1541,11 @@ HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
     script_addref(ctx);
     parser_ctx->script = ctx;
 
-    jsheap_init(&parser_ctx->tmp_heap);
+    mark = jsheap_mark(&ctx->tmp_heap);
     jsheap_init(&parser_ctx->heap);
 
     parser_parse(parser_ctx);
-    jsheap_free(&parser_ctx->tmp_heap);
+    jsheap_clear(mark);
     if(FAILED(parser_ctx->hres)) {
         hres = parser_ctx->hres;
         parser_release(parser_ctx);

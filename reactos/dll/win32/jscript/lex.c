@@ -23,7 +23,6 @@
 #include "objsafe.h"
 #include "engine.h"
 
-#define YYSTYPE
 #include "parser.tab.h"
 
 #include "wine/debug.h"
@@ -667,7 +666,7 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
         if(++ctx->ptr < ctx->end) {
             if(*ctx->ptr == '=') {  /* /= */
                 ctx->ptr++;
-                *(int*)lval = EXPR_ASSIGNMUL;
+                *(int*)lval = EXPR_ASSIGNDIV;
                 return tAssignOper;
             }
         }
@@ -684,4 +683,50 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
 
     WARN("unexpected char '%c' %d\n", *ctx->ptr, *ctx->ptr);
     return 0;
+}
+
+static void add_object_literal(parser_ctx_t *ctx, DispatchEx *obj)
+{
+    obj_literal_t *literal = parser_alloc(ctx, sizeof(obj_literal_t));
+
+    literal->obj = obj;
+    literal->next = ctx->obj_literals;
+    ctx->obj_literals = literal;
+}
+
+literal_t *parse_regexp(parser_ctx_t *ctx)
+{
+    const WCHAR *re, *flags;
+    DispatchEx *regexp;
+    literal_t *ret;
+    DWORD re_len;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    re = ctx->ptr;
+    while(ctx->ptr < ctx->end && (*ctx->ptr != '/' || *(ctx->ptr-1) == '\\'))
+        ctx->ptr++;
+
+    if(ctx->ptr == ctx->end) {
+        WARN("unexpected end of file\n");
+        return NULL;
+    }
+
+    re_len = ctx->ptr-re;
+
+    flags = ++ctx->ptr;
+    while(ctx->ptr < ctx->end && isalnumW(*ctx->ptr))
+        ctx->ptr++;
+
+    hres = create_regexp_str(ctx->script, re, re_len, flags, ctx->ptr-flags, &regexp);
+    if(FAILED(hres))
+        return NULL;
+
+    add_object_literal(ctx, regexp);
+
+    ret = parser_alloc(ctx, sizeof(literal_t));
+    ret->vt = VT_DISPATCH;
+    ret->u.disp = (IDispatch*)_IDispatchEx_(regexp);
+    return ret;
 }

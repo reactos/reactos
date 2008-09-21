@@ -38,6 +38,8 @@ static const CLSID CLSID_JScriptAuthor =
 static const CLSID CLSID_JScriptEncode =
     {0xf414c262,0x6ac0,0x11cf,{0xb6,0xd1,0x00,0xaa,0x00,0xbb,0xbb,0x58}};
 
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+
 static HINSTANCE jscript_hinstance;
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)

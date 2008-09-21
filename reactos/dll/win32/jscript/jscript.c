@@ -54,6 +54,7 @@ void script_release(script_ctx_t *ctx)
     if(--ctx->ref)
         return;
 
+    jsheap_free(&ctx->tmp_heap);
     heap_free(ctx);
 }
 
@@ -80,7 +81,7 @@ static HRESULT exec_global_code(JScript *This, parser_ctx_t *parser_ctx)
     VARIANT var;
     HRESULT hres;
 
-    hres = create_exec_ctx(&exec_ctx);
+    hres = create_exec_ctx((IDispatch*)_IDispatchEx_(This->ctx->script_disp), This->ctx->script_disp, NULL, &exec_ctx);
     if(FAILED(hres))
         return hres;
 
@@ -216,7 +217,13 @@ static HRESULT WINAPI JScript_SetScriptSite(IActiveScript *iface,
             return hres;
     }
 
-    hres = create_dispex(This->ctx, &This->ctx->script_disp);
+    if(!This->ctx->script_disp) {
+        hres = create_dispex(This->ctx, NULL, NULL, &This->ctx->script_disp);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    hres = init_global(This->ctx);
     if(FAILED(hres))
         return hres;
 
@@ -299,12 +306,32 @@ static HRESULT WINAPI JScript_Close(IActiveScript *iface)
 
     clear_script_queue(This);
 
+    if(This->ctx->named_items) {
+        named_item_t *iter, *iter2;
+
+        iter = This->ctx->named_items;
+        while(iter) {
+            iter2 = iter->next;
+
+            IDispatch_Release(iter->disp);
+            heap_free(iter);
+            iter = iter2;
+        }
+
+        This->ctx->named_items = NULL;
+    }
+
     if(This->ctx) {
         change_state(This, SCRIPTSTATE_CLOSED);
 
         if(This->ctx->script_disp) {
             IDispatchEx_Release(_IDispatchEx_(This->ctx->script_disp));
             This->ctx->script_disp = NULL;
+        }
+
+        if(This->ctx->global) {
+            IDispatchEx_Release(_IDispatchEx_(This->ctx->global));
+            This->ctx->global = NULL;
         }
     }
 
@@ -320,8 +347,41 @@ static HRESULT WINAPI JScript_AddNamedItem(IActiveScript *iface,
                                            LPCOLESTR pstrName, DWORD dwFlags)
 {
     JScript *This = ACTSCRIPT_THIS(iface);
-    FIXME("(%p)->(%s %x)\n", This, debugstr_w(pstrName), dwFlags);
-    return E_NOTIMPL;
+    named_item_t *item;
+    IDispatch *disp;
+    IUnknown *unk;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %x)\n", This, debugstr_w(pstrName), dwFlags);
+
+    if(This->thread_id != GetCurrentThreadId() || !This->ctx || This->ctx->state == SCRIPTSTATE_CLOSED)
+        return E_UNEXPECTED;
+
+    hres = IActiveScriptSite_GetItemInfo(This->site, pstrName, SCRIPTINFO_IUNKNOWN, &unk, NULL);
+    if(FAILED(hres)) {
+        WARN("GetItemInfo failed: %08x\n", hres);
+        return hres;
+    }
+
+    hres = IUnknown_QueryInterface(unk, &IID_IDispatch, (void**)&disp);
+    IUnknown_Release(unk);
+    if(FAILED(hres)) {
+        WARN("object does not implement IDispatch\n");
+        return hres;
+    }
+
+    item = heap_alloc(sizeof(*item));
+    if(!item) {
+        IDispatch_Release(disp);
+        return E_OUTOFMEMORY;
+    }
+
+    item->disp = disp;
+    item->flags = dwFlags;
+    item->next = This->ctx->named_items;
+    This->ctx->named_items = item;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI JScript_AddTypeLib(IActiveScript *iface, REFGUID rguidTypeLib,
@@ -448,6 +508,7 @@ static HRESULT WINAPI JScriptParse_InitNew(IActiveScriptParse *iface)
 
     ctx->ref = 1;
     ctx->state = SCRIPTSTATE_UNINITIALIZED;
+    jsheap_init(&ctx->tmp_heap);
 
     ctx = InterlockedCompareExchangePointer((void**)&This->ctx, ctx, NULL);
     if(ctx) {
@@ -517,7 +578,7 @@ static const IActiveScriptParseVtbl JScriptParseVtbl = {
     JScriptParse_ParseScriptText
 };
 
-#define ASPARSEPROC_THIS(iface) DEFINE_THIS(JScript, IActiveScriptParse, iface)
+#define ASPARSEPROC_THIS(iface) DEFINE_THIS(JScript, IActiveScriptParseProcedure2, iface)
 
 static HRESULT WINAPI JScriptParseProcedure_QueryInterface(IActiveScriptParseProcedure2 *iface, REFIID riid, void **ppv)
 {
@@ -543,8 +604,30 @@ static HRESULT WINAPI JScriptParseProcedure_ParseProcedureText(IActiveScriptPars
         DWORD dwSourceContextCookie, ULONG ulStartingLineNumber, DWORD dwFlags, IDispatch **ppdisp)
 {
     JScript *This = ASPARSEPROC_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+    parser_ctx_t *parser_ctx;
+    DispatchEx *dispex;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %s %s %s %p %s %x %u %x %p)\n", This, debugstr_w(pstrCode), debugstr_w(pstrFormalParams),
+          debugstr_w(pstrProcedureName), debugstr_w(pstrItemName), punkContext, debugstr_w(pstrDelimiter),
+          dwSourceContextCookie, ulStartingLineNumber, dwFlags, ppdisp);
+
+    if(This->thread_id != GetCurrentThreadId() || This->ctx->state == SCRIPTSTATE_CLOSED)
+        return E_UNEXPECTED;
+
+    hres = script_parse(This->ctx, pstrCode, &parser_ctx);
+    if(FAILED(hres)) {
+        WARN("Parse failed %08x\n", hres);
+        return hres;
+    }
+
+    hres = create_source_function(parser_ctx, NULL, parser_ctx->source, NULL, &dispex);
+    parser_release(parser_ctx);
+    if(FAILED(hres))
+        return hres;
+
+    *ppdisp = (IDispatch*)_IDispatchEx_(dispex);
+    return S_OK;
 }
 
 #undef ASPARSEPROC_THIS
