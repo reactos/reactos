@@ -344,14 +344,14 @@ static DWORD DoRegServer(void)
     CHAR path[MAX_PATH+12];
     DWORD ret = 0;
 
-    scm = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
+    scm = OpenSCManagerA(NULL, SERVICES_ACTIVE_DATABASEA, SC_MANAGER_CREATE_SERVICE);
     if (!scm)
     {
         fprintf(stderr, "Failed to open the service control manager.\n");
         return 1;
     }
 
-    GetSystemDirectory(path, MAX_PATH);
+    GetSystemDirectoryA(path, MAX_PATH);
     lstrcatA(path, "\\msiexec.exe /V");
 
     service = CreateServiceA(scm, "MSIServer", "MSIServer", GENERIC_ALL,
