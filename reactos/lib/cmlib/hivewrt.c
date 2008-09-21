@@ -189,7 +189,7 @@ HvpWriteHive(
       }
 
       BlockPtr = (PVOID)RegistryHive->Storage[Stable].BlockList[BlockIndex].BlockAddress;
-      FileOffset = (ULONGLONG)(BlockIndex + 1) * (ULONGLONG)HV_BLOCK_SIZE;
+      FileOffset = (BlockIndex + 1) * HV_BLOCK_SIZE;
 
       /* Write hive block */
       Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,

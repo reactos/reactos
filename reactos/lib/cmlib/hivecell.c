@@ -124,6 +124,8 @@ BOOLEAN CMAPI
 HvIsCellDirty(IN PHHIVE Hive,
               IN HCELL_INDEX Cell)
 {
+   BOOLEAN IsDirty = FALSE;
+
    /* Sanity checks */
    ASSERT(Hive->ReadOnly == FALSE);
 
@@ -132,7 +134,11 @@ HvIsCellDirty(IN PHHIVE Hive,
       return TRUE;
 
    /* Check if the dirty bit is set */
-   return RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE);
+   if (RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE))
+       IsDirty = TRUE;
+
+   /* Return result as boolean*/
+   return IsDirty;
 }
 
 static ULONG __inline CMAPI
