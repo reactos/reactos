@@ -595,7 +595,7 @@ typedef struct _KPRCB
 #else
     ULONG SpareFields0[1];
 #endif
-    CHAR VendorString[13];
+    UCHAR VendorString[13];
     UCHAR InitialApicId;
     UCHAR LogicalProcessorsPerPhysicalProcessor;
     ULONG MHz;

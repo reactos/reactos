@@ -206,30 +206,30 @@ KiGetCpuVendor(VOID)
     Prcb->VendorString[sizeof(Prcb->VendorString) - sizeof(CHAR)] = ANSI_NULL;
 
     /* Now check the CPU Type */
-    if (!strcmp(Prcb->VendorString, CmpIntelID))
+    if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
     {
         return CPU_INTEL;
     }
-    else if (!strcmp(Prcb->VendorString, CmpAmdID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpAmdID))
     {
         return CPU_AMD;
     }
-    else if (!strcmp(Prcb->VendorString, CmpCyrixID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCyrixID))
     {
         DPRINT1("Cyrix CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpTransmetaID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpTransmetaID))
     {
         DPRINT1("Transmeta CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpCentaurID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
     {
         DPRINT1("VIA CPUs not fully supported\n");
         return 0;
     }
-    else if (!strcmp(Prcb->VendorString, CmpRiseID))
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpRiseID))
     {
         DPRINT1("Rise CPUs not fully supported\n");
         return 0;

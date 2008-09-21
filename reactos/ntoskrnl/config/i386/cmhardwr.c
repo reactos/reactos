@@ -483,7 +483,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 if (Prcb->VendorString)
                 {
                     /* Convert it to Unicode */
-                    RtlInitAnsiString(&TempString, Prcb->VendorString);
+                    RtlInitAnsiString(&TempString, (PCHAR)Prcb->VendorString);
                     RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
 
                     /* Add it to the registry */
