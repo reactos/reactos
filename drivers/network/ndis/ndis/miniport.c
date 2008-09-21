@@ -634,8 +634,6 @@ MiniQueueWorkItem(
 
     KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
 
-    Adapter->MiniportBusy = TRUE;
-
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -663,6 +661,12 @@ MiniDequeueWorkItem(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+    if (Adapter->MiniportBusy) {
+        NDIS_DbgPrint(MID_TRACE, ("Waiting for miniport to become free.\n"));
+        KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
+        return NDIS_STATUS_FAILURE;
+    }
+
     Item = Adapter->WorkQueueHead;
 
     if (Item)
@@ -677,6 +681,8 @@ MiniDequeueWorkItem(
         *WorkItemContext = Item->WorkItemContext;
 
         ExFreePool(Item);
+
+        Adapter->MiniportBusy = TRUE;
 
         return NDIS_STATUS_SUCCESS;
     }
@@ -899,6 +905,9 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
             break;
         }
     }
+
+  if( NdisStatus != NDIS_STATUS_PENDING )
+      Adapter->MiniportBusy = FALSE; 
 
   ExFreePool(WorkItem);
 }
