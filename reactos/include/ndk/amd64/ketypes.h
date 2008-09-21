@@ -30,7 +30,7 @@ Author:
 //
 //#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
 //#define PCR                     ((volatile KPCR * const)K0IPCR)
-#define PCR ((volatile KPCR * const)__readgsqword(KPCR_SELF))
+#define PCR ((volatile KPCR * const)__readgsqword(FIELD_OFFSET(KPCR, Self)))
 //#if defined(CONFIG_SMP) || defined(NT_BUILD)
 //#undef  KeGetPcr
 //#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
