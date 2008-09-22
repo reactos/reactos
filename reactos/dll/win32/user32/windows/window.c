@@ -1762,15 +1762,8 @@ TileWindows(HWND hwndParent,
  * @unimplemented
  */
 BOOL STDCALL
-UpdateLayeredWindow(HWND hwnd,
-                    HDC hdcDst,
-                    POINT *pptDst,
-                    SIZE *psize,
-                    HDC hdcSrc,
-                    POINT *pptSrc,
-                    COLORREF crKey,
-                    BLENDFUNCTION *pblend,
-                    DWORD dwFlags)
+UpdateLayeredWindowIndirect(HWND hwnd,
+                            const UPDATELAYEREDWINDOWINFO *info)
 {
     UNIMPLEMENTED;
     return FALSE;
