@@ -966,7 +966,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
       }
       fmt_state &= ~FMT_STATE_OPEN_COPY;
     }
-    else if ((*pFormat == 'q' || *pFormat == 'q') && COULD_BE(FMT_TYPE_DATE))
+    else if ((*pFormat == 'q' || *pFormat == 'Q') && COULD_BE(FMT_TYPE_DATE))
     {
       /* Date formats: Quarter specifier
        * Other formats: Literal

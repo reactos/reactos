@@ -3146,7 +3146,7 @@ static void SLTG_DoVars(char *pBlk, char *pFirstItem, ITypeInfoImpl *pTI, unsign
 						       sizeof(VARIANT));
         V_VT((*ppVarDesc)->vardesc.u.lpvarValue) = VT_INT;
         if (pItem->flags & 0x08)
-          V_UNION((*ppVarDesc)->vardesc.u.lpvarValue, intVal) = pItem->byte_offs;
+          V_INT((*ppVarDesc)->vardesc.u.lpvarValue) = pItem->byte_offs;
         else {
           switch ((*ppVarDesc)->vardesc.elemdescVar.tdesc.vt)
           {
@@ -3172,7 +3172,9 @@ static void SLTG_DoVars(char *pBlk, char *pFirstItem, ITypeInfoImpl *pTI, unsign
             case VT_UI2:
             case VT_I4:
             case VT_UI4:
-              V_UNION((*ppVarDesc)->vardesc.u.lpvarValue, intVal) =
+            case VT_INT:
+            case VT_UINT:
+              V_INT((*ppVarDesc)->vardesc.u.lpvarValue) =
                 *(INT*)(pBlk + pItem->byte_offs);
               break;
             default:
@@ -5483,7 +5485,32 @@ _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) {
     return res;
 }
 
-extern int _argsize(DWORD vt);
+/* The size of the argument on the stack in DWORD units (in all x86 call
+ * convetions the arguments on the stack are DWORD-aligned)
+ */
+int _dispargsize(VARTYPE vt)
+{
+    switch (vt) {
+    case VT_I8:
+    case VT_UI8:
+	return 8/sizeof(DWORD);
+    case VT_R8:
+        return sizeof(double)/sizeof(DWORD);
+    case VT_DECIMAL:
+        return (sizeof(DECIMAL)+3)/sizeof(DWORD);
+    case VT_CY:
+        return sizeof(CY)/sizeof(DWORD);
+    case VT_DATE:
+	return sizeof(DATE)/sizeof(DWORD);
+    case VT_VARIANT:
+	return (sizeof(VARIANT)+3)/sizeof(DWORD);
+    case VT_RECORD:
+        FIXME("VT_RECORD not implemented\n");
+        return 1;
+    default:
+	return 1;
+    }
+}
 
 static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt)
 {
@@ -5671,9 +5698,9 @@ DispCallFunc(
 
     for (i=0;i<cActuals;i++)
     {
-        TRACE("arg %d: type %d, size %d\n",i,prgvt[i],_argsize(prgvt[i]));
+        TRACE("arg %d: type %d, size %d\n",i,prgvt[i],_dispargsize(prgvt[i]));
         dump_Variant(prgpvarg[i]);
-        argsize += _argsize(prgvt[i]);
+        argsize += _dispargsize(prgvt[i]);
     }
     args = HeapAlloc(GetProcessHeap(),0,sizeof(DWORD)*argsize);
 
@@ -5689,10 +5716,10 @@ DispCallFunc(
         VARIANT *arg = prgpvarg[i];
         TRACE("Storing arg %d (%d as %d)\n",i,V_VT(arg),prgvt[i]);
         if (prgvt[i] == VT_VARIANT)
-            memcpy(&args[argspos], arg, _argsize(prgvt[i]) * sizeof(DWORD));
+            memcpy(&args[argspos], arg, _dispargsize(prgvt[i]) * sizeof(DWORD));
         else
-            memcpy(&args[argspos], &V_NONE(arg), _argsize(prgvt[i]) * sizeof(DWORD));
-        argspos += _argsize(prgvt[i]);
+            memcpy(&args[argspos], &V_NONE(arg), _dispargsize(prgvt[i]) * sizeof(DWORD));
+        argspos += _dispargsize(prgvt[i]);
     }
 
     if (pvInstance)

@@ -5500,7 +5500,7 @@ HRESULT WINAPI VarDecDiv(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
   VARIANT_DIFromDec(pDecLeft, &di_left);
   VARIANT_DIFromDec(pDecRight, &di_right);
   divresult = VARIANT_DI_div(&di_left, &di_right, &di_result);
-  if (divresult)
+  if (divresult != S_OK)
   {
       /* division actually overflowed */
       hRet = divresult;
