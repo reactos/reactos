@@ -346,6 +346,9 @@
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
 </directory>
+<directory name="stdole32.tlb">
+	<xi:include href="stdole32.tlb/stdole32.rbuild" />
+</directory>
 <directory name="sxs">
 	<xi:include href="sxs/sxs.rbuild" />
 </directory>
