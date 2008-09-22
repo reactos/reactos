@@ -702,6 +702,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     if (dwError != ERROR_SUCCESS)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -714,6 +718,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     if (lpMessageBuffer == NULL)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -728,6 +736,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpMessageBuffer);
 
     /* Free the service table */
+    for (i = 0; i < dwActiveServiceCount; i++)
+    {
+        RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+    }
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
@@ -780,6 +792,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     if (dwError != ERROR_SUCCESS)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -792,6 +808,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     if (lpMessageBuffer == NULL)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -806,6 +826,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpMessageBuffer);
 
     /* Free the service table */
+    for (i = 0; i < dwActiveServiceCount; i++)
+    {
+        RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+    }
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
