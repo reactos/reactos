@@ -705,6 +705,7 @@ UnregisterHotKey@8=NtUserUnregisterHotKey@8
 UnregisterMessagePumpHook@0
 UnregisterUserApiHook@0
 UpdateLayeredWindow@36=NtUserUpdateLayeredWindow@36
+UpdateLayeredWindowIndirect@8
 UpdatePerUserSystemParameters@8
 UpdateWindow@4
 User32InitializeImmEntryTable@4
