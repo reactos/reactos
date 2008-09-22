@@ -227,7 +227,7 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
         }
         else if (!(p->member.para.nFlags & MEPF_ROWSTART))
         {
-          assert(!(p->member.para.pFmt->wEffects & (PFE_TABLE|PFE_TABLEROWDELIMITER)));
+          assert(!(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER));
           /* ROWSTART must be followed by a cell. */
           assert(!(p->member.para.nFlags & MEPF_CELL));
           /* ROWSTART must be followed by a cell. */
@@ -393,10 +393,7 @@ ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
   assert(table_row->type == diParagraph);
   if (!editor->bEmulateVersion10) { /* v4.1 */
     ME_DisplayItem *insertedCell, *para, *cell;
-    if (table_row->member.para.nFlags & MEPF_ROWEND)
-      cell = ME_FindItemBack(table_row, diCell);
-    else
-      cell = ME_FindItemFwd(table_row, diCell);
+    cell = ME_FindItemFwd(ME_GetTableRowStart(table_row), diCell);
     run = ME_GetTableRowEnd(table_row)->member.para.next_para;
     run = ME_FindItemFwd(run, diRun);
     editor->pCursors[0].pRun = run;
@@ -586,6 +583,22 @@ void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow)
   HideCaret(editor->hWnd);
   ME_ShowCaret(editor);
   ME_SendSelChange(editor);
+}
+
+/* Make sure the cursor is not in the hidden table row start paragraph
+ * without a selection. */
+void ME_MoveCursorFromTableRowStartParagraph(ME_TextEditor *editor)
+{
+  ME_DisplayItem *para = ME_GetParagraph(editor->pCursors[0].pRun);
+  if (para == ME_GetParagraph(editor->pCursors[1].pRun) &&
+      para->member.para.nFlags & MEPF_ROWSTART) {
+    /* The cursors should not be at the hidden start row paragraph without
+     * a selection, so the cursor is moved into the first cell. */
+    para = para->member.para.next_para;
+    editor->pCursors[0].pRun = ME_FindItemFwd(para, diRun);
+    editor->pCursors[0].nOffset = 0;
+    editor->pCursors[1] = editor->pCursors[0];
+  }
 }
 
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor)

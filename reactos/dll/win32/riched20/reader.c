@@ -242,8 +242,6 @@ void RTFInit(RTF_Info *info)
 		info->cpOutputBuffer = heap_alloc(info->dwMaxCPOutputCount);
 	}
 
-        if (info->tableDef)
-            ZeroMemory(info->tableDef, sizeof(info->tableDef));
         info->tableDef = NULL;
         info->nestingLevel = 0;
         info->canInheritInTbl = FALSE;
@@ -404,6 +402,16 @@ void RTFSkipGroup(RTF_Info *info)
 			}
 		}
 	}
+}
+
+/*
+ * Do no special processing on the group.
+ *
+ * This acts as a placeholder for a callback in order to indicate that it
+ * shouldn't be ignored.  Instead it will fallback on the loop in RTFRead.
+ */
+void RTFReadGroup (RTF_Info *info)
+{
 }
 
 
@@ -2477,6 +2485,13 @@ ControlClass (RTF_Info *info)
 	{
         case rtfCharAttr:
                 CharAttr(info);
+                ME_RTFCharAttrHook(info);
+                break;
+        case rtfParAttr:
+                ME_RTFParAttrHook(info);
+                break;
+        case rtfTblAttr:
+                ME_RTFTblAttrHook(info);
                 break;
         case rtfCharSet:
                 CharSet(info);
@@ -2492,6 +2507,7 @@ ControlClass (RTF_Info *info)
                 break;
 	case rtfSpecialChar:
                 SpecialChar (info);
+                ME_RTFSpecialCharHook(info);
 		break;
 	}
 }
