@@ -85,7 +85,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
     goto cleanup;
 
 regerror:
-    if( SubOut ) free( SubOut );
+    if( SubOut ) { free( SubOut ); SubOut = NULL; }
 cleanup:
     if( ValueKey && ValueKey != Root ) {
         DH_DbgPrint(MID_TRACE,("Closing key %x\n", ValueKey));
