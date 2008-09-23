@@ -635,24 +635,20 @@ MiniReset(
 }
 
 VOID STDCALL
-HangTimer( PVOID Context )
+MiniportHangDpc(
+        PKDPC Dpc,
+        PVOID DeferredContext,
+        PVOID SystemArgument1,
+        PVOID SystemArgument2)
 {
-  PLOGICAL_ADAPTER Adapter = Context;
-  BOOLEAN AddressingReset;
+  PLOGICAL_ADAPTER Adapter = DeferredContext;
+  BOOLEAN AddressingReset = FALSE;
 
-  while (Adapter->NdisMiniportBlock.PnPDeviceState == NdisPnPDeviceStarted)
-  {
-    AddressingReset = FALSE;
 
-    NdisMSleep(Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000000);
+  if (MiniCheckForHang(Adapter))
+      MiniReset(Adapter, &AddressingReset);
 
-    if (MiniCheckForHang(Adapter))
-        MiniReset(Adapter, &AddressingReset);
-
-    /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
-  }
-
-  PsTerminateSystemThread(STATUS_SUCCESS);
+  /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
 }
 
 
@@ -1442,9 +1438,8 @@ NdisIPnPStartDevice(
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
-  HANDLE HangTimerHandle;
-  
-/* FIXME - KIRQL OldIrql; */
+  LARGE_INTEGER Timeout;
+  /* FIXME - KIRQL OldIrql; */
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -1663,9 +1658,10 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
 
-  PsCreateSystemThread(&HangTimerHandle, THREAD_ALL_ACCESS, 0, 0, 0,
-                       HangTimer, Adapter);
-  ZwClose(HangTimerHandle);
+  Timeout.QuadPart = (LONGLONG)Adapter->NdisMiniportBlock.CheckForHangSeconds * -1000000;
+  KeSetTimerEx(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer, Timeout,
+               Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000,
+               &Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc);
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
@@ -1721,6 +1717,8 @@ NdisIPnPStopDevice(
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
+
+  KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
   return STATUS_SUCCESS;
 }
@@ -1908,7 +1906,9 @@ NdisIAddDevice(
   Adapter->NdisMiniportBlock.OldPnPDeviceState = 0;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceAdded;
 
-  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, (PVOID)Adapter);
+  KeInitializeTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+  KeInitializeDpc(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc, MiniportHangDpc, Adapter);
+  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, Adapter);
 
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
