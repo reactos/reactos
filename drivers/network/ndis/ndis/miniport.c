@@ -2129,8 +2129,6 @@ NdisMSetAttributesEx(
  *     AdapterType               = Specifies the I/O bus interface of the caller's NIC
  */
 {
-  /* TODO: Take CheckForHandTimeInSeconds into account! */
-
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -2138,6 +2136,8 @@ NdisMSetAttributesEx(
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
   Adapter->NdisMiniportBlock.Flags = AttributeFlags;
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
+  if (CheckForHangTimeInSeconds > 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = CheckForHangTimeInSeconds;
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
     NDIS_DbgPrint(MAX_TRACE, ("Intermediate drivers not supported yet.\n"));
 }
