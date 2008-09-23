@@ -939,6 +939,11 @@ DriverEntry(
                            RegistryPath,
                            NULL);
 
+    if (!NdisWrapperHandle) {
+        NDIS_DbgPrint(MIN_TRACE, ("NdisMInitializeWrapper() failed\n"));
+        return STATUS_UNSUCCESSFUL;
+    }
+
     DriverInfo.NdisWrapperHandle = NdisWrapperHandle;
     DriverInfo.NdisMacHandle     = NULL;
     InitializeListHead(&DriverInfo.AdapterListHead);
