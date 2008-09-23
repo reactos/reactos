@@ -1633,6 +1633,10 @@ NdisIPnPStartDevice(
       return (NTSTATUS)NdisStatus;
     }
 
+  /* Check for a hang every two seconds if it wasn't set in MiniportInitialize */
+  if (Adapter->NdisMiniportBlock.CheckForHangSeconds == 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = 2;
+
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
 
