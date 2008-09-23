@@ -595,12 +595,43 @@ MiniCheckForHang( PLOGICAL_ADAPTER Adapter )
  */
 {
    BOOLEAN Ret = FALSE;
+   KIRQL OldIrql;
 
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
    if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)
        Ret = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)(
          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+   KeLowerIrql(OldIrql);
 
    return Ret;
+}
+
+NDIS_STATUS
+MiniReset(
+    PLOGICAL_ADAPTER Adapter,
+    PBOOLEAN AddressingReset)
+/*
+ * FUNCTION: Resets the miniport
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ *     AddressingReset = Set to TRUE if we need to call MiniportSetInformation later
+ * RETURNS:
+ *     Status of the operation
+ */
+{
+   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
+   KIRQL OldIrql;
+
+   /* FIXME: What should we return if there isn't a reset handler? */
+
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)
+       Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
+            AddressingReset);
+   KeLowerIrql(OldIrql);
+
+   return Status;
 }
 
 
