@@ -19,7 +19,7 @@ typedef struct _D3D9MipMap
 /* 0x0064 */    LPDWORD dwUnknown64;
 /* 0x0068 */    D3DFORMAT Format;
 /* 0x006c */    DWORD dwUnknown6c;
-/* 0x0070 */    DWORD dwUnknown70;
+/* 0x0070 */    DWORD Usage;
 /* 0x0074 */    DWORD dwUnknown74;
 /* 0x0078 */    DWORD dwUnknown78;
 /* 0x007c */    DWORD dwUnknown7c;

@@ -510,7 +510,7 @@ HRESULT WINAPI IDirect3DDevice9Base_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT 
     if (D3DFMT_UNKNOWN == Format)
         return InvalidCall(This, "Invalid Format parameter specified, D3DFMT_UNKNOWN is not a valid Format");
 
-    if (NULL == pSharedHandle)
+    if (NULL != pSharedHandle)
     {
         UNIMPLEMENTED;
         return InvalidCall(This, "Invalid pSharedHandle parameter specified, only NULL is supported at the moment");

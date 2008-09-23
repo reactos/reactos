@@ -23,7 +23,9 @@
 	<file>d3d9_impl.c</file>
 	<file>d3d9_mipmap.c</file>
 	<file>d3d9_puredevice.c</file>
+	<file>d3d9_resource.c</file>
 	<file>d3d9_swapchain.c</file>
+	<file>d3d9_texture.c</file>
 	<file>adapter.c</file>
 	<file>device.c</file>
 	<file>format.c</file>

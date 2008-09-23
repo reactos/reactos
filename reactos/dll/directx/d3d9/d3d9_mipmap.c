@@ -246,13 +246,16 @@ HRESULT CreateD3D9MipMap(DIRECT3DDEVICE9_INT* pDevice, UINT Width, UINT Height, 
         return E_OUTOFMEMORY;
     }
 
+    InitDirect3DBaseTexture9(&pThisTexture->BaseTexture, (IDirect3DBaseTexture9Vtbl*)&D3D9MipMap_Vtbl, Usage, Levels, Format, Pool, pDevice, RT_EXTERNAL);
+
     pThisTexture->lpVtbl = &D3D9MipMap_Vtbl;
     
+    pThisTexture->Usage = Usage;
     pThisTexture->dwWidth = Width;
     pThisTexture->dwHeight = Height;
     pThisTexture->Format = Format;
 
-    *ppTexture = (IDirect3DTexture9*)pThisTexture->lpVtbl;
+    *ppTexture = (IDirect3DTexture9*)&pThisTexture->lpVtbl;
 
     UNIMPLEMENTED;
     return D3D_OK;
