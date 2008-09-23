@@ -583,6 +583,26 @@ MiniQueryInformation(
   return NdisStatus;
 }
 
+BOOLEAN
+MiniCheckForHang( PLOGICAL_ADAPTER Adapter )
+/*
+ * FUNCTION: Checks to see if the miniport is hung
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ * RETURNS:
+ *     TRUE if the miniport is hung
+ *     FALSE if the miniport is not hung
+ */
+{
+   BOOLEAN Ret = FALSE;
+
+   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)
+       Ret = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)(
+         Adapter->NdisMiniportBlock.MiniportAdapterContext);
+
+   return Ret;
+}
+
 
 NDIS_STATUS
 FASTCALL
