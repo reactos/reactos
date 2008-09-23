@@ -243,7 +243,7 @@ StartScreenSaver(
 	HKEY hKey = NULL;
 	WCHAR szApplicationName[MAX_PATH];
 	WCHAR szCommandLine[MAX_PATH + 3];
-	DWORD bufferSize = sizeof(szApplicationName)- 1;
+	DWORD bufferSize = (sizeof(szApplicationName) / sizeof(WCHAR)) - 1;
 	DWORD dwType;
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
