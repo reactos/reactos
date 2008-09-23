@@ -23,7 +23,6 @@ UpdateButtonColor(HWND hwndDlg, GLOBALS* g, INT ID, INT nButton, INT nColor)
 	RECT rect;
 	HBRUSH hbrush;
 	HWND hwndColorButton;
-	COLORREF crColor = g->ThemeAdv.crColor[nColor];
 	HGDIOBJ hgdiTmp;
 
 	if (nColor != -1)
@@ -42,7 +41,7 @@ UpdateButtonColor(HWND hwndDlg, GLOBALS* g, INT ID, INT nButton, INT nColor)
 		rect.top = 2;
 		rect.right = 22;
 		rect.bottom = 13;
-		hbrush = CreateSolidBrush(crColor);
+		hbrush = CreateSolidBrush(g->ThemeAdv.crColor[nColor]);
 		FillRect(hdcCompat, &rect, hbrush);
 		DeleteObject(hbrush);
 
