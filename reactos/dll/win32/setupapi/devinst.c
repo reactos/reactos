@@ -4592,7 +4592,7 @@ cleanup:
     if (hKey != NULL)
         RegCloseKey(hKey);
 
-    return hwProfile;
+    return ret;
 }
 
 static BOOL
