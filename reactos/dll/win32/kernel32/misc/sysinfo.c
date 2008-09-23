@@ -176,7 +176,7 @@ GetSystemInfo (
 BOOL STDCALL
 IsProcessorFeaturePresent(DWORD ProcessorFeature)
 {
-  if (ProcessorFeature > PROCESSOR_FEATURE_MAX)
+  if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
     return(FALSE);
 
   return((BOOL)SharedUserData->ProcessorFeatures[ProcessorFeature]);
