@@ -250,7 +250,6 @@ CreateUserProfileW (PSID Sid,
   if (!AppendSystemPostfix (szUserProfilePath, MAX_PATH))
     {
       DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-      LocalFree ((HLOCAL)SidString);
       return FALSE;
     }
 
