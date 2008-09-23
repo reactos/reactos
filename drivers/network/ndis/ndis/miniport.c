@@ -634,6 +634,27 @@ MiniReset(
    return Status;
 }
 
+VOID STDCALL
+HangTimer( PVOID Context )
+{
+  PLOGICAL_ADAPTER Adapter = Context;
+  BOOLEAN AddressingReset;
+
+  while (Adapter->NdisMiniportBlock.PnPDeviceState == NdisPnPDeviceStarted)
+  {
+    AddressingReset = FALSE;
+
+    NdisMSleep(Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000000);
+
+    if (MiniCheckForHang(Adapter))
+        MiniReset(Adapter, &AddressingReset);
+
+    /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
+  }
+
+  PsTerminateSystemThread(STATUS_SUCCESS);
+}
+
 
 NDIS_STATUS
 FASTCALL
@@ -1421,6 +1442,8 @@ NdisIPnPStartDevice(
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
+  HANDLE HangTimerHandle;
+  
 /* FIXME - KIRQL OldIrql; */
 
   /*
@@ -1639,6 +1662,10 @@ NdisIPnPStartDevice(
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
+
+  PsCreateSystemThread(&HangTimerHandle, THREAD_ALL_ACCESS, 0, 0, 0,
+                       HangTimer, Adapter);
+  ZwClose(HangTimerHandle);
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
