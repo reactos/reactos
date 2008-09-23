@@ -63,8 +63,7 @@ DRIVER_INFORMATION      DriverInfo = {0};
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
-#if 0
-static BOOLEAN MiniportCheckForHang(
+static BOOLEAN STDCALL MiniportCheckForHang(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Examines if an adapter has hung
@@ -78,7 +77,6 @@ static BOOLEAN MiniportCheckForHang(
 
     return FALSE;
 }
-#endif
 
 
 static VOID STDCALL MiniportDisableInterrupt(
@@ -920,7 +918,7 @@ DriverEntry(
     NdisZeroMemory(&Miniport, sizeof(Miniport));
     Miniport.MajorNdisVersion           = DRIVER_NDIS_MAJOR_VERSION;
     Miniport.MinorNdisVersion           = DRIVER_NDIS_MINOR_VERSION;
-    Miniport.CheckForHangHandler        = NULL; //MiniportCheckForHang;
+    Miniport.CheckForHangHandler        = MiniportCheckForHang;
     Miniport.DisableInterruptHandler    = MiniportDisableInterrupt;
     Miniport.EnableInterruptHandler     = MiniportEnableInterrupt;
     Miniport.HaltHandler                = MiniportHalt;
