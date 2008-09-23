@@ -103,7 +103,7 @@ MiniportQueryInformation(
  * RETURNS:
  *     NDIS_STATUS_SUCCESS on all queries
  * NOTES:
- *     - Called by NDIS at PASSIVE_LEVEL
+ *     - Called by NDIS at DISPATCH_LEVEL
  *     - If InformationBufferLength is insufficient to store the results, return the amount
  *       needed in BytesNeeded and return NDIS_STATUS_INVALID_LENGTH
  * TODO:
@@ -117,6 +117,8 @@ MiniportQueryInformation(
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
 
   DPRINT("Called. OID 0x%x\n", Oid);
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   ASSERT(Adapter);
 
@@ -390,7 +392,7 @@ MiniportSetInformation(
  * RETURNS:
  *     NDIS_STATUS_SUCCESS on all requests
  * NOTES:
- *     - Called by NDIS at PASSIVE_LEVEL
+ *     - Called by NDIS at DISPATCH_LEVEL
  *     - verify buffer space as mentioned in previous function notes
  */
 {
@@ -399,6 +401,8 @@ MiniportSetInformation(
   PADAPTER Adapter = (PADAPTER)MiniportAdapterContext;
 
   ASSERT(Adapter);
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   DPRINT("Called, OID 0x%x\n", Oid);
 
