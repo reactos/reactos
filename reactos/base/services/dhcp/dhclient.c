@@ -480,9 +480,9 @@ void set_name_servers( struct client_lease *new_lease ) {
 
             RegSetValueEx( RegKey, "DhcpNameServer", 0, REG_SZ,
                            (LPBYTE)nsbuf, strlen(nsbuf) + 1);
-
-            free( nsbuf );
         }
+	// free(NULL) is defined to be OK too
+	free( nsbuf );
     }
 }
 
@@ -1706,7 +1706,7 @@ supersede:
 					len = ip->client->
 					    config->defaults[i].len +
 					    lease->options[i].len;
-					if (len > sizeof(dbuf)) {
+					if (len >= sizeof(dbuf)) {
 						warning("no space to %s %s",
 						    "prepend option",
 						    dhcp_options[i].name);
