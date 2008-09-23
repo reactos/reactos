@@ -46,7 +46,7 @@ VOID RunLoader(VOID)
 {
     ULONG i;
     LPCSTR SourcePath;
-    LPCSTR LoadOptions, DbgLoadOptions;
+    LPCSTR LoadOptions, DbgLoadOptions = "";
     LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -153,8 +153,6 @@ VOID RunLoader(VOID)
 	if (!InfGetDataField (&InfContext, 1, &DbgLoadOptions))
 	    DbgLoadOptions = "";
     }
-#else
-    DbgLoadOptions = "";
 #endif
   if (!strlen(DbgLoadOptions) && !InfFindFirstLine (InfHandle,
 			 "SetupData",
