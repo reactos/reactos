@@ -727,6 +727,15 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
             DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+
+            /* Give the caller rounded BaseAddress and area length */
+            if (NT_SUCCESS(Status))
+            {
+                *UBaseAddress = BaseAddress;
+                *URegionSize = RegionSize;
+                DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
+            }
+
             return(Status);
          }
          else if (MemoryAreaLength >= RegionSize)
@@ -749,6 +758,15 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
             DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
+
+            /* Give the caller rounded BaseAddress and area length */
+            if (NT_SUCCESS(Status))
+            {
+                *UBaseAddress = BaseAddress;
+                *URegionSize = RegionSize;
+                DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
+            }
+
             return(Status);
          }
          else
