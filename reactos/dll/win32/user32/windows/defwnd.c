@@ -76,7 +76,7 @@ GetSysColor(int nIndex)
 HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColorPens[nIndex];
   }
