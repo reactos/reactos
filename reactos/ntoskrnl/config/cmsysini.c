@@ -775,7 +775,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Save the boot type */
-    if (SystemHive) CmpBootType = SystemHive->Hive.BaseBlock->BootType;
+    CmpBootType = SystemHive->Hive.BaseBlock->BootType;
 
     /* Are we in self-healing mode? */
     if (!CmSelfHeal)
