@@ -1,29 +1,12 @@
-/* $Id$
- *
- * initwkdll.c - Load the well known DLLs
- *
- * ReactOS Operating System
- *
- * --------------------------------------------------------------------
- *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.
- *
- * --------------------------------------------------------------------
+/*
+ * PROJECT:         ReactOS Session Manager
+ * LICENSE:         GPL v2 or later - See COPYING in the top level directory
+ * FILE:            base/system/smss/initwkdll.c
+ * PURPOSE:         Load the well known DLLs.
+ * PROGRAMMERS:     ReactOS Development Team
  */
 
+/* INCLUDES ******************************************************************/
 #include "smss.h"
 
 #define NDEBUG
