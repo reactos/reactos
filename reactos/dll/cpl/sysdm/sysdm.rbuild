@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" unicode="yes">
-	<importlibrary definition="sysdm.def" />
+	<importlibrary definition="sysdm.spec.def" />
 	<include base="sysdm">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -29,5 +29,6 @@
 	<file>userprofile.c</file>
 	<file>virtmem.c</file>
 	<file>sysdm.rc</file>
+	<file>sysdm.spec</file>
 	<pch>precomp.h</pch>
 </module>

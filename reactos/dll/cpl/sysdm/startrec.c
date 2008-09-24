@@ -437,7 +437,7 @@ DeleteBootRecords(HWND hwndDlg)
     for (index = 0; index <lIndex; index++)
     {
         pRecord = (PBOOTRECORD) SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_GETITEMDATA, (WPARAM)index, (LPARAM)0);
-        if ((INT)pRecord != CB_ERR)
+        if ((INT_PTR)pRecord != CB_ERR)
         {
             HeapFree(GetProcessHeap(), 0, pRecord);
         }
@@ -570,7 +570,7 @@ WriteStartupRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
         RegSetValueEx(hKey, _T("MinidumpDir"), 0, REG_EXPAND_SZ, (LPBYTE)pStartInfo->szDumpFile, (_tcslen(pStartInfo->szDumpFile) + 1) * sizeof(TCHAR));
     }
 
-    RegSetValueEx(hKey, _T("CrashDumpEnabled"), 0, REG_DWORD, (LPBYTE)pStartInfo->dwCrashDumpEnabled, sizeof(pStartInfo->dwCrashDumpEnabled));
+    RegSetValueEx(hKey, _T("CrashDumpEnabled"), 0, REG_DWORD, (LPBYTE)(DWORD_PTR)pStartInfo->dwCrashDumpEnabled, sizeof(pStartInfo->dwCrashDumpEnabled));
     RegCloseKey(hKey);
 }
 
@@ -741,7 +741,7 @@ StartRecDlgProc(HWND hwndDlg,
 
                     pRecord = (PBOOTRECORD) SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_GETITEMDATA, (WPARAM)lResult, (LPARAM)0);
 
-                    if ((INT)pRecord != CB_ERR)
+                    if ((INT_PTR)pRecord != CB_ERR)
                     {
                         if (pStartInfo->iFreeLdrIni == 1) // FreeLdrIni style
                         {
