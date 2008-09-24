@@ -645,8 +645,10 @@ MiniportHangDpc(
   BOOLEAN AddressingReset = FALSE;
 
 
-  if (MiniCheckForHang(Adapter))
+  if (MiniCheckForHang(Adapter)) {
+      NDIS_DbgPrint(MIN_TRACE, ("Miniport detected adapter hang\n"));
       MiniReset(Adapter, &AddressingReset);
+  }
 
   /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
 }
