@@ -141,10 +141,8 @@ MiGetMediaState(PADAPTER Adapter);
 
 #if DBG
 #define BREAKPOINT DbgBreakPoint();
-#define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql() == x)
 #else
 #define BREAKPOINT
-#define ASSERT_IRQL_EQUAL(x)
 #endif
 
 #ifndef TAG

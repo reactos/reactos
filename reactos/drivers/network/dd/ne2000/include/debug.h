@@ -56,14 +56,12 @@ extern ULONG DebugTraceLevel;
 #endif /* NASSERT */
 #endif
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
-#define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql() == (x))
 
 #else /* DBG */
 
 #define NDIS_DbgPrint(_t_, _x_)
 
 #define ASSERT_IRQL(x)
-#define ASSERT_IRQL_EQUAL(x)
 /* #define ASSERT(x) */  /* ndis.h */
 
 #endif /* DBG */
