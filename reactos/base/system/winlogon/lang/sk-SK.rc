@@ -1,5 +1,6 @@
-/* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  24-04-2008
+/* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  24-04-2008
+ * LAST CHANGE:  18-09-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -33,17 +34,17 @@ BEGIN
     IDS_APPLYINGYOURPERSONALSETTINGS "Aplikujú sa osobné nastavenia..."
     IDS_RUNNINGLOGOFFSCRIPTS "Spúšajú sa odhlasovacie skripty..."
     IDS_RUNNINGLOGONSCRIPTS "Spúšajú sa prihlasovacie skripty..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Naèítavajú sa vaše osobné nastavenia..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Naèítavajú sa Vaše osobné nastavenia..."
     IDS_CLOSINGNETWORKCONNECTIONS "Ukonèujú sa sieové pripojenia..."
     IDS_REACTOSISSHUTTINGDOWN "Systém ReactOS sa vypína..."
     IDS_PREPARETOSTANDBY "Systém sa pripravuje na prechod do úsporného reimu..."
     IDS_PREPARETOHIBERNATE "Systém sa pripravuje na prechod do reimu dlhodobého spánku..."
-    IDS_SAVEYOURSETTINGS "Systém ukladá vaše nastavenia..."
+    IDS_SAVEYOURSETTINGS "Systém ukladá Vaše nastavenia..."
     IDS_REACTOSISSTARTINGUP "Systém ReactOS sa spúša..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Program Winlogon zlyhal pri aktivácií shellu!"
+    IDS_FAILEDACTIVATEUSERSHELL "Program Winlogon zlyhal pri aktivácii shellu!"
 END
 
