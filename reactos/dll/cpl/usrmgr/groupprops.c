@@ -270,9 +270,9 @@ AddUsersToGroup(HWND hwndDlg,
 //        DebugPrintf(_T("Removed all users from the list!"));
 
         /* Set group members */
-        NetLocalGroupGetMembers(NULL, pGroupData->szGroupName, 1, (LPBYTE*)(DWORD_PTR)&membersInfo,
+        NetLocalGroupGetMembers(NULL, pGroupData->szGroupName, 1, (LPBYTE*)&membersInfo,
                                 MAX_PREFERRED_LENGTH, &dwRead, &dwTotal,
-                                (PDWORD_PTR)&resumeHandle);
+                                &resumeHandle);
 
         for (i = 0; i < dwRead; i++)
         {
