@@ -2472,9 +2472,9 @@ FLOATOBJ_SubLong(
 #define FLOATOBJ_Equal(pf, pf1)         (*(pf) == *(pf1))
 #define FLOATOBJ_GreaterThan(pf, pf1)   (*(pf) > *(pf1))
 #define FLOATOBJ_LessThan(pf, pf1)      (*(pf) < *(pf1))
-#define FLOATOBJ_EqualLong(pf, 1)       (*(pf) == (FLOAT)(1))
-#define FLOATOBJ_GreaterThanLong(pf, 1) (*(pf) > (FLOAT)(1))
-#define FLOATOBJ_LessThanLong(pf, 1)    (*(pf) < (FLOAT)(1))
+#define FLOATOBJ_EqualLong(pf, l)       (*(pf) == (FLOAT)(l))
+#define FLOATOBJ_GreaterThanLong(pf, l) (*(pf) > (FLOAT)(l))
+#define FLOATOBJ_LessThanLong(pf, l)    (*(pf) < (FLOAT)(l))
 
 #endif
 
