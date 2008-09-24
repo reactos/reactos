@@ -54,6 +54,7 @@
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"
+#include "infros.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"

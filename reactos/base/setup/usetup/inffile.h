@@ -37,10 +37,10 @@
 
 #define SetupCloseInfFile InfpCloseInfFile
 #define SetupFindFirstLineW InfpFindFirstLineW
-#define SetupFindNextLine InfpFindNextLine
-#define SetupGetBinaryField InfpGetBinaryField
-#define SetupGetFieldCount InfpGetFieldCount
-#define SetupGetIntField InfpGetIntField
+#define SetupFindNextLine InfFindNextLine
+#define SetupGetBinaryField InfGetBinaryField
+#define SetupGetFieldCount InfGetFieldCount
+#define SetupGetIntField InfGetIntField
 #define SetupGetMultiSzFieldW InfpGetMultiSzFieldW
 #define SetupGetStringFieldW InfpGetStringFieldW
 #define SetupOpenInfFileW InfpOpenInfFileW
@@ -66,29 +66,6 @@ InfpFindFirstLineW(
 	IN PCWSTR Section,
 	IN PCWSTR Key,
 	IN OUT PINFCONTEXT Context);
-
-BOOL WINAPI
-InfpFindNextLine(
-	IN PINFCONTEXT ContextIn,
-	OUT PINFCONTEXT ContextOut);
-
-BOOL WINAPI
-InfpGetBinaryField(
-	IN PINFCONTEXT Context,
-	IN ULONG FieldIndex,
-	IN OUT BYTE* ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize);
-
-DWORD WINAPI
-InfpGetFieldCount(
-	IN PINFCONTEXT Context);
-
-BOOL WINAPI
-InfpGetIntField(
-	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
-	OUT PINT IntegerValue);
 
 BOOL WINAPI
 InfpGetMultiSzFieldW(
