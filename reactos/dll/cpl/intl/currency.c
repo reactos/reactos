@@ -413,7 +413,7 @@ SetCurrencyDigNum(HWND hwndDlg, LCID lcid)
                            (LPARAM)0);
 
     /* Save number of digidts in field */
-    if (nCurrSel > 0)
+    if (nCurrSel != CB_ERR)
         SetLocaleInfo(lcid, LOCALE_SMONGROUPING, szFieldDigNumSamples[nCurrSel]);
 
     return TRUE;
