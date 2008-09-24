@@ -1569,9 +1569,11 @@ IoFlushAdapterBuffers(
    PHYSICAL_ADDRESS PhysicalAddress;
    PPFN_NUMBER MdlPagesPtr;
 
+   /* Sanity checks */
    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+   ASSERT(AdapterObject);
 
-   if (AdapterObject != NULL && !AdapterObject->MasterDevice)
+   if (!AdapterObject->MasterDevice)
    {
       /* Mask out (disable) the DMA channel. */
       if (AdapterObject->AdapterNumber == 1)
