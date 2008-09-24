@@ -522,7 +522,7 @@ MmModifyAttributes(PMM_AVL_TABLE AddressSpace,
 NTSTATUS STDCALL
 NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                         IN OUT PVOID* UBaseAddress,
-                        IN     ULONG  ZeroBits,
+                        IN     ULONG_PTR  ZeroBits,
                         IN OUT PSIZE_T URegionSize,
                         IN     ULONG  AllocationType,
                         IN     ULONG  Protect)
