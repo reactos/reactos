@@ -386,7 +386,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 					    rcLeftPanel.right - rcLeftPanel.left,
 					    dwHeight,
 					    hWnd,
-					    (HMENU)i,
+					    (HMENU)IntToPtr(i),
 					    hInstance,
 					    NULL);
 	  hwndDefaultTopic = hwndTopicButton[i];
