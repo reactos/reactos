@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="appwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz.cpl" unicode="yes">
-	<importlibrary definition="appwiz.def" />
+	<importlibrary definition="appwiz.spec.def" />
 	<include base="appwiz">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -19,4 +19,5 @@
 	<file>createlink.c</file>
 	<file>updates.c</file>
 	<file>appwiz.rc</file>
+	<file>appwiz.spec</file>
 </module>
