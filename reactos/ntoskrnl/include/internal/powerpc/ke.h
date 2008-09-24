@@ -54,8 +54,6 @@ VOID
 KiPPCSetProcessorFeatures(VOID);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
-VOID
-NtEarlyInitVdm(VOID);
 
 #ifdef CONFIG_SMP
 #define LOCK "isync ; "

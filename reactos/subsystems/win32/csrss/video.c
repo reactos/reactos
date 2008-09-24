@@ -23,7 +23,6 @@ InitializeVideoAddressSpace(VOID)
     NTSTATUS Status;
     HANDLE PhysMemHandle;
     PVOID BaseAddress;
-    PVOID NullAddress;
     LARGE_INTEGER Offset;
     ULONG ViewSize;
     CHAR IVTAndBda[1024+256];
@@ -104,11 +103,6 @@ InitializeVideoAddressSpace(VOID)
         DbgPrint("NtVdmControl failed (status %x)\n", Status);
         return 0;
     }
-
-    /* Copy the IVT and BDA into the right place */
-    NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
-    memcpy(NullAddress, IVTAndBda, 1024);
-    memcpy((PVOID)0x400, &IVTAndBda[1024], 256);
 
     /* Return success */
     return 1;
