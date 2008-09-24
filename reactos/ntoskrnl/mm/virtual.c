@@ -427,26 +427,21 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     MEMORY_AREA* MemoryArea;
     PMM_AVL_TABLE AddressSpace;
 
-    if (Address < MmSystemRangeStart)
-    {
-        Status = ObReferenceObjectByHandle(ProcessHandle,
-                                           PROCESS_QUERY_INFORMATION,
-                                           NULL,
-                                           UserMode,
-                                           (PVOID*)(&Process),
-                                           NULL);
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       NULL,
+                                       UserMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("NtQueryVirtualMemory() = %x\n",Status);
-            return(Status);
-        }
-        AddressSpace = &Process->VadRoot;
-    }
-    else
+    if (!NT_SUCCESS(Status))
     {
-        AddressSpace = MmGetKernelAddressSpace();
+        DPRINT("NtQueryVirtualMemory() = %x\n",Status);
+        return(Status);
     }
+
+    AddressSpace = &Process->VadRoot;
+
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
     switch(VirtualMemoryInformationClass)
@@ -572,11 +567,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     MmUnlockAddressSpace(AddressSpace);
-    if (Address < MmSystemRangeStart)
-    {
-        ASSERT(Process);
-        ObDereferenceObject(Process);
-    }
+    ObDereferenceObject(Process);
 
     return Status;
 }
