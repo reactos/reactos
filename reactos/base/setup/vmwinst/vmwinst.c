@@ -504,7 +504,7 @@ done:
   }
 
 cleanup:
-  hThread = (HANDLE)InterlockedExchange((LONG*)&hInstallationThread, 0);
+  hThread = (HANDLE)(ULONG_PTR)InterlockedExchange((LONG*)&hInstallationThread, 0);
   if(hThread != NULL)
   {
     CloseHandle(hThread);
