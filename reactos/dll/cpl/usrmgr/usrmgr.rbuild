@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="usrmgr" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_USRMGR}" installbase="system32" installname="usrmgr.cpl" unicode="yes">
-	<importlibrary definition="usrmgr.def" />
+	<importlibrary definition="usrmgr.spec.def" />
 	<include base="usrmgr">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -21,4 +21,5 @@
 	<file>users.c</file>
 	<file>usrmgr.c</file>
 	<file>usrmgr.rc</file>
+	<file>usrmgr.spec</file>
 </module>
