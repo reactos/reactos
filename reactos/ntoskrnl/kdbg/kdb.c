@@ -1692,7 +1692,7 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
                     IN PVOID Src,
                     IN ULONG Bytes)
 {
-    BOOLEAN Result;
+    BOOLEAN Result = TRUE;
     ULONG_PTR Start, End, Write;
 
     for (Start = (ULONG_PTR)Src, 
@@ -1700,7 +1700,7 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
              Write = (ULONG_PTR)Dest; 
          Result && (Start < End); 
          Start++, Write++)
-        if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
+        if (!KdpSafeWriteMemory(Write, 1, *((PCHAR)Start)))
             Result = FALSE;
 
     return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
