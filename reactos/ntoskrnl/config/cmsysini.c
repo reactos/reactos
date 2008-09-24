@@ -71,11 +71,10 @@ CmpDeleteKeyObject(PVOID DeletedObject)
         {
             /* Delist the key */
             DelistKeyBodyFromKCB(KeyBody, FALSE);
+
+            /* Dereference the KCB */
+            CmpDelayDerefKeyControlBlock(Kcb);
         }
-        
-        /* Dereference the KCB */
-        CmpDelayDerefKeyControlBlock(Kcb);
-        
     }
     
     /* Release the registry lock */
