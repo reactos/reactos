@@ -107,7 +107,7 @@ GetDevNum(HWND hControl, DWORD Id)
     if (DevNum == (UINT) CB_ERR)
         return 0;
 
-    if (mixerGetID((HMIXEROBJ) DevNum, &DevNum, Id) != MMSYSERR_NOERROR)
+    if (mixerGetID((HMIXEROBJ)IntToPtr(DevNum), &DevNum, Id) != MMSYSERR_NOERROR)
         return 0;
 
     return DevNum;
