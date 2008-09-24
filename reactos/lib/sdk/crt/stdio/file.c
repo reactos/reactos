@@ -1112,6 +1112,7 @@ FILE* CDECL _wfdopen(int fd, const wchar_t *mode)
       }
       UNLOCK_FILES();
   }
+  free(modea);
   return file;
 }
 
@@ -1571,8 +1572,8 @@ int CDECL _wsopen( const wchar_t* path, int oflags, int shflags, ... )
     free(patha);
     return retval;
   }
-
   __set_errno(GetLastError());
+  free(patha);
   return -1;
 }
 
@@ -2561,7 +2562,8 @@ FILE * CDECL _wfsopen(const wchar_t *path, const wchar_t *mode, int share)
     free(modea);
     return retval;
   }
-
+  free(patha);
+  free(modea);
   __set_errno(GetLastError());
   return NULL;
 }
