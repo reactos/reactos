@@ -255,7 +255,7 @@ DisplayPageProc(HWND hwndDlg,
                 SetCaretBlinkTime(pGlobalData->uCaretBlinkTime);
                 SystemParametersInfo(SPI_SETCARETWIDTH,
                                      0,
-                                     (PVOID)pGlobalData->uCaretWidth,
+                                     IntToPtr(pGlobalData->uCaretWidth),
                                      SPIF_UPDATEINIFILE | SPIF_SENDCHANGE /*0*/);
                 SystemParametersInfo(SPI_SETHIGHCONTRAST,
                                      sizeof(HIGHCONTRAST),
