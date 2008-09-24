@@ -61,9 +61,11 @@ VOID STDCALL SmpApiThread(PVOID);
 
 
 /* smapiexec.c */
+#define SM_CREATE_FLAG_WAIT        0x01
+#define SM_CREATE_FLAG_RESERVE_1MB 0x02
 NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
 				     LPWSTR CommandLine,
-				     BOOLEAN WaitForIt,
+				     ULONG Flags,
 				     PLARGE_INTEGER Timeout OPTIONAL,
 				     PRTL_USER_PROCESS_INFORMATION UserProcessInfo OPTIONAL);
 NTSTATUS FASTCALL SmExecPgm(PSM_PORT_MESSAGE);

@@ -80,8 +80,8 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 
   /* Create NT process */
   Status = SmCreateUserProcess (ImagePath,
-		  		CommandLine,
-				TRUE, /* wait */
+				CommandLine,
+				SM_CREATE_FLAG_WAIT,
 				NULL, NULL);
   if (!NT_SUCCESS(Status))
   {

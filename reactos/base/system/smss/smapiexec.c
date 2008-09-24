@@ -22,8 +22,10 @@ static const WCHAR szSystemDirectory[] = L"\\System32";
  * ARGUMENTS
  *	ImagePath: absolute path of the image to run;
  *	CommandLine: arguments and options for ImagePath;
- *	WaitForIt: TRUE for boot time processes and FALSE for
- *		subsystems bootstrapping;
+ *	Flags: Wait flag: Set for boot time processes and unset for
+ *			subsystems bootstrapping;
+ *		1Mb reserve flag: Set for subsystems, unset for everything
+*			else
  *	Timeout: optional: used if WaitForIt==TRUE;
  *	ProcessHandle: optional: a duplicated handle for
  		the child process (storage provided by the caller).
@@ -35,7 +37,7 @@ static const WCHAR szSystemDirectory[] = L"\\System32";
 NTSTATUS STDCALL
 SmCreateUserProcess (LPWSTR ImagePath,
 		     LPWSTR CommandLine,
-		     BOOLEAN WaitForIt,
+		     ULONG Flags,
 		     PLARGE_INTEGER Timeout OPTIONAL,
 		     PRTL_USER_PROCESS_INFORMATION UserProcessInfo OPTIONAL)
 {
@@ -106,7 +108,12 @@ FailProcParams:
 			__FUNCTION__, Status);
 		return Status;
 	}
-
+#ifdef ROS_DOESNT_SUCK
+	/* Reserve lower 1Mb, if requested */
+	if (Flags & SM_CREATE_FLAG_RESERVE_1MB)
+		ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+#endif
+	/* Create the user process */
 	Status = RtlCreateUserProcess (& ImagePathString,
 				       OBJ_CASE_INSENSITIVE,
 				       ProcessParameters,
@@ -141,7 +148,7 @@ FailProcParams:
 	}
 
 	/* Wait for process termination */
-	if (WaitForIt)
+	if (Flags & SM_CREATE_FLAG_WAIT)
 	{
 		Status = NtWaitForSingleObject (pProcessInfo->ProcessHandle,
 						FALSE,
@@ -151,13 +158,13 @@ FailProcParams:
 			DPRINT1("SM: %s: NtWaitForSingleObject failed with Status=0x%08lx\n",
 				__FUNCTION__, Status);
 		}
-
 	}
-        if (NULL == UserProcessInfo)
-        {
-           NtClose(pProcessInfo->ProcessHandle);
-           NtClose(pProcessInfo->ThreadHandle);
-        }
+
+    if (NULL == UserProcessInfo)
+    {
+        NtClose(pProcessInfo->ProcessHandle);
+        NtClose(pProcessInfo->ThreadHandle);
+    }
 	return Status;
 }
 
@@ -230,9 +237,9 @@ SMAPI(SmExecPgm)
 				Request->SmHeader.Status =
 					SmCreateUserProcess(ImagePath,
 							      CommandLine,
-							      FALSE, /* wait */
-				      			      NULL, /* timeout */
-			      				      & ProcessInfo);
+							      SM_CREATE_FLAG_RESERVE_1MB,
+							      NULL, /* timeout */
+							      & ProcessInfo);
 				if (NT_SUCCESS(Request->SmHeader.Status))
 				{
 					Status = SmCreateClient (& ProcessInfo, Name);
