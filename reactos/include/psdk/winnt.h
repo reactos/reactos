@@ -4703,7 +4703,7 @@ MemoryBarrier(VOID)
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #elif defined (_M_AMD64)
-#define MemoryBarrier()
+#define MemoryBarrier __faststorefence
 #elif defined(_M_PPC)
 #define MemoryBarrier()
 #elif defined(_M_ARM)
