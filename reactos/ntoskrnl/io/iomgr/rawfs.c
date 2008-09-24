@@ -652,6 +652,7 @@ RawQueryFsSizeInfo(IN PVCB Vcb,
                                         FALSE,
                                         &Event,
                                         &IoStatusBlock);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Call driver and check if we're pending */
     Status = IoCallDriver(RealDevice, Irp);
@@ -692,6 +693,7 @@ RawQueryFsSizeInfo(IN PVCB Vcb,
                                             FALSE,
                                             &Event,
                                             &IoStatusBlock);
+        if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Call driver and check if we're pending */
         Status = IoCallDriver(RealDevice, Irp);
