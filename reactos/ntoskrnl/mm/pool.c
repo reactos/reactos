@@ -36,8 +36,6 @@ EiAllocatePool(POOL_TYPE PoolType,
    PVOID Block;
    PCHAR TagChars = (PCHAR)&Tag;
 
-   if (NumberOfBytes == 0)
-       KeBugCheckEx(BAD_POOL_CALLER, 0x00, 0, PoolType, Tag);
    if (Tag == 0)
        KeBugCheckEx(BAD_POOL_CALLER, 0x9b, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
    if (Tag == TAG('B','I','G',0))
