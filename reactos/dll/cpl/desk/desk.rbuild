@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl" unicode="yes">
-	<importlibrary definition="desk.def" />
+	<importlibrary definition="desk.spec.def" />
 	<include base="desk">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -34,4 +34,5 @@
 	<file>monslctl.c</file>
 	<file>general.c</file>
 	<file>desk.rc</file>
+	<file>desk.spec</file>
 </module>
