@@ -288,7 +288,7 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     HANDLE DuplicatedHandle;
-    ULONG Dummy;
+    SIZE_T Dummy;
     
     DPRINT("BasepDuplicateAndWriteHandle. hProcess: %lx, Handle: %lx,"
            "Address: %p\n", ProcessHandle, StandardHandle, Address);

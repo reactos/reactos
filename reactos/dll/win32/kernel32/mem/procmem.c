@@ -23,8 +23,8 @@ NTAPI
 ReadProcessMemory(IN HANDLE hProcess,
                   IN LPCVOID lpBaseAddress,
                   IN LPVOID lpBuffer,
-                  IN DWORD nSize,
-                  OUT LPDWORD lpNumberOfBytesRead)
+                  IN SIZE_T nSize,
+                  OUT SIZE_T* lpNumberOfBytesRead)
 {
     NTSTATUS Status;
 

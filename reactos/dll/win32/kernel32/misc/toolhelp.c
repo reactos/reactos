@@ -225,8 +225,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   HANDLE hSection;
   PTH32SNAPSHOT Snapshot;
   ULONG_PTR DataOffset;
-  ULONG ViewSize, i;
-  ULONG nProcesses = 0, nThreads = 0, nHeaps = 0, nModules = 0;
+  SIZE_T ViewSize;
+  ULONG i, nProcesses = 0, nThreads = 0, nHeaps = 0, nModules = 0;
   ULONG RequiredSnapshotSize = sizeof(TH32SNAPSHOT);
   PRTL_PROCESS_HEAPS hi = NULL;
   PRTL_PROCESS_MODULES mi = NULL;
@@ -670,7 +670,7 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lphl, sizeof(HEAPLIST32));
@@ -724,7 +724,7 @@ Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lphl, sizeof(HEAPLIST32));
@@ -811,7 +811,7 @@ Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpme, sizeof(MODULEENTRY32W));
@@ -898,7 +898,7 @@ Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpme, sizeof(MODULEENTRY32W));
@@ -985,7 +985,7 @@ Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lppe, sizeof(PROCESSENTRY32W));
@@ -1074,7 +1074,7 @@ Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lppe, sizeof(PROCESSENTRY32W));
@@ -1128,7 +1128,7 @@ Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpte, sizeof(THREADENTRY32));
@@ -1182,7 +1182,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpte, sizeof(THREADENTRY32));
@@ -1233,7 +1233,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 BOOL
 STDCALL
 Toolhelp32ReadProcessMemory(DWORD th32ProcessID,  LPCVOID lpBaseAddress,
-                            LPVOID lpBuffer, DWORD cbRead, LPDWORD lpNumberOfBytesRead)
+                            LPVOID lpBuffer, SIZE_T cbRead, SIZE_T* lpNumberOfBytesRead)
 {
   HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, th32ProcessID);
   if(hProcess != NULL)
