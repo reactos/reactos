@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="input" type="win32dll" extension=".dll" baseaddress="${BASEADDRESS_INPUT}" installbase="system32" installname="input.dll" unicode="yes">
-	<importlibrary definition="input.def" />
+	<importlibrary definition="input.spec.def" />
 	<include base="input">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -16,4 +16,5 @@
 	<file>add.c</file>
 	<file>changekeyseq.c</file>
 	<file>input.rc</file>
+	<file>input.spec</file>
 </module>
