@@ -583,6 +583,76 @@ MiniQueryInformation(
   return NdisStatus;
 }
 
+BOOLEAN
+MiniCheckForHang( PLOGICAL_ADAPTER Adapter )
+/*
+ * FUNCTION: Checks to see if the miniport is hung
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ * RETURNS:
+ *     TRUE if the miniport is hung
+ *     FALSE if the miniport is not hung
+ */
+{
+   BOOLEAN Ret = FALSE;
+   KIRQL OldIrql;
+
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)
+       Ret = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CheckForHangHandler)(
+         Adapter->NdisMiniportBlock.MiniportAdapterContext);
+   KeLowerIrql(OldIrql);
+
+   return Ret;
+}
+
+NDIS_STATUS
+MiniReset(
+    PLOGICAL_ADAPTER Adapter,
+    PBOOLEAN AddressingReset)
+/*
+ * FUNCTION: Resets the miniport
+ * ARGUMENTS:
+ *     Adapter = Pointer to the logical adapter object
+ *     AddressingReset = Set to TRUE if we need to call MiniportSetInformation later
+ * RETURNS:
+ *     Status of the operation
+ */
+{
+   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
+   KIRQL OldIrql;
+
+   /* FIXME: What should we return if there isn't a reset handler? */
+
+   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)
+       Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
+            AddressingReset);
+   KeLowerIrql(OldIrql);
+
+   return Status;
+}
+
+VOID STDCALL
+MiniportHangDpc(
+        PKDPC Dpc,
+        PVOID DeferredContext,
+        PVOID SystemArgument1,
+        PVOID SystemArgument2)
+{
+  PLOGICAL_ADAPTER Adapter = DeferredContext;
+  BOOLEAN AddressingReset = FALSE;
+
+
+  if (MiniCheckForHang(Adapter)) {
+      NDIS_DbgPrint(MIN_TRACE, ("Miniport detected adapter hang\n"));
+      MiniReset(Adapter, &AddressingReset);
+  }
+
+  /* FIXME: We should call MiniportSetInformation if AddressingReset is TRUE */
+}
+
 
 NDIS_STATUS
 FASTCALL
@@ -1370,7 +1440,8 @@ NdisIPnPStartDevice(
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
-/* FIXME - KIRQL OldIrql; */
+  LARGE_INTEGER Timeout;
+  /* FIXME - KIRQL OldIrql; */
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -1582,8 +1653,17 @@ NdisIPnPStartDevice(
       return (NTSTATUS)NdisStatus;
     }
 
+  /* Check for a hang every two seconds if it wasn't set in MiniportInitialize */
+  if (Adapter->NdisMiniportBlock.CheckForHangSeconds == 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = 2;
+
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
+
+  Timeout.QuadPart = (LONGLONG)Adapter->NdisMiniportBlock.CheckForHangSeconds * -1000000;
+  KeSetTimerEx(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer, Timeout,
+               Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000,
+               &Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc);
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
@@ -1639,6 +1719,8 @@ NdisIPnPStopDevice(
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
+
+  KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
   return STATUS_SUCCESS;
 }
@@ -1826,7 +1908,9 @@ NdisIAddDevice(
   Adapter->NdisMiniportBlock.OldPnPDeviceState = 0;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceAdded;
 
-  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, (PVOID)Adapter);
+  KeInitializeTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+  KeInitializeDpc(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc, MiniportHangDpc, Adapter);
+  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, Adapter);
 
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -2078,8 +2162,6 @@ NdisMSetAttributesEx(
  *     AdapterType               = Specifies the I/O bus interface of the caller's NIC
  */
 {
-  /* TODO: Take CheckForHandTimeInSeconds into account! */
-
   PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -2087,6 +2169,8 @@ NdisMSetAttributesEx(
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
   Adapter->NdisMiniportBlock.Flags = AttributeFlags;
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
+  if (CheckForHangTimeInSeconds > 0)
+      Adapter->NdisMiniportBlock.CheckForHangSeconds = CheckForHangTimeInSeconds;
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
     NDIS_DbgPrint(MAX_TRACE, ("Intermediate drivers not supported yet.\n"));
 }

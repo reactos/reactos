@@ -69,6 +69,8 @@ MiniportHandleInterrupt(
 
   DPRINT("Called\n");
 
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
@@ -624,6 +626,8 @@ MiniportMediaDetectionTimer(
 {
   PADAPTER Adapter = (PADAPTER)FunctionContext;
 
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
   if (NdisMSynchronizeWithInterrupt(&Adapter->InterruptObject,
                                     MiSyncMediaDetection,
                                     FunctionContext))
@@ -811,6 +815,8 @@ MiniportInitialize(
   PADAPTER Adapter = 0;
   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
   BOOLEAN InterruptRegistered = FALSE;
+
+  ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
   /* Pick a medium */
   for(i = 0; i < MediumArraySize; i++)
@@ -1023,6 +1029,8 @@ MiniportReset(
 {
   DPRINT("Called\n");
 
+  ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
   /* MiniportReset doesn't do anything at the moment... perhaps this should be fixed. */
 
   *AddressingReset = FALSE;
@@ -1071,6 +1079,8 @@ MiniportSend(
   UINT TotalPacketLength, SourceLength, Position = 0;
 
   DPRINT("Called\n");
+
+  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
   NdisDprAcquireSpinLock(&Adapter->Lock);
 
