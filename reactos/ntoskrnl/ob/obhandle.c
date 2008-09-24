@@ -450,6 +450,14 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+ObpValidateAccessMask(IN PACCESS_STATE AccessState)
+{
+    /* TODO */
+    return STATUS_SUCCESS;
+}
+
 /*++
 * @name ObpDecrementHandleCount
 *
@@ -2888,7 +2896,7 @@ ObInsertObject(IN PVOID Object,
     AccessState->SecurityDescriptor = ObjectCreateInfo->SecurityDescriptor;
 
     /* Validate the access mask */
-    Status = STATUS_SUCCESS;//ObpValidateAccessMask(AccessState);
+    Status = ObpValidateAccessMask(AccessState);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
