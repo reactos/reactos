@@ -38,12 +38,12 @@ DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
 INT
 STDCALL
 DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
-				  PLONG width,
-				  PLONG height,
-				  PWORD planes,
-				  PWORD bpp,
-				  PLONG compr,
-				  PLONG size )
+                  PLONG width,
+                  PLONG height,
+                  PWORD planes,
+                  PWORD bpp,
+                  PLONG compr,
+                  PLONG size )
 {
 
   if (header->biSize == sizeof(BITMAPCOREHEADER))
