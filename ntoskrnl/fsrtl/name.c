@@ -269,6 +269,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  *          should be implemented (see FsRtlDoesNameContainWildCards).
  *
  *--*/
+#if 0
 BOOLEAN
 NTAPI
 FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
@@ -316,4 +317,95 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
 
     return FALSE;
 }
+#endif
+BOOLEAN
+NTAPI
+FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
+                        IN PUNICODE_STRING Name,
+                        IN BOOLEAN IgnoreCase,
+                        IN PWCHAR UpcaseTable OPTIONAL)
+{
+    USHORT ExpressionPosition, NamePosition;
+    UNICODE_STRING TempExpression, TempName;
 
+    ExpressionPosition = 0;
+    NamePosition = 0;
+    while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition < (Name->Length / sizeof(WCHAR)))
+    {
+        if (Expression->Buffer[ExpressionPosition] == L'*')
+        {
+            ExpressionPosition++;
+            if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
+            {
+                return TRUE;
+            }
+            while (NamePosition < (Name->Length / sizeof(WCHAR)))
+            {
+                TempExpression.Length =
+                    TempExpression.MaximumLength =
+                    Expression->Length - (ExpressionPosition * sizeof(WCHAR));
+                TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
+                TempName.Length =
+                    TempName.MaximumLength =
+                    Name->Length - (NamePosition * sizeof(WCHAR));
+                TempName.Buffer = Name->Buffer + NamePosition;
+                /* FIXME: Rewrite to get rid of recursion */
+                if (FsRtlIsNameInExpression(&TempExpression, &TempName,
+                    IgnoreCase, UpcaseTable))
+                {
+                    return TRUE;
+                }
+                NamePosition++;
+            }
+        }
+        else
+        {
+            if (Expression->Buffer[ExpressionPosition] == L'?' || (
+                IgnoreCase && !UpcaseTable &&
+                RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
+                RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
+                (!IgnoreCase && Expression->Buffer[ExpressionPosition] ==
+                Name->Buffer[NamePosition]))
+            {
+                NamePosition++;
+
+                ExpressionPosition++;
+            }
+            else if (IgnoreCase && UpcaseTable)
+            {
+                if (UpcaseTable[Expression->Buffer[ExpressionPosition]] ==
+                    UpcaseTable[Name->Buffer[NamePosition]])
+                {
+                    NamePosition++;
+                    ExpressionPosition++;
+                }
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+    }
+
+    /* Handle matching of "f0_*.*" expression to "f0_000" file name. */
+    if (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        Expression->Buffer[ExpressionPosition] == L'.')
+    {
+        while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+            (Expression->Buffer[ExpressionPosition] == L'.' ||
+            Expression->Buffer[ExpressionPosition] == L'*' ||
+            Expression->Buffer[ExpressionPosition] == L'?'))
+        {
+            ExpressionPosition++;
+        }
+    }
+
+    if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition == (Name->Length / sizeof(WCHAR)))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
