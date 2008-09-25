@@ -1158,6 +1158,17 @@ PsIsProcessBeingDebugged(PEPROCESS Process)
 /*
  * @implemented
  */
+BOOLEAN
+NTAPI
+PsIsSystemProcess(IN PEPROCESS Process)
+{
+    /* Return if this is the System Process */
+    return Process == PsInitialSystemProcess;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 PsSetProcessPriorityClass(PEPROCESS Process,

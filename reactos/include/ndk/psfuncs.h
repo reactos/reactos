@@ -136,6 +136,13 @@ PsIsProtectedProcess(
     IN PEPROCESS Process
 );
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemProcess(
+    IN PEPROCESS Process
+);
+
 //
 // Quota Functions
 //
