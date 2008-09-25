@@ -194,7 +194,7 @@ static void fill_table(IUnknownVtbl *vtbl, void **methods, DWORD num)
 #else  /* __i386__ */
 
 typedef struct {int dummy;} vtbl_method_t;
-static void fill_table(IUnknownVtbl *vtbl, DWORD num)
+static void fill_table(IUnknownVtbl *vtbl, void **methods, DWORD num)
 {
     ERR("delegated stubs are not supported on this architecture\n");
 }

@@ -7,7 +7,6 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
-	<define name="_STDDEF_H" />
 	<define name="_RPCRT4_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="MSWMSG" />
