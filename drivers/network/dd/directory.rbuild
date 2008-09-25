@@ -7,4 +7,7 @@
 	<directory name="pcnet">
 		<xi:include href="pcnet/pcnet.rbuild" />
 	</directory>
+	<directory name="dummynic">
+		<xi:include href="dummynic/dummynic.rbuild" />
+	</directory>
 </group>
