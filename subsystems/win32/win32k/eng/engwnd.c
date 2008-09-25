@@ -17,7 +17,7 @@
 BOOL
 APIENTRY
 EngControlSprites(IN WNDOBJ* WindowObj,
-                 IN FLONG Flags)
+                  IN FLONG Flags)
 {
     UNIMPLEMENTED;
 	return FALSE;
@@ -25,10 +25,10 @@ EngControlSprites(IN WNDOBJ* WindowObj,
 
 WNDOBJ*
 APIENTRY
-EngCreateWnd(SURFOBJ  *pso,
-             HWND  hwnd,
-             WNDOBJCHANGEPROC  pfn,
-             FLONG  fl,
+EngCreateWnd(SURFOBJ *pso,
+             HWND hwnd,
+             WNDOBJCHANGEPROC pfn,
+             FLONG fl,
              INT iPixelFormat)
 {
     UNIMPLEMENTED;
@@ -37,7 +37,7 @@ EngCreateWnd(SURFOBJ  *pso,
 
 VOID
 APIENTRY
-EngDeleteWnd(IN WNDOBJ  *pwo)
+EngDeleteWnd(IN WNDOBJ *pwo)
 {
     UNIMPLEMENTED;
 }
