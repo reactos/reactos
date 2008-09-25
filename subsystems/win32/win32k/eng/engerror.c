@@ -27,13 +27,39 @@ VOID
 APIENTRY
 EngSetLastError(IN ULONG iError)
 {
-    UNIMPLEMENTED;
+    PTEB Teb;
+
+    /* Get the TEB */
+    Teb = PsGetThreadTeb(PsGetCurrentThread());
+
+    /* Check if we have one */
+    if (Teb)
+    {
+        /* Set the error */
+        Teb->LastErrorValue = iError;
+    }
 }
 
 ULONG
 APIENTRY
 EngGetLastError(VOID)
 {
-    UNIMPLEMENTED;
-	return 0;
+    PTEB Teb;
+    ULONG iError;
+
+    /* Assume success */
+    iError = NO_ERROR;
+
+    /* Get the TEB */
+    Teb = PsGetThreadTeb(PsGetCurrentThread());
+
+    /* Check if we have one */
+    if (Teb)
+    {
+        /* Get the error */
+        iError = Teb->LastErrorValue;
+    }
+
+    /* Return the error */
+	return iError;
 }
