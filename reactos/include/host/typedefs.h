@@ -40,7 +40,7 @@
 #define OPTIONAL
 
 #define FALSE 0
-#define TRUE (!(FALSE))
+#define TRUE 1
 
 /* FIXME: this value is target specific, host tools MUST not use it
  * and this line has to be removed */
