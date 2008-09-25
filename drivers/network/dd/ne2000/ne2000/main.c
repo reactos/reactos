@@ -672,13 +672,9 @@ static NDIS_STATUS STDCALL MiniportSend(
 
     ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
+#ifndef NOCARD
     NDIS_DbgPrint(MID_TRACE, ("Queueing packet.\n"));
 
-#ifdef NOCARD
-    NdisMSendComplete(Adapter->MiniportAdapterHandle,
-                      Packet,
-                      NDIS_STATUS_SUCCESS);
-#else
     /* Queue the packet on the transmit queue */
     RESERVED(Packet)->Next = NULL;
     if (Adapter->TXQueueHead == NULL) {
@@ -691,8 +687,11 @@ static NDIS_STATUS STDCALL MiniportSend(
 
     /* Transmit the packet */
     NICTransmit(Adapter);
-#endif
+
     return NDIS_STATUS_PENDING;
+#else
+    return NDIS_STATUS_SUCCESS;
+#endif
 }
 
 
