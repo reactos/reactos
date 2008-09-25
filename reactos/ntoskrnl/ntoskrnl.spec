@@ -415,7 +415,7 @@
 @ stdcall IoGetFileObjectGenericMapping()
 @ stdcall IoGetInitialStack()
 @ stdcall IoGetLowerDeviceObject(ptr)
-@ stdcall IoGetPagingIoPriority(ptr)
+@ fastcall IoGetPagingIoPriority(ptr)
 @ stdcall IoGetRelatedDeviceObject(ptr)
 @ stdcall IoGetRequestorProcess(ptr)
 @ stdcall IoGetRequestorProcessId(ptr)

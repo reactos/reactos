@@ -1535,16 +1535,37 @@ IoFreeIrp(IN PIRP Irp)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 IO_PAGING_PRIORITY
-NTAPI
+FASTCALL
 IoGetPagingIoPriority(IN PIRP Irp)
 {
-    UNIMPLEMENTED;
+    IO_PAGING_PRIORITY Priority;
+    ULONG Flags;
 
-    /* Lie and say this isn't a paging IRP -- FIXME! */
-    return IoPagingPriorityInvalid;
+    /* Get the flags */
+    Flags = Irp->Flags;
+
+    /* Check what priority it has */
+    if (Flags & 0x8000) // FIXME: Undocumented flag
+    {
+        /* High priority */
+        Priority = IoPagingPriorityHigh;
+    }
+    else if (Flags & IRP_PAGING_IO)
+    {
+        /* Normal priority */
+        Priority = IoPagingPriorityNormal;
+    }
+    else
+    {
+        /* Invalid -- not a paging IRP */
+        Priority = IoPagingPriorityInvalid;
+    }
+
+    /* Return the priority */
+    return Priority;
 }
 
 /*
