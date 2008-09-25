@@ -22,7 +22,9 @@
  
 #include "opengl32.h"
 
+#if defined(_M_IX86)
 C_ASSERT(FIELD_OFFSET(TEB, glTable) == 0xbe8);
+#endif
 
 int STDCALL glEmptyFunc0() { return 0; }
 int STDCALL glEmptyFunc4( long l1 ) { return 0; }
