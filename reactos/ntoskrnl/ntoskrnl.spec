@@ -1380,12 +1380,12 @@
 ;WmiFlushTrace
 ;WmiGetClock
 ;WmiQueryTrace
-;WmiQueryTraceInformation
+@ stdcall WmiQueryTraceInformation(long ptr long ptr ptr)
 ;WmiStartTrace
 ;WmiStopTrace
 ;WmiTraceFastEvent
-;WmiTraceMessage
-;WmiTraceMessageVa
+@ cdecl WmiTraceMessage()
+@ stdcall WmiTraceMessageVa(ptr long ptr long long)
 ;WmiUpdateTrace
 ;XIPDispatch
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)
