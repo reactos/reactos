@@ -1496,7 +1496,7 @@ NdisIPnPStartDevice(
 
   if (Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
     {
-      ResourceCount = Stack->Parameters.StartDevice.AllocatedResources->List[0].
+      ResourceCount = Stack->Parameters.StartDevice.AllocatedResourcesTranslated->List[0].
                       PartialResourceList.Count;
       ResourceListSize =
         FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.
