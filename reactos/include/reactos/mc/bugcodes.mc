@@ -1032,8 +1032,6 @@ Run CHKDSK /F to check for hard drive corruption, and then
 restart your computer.
 .
 
-
-
 MessageId=0x7D
 Severity=Success
 Facility=System
@@ -1043,6 +1041,14 @@ INSTALL_MORE_MEMORY
 .
 
 MessageId=0x7E
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
+Language=English
+SYSTEM_THREAD_EXCEPTION_NOT_HANDLED
+.
+
+MessageId=0x7F
 Severity=Success
 Facility=System
 SymbolicName=UNEXPECTED_KERNEL_MODE_TRAP
@@ -1057,7 +1063,7 @@ remove or disable components, restart your computer, press F8 to select
 Advanced Startup Options, and then select Safe Mode.
 .
 
-MessageId=0x7F
+MessageId=0x80
 Severity=Success
 Facility=System
 SymbolicName=NMI_HARDWARE_FAILURE
@@ -1065,7 +1071,7 @@ Language=English
 Hardware malfunction
 .
 
-MessageId=0x80
+MessageId=0x8E
 Severity=Success
 Facility=System
 SymbolicName=KERNEL_MODE_EXCEPTION_NOT_HANDLED
@@ -1073,7 +1079,7 @@ Language=English
 KERNEL_MODE_EXCEPTION_NOT_HANDLED
 .
 
-MessageId=0x8E
+MessageId=0x81
 Severity=Success
 Facility=System
 SymbolicName=SPIN_LOCK_INIT_FAILURE
