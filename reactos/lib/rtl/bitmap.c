@@ -440,12 +440,12 @@ NTAPI
 RtlClearBit(PRTL_BITMAP BitMapHeader,
             ULONG BitNumber)
 {
-    PULONG Ptr;
+    PUCHAR Ptr;
 
     if (BitNumber >= BitMapHeader->SizeOfBitMap) return;
 
-    Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
-    *Ptr &= ~(1 << (BitNumber % 32));
+    Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
+    *Ptr &= ~(1 << (BitNumber % 8));
 }
 
 /*
@@ -457,7 +457,7 @@ RtlClearBits(IN PRTL_BITMAP BitMapHeader,
              IN ULONG StartingIndex,
              IN ULONG NumberToClear)
 {
- LPBYTE lpOut;
+  LPBYTE lpOut;
 
   if (!BitMapHeader || !NumberToClear ||
       StartingIndex >= BitMapHeader->SizeOfBitMap ||
@@ -540,12 +540,6 @@ RtlFindClearBits(PRTL_BITMAP BitMapHeader,
   return ~0U;
 }
 
-
-
-
-
-
-
 /*
  * @implemented
  */
@@ -557,7 +551,6 @@ RtlFindClearRuns(PRTL_BITMAP BitMapHeader,
 {
     return NTDLL_FindRuns(BitMapHeader, RunArray, SizeOfRunArray, LocateLongestRuns, NTDLL_FindClearRun);
 }
-
 
 /*
  * @unimplemented
@@ -745,9 +738,6 @@ RtlFindSetBitsAndClear(PRTL_BITMAP BitMapHeader,
 }
 
 
-
-
-
 /*
  * @implemented
  */
@@ -797,14 +787,14 @@ VOID NTAPI
 RtlSetBit(PRTL_BITMAP BitMapHeader,
 	  ULONG BitNumber)
 {
-  PULONG Ptr;
+  PUCHAR Ptr;
 
   if (BitNumber >= BitMapHeader->SizeOfBitMap)
     return;
 
-  Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
+  Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
 
-  *Ptr |= (1 << (BitNumber % 32));
+  *Ptr |= (1 << (BitNumber % 8));
 }
 
 
@@ -867,14 +857,14 @@ BOOLEAN NTAPI
 RtlTestBit(PRTL_BITMAP BitMapHeader,
 	   ULONG BitNumber)
 {
-  PULONG Ptr;
+  PUCHAR Ptr;
 
   if (BitNumber >= BitMapHeader->SizeOfBitMap)
     return FALSE;
 
-  Ptr = (PULONG)BitMapHeader->Buffer + (BitNumber / 32);
+  Ptr = (PUCHAR)BitMapHeader->Buffer + (BitNumber / 8);
 
-  return (BOOLEAN)(*Ptr & (1 << (BitNumber % 32)));
+  return (BOOLEAN)(*Ptr & (1 << (BitNumber % 8)));
 }
 
 /*
