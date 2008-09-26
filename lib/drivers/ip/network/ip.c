@@ -352,10 +352,10 @@ VOID IPRegisterProtocol(
  *     To unregister a protocol handler, call this function with Handler = NULL
  */
 {
-#ifdef DBG
-    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE)
+    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE) {
         TI_DbgPrint(MIN_TRACE, ("Protocol number is out of range (%d).\n", ProtocolNumber));
-#endif
+        return;
+    }
 
     ProtocolTable[ProtocolNumber] = Handler;
 }
