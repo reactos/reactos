@@ -43,6 +43,8 @@ NdisCompleteBindAdapter(
 {
   PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)BindAdapterContext;
 
+  if (!NT_SUCCESS(Status)) return;
+
   /* Put protocol binding struct on global list */
   ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
 }
@@ -119,8 +121,6 @@ ProRequest(
  */
 {
   KIRQL OldIrql;
-  BOOLEAN QueueWorkItem = FALSE;
-  NDIS_STATUS NdisStatus;
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
   PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
@@ -141,26 +141,15 @@ ProRequest(
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
-      if(Adapter->MiniportBusy)
-        QueueWorkItem = TRUE;
+      if (Adapter->MiniportBusy) {
+          MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
+          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+          return NDIS_STATUS_PENDING;
+      }
     }
-
-  /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
-  if (QueueWorkItem)
-    {
-      MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
-      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
-      return NDIS_STATUS_PENDING;
-    }
-
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
-  NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, NdisRequest);
-
-  if( NdisStatus == NDIS_STATUS_PENDING )
-      Adapter->MiniportBusy = TRUE;
-
-  return NdisStatus;
+  return MiniDoRequest(Adapter, NdisRequest);
 }
 
 

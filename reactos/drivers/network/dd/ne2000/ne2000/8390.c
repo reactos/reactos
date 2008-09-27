@@ -544,6 +544,8 @@ static VOID NICStartTransmit(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+    if (Adapter->TXCurrent < 0) return;
+
 	//FrameStart = Adapter->TXStart + Adapter->TXCurrent * DRIVER_BLOCK_SIZE;
 	//FrameStart = Adapter->TXStart;
 	FrameStart = (UCHAR)(Adapter->TXStart + (UCHAR)(Adapter->TXCurrent * BUFFERS_PER_TX_BUF));
