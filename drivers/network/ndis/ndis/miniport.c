@@ -326,8 +326,10 @@ MiniRequestComplete(
             Request,
             Status);
     }
-    KeLowerIrql(OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     Adapter->MiniportBusy = FALSE;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    KeLowerIrql(OldIrql);
 }
 
 VOID NTAPI
@@ -357,8 +359,10 @@ MiniSendComplete(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
-    KeLowerIrql(OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     Adapter->MiniportBusy = FALSE;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -392,8 +396,10 @@ MiniTransferDataComplete(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
-    KeLowerIrql(OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     Adapter->MiniportBusy = FALSE;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -767,7 +773,7 @@ MiniDequeueWorkItem(
 
 NDIS_STATUS
 MiniDoRequest(
-    PNDIS_MINIPORT_BLOCK Adapter,
+    PLOGICAL_ADAPTER Adapter,
     PNDIS_REQUEST NdisRequest)
 /*
  * FUNCTION: Sends a request to a miniport
@@ -782,14 +788,14 @@ MiniDoRequest(
     KIRQL OldIrql;
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-    Adapter->MediaRequest = NdisRequest;
+    Adapter->NdisMiniportBlock.MediaRequest = NdisRequest;
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     switch (NdisRequest->RequestType)
     {
     case NdisRequestQueryInformation:
-        Status = (*Adapter->DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
-            Adapter->MiniportAdapterContext,
+        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.QUERY_INFORMATION.Oid,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
             NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength,
@@ -798,8 +804,8 @@ MiniDoRequest(
         break;
 
     case NdisRequestSetInformation:
-        Status = (*Adapter->DriverHandle->MiniportCharacteristics.SetInformationHandler)(
-            Adapter->MiniportAdapterContext,
+        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SetInformationHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
             NdisRequest->DATA.SET_INFORMATION.Oid,
             NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
             NdisRequest->DATA.SET_INFORMATION.InformationBufferLength,
@@ -833,8 +839,10 @@ NdisMQueryInformationComplete(
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     if( Adapter->NdisMiniportBlock.QueryCompleteHandler )
 	(Adapter->NdisMiniportBlock.QueryCompleteHandler)(MiniportAdapterHandle, Status);
-    KeLowerIrql(OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     Adapter->MiniportBusy = FALSE;
+    KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    KeLowerIrql(OldIrql);
 }
 
 VOID NTAPI MiniportWorker(IN PVOID WorkItem)
@@ -962,7 +970,7 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
             break;
 
           case NdisWorkItemRequest:
-            NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, (PNDIS_REQUEST)WorkItemContext);
+            NdisStatus = MiniDoRequest(Adapter, (PNDIS_REQUEST)WorkItemContext);
 
             if (NdisStatus == NDIS_STATUS_PENDING)
               break;
@@ -1019,6 +1027,7 @@ VOID NTAPI MiniportDpc(
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
   NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_WORK_ITEM));
+  if (!NdisWorkItem) return;
 
   WorkItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
 
@@ -2123,8 +2132,10 @@ NdisMSetInformationComplete(
   ASSERT(Adapter);
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   (Adapter->NdisMiniportBlock.SetCompleteHandler)(MiniportAdapterHandle, Status);
-  KeLowerIrql(OldIrql);
+  KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
   Adapter->MiniportBusy = FALSE;
+  KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+  KeLowerIrql(OldIrql);
 }
 
 
