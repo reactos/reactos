@@ -250,7 +250,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  * Check if the Name string is in the Expression string.
  *
  * @param Expression
- *        The string in which we've to find Name. It can contains wildcards
+ *        The string in which we've to find Name. It can contain wildcards
  *
  * @param Name
  *        The string to find. It cannot contain wildcards
@@ -277,27 +277,27 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
     ULONG i, j, k = 0;
-
+	
     ASSERT(!FsRtlDoesNameContainWildCards(Name));
 
     for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
     {
         if ((FsRtlpUpcaseUnicodeChar(Expression->Buffer[i], IgnoreCase, UpcaseTable) ==
              FsRtlpUpcaseUnicodeChar(Name->Buffer[k], IgnoreCase, UpcaseTable)) ||
-            (Expression->Buffer[i] == '?') || (Expression->Buffer[i] == ANSI_DOS_QM) ||
-            (Expression->Buffer[i] == ANSI_DOS_DOT && (Name->Buffer[k] == '.' || Name->Buffer[k] == '0')))
+            (Expression->Buffer[i] == L'?') || (Expression->Buffer[i] == DOS_QM) ||
+            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k] == L'0')))
         {
             k++;
         }
-        else if (Expression->Buffer[i] == '*')
+        else if (Expression->Buffer[i] == L'*')
         {
             k = Name->Length / sizeof(WCHAR);
         }
-        else if (Expression->Buffer[i] == ANSI_DOS_STAR)
+        else if (Expression->Buffer[i] == DOS_STAR)
         {
             for (j = k ; j < Name->Length / sizeof(WCHAR) ; j++)
             {
-                if (Name->Buffer[j] == '.')
+                if (Name->Buffer[j] == L'.')
                 {
                     k = j;
                     break;
@@ -308,7 +308,7 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
         {
             k = 0;
         }
-        if (k == Expression->Length / sizeof(WCHAR))
+        if (k >= Expression->Length / sizeof(WCHAR))
         {
             return TRUE;
         }
