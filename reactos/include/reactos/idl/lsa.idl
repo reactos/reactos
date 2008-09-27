@@ -4,7 +4,7 @@
 
 #include <ms-dtyp.idl>
 
-typedef [context_handle] unsigned long LSAPR_HANDLE;
+typedef /*[context_handle]*/ unsigned long LSAPR_HANDLE;
 typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
 cpp_quote("#ifndef _WINNT_H")
