@@ -943,7 +943,11 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
             break;
 
           case NdisWorkItemResetRequested:
-            NdisStatus = MiniReset(Adapter, &AddressingReset);
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+            NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+                          Adapter->NdisMiniportBlock.MiniportAdapterContext,
+                          &AddressingReset);
+            KeLowerIrql(OldIrql);
 
             if (NdisStatus == NDIS_STATUS_PENDING)
                 break;
