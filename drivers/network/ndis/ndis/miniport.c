@@ -817,6 +817,12 @@ MiniDoRequest(
         Status = NDIS_STATUS_FAILURE;
     }
 
+    if (Status == NDIS_STATUS_PENDING) {
+        KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+        Adapter->MiniportBusy = TRUE;
+        KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+    }
+
     KeLowerIrql(OldIrql);
     return Status;
 }
@@ -999,8 +1005,11 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
         }
     }
 
-  if( NdisStatus != NDIS_STATUS_PENDING )
-      Adapter->MiniportBusy = FALSE; 
+  if( NdisStatus != NDIS_STATUS_PENDING ) {
+      KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+      Adapter->MiniportBusy = FALSE;
+      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+  }
 
   ExFreePool(WorkItem);
 }
