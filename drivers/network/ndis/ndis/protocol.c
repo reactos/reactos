@@ -43,6 +43,8 @@ NdisCompleteBindAdapter(
 {
   PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)BindAdapterContext;
 
+  if (!NT_SUCCESS(Status)) return;
+
   /* Put protocol binding struct on global list */
   ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
 }
