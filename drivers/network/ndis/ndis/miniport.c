@@ -619,14 +619,18 @@ MiniReset(
  *     Status of the operation
  */
 {
-   NDIS_STATUS Status = NDIS_STATUS_FAILURE;
+   NDIS_STATUS Status;
    KIRQL OldIrql;
 
-   /* FIXME: What should we return if there isn't a reset handler? */
+   if (Adapter->MiniportBusy) {
+       KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+       MiniQueueWorkItem(Adapter, NdisWorkItemResetRequested, NULL);
+       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+       return NDIS_STATUS_PENDING;
+   }
 
    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)
-       Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
+   Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
             Adapter->NdisMiniportBlock.MiniportAdapterContext,
             AddressingReset);
    KeLowerIrql(OldIrql);
@@ -841,6 +845,7 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
   NDIS_STATUS NdisStatus;
   PVOID WorkItemContext;
   NDIS_WORK_ITEM_TYPE WorkItemType;
+  BOOLEAN AddressingReset;
 
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
@@ -938,6 +943,12 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
             break;
 
           case NdisWorkItemResetRequested:
+            NdisStatus = MiniReset(Adapter, &AddressingReset);
+
+            if (NdisStatus == NDIS_STATUS_PENDING)
+                break;
+
+            MiniResetComplete(Adapter, NdisStatus, AddressingReset);
             break;
 
           case NdisWorkItemResetInProgress:
