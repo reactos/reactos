@@ -119,30 +119,6 @@
 #define APIC_TDCR_128      0x0A
 #define APIC_TDCR_1        0x0B
 
-#define APIC_LVT_VECTOR   		  (0xFF << 0)   /* Vector */
-#define APIC_LVT_DS       		  (0x1 << 12)   /* Delivery Status */
-#define APIC_LVT_REMOTE_IRR		  (0x1 << 14)		/* Remote IRR */
-#define APIC_LVT_LEVEL_TRIGGER	(0x1 << 15)		/* Lvel Triggered */
-#define APIC_LVT_MASKED   	    (0x1 << 16)   /* Mask */
-#define APIC_LVT_PERIODIC 	  	(0x1 << 17)   /* Timer Mode */
-
-#define APIC_LVT3_DM        (0x7 << 8)
-#define APIC_LVT3_IIPP      (0x1 << 13)
-#define APIC_LVT3_TM        (0x1 << 15)
-#define APIC_LVT3_MASKED    (0x1 << 16)
-#define APIC_LVT3_OS        (0x1 << 17)
-
-#define APIC_TDCR_TMBASE   (0x1 << 2)
-#define APIC_TDCR_MASK     0x0F
-#define APIC_TDCR_2        0x00
-#define APIC_TDCR_4        0x01
-#define APIC_TDCR_8        0x02
-#define APIC_TDCR_16       0x03
-#define APIC_TDCR_32       0x08
-#define APIC_TDCR_64       0x09
-#define APIC_TDCR_128      0x0A
-#define APIC_TDCR_1        0x0B
-
 #define APIC_TARGET_SELF         0x100
 #define APIC_TARGET_ALL          0x200
 #define APIC_TARGET_ALL_BUT_SELF 0x300
