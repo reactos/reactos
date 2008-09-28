@@ -599,14 +599,17 @@ NtGdiCreateSolidBrush(COLORREF Color,
 BOOL STDCALL
 NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
-   PDC dc = DC_LockDc(hDC);
-   PDC_ATTR Dc_Attr = dc->pDc_Attr;
-   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   PDC dc;
+   PDC_ATTR Dc_Attr;
+
+   dc = DC_LockDc(hDC);
    if (dc == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   Dc_Attr = dc->pDc_Attr;
+   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
    if (Point != NULL)
    {
