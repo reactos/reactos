@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
-	<importlibrary definition="tcpip.def"></importlibrary>
+	<importlibrary definition="tcpip.spec.def" />
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>
 	<define name="NDIS40" />
@@ -39,4 +39,5 @@
 		<file>wait.c</file>
 	</directory>
 	<file>tcpip.rc</file>
+	<file>tcpip.spec</file>
 </module>

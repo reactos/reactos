@@ -1,13 +1,8 @@
-; TCPIP.SYS - TCP/IP protocol driver
-
-LIBRARY tcpip.sys
-
-EXPORTS
 ;FreeIprBuff
 ;GetIFAndLink
-IPAddInterface@20
+@ stdcall IPAddInterface(long long long long long)
 ;IPAllocBuff
-IPDelInterface@4
+@ stdcall IPDelInterface(long)
 ;IPDelayedNdisReEnumerateBindings
 ;IPDeregisterARP
 ;IPDisableSniffer
@@ -22,11 +17,9 @@ IPDelInterface@4
 ;IPRegisterProtocol
 ;IPSetIPSecStatus
 ;IPTransmit
-LookupRoute@8
+@ stdcall LookupRoute(long long)
 ;LookupRouteInformation
 ;SendICMPErr
 ;SetIPSecPtr
 ;UnSetIPSecPtr
 ;UnSetIPSecSendPtr
-
-; EOF
