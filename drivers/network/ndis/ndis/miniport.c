@@ -182,8 +182,6 @@ MiniIndicateData(
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
 
-          KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
-
 #ifdef DBG
           if(!AdapterBinding)
             {
@@ -225,8 +223,6 @@ MiniIndicateData(
               LookaheadBuffer,
               LookaheadBufferSize,
               PacketSize);
-
-          KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
           CurrentEntry = CurrentEntry->Flink;
         }
