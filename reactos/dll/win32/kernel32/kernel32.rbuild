@@ -110,6 +110,7 @@
 			<file>lcformat.c</file>
 			<file>profile.c</file>
 			<file>utils.c</file>
+			<file>icustubs.cpp</file>
 		</directory>
 		<directory name="thread">
 			<if property="ARCH" value="i386">
@@ -130,7 +131,12 @@
 		<library>kernel32_base</library>
 		<library>wine</library>
 		<library>pseh</library>
-		<library>ntdll</library>
+
 		<file>kernel32.rc</file>
+
+		<library>normalize</library>
+		<library>icu4ros</library>
+
+		<library>ntdll</library>
 	</module>
 </group>
