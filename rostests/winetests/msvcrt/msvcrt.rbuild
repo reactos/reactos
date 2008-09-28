@@ -6,7 +6,7 @@
 	<include base="msvcrt">include/reactos/wine/msvcrt</include>
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
-	<library>ntdll</library>
+	<library>msvcrt</library>
 	<file>cpp.c</file>
 	<file>data.c</file>
 	<file>dir.c</file>
