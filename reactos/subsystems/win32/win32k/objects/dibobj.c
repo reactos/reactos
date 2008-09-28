@@ -62,6 +62,13 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
+      if (PalGDI == NULL)
+      {
+          BITMAPOBJ_UnlockBitmap(BitmapObj);
+          DC_UnlockDc(dc);
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return 0;
+      }
 
       for (Index = StartIndex;
            Index < StartIndex + Entries && Index < PalGDI->NumColors;
@@ -120,6 +127,13 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
+      if (PalGDI == NULL)
+      {
+          BITMAPOBJ_UnlockBitmap(BitmapObj);
+          DC_UnlockDc(dc);
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return 0;
+      }
 
       for (Index = StartIndex;
            Index < StartIndex + Entries && Index < PalGDI->NumColors;
