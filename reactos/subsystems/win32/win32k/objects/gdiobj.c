@@ -20,6 +20,8 @@
 /* apparently the first 10 entries are never used in windows as they are empty */
 #define RESERVE_ENTRIES_COUNT 10
 
+#define BASE_OBJTYPE_COUNT 32
+
 #define DelayExecution() \
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
@@ -37,7 +39,7 @@ typedef struct
 } OBJ_TYPE_INFO, *POBJ_TYPE_INFO;
 
 static const
-OBJ_TYPE_INFO ObjTypeInfo[] =
+OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 {
   {0, 0,                     0,                NULL},             /* 00 reserved entry */
   {1, sizeof(DC),            TAG_DC,           DC_Cleanup},       /* 01 DC */
@@ -70,9 +72,8 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {0, 0,                     TAG_DRVOBJ,       NULL},             /* 1c DRVOBJ, unused */
   {0, 0,                     TAG_DCIOBJ,       NULL},             /* 1d DCIOBJ, unused */
   {0, 0,                     TAG_SPOOL,        NULL},             /* 1e SPOOL, unused */
+  {0, 0,                     0,                NULL},             /* 1f reserved entry */
 };
-
-#define BASE_OBJTYPE_COUNT (sizeof(ObjTypeInfo) / sizeof(ObjTypeInfo[0]))
 
 static LARGE_INTEGER ShortDelay;
 
