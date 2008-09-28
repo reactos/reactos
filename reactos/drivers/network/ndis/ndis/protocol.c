@@ -67,6 +67,7 @@ ProIndicatePacket(
 {
   UINT BufferedLength;
   UINT PacketLength;
+  KIRQL OldIrql;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -75,6 +76,8 @@ ProIndicatePacket(
 #endif
 
   NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
+
+  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
@@ -102,6 +105,8 @@ ProIndicatePacket(
       Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = NULL;
     }
   KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
+
+  KeLowerIrql(OldIrql);
 
   return STATUS_SUCCESS;
 }
