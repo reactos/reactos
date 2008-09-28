@@ -129,7 +129,7 @@ NTSTATUS ElfrOpenELW(
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    *LogHandle = 1;
+    *LogHandle = (IELF_HANDLE)1;
     return STATUS_SUCCESS;
 }
 
@@ -145,7 +145,7 @@ NTSTATUS ElfrRegisterEventSourceW(
     IELF_HANDLE *LogHandle)
 {
     UNIMPLEMENTED;
-    *LogHandle = 1;
+    *LogHandle = (IELF_HANDLE)1;
     return STATUS_SUCCESS;
 }
 
