@@ -46,11 +46,11 @@ InitializeVideoAddressSpace(VOID)
     Offset.QuadPart = 0xa0000;
     ViewSize = 0x100000 - 0xa0000;
     BaseAddress = (PVOID)0xa0000;
-    Status = NtMapViewOfSection(PhysMemHandle,
+    Status = ZwMapViewOfSection(PhysMemHandle,
                                 NtCurrentProcess(),
                                 &BaseAddress,
                                 0,
-                                8192,
+                                ViewSize,
                                 &Offset,
                                 &ViewSize,
                                 ViewUnmap,
@@ -59,12 +59,12 @@ InitializeVideoAddressSpace(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Couldn't map physical memory (%x)\n", Status);
-        NtClose(PhysMemHandle);
+        ZwClose(PhysMemHandle);
         return 0;
     }
 
     /* Close physical memory section handle */
-    NtClose(PhysMemHandle);
+    ZwClose(PhysMemHandle);
 
     if (BaseAddress != (PVOID)0xa0000)
     {
@@ -73,8 +73,8 @@ InitializeVideoAddressSpace(VOID)
         return 0;
     }
 
-    /* Map some memory to use for the non-BIOS parts of
-     * the v86 mode address space
+    /* Allocate some low memory to use for the non-BIOS
+     * parts of the v86 mode address space
      */
     BaseAddress = (PVOID)0x1;
     ViewSize = 0xa0000 - 0x1000;
