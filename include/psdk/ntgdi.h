@@ -61,14 +61,7 @@ typedef struct _LOGCOLORSPACEEXW
     DWORD dwFlags;
 } LOGCOLORSPACEEXW, *PLOGCOLORSPACEEXW;
 
-typedef struct _POLYPATBLT
-{
-  INT nXLeft;
-  INT nYLeft;
-  INT nWidth;
-  INT nHeight;
-  HBRUSH hBrush;
-} POLYPATBLT, *PPOLYPATBLT;
+typedef struct _POLYPATBLT POLYPATBLT, *PPOLYPATBLT;
 
 /* NtGdiAddRemoteMMInstanceToDC */
 typedef struct tagDOWNLOADDESIGNVECTOR
@@ -1701,11 +1694,6 @@ APIENTRY
 NtGdiFlattenPath(
     IN HDC hdc
 );
-
-W32KAPI
-NTSTATUS
-APIENTRY
-NtGdiFlushUserBatch(VOID);
 
 W32KAPI
 HRGN
@@ -3656,17 +3644,4 @@ NtGdiMakeObjectUnXferable(
     IN HANDLE h
 );
 
-W32KAPI
-BOOL
-APIENTRY
-NtGdiInitSpool();
-
-/* FIXME wrong prototypes fix the build */
-W32KAPI
-INT
-APIENTRY
-NtGdiGetSpoolMessage( DWORD u1,
-                      DWORD u2,
-                      DWORD u3,
-                      DWORD u4);
 #endif

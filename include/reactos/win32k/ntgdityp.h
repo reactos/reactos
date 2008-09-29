@@ -101,6 +101,9 @@ typedef enum _TRANSFORMTYPE
 enum
 {
     MX_SCALE = 1,
+    MX_IDENTITYSCALE = 2,
+    MX_INTEGER = 4,
+    MX_NOTRANSLATE = 8,
 };
 
 typedef enum GDIObjType
@@ -173,6 +176,27 @@ typedef DWORD LFTYPE;
 
 
 /* DEFINES *******************************************************************/
+
+/* Routines missing in ntgdi.h */
+#ifndef W32KAPI
+#define W32KAPI  DECLSPEC_ADDRSAFE
+#endif
+
+W32KAPI
+BOOL
+APIENTRY
+NtGdiInitSpool(
+    VOID
+);
+
+/* FIXME: prototypes */
+W32KAPI
+INT
+APIENTRY
+NtGdiGetSpoolMessage(DWORD u1,
+                     DWORD u2,
+                     DWORD u3,
+                     DWORD u4);
 
 #define GDIBATCHBUFSIZE 0x136*4
 #define GDI_BATCH_LIMIT 20
@@ -355,6 +379,19 @@ typedef struct _MATRIX_S
     FIX fxDy;
     FLONG flAccel;
 } MATRIX_S;
+
+typedef struct _MATRIX
+{
+    FLOATOBJ efM11;
+    FLOATOBJ efM12;
+    FLOATOBJ efM21;
+    FLOATOBJ efM22;
+    FLOATOBJ efDx;
+    FLOATOBJ efDy;
+    FIX fxDx;
+    FIX fxDy;
+    FLONG flAccel;
+} MATRIX, *PMATRIX;
 
 /* Gdi XForm storage union */
 typedef union
