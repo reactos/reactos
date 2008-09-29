@@ -46,13 +46,17 @@ NtGdiCreatePaletteInternal(IN LPLOGPALETTE pLogPal,
 
 LONG
 APIENTRY
-NtGdiDoPalette(IN HGDIOBJ hObj,
+NtGdiDoPalette(IN HPALETTE hObj,
                IN WORD iStart,
                IN WORD cEntries,
-               IN LPVOID pEntries,
+               IN PALETTEENTRY* pEntries,
                IN DWORD iFunc,
                IN BOOL bInbound)
 {
+    /*
+     * NOTE: hObj is a DC handle (HDC) for GdiPalGetSystemEntries and GdiPalGet/SetColorTable
+     * pEntries is RGBQUAD* for GdiPalGet/SetColorTable
+     * We do this to keep compatibility with MS ntgdi.h */
     UNIMPLEMENTED;
     return 0;
 }

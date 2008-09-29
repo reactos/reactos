@@ -385,10 +385,10 @@ W32KAPI
 LONG
 APIENTRY
 NtGdiDoPalette(
-    IN HGDIOBJ hObj,
+    IN HPALETTE hObj,
     IN WORD iStart,
     IN WORD cEntries,
-    IN LPVOID pEntries,
+    IN PALETTEENTRY* pEntries,
     IN DWORD iFunc,
     IN BOOL bInbound
 );
