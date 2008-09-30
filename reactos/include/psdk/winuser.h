@@ -1726,6 +1726,7 @@ extern "C" {
 #define WM_TIMECHANGE 30
 #define WM_TIMER 275
 #define WM_SYSTIMER 280
+#define WM_POPUPSYSTEMMENU 787
 #define WM_UNDO 772
 #define WM_USER 1024
 #define WM_USERCHANGED 84
