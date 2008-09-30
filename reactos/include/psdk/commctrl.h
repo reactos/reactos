@@ -4485,7 +4485,7 @@ typedef struct tagNMIPADDRESS
 #define MAKEIPRANGE(low,high) \
     ((LPARAM)(WORD)(((BYTE)(high)<<8)+(BYTE)(low)))
 #define MAKEIPADDRESS(b1,b2,b3,b4) \
-    ((LPARAM)(((DWORD)(b1)<<24)+((DWORD)(b2)<16)+((DWORD)(b3)<<8)+((DWORD)(b4))))
+    ((LPARAM)(((DWORD)(b1)<<24)+((DWORD)(b2)<<16)+((DWORD)(b3)<<8)+((DWORD)(b4))))
 
 #define FIRST_IPADDRESS(x)	(((x)>>24)&0xff)
 #define SECOND_IPADDRESS(x)	(((x)>>16)&0xff)
