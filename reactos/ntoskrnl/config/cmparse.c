@@ -1042,10 +1042,14 @@ CmpParseKey(IN PVOID ParseObject,
     
     /* Check if everything was found cached */
     if (!TotalRemainingSubkeys) ASSERTMSG("Caching not implemented", FALSE);
-    
+
     /* Don't do anything if we're being deleted */
-    if (Kcb->Delete) return STATUS_OBJECT_NAME_NOT_FOUND;
-    
+    if (Kcb->Delete)
+    {
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
+    }
+
     /* Check if this is a symlink */
     if (Kcb->Flags & KEY_SYM_LINK)
     {
@@ -1092,8 +1096,12 @@ CmpParseKey(IN PVOID ParseObject,
     
     /* Get the key node */
     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
-    if (!Node) return STATUS_INSUFFICIENT_RESOURCES;
-    
+    if (!Node)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
     /* Start parsing */
     Status = STATUS_NOT_IMPLEMENTED;
     while (TRUE)
