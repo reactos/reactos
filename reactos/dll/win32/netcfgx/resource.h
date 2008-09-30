@@ -3,6 +3,8 @@
 
 /* dialogs */
 #define IDD_TCPIP_BASIC_DLG 100
+#define IDD_TCPIP_ALTCF_DLG 101
+
 
 /* controls */
 #define IDC_USEDHCP         1000
@@ -38,7 +40,8 @@
 
 /* strings */
 #define IDS_NET_CONNECT     8000
-
+#define IDS_NO_IPADDR_SET   8001
+#define IDS_NO_SUBMASK_SET  8002
 
 
 #endif

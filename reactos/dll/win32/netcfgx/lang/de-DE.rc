@@ -25,6 +25,27 @@ BEGIN
 	PUSHBUTTON "&Erweitert...", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
 END
 
+IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "Alternative Konfiguration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Geben Sie alternative IP-Einstellungen an, falls dieser Computer in mehreren Netzwerken verwendet wird", -1, 9, 9, 220, 20
+    CONTROL "Au&tomatisch zugewiesene, private IP-Adresse", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
+    CONTROL "B&enutzerdefiniert", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    LTEXT "&IP-Adresse:", -1, 14, 75, 135, 8
+    CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
+    LTEXT "S&ubnetzmaske:", -1, 14, 95, 135, 8
+    CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
+    LTEXT "&Standardgateway:", -1, 14, 115, 135, 8
+    CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
+    LTEXT "&Bevorzugter DNS-Server:", -1, 14, 150, 135, 8
+    CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
+    LTEXT "A&lternativer DNS-Server:", -1, 14, 165, 180, 8
+    CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
+END
+
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_NET_CONNECT "LAN-Verbindung"
