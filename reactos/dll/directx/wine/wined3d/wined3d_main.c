@@ -4,6 +4,7 @@
  * Copyright 2002-2003 The wine-d3d team
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2004      Jason Edmeades
+ * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +26,7 @@
 #include "initguid.h"
 #include "wined3d_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(wine_d3d);
+WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 int num_lock = 0;
 void (*wine_tsx11_lock_ptr)(void) = NULL;
@@ -43,7 +44,8 @@ wined3d_settings_t wined3d_settings =
     ORM_BACKBUFFER, /* Use the backbuffer to do offscreen rendering */
     RTL_AUTO,       /* Automatically determine best locking method */
     0,              /* The default of memory is set in FillGLCaps */
-    NULL            /* No wine logo by default */
+    NULL,           /* No wine logo by default */
+    FALSE           /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
 };
 
 IWineD3D* WINAPI WineDirect3DCreate(UINT SDKVersion, UINT dxVersion, IUnknown *parent) {
@@ -253,6 +255,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             {
                 wined3d_settings.logo = HeapAlloc(GetProcessHeap(), 0, strlen(buffer) + 1);
                 if(wined3d_settings.logo) strcpy(wined3d_settings.logo, buffer);
+            }
+            if ( !get_config_key( hkey, appkey, "Multisampling", buffer, size) )
+            {
+                if (!strcmp(buffer,"enabled"))
+                {
+                    TRACE("Allow multisampling\n");
+                    wined3d_settings.allow_multisampling = TRUE;
+                }
             }
        }
        if (wined3d_settings.vs_mode == VS_HW)

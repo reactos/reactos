@@ -4,6 +4,7 @@
  * Copyright 2002 Raphael Junqueira
  * Copyright 2004 Jason Edmeades
  * Copyright 2005 Oliver Stieber
+ * Copyright 2007 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -169,8 +170,7 @@ void stateblock_copy(
     Dest->viewport = This->viewport;
     Dest->material = This->material;
     Dest->pixelShader = This->pixelShader;
-    Dest->glsl_program = This->glsl_program;
-    memcpy(&Dest->scissorRect, &This->scissorRect, sizeof(Dest->scissorRect));
+    Dest->scissorRect = This->scissorRect;
 
     /* Lights */
     memset(This->activeLights, 0, sizeof(This->activeLights));
@@ -185,7 +185,7 @@ void stateblock_copy(
         LIST_FOR_EACH(e1, &This->lightMap[l]) {
             PLIGHTINFOEL *light = LIST_ENTRY(e1, PLIGHTINFOEL, entry), *light2;
             light2 = HeapAlloc(GetProcessHeap(), 0, sizeof(*light));
-            memcpy(light2, light, sizeof(*light));
+            *light2 = *light;
             list_add_tail(&Dest->lightMap[l], &light2->entry);
             if(light2->glIndex != -1) Dest->activeLights[light2->glIndex] = light2;
         }
@@ -342,7 +342,7 @@ static inline void record_lights(IWineD3DStateBlockImpl *This, IWineD3DStateBloc
                 realLight = LIST_ENTRY(f, PLIGHTINFOEL, entry);
                 if(realLight->OriginalIndex == src->OriginalIndex) {
                     if(src->changed) {
-                        memcpy(&src->OriginalParms, &realLight->OriginalParms, sizeof(src->OriginalParms));
+                        src->OriginalParms = realLight->OriginalParms;
                     }
                     if(src->enabledChanged) {
                             /* Need to double check because enabledChanged does not catch enabled -> disabled -> enabled
@@ -367,7 +367,7 @@ static inline void record_lights(IWineD3DStateBlockImpl *This, IWineD3DStateBloc
                 continue;
             } else if(src->changed) {
                 /* Otherwise assign defaul params */
-                memcpy(&src->OriginalParms, &WINED3D_default_light, sizeof(src->OriginalParms));
+                src->OriginalParms = WINED3D_default_light;
             } else {
                 /* Not enabled by default */
                 src->glIndex = -1;
@@ -477,9 +477,8 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         /* Others + Render & Texture */
         for (i = 0; i < This->num_contained_transform_states; i++) {
             TRACE("Updating transform %d\n", i);
-            memcpy(&This->transforms[This->contained_transform_states[i]],
-                   &targetStateBlock->transforms[This->contained_transform_states[i]],
-                   sizeof(WINED3DMATRIX));
+            This->transforms[This->contained_transform_states[i]] =
+                targetStateBlock->transforms[This->contained_transform_states[i]];
         }
 
         if (This->changed.indices && ((This->pIndexData != targetStateBlock->pIndexData)
@@ -506,14 +505,14 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                                                     &This->material,
                                                     sizeof(WINED3DMATERIAL)) != 0) {
             TRACE("Updating material\n");
-            memcpy(&This->material, &targetStateBlock->material, sizeof(WINED3DMATERIAL));
+            This->material = targetStateBlock->material;
         }
 
         if (This->changed.viewport && memcmp(&targetStateBlock->viewport,
                                                     &This->viewport,
                                                     sizeof(WINED3DVIEWPORT)) != 0) {
             TRACE("Updating viewport\n");
-            memcpy(&This->viewport, &targetStateBlock->viewport, sizeof(WINED3DVIEWPORT));
+            This->viewport = targetStateBlock->viewport;
         }
 
         if(This->changed.scissorRect && memcmp(&targetStateBlock->scissorRect,
@@ -521,7 +520,7 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
                                            sizeof(targetStateBlock->scissorRect)))
         {
             TRACE("Updating scissor rect\n");
-            memcpy(&targetStateBlock->scissorRect, &This->scissorRect, sizeof(targetStateBlock->scissorRect));
+            targetStateBlock->scissorRect = This->scissorRect;
         }
 
         for (i = 0; i < MAX_STREAMS; i++) {
@@ -1038,6 +1037,12 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
         DWORD d;
     } tmpfloat;
     unsigned int i;
+    IWineD3DSwapChain *swapchain;
+    IWineD3DSurface *backbuffer;
+    WINED3DSURFACE_DESC desc = {0};
+    UINT width, height;
+    RECT scissorrect;
+    HRESULT hr;
 
     /* Note this may have a large overhead but it should only be executed
        once, in order to initialize the complete state of the device and
@@ -1047,10 +1052,10 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
     This->blockType = WINED3DSBT_INIT;
 
     /* Set some of the defaults for lights, transforms etc */
-    memcpy(&This->transforms[WINED3DTS_PROJECTION], &identity, sizeof(identity));
-    memcpy(&This->transforms[WINED3DTS_VIEW], &identity, sizeof(identity));
+    memcpy(&This->transforms[WINED3DTS_PROJECTION], identity, sizeof(identity));
+    memcpy(&This->transforms[WINED3DTS_VIEW], identity, sizeof(identity));
     for (i = 0; i < 256; ++i) {
-      memcpy(&This->transforms[WINED3DTS_WORLDMATRIX(i)], &identity, sizeof(identity));
+      memcpy(&This->transforms[WINED3DTS_WORLDMATRIX(i)], identity, sizeof(identity));
     }
 
     TRACE("Render states\n");
@@ -1194,7 +1199,7 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
     /* Texture Stage States - Put directly into state block, we will call function below */
     for (i = 0; i < MAX_TEXTURES; i++) {
         TRACE("Setting up default texture states for texture Stage %d\n", i);
-        memcpy(&This->transforms[WINED3DTS_TEXTURE0 + i], &identity, sizeof(identity));
+        memcpy(&This->transforms[WINED3DTS_TEXTURE0 + i], identity, sizeof(identity));
         This->textureState[i][WINED3DTSS_COLOROP               ] = (i==0)? WINED3DTOP_MODULATE :  WINED3DTOP_DISABLE;
         This->textureState[i][WINED3DTSS_COLORARG1             ] = WINED3DTA_TEXTURE;
         This->textureState[i][WINED3DTSS_COLORARG2             ] = WINED3DTA_CURRENT;
@@ -1234,71 +1239,35 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
         This->samplerState[i][WINED3DSAMP_DMAPOFFSET       ] = 0; /* TODO: Vertex offset in the presampled displacement map */
     }
 
-    /* Under DirectX you can have texture stage operations even if no texture is
-       bound, whereas opengl will only do texture operations when a valid texture is
-       bound. We emulate this by creating dummy textures and binding them to each
-       texture stage, but disable all stages by default. Hence if a stage is enabled
-       then the default texture will kick in until replaced by a SetTexture call     */
-    ENTER_GL();
-
-    if(GL_SUPPORT(APPLE_CLIENT_STORAGE)) {
-        /* The dummy texture does not have client storage backing */
-        glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_FALSE);
-        checkGLcall("glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_FALSE)");
-    }
-    for (i = 0; i < GL_LIMITS(textures); i++) {
-        GLubyte white = 255;
-
-        /* Note this avoids calling settexture, so pretend it has been called */
+    for(i = 0; i < GL_LIMITS(textures); i++) {
+        /* Note: This avoids calling SetTexture, so pretend it has been called */
         This->changed.textures[i] = TRUE;
         This->textures[i]         = NULL;
+    }
 
-        /* Make appropriate texture active */
-        if (GL_SUPPORT(ARB_MULTITEXTURE)) {
-            GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + i));
-            checkGLcall("glActiveTextureARB");
-        } else if (i > 0) {
-            FIXME("Program using multiple concurrent textures which this opengl implementation doesn't support\n");
+    /* Set the default scissor rect values */
+    desc.Width = &width;
+    desc.Height = &height;
+
+    /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
+    hr = IWineD3DDevice_GetSwapChain(device, 0, &swapchain);
+    if( hr == WINED3D_OK && swapchain != NULL) {
+        hr = IWineD3DSwapChain_GetBackBuffer(swapchain, 0, WINED3DBACKBUFFER_TYPE_MONO, &backbuffer);
+        if( hr == WINED3D_OK && backbuffer != NULL) {
+            IWineD3DSurface_GetDesc(backbuffer, &desc);
+            IWineD3DSurface_Release(backbuffer);
+
+            scissorrect.left = 0;
+            scissorrect.right = width;
+            scissorrect.top = 0;
+            scissorrect.bottom = height;
+            hr = IWineD3DDevice_SetScissorRect(device, &scissorrect);
+            if( hr != WINED3D_OK ) {
+                ERR("This should never happen, expect rendering issues!\n");
+            }
         }
-
-        /* Generate an opengl texture name */
-        glGenTextures(1, &ThisDevice->dummyTextureName[i]);
-        checkGLcall("glGenTextures");
-        TRACE("Dummy Texture %d given name %d\n", i, ThisDevice->dummyTextureName[i]);
-
-        /* Generate a dummy 2d texture (not using 1d because they cause many
-         * DRI drivers fall back to sw) */
-        This->textureDimensions[i] = GL_TEXTURE_2D;
-        glBindTexture(GL_TEXTURE_2D, ThisDevice->dummyTextureName[i]);
-        checkGLcall("glBindTexture");
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, &white);
-        checkGLcall("glTexImage2D");
+        IWineD3DSwapChain_Release(swapchain);
     }
-    if(GL_SUPPORT(APPLE_CLIENT_STORAGE)) {
-        /* Reenable because if supported it is enabled by default */
-        glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE);
-        checkGLcall("glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE)");
-    }
-
-    LEAVE_GL();
-
-
-    /* Defaulting palettes - Note these are device wide but reinitialized here for convenience*/
-    for (i = 0; i < MAX_PALETTES; ++i) {
-      int j;
-      for (j = 0; j < 256; ++j) {
-        This->wineD3DDevice->palettes[i][j].peRed   = 0xFF;
-        This->wineD3DDevice->palettes[i][j].peGreen = 0xFF;
-        This->wineD3DDevice->palettes[i][j].peBlue  = 0xFF;
-        This->wineD3DDevice->palettes[i][j].peFlags = 0xFF;
-      }
-    }
-    This->wineD3DDevice->currentPalette = 0;
-
-    /* Set default GLSL program to NULL.  We won't actually create one
-     * until the app sets a vertex or pixel shader */
-    This->glsl_program = NULL;
 
     TRACE("-----------------------> Device defaults now set up...\n");
     return WINED3D_OK;

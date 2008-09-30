@@ -237,7 +237,7 @@ HRESULT WINAPI D3D8CB_CreateVolume(IUnknown  *pDevice, IUnknown *pSuperior, UINT
         HeapFree(GetProcessHeap(), 0, object);
         *ppVolume = NULL;
     } else {
-        *ppVolume = (IWineD3DVolume *)object->wineD3DVolume;
+        *ppVolume = object->wineD3DVolume;
         object->container = pSuperior;
         object->forwardReference = pSuperior;
     }

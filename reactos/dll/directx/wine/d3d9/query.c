@@ -145,7 +145,7 @@ static const IDirect3DQuery9Vtbl Direct3DQuery9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DQuery9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9 iface, D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery) {
+HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX iface, D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     IDirect3DQuery9Impl *object = NULL;
     HRESULT hr = D3D_OK;

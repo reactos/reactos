@@ -88,11 +88,11 @@ void IWineD3DResourceImpl_CleanUp(IWineD3DResource *iface){
 
     if (This->resource.wineD3DDevice != NULL) {
         IWineD3DDevice_ResourceReleased((IWineD3DDevice *)This->resource.wineD3DDevice, iface);
-    }/* NOTE: this is not really an error for systemmem resoruces */
+    }/* NOTE: this is not really an error for system memory resources */
     return;
 }
 
-/* IWineD3DResource Interface follow: */
+/* IWineD3DResource Interface follows: */
 HRESULT WINAPI IWineD3DResourceImpl_GetDevice(IWineD3DResource *iface, IWineD3DDevice** ppDevice) {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
     TRACE("(%p) : returning %p\n", This, This->resource.wineD3DDevice);
@@ -235,6 +235,11 @@ void     WINAPI        IWineD3DResourceImpl_PreLoad(IWineD3DResource *iface) {
     FIXME("(%p) : stub\n", This);
 }
 
+void     WINAPI        IWineD3DResourceImpl_UnLoad(IWineD3DResource *iface) {
+    IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
+    FIXME("(%p) : stub\n", This);
+}
+
 WINED3DRESOURCETYPE WINAPI IWineD3DResourceImpl_GetType(IWineD3DResource *iface) {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
     TRACE("(%p) : returning %d\n", This, This->resource.resourceType);
@@ -271,5 +276,6 @@ static const IWineD3DResourceVtbl IWineD3DResource_Vtbl =
     IWineD3DResourceImpl_SetPriority,
     IWineD3DResourceImpl_GetPriority,
     IWineD3DResourceImpl_PreLoad,
+    IWineD3DResourceImpl_UnLoad,
     IWineD3DResourceImpl_GetType
 };

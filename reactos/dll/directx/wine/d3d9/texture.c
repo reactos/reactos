@@ -327,7 +327,7 @@ static const IDirect3DTexture9Vtbl Direct3DTexture9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Levels, DWORD Usage,
+HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, UINT Width, UINT Height, UINT Levels, DWORD Usage,
                                                     D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle) {
     IDirect3DTexture9Impl *object;
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;

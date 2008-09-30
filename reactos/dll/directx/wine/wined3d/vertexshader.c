@@ -6,6 +6,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2006 Ivan Gyurdiev
+ * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,50 +34,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 #define GLINFO_LOCATION ((IWineD3DDeviceImpl *)This->baseShader.device)->adapter->gl_info
 
-/* Shader debugging - Change the following line to enable debugging of software
-      vertex shaders                                                             */
-#if 0 /* Musxt not be 1 in cvs version */
-# define VSTRACE(A) TRACE A
-# define TRACE_VSVECTOR(name) TRACE( #name "=(%f, %f, %f, %f)\n", name.x, name.y, name.z, name.w)
-#else
-# define VSTRACE(A)
-# define TRACE_VSVECTOR(name)
-#endif
-
-/**
- * DirectX9 SDK download
- *  http://msdn.microsoft.com/library/default.asp?url=/downloads/list/directx.asp
- *
- * Exploring D3DX
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndrive/html/directx07162002.asp
- *
- * Using Vertex Shaders
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndrive/html/directx02192001.asp
- *
- * Dx9 New
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/whatsnew.asp
- *
- * Dx9 Shaders
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader2_0/VertexShader2_0.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader2_0/Instructions/Instructions.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/programmingguide/GettingStarted/VertexDeclaration/VertexDeclaration.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader3_0/VertexShader3_0.asp
- *
- * Dx9 D3DX
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/programmingguide/advancedtopics/VertexPipe/matrixstack/matrixstack.asp
- *
- * FVF
- *  http://msdn.microsoft.com/library/en-us/directx9_c/directx/graphics/programmingguide/GettingStarted/VertexFormats/vformats.asp
- *
- * NVIDIA: DX8 Vertex Shader to NV Vertex Program
- *  http://developer.nvidia.com/view.asp?IO=vstovp
- *
- * NVIDIA: Memory Management with VAR
- *  http://developer.nvidia.com/view.asp?IO=var_memory_management
- */
-
-/* TODO: Vertex and Pixel shaders are almost identicle, the only exception being the way that some of the data is looked up or the availablity of some of the data i.e. some instructions are only valid for pshaders and some for vshaders
-because of this the bulk of the software pipeline can be shared between pixel and vertex shaders... and it wouldn't supprise me if the programes can be cross compiled using a large body body shared code */
+/* TODO: Vertex and Pixel shaders are almost identical, the only exception being the way that some of the data is looked up or the availability of some of the data i.e. some instructions are only valid for pshaders and some for vshaders
+because of this the bulk of the software pipeline can be shared between pixel and vertex shaders... and it wouldn't surprise me if the program can be cross compiled using a large body of shared code */
 
 #define GLNAME_REQUIRE_GLSL  ((const char *)1)
 
@@ -296,6 +255,9 @@ static inline void find_swizzled_attribs(IWineD3DVertexDeclaration *declaration,
 
     for(i = 0; i < decl->num_swizzled_attribs; i++) {
         for(j = 0; j < MAX_ATTRIBS; j++) {
+
+            if(!This->baseShader.reg_maps.attributes[j]) continue;
+
             usage_token = This->semantics_in[j].usage;
             usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
             usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
@@ -336,7 +298,7 @@ static inline void find_swizzled_attribs(IWineD3DVertexDeclaration *declaration,
                oldswizzles[i].usage == This->swizzled_attribs[j].usage &&
                oldswizzles[i].idx > This->swizzled_attribs[j].idx)) {
                 memmove(&This->swizzled_attribs[j + 1], &This->swizzled_attribs[j],
-                         sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j - 1)));
+                         sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j + 1)));
                 break;
             }
         }
@@ -381,122 +343,7 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
     buffer.lineNo = 0;
     buffer.newline = TRUE;
 
-    if (This->baseShader.shader_mode == SHADER_GLSL) {
-
-        /* Create the hw GLSL shader program and assign it as the baseShader.prgId */
-        GLhandleARB shader_obj = GL_EXTCALL(glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB));
-
-        /* Base Declarations */
-        shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, &buffer, &GLINFO_LOCATION);
-
-        /* Base Shader Body */
-        shader_generate_main( (IWineD3DBaseShader*) This, &buffer, reg_maps, pFunction);
-
-        /* Unpack 3.0 outputs */
-        if (This->baseShader.hex_version >= WINED3DVS_VERSION(3,0)) {
-            shader_addline(&buffer, "order_ps_input(OUT);\n");
-        } else {
-            shader_addline(&buffer, "order_ps_input();\n");
-        }
-
-        /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
-        if (!reg_maps->fog)
-            shader_addline(&buffer, "gl_FogFragCoord = gl_Position.z;\n");
-
-        /* Write the final position.
-         *
-         * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
-         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
-         * contains 1.0 to allow a mad.
-         */
-        shader_addline(&buffer, "gl_Position.xy = gl_Position.xy * posFixup.xy + posFixup.zw;\n");
-
-        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
-         *
-         * Basically we want(in homogenous coordinates) z = z * 2 - 1. However, shaders are run
-         * before the homogenous divide, so we have to take the w into account: z = ((z / w) * 2 - 1) * w,
-         * which is the same as z = z / 2 - w.
-         */
-        shader_addline(&buffer, "gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;\n");
-
-        shader_addline(&buffer, "}\n");
-
-        TRACE("Compiling shader object %u\n", shader_obj);
-        GL_EXTCALL(glShaderSourceARB(shader_obj, 1, (const char**)&buffer.buffer, NULL));
-        GL_EXTCALL(glCompileShaderARB(shader_obj));
-        print_glsl_info_log(&GLINFO_LOCATION, shader_obj);
-
-        /* Store the shader object */
-        This->baseShader.prgId = shader_obj;
-
-    } else if (This->baseShader.shader_mode == SHADER_ARB) {
-
-        /*  Create the hw ARB shader */
-        shader_addline(&buffer, "!!ARBvp1.0\n");
-        shader_addline(&buffer, "PARAM helper_const = { 2.0, -1.0, %d.0, 0.0 };\n", This->rel_offset);
-
-        /* Mesa supports only 95 constants */
-        if (GL_VEND(MESA) || GL_VEND(WINE))
-            This->baseShader.limits.constant_float = 
-                min(95, This->baseShader.limits.constant_float);
-
-        /* Some instructions need a temporary register. Add it if needed, but only if it is really needed */
-        if(reg_maps->usesnrm || This->rel_offset) {
-            shader_addline(&buffer, "TEMP TMP;\n");
-        }
-
-        /* Base Declarations */
-        shader_generate_arb_declarations( (IWineD3DBaseShader*) This, reg_maps, &buffer, &GLINFO_LOCATION);
-
-        /* We need a constant to fixup the final position */
-        shader_addline(&buffer, "PARAM posFixup = program.env[%d];\n", ARB_SHADER_PRIVCONST_POS);
-
-        /* Base Shader Body */
-        shader_generate_main( (IWineD3DBaseShader*) This, &buffer, reg_maps, pFunction);
-
-        /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
-        if (!reg_maps->fog)
-            shader_addline(&buffer, "MOV result.fogcoord, TMP_OUT.z;\n");
-
-        /* Write the final position.
-         *
-         * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
-         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
-         * contains 1.0 to allow a mad, but arb vs swizzles are too restricted for that.
-         */
-        shader_addline(&buffer, "ADD TMP_OUT.x, TMP_OUT.x, posFixup.z;\n");
-        shader_addline(&buffer, "MAD TMP_OUT.y, TMP_OUT.y, posFixup.y, posFixup.w;\n");
-
-        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
-         * and the glsl equivalent
-         */
-        shader_addline(&buffer, "MAD TMP_OUT.z, TMP_OUT.z, helper_const.x, -TMP_OUT.w;\n");
-
-        shader_addline(&buffer, "MOV result.position, TMP_OUT;\n");
-        
-        shader_addline(&buffer, "END\n"); 
-
-        /* TODO: change to resource.glObjectHandle or something like that */
-        GL_EXTCALL(glGenProgramsARB(1, &This->baseShader.prgId));
-
-        TRACE("Creating a hw vertex shader, prg=%d\n", This->baseShader.prgId);
-        GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, This->baseShader.prgId));
-
-        TRACE("Created hw vertex shader, prg=%d\n", This->baseShader.prgId);
-        /* Create the program and check for errors */
-        GL_EXTCALL(glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
-            buffer.bsize, buffer.buffer));
-
-        if (glGetError() == GL_INVALID_OPERATION) {
-            GLint errPos;
-            glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errPos);
-            FIXME("HW VertexShader Error at position %d: %s\n",
-                  errPos, debugstr_a((const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
-            This->baseShader.prgId = -1;
-        }
-    }
+    ((IWineD3DDeviceImpl *)This->baseShader.device)->shader_backend->shader_generate_vshader(iface, &buffer);
 
 #if 1 /* if were using the data buffer of device then we don't need to free it */
   HeapFree(GetProcessHeap(), 0, buffer.buffer);
@@ -678,8 +525,12 @@ static inline BOOL swizzled_attribs_differ(IWineD3DVertexShaderImpl *This, IWine
     DWORD usage_idx;
 
     for(i = 0; i < vdecl->declarationWNumElements; i++) {
+        /* Ignore tesselated streams and the termination entry(position0, stream 255, unused) */
+        if(vdecl->pDeclarationWine[i].Stream >= MAX_STREAMS ||
+           vdecl->pDeclarationWine[i].Type == WINED3DDECLTYPE_UNUSED) continue;
+
         for(j = 0; j < MAX_ATTRIBS; j++) {
-            if(!This->baseShader.reg_maps.attributes) continue;
+            if(!This->baseShader.reg_maps.attributes[j]) continue;
 
             usage_token = This->semantics_in[j].usage;
             usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;

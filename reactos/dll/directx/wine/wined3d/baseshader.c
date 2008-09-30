@@ -6,6 +6,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2006 Ivan Gyurdiev
+ * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -125,7 +126,7 @@ static inline int shader_skip_opcode(
     DWORD opcode_token) {
 
    /* Shaders >= 2.0 may contain address tokens, but fortunately they
-    * have a useful legnth mask - use it here. Shaders 1.0 contain no such tokens */
+    * have a useful length mask - use it here. Shaders 1.0 contain no such tokens */
 
     return (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 2)?
         ((opcode_token & WINED3DSI_INSTLENGTH_MASK) >> WINED3DSI_INSTLENGTH_SHIFT):
@@ -153,8 +154,8 @@ int shader_skip_unrecognized(
         tokens_read += shader_get_param(iface, pToken, &param, &addr_token);
         pToken += tokens_read;
 
-        FIXME("Unrecognized opcode param: token=%08x "
-            "addr_token=%08x name=", param, addr_token);
+        FIXME("Unrecognized opcode param: token=0x%08x "
+            "addr_token=0x%08x name=", param, addr_token);
         shader_dump_param(iface, param, addr_token, i);
         FIXME("\n");
         ++i;
@@ -181,6 +182,20 @@ unsigned int shader_get_float_offset(const DWORD reg) {
      }
 }
 
+static void shader_delete_constant_list(struct list* clist) {
+
+    struct list *ptr;
+    struct local_constant* constant;
+
+    ptr = list_head(clist);
+    while (ptr) {
+        constant = LIST_ENTRY(ptr, struct local_constant, entry);
+        ptr = list_next(clist, ptr);
+        HeapFree(GetProcessHeap(), 0, constant);
+    }
+    list_init(clist);
+}
+
 /* Note that this does not count the loop register
  * as an address register. */
 
@@ -198,11 +213,18 @@ HRESULT shader_get_registers_used(
     /* There are some minor differences between pixel and vertex shaders */
     char pshader = shader_is_pshader_version(This->baseShader.hex_version);
 
-    reg_maps->bumpmat = -1;
-    reg_maps->luminanceparams = -1;
+    memset(reg_maps->bumpmat, 0, sizeof(reg_maps->bumpmat));
+    memset(reg_maps->luminanceparams, 0, sizeof(reg_maps->luminanceparams));
 
     if (pToken == NULL)
         return WINED3D_OK;
+
+    /* get_registers_used is called on every compile on some 1.x shaders, which can result
+     * in stacking up a collection of local constants. Delete the old constants if existing
+     */
+    shader_delete_constant_list(&This->baseShader.constantsF);
+    shader_delete_constant_list(&This->baseShader.constantsB);
+    shader_delete_constant_list(&This->baseShader.constantsI);
 
     while (WINED3DVS_END() != *pToken) {
         CONST SHADER_OPCODE* curOpcode;
@@ -267,7 +289,7 @@ HRESULT shader_get_registers_used(
             local_constant* lconst = HeapAlloc(GetProcessHeap(), 0, sizeof(local_constant));
             if (!lconst) return E_OUTOFMEMORY;
             lconst->idx = *pToken & WINED3DSP_REGNUM_MASK;
-            memcpy(&lconst->value, pToken + 1, 4 * sizeof(DWORD));
+            memcpy(lconst->value, pToken + 1, 4 * sizeof(DWORD));
 
             /* In pixel shader 1.X shaders, the constants are clamped between [-1;1] */
             if(WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 && pshader) {
@@ -290,7 +312,7 @@ HRESULT shader_get_registers_used(
             local_constant* lconst = HeapAlloc(GetProcessHeap(), 0, sizeof(local_constant));
             if (!lconst) return E_OUTOFMEMORY;
             lconst->idx = *pToken & WINED3DSP_REGNUM_MASK;
-            memcpy(&lconst->value, pToken + 1, 4 * sizeof(DWORD));
+            memcpy(lconst->value, pToken + 1, 4 * sizeof(DWORD));
             list_add_head(&This->baseShader.constantsI, &lconst->entry);
             pToken += curOpcode->num_params;
 
@@ -299,7 +321,7 @@ HRESULT shader_get_registers_used(
             local_constant* lconst = HeapAlloc(GetProcessHeap(), 0, sizeof(local_constant));
             if (!lconst) return E_OUTOFMEMORY;
             lconst->idx = *pToken & WINED3DSP_REGNUM_MASK;
-            memcpy(&lconst->value, pToken + 1, 1 * sizeof(DWORD));
+            memcpy(lconst->value, pToken + 1, 1 * sizeof(DWORD));
             list_add_head(&This->baseShader.constantsB, &lconst->entry);
             pToken += curOpcode->num_params;
 
@@ -327,7 +349,8 @@ HRESULT shader_get_registers_used(
             int i, limit;
 
             /* Declare 1.X samplers implicitly, based on the destination reg. number */
-            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 && 
+            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 &&
+                pshader /* Filter different instructions with the same enum values in VS */ &&
                 (WINED3DSIO_TEX == curOpcode->opcode ||
                  WINED3DSIO_TEXBEM == curOpcode->opcode ||
                  WINED3DSIO_TEXBEML == curOpcode->opcode ||
@@ -349,6 +372,10 @@ HRESULT shader_get_registers_used(
                 } else {
                     int texType = IWineD3DBaseTexture_GetTextureDimensions(stateBlock->textures[sampler_code]);
                     switch(texType) {
+                        /* We have to select between texture rectangles and 2D textures later because 2.0 and
+                         * 3.0 shaders only have WINED3DSTT_2D as well
+                         */
+                        case GL_TEXTURE_RECTANGLE_ARB:
                         case GL_TEXTURE_2D:
                             reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_2D;
                             break;
@@ -370,25 +397,17 @@ HRESULT shader_get_registers_used(
                 /* texbem is only valid with < 1.4 pixel shaders */
                 if(WINED3DSIO_TEXBEM  == curOpcode->opcode ||
                     WINED3DSIO_TEXBEML == curOpcode->opcode) {
-                    if(reg_maps->bumpmat != -1 && reg_maps->bumpmat != sampler_code) {
-                        FIXME("Pixel shader uses texbem instruction on more than 1 sampler\n");
-                    } else {
-                        reg_maps->bumpmat = sampler_code;
-                        if(WINED3DSIO_TEXBEML == curOpcode->opcode) {
-                            reg_maps->luminanceparams = sampler_code;
-                        }
+                    reg_maps->bumpmat[sampler_code] = TRUE;
+                    if(WINED3DSIO_TEXBEML == curOpcode->opcode) {
+                        reg_maps->luminanceparams[sampler_code] = TRUE;
                     }
                 }
             }
             if(WINED3DSIO_NRM  == curOpcode->opcode) {
                 reg_maps->usesnrm = 1;
-            } else if(WINED3DSIO_BEM == curOpcode->opcode) {
+            } else if(WINED3DSIO_BEM == curOpcode->opcode && pshader) {
                 DWORD regnum = *pToken & WINED3DSP_REGNUM_MASK;
-                if(reg_maps->bumpmat != -1 && reg_maps->bumpmat != regnum) {
-                    FIXME("Pixel shader uses bem or texbem instruction on more than 1 sampler\n");
-                } else {
-                    reg_maps->bumpmat = regnum;
-                }
+                reg_maps->bumpmat[regnum] = TRUE;
             } else if(WINED3DSIO_DSY  == curOpcode->opcode) {
                 reg_maps->usesdsy = 1;
             }
@@ -459,6 +478,15 @@ HRESULT shader_get_registers_used(
                         reg_maps->usesrelconstF = TRUE;
                     }
                 }
+
+                /* WINED3DSPR_TEXCRDOUT is the same as WINED3DSPR_OUTPUT. _OUTPUT can be > MAX_REG_TEXCRD and is used
+                 * in >= 3.0 shaders. Filter 3.0 shaders to prevent overflows, and also filter pixel shaders because TECRDOUT
+                 * isn't used in them, but future register types might cause issues
+                 */
+                else if(WINED3DSPR_TEXCRDOUT == regtype && i == 0 /* Only look at writes */ &&
+                        !pshader && WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) < 3) {
+                    reg_maps->texcoord_mask[reg] |= shader_get_writemask(param);
+                }
             }
         }
     }
@@ -483,7 +511,7 @@ static void shader_dump_decl_usage(
             case WINED3DSTT_2D: TRACE("_2d"); break;
             case WINED3DSTT_CUBE: TRACE("_cube"); break;
             case WINED3DSTT_VOLUME: TRACE("_volume"); break;
-            default: TRACE("_unknown_ttype(%08x)", ttype); 
+            default: TRACE("_unknown_ttype(0x%08x)", ttype);
        }
 
     } else { 
@@ -546,7 +574,7 @@ static void shader_dump_decl_usage(
             TRACE("sample");
             break;
         default:
-            FIXME("unknown_semantics(%08x)", usage);
+            FIXME("unknown_semantics(0x%08x)", usage);
         }
     }
 }
@@ -753,8 +781,7 @@ void shader_dump_param(
 /** Shared code in order to generate the bulk of the shader string.
     Use the shader_header_fct & shader_footer_fct to add strings
     that are specific to pixel or vertex functions
-    NOTE: A description of how to parse tokens can be found at:
-          http://msdn.microsoft.com/library/default.asp?url=/library/en-us/graphics/hh/graphics/usermodedisplaydriver_shader_cc8e4e05-f5c3-4ec0-8853-8ce07c1551b2.xml.asp */
+    NOTE: A description of how to parse tokens can be found on msdn */
 void shader_generate_main(
     IWineD3DBaseShader *iface,
     SHADER_BUFFER* buffer,
@@ -808,7 +835,7 @@ void shader_generate_main(
 
             /* Unknown opcode and its parameters */
             if (NULL == curOpcode) {
-                FIXME("Unrecognized opcode: token=%08x\n", hw_arg.opcode_token);
+                FIXME("Unrecognized opcode: token=0x%08x\n", hw_arg.opcode_token);
                 pToken += shader_skip_unrecognized(iface, pToken); 
 
             /* Nothing to do */
@@ -936,7 +963,7 @@ void shader_trace_init(
 
             if (NULL == curOpcode) {
                 int tokens_read;
-                FIXME("Unrecognized opcode: token=%08x\n", opcode_token);
+                FIXME("Unrecognized opcode: token=0x%08x\n", opcode_token);
                 tokens_read = shader_skip_unrecognized(iface, pToken);
                 pToken += tokens_read;
                 len += tokens_read;
@@ -1062,34 +1089,63 @@ void shader_trace_init(
     }
 }
 
-static void shader_delete_constant_list(
-    struct list* clist) {
-
-    struct list *ptr;
-    struct local_constant* constant;
-
-    ptr = list_head(clist);
-    while (ptr) {
-        constant = LIST_ENTRY(ptr, struct local_constant, entry);
-        ptr = list_next(clist, ptr);
-        HeapFree(GetProcessHeap(), 0, constant);
-    }
-}
-
 static void shader_none_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {}
 static void shader_none_select_depth_blt(IWineD3DDevice *iface) {}
+static void shader_none_deselect_depth_blt(IWineD3DDevice *iface) {}
 static void shader_none_load_constants(IWineD3DDevice *iface, char usePS, char useVS) {}
 static void shader_none_cleanup(IWineD3DDevice *iface) {}
 static void shader_none_color_correction(SHADER_OPCODE_ARG* arg) {}
 static void shader_none_destroy(IWineD3DBaseShader *iface) {}
+static HRESULT shader_none_alloc(IWineD3DDevice *iface) {return WINED3D_OK;}
+static void shader_none_free(IWineD3DDevice *iface) {}
+static BOOL shader_none_dirty_const(IWineD3DDevice *iface) {return FALSE;}
+static void shader_none_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer) {
+    FIXME("NONE shader backend asked to generate a pixel shader\n");
+}
+static void shader_none_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer) {
+    FIXME("NONE shader backend asked to generate a vertex shader\n");
+}
+
+#define GLINFO_LOCATION      (*gl_info)
+static void shader_none_get_caps(WINED3DDEVTYPE devtype, WineD3D_GL_Info *gl_info, struct shader_caps *pCaps) {
+    /* Set the shader caps to 0 for the none shader backend */
+    pCaps->VertexShaderVersion  = 0;
+    pCaps->PixelShaderVersion    = 0;
+    pCaps->PixelShader1xMaxValue = 0.0;
+}
+#undef GLINFO_LOCATION
+static BOOL shader_none_conv_supported(WINED3DFORMAT fmt) {
+    TRACE("Checking shader format support for format %s", debug_d3dformat(fmt));
+    switch(fmt) {
+        /* Faked to make some apps happy. */
+        case WINED3DFMT_V8U8:
+        case WINED3DFMT_V16U16:
+        case WINED3DFMT_L6V5U5:
+        case WINED3DFMT_X8L8V8U8:
+        case WINED3DFMT_Q8W8V8U8:
+            TRACE("[OK]\n");
+            return TRUE;
+        default:
+            TRACE("[FAILED]\n");
+            return FALSE;
+    }
+}
 
 const shader_backend_t none_shader_backend = {
-    &shader_none_select,
-    &shader_none_select_depth_blt,
-    &shader_none_load_constants,
-    &shader_none_cleanup,
-    &shader_none_color_correction,
-    &shader_none_destroy
+    shader_none_select,
+    shader_none_select_depth_blt,
+    shader_none_deselect_depth_blt,
+    shader_none_load_constants,
+    shader_none_cleanup,
+    shader_none_color_correction,
+    shader_none_destroy,
+    shader_none_alloc,
+    shader_none_free,
+    shader_none_dirty_const,
+    shader_none_generate_pshader,
+    shader_none_generate_vshader,
+    shader_none_get_caps,
+    shader_none_conv_supported
 };
 
 /* *******************************************
@@ -1129,6 +1185,7 @@ ULONG  WINAPI IWineD3DBaseShaderImpl_Release(IWineD3DBaseShader *iface) {
         shader_delete_constant_list(&This->baseShader.constantsF);
         shader_delete_constant_list(&This->baseShader.constantsB);
         shader_delete_constant_list(&This->baseShader.constantsI);
+        list_remove(&This->baseShader.shader_list_entry);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;

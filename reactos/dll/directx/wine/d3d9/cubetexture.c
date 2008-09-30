@@ -333,7 +333,7 @@ static const IDirect3DCubeTexture9Vtbl Direct3DCubeTexture9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DCubeTexture9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9 iface,
+HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9EX iface,
                                                         UINT EdgeLength, UINT Levels, DWORD Usage,
                                                         D3DFORMAT Format, D3DPOOL Pool,
                                                         IDirect3DCubeTexture9** ppCubeTexture, HANDLE* pSharedHandle) {

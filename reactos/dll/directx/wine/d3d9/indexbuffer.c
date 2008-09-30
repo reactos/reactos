@@ -211,7 +211,7 @@ static const IDirect3DIndexBuffer9Vtbl Direct3DIndexBuffer9_Vtbl =
 
 
 /* IDirect3DDevice9 IDirect3DIndexBuffer9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(LPDIRECT3DDEVICE9 iface, 
+HRESULT WINAPI IDirect3DDevice9Impl_CreateIndexBuffer(LPDIRECT3DDEVICE9EX iface,
                               UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool,
                               IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle) {
     

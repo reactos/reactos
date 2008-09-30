@@ -19,6 +19,7 @@
 	<library>uuid</library>
 	<library>msvcrt</library>
 
+	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>
 	<file>baseshader.c</file>
 	<file>basetexture.c</file>
@@ -30,6 +31,7 @@
 	<file>drawprim.c</file>
 	<file>glsl_shader.c</file>
 	<file>indexbuffer.c</file>
+	<file>nvidia_texture_shader.c</file>
 	<file>palette.c</file>
 	<file>pixelshader.c</file>
 	<file>query.c</file>
@@ -40,6 +42,8 @@
 	<file>surface.c</file>
 	<file>surface_gdi.c </file>
 	<file>swapchain.c</file>
+	<file>swapchain_base.c</file>
+	<file>swapchain_gdi.c</file>
 	<file>texture.c</file>
 	<file>utils.c</file>
 	<file>vertexbuffer.c</file>

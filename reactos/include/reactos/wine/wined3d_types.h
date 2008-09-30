@@ -266,6 +266,7 @@ typedef enum _WINED3DFORMAT {
 
     WINED3DFMT_UYVY                 =  WINEMAKEFOURCC('U', 'Y', 'V', 'Y'),
     WINED3DFMT_YUY2                 =  WINEMAKEFOURCC('Y', 'U', 'Y', '2'),
+    WINED3DFMT_YV12                 =  WINEMAKEFOURCC('Y', 'V', '1', '2'),
     WINED3DFMT_DXT1                 =  WINEMAKEFOURCC('D', 'X', 'T', '1'),
     WINED3DFMT_DXT2                 =  WINEMAKEFOURCC('D', 'X', 'T', '2'),
     WINED3DFMT_DXT3                 =  WINEMAKEFOURCC('D', 'X', 'T', '3'),
@@ -302,6 +303,10 @@ typedef enum _WINED3DFORMAT {
     
     WINED3DFMT_CxV8U8               = 117,
 
+    /* Vendor specific formats */
+    WINED3DFMT_ATI2N                =  WINEMAKEFOURCC('A', 'T', 'I', '2'),
+    WINED3DFMT_NVHU                 =  WINEMAKEFOURCC('N', 'V', 'H', 'U'),
+    WINED3DFMT_NVHS                 =  WINEMAKEFOURCC('N', 'V', 'H', 'S'),
 
     WINED3DFMT_FORCE_DWORD          = 0xFFFFFFFF
 } WINED3DFORMAT;
@@ -1095,112 +1100,134 @@ typedef struct _WINED3DINDEXBUFFER_DESC {
  */
 
 typedef struct _WINED3DVSHADERCAPS2_0 {
-  DWORD  *Caps;
-  INT    *DynamicFlowControlDepth;
-  INT    *NumTemps;
-  INT    *StaticFlowControlDepth;
+  DWORD  Caps;
+  INT    DynamicFlowControlDepth;
+  INT    NumTemps;
+  INT    StaticFlowControlDepth;
 } WINED3DVSHADERCAPS2_0;
 
 typedef struct _WINED3DPSHADERCAPS2_0 {
-  DWORD  *Caps;
-  INT    *DynamicFlowControlDepth;
-  INT    *NumTemps;
-  INT    *StaticFlowControlDepth;
-  INT    *NumInstructionSlots;
+  DWORD  Caps;
+  INT    DynamicFlowControlDepth;
+  INT    NumTemps;
+  INT    StaticFlowControlDepth;
+  INT    NumInstructionSlots;
 } WINED3DPSHADERCAPS2_0;
 
+typedef struct _WINEDDCAPS {
+    DWORD Caps;
+    DWORD Caps2;
+    DWORD CKeyCaps;
+    DWORD FXCaps;
+    DWORD FXAlphaCaps;
+    DWORD PalCaps;
+    DWORD SVCaps;
+    DWORD SVBCaps;
+    DWORD SVBCKeyCaps;
+    DWORD SVBFXCaps;
+    DWORD VSBCaps;
+    DWORD VSBCKeyCaps;
+    DWORD VSBFXCaps;
+    DWORD SSBCaps;
+    DWORD SSBCKeyCaps;
+    DWORD SSBFXCaps;
+    DWORD ddsCaps;
+    DWORD StrideAlign;
+} WINEDDCAPS;
+
 typedef struct _WINED3DCAPS {
-  WINED3DDEVTYPE      *DeviceType;
-  UINT                *AdapterOrdinal;
+  WINED3DDEVTYPE      DeviceType;
+  UINT                AdapterOrdinal;
 
-  DWORD               *Caps;
-  DWORD               *Caps2;
-  DWORD               *Caps3;
-  DWORD               *PresentationIntervals;
+  DWORD               Caps;
+  DWORD               Caps2;
+  DWORD               Caps3;
+  DWORD               PresentationIntervals;
 
-  DWORD               *CursorCaps;
+  DWORD               CursorCaps;
 
-  DWORD               *DevCaps;
+  DWORD               DevCaps;
 
-  DWORD               *PrimitiveMiscCaps;
-  DWORD               *RasterCaps;
-  DWORD               *ZCmpCaps;
-  DWORD               *SrcBlendCaps;
-  DWORD               *DestBlendCaps;
-  DWORD               *AlphaCmpCaps;
-  DWORD               *ShadeCaps;
-  DWORD               *TextureCaps;
-  DWORD               *TextureFilterCaps;
-  DWORD               *CubeTextureFilterCaps;
-  DWORD               *VolumeTextureFilterCaps;
-  DWORD               *TextureAddressCaps;
-  DWORD               *VolumeTextureAddressCaps;
+  DWORD               PrimitiveMiscCaps;
+  DWORD               RasterCaps;
+  DWORD               ZCmpCaps;
+  DWORD               SrcBlendCaps;
+  DWORD               DestBlendCaps;
+  DWORD               AlphaCmpCaps;
+  DWORD               ShadeCaps;
+  DWORD               TextureCaps;
+  DWORD               TextureFilterCaps;
+  DWORD               CubeTextureFilterCaps;
+  DWORD               VolumeTextureFilterCaps;
+  DWORD               TextureAddressCaps;
+  DWORD               VolumeTextureAddressCaps;
 
-  DWORD               *LineCaps;
+  DWORD               LineCaps;
 
-  DWORD               *MaxTextureWidth;
-  DWORD               *MaxTextureHeight;
-  DWORD               *MaxVolumeExtent;
+  DWORD               MaxTextureWidth;
+  DWORD               MaxTextureHeight;
+  DWORD               MaxVolumeExtent;
 
-  DWORD               *MaxTextureRepeat;
-  DWORD               *MaxTextureAspectRatio;
-  DWORD               *MaxAnisotropy;
-  float               *MaxVertexW;
+  DWORD               MaxTextureRepeat;
+  DWORD               MaxTextureAspectRatio;
+  DWORD               MaxAnisotropy;
+  float               MaxVertexW;
 
-  float               *GuardBandLeft;
-  float               *GuardBandTop;
-  float               *GuardBandRight;
-  float               *GuardBandBottom;
+  float               GuardBandLeft;
+  float               GuardBandTop;
+  float               GuardBandRight;
+  float               GuardBandBottom;
 
-  float               *ExtentsAdjust;
-  DWORD               *StencilCaps;
+  float               ExtentsAdjust;
+  DWORD               StencilCaps;
 
-  DWORD               *FVFCaps;
-  DWORD               *TextureOpCaps;
-  DWORD               *MaxTextureBlendStages;
-  DWORD               *MaxSimultaneousTextures;
+  DWORD               FVFCaps;
+  DWORD               TextureOpCaps;
+  DWORD               MaxTextureBlendStages;
+  DWORD               MaxSimultaneousTextures;
 
-  DWORD               *VertexProcessingCaps;
-  DWORD               *MaxActiveLights;
-  DWORD               *MaxUserClipPlanes;
-  DWORD               *MaxVertexBlendMatrices;
-  DWORD               *MaxVertexBlendMatrixIndex;
+  DWORD               VertexProcessingCaps;
+  DWORD               MaxActiveLights;
+  DWORD               MaxUserClipPlanes;
+  DWORD               MaxVertexBlendMatrices;
+  DWORD               MaxVertexBlendMatrixIndex;
 
-  float               *MaxPointSize;
+  float               MaxPointSize;
 
-  DWORD               *MaxPrimitiveCount;
-  DWORD               *MaxVertexIndex;
-  DWORD               *MaxStreams;
-  DWORD               *MaxStreamStride;
+  DWORD               MaxPrimitiveCount;
+  DWORD               MaxVertexIndex;
+  DWORD               MaxStreams;
+  DWORD               MaxStreamStride;
 
-  DWORD               *VertexShaderVersion;
-  DWORD               *MaxVertexShaderConst;
+  DWORD               VertexShaderVersion;
+  DWORD               MaxVertexShaderConst;
 
-  DWORD               *PixelShaderVersion;
-  float               *PixelShader1xMaxValue;
+  DWORD               PixelShaderVersion;
+  float               PixelShader1xMaxValue;
 
   /* DX 9 */
-  DWORD               *DevCaps2;
+  DWORD               DevCaps2;
 
-  float               *MaxNpatchTessellationLevel;
-  DWORD               *Reserved5; /*undocumented*/
+  float               MaxNpatchTessellationLevel;
+  DWORD               Reserved5; /*undocumented*/
 
-  UINT                *MasterAdapterOrdinal;
-  UINT                *AdapterOrdinalInGroup;
-  UINT                *NumberOfAdaptersInGroup;
-  DWORD               *DeclTypes;
-  DWORD               *NumSimultaneousRTs;
-  DWORD               *StretchRectFilterCaps;
+  UINT                MasterAdapterOrdinal;
+  UINT                AdapterOrdinalInGroup;
+  UINT                NumberOfAdaptersInGroup;
+  DWORD               DeclTypes;
+  DWORD               NumSimultaneousRTs;
+  DWORD               StretchRectFilterCaps;
   WINED3DVSHADERCAPS2_0   VS20Caps;
   WINED3DPSHADERCAPS2_0   PS20Caps;
-  DWORD               *VertexTextureFilterCaps;
-  DWORD               *MaxVShaderInstructionsExecuted;
-  DWORD               *MaxPShaderInstructionsExecuted;
-  DWORD               *MaxVertexShader30InstructionSlots; 
-  DWORD               *MaxPixelShader30InstructionSlots;
-  DWORD               *Reserved2;/* Not in the microsoft headers but documented */
-  DWORD               *Reserved3;
+  DWORD               VertexTextureFilterCaps;
+  DWORD               MaxVShaderInstructionsExecuted;
+  DWORD               MaxPShaderInstructionsExecuted;
+  DWORD               MaxVertexShader30InstructionSlots;
+  DWORD               MaxPixelShader30InstructionSlots;
+  DWORD               Reserved2;/* Not in the microsoft headers but documented */
+  DWORD               Reserved3;
 
+  WINEDDCAPS          DirectDrawCaps;
 } WINED3DCAPS;
 
 typedef enum _WINED3DSTATEBLOCKTYPE {
@@ -1259,11 +1286,11 @@ typedef enum _WINED3DDECLTYPE {
 #define WINED3DDECL_END() {0xFF,0,WINED3DDECLTYPE_UNUSED,0,0,0,-1}
 
 typedef struct WineDirect3DStridedData {
-    BYTE     *lpData;        /* Pointer to start of data               */
-    DWORD     dwStride;      /* Stride between occurances of this data */
-    DWORD     dwType;        /* Type (as in D3DVSDT_TYPE)              */
-    int       VBO;           /* Vertex buffer object this data is in   */
-    UINT      streamNo;      /* D3D stream number                      */
+    BYTE     *lpData;        /* Pointer to start of data                */
+    DWORD     dwStride;      /* Stride between occurrences of this data */
+    DWORD     dwType;        /* Type (as in D3DVSDT_TYPE)               */
+    int       VBO;           /* Vertex buffer object this data is in    */
+    UINT      streamNo;      /* D3D stream number                       */
 } WineDirect3DStridedData;
 
 typedef struct WineDirect3DVertexStridedData {
@@ -1333,7 +1360,7 @@ typedef enum {
 #define WINED3DUSAGE_AUTOGENMIPMAP                    0x00000400L 
 #define WINED3DUSAGE_DMAP                             0x00004000L
 #define WINED3DUSAGE_MASK                             0x00004FFFL
-#define WINED3DUSAGE_OVERLAY                          0x00010000L
+#define WINED3DUSAGE_OVERLAY                          0x80000000L
 
 #define WINED3DUSAGE_QUERY_LEGACYBUMPMAP            0x00008000L
 #define WINED3DUSAGE_QUERY_FILTER                   0x00020000L
@@ -1342,13 +1369,12 @@ typedef enum {
 #define WINED3DUSAGE_QUERY_SRGBWRITE                0x00040000L
 #define WINED3DUSAGE_QUERY_VERTEXTEXTURE            0x00100000L
 #define WINED3DUSAGE_QUERY_WRAPANDMIP               0x00200000L
-#define WINED3DUSAGE_QUERY_MASK                     0x002F8000L
+#define WINED3DUSAGE_QUERY_MASK                     0x003F8000L
 
 typedef enum _WINED3DSURFTYPE {
     SURFACE_UNKNOWN    = 0,   /* Default / Unknown surface type */
     SURFACE_OPENGL,           /* OpenGL surface: Renders using libGL, needed for 3D */
     SURFACE_GDI,              /* User surface. No 3D, DirectDraw rendering with GDI */
-    SURFACE_XRENDER           /* Future dreams: Use XRENDER / EXA / whatever stuff */
 } WINED3DSURFTYPE;
 
 #define WINED3DCAPS2_NO2DDURING3DSCENE                 0x00000002L
@@ -1777,5 +1803,29 @@ typedef struct _WINEDDOVERLAYFX
 #define WINEDDFLIP_INTERVAL2                    0x02000000
 #define WINEDDFLIP_INTERVAL3                    0x03000000
 #define WINEDDFLIP_INTERVAL4                    0x04000000
+
+#define WINEDDOVER_ALPHADEST                    0x00000001
+#define WINEDDOVER_ALPHADESTCONSTOVERRIDE       0x00000002
+#define WINEDDOVER_ALPHADESTNEG                 0x00000004
+#define WINEDDOVER_ALPHADESTSURFACEOVERRIDE     0x00000008
+#define WINEDDOVER_ALPHAEDGEBLEND               0x00000010
+#define WINEDDOVER_ALPHASRC                     0x00000020
+#define WINEDDOVER_ALPHASRCCONSTOVERRIDE        0x00000040
+#define WINEDDOVER_ALPHASRCNEG                  0x00000080
+#define WINEDDOVER_ALPHASRCSURFACEOVERRIDE      0x00000100
+#define WINEDDOVER_HIDE                         0x00000200
+#define WINEDDOVER_KEYDEST                      0x00000400
+#define WINEDDOVER_KEYDESTOVERRIDE              0x00000800
+#define WINEDDOVER_KEYSRC                       0x00001000
+#define WINEDDOVER_KEYSRCOVERRIDE               0x00002000
+#define WINEDDOVER_SHOW                         0x00004000
+#define WINEDDOVER_ADDDIRTYRECT                 0x00008000
+#define WINEDDOVER_REFRESHDIRTYRECTS            0x00010000
+#define WINEDDOVER_REFRESHALL                   0x00020000
+#define WINEDDOVER_DDFX                         0x00080000
+#define WINEDDOVER_AUTOFLIP                     0x00100000
+#define WINEDDOVER_BOB                          0x00200000
+#define WINEDDOVER_OVERRIDEBOBWEAVE             0x00400000
+#define WINEDDOVER_INTERLEAVED                  0x00800000
 
 #endif
