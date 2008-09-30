@@ -1636,7 +1636,7 @@ NdisIPnPStartDevice(
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
-      return (NTSTATUS)NdisStatus;
+      return NdisStatus;
     }
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
@@ -1669,7 +1669,7 @@ NdisIPnPStartDevice(
         return STATUS_UNSUCCESSFUL;
     }
 
-  if (!Success || NdisStatus != NDIS_STATUS_SUCCESS)
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MAX_TRACE, ("couldn't create filter (%x)\n", NdisStatus));
       if (Adapter->LookaheadBuffer)
@@ -1678,8 +1678,7 @@ NdisIPnPStartDevice(
           Adapter->LookaheadBuffer = NULL;
         }
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
-      return (NTSTATUS)NdisStatus;
+      return NdisStatus;
     }
 
   /* Check for a hang every two seconds if it wasn't set in MiniportInitialize */

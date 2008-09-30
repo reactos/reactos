@@ -479,6 +479,15 @@ NdisReadConfiguration(
         return;
     }
 
+    MiniportResource = ExAllocatePool(PagedPool, sizeof(MINIPORT_RESOURCE));
+    if(!MiniportResource)
+    {
+       NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+       ExFreePool(KeyInformation);
+       *Status = NDIS_STATUS_RESOURCES;
+       return;
+    }
+
     switch(ParameterType)
     {
         case NdisParameterInteger:
@@ -516,8 +525,15 @@ NdisReadConfiguration(
                 ExFreePool(*ParameterValue);
                 *ParameterValue = NULL;
                 *Status = NDIS_STATUS_FAILURE;
-            } else
-                *Status = NDIS_STATUS_SUCCESS;
+                return;
+            }
+
+            MiniportResource->ResourceType = 0;
+            MiniportResource->Resource = *ParameterValue;
+            NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
+            ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
+
+            *Status = NDIS_STATUS_SUCCESS;
 
             return;
         }
@@ -556,18 +572,6 @@ NdisReadConfiguration(
                 return;
             }
 
-            MiniportResource = ExAllocatePool(PagedPool, sizeof(MINIPORT_RESOURCE));
-            if(!MiniportResource)
-            {
-                NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-                ExFreePool(RegData);
-                ExFreePool(KeyInformation);
-                ExFreePool(*ParameterValue);
-                *ParameterValue = NULL;
-                *Status = NDIS_STATUS_RESOURCES;
-                return;
-            }
-
             MiniportResource->ResourceType = 0;
             MiniportResource->Resource = *ParameterValue;
             NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
@@ -601,17 +605,6 @@ NdisReadConfiguration(
             {
                 NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
                 ExFreePool(KeyInformation);
-                *Status = NDIS_STATUS_RESOURCES;
-                return;
-            }
-
-            MiniportResource = ExAllocatePool(PagedPool, sizeof(MINIPORT_RESOURCE));
-            if(!MiniportResource)
-            {
-                NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
-                ExFreePool(KeyInformation);
-                ExFreePool(*ParameterValue);
-                *ParameterValue = NULL;
                 *Status = NDIS_STATUS_RESOURCES;
                 return;
             }
