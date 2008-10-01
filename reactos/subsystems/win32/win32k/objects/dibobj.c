@@ -552,7 +552,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 coreheader->bcWidth = BitmapObj->SurfObj.sizlBitmap.cx;
                 coreheader->bcPlanes = 1;
                 coreheader->bcBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
-                coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+                /* Resulting height may be smaller than original height */
+                coreheader->bcHeight = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
 
                 if (BitmapObj->SurfObj.lDelta > 0)
                     coreheader->bcHeight = -coreheader->bcHeight;
@@ -563,7 +564,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 ProbeForWrite(Info, sizeof(BITMAPINFO), 1);
 
                 Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
-                Info->bmiHeader.biHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+                /* Resulting height may be smaller than original height */
+                Info->bmiHeader.biHeight = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
                 /* Report negtive height for top-down bitmaps. */
                 if (BitmapObj->SurfObj.lDelta > 0)
                     Info->bmiHeader.biHeight = -Info->bmiHeader.biHeight;
@@ -594,8 +596,9 @@ NtGdiGetDIBitsInternal(HDC hDC,
                             Info->bmiHeader.biCompression = BI_PNG;
                             break;
                     }
-
-                    Info->bmiHeader.biSizeImage = BitmapObj->SurfObj.cjBits;
+                    /* Image size has to be calculated */
+                    Info->bmiHeader.biSizeImage = DIB_GetDIBWidthBytes(Info->bmiHeader.biWidth, 
+                        Info->bmiHeader.biBitCount) * Info->bmiHeader.biHeight;
                     Info->bmiHeader.biXPelsPerMeter = 0; /* FIXME */
                     Info->bmiHeader.biYPelsPerMeter = 0; /* FIXME */
                     Info->bmiHeader.biClrUsed = 0;
@@ -707,8 +710,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
                 {
                     hDestBitmap = EngCreateBitmap(DestSize,
-                                                  /* DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount), */
-                                                  DestSize.cx * (Info->bmiHeader.biBitCount >> 3), /* HACK */
+                                                  DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
                                                   BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
                                                   0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
                                                   Bits);
