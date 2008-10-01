@@ -354,43 +354,43 @@ KiGetFeatureBits(VOID)
     }
 
 #ifdef CPU_TRANSMETA
-	if (Vendor == CPU_TRANSMETA)
-	{
-		/* Enable CMPXCHG8B if the family (>= 5), model and stepping (>= 4.2) support it */
-		if ((Reg[0] & 0x0F00) >= 0x0500 && (Reg[0] & 0x00FF) >= 0x0042)
-		{
-			WRMSR(0x80860004, RDMSR(0x80860004) | 0x0100);
-			FeatureBits |= KF_CMPXCHG8B;
-		}
-	}
+    if (Vendor == CPU_TRANSMETA)
+    {
+        /* Enable CMPXCHG8B if the family (>= 5), model and stepping (>= 4.2) support it */
+        if ((Reg[0] & 0x0F00) >= 0x0500 && (Reg[0] & 0x00FF) >= 0x0042)
+        {
+            WRMSR(0x80860004, RDMSR(0x80860004) | 0x0100);
+            FeatureBits |= KF_CMPXCHG8B;
+        }
+    }
 #endif
 
 #ifdef CPU_CENTAUR
-	if (Vendor == CPU_CENTAUR)
-	{
-		/* If CMPXCHG8B is not detected, try to enable it */
-		if (!(CpuFeatures & 0x00000100))
-		{
-			if ((Reg[0] & 0x0F00) == 0x0500)
-			{
-				WRMSR(0x0107, RDMSR(0x0107) | 0x02);
-				FeatureBits |= KF_CMPXCHG8B;
-			}
-			else if ((Reg[0] & 0x0F00) >= 0x0600)
-			{
-				WRMSR(0x1107, (RDMSR(0x1107) | 0x02) & ~((LONGLONG)0x01));
-				FeatureBits |= KF_CMPXCHG8B;
-			}
-		}
-	}
+    if (Vendor == CPU_CENTAUR)
+    {
+        /* If CMPXCHG8B is not detected, try to enable it */
+        if (!(CpuFeatures & 0x00000100))
+        {
+            if ((Reg[0] & 0x0F00) == 0x0500)
+            {
+                WRMSR(0x0107, RDMSR(0x0107) | 0x02);
+                FeatureBits |= KF_CMPXCHG8B;
+            }
+            else if ((Reg[0] & 0x0F00) >= 0x0600)
+            {
+                WRMSR(0x1107, (RDMSR(0x1107) | 0x02) & ~((LONGLONG)0x01));
+                FeatureBits |= KF_CMPXCHG8B;
+            }
+        }
+    }
 #endif
 
 #ifdef CPU_RISE
-	if (Vendor == CPU_RISE)
-	{
-		/* Windows Vista assumes CMPXCHG8B is always supported on Rise */
-		FeatureBits |= KF_CMPXCHG8B;
-	}
+    if (Vendor == CPU_RISE)
+    {
+        /* Windows Vista assumes CMPXCHG8B is always supported on Rise */
+        FeatureBits |= KF_CMPXCHG8B;
+    }
 #endif
 
     /* Convert all CPUID Feature bits into our format */
