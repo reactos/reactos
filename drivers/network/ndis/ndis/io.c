@@ -62,19 +62,19 @@ BOOLEAN NTAPI ServiceRoutine(
 {
   BOOLEAN InterruptRecognized;
   BOOLEAN QueueMiniportHandleInterrupt;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)ServiceContext;
+  PLOGICAL_ADAPTER Adapter = ServiceContext;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
 
-  (*Adapter->DriverHandle->MiniportCharacteristics.ISRHandler)(
+  (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ISRHandler)(
       &InterruptRecognized,
       &QueueMiniportHandleInterrupt,
-      Adapter->MiniportAdapterContext);
+      Adapter->NdisMiniportBlock.MiniportAdapterContext);
 
   if (QueueMiniportHandleInterrupt)
     {
       NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
-      KeInsertQueueDpc(&Adapter->Interrupt->InterruptDpc, NULL, NULL);
+      KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
     }
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
