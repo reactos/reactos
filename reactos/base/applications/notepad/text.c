@@ -120,8 +120,6 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 			iCodePage = CP_ACP;
 		else if (iEncoding == ENCODING_UTF8)
 			iCodePage = CP_UTF8;
-		else
-			goto done;
 
 		if ((dwSize - dwPos) > 0)
 		{
@@ -263,8 +261,6 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 					iCodePage = CP_ACP;
 				else if (iEncoding == ENCODING_UTF8)
 					iCodePage = CP_UTF8;
-				else
-					goto done;
 
 				iRequiredBytes = WideCharToMultiByte(iCodePage, 0, &pszText[dwPos], dwTextLen - dwPos, NULL, 0, NULL, NULL);
 				if (iRequiredBytes <= 0)
