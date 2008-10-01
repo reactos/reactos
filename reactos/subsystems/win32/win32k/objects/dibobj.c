@@ -549,9 +549,9 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 ProbeForWrite(Info, sizeof(BITMAPINFO), 1);
 
                 coreheader = (BITMAPCOREHEADER*) Info;
-                coreheader->bcWidth =BitmapObj->SurfObj.sizlBitmap.cx;
+                coreheader->bcWidth = BitmapObj->SurfObj.sizlBitmap.cx;
                 coreheader->bcPlanes = 1;
-                coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
+                coreheader->bcBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
                 coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
 
                 if (BitmapObj->SurfObj.lDelta > 0)
@@ -665,7 +665,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                     {
                         Info->bmiColors[Index].rgbRed = DestPalette->IndexedColors[Index].peRed;
                         Info->bmiColors[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
-                        Info->bmiColors[Index].rgbBlue =  DestPalette->IndexedColors[Index].peBlue;
+                        Info->bmiColors[Index].rgbBlue = DestPalette->IndexedColors[Index].peBlue;
                     }
                 }
 
@@ -990,7 +990,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
 
   if (!hDc)
   {
-     hDc =  IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
+     hDc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
      if (!hDc)
      {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1031,7 +1031,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
                               IN OPTIONAL HANDLE hSection,
                               IN DWORD dwOffset,
                               IN LPBITMAPINFO bmi,
-                              DWORD  Usage,
+                              DWORD Usage,
                               IN UINT cjHeader,
                               IN FLONG fl,
                               IN ULONG_PTR dwColorSpace,
@@ -1148,7 +1148,8 @@ DIB_CreateDIBSection(
       case 16:
         dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB : 0x7c00;
         dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;        break;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;
+        break;
 
       case 24:
         dib->dsBitfields[0] = 0xff0000;
@@ -1164,11 +1165,8 @@ DIB_CreateDIBSection(
     }
     dib->dshSection = section;
     dib->dsOffset = offset;
-  }
 
-  // Create Device Dependent Bitmap and add DIB pointer
-  if (dib)
-  {
+    // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
     Size.cy = abs(bm.bmHeight);
     res = IntCreateBitmap(Size, bm.bmWidthBytes,
@@ -1312,7 +1310,6 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 
   if (NULL == palGDI)
     {
-//      RELEASEDCINFO(hDC);
       return NULL;
     }
 
@@ -1344,7 +1341,6 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
       lpIndex++;
     }
-//    RELEASEDCINFO(hDC);
   PALETTE_UnlockPalette(palGDI);
 
   return lpRGB;

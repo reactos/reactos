@@ -1065,7 +1065,7 @@ EngAlphaBlend(IN SURFOBJ *Dest,
            BlendObj->BlendFunction.AlphaFormat);
 
 
-    /* Validate input */
+    /* Validate output */
     OutputRect = *DestRect;
     if (OutputRect.right < OutputRect.left)
     {

@@ -755,8 +755,7 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 			Bitmap.bmWidthBytes = abs(bmp->SurfObj.lDelta);
 			Bitmap.bmPlanes = 1;
 			Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-			//Bitmap.bmBits = bmp->SurfObj.pvBits;
-			Bitmap.bmBits = NULL; /* not set accoring wine test confirm in win2k */
+			Bitmap.bmBits = NULL; /* not set according to wine test, confirmed in win2k */
 			memcpy(buffer, &Bitmap, Count);
 		}
 		return Count;
