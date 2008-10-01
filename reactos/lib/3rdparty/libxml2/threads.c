@@ -786,7 +786,7 @@ xmlOnceInit(void) {
 
 #if defined(HAVE_WIN32_THREADS)
     if (!run_once.done) {
-        if (InterlockedIncrement(&run_once.control) == 1)
+        if (InterlockedIncrement((PLONG)&run_once.control) == 1)
         {
 #if !defined(HAVE_COMPILER_TLS)
             globalkey = TlsAlloc();
