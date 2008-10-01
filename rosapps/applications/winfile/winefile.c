@@ -201,14 +201,13 @@ static const TCHAR sLongNumFmt[] = {'%','I','6','4','u','\0'};
 
 
 /* load resource string */
-static LPTSTR load_string(LPTSTR buffer, UINT id)
+static LPTSTR load_string(LPTSTR buffer, DWORD size, UINT id)
 {
-	LoadString(Globals.hInstance, id, buffer, BUFFER_LEN);
-
+	LoadString(Globals.hInstance, id, buffer, size);
 	return buffer;
 }
 
-#define RS(b, i) load_string(b, i)
+#define RS(b, i) load_string(b, sizeof(b)/sizeof(b[0]), i)
 
 
 /* display error message for the specified WIN32 error code */
@@ -1407,9 +1406,9 @@ static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv,
 		root->drive_type = DRIVE_UNKNOWN;
 		drv[0] = '\\';
 		drv[1] = '\0';
-		load_string(root->volname, IDS_DESKTOP);
+		load_string(root->volname, sizeof(root->volname)/sizeof(root->volname[0]), IDS_DESKTOP);
 		root->fs_flags = 0;
-		load_string(root->fs, IDS_SHELL);
+		load_string(root->fs, sizeof(root->fs)/sizeof(root->fs[0]), IDS_SHELL);
 
 		return read_tree_shell(root, pidl, sortOrder, hwnd);
 	}
@@ -1422,9 +1421,9 @@ static Entry* read_tree(Root* root, LPCTSTR path, LPITEMIDLIST pidl, LPTSTR drv,
 		root->drive_type = GetDriveType(path);
 
 		lstrcat(drv, sSlash);
-		load_string(root->volname, IDS_ROOT_FS);
+		load_string(root->volname, sizeof(root->volname)/sizeof(root->volname[0]), IDS_ROOT_FS);
 		root->fs_flags = 0;
-		load_string(root->fs, IDS_UNIXFS);
+		load_string(root->fs, sizeof(root->fs)/sizeof(root->fs[0]), IDS_UNIXFS);
 
 		lstrcpy(root->path, sSlash);
 
@@ -1509,7 +1508,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 
 #ifdef _SHELL_FOLDERS
 	if (root->entry.etype == ET_SHELL)
-		load_string(root->entry.data.cFileName, IDS_DESKTOP);
+		load_string(root->entry.data.cFileName, sizeof(root->entry.data.cFileName)/sizeof(root->entry.data.cFileName[0]), IDS_DESKTOP);
 	else
 #endif
 		wsprintf(root->entry.data.cFileName, RS(b1,IDS_TITLEFMT), drv, root->fs);
@@ -3865,7 +3864,7 @@ static void create_drive_bar(void)
 #endif
 #ifdef _SHELL_FOLDERS
 	/* insert shell namespace button */
-	load_string(b1, IDS_SHELL);
+	load_string(b1, sizeof(b1)/sizeof(b1[0]), IDS_SHELL);
 	b1[lstrlen(b1)+1] = '\0';
 	SendMessage(Globals.hdrivebar, TB_ADDSTRING, 0, (LPARAM)b1);
 
@@ -4720,18 +4719,18 @@ static void InitInstance(HINSTANCE hinstance)
 	/* load column strings */
 	col = 1;
 
-	load_string(g_pos_names[col++], IDS_COL_NAME);
-	load_string(g_pos_names[col++], IDS_COL_SIZE);
-	load_string(g_pos_names[col++], IDS_COL_CDATE);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_NAME);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_SIZE);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_CDATE);
 #ifndef _NO_EXTENSIONS
-	load_string(g_pos_names[col++], IDS_COL_ADATE);
-	load_string(g_pos_names[col++], IDS_COL_MDATE);
-	load_string(g_pos_names[col++], IDS_COL_IDX);
-	load_string(g_pos_names[col++], IDS_COL_LINKS);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_ADATE);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_MDATE);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_IDX);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_LINKS);
 #endif
-	load_string(g_pos_names[col++], IDS_COL_ATTR);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_ATTR);
 #ifndef _NO_EXTENSIONS
-	load_string(g_pos_names[col++], IDS_COL_SEC);
+	load_string(g_pos_names[col++], sizeof(g_pos_names[col])/sizeof(g_pos_names[col][0]), IDS_COL_SEC);
 #endif
 }
 
