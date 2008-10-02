@@ -33,6 +33,7 @@ typedef struct {
     LONG                       ref;
     const IContextMenu2Vtbl *lpVtblContextMenu;
     const IPersistFolder2Vtbl *lpVtblPersistFolder2;
+    const IQueryInfoVtbl *lpVtblQueryInfo;
 
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
@@ -69,6 +70,10 @@ static LPIGenericSFImpl __inline impl_from_IPersistFolder2(IPersistFolder2 *ifac
     return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
 }
 
+static LPIGenericSFImpl __inline impl_from_IQueryInfo(IQueryInfo *iface)
+{
+    return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblQueryInfo));
+}
 
 
 /**************************************************************************
@@ -99,6 +104,14 @@ static HRESULT WINAPI ISF_NetConnect_fnQueryInterface (IShellFolder2 *iface, REF
         IUnknown_AddRef ((IUnknown *) (*ppvObj));
         return S_OK;
     }
+
+    /* TODO:
+     * IID_IPersistFreeThreadedObject
+     * IID_IBrowserFrameOptions
+     * IID_IShellIconOverlay
+     * IID_IPersistIDList
+     * IID_IPersist
+     */
 
     return E_NOINTERFACE;
 }
@@ -288,6 +301,8 @@ static HRESULT WINAPI ISF_NetConnect_fnGetAttributesOf (IShellFolder2 * iface,
     static const DWORD dwNetConnectAttributes = SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
+    static const DWORD dwNetConnectItemAttributes = SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
+        SFGAO_FILESYSANCESTOR | SFGAO_CANRENAME;
 
     if (!rgfInOut)
         return E_INVALIDARG;
@@ -300,6 +315,8 @@ static HRESULT WINAPI ISF_NetConnect_fnGetAttributesOf (IShellFolder2 * iface,
 
     if(cidl == 0)
         *rgfInOut = dwNetConnectAttributes;
+    else
+        *rgfInOut = dwNetConnectItemAttributes;
 
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
@@ -333,18 +350,22 @@ static HRESULT WINAPI ISF_NetConnect_fnGetUIObjectOf (IShellFolder2 * iface,
 
     *ppvOut = NULL;
 
-    if (IsEqualIID (riid, &IID_IContextMenu) && (cidl >= 1))
+    if ((IsEqualIID (riid, &IID_IContextMenu) || IsEqualIID (riid, &IID_IContextMenu2)) && (cidl >= 1))
     {
         pObj = (IUnknown*)(&This->lpVtblContextMenu);
         This->apidl = apidl[0];
         IUnknown_AddRef(pObj);
         hr = S_OK;
     }
+    else if (IsEqualIID(riid, &IID_IQueryInfo) && (cidl >= 1))
+    {
+        pObj = (IUnknown*)(&This->lpVtblQueryInfo);
+        This->apidl = apidl[0];
+        IUnknown_AddRef(pObj);
+        hr = S_OK;
+   }
     else
         hr = E_NOINTERFACE;
-
-    if (SUCCEEDED(hr) && !pObj)
-        hr = E_OUTOFMEMORY;
 
     *ppvOut = pObj;
     return hr;
@@ -511,6 +532,9 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
     if (!val)
         return E_FAIL;
 
+   if (!val->pItem)
+       return E_FAIL;
+
     if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
         return E_FAIL;
 
@@ -548,10 +572,13 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDetailsOf (IShellFolder2 * iface,
             }
             break;
         case COLUMN_DEVNAME:
-            wcscpy(buffer, pProperties->pszwDeviceName);
-            buffer[MAX_PATH-1] = L'\0';
-            psd->str.uType = STRRET_WSTR;
-            hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+            if (pProperties->pszwDeviceName)
+            {
+                wcscpy(buffer, pProperties->pszwDeviceName);
+                buffer[MAX_PATH-1] = L'\0';
+                psd->str.uType = STRRET_WSTR;
+                hr = SHStrDupW(buffer, &psd->str.u.pOleStr);
+            }
             break;
         case COLUMN_PHONE:
         case COLUMN_OWNER:
@@ -608,7 +635,13 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_QueryInterface(IContextMenu2 
 {
     IGenericSFImpl * This = impl_from_IContextMenu2(iface);
 
-    return IShellFolder2_QueryInterface((IShellFolder2*)This, iid, ppvObject);
+    if (IsEqualIID(iid, &IID_IContextMenu) || IsEqualIID(iid, &IID_IContextMenu2))
+    {
+        *ppvObject = (IUnknown*) &This->lpVtblContextMenu;
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
 }
 
 /************************************************************************
@@ -986,6 +1019,77 @@ static const IPersistFolder2Vtbl vt_PersistFolder2 =
     ISF_NetConnect_PersistFolder2_GetCurFolder
 };
 
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_QueryInterface
+ */
+static HRESULT WINAPI ISF_NetConnect_IQueryInfo_QueryInterface (IQueryInfo * iface,
+               REFIID iid, LPVOID * ppvObj)
+{
+    IGenericSFImpl * This = impl_from_IQueryInfo(iface);
+
+    if (IsEqualIID(iid, &IID_IQueryInfo))
+    {
+        *ppvObj = (IUnknown*)&This->lpVtblQueryInfo;
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_AddRef
+ */
+static ULONG WINAPI ISF_NetConnect_IQueryInfo_AddRef (IQueryInfo * iface)
+{
+    IGenericSFImpl * This = impl_from_IQueryInfo(iface);
+
+    return IShellFolder2_AddRef((IShellFolder2*)This);
+}
+
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_Release
+ */
+static ULONG WINAPI ISF_NetConnect_IQueryInfo_Release (IQueryInfo * iface)
+{
+    IGenericSFImpl * This = impl_from_IQueryInfo(iface);
+
+    return IShellFolder2_Release((IShellFolder2*)This);
+}
+
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_GetClassID
+ */
+static HRESULT WINAPI ISF_NetConnect_IQueryInfo_GetInfoFlags (
+               IQueryInfo * iface, DWORD *pdwFlags)
+{
+    *pdwFlags = 0;
+
+    return S_OK;
+}
+
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_Initialize
+ *
+ * NOTES: it makes no sense to change the pidl
+ */
+static HRESULT WINAPI ISF_NetConnect_IQueryInfo_GetInfoTip (
+               IQueryInfo * iface, DWORD dwFlags, WCHAR **ppwszTip)
+{
+//    IGenericSFImpl * This = impl_from_IQueryInfo(iface);
+
+    *ppwszTip = NULL;
+    return S_OK;
+}
+
+static const IQueryInfoVtbl vt_QueryInfo =
+{
+    ISF_NetConnect_IQueryInfo_QueryInterface,
+    ISF_NetConnect_IQueryInfo_AddRef,
+    ISF_NetConnect_IQueryInfo_Release,
+    ISF_NetConnect_IQueryInfo_GetInfoTip,
+    ISF_NetConnect_IQueryInfo_GetInfoFlags
+};
+
 /**************************************************************************
 *	ISF_NetConnect_Constructor
 */
@@ -1007,6 +1111,7 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
     sf->lpVtblContextMenu = &vt_ContextMenu2;
+    sf->lpVtblQueryInfo = &vt_QueryInfo;
 
     hr = CoCreateInstance(&CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (LPVOID*)&sf->lpOleCmd);
     if (FAILED(hr))
@@ -1022,6 +1127,5 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
         IShellFolder2_Release((IShellFolder2*)sf);
         return E_NOINTERFACE;
     }
-
     return S_OK;
 }
