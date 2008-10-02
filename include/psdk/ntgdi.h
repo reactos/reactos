@@ -3539,6 +3539,7 @@ NtGdiHT_Get8BPPMaskPalette(
 
 W32KAPI
 BOOL
+APIENTRY
 NtGdiUpdateTransform(
     IN HDC hdc
 );
@@ -3568,6 +3569,7 @@ NtGdiGetDeviceWidth(
 
 W32KAPI
 BOOL
+APIENTRY
 NtGdiSetPUMPDOBJ(
     IN HUMPD humpd,
     IN BOOL bStoreID,
@@ -3577,6 +3579,7 @@ NtGdiSetPUMPDOBJ(
 
 W32KAPI
 BOOL
+APIENTRY
 NtGdiBRUSHOBJ_DeleteRbrush(
     IN BRUSHOBJ *pbo,
     IN BRUSHOBJ *pboB
@@ -3584,6 +3587,7 @@ NtGdiBRUSHOBJ_DeleteRbrush(
 
 W32KAPI
 BOOL
+APIENTRY
 NtGdiUMPDEngFreeUserMem(
     IN KERNEL_PVOID *ppv
 );

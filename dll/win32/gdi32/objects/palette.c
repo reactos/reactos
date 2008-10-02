@@ -50,7 +50,7 @@ GetSystemPaletteEntries(HDC hDC,
                         UINT cEntries,
                         LPPALETTEENTRY ppe)
 {
-    return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
+    return NtGdiDoPalette((HPALETTE)hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
 }
 
 UINT
@@ -60,7 +60,7 @@ GetDIBColorTable(HDC hDC,
                  UINT cEntries,
                  RGBQUAD *pColors)
 {
-    return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
+    return NtGdiDoPalette((HPALETTE)hDC, iStartIndex, cEntries, (PALETTEENTRY*)pColors, GdiPalGetColorTable, FALSE);
 }
 
 /*
@@ -116,7 +116,7 @@ SetDIBColorTable(HDC hDC,
 
     if (cEntries)
     {
-        retValue = NtGdiDoPalette(hDC, iStartIndex, cEntries, (RGBQUAD*)pColors, GdiPalSetColorTable, TRUE);
+        retValue = NtGdiDoPalette((HPALETTE)hDC, iStartIndex, cEntries, (PALETTEENTRY*)pColors, GdiPalSetColorTable, TRUE);
     }
 
     return retValue;

@@ -101,20 +101,19 @@ NtGdiUnloadPrinterDriver(IN LPWSTR pDriverName,
     return FALSE;
 }
 
-/* FIXME: Parameters! */
 INT
 APIENTRY
-NtGdiGetSpoolMessage( DWORD u1,
-                      DWORD u2,
-                      DWORD u3,
-                      DWORD u4)
+NtGdiGetSpoolMessage(IN PVOID InputBuffer,
+                     IN ULONG InputBufferSize,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferSize)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiSetPUMPDOBJ(IN HUMPD humpd,
                  IN BOOL bStoreID,
                  OUT HUMPD *phumpd,
@@ -125,7 +124,7 @@ NtGdiSetPUMPDOBJ(IN HUMPD humpd,
 }
 
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiUMPDEngFreeUserMem(IN KERNEL_PVOID *ppv)
 {
     UNIMPLEMENTED;

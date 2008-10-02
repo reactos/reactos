@@ -121,9 +121,8 @@ NtGdiMirrorWindowOrg(IN HDC hdc)
 }
 
 
-
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiUpdateTransform(IN HDC hdc)
 {
     UNIMPLEMENTED;

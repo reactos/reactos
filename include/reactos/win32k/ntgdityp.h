@@ -189,14 +189,15 @@ NtGdiInitSpool(
     VOID
 );
 
-/* FIXME: prototypes */
 W32KAPI
 INT
 APIENTRY
-NtGdiGetSpoolMessage(DWORD u1,
-                     DWORD u2,
-                     DWORD u3,
-                     DWORD u4);
+NtGdiGetSpoolMessage(
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferSize,
+    OUT PVOID OutputBuffer,
+    IN ULONG OutputBufferSize
+);
 
 #define GDIBATCHBUFSIZE 0x136*4
 #define GDI_BATCH_LIMIT 20

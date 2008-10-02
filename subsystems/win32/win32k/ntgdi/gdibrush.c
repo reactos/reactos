@@ -110,7 +110,7 @@ NtGdiSetBrushOrg(IN HDC hdc,
 }
 
 BOOL
-/* Missing APIENTRY! */
+APIENTRY
 NtGdiBRUSHOBJ_DeleteRbrush(IN BRUSHOBJ *pbo,
                            IN BRUSHOBJ *pboB)
 {
