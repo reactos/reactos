@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Win32K
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/ntgdi/gdiinit.c
- * PURPOSE:         GDI Inittialization Routine
+ * PURPOSE:         GDI Initialization Routines
  * PROGRAMMERS:     Stefan Ginsberg (stefan__100__@hotmail.com)
  */
 
@@ -18,7 +18,7 @@ BOOL
 APIENTRY
 NtGdiInit(VOID)
 {
-    DPRINT1("NtGdiInit() called\n");
+    /* This is all we do */
     return TRUE;
 }
 
