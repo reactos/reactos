@@ -27,8 +27,3 @@
 
 /* Private GDI32 Header */
 #include "gdi32p.h"
-
-/* Deprecated NTGDI calls which shouldn't exist */
-#include <win32k/ntgdibad.h>
-
-/* EOF */
