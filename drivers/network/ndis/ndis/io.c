@@ -60,22 +60,31 @@ BOOLEAN NTAPI ServiceRoutine(
  *     TRUE if a miniport controlled device generated the interrupt
  */
 {
-  BOOLEAN InterruptRecognized;
-  BOOLEAN QueueMiniportHandleInterrupt;
+  BOOLEAN InterruptRecognized = FALSE;
+  BOOLEAN QueueMiniportHandleInterrupt = FALSE;
   PLOGICAL_ADAPTER Adapter = ServiceContext;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
 
-  (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ISRHandler)(
-      &InterruptRecognized,
-      &QueueMiniportHandleInterrupt,
-      Adapter->NdisMiniportBlock.MiniportAdapterContext);
+  if (Adapter->NdisMiniportBlock.Interrupt->IsrRequested) {
+      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ISRHandler)(
+          &InterruptRecognized,
+          &QueueMiniportHandleInterrupt,
+          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+
+  } else if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
+      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
+          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+       QueueMiniportHandleInterrupt = TRUE;
+       InterruptRecognized = TRUE;
+  }
+
 
   if (QueueMiniportHandleInterrupt)
-    {
-      NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
+  {
+      NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
       KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
-    }
+  }
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -767,6 +776,7 @@ NdisMRegisterInterrupt(
   KeInitializeEvent(&Interrupt->DpcsCompletedEvent, NotificationEvent, FALSE);
 
   Interrupt->SharedInterrupt = SharedInterrupt;
+  Interrupt->IsrRequested = RequestIsr;
 
   Adapter->NdisMiniportBlock.Interrupt = Interrupt;
 
