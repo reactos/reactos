@@ -216,15 +216,15 @@ IO_ALLOCATION_ACTION NTAPI NdisMapRegisterCallback (
  *     - Called at IRQL = DISPATCH_LEVEL
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)Context;
+  PLOGICAL_ADAPTER Adapter = Context;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  Adapter->MapRegisters[Adapter->CurrentMapRegister].MapRegister = MapRegisterBase;
+  Adapter->NdisMiniportBlock.MapRegisters[Adapter->NdisMiniportBlock.CurrentMapRegister].MapRegister = MapRegisterBase;
 
   NDIS_DbgPrint(MAX_TRACE, ("setting event and leaving.\n"));
 
-  KeSetEvent(Adapter->AllocationEvent, 0, FALSE);
+  KeSetEvent(Adapter->NdisMiniportBlock.AllocationEvent, 0, FALSE);
 
   /* this is only the thing to do for busmaster NICs */
   return DeallocateObjectKeepRegisters;
