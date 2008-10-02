@@ -31,14 +31,14 @@ NtUserDisableThreadIme(DWORD dwUnknown1)
     return 0;
 }
 
-DWORD
+VOID
 APIENTRY
 NtUserNotifyIMEStatus(DWORD Unknown0,
                       DWORD Unknown1,
                       DWORD Unknown2)
 {
     UNIMPLEMENTED;
-    return 0;
+    return;
 }
 
 DWORD

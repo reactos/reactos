@@ -43,12 +43,12 @@ NtUserGetDoubleClickTime(VOID)
    return 0;
 }
 
-DWORD
+INT
 APIENTRY
 NtUserGetMouseMovePointsEx(UINT cbSize,
                            LPMOUSEMOVEPOINT lppt,
                            LPMOUSEMOVEPOINT lpptBuf,
-                           int nBufPoints,
+                           INT nBufPoints,
                            DWORD resolution)
 {
     UNIMPLEMENTED;

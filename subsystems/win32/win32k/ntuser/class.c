@@ -16,11 +16,11 @@
 
 BOOL
 APIENTRY
-NtUserGetClassInfoEx(DWORD Param1,
-                     DWORD Param2,
-                     DWORD Param3,
-                     DWORD Param4,
-                     DWORD Param5)
+NtUserGetClassInfoEx(HINSTANCE hInstance,
+                     PUNICODE_STRING ClassName,
+                     PWNDCLASSEXW wcex,
+                     PWSTR *ppszMenuName,
+                     BOOL bUnknown)
 {
     UNIMPLEMENTED;
     return FALSE;

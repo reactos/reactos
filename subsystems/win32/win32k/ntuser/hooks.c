@@ -42,10 +42,10 @@ NtUserCallMsgFilter(LPMSG msg,
 
 LRESULT
 APIENTRY
-NtUserCallNextHookEx(HHOOK Hook,
-                     INT Code,
+NtUserCallNextHookEx(INT nCode,
                      WPARAM wParam,
-                     LPARAM lParam)
+                     LPARAM lParam,
+                     BOOL bAnsi)
 {
     UNIMPLEMENTED;
     return 0;

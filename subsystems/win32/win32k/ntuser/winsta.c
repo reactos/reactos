@@ -61,9 +61,9 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
     return FALSE;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserSetWindowStationUser(DWORD Unknown0,
+NtUserSetWindowStationUser(HWINSTA hWinSta,
                            DWORD Unknown1,
                            DWORD Unknown2,
                            DWORD Unknown3)

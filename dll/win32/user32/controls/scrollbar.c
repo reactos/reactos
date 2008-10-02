@@ -1567,7 +1567,7 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
     }
   else
     {
-      return NtUserSetScrollInfo(Wnd, SBType, Info, bRedraw);
+      return NtUserSetScrollInfo(Wnd, SBType, (SCROLLINFO*)Info, bRedraw);
     }
 }
 

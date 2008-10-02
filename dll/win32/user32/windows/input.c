@@ -353,7 +353,7 @@ MapVirtualKeyExW(UINT uCode,
 		 UINT uMapType,
 		 HKL dwhkl)
 {
-  return NtUserMapVirtualKeyEx( uCode, uMapType, 0, dwhkl );
+  return NtUserMapVirtualKeyEx( uCode, uMapType, dwhkl, FALSE ); //FIXME: Determine last parameter
 }
 
 

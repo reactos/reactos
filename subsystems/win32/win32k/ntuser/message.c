@@ -16,7 +16,7 @@
 
 LRESULT
 APIENTRY
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo)
+NtUserDispatchMessage(PMSG Msg)
 {
     UNIMPLEMENTED;
     return 0;
@@ -24,7 +24,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo)
 
 BOOL
 APIENTRY
-NtUserGetMessage(PNTUSERGETMESSAGEINFO MsgInfo,
+NtUserGetMessage(PMSG Msg,
                  HWND hWnd,
                  UINT wMsgFilterMin,
                  UINT wMsgFilterMax)
@@ -62,7 +62,7 @@ NtUserMessageCall(HWND hWnd,
 
 BOOL
 APIENTRY
-NtUserPeekMessage(PNTUSERGETMESSAGEINFO MsgInfo,
+NtUserPeekMessage(PMSG Msg,
                   HWND hWnd,
                   UINT wMsgFilterMin,
                   UINT wMsgFilterMax,

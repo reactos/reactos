@@ -17,7 +17,7 @@
 INT
 APIENTRY
 NtUserCopyAcceleratorTable(HACCEL Table,
-                           LPACCEL Entries,
+                           ACCEL* Entries,
                            INT EntriesCount)
 {
     UNIMPLEMENTED;
@@ -26,14 +26,14 @@ NtUserCopyAcceleratorTable(HACCEL Table,
 
 HACCEL
 APIENTRY
-NtUserCreateAcceleratorTable(LPACCEL Entries,
-                             SIZE_T EntriesCount)
+NtUserCreateAcceleratorTable(ACCEL* Entries,
+                             INT EntriesCount)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
-BOOLEAN
+BOOL
 APIENTRY
 NtUserDestroyAcceleratorTable(HACCEL Table)
 {
@@ -45,7 +45,7 @@ INT
 APIENTRY
 NtUserTranslateAccelerator(HWND Window,
                            HACCEL Table,
-                           LPMSG Message)
+                           PMSG Message)
 {
     UNIMPLEMENTED;
     return 0;

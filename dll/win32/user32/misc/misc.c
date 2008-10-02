@@ -49,24 +49,6 @@ GetGuiResources(
 
 
 /*
- * Private calls for CSRSS
- */
-VOID
-STDCALL
-PrivateCsrssManualGuiCheck(LONG Check)
-{
-  NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
-}
-
-VOID
-STDCALL
-PrivateCsrssInitialized(VOID)
-{
-  NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
-}
-
-
-/*
  * @implemented
  */
 BOOL
@@ -75,7 +57,7 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   return NtUserCallTwoParam(dwProcessId,
 			    (DWORD)bRegister,
-			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
+			    TWOPARAM_ROUTINE_REGISTERLOGONPROCESS);
 }
 
 /*

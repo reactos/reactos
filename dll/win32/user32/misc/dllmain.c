@@ -259,11 +259,13 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!NtUserRegisterUserModule(hInstanceDll) ||
+#if 0
+         if (!NtUserCallOneParam((DWORD)hInstance, ONEPARAM_ROUTINE_REGISTERUSERMODULE) ||
              !RegisterSystemControls())
          {
              return FALSE;
          }
+#endif
 
          if (!Init())
             return FALSE;

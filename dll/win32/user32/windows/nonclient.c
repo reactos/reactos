@@ -451,7 +451,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
      if (menu && !(Style & WS_CHILD))
      {
         TempRect = CurrentRect;
-        TempRect.bottom = TempRect.top + (UINT)NtUserSetMenuBarHeight(menu, 0);
+        TempRect.bottom = TempRect.top; // + (UINT)NtUserCallTwoParam((DWORD)menu, (DWORD)height, TWOPARAM_ROUTINE_SETMENUBARHEIGHT)
         CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
      }
 
@@ -567,8 +567,9 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 
       if(Style & (WS_VSCROLL | WS_HSCROLL))
       {
+#if 0
         SCROLLBARINFO sbi;
-        SETSCROLLBARINFO ssbi;
+        SETSCROLLBARINFO ssbi; // <-- ros specific
 
         sbi.cbSize = sizeof(SCROLLBARINFO);
         if((Style & WS_VSCROLL) && NtUserGetScrollBarInfo(hWnd, OBJID_VSCROLL, &sbi))
@@ -608,6 +609,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
         }
         else
           Style &= ~WS_HSCROLL;
+#endif
       }
 
       if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL))
@@ -1107,7 +1109,7 @@ AdjustWindowRect(LPRECT lpRect,
 BOOL WINAPI
 DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 {
- return NtUserDrawCaption(hWnd, hDC, lprc, uFlags);
+ return NtUserDrawCaption(hWnd, hDC, (RECT*)lprc, uFlags);
 }
 
 /*
@@ -1127,7 +1129,7 @@ DrawCaptionTempW(
 {
    UNICODE_STRING Text = {0};
    RtlInitUnicodeString(&Text, str);
-   return NtUserDrawCaptionTemp(hWnd, hDC, rect, hFont, hIcon, &Text, uFlags);
+   return NtUserDrawCaptionTemp(hWnd, hDC, (RECT*)rect, hFont, hIcon, &Text, uFlags);
 }
 
 /*

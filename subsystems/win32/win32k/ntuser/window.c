@@ -14,14 +14,14 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-DWORD
+VOID
 APIENTRY
 NtUserAlterWindowStyle(DWORD Unknown0,
                        DWORD Unknown1,
                        DWORD Unknown2)
 {
     UNIMPLEMENTED;
-    return 0;
+    return;
 }
 
 HWND
@@ -81,7 +81,7 @@ NtUserDefSetText(HWND WindowHandle,
     return FALSE;
 }
 
-BOOLEAN
+BOOL
 APIENTRY
 NtUserDestroyWindow(HWND Wnd)
 {
@@ -174,9 +174,9 @@ NtUserInternalGetWindowText(HWND hWnd,
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserLockWindowUpdate(DWORD Unknown0)
+NtUserLockWindowUpdate(HWND hWndLock)
 {
     UNIMPLEMENTED;
     return 0;
@@ -218,7 +218,7 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
 BOOL
 APIENTRY
 NtUserRedrawWindow(HWND hWnd,
-                   CONST RECT *lprcUpdate,
+                   PRECT prcUpdate,
                    HRGN hrgnUpdate,
                    UINT flags)
 {
@@ -280,11 +280,11 @@ NtUserSetWindowFNID(HWND hWnd,
     return FALSE;
 }
 
-LONG
+LONG_PTR
 APIENTRY
 NtUserSetWindowLong(HWND hWnd,
-                    DWORD Index,
-                    LONG NewValue,
+                    INT Index,
+                    LONG_PTR NewValue,
                     BOOL Ansi)
 {
     UNIMPLEMENTED;
@@ -476,7 +476,7 @@ NtUserGetListBoxInfo(HWND hWnd)
 }
 
 
-BOOLEAN
+BOOL
 APIENTRY
 NtUserGetTitleBarInfo(HWND hwnd,
                       PTITLEBARINFO pti)

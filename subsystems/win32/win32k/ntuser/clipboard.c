@@ -26,7 +26,7 @@ NtUserChangeClipboardChain(HWND hWndRemove,
 BOOL
 APIENTRY
 NtUserOpenClipboard(HWND hWnd,
-                    DWORD Unknown1)
+                    HWND* phWnd)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -40,7 +40,7 @@ NtUserCloseClipboard(VOID)
     return FALSE;
 }
 
-DWORD
+INT
 APIENTRY
 NtUserCountClipboardFormats(VOID)
 {
@@ -48,7 +48,7 @@ NtUserCountClipboardFormats(VOID)
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserEmptyClipboard(VOID)
 {

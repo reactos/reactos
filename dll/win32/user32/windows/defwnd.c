@@ -110,7 +110,7 @@ SetSysColors(
   CONST INT *lpaElements,
   CONST COLORREF *lpaRgbValues)
 {
-  return NtUserSetSysColors(cElements, lpaElements, lpaRgbValues, 0);
+  return NtUserSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues, 0);
 }
 
 void
@@ -519,7 +519,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
 
   SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
-  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
+  //NtUserCallTwoParam((DWORD)field, (DWORD)hwnd, TWOPARAM_ROUTINE_SETGUITHRDHANDLE)
   if (GetCapture() != hwnd) SetCapture( hwnd );
 
   if (Style & WS_CHILD)
@@ -666,7 +666,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
-  (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
+  //NtUserCallTwoParam((DWORD)field, (DWORD)hwnd, TWOPARAM_ROUTINE_SETGUITHRDHANDLE)
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
 
@@ -1503,15 +1503,17 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SYSTIMER:
         {
-          THRDCARETINFO CaretInfo;
+          //THRDCARETINFO CaretInfo;
           switch(wParam)
           {
             case 0xffff: /* Caret timer */
+#if 0
               /* switch showing byte in win32k and get information about the caret */
-              if(NtUserSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
+              if(NtUserCallOneParam((DWORD)CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING) && (CaretInfo.hWnd == hWnd))
               {
                 DrawCaret(hWnd, &CaretInfo);
               }
+#endif
               break;
           }
           break;
@@ -1715,12 +1717,14 @@ User32DefWindowProc(HWND hWnd,
                     return 0;
             }
 
+#if 0
             /* Pack the information and call win32k */
             if (Change)
             {
                 if (!NtUserCallTwoParam((DWORD)hWnd, (DWORD)Flags | ((DWORD)Action << 3), TWOPARAM_ROUTINE_ROS_UPDATEUISTATE))
                     break;
             }
+#endif
 
             /* Always broadcast the update to all children */
             EnumChildWindows(hWnd,

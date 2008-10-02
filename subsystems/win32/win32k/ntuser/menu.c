@@ -54,7 +54,7 @@ NtUserDrawMenuBarTemp(HWND hWnd,
     return 0;
 }
 
-UINT
+BOOL
 APIENTRY
 NtUserEnableMenuItem(HMENU hMenu,
                      UINT uIDEnableItem,
@@ -136,8 +136,8 @@ INT
 APIENTRY
 NtUserMenuItemFromPoint(HWND hWnd,
                         HMENU hMenu,
-                        DWORD X,
-                        DWORD Y)
+                        LONG X,
+                        LONG Y)
 {
     UNIMPLEMENTED;
     return 0;
@@ -193,7 +193,7 @@ NtUserSetMenuFlagRtoL(HMENU hMenu)
 DWORD
 APIENTRY
 NtUserThunkedMenuInfo(HMENU hMenu,
-                      LPCMENUINFO lpcmi)
+                      MENUINFO* lpcmi)
 {
     UNIMPLEMENTED;
     return 0;

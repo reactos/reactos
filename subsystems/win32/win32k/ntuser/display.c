@@ -27,10 +27,10 @@ NtUserChangeDisplaySettings(PUNICODE_STRING lpszDeviceName,
 
 BOOL
 APIENTRY
-NtUserEnumDisplayDevices (PUNICODE_STRING lpDevice,
-                          DWORD iDevNum,
-                          PDISPLAY_DEVICEW lpDisplayDevice,
-                          DWORD dwFlags)
+NtUserEnumDisplayDevices(PUNICODE_STRING lpDevice,
+                         DWORD iDevNum,
+                         PDISPLAY_DEVICEW lpDisplayDevice,
+                         DWORD dwFlags)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -38,10 +38,10 @@ NtUserEnumDisplayDevices (PUNICODE_STRING lpDevice,
 
 BOOL
 APIENTRY
-NtUserEnumDisplayMonitors (HDC hdc,
-                           LPCRECT lprcClip,
-                           MONITORENUMPROC lpfnEnum,
-                           LPARAM dwData)
+NtUserEnumDisplayMonitors(HDC hdc,
+                          PRECT lprcClip,
+                          MONITORENUMPROC lpfnEnum,
+                          LPARAM dwData)
 {
     UNIMPLEMENTED;
     return FALSE;

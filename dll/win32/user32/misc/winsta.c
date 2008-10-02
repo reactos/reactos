@@ -346,13 +346,13 @@ SetProcessWindowStation(HWINSTA hWinSta)
 DWORD
 STDCALL
 SetWindowStationUser(
-  DWORD Unknown1,
+  HWINSTA hWinSta,
   DWORD Unknown2,
   DWORD Unknown3,
   DWORD Unknown4
   )
 {
-  return NtUserSetWindowStationUser(Unknown1, Unknown2, Unknown3, Unknown4);
+  return NtUserSetWindowStationUser(hWinSta, Unknown2, Unknown3, Unknown4);
 }
 
 

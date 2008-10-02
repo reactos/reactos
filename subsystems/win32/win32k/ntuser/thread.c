@@ -33,13 +33,13 @@ NtUserGetThreadState(DWORD ThreadState)
     return 0;
 }
 
-DWORD
+VOID
 APIENTRY
 NtUserSetThreadState(DWORD Unknown0,
                      DWORD Unknown1)
 {
     UNIMPLEMENTED;
-    return 0;
+    return;
 }
 
 DWORD
@@ -65,11 +65,11 @@ NtUserSetInformationThread(DWORD dwUnknown1,
     return 0;
 }
 
-DWORD
+VOID
 APIENTRY
 NtUserSetThreadLayoutHandles(DWORD dwUnknown1,
                              DWORD dwUnknown2)
 {
     UNIMPLEMENTED;
-	return 0;
+	return;
 }

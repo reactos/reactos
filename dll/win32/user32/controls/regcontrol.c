@@ -59,5 +59,5 @@ BOOL WINAPI RegisterSystemControls(VOID)
         cls[i].ClassId = g_SysClasses[i].ClsId;
     }
 
-    return NtUserRegisterSystemClasses(sizeof(cls) / sizeof(cls[0]), cls);
+    return FALSE; //(BOOL)NtUserCallTwoParam((DWORD)Count, (DWORD)SysClasses, TWOPARAM_ROUTINE_ROS_REGSYSCLASSES);
 }

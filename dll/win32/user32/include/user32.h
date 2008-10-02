@@ -52,6 +52,11 @@ extern PW32PROCESSINFO g_pi;
 extern PW32PROCESSINFO g_kpi;
 extern PSERVERINFO g_psi;
 
+PW32THREADINFO GetW32ThreadInfo(VOID);
+#define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
+
+#define UserHMGetHandle(obj) ((obj)->hdr.Handle)
+
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
 {
@@ -77,7 +82,7 @@ DesktopPtrToUser(PVOID Ptr)
         /* NOTE: This is slow as it requires a call to win32k. This should only be
                  neccessary if a thread wants to access an object on a different
                  desktop */
-        return NtUserGetDesktopMapping(Ptr);
+        return NULL; //(PVOID)NtUserCallOneParam((DWORD)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
     }
 }
 

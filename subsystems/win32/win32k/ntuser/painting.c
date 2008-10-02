@@ -26,7 +26,7 @@ NtUserBeginPaint(HWND hWnd,
 BOOL
 APIENTRY
 NtUserEndPaint(HWND hWnd,
-               CONST PAINTSTRUCT* lPs)
+               PAINTSTRUCT* lPs)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -51,8 +51,8 @@ BOOL
 APIENTRY
 NtUserDrawAnimatedRects(HWND hwnd,
                         INT idAni,
-                        RECT *lprcFrom,
-                        RECT *lprcTo)
+                        PRECT lprcFrom,
+                        PRECT lprcTo)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -62,7 +62,7 @@ BOOL
 APIENTRY
 NtUserDrawCaption(HWND hWnd,
                   HDC hDc,
-                  LPCRECT lpRc,
+                  PRECT lpRc,
                   UINT uFlags)
 {
     UNIMPLEMENTED;
@@ -73,17 +73,17 @@ BOOL
 APIENTRY
 NtUserDrawCaptionTemp(HWND hWnd,
                       HDC hDC,
-                      LPCRECT lpRc,
+                      PRECT lpRc,
                       HFONT hFont,
                       HICON hIcon,
-                      CONST PUNICODE_STRING str,
+                      PUNICODE_STRING str,
                       UINT uFlags)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
-DWORD
+INT
 APIENTRY
 NtUserExcludeUpdateRgn(HDC hDC,
                        HWND hWnd)
@@ -95,7 +95,7 @@ NtUserExcludeUpdateRgn(HDC hDC,
 BOOL
 APIENTRY
 NtUserGetUpdateRect(HWND hWnd,
-                    LPRECT lpRect,
+                    PRECT lpRect,
                     BOOL fErase)
 {
     UNIMPLEMENTED;
@@ -115,7 +115,7 @@ NtUserGetUpdateRgn(HWND hWnd,
 BOOL
 APIENTRY
 NtUserInvalidateRect(HWND hWnd,
-                     CONST RECT *lpRect,
+                     PRECT lpRect,
                      BOOL bErase)
 {
     UNIMPLEMENTED;
@@ -135,7 +135,7 @@ NtUserInvalidateRgn(HWND hWnd,
 BOOL
 APIENTRY
 NtUserValidateRect(HWND hWnd,
-                   CONST RECT *lpRect)
+                   PRECT lpRect)
 {
     UNIMPLEMENTED;
     return FALSE;

@@ -29,7 +29,7 @@ NTSTATUS
 APIENTRY
 NtUserBuildHwndList(HDESK hDesktop,
                     HWND hwndParent,
-                    BOOLEAN bChildren,
+                    BOOL bChildren, //BOOL or BOOLEAN?
                     ULONG dwThreadId,
                     ULONG lParam,
                     HWND* pWnd,
@@ -93,7 +93,7 @@ NtUserGetAtomName(ATOM nAtom,
 BOOL
 APIENTRY
 NtUserGetObjectInformation(HANDLE hObject,
-                           DWORD nIndex,
+                           INT nIndex,
                            PVOID pvInformation,
                            DWORD nLength,
                            PDWORD nLengthNeeded)

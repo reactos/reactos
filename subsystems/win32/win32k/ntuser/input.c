@@ -97,7 +97,7 @@ NtUserWaitForInputIdle(IN HANDLE hProcess,
     return 0;
 }
 
-DWORD
+UINT
 APIENTRY
 NtUserGetRawInputBuffer(PRAWINPUT pData,
                         PUINT pcbSize,
@@ -107,7 +107,7 @@ NtUserGetRawInputBuffer(PRAWINPUT pData,
     return 0;
 }
 
-DWORD
+UINT
 APIENTRY
 NtUserGetRawInputData(HRAWINPUT hRawInput,
                       UINT uiCommand,
@@ -119,7 +119,7 @@ NtUserGetRawInputData(HRAWINPUT hRawInput,
     return 0;
 }
 
-DWORD
+UINT
 APIENTRY
 NtUserGetRawInputDeviceInfo(HANDLE hDevice,
                             UINT uiCommand,
@@ -130,7 +130,7 @@ NtUserGetRawInputDeviceInfo(HANDLE hDevice,
     return 0;
 }
 
-DWORD
+UINT
 APIENTRY
 NtUserGetRawInputDeviceList(PRAWINPUTDEVICELIST pRawInputDeviceList,
                             PUINT puiNumDevices,
@@ -140,7 +140,7 @@ NtUserGetRawInputDeviceList(PRAWINPUTDEVICELIST pRawInputDeviceList,
     return 0;
 }
 
-DWORD
+UINT
 APIENTRY
 NtUserGetRegisteredRawInputDevices(PRAWINPUTDEVICE pRawInputDevices,
                                    PUINT puiNumDevices,

@@ -47,10 +47,10 @@ NtUserSelectPalette(HDC hDC,
 
 BOOL
 APIENTRY
-NtUserSetSysColors(INT cElements,
-                   IN CONST INT *lpaElements,
-                   IN CONST COLORREF *lpaRgbValues,
-                   FLONG Flags)
+NtUserSetSysColors(IN INT cElements,
+                   IN INT *lpaElements,
+                   IN COLORREF *lpaRgbValues,
+                   IN FLONG Flags)
 {
     UNIMPLEMENTED;
     return FALSE;

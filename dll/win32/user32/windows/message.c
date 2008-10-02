@@ -938,11 +938,12 @@ typedef struct tagMSGCONVERSION
   ULONG LParamSize;
 } MSGCONVERSION, *PMSGCONVERSION;
 
-static PMSGCONVERSION MsgConversions = NULL;
-static unsigned MsgConversionNumAlloc = 0;
-static unsigned MsgConversionNumUsed = 0;
+//static PMSGCONVERSION MsgConversions = NULL;
+//static unsigned MsgConversionNumAlloc = 0;
+//static unsigned MsgConversionNumUsed = 0;
 static CRITICAL_SECTION MsgConversionCrst;
 
+#if 0
 static BOOL FASTCALL
 MsgConversionAdd(PMSGCONVERSION Conversion)
 {
@@ -1041,6 +1042,7 @@ MsgConversionCleanup(CONST MSG *Msg, BOOL Ansi, BOOL CheckMsgContents, LRESULT *
     }
   LeaveCriticalSection(&MsgConversionCrst);
 }
+#endif
 
 /*
  * @implemented
@@ -1049,7 +1051,7 @@ LPARAM
 STDCALL
 GetMessageExtraInfo(VOID)
 {
-  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
+  return 0; //(LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
 }
 
 
@@ -1087,7 +1089,7 @@ InSendMessage(VOID)
 //  FIXME("ISM %x\n",pcti);
   if ( pcti )
   {
-    if (pcti->CTI_flags & CTI_INSENDMESSAGE)
+    if (pcti->CTIF_flags & CTI_INSENDMESSAGE)
     {
        return TRUE;
     }
@@ -1107,7 +1109,7 @@ InSendMessageEx(
 {
   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
 //  FIXME("ISMEX %x\n",pcti);
-  if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
+  if (pcti && !(pcti->CTIF_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
   else
   /* return NtUserGetThreadState(THREADSTATE_INSENDMESSAGE); */
   return 0;
@@ -1420,6 +1422,7 @@ GetMessageA(LPMSG lpMsg,
 	    UINT wMsgFilterMin,
 	    UINT wMsgFilterMax)
 {
+#if 0
   BOOL Res;
   MSGCONVERSION Conversion;
   NTUSERGETMESSAGEINFO Info;
@@ -1453,6 +1456,8 @@ GetMessageA(LPMSG lpMsg,
     }
 
   return Res;
+#endif
+  return FALSE;
 }
 
 
@@ -1465,6 +1470,7 @@ GetMessageW(LPMSG lpMsg,
 	    UINT wMsgFilterMin,
 	    UINT wMsgFilterMax)
 {
+#if 0
   BOOL Res;
   MSGCONVERSION Conversion;
   NTUSERGETMESSAGEINFO Info;
@@ -1493,6 +1499,8 @@ GetMessageW(LPMSG lpMsg,
     }
 
   return Res;
+#endif
+  return FALSE;
 }
 
 
@@ -1506,6 +1514,7 @@ PeekMessageA(LPMSG lpMsg,
 	     UINT wMsgFilterMax,
 	     UINT wRemoveMsg)
 {
+#if 0
   BOOL Res;
   MSGCONVERSION Conversion;
   NTUSERGETMESSAGEINFO Info;
@@ -1539,6 +1548,8 @@ PeekMessageA(LPMSG lpMsg,
     }
 
   return Res;
+#endif
+  return FALSE;
 }
 
 
@@ -1554,6 +1565,7 @@ PeekMessageW(
   UINT wMsgFilterMax,
   UINT wRemoveMsg)
 {
+#if 0
   BOOL Res;
   MSGCONVERSION Conversion;
   NTUSERGETMESSAGEINFO Info;
@@ -1582,6 +1594,8 @@ PeekMessageW(
     }
 
   return Res;
+#endif
+  return FALSE;
 }
 
 
@@ -2460,7 +2474,7 @@ RealMsgWaitForMultipleObjectsEx(
    }
    */
 
-   MessageQueueHandle = NtUserMsqSetWakeMask(dwWakeMask);
+   MessageQueueHandle = NULL; //NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_MSQSETWAKEMASK)
    if (MessageQueueHandle == NULL)
    {
       SetLastError(0); /* ? */

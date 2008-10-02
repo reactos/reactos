@@ -1068,7 +1068,7 @@ BOOL STDCALL
 GetWindowInfo(HWND hwnd,
 	      PWINDOWINFO pwi)
 {
-  return NtUserGetWindowInfo(hwnd, pwi);
+  return FALSE; //NtUserCallTwoParam((DWORD)hwnd, (DWORD)pwi, TWOPARAM_ROUTINE_GETWINDOWINFO)
 }
 
 
@@ -1082,7 +1082,7 @@ GetWindowModuleFileNameA(HWND hwnd,
 {
   HINSTANCE hWndInst;
 
-  if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
+  if(!(hWndInst = NULL))// NULL -> NtUserCallOneParam((DWORD)hwnd, ONEPARAM_ROUTINE_GETWINDOWINSTANCE)
   {
     return 0;
   }
@@ -1101,7 +1101,7 @@ GetWindowModuleFileNameW(HWND hwnd,
 {
   HINSTANCE hWndInst;
 
-  if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
+  if(!(hWndInst = NULL)) //NULL -> NtUserCallOneParam((DWORD)hwnd, ONEPARAM_ROUTINE_GETWINDOWINSTANCE)
   {
     return 0;
   }
@@ -1858,7 +1858,7 @@ STDCALL
 SetWindowContextHelpId(HWND hwnd,
           DWORD dwContextHelpId)
 {
-  return NtUserSetWindowContextHelpId(hwnd, dwContextHelpId);
+  return FALSE; //NtUserCallTwoParam((DWORD)hwnd, dwContextHelpId, TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID)
 }
 
 
@@ -1968,7 +1968,7 @@ BOOL STDCALL
 ScrollWindow(HWND hWnd, int dx, int dy, CONST RECT *lpRect,
    CONST RECT *prcClip)
 {
-   return NtUserScrollWindowEx(hWnd, dx, dy, lpRect, prcClip, 0, NULL,
+   return NtUserScrollWindowEx(hWnd, dx, dy, (RECT*)lpRect, (RECT*)prcClip, 0, NULL,
       (lpRect ? 0 : SW_SCROLLCHILDREN) | SW_INVALIDATE) != ERROR;
 }
 
@@ -1980,7 +1980,7 @@ INT STDCALL
 ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT *prcScroll,
    CONST RECT *prcClip, HRGN hrgnUpdate, LPRECT prcUpdate, UINT flags)
 {
-   return NtUserScrollWindowEx(hWnd, dx, dy, prcScroll, prcClip, hrgnUpdate,
+   return NtUserScrollWindowEx(hWnd, dx, dy, (RECT*)prcScroll, (RECT*)prcClip, hrgnUpdate,
       prcUpdate, flags);
 }
 
@@ -1991,7 +1991,7 @@ BOOL
 STDCALL
 AnyPopup(VOID)
 {
-  return NtUserAnyPopup();
+  return FALSE; //NtUserCallNoParam(NOPARAM_ROUTINE_ANYPOPUP)
 }
 
 /*
@@ -2001,7 +2001,7 @@ BOOL
 STDCALL
 IsWindowInDestroy(HWND hWnd)
 {
-  return NtUserIsWindowInDestroy(hWnd);
+  return FALSE; //NtUserCallOneParam((DWORD)hWnd, ONEPARAM_ROUTINE_ISWINDOWINDESTROY)
 }
 
 /*
@@ -2011,7 +2011,7 @@ VOID
 STDCALL
 DisableProcessWindowsGhosting(VOID)
 {
-  NtUserEnableProcessWindowGhosting(FALSE);
+  //NtUserCallOneParam((DWORD)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 }
 
 /* EOF */

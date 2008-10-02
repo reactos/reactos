@@ -39,10 +39,10 @@ APIENTRY
 NtUserScrollDC(HDC hDC,
                INT dx,
                INT dy,
-               CONST RECT *lprcScroll,
-               CONST RECT *lprcClip ,
+               PRECT lprcScroll,
+               PRECT lprcClip ,
                HRGN hrgnUpdate,
-               LPRECT lprcUpdate)
+               PRECT lprcUpdate)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -53,11 +53,11 @@ APIENTRY
 NtUserScrollWindowEx(HWND hWnd,
                      INT dx,
                      INT dy,
-                     const RECT *rect,
-                     const RECT *clipRect,
+                     PRECT prcScroll,
+                     PRECT prcClip,
                      HRGN hrgnUpdate,
-                     LPRECT rcUpdate,
-                     UINT flags)
+                     PRECT prcUpdate,
+                     UINT uFlags)
 {
     UNIMPLEMENTED;
     return 0;
@@ -67,18 +67,18 @@ DWORD
 APIENTRY
 NtUserSetScrollInfo(HWND hwnd,
                     INT fnBar,
-                    LPCSCROLLINFO lpsi,
+                    SCROLLINFO* lpsi,
                     BOOL bRedraw)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserShowScrollBar(HWND hWnd,
                     INT wBar,
-                    DWORD bShow)
+                    BOOL bShow)
 {
     UNIMPLEMENTED;
     return 0;

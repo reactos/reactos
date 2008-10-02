@@ -31,7 +31,7 @@ NtUserGetAsyncKeyState(INT Key)
     return 0;
 }
 
-DWORD
+INT
 APIENTRY
 NtUserGetKeyNameText(LONG lParam,
                      PWSTR String,
@@ -66,9 +66,9 @@ NtUserGetKeyboardLayoutName(LPWSTR lpszName)
     return FALSE;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserGetKeyboardState(LPBYTE Unknown0)
+NtUserGetKeyboardState(PBYTE pKeyState)
 {
     UNIMPLEMENTED;
     return 0;
@@ -126,10 +126,10 @@ NtUserUnloadKeyboardLayout(HKL hKl)
 
 UINT
 APIENTRY
-NtUserMapVirtualKeyEx(UINT keyCode,
-		              UINT transType,
-		              DWORD keyboardId,
-		              HKL dwhkl)
+NtUserMapVirtualKeyEx(UINT uCode,
+		              UINT uMapType,
+		              HKL dwHKL,
+		              BOOL Unknown)
 {
     UNIMPLEMENTED;
     return 0;
@@ -139,7 +139,7 @@ DWORD
 APIENTRY
 NtUserVkKeyScanEx(WCHAR wChar,
                   HKL KeyboardLayout,
-                  DWORD Unknown2)
+                  BOOL Unknown)
 {
     UNIMPLEMENTED;
     return 0;

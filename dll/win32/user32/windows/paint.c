@@ -103,7 +103,7 @@ EndPaint(
   HWND hWnd,
   CONST PAINTSTRUCT *lpPaint)
 {
-  return NtUserEndPaint(hWnd, lpPaint);
+  return NtUserEndPaint(hWnd, (PAINTSTRUCT*)lpPaint);
 }
 
 
@@ -176,7 +176,7 @@ RedrawWindow(
   HRGN hrgnUpdate,
   UINT flags)
 {
- return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
+ return NtUserRedrawWindow(hWnd, (RECT*)lprcUpdate, hrgnUpdate, flags);
 }
 
 
@@ -197,7 +197,7 @@ ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
       return TRUE;
    }
 
-   return NtUserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate,
+   return NtUserScrollDC(hDC, dx, dy, (RECT*)lprcScroll, (RECT*)lprcClip, hrgnUpdate,
       lprcUpdate);
 }
 
@@ -267,7 +267,7 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
+  return 0; //(int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
 
 
@@ -280,7 +280,7 @@ GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+  return 0; //(int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 }
 
 

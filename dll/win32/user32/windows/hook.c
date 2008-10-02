@@ -183,18 +183,73 @@ CallMsgFilterW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LRESULT
 STDCALL
 CallNextHookEx(
-  HHOOK Hook,
+  HHOOK Hook,  // Windows NT/XP/2003: Ignored.
   int Code,
   WPARAM wParam,
   LPARAM lParam)
 {
-  return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
+  PW32CLIENTINFO ClientInfo;
+  DWORD Flags, Save;
+  PHOOK pHook;
+  LRESULT lResult = 0;
+
+  GetConnected();
+
+  ClientInfo = GetWin32ClientInfo();
+
+  if (!ClientInfo->phkCurrent) return 0;
+  
+  pHook = SharedPtrToUser(ClientInfo->phkCurrent);
+
+  if (pHook->HookId == WH_CALLWNDPROC || pHook->HookId == WH_CALLWNDPROCRET)
+  {
+     Save = ClientInfo->dwHookData;
+     Flags = ClientInfo->CI_flags & CI_CURTHPRHOOK;
+// wParam: If the message was sent by the current thread/process, it is
+// nonzero; otherwise, it is zero.
+     if (wParam) ClientInfo->CI_flags |= CI_CURTHPRHOOK;
+     else        ClientInfo->CI_flags &= ~CI_CURTHPRHOOK;
+
+     if (pHook->HookId == WH_CALLWNDPROC)
+     {
+        PCWPSTRUCT pCWP = (PCWPSTRUCT)lParam;
+
+        lResult = NtUserMessageCall( pCWP->hwnd,
+                                  pCWP->message,
+                                   pCWP->wParam,
+                                   pCWP->lParam, 
+                                              0,
+                               FNID_CALLWNDPROC,
+                                    pHook->Ansi);
+     }
+     else
+     {
+        PCWPRETSTRUCT pCWPR = (PCWPRETSTRUCT)lParam;
+
+        ClientInfo->dwHookData = pCWPR->lResult;
+
+        lResult = NtUserMessageCall( pCWPR->hwnd,
+                                  pCWPR->message,
+                                   pCWPR->wParam,
+                                   pCWPR->lParam, 
+                                               0,
+                             FNID_CALLWNDPROCRET,
+                                     pHook->Ansi);
+     }
+     ClientInfo->CI_flags ^= ((ClientInfo->CI_flags ^ Flags) & CI_CURTHPRHOOK);
+     ClientInfo->dwHookData = Save;
+  }
+  else
+     lResult = NtUserCallNextHookEx(Code, wParam, lParam, pHook->Ansi);
+
+  return lResult;
 }
+
 
 /*
  * @unimplemented

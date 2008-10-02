@@ -24,7 +24,7 @@ NtUserClipCursor(RECT *lpRect)
 
 BOOL
 APIENTRY
-NtUserDestroyCursor(HANDLE Handle,
+NtUserDestroyCursor(HCURSOR hCursor,
                     DWORD Unknown)
 {
     UNIMPLEMENTED;

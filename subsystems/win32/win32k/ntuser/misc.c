@@ -64,18 +64,18 @@ NtUserInitTask(DWORD Unknown0,
     return 0;
 }
 
-DWORD
+VOID
 APIENTRY
 NtUserModifyUserStartupInfoFlags(DWORD Unknown0,
                                  DWORD Unknown1)
 {
     UNIMPLEMENTED;
-    return 0;
+    return;
 }
 
-DWORD
+BOOL
 APIENTRY
-NtUserRegisterTasklist(DWORD Unknown0)
+NtUserRegisterTasklist(HWND hWnd)
 {
     UNIMPLEMENTED;
     return 0;

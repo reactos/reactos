@@ -208,7 +208,7 @@ GetCursorPos(LPPOINT lpPoint)
     return FALSE;
   }
 
-  res = NtUserGetCursorPos(lpPoint);
+  res = FALSE;; //NtUserCallOneParam((DWORD)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION)
 
   return res;
 }
