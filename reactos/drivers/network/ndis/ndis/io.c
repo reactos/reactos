@@ -60,22 +60,31 @@ BOOLEAN NTAPI ServiceRoutine(
  *     TRUE if a miniport controlled device generated the interrupt
  */
 {
-  BOOLEAN InterruptRecognized;
-  BOOLEAN QueueMiniportHandleInterrupt;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)ServiceContext;
+  BOOLEAN InterruptRecognized = FALSE;
+  BOOLEAN QueueMiniportHandleInterrupt = FALSE;
+  PLOGICAL_ADAPTER Adapter = ServiceContext;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
 
-  (*Adapter->DriverHandle->MiniportCharacteristics.ISRHandler)(
-      &InterruptRecognized,
-      &QueueMiniportHandleInterrupt,
-      Adapter->MiniportAdapterContext);
+  if (Adapter->NdisMiniportBlock.Interrupt->IsrRequested) {
+      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ISRHandler)(
+          &InterruptRecognized,
+          &QueueMiniportHandleInterrupt,
+          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+
+  } else if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
+      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
+          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+       QueueMiniportHandleInterrupt = TRUE;
+       InterruptRecognized = TRUE;
+  }
+
 
   if (QueueMiniportHandleInterrupt)
-    {
-      NDIS_DbgPrint(MAX_TRACE, ("Queueing DPC.\n"));
-      KeInsertQueueDpc(&Adapter->Interrupt->InterruptDpc, NULL, NULL);
-    }
+  {
+      NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
+      KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
+  }
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -207,15 +216,15 @@ IO_ALLOCATION_ACTION NTAPI NdisMapRegisterCallback (
  *     - Called at IRQL = DISPATCH_LEVEL
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)Context;
+  PLOGICAL_ADAPTER Adapter = Context;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  Adapter->MapRegisters[Adapter->CurrentMapRegister].MapRegister = MapRegisterBase;
+  Adapter->NdisMiniportBlock.MapRegisters[Adapter->NdisMiniportBlock.CurrentMapRegister].MapRegister = MapRegisterBase;
 
   NDIS_DbgPrint(MAX_TRACE, ("setting event and leaving.\n"));
 
-  KeSetEvent(Adapter->AllocationEvent, 0, FALSE);
+  KeSetEvent(Adapter->NdisMiniportBlock.AllocationEvent, 0, FALSE);
 
   /* this is only the thing to do for busmaster NICs */
   return DeallocateObjectKeepRegisters;
@@ -767,6 +776,7 @@ NdisMRegisterInterrupt(
   KeInitializeEvent(&Interrupt->DpcsCompletedEvent, NotificationEvent, FALSE);
 
   Interrupt->SharedInterrupt = SharedInterrupt;
+  Interrupt->IsrRequested = RequestIsr;
 
   Adapter->NdisMiniportBlock.Interrupt = Interrupt;
 
