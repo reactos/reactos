@@ -1126,7 +1126,7 @@ NdisMFlushLog(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 #undef NdisMIndicateStatus
 VOID
@@ -1137,7 +1137,29 @@ NdisMIndicateStatus(
     IN  PVOID       StatusBuffer,
     IN  UINT        StatusBufferSize)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+       (*AdapterBinding->ProtocolBinding->Chars.StatusHandler)(
+           AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+           GeneralStatus,
+           StatusBuffer,
+           StatusBufferSize);
+
+       CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 /*
