@@ -298,7 +298,13 @@ MiniResetComplete(
     IN  NDIS_STATUS Status,
     IN  BOOLEAN     AddressingReset)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    KIRQL OldIrql;
+    NDIS_DbgPrint(MIN_TRACE, ("FIXME: MiniResetComplete is partially implemented\n"));
+    NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+    Adapter->MiniportBusy = FALSE;
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
@@ -631,11 +637,23 @@ MiniReset(
        return NDIS_STATUS_PENDING;
    }
 
+   NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_START, NULL, 0);
+   NdisMIndicateStatusComplete(Adapter);
+
    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
    Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
             Adapter->NdisMiniportBlock.MiniportAdapterContext,
             AddressingReset);
    KeLowerIrql(OldIrql);
+
+   if (Status != NDIS_STATUS_PENDING) {
+       NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+       NdisMIndicateStatusComplete(Adapter);
+   } else {
+       KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+       Adapter->MiniportBusy = TRUE;
+       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+   }
 
    return Status;
 }
@@ -953,6 +971,9 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
             break;
 
           case NdisWorkItemResetRequested:
+            NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_START, NULL, 0);
+            NdisMIndicateStatusComplete(Adapter);
+
             KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
             NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ResetHandler)(
                           Adapter->NdisMiniportBlock.MiniportAdapterContext,
