@@ -1163,7 +1163,7 @@ NdisMIndicateStatus(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 #undef NdisMIndicateStatusComplete
 VOID
@@ -1171,7 +1171,26 @@ EXPORT
 NdisMIndicateStatusComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
-    UNIMPLEMENTED
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+       (*AdapterBinding->ProtocolBinding->Chars.StatusCompleteHandler)(
+           AdapterBinding->NdisOpenBlock.ProtocolBindingContext);
+
+       CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
