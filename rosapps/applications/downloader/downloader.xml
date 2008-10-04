@@ -12,13 +12,13 @@
 			<licence>MPL/GPL/LGPL</licence>
 			<version>2.0.0.17</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.17.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.17/win32/en-US/Firefox%20Setup%202.0.0.17.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
 			<licence>Freeware</licence>
 			<version>9.26</version>
-			<description>The most popular and one of the best free Web Browsers out there.</description>
+			<description>The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.</description>
 			<location>http://mirror.nwps.ws/opera/win/926/en/Opera_9.26_Classic_Setup.exe</location>
 		</application>
 		<application name="Thunderbird 1.5">
@@ -26,20 +26,20 @@
 			<licence>MPL/GPL/LGPL</licence>
 			<version>1.5.0.14</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/latest-1.5/win32/en-US/Thunderbird%20Setup%201.5.0.14.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/1.5.0.14/win32/en-US/Thunderbird%20Setup%201.5.0.14.exe</location>
 		</application>
 		<application name="Thunderbird 2.0">
 			<regname>Mozilla Thunderbird (2.0.0.16)</regname>
 			<licence>MPL/GPL/LGPL</licence>
 			<version>2.0.0.16</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/latest-2.0/win32/en-US/Thunderbird%20Setup%202.0.0.16.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.17/win32/en-US/Thunderbird%20Setup%202.0.0.17.exe</location>
 		</application>
 		<application name="SeaMonkey">
 			<regname>SeaMonkey (1.1.9)</regname>
 			<version>1.1.9</version>
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.9/seamonkey-1.1.9.en-US.win32.installer.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.12/seamonkey-1.1.12.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
 			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
