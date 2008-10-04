@@ -280,7 +280,10 @@ typedef struct _DEVCAPS // Very similar to GDIINFO
     ULONG ulDesktopHorzRes;
     ULONG ulDesktopVertRes;
     ULONG ulBltAlignment;
-    ULONG ulReserved[4];
+    ULONG ulPanningHorzRes;
+    ULONG ulPanningVertRes;
+    ULONG xPanningAlignment;
+    ULONG yPanningAlignment;
     ULONG ulShadeBlend;
     ULONG ulColorMgmtCaps;
 } DEVCAPS, *PDEVCAPS;
