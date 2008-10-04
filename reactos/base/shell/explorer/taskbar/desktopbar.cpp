@@ -427,9 +427,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_SWITCH_DESKTOP_1:
-	  case ID_SWITCH_DESKTOP_1+1:
-	  case ID_SWITCH_DESKTOP_1+2:
-	  case ID_SWITCH_DESKTOP_1+3: {
+	  case ID_SWITCH_DESKTOP_1+1: {
 		int desktop_idx = id - ID_SWITCH_DESKTOP_1;
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);

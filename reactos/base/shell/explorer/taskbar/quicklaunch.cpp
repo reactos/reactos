@@ -150,7 +150,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		SelectBitmap(hdc, hbmp_old);
 
-		AddButton(ID_SWITCH_DESKTOP_1+i, hbmp, FmtString(desktop_fmt, i+1), NULL, cur_desktop==i?TBSTATE_ENABLED|TBSTATE_CHECKED:TBSTATE_ENABLED);
+		AddButton(ID_SWITCH_DESKTOP_1+i, hbmp, FmtString(desktop_fmt, i+1), NULL, cur_desktop==i?TBSTATE_ENABLED|TBSTATE_PRESSED:TBSTATE_ENABLED);
 	}
 	DeleteDC(hdc);
 
@@ -199,7 +199,7 @@ void QuickLaunchBar::AddButton(int id, HBITMAP hbmp, LPCTSTR name, Entry* entry,
 void QuickLaunchBar::UpdateDesktopButtons(int desktop_idx)
 {
 	for(int i=0; i<DESKTOP_COUNT; ++i) {
-		TBBUTTONINFO tbi = {sizeof(TBBUTTONINFO), TBIF_STATE, 0, 0, desktop_idx==i? TBSTATE_ENABLED|TBSTATE_CHECKED: TBSTATE_ENABLED};
+		TBBUTTONINFO tbi = {sizeof(TBBUTTONINFO), TBIF_STATE, 0, 0, desktop_idx==i? TBSTATE_ENABLED|TBSTATE_PRESSED: TBSTATE_ENABLED};
 
 		SendMessage(_hwnd, TB_SETBUTTONINFO, ID_SWITCH_DESKTOP_1+i, (LPARAM)&tbi);
 	}
