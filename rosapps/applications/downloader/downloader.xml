@@ -274,9 +274,9 @@
 		</application>
 		<application name="uTorrent">
 			<regname>&#181;Torrent</regname>
-			<version>1.7.7</version>
+			<version>1.8</version>
 			<description>Small and fast BitTorrent Client.</description>
-			<location>http://download.utorrent.com/1.7.7/utorrent.exe</location>
+			<location>http://download.utorrent.com/1.8/utorrent.exe</location>
 		</application>
 		<application name="Audio Grabber">
 			<regname>Audiograbber 1.83 SE</regname>
