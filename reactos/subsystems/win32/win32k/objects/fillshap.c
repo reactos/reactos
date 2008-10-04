@@ -539,6 +539,11 @@ IntRectangle(PDC dc,
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
+    if ( PATH_IsPathOpen(dc->DcLevel) )
+    {
+        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+    }
+
     /* Do we rotate or shear? */
     if (!(dc->DcLevel.mxWorldToDevice.flAccel & MX_SCALE))
     {
@@ -548,11 +553,6 @@ IntRectangle(PDC dc,
         DestCoords[1].x = DestCoords[2].x = RightRect;
         DestCoords[2].y = DestCoords[3].y = BottomRect;
         return IntGdiPolygon(dc, DestCoords, 4);
-    }
-
-    if ( PATH_IsPathOpen(dc->DcLevel) )
-    {
-        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
 
     DestRect.left = LeftRect;
