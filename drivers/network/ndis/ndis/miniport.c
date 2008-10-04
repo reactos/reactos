@@ -182,26 +182,6 @@ MiniIndicateData(
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
 
-#ifdef DBG
-          if(!AdapterBinding)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding was null\n"));
-              break;
-            }
-
-          if(!AdapterBinding->ProtocolBinding)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding was null\n"));
-              break;
-            }
-
-          if(!AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)
-            {
-              NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding->ProtocolBinding->Chars.ReceiveHandler was null\n"));
-              break;
-            }
-#endif
-
 	  NDIS_DbgPrint
 	      (MID_TRACE,
 	       ("XXX (%x) %x %x %x %x %x %x %x XXX\n",
@@ -261,11 +241,14 @@ MiniIndicateReceivePacket(
   {
       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 
-      for (i = 0; i < NumberOfPackets; i++)
+      if (AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)
       {
-          (*AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)(
-           AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
-           PacketArray[i]);
+          for (i = 0; i < NumberOfPackets; i++)
+          {
+              (*AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)(
+               AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+               PacketArray[i]);
+          }
       }
 
       CurrentEntry = CurrentEntry->Flink;
