@@ -235,60 +235,43 @@ MiniIndicateData(
 
 VOID NTAPI
 MiniIndicateReceivePacket(
-    IN  NDIS_HANDLE    Miniport,
+    IN  NDIS_HANDLE    MiniportAdapterHandle,
     IN  PPNDIS_PACKET  PacketArray,
     IN  UINT           NumberOfPackets)
 /*
  * FUNCTION: receives miniport packet array indications
  * ARGUMENTS:
- *     Miniport: Miniport handle for the adapter
+ *     MiniportAdapterHandle: Miniport handle for the adapter
  *     PacketArray: pointer to a list of packet pointers to indicate
  *     NumberOfPackets: number of packets to indicate
- * NOTES:
- *     - This currently is a big temporary hack.  In the future this should
- *       call ProtocolReceivePacket() on each bound protocol if it exists.
- *       For now it just mimics NdisMEthIndicateReceive.
+ *
  */
 {
+  PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+  PLIST_ENTRY CurrentEntry;
+  PADAPTER_BINDING AdapterBinding;
+  KIRQL OldIrql;
   UINT i;
 
-  for(i = 0; i < NumberOfPackets; i++)
-    {
-      PCHAR PacketBuffer = 0;
-      UINT PacketLength = 0;
-      PNDIS_BUFFER NdisBuffer = 0;
+  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
-#define PACKET_TAG (('k' << 24) + ('P' << 16) + ('D' << 8) + 'N')
+  CurrentEntry = Adapter->ProtocolListHead.Flink;
 
-      NdisAllocateMemoryWithTag((PVOID)&PacketBuffer, 1518, PACKET_TAG);
-      if(!PacketBuffer)
-        {
-          NDIS_DbgPrint(MIN_TRACE, ("insufficient resources\n"));
-          return;
-        }
+  while (CurrentEntry != &Adapter->ProtocolListHead)
+  {
+      AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 
-      NdisQueryPacket(PacketArray[i], NULL, NULL, &NdisBuffer, NULL);
+      for (i = 0; i < NumberOfPackets; i++)
+      {
+          (*AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)(
+           AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+           PacketArray[i]);
+      }
 
-      while(NdisBuffer)
-        {
-          PNDIS_BUFFER CurrentBuffer;
-          PVOID BufferVa;
-          UINT BufferLen;
+      CurrentEntry = CurrentEntry->Flink;
+  }
 
-          NdisQueryBuffer(NdisBuffer, &BufferVa, &BufferLen);
-          memcpy(PacketBuffer + PacketLength, BufferVa, BufferLen);
-          PacketLength += BufferLen;
-
-          CurrentBuffer = NdisBuffer;
-          NdisGetNextBuffer(CurrentBuffer, &NdisBuffer);
-        }
-
-      NDIS_DbgPrint(MID_TRACE, ("indicating a %d-byte packet\n", PacketLength));
-
-      MiniIndicateData(Miniport, NULL, PacketBuffer, 14, PacketBuffer+14, PacketLength-14, PacketLength-14);
-
-      NdisFreeMemory(PacketBuffer, 0, 0);
-    }
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
 
