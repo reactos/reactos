@@ -153,7 +153,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 250;
+	rbBand.cx = 120;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
