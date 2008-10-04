@@ -8,11 +8,11 @@
 			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
 		</application>
 		<application name="Firefox 2.0">
-			<regname>Mozilla Firefox (2.0.0.16)</regname>
+			<regname>Mozilla Firefox (2.0.0.17)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.16</version>
+			<version>2.0.0.17</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.16.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-2.0/win32/en-US/Firefox%20Setup%202.0.0.17.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
