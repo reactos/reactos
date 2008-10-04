@@ -291,6 +291,11 @@
 			<description>Needed for many Open Source Games to run. You need 7-Zip or a similar Utility to extract it.</description>
 			<location>http://www.libsdl.org/release/SDL-1.2.13-win32.zip</location>
 		</application>
+		<application name="Simple Direct Media Layer (SDL) Mixer">
+			<version>1.2.8</version>
+			<description>Needed for some Open Source Games to run. You need 7-Zip or a similar Utility to extract it.</description>
+			<location>http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.8-win32.zip</location>
+		</application>
 		<application name="DOSBox">
 			<version>0.72</version>
 			<description>DOSBox is a DOS emulator.</description>
