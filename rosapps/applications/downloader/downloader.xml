@@ -74,7 +74,7 @@
 			<licence>MIT</licence>
 			<version>0.60</version>
 			<description>A free SSH, Telnet, rlogin, and raw TCP client.</description>
-			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.60-installer.exe</location>
+			<location>http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe</location>
 		</application>
 	</category>
 	<category name="Office" icon="2">
