@@ -657,12 +657,10 @@ IntGdiSetMapMode(PDC  dc,
 
   PrevMapMode = Dc_Attr->iMapMode;
 
-  if (MapMode != Dc_Attr->iMapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
-  {
-    Dc_Attr->iMapMode = MapMode;
+  Dc_Attr->iMapMode = MapMode;
 
-    switch (MapMode)
-    {
+  switch (MapMode)
+  {
       case MM_TEXT:
         Dc_Attr->szlWindowExt.cx = 1;
         Dc_Attr->szlWindowExt.cy = 1;
@@ -717,7 +715,6 @@ IntGdiSetMapMode(PDC  dc,
       default:
         Dc_Attr->iMapMode = PrevMapMode;
         PrevMapMode = 0;
-    }
 
     DC_UpdateXforms(dc);
   }

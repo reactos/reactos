@@ -1275,8 +1275,13 @@ SetMapMode(
       return 0;
     }
 #endif
-  if ((Mode == Dc_Attr->iMapMode) && (Mode != MM_ISOTROPIC)) return Mode;
-  return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
+  // Force change if Isotropic is set for recompute.
+  if ((Mode != Dc_Attr->iMapMode) || (Mode == MM_ISOTROPIC))
+  {
+      Dc_Attr->ulDirty_ &= ~SLOW_WIDTHS;
+      return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
+  }
+  return Dc_Attr->iMapMode;
 }
 
 /*
