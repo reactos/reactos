@@ -524,7 +524,7 @@ NtGdiCreateDIBBrush(
    NTSTATUS Status = STATUS_SUCCESS;
    HBRUSH hBrush;
 
-   SafeBitmapInfoAndData = EngAllocMem(0, BitmapInfoSize, 0);
+   SafeBitmapInfoAndData = EngAllocMem(FL_ZERO_MEMORY, BitmapInfoSize, TAG_DIB);
    if (SafeBitmapInfoAndData == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
