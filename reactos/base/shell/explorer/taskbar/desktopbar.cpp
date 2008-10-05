@@ -169,7 +169,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	RegisterHotkeys();
 
 	 // prepare Startmenu, but hide it for now
-	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd, STARTMENUROOT_ICON_SIZE));
+	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwndStartButton, STARTMENUROOT_ICON_SIZE));
+    _startMenuRoot->_hwndParent = _hwndStartButton;
 
 	return 0;
 }
