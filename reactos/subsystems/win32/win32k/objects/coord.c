@@ -715,9 +715,8 @@ IntGdiSetMapMode(PDC  dc,
       default:
         Dc_Attr->iMapMode = PrevMapMode;
         PrevMapMode = 0;
-
-    DC_UpdateXforms(dc);
   }
+    DC_UpdateXforms(dc);
 
   return PrevMapMode;
 }
