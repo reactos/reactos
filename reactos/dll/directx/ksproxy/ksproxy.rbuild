@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="ksproxy" type="win32dll" baseaddress="${BASEADDRESS_KSPROXY}" installbase="system32" installname="ksproxy.ax" allowwarnings="true">
+<module name="ksproxy" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_KSPROXY}" installbase="system32" installname="ksproxy.ax" allowwarnings="true">
 	<importlibrary definition="ksproxy.spec.def" />
 	<include base="ksproxy">.</include>
 	<define name="WINVER">0x600</define>

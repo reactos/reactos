@@ -1,4 +1,4 @@
-<module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes">
+<module name="mmdrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes">
 	<importlibrary definition="mmdrv.spec.def" />
 	<include base="mmdrv">.</include>
 	<define name="NDEBUG" />

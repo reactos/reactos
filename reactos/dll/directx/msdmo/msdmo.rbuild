@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="msdmo" type="win32dll" baseaddress="${BASEADDRESS_MSDMO}" installbase="system32" installname="msdmo.dll" allowwarnings="true">
+<module name="msdmo" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MSDMO}" installbase="system32" installname="msdmo.dll" allowwarnings="true">
 	<importlibrary definition="msdmo.spec.def" />
 	<include base="msdmo">.</include>
 	<define name="WINVER">0x600</define>
