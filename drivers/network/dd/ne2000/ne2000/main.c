@@ -141,10 +141,13 @@ static VOID STDCALL MiniportHalt(
             0x20,
             Adapter->IOBase);
 
+    if (Adapter->ShutdownHandlerRegistered)
+        NdisMDeregisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle);
+
     /* Remove adapter from global adapter list */
     if ((&Adapter->ListEntry)->Blink != NULL) {
         RemoveEntryList(&Adapter->ListEntry);
-	}
+    }
 
     /* Free adapter context area */
     NdisFreeMemory(Adapter, sizeof(NIC_ADAPTER), 0);
@@ -203,6 +206,14 @@ static VOID STDCALL MiQueryResources(
     }
 }
 
+VOID
+STDCALL
+MiniportShutdown(PVOID Context)
+{
+  #ifndef NOCARD
+    NICStop((PNIC_ADAPTER)Context);
+  #endif
+}
 
 static NDIS_STATUS STDCALL MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
@@ -414,6 +425,12 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     /* Start the NIC */
     NICStart(Adapter);
 #endif
+
+    /* Register the shutdown handler */
+    NdisMRegisterAdapterShutdownHandler(MiniportAdapterHandle, Adapter, MiniportShutdown);
+
+    Adapter->ShutdownHandlerRegistered = TRUE;
+
     /* Add adapter to the global adapter list */
     InsertTailList(&DriverInfo.AdapterListHead, &Adapter->ListEntry);
 
