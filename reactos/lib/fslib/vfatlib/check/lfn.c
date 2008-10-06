@@ -410,8 +410,12 @@ char *lfn_get( DIR_ENT *de )
 	}
     }
 
-    for (sum = 0, i = 0; i < 11; i++)
+    for (sum = 0, i = 0; i < 8; i++)
 	sum = (((sum&1) << 7) | ((sum&0xfe) >> 1)) + de->name[i];
+
+    for (i = 0; i < 3; i++)
+	sum = (((sum&1) << 7) | ((sum&0xfe) >> 1)) + de->ext[i];
+
     if (sum != lfn_checksum) {
 	/* checksum doesn't match, long name doesn't apply to this alias */
 	/* Causes: 1) alias renamed */
