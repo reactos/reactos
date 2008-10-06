@@ -142,6 +142,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
          Colors[Index - StartIndex].rgbRed = PalGDI->IndexedColors[Index].peRed;
          Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
          Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
+         Colors[Index - StartIndex].rgbReserved = 0;
       }
       PALETTE_UnlockPalette(PalGDI);
    }
@@ -544,7 +545,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
         {
             if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
             {
-                BITMAPCOREHEADER* coreheader;
+                BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
 
                 ProbeForWrite(Info, sizeof(BITMAPINFO), 1);
 
@@ -669,6 +670,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                         Info->bmiColors[Index].rgbRed = DestPalette->IndexedColors[Index].peRed;
                         Info->bmiColors[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
                         Info->bmiColors[Index].rgbBlue = DestPalette->IndexedColors[Index].peBlue;
+                        Info->bmiColors[Index].rgbReserved = 0;
                     }
                 }
 
@@ -694,7 +696,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
 
                 hDestBitmap = NULL;
 
-                ProbeForWrite(Bits, sizeof(BitmapObj->SurfObj.cjBits), 1);
+                ProbeForWrite(Bits, BitmapObj->SurfObj.cjBits, 1);
 
                 if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
                 {
@@ -1083,7 +1085,6 @@ DIB_CreateDIBSection(
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
   INT effHeight;
   ULONG totalSize;
-  UINT Entries = 0;
   BITMAP bm;
   SIZEL Size;
   RGBQUAD *lpRGB;
@@ -1091,6 +1092,12 @@ DIB_CreateDIBSection(
   DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
 	bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
+
+  /* CreateDIBSection should fail for compressed formats */
+  if (bi->biCompression == BI_RLE4 || bi->biCompression == BI_RLE8)
+  {
+    return (HBITMAP)NULL;
+  }
 
   effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
   bm.bmType = 0;
@@ -1137,9 +1144,6 @@ DIB_CreateDIBSection(
   if (dib)
   {
     dib->dsBm = bm;
-    dib->dsBmih = *bi;
-    dib->dsBmih.biSizeImage = totalSize;
-
     /* Set dsBitfields values */
     if ( usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
     {
@@ -1202,17 +1206,21 @@ DIB_CreateDIBSection(
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
                   device. Obviously, this is left out of the ReactOS implementation. Instead, we call
                   NtGdiSetDIBColorTable. */
-    if(bi->biBitCount == 1) { Entries = 2; } else
-    if(bi->biBitCount == 4) { Entries = 16; } else
-    if(bi->biBitCount == 8) { Entries = 256; }
+    bi->biClrUsed = 0;
+    if(bi->biBitCount == 1) { bi->biClrUsed = 2; } else
+    if(bi->biBitCount == 4) { bi->biClrUsed = 16; } else
+    if(bi->biBitCount == 8) { bi->biClrUsed = 256; }
 
-    if (Entries)
-      bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(Entries, lpRGB);
+    if (bi->biClrUsed != 0)
+      bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(bi->biClrUsed, lpRGB);
     else
       bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
                                               dib->dsBitfields[0],
                                               dib->dsBitfields[1],
                                               dib->dsBitfields[2]);
+
+    dib->dsBmih = *bi;
+    dib->dsBmih.biSizeImage = totalSize;
   }
 
   // Clean up in case of errors
@@ -1341,6 +1349,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
       lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
       lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+      lpRGB[i].rgbReserved = 0;
       lpIndex++;
     }
   PALETTE_UnlockPalette(palGDI);
