@@ -1137,8 +1137,10 @@ NdisMDeregisterAdapterShutdownHandler(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  if(Adapter->BugcheckContext->ShutdownHandler)
+  if(Adapter->BugcheckContext->ShutdownHandler) {
     KeDeregisterBugCheckCallback(Adapter->BugcheckContext->CallbackRecord);
+    IoUnregisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
+  }
 }
 
 
@@ -1306,12 +1308,9 @@ NdisMRegisterAdapterShutdownHandler(
  */
 {
   PLOGICAL_ADAPTER            Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
-  PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext = Adapter->BugcheckContext;
+  PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
-
-  if(BugcheckContext)
-    return;
 
   BugcheckContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_BUGCHECK_CONTEXT));
   if(!BugcheckContext)
@@ -1324,11 +1323,19 @@ NdisMRegisterAdapterShutdownHandler(
   BugcheckContext->DriverContext = ShutdownContext;
 
   BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
+  if (!BugcheckContext->CallbackRecord) {
+      ExFreePool(BugcheckContext);
+      return;
+  }
+
+  Adapter->BugcheckContext = BugcheckContext;
 
   KeInitializeCallbackRecord(BugcheckContext->CallbackRecord);
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback,
       BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
+
+  IoRegisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
 }
 
 
@@ -1781,6 +1788,28 @@ NdisIPnPStopDevice(
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+NdisIShutdown(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+  PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+  PMINIPORT_BUGCHECK_CONTEXT Context = Adapter->BugcheckContext;
+  ADAPTER_SHUTDOWN_HANDLER ShutdownHandler = Context->ShutdownHandler;
+
+  ASSERT(ShutdownHandler);
+
+  ShutdownHandler(Context->DriverContext);
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -2075,6 +2104,7 @@ NdisMRegisterMiniport(
   *MiniportPtr = Miniport;
 
   Miniport->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
+  Miniport->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
   Miniport->DriverObject->DriverExtension->AddDevice = NdisIAddDevice;
 
   return NDIS_STATUS_SUCCESS;
