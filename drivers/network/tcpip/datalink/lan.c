@@ -517,19 +517,44 @@ VOID STDCALL ProtocolReceiveComplete(
 
 VOID STDCALL ProtocolStatus(
     NDIS_HANDLE BindingContext,
-    NDIS_STATUS GenerelStatus,
+    NDIS_STATUS GeneralStatus,
     PVOID StatusBuffer,
     UINT StatusBufferSize)
 /*
  * FUNCTION: Called by NDIS when the underlying driver has changed state
  * ARGUMENTS:
  *     BindingContext   = Pointer to a device context (LAN_ADAPTER)
- *     GenerelStatus    = A generel status code
+ *     GeneralStatus    = A general status code
  *     StatusBuffer     = Pointer to a buffer with medium-specific data
  *     StatusBufferSize = Number of bytes in StatusBuffer
  */
 {
+    PLAN_ADAPTER Adapter = BindingContext;
+
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    switch(GeneralStatus)
+    {
+      case NDIS_STATUS_MEDIA_CONNECT:
+         DbgPrint("NDIS_STATUS_MEDIA_CONNECT\n");
+         break;
+
+      case NDIS_STATUS_MEDIA_DISCONNECT:
+         DbgPrint("NDIS_STATUS_MEDIA_DISCONNECT\n");
+         break;
+
+      case NDIS_STATUS_RESET_START:
+         Adapter->State = LAN_STATE_RESETTING;
+         break;
+
+      case NDIS_STATUS_RESET_END:
+         Adapter->State = LAN_STATE_STARTED;
+         break;
+
+      default:
+         DbgPrint("Unhandled status: %x", GeneralStatus);
+         break;
+    }
 }
 
 
