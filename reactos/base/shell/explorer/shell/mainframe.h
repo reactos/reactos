@@ -51,6 +51,7 @@ struct MainFrameBase : public PreTranslateWindow
 	WindowHandle _hwndrebar;
 
 	WindowHandle _htoolbar;
+	WindowHandle _haddrcombo;
 	WindowHandle _hstatusbar;
 
 	WindowHandle _hsidebar;
@@ -176,4 +177,6 @@ protected:
 
 	 // interface BrowserCallback
 	virtual void	entry_selected(Entry* entry);
+
+	void	set_url(LPCTSTR url);
 };

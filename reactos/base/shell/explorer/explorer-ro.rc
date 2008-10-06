@@ -41,7 +41,7 @@ BEGIN
     BEGIN
         MENUITEM "&Bara cu instrumente",        ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar",                  ID_VIEW_EXTRA_BAR
-        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR
         MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
         MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
         MENUITEM SEPARATOR

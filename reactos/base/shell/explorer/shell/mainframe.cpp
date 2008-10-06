@@ -186,10 +186,21 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
-	 // address & command bar
-	WindowCanvas canvas(hwnd);
-	RECT rect = {0, 0, 0, 0};
-	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+	 // address bar 
+	_haddrcombo = CreateWindowEx(0,
+								WC_COMBOBOX,
+								TEXT("Address"),
+								WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|CBS_DROPDOWN|
+								CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|CCS_NOMOVEY,
+								0, 0, 0, 0,
+								hwnd,
+								(HMENU)IDW_ADDRESSBAR,
+								g_Globals._hInstance,
+								0);
+
+	HFONT hFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+	SendMessageW(_haddrcombo, WM_SETFONT, (WPARAM)hFont, 0);
+
 
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
@@ -205,11 +216,16 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 	 // create rebar window to manage toolbar and drivebar
 #ifndef _NO_REBAR
-	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
-					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
-					RBS_VARHEIGHT|RBS_DBLCLKTOGGLE|
-					WS_BORDER|RBS_AUTOSIZE|RBS_BANDBORDERS,
-					0, 0, 0, 0, _hwnd, 0, g_Globals._hInstance, 0);
+	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW,
+								REBARCLASSNAME,
+								NULL,
+								WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
+								 RBS_VARHEIGHT|RBS_DBLCLKTOGGLE| RBS_AUTOSIZE|RBS_BANDBORDERS,
+								0, 0, 0, 0,
+								_hwnd,
+								NULL,
+								g_Globals._hInstance,
+								0);
 
 	int btn_hgt = HIWORD(SendMessage(_htoolbar, TB_GETBUTTONSIZE, 0, 0));
 
@@ -217,9 +233,6 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 	rbBand.cbSize = sizeof(REBARBANDINFO);
 	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE;
-#ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
-#define RBBS_HIDETITLE	0x400
-#endif
 	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
 
 	rbBand.cxMinChild = 0;
@@ -233,7 +246,16 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 284;
-	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)0, (LPARAM)&rbBand);
+
+	rbBand.fStyle &= ~RBBS_HIDETITLE;
+	rbBand.fStyle |= RBBS_BREAK;
+    rbBand.lpText = TEXT("Address :");
+	rbBand.hwndChild = _haddrcombo;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = btn_hgt;
+	rbBand.cx = 400;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)3, (LPARAM)&rbBand);
 #endif
 }
 
@@ -284,13 +306,8 @@ bool MainFrameBase::ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRES
 		break;
 
 	  case WM_SIZE: {
-#ifdef __REACTOS__	///@todo Work around to display rebar in ROS (with flickering) as long as the control isn't fixed
-		int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
-		MoveWindow(_hwndrebar, 0, 0, LOWORD(lparam), height, TRUE);
-#else
 		resize_frame(LOWORD(lparam), HIWORD(lparam));
 		SendMessage(_hwndrebar, WM_SIZE, 0, 0);
-#endif
 		break;}	// do not pass message to DefFrameProc
 
 	  case WM_GETMINMAXINFO: {
@@ -472,6 +489,8 @@ void MainFrameBase::resize_frame(int cx, int cy)
         int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
 		rect.top += height;
         rect.top += 5;
+
+		SetWindowPos(_haddrcombo, NULL, 0, 0, cx, height, SWP_NOMOVE);
 	} else {
 		if (IsWindowVisible(_htoolbar)) {
 			SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -747,7 +766,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 #endif
 #endif
 
-	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_UNCHECKED);
 
 
 #ifndef _NO_WIN_FS
@@ -795,7 +814,7 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 284;
-	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)1, (LPARAM)&rbBand);
 
 #ifndef _NO_WIN_FS
 	rbBand.fStyle |= RBBS_BREAK;
@@ -805,7 +824,10 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
 	rbBand.cx = 400;
-	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)2, (LPARAM)&rbBand);
+
+	// hide the drivebar by default
+	SendMessage(_hwndrebar, RB_SHOWBAND, 2, FALSE);
 #endif
 #endif
 }
@@ -1586,6 +1608,15 @@ void SDIMainFrame::entry_selected(Entry* entry)
 	 // set size of new created shell view windows
 	resize_children();
 }
+
+void SDIMainFrame::set_url(LPCTSTR url)
+{
+	if (_url != url) {
+		_url = url;
+		SetWindowText(_haddrcombo, url);
+	}
+}
+
 
 void SDIMainFrame::jump_to(LPCTSTR path, int mode)
 {/*@@todo

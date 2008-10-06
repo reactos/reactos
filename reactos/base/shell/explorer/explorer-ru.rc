@@ -38,7 +38,7 @@ BEGIN
     BEGIN
         MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR
         MENUITEM "&Дополнительная панель",      ID_VIEW_EXTRA_BAR
-        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR
         MENUITEM "И&збранное",                  ID_VIEW_SIDE_BAR
         MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR

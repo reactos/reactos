@@ -38,7 +38,7 @@ BEGIN
     BEGIN
         MENUITEM "Barre d'&outils",             ID_VIEW_TOOL_BAR
         MENUITEM "Barre d'&extras",             ID_VIEW_EXTRA_BAR
-        MENUITEM "&Barre des lecteurs",         ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Barre des lecteurs",         ID_VIEW_DRIVE_BAR
         MENUITEM "&Volet latéral",              ID_VIEW_SIDE_BAR
         MENUITEM "Barre d'&état",               ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
