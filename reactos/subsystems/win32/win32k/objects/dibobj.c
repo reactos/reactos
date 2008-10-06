@@ -555,7 +555,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 coreheader->bcBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
                 /* Resulting height may be smaller than original height */
                 coreheader->bcHeight = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
-
+                coreheader->bcSize = DIB_GetDIBWidthBytes(coreheader->bcWidth,
+                    coreheader->bcBitCount) * coreheader->bcHeight;
                 if (BitmapObj->SurfObj.lDelta > 0)
                     coreheader->bcHeight = -coreheader->bcHeight;
             }
@@ -567,44 +568,41 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
                 /* Resulting height may be smaller than original height */
                 Info->bmiHeader.biHeight = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
+                Info->bmiHeader.biPlanes = 1;
+                Info->bmiHeader.biBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
+                switch (BitmapObj->SurfObj.iBitmapFormat)
+                {
+                    case BMF_1BPP:
+                    case BMF_4BPP:
+                    case BMF_8BPP:
+                    case BMF_16BPP:
+                    case BMF_24BPP:
+                    case BMF_32BPP:
+                        Info->bmiHeader.biCompression = BI_RGB;
+                        break;
+                    case BMF_4RLE:
+                        Info->bmiHeader.biCompression = BI_RLE4;
+                        break;
+                    case BMF_8RLE:
+                        Info->bmiHeader.biCompression = BI_RLE8;
+                        break;
+                    case BMF_JPEG:
+                        Info->bmiHeader.biCompression = BI_JPEG;
+                        break;
+                    case BMF_PNG:
+                        Info->bmiHeader.biCompression = BI_PNG;
+                        break;
+                }
+                /* Image size has to be calculated */
+                Info->bmiHeader.biSizeImage = DIB_GetDIBWidthBytes(Info->bmiHeader.biWidth,
+                    Info->bmiHeader.biBitCount) * Info->bmiHeader.biHeight;
+                Info->bmiHeader.biXPelsPerMeter = 0; /* FIXME */
+                Info->bmiHeader.biYPelsPerMeter = 0; /* FIXME */
+                Info->bmiHeader.biClrUsed = 0;
+                Info->bmiHeader.biClrImportant = 1 << Info->bmiHeader.biBitCount; /* FIXME */
                 /* Report negtive height for top-down bitmaps. */
                 if (BitmapObj->SurfObj.lDelta > 0)
                     Info->bmiHeader.biHeight = -Info->bmiHeader.biHeight;
-                Info->bmiHeader.biPlanes = 1;
-                Info->bmiHeader.biBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
-                if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
-                {
-                    switch (BitmapObj->SurfObj.iBitmapFormat)
-                    {
-                        case BMF_1BPP:
-                        case BMF_4BPP:
-                        case BMF_8BPP:
-                        case BMF_16BPP:
-                        case BMF_24BPP:
-                        case BMF_32BPP:
-                            Info->bmiHeader.biCompression = BI_RGB;
-                            break;
-                        case BMF_4RLE:
-                            Info->bmiHeader.biCompression = BI_RLE4;
-                            break;
-                        case BMF_8RLE:
-                            Info->bmiHeader.biCompression = BI_RLE8;
-                            break;
-                        case BMF_JPEG:
-                            Info->bmiHeader.biCompression = BI_JPEG;
-                            break;
-                        case BMF_PNG:
-                            Info->bmiHeader.biCompression = BI_PNG;
-                            break;
-                    }
-                    /* Image size has to be calculated */
-                    Info->bmiHeader.biSizeImage = DIB_GetDIBWidthBytes(Info->bmiHeader.biWidth, 
-                        Info->bmiHeader.biBitCount) * Info->bmiHeader.biHeight;
-                    Info->bmiHeader.biXPelsPerMeter = 0; /* FIXME */
-                    Info->bmiHeader.biYPelsPerMeter = 0; /* FIXME */
-                    Info->bmiHeader.biClrUsed = 0;
-                    Info->bmiHeader.biClrImportant = 1 << Info->bmiHeader.biBitCount; /* FIXME */
-                }
             }
         }
         _SEH_HANDLE
@@ -701,6 +699,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
                 {
                     BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+                    coreheader->bcSize = DIB_GetDIBWidthBytes(DestSize.cx,
+                        coreheader->bcBitCount) * DestSize.cy;
 
                     hDestBitmap = EngCreateBitmap(DestSize,
                                                   DIB_GetDIBWidthBytes(DestSize.cx, coreheader->bcBitCount),
@@ -711,6 +711,9 @@ NtGdiGetDIBitsInternal(HDC hDC,
 
                 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
                 {
+                    Info->bmiHeader.biSizeImage = DIB_GetDIBWidthBytes(DestSize.cx,
+                        Info->bmiHeader.biBitCount) * DestSize.cy;
+
                     hDestBitmap = EngCreateBitmap(DestSize,
                                                   DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
                                                   BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
