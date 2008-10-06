@@ -40,7 +40,7 @@ RtlDelete(PRTL_SPLAY_LINKS Links)
     if (!(RtlLeftChild(N)) && !(RtlRightChild(N)))
     {
         /* If we are also the root, then the tree is gone */
-        return NULL;
+        if (RtlIsRoot(N)) return NULL;
 
         /* Get our parent */
         P = RtlParent(N);
