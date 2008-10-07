@@ -1,5 +1,5 @@
 <module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" allowwarnings="true">
-	<importlibrary definition="gdi32.def" />
+	<importlibrary definition="gdi32.spec.def" />
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0600</define>
@@ -51,4 +51,5 @@
 		<file>path.c</file>
 	</directory>
 	<file>gdi32.rc</file>
+	<file>gdi32.spec</file>
 </module>
