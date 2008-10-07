@@ -350,12 +350,12 @@ IntGdiPolylineTo(DC      *dc,
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
                    LPPOINT pt,
-                   LPDWORD PolyPoints,
+                   PULONG  PolyPoints,
                    DWORD   Count)
 {
     int i;
     LPPOINT pts;
-    LPDWORD pc;
+    PULONG pc;
     BOOL ret = FALSE; // default to failure
     pts = pt;
     pc = PolyPoints;

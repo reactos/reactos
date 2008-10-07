@@ -3560,7 +3560,7 @@ REGION_PtsToRegion(
  */
 static void FASTCALL
 REGION_CreateETandAET(
-    const INT *Count,
+    const ULONG *Count,
     INT nbpolygons,
     const POINT *pts,
     EdgeTable *ET,
@@ -3657,7 +3657,7 @@ REGION_CreateETandAET(
 HRGN FASTCALL
 IntCreatePolyPolygonRgn(
     POINT *Pts,
-    INT *Count,
+    PULONG Count,
     INT nbpolygons,
     INT mode
 )
@@ -3680,6 +3680,8 @@ IntCreatePolyPolygonRgn(
     POINTBLOCK *tmpPtBlock;
     int numFullPtBlocks = 0;
     INT poly, total;
+
+    if (mode == 0 || mode > 2) return 0;
 
     if (!(region = REGION_AllocRgnWithHandle(nbpolygons)))
         return 0;
@@ -3849,141 +3851,6 @@ IntCreatePolyPolygonRgn(
     ExFreePool(pETEs);
     REGION_UnlockRgn(region);
     return hrgn;
-}
-
-
-HRGN
-FASTCALL
-GdiCreatePolyPolygonRgn(
-    CONST PPOINT pt,
-    CONST PINT  PolyCounts,
-    INT  Count,
-    INT  PolyFillMode
-)
-{
-    POINT *Safept;
-    INT *SafePolyCounts;
-    INT nPoints, nEmpty, nInvalid, i;
-    HRGN hRgn;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (pt == NULL || PolyCounts == NULL || Count == 0 ||
-            (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
-    {
-        /* Windows doesn't set a last error here */
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        ProbeForRead(PolyCounts, Count * sizeof(INT), 1);
-        /* just probe one point for now, we don't know the length of the array yet */
-        ProbeForRead(pt, sizeof(POINT), 1);
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    if (!(SafePolyCounts = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_REGION)))
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        /* pointers were already probed! */
-        RtlCopyMemory(SafePolyCounts,
-        PolyCounts,
-        Count * sizeof(INT));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(SafePolyCounts);
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    /* validate poligons */
-    nPoints = 0;
-    nEmpty = 0;
-    nInvalid = 0;
-    for (i = 0; i < Count; i++)
-    {
-        if (SafePolyCounts[i] == 0)
-        {
-            nEmpty++;
-        }
-        if (SafePolyCounts[i] == 1)
-        {
-            nInvalid++;
-        }
-        nPoints += SafePolyCounts[i];
-    }
-
-    if (nEmpty == Count)
-    {
-        /* if all polygon counts are zero, return without setting a last error code. */
-        ExFreePool(SafePolyCounts);
-        return (HRGN)0;
-    }
-    if (nInvalid != 0)
-    {
-        /* if at least one poly count is 1, fail */
-        ExFreePool(SafePolyCounts);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return (HRGN)0;
-    }
-
-    /* copy points */
-    if (!(Safept = ExAllocatePoolWithTag(PagedPool, nPoints * sizeof(POINT), TAG_REGION)))
-    {
-        ExFreePool(SafePolyCounts);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return (HRGN)0;
-    }
-
-    _SEH_TRY
-    {
-        ProbeForRead(pt, nPoints * sizeof(POINT), 1);
-        /* pointers were already probed! */
-        RtlCopyMemory(Safept,
-                      pt,
-                      nPoints * sizeof(POINT));
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(Safept);
-        ExFreePool(SafePolyCounts);
-        SetLastNtError(Status);
-        return (HRGN)0;
-    }
-
-    /* now we're ready to calculate the region safely */
-    hRgn = IntCreatePolyPolygonRgn(Safept, SafePolyCounts, Count, PolyFillMode);
-
-    ExFreePool(Safept);
-    ExFreePool(SafePolyCounts);
-    return hRgn;
 }
 
 /* EOF */

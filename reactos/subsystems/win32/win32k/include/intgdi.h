@@ -93,7 +93,7 @@ IntGdiPolyBezierTo(DC      *dc,
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
                    LPPOINT pt,
-                   LPDWORD PolyPoints,
+                   PULONG PolyPoints,
                    DWORD   Count);
 
 BOOL FASTCALL
@@ -125,7 +125,7 @@ IntGdiPolygon(PDC    dc,
 BOOL FASTCALL
 IntGdiPolyPolygon(DC      *dc,
                   LPPOINT Points,
-                  LPINT   PolyCounts,
+                  PULONG  PolyCounts,
                   int     Count);
 
 BOOL FASTCALL IntGdiGradientFill(DC *dc,
