@@ -6,6 +6,7 @@
 @ stub sfc_os_6
 @ stub sfc_os_7
 @ stub SfcGetNextProtectedFile
-@ stub SfcIsFileProtected
+@ stdcall SfcIsFileProtected(ptr wstr)
+@ stdcall SfcIsKeyProtected(long wstr long)
 @ stub SfcWLEventLogoff
 @ stub SfcWLEventLogon
