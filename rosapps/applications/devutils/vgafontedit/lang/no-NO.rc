@@ -76,7 +76,7 @@ BEGIN
     IDS_OPENFILTER, "Alle støttet formater (*.bin,*.psf)|*.bin;*.psf|Binære skrifttype filer (*.bin)|*.bin|PC skjerm skrifttype versjon 1 (*.psf)|*.psf|"
     IDS_SAVEFILTER, "Binære skrifttype filer (*.bin)|*.bin|"
     IDS_OPENERROR, "Feil med å åpne filen! (Feil nummer %1!u!)"
-    IDS_READERROR, "Feil med å lese filen! (Feil nummer %1!u!)""
+    IDS_READERROR, "Feil med å lese filen! (Feil nummer %1!u!)"
     IDS_WRITEERROR, "Feil med å lagre filen! (Feil nummer %1!u!)"
     IDS_UNSUPPORTEDFORMAT, "Filformatet er ikke støttet!"
     IDS_UNSUPPORTEDPSF, "Ikke støttet PSF filformat/skriftformat! Programmet støtter bare 8x8 skrift med ingen spesielle modus."
