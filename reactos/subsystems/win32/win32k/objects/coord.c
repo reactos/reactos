@@ -672,8 +672,14 @@ IntGdiSetMapMode(PDC  dc,
                              INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
         break;
 
-      case MM_LOMETRIC:
       case MM_ISOTROPIC:
+        Dc_Attr->szlWindowExt.cx = 3600;
+        Dc_Attr->szlWindowExt.cy = 2700;
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        break;
+
+      case MM_LOMETRIC:
         Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 10;
         Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 10;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
