@@ -16,10 +16,11 @@
 /* FUNCTIONS ****************************************************************/
 
 VOID STDCALL
-HalRequestIpi(ULONG ProcessorNo)
+HalRequestIpi(KAFFINITY TargetProcessors)
 {
-  DPRINT("HalRequestIpi(ProcessorNo %d)\n", ProcessorNo);
-  APICSendIPI(1 << ProcessorNo,
+  /* FIXME: SMP HAL is...very broken */
+  DPRINT("HalRequestIpi(TargetProcessors %d)\n", TargetProcessors);
+  APICSendIPI(1 << TargetProcessors,
 	      IPI_VECTOR|APIC_ICR0_LEVEL_DEASSERT|APIC_ICR0_DESTM);
 }
 
