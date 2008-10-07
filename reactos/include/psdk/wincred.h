@@ -107,6 +107,45 @@ typedef struct _CREDUI_INFOW
     HBITMAP hbmBanner;
 } CREDUI_INFOW, *PCREDUI_INFOW;
 
+typedef enum _CRED_MARSHAL_TYPE {
+    CertCredential = 1,
+    UsernameTargetCredential
+} CRED_MARSHAL_TYPE, *PCRED_MARSHAL_TYPE;
+
+typedef struct _CREDENTIAL_TARGET_INFORMATIONA {
+    LPSTR TargetName;
+    LPSTR NetbiosServerName;
+    LPSTR DnsServerName;
+    LPSTR NetbiosDomainName;
+    LPSTR DnsDomainName;
+    LPSTR DnsTreeName;
+    LPSTR PackageName;
+    ULONG Flags;
+    DWORD CredTypeCount;
+    LPDWORD CredTypes;
+} CREDENTIAL_TARGET_INFORMATIONA, *PCREDENTIAL_TARGET_INFORMATIONA;
+
+typedef struct _CREDENTIAL_TARGET_INFORMATIONW {
+    LPWSTR TargetName;
+    LPWSTR NetbiosServerName;
+    LPWSTR DnsServerName;
+    LPWSTR NetbiosDomainName;
+    LPWSTR DnsDomainName;
+    LPWSTR DnsTreeName;
+    LPWSTR PackageName;
+    ULONG Flags;
+    DWORD CredTypeCount;
+    LPDWORD CredTypes;
+} CREDENTIAL_TARGET_INFORMATIONW, *PCREDENTIAL_TARGET_INFORMATIONW;
+
+#ifdef UNICODE
+typedef CREDENTIAL_TARGET_INFORMATIONW CREDENTIAL_TARGET_INFORMATION;
+typedef PCREDENTIAL_TARGET_INFORMATIONW PCREDENTIAL_TARGET_INFORMATION;
+#else
+typedef CREDENTIAL_TARGET_INFORMATIONA CREDENTIAL_TARGET_INFORMATION;
+typedef PCREDENTIAL_TARGET_INFORMATIONA PCREDENTIAL_TARGET_INFORMATION;
+#endif /* UNICODE */
+
 DECL_WINELIB_TYPE_AW(CREDUI_INFO)
 DECL_WINELIB_TYPE_AW(PCREDUI_INFO)
 
@@ -200,6 +239,23 @@ DWORD WINAPI CredUIStoreSSOCredW(PCWSTR,PCWSTR,PCWSTR,BOOL);
 /* Note: no CredUIStoreSSOCredA in PSDK header */
 DWORD WINAPI CredUIReadSSOCredW(PCWSTR,PWSTR*);
 /* Note: no CredUIReadSSOCredA in PSDK header */
+
+BOOL WINAPI CredReadDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo, DWORD Flags, DWORD *Count, PCREDENTIALW **Credential);
+BOOL WINAPI CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo, DWORD Flags, DWORD *Count, PCREDENTIALA **Credential);
+BOOL WINAPI CredWriteDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo, PCREDENTIALW Credential, DWORD Flags);
+BOOL WINAPI CredWriteDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo, PCREDENTIALA Credential, DWORD Flags);
+BOOL WINAPI CredUnmarshalCredentialW(LPCWSTR MarshaledCredential, PCRED_MARSHAL_TYPE CredType, PVOID *Credential);
+BOOL WINAPI CredUnmarshalCredentialA(LPCSTR MarshaledCredential, PCRED_MARSHAL_TYPE CredType, PVOID *Credential);
+
+#ifdef UNICODE
+#define CredReadDomainCredentials CredReadDomainCredentialsW
+#define CredWriteDomainCredentials CredWriteDomainCredentialsW
+#define CredUnmarshalCredential CredUnmarshalCredentialW
+#else
+#define CredReadDomainCredentials CredReadDomainCredentialsA
+#define CredWriteDomainCredentials CredWriteDomainCredentialsA
+#define CredUnmarshalCredential CredUnmarshalCredentialA
+#endif /* UNICODE */
 
 #ifdef __cplusplus
 }
