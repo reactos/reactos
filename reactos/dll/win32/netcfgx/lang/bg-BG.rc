@@ -111,5 +111,5 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Network connection"
+	IDS_NET_CONNECT "Мрежoвo свързване"
 END

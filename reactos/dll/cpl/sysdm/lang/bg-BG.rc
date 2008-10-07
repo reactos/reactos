@@ -50,7 +50,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Разширени"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "За повечето от тези настройски са нужни управителски права.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "За повечето от тези настройки са нужни управнически права.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Производителност", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Тези настройки управляват употребата на памет от приложенията, което влияе на бързината на компютъра ви.", IDC_STATIC, 16, 29, 210, 17
     PUSHBUTTON  "Настройки", IDC_PERFOR, 194, 48, 50, 15

@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "&Изход %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "&Откачване...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
 /* undock computer*/
-        MENUITEM "От&гнездване на кокмпютъра", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "От&гнездване на компютъра", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "&Изключване...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END

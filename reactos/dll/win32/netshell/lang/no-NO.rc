@@ -97,11 +97,11 @@ BEGIN
 	IDS_NET_DELETE              "Slett"
 	IDS_NET_PROPERTIES          "Egenskaper"
 
-	IDS_FORMAT_BIT              "%u Bytes/s"
-	IDS_FORMAT_KBIT             "%u KBytes/s"
-	IDS_FORMAT_MBIT             "%u MBytes/s"
-	IDS_FORMAT_GBIT             "%u GBytes/s"
-	IDS_DURATION_DAY            "%d Day %s"
-	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_FORMAT_BIT              "%u Byte/s"
+	IDS_FORMAT_KBIT             "%u KB/s"
+	IDS_FORMAT_MBIT             "%u MB/s"
+	IDS_FORMAT_GBIT             "%u GB/s"
+	IDS_DURATION_DAY            "%d dag %s"
+	IDS_DURATION_DAYS           "%d dager %s"
 END
 

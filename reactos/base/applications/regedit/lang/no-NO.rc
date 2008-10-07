@@ -460,8 +460,8 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
- *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *    ID_HELP_HELPTOPICS      "Åpne registerredigering hjelpen."
+ *    ID_HELP_ABOUT           "Vis program informasjon, versjon nummer, og enerett."
  *END
  */
 
