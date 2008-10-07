@@ -1,0 +1,52 @@
+/*
+ * Korean language resource file for Credentials UI
+ *
+ * Copyright 2007 Robert Shearman (for CodeWeavers)
+ * Copyright 2007 YunSong Hwang-황윤성(hys545@dreamwiz.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IDS_TITLEFORMAT"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_BANNER,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,213,37
+    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "사용자 이름(&U):",IDC_STATIC,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "암호(&P):",IDC_STATIC,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "내 암호 기억(&R)",IDC_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "확인",IDOK,97,128,50,14
+    PUSHBUTTON      "취소",IDCANCEL,156,128,50,14
+END
+
+
+STRINGTABLE DISCARDABLE
+{
+ IDS_TITLEFORMAT     " %s 연결"
+ IDS_MESSAGEFORMAT   " %s 연결중"
+ IDS_INCORRECTPASSWORDTITLE  "로그온  실패"
+ IDS_INCORRECTPASSWORD       "당신의 사용자 이름과 암호가\n올바른지 확인하십시오"
+ IDS_CAPSLOCKONTITLE "Caps Lock  커짐"
+ IDS_CAPSLOCKON      "Caps Lock 이 커져 있으면 암호가 잘못입력될 수 있습니다.\n\n 암호를 입력하기 전에\n키보드의 Caps Lock 키를 끄시기 바랍니다."
+}

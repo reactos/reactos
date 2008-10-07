@@ -153,6 +153,7 @@
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
   <property name="BASEADDRESS_ATL" value="0x76a80000" />
   <property name="BASEADDRESS_SFC" value="0x76b50000" />
+  <property name="BASEADDRESS_CREDUI" value="0x76bf0000" />
   <property name="BASEADDRESS_SFC_OS" value="0x76c10000" />
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />

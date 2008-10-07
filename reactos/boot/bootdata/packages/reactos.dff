@@ -241,6 +241,7 @@ dll\win32\comcat\comcat.dll                         1
 dll\win32\comctl32\comctl32.dll                     1
 dll\win32\comdlg32\comdlg32.dll                     1
 dll\win32\compstui\compstui.dll                     1
+dll\win32\credui\credui.dll                         1
 dll\win32\crtdll\crtdll.dll                         1
 dll\win32\crypt32\crypt32.dll                       1
 dll\win32\cryptdll\cryptdll.dll                     1

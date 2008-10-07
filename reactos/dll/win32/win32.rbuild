@@ -52,6 +52,9 @@
 <directory name="compstui">
 	<xi:include href="compstui/compstui.rbuild" />
 </directory>
+<directory name="credui">
+	<xi:include href="credui/credui.rbuild" />
+</directory>
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.rbuild" />
 </directory>
