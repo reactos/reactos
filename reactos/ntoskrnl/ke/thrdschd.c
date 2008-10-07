@@ -19,6 +19,23 @@ ULONG KiIdleSMTSummary;
 
 /* FUNCTIONS *****************************************************************/
 
+PKTHREAD
+FASTCALL
+KiIdleSchedule(IN PKPRCB Prcb)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+    return NULL;
+}
+
+VOID
+FASTCALL
+KiProcessDeferredReadyList(IN PKPRCB Prcb)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
 VOID
 FASTCALL
 KiQueueReadyThread(IN PKTHREAD Thread,
