@@ -123,7 +123,7 @@ END
 
 IDD_TCPIPGW_DLG DIALOGEX DISCARDABLE  0, 0, 200, 80
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "TCP/IP-Adresse"
+CAPTION "TCP/IP-Gateway"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 100, 15, 80, 12
@@ -220,9 +220,10 @@ BEGIN
 	IDS_PROT_RANGE      "Protokollnummern müssen größer als 0 und kleiner als 256 sein. Geben Sie eine Nummer in diesem Bereich ein."
 	IDS_DUP_NUMBER      "Die Nummer, die Sie hinzufügen möchten ist bereits in der Liste. Geben Sie eine andere Nummer ein."
 	IDS_DISABLE_FILTER  "Das Deaktivieren dieser globalen TCP/IP-Einstellung wird alle Adapter betreffen."
-	IDS_NO_SUFFIX       "Die aktuelle Sucheinstellung der SUchmethode erfordert mindestens ein DNS-Suffix. Geben Sie ein Suffix ein, oder ändern Sie die Einstellung."
+	IDS_NO_SUFFIX       "Die aktuelle Sucheinstellung der Suchmethode erfordert mindestens ein DNS-Suffix. Geben Sie ein Suffix ein, oder ändern Sie die Einstellung."
 	IDS_DOMAIN_SUFFIX   "Das Domänensuffix ist kein gültiges Süffix."
 	IDS_DNS_SUFFIX      "Der DNS-Domänensuffix ""%s"" ist kein gültiger DNS-Name."
 	IDS_DUP_SUFFIX      "Das DNS-Suffix ist bereits in der Liste vorhanden."
-
+	IDS_DUP_IPADDR      "Die IP-Adresse ist bereits in der Liste vorhanden."
+	IDS_DUP_GW          "Der Standardgateway ist bereits in der Liste vorhanden."
 END

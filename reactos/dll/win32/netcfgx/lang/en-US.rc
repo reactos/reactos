@@ -224,5 +224,7 @@ BEGIN
 	IDS_DOMAIN_SUFFIX   "Domain suffix is not a valid suffix."
 	IDS_DNS_SUFFIX      "The DNS domain name ""%s"" is not a valid DNS name."
 	IDS_DUP_SUFFIX      "The DNS suffix is already on the list."
+	IDS_DUP_IPADDR      "The IP address is already on the list."
+	IDS_DUP_GW          "The default gateway is already on the list."
 END
 
