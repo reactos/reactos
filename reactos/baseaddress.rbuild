@@ -50,6 +50,7 @@
   <property name="BASEADDRESS_PSXDLL" value="0x68eb0000" />
   <property name="BASEADDRESS_PSAPI" value="0x68f70000" />
   <property name="BASEADDRESS_KSPROXY" value="0x68f90000" />
+  <property name="BASEADDRESS_GETUNAME" value="0x69110000" />
   <property name="BASEADDRESS_OLEACC" value="0x69640000" />
   <property name="BASEADDRESS_WINMM" value="0x697d0000" />
   <property name="BASEADDRESS_MSIMG32" value="0x69cc0000" />
