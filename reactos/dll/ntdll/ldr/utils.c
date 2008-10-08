@@ -1358,7 +1358,16 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
          }
        if (!NT_SUCCESS(Status))
          {
+           ULONG ErrorResponse;
+           ULONG_PTR ErrorParameter = (ULONG_PTR)&DllName;
+
            DPRINT1("failed to load %wZ\n", &DllName);
+           NtRaiseHardError(STATUS_DLL_NOT_FOUND,
+                            1,
+                            1,
+                            &ErrorParameter,
+                            OptionOk,
+                            &ErrorResponse);
          }
      }
    RtlFreeUnicodeString (&DllName);
@@ -1384,7 +1393,12 @@ RtlpRaiseImportNotFound(CHAR *FuncName, ULONG Ordinal, PUNICODE_STRING DllName)
     RtlAnsiStringToUnicodeString(&ProcName, &ProcNameAnsi, TRUE);
     ErrorParameters[0] = (ULONG_PTR)&ProcName;
     ErrorParameters[1] = (ULONG_PTR)DllName;
-    NtRaiseHardError(STATUS_ENTRYPOINT_NOT_FOUND, 2, 3, ErrorParameters, OptionOk, &ErrorResponse);
+    NtRaiseHardError(STATUS_ENTRYPOINT_NOT_FOUND,
+                     2,
+                     3,
+                     ErrorParameters,
+                     OptionOk,
+                     &ErrorResponse);
     RtlFreeUnicodeString(&ProcName);
 }
 
