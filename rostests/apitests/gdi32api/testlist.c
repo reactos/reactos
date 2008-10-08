@@ -6,6 +6,7 @@
 /* include the tests */
 #include "tests/AddFontResource.c"
 #include "tests/AddFontResourceEx.c"
+#include "tests/BeginPath.c"
 #include "tests/CreateBitmapIndirect.c"
 #include "tests/CreateCompatibleDC.c"
 #include "tests/CreateFont.c"
@@ -35,16 +36,9 @@
 #include "tests/GetStockObject.c"
 #include "tests/SelectObject.c"
 #include "tests/SetDCPenColor.c"
+#include "tests/SetMapMode.c"
 #include "tests/SetSysColors.c"
 #include "tests/SetWorldTransform.c"
-
-
-
-
-
-
-
-
 
 
 /* The List of tests */
@@ -52,6 +46,7 @@ TESTENTRY TestList[] =
 {
 	{ L"AddFontResourceA", Test_AddFontResourceA },
 	{ L"AddFontResourceEx", Test_AddFontResourceEx },
+	{ L"BeginPath", Test_BeginPath },
 	{ L"CreateBitmapIndirect", Test_CreateBitmapIndirect },
 	{ L"CreateCompatibleDC", Test_CreateCompatibleDC },
 	{ L"CreateFont", Test_CreateFont },
@@ -81,6 +76,7 @@ TESTENTRY TestList[] =
 	{ L"GetStockObject", Test_GetStockObject },
 	{ L"SelectObject", Test_SelectObject },
 	{ L"SetDCPenColor", Test_SetDCPenColor },
+	{ L"SetMapMode", Test_SetMapMode },
 	{ L"SetSysColors", Test_SetSysColors },
 	{ L"SetWorldTransform", Test_SetWorldTransform },
 };
