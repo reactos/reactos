@@ -27,22 +27,22 @@ END
 
 IDD_TCPIP_ALTCF_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Alternate Configuration"
+CAPTION "Konfiguracja alternatywna"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "If this computer is used on more than one network, enter the alternate IP settings below", -1, 9, 9, 220, 20
-    CONTROL "Au&tomatic private IP address", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
+    LTEXT "Jeœli ten komputer jest u¿ywany w wiêcej ni¿ jednej sieci, wprowadŸ poni¿ej alternatywne ustawienia protoko³u IP", -1, 9, 9, 220, 20
+    CONTROL "Au&tomatyczny prywatny adres IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
-    CONTROL "U&ser configured", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
-    LTEXT "&IP address:", -1, 14, 75, 135, 8
+    CONTROL "&Ustawienia konfigurowane przez u¿ytkownika", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
+    LTEXT "Adres &IP:", -1, 14, 75, 135, 8
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "S&ubnet mask:", -1, 14, 95, 135, 8
+    LTEXT "&Maska podsieci:", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
-    LTEXT "&Default gateway:", -1, 14, 115, 135, 8
+    LTEXT "&Brama domyœlna:", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12
-    LTEXT "&Preferred DNS server:", -1, 14, 150, 135, 8
+    LTEXT "&Preferowany serwer DNS:", -1, 14, 150, 135, 8
     CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP, 150, 150, 80, 12
-    LTEXT "&Alternate DNS server:", -1, 14, 165, 180, 8
+    LTEXT "&Alternatywny serwer DNS:", -1, 14, 165, 180, 8
     CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP, 150, 165, 80, 12
 END
 
@@ -198,7 +198,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_NET_CONNECT "Network connection"
+	IDS_NET_CONNECT "Po³¹czenie sieciowe"
 	IDS_NO_IPADDR_SET   "The adapter requires at least one IP address. Please enter one."
 	IDS_NO_SUBMASK_SET  "You have entered an address that is missing its subnet mask. Please add a subnet mask."
 	IDS_TCPFILTERDESC   "TCP/IP filtering allows you to control the type of TCP/IP network traffic that reaches your computer."
