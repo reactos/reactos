@@ -1,0 +1,224 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "Приложение за преглеждане на РеактХ"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    PUSHBUTTON "Помо&щ", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Следваща страница", IDC_BUTTON_NEXT, 227, 261, 80, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Запис на всички сведения...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Из&ход", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Това средство дава подробни сведения за съставните на РеактХ и за водачите, сложени в уредбата ви.", -1, 10, 10, 443, 17
+    LTEXT "Ако знаете коя област причинява проблема, натиснете подходящия подпрозорец. В противен случай можете да ползвате „Следваща страница“, за да обходите всички страници.", -1, 10, 30, 443, 25
+    GROUPBOX "Сведения за уредбата", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Сегашни дата/време:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Име на компютъра:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "Работна уредба:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Език:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "Производител на уредбата:", -1, 40, 110, 110, 10, SS_RIGHT
+    LTEXT "Модел на системата:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "БИОС:", -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT "Процесор:", -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT "Памет:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "Обменен файл:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "Версия на РеактХ:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_LANG, 155, 100, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MANU, 155, 110, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MODEL, 155, 120, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Устройство", -1, 10, 10, 250, 100
+    RTEXT "Име:", -1, 20, 25, 80, 10
+    RTEXT "Производител:", -1, 20, 35, 80, 10
+    RTEXT "Вид на чипа:", -1, 20, 45, 80, 10
+    RTEXT "Вид ЦАП:", -1, 20, 55, 80, 10
+    RTEXT "Обща памет около:", -1, 20, 65, 80, 10
+    RTEXT "Режим на екрана:", -1, 20, 75, 80, 10
+    RTEXT "Екран:", -1, 20, 85, 80, 10
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 105, 25, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 105, 35, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 105, 45, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 105, 55, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 105, 65, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 105, 75, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 105, 85, 150, 10
+
+    GROUPBOX "Водач (драйвер)", -1, 270, 10, 190, 100
+    RTEXT "Основен водач:", -1, 275, 25, 55, 10
+    RTEXT "Издание:", -1, 275, 35, 55, 10
+    RTEXT "Дата:", -1, 275, 45, 55, 10
+    RTEXT "Знак на WHQL:", -1, 275, 55, 55, 10
+    RTEXT "Мини-VDD:", -1, 275, 65, 55, 10
+    RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
+    RTEXT "Версия на DDI:", -1, 275, 85, 55, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
+
+    GROUPBOX "Възможности на РеактХ", -1, 10, 115, 450, 60
+    RTEXT "Ускорение на DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT "Ускорение на Direct3D:", -1, 15, 145, 110, 12
+    RTEXT "AGP ускорение на тъканите:", -1, 15, 160, 110, 12
+    LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "Включване", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Включване", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Включване", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "Проверка на DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 85, 14
+    PUSHBUTTON "Проверка на Direct3D", IDC_BUTTON_TEST3D, 250, 140, 85, 14, WS_DISABLED
+
+    GROUPBOX "Бележки", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Устройство", -1, 10, 10, 250, 100
+    RTEXT "Име:", -1, 15, 25, 95, 10
+    RTEXT "ОЗ на устройството:", -1, 15, 35, 95, 10
+    RTEXT "ОЗ на производителя:", -1, 15, 45, 95, 10
+    RTEXT "ОУ на произведението:", -1, 15, 55, 95, 10
+    RTEXT "Вид:", -1, 15, 65, 95, 10
+    RTEXT "Подразбирано устройство:", -1, 15, 75, 95, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 115, 25, 140, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 115, 35, 140, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 115, 45, 140, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 115, 55, 140, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 115, 65, 140, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 115, 75, 140, 10
+    GROUPBOX "Водач (драйвер)", -1, 270, 10, 190, 100
+    RTEXT "Име:", -1, 275, 25, 55, 10
+    RTEXT "Издание:", -1, 275, 35, 55, 10
+    RTEXT "Дата:", -1, 275, 45, 55, 10
+    RTEXT "Знак на WHQL:", -1, 275, 55, 55, 10
+    RTEXT "Други файлове:", -1, 275, 65, 55, 10
+    RTEXT "Доставчик:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "Възможности на РеактХ", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "Хардуерен звук\nУскорение:", -1, 20, 135, 90, 20
+    PUSHBUTTON "Проверка на DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 100, 14
+    GROUPBOX "Бележки", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Устройства за пряк вход (DirectInput)", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+    GROUPBOX "Входни устройства", -1, 10, 100, 452, 60
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    GROUPBOX "Сведения", -1, 10, 170, 452, 50
+    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Вписан доставчик на услугата DirectPlay", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_MAIN_DIALOG "Преглеждащо сечиво на РеактХ"
+	IDS_SYSTEM_DIALOG "Уредба"
+	IDS_DISPLAY_DIALOG "Екран"
+	IDS_SOUND_DIALOG "Звук"
+	IDS_MUSIC_DIALOG "Музика"
+	IDS_INPUT_DIALOG "Вход"
+	IDS_NETWORK_DIALOG "Мрежа"
+	IDS_HELP_DIALOG "Помощ"
+	IDS_FORMAT_MB "%I64uМБ памет"
+	IDS_FORMAT_SWAP "%I64u МБ заети, %I64u МБ свободни"
+	IDS_FORMAT_UNIPROC "%s (%u ЦПУ)"
+	IDS_FORMAT_MPPROC  "%s (%u ЦПУта)"
+	IDS_VERSION_UNKNOWN "Неизвестна версия"
+	IDS_DEVICE_STATUS_ATTACHED "Свързан"
+	IDS_DEVICE_STATUS_MISSING "Разкачен"
+	IDS_DEVICE_STATUS_UNKNOWN "Неизвестно"
+	IDS_DEVICE_NAME "Име на устройството"
+	IDS_DEVICE_STATUS "Състояние"
+	IDS_DEVICE_CONTROLLER "ОЗ на управлението"
+	IDS_DEVICE_MANUFACTURER "ОЗ на производителя"
+	IDS_DEVICE_PRODUCT "ОЗ на произведението"
+	IDS_DEVICE_FORCEFEEDBACK "Водач за силова обратна връзка"
+	IDS_NOT_APPLICABLE "Неприложимо"
+	IDS_OPTION_YES "Да"
+	IDS_DIRECTPLAY_COL_NAME1 "Име"
+	IDS_DIRECTPLAY_COL_NAME2 "Регистър"
+	IDS_DIRECTPLAY_COL_NAME3 "Файл"
+	IDS_DIRECTPLAY_COL_NAME4 "Издание"
+	IDS_DIRECTPLAY8_MODEMSP "Доставчик на услугата за модем на DirectPlay8"
+	IDS_DIRECTPLAY8_SERIALSP "Доставчик на последователната услугата на DirectPlay8"
+	IDS_DIRECTPLAY8_IPXSP "Доставчик на IPX услугата на DirectPlay8"
+	IDS_DIRECTPLAY8_TCPSP "Доставчик на услугата DirectPlay8-TCP/IP"
+	IDS_DIRECTPLAY_TCPCONN "Свързване към интернет по TCP/IP за DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "IPX свързване за DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "Модемно свързване за DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "Последователно свързване за DirectPlay"
+	IDS_REG_SUCCESS "Добре"
+	IDS_REG_FAIL "Грешка"
+	IDS_DDTEST_ERROR "Проверката бе неуспешна!"
+	IDS_DDTEST_DESCRIPTION "Това ще пусне интерфейса за изпитване на DirectDraw. Да продължа ли?"
+	IDS_DDPRIMARY_DESCRIPTION "Ще бъде изпитан DirectDraw за изобразяване на първична повърхност. Трябва да бъдат изобразени черни и бели правоъгълници. Да продължим ли?"
+	IDS_DDPRIMARY_RESULT "Видяхте ли черни и бели правоъгълници?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Ще бъде изпитан DirectDraw за изобразяване в извънекранен буфер. Трябва да бъде изобразен движещ се бял правоъгълник. Да продължим ли?"
+	IDS_DDOFFSCREEN_RESULT "Видяхте ли бял движещ се правоъгълник?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Ще бъде изпитан DirectDraw за изобразяване на цял екран. Трябва да бъде изобразен движещ се бял правоъгълник. Да продължим ли?"
+	IDS_DDFULLSCREEN_RESULT "Видяхте ли бял движещ се правоъгълник в режим „цял екран“?"
+	IDS_FORMAT_ADAPTER_MEM "%u МБ"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u бита)(%uХц)"
+	IDS_OPTION_NO "Не"
+END
+
+
