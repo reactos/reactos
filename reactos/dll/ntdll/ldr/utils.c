@@ -1365,6 +1365,29 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
    return Status;
 }
 
+void
+RtlpRaiseImportNotFound(CHAR *FuncName, ULONG Ordinal, PUNICODE_STRING DllName)
+{
+    ULONG ErrorResponse;
+    ULONG_PTR ErrorParameters[2];
+    ANSI_STRING ProcNameAnsi;
+    UNICODE_STRING ProcName;
+    CHAR Buffer[8];
+
+    if (!FuncName)
+    {
+        _snprintf(Buffer, 8, "# %ld", Ordinal);
+        FuncName = Buffer;
+    }
+
+    RtlInitAnsiString(&ProcNameAnsi, FuncName);
+    RtlAnsiStringToUnicodeString(&ProcName, &ProcNameAnsi, TRUE);
+    ErrorParameters[0] = (ULONG_PTR)&ProcName;
+    ErrorParameters[1] = (ULONG_PTR)DllName;
+    NtRaiseHardError(STATUS_ENTRYPOINT_NOT_FOUND, 2, 3, ErrorParameters, OptionOk, &ErrorResponse);
+    RtlFreeUnicodeString(&ProcName);
+}
+
 static NTSTATUS
 LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
                                 PLDR_DATA_TABLE_ENTRY ImportedModule,
@@ -1427,7 +1450,8 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import #%ld from %wZ\n", Ordinal, &ImportedModule->FullDllName);
-               return STATUS_UNSUCCESSFUL;
+               RtlpRaiseImportNotFound(NULL, Ordinal, &ImportedModule->FullDllName);
+               return STATUS_ENTRYPOINT_NOT_FOUND;
              }
          }
        else
@@ -1438,7 +1462,8 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
-               return STATUS_UNSUCCESSFUL;
+               RtlpRaiseImportNotFound((CHAR*)pe_name->Name, 0, &ImportedModule->FullDllName);
+               return STATUS_ENTRYPOINT_NOT_FOUND;
              }
          }
        ImportAddressList++;
