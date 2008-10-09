@@ -338,16 +338,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
 
     TRACE("GetFileSecurityW() called\n");
 
-    if (RequestedInformation &
-        (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
-    {
-        AccessMask |= READ_CONTROL;
-    }
-
-    if (RequestedInformation & SACL_SECURITY_INFORMATION)
-    {
-        AccessMask |= ACCESS_SYSTEM_SECURITY;
-    }
+    QuerySecurityAccessMask(RequestedInformation, &AccessMask);
 
     if (!RtlDosPathNameToNtPathName_U(lpFileName,
                                       &FileName,
@@ -483,21 +474,7 @@ SetFileSecurityW(LPCWSTR lpFileName,
 
     TRACE("SetFileSecurityW() called\n");
 
-    if (SecurityInformation &
-        (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
-    {
-        AccessMask |= WRITE_OWNER;
-    }
-
-    if (SecurityInformation & DACL_SECURITY_INFORMATION)
-    {
-        AccessMask |= WRITE_DAC;
-    }
-
-    if (SecurityInformation & SACL_SECURITY_INFORMATION)
-    {
-        AccessMask |= ACCESS_SYSTEM_SECURITY;
-    }
+    SetSecurityAccessMask(SecurityInformation, &AccessMask);
 
     if (!RtlDosPathNameToNtPathName_U(lpFileName,
                                       &FileName,
