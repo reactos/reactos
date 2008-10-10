@@ -4486,6 +4486,13 @@ RtlFreeHeap (
 NTSYSAPI
 VOID
 NTAPI
+RtlFreeOemString (
+    IN POEM_STRING  OemString
+); 
+
+NTSYSAPI
+VOID
+NTAPI
 RtlGenerate8dot3Name (
     IN PUNICODE_STRING              Name,
     IN BOOLEAN                      AllowExtendedCharacters,
