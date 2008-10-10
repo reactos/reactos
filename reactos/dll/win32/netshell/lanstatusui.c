@@ -522,7 +522,7 @@ InitializeNetTaskbarNotifications(
        pItem = This->pHead;
        while(pItem)
        {
-           hr = INetConnection_GetProperties(INetCon, &pProps);
+           hr = INetConnection_GetProperties(pItem->pNet, &pProps);
            if (SUCCEEDED(hr))
            {
                 ZeroMemory(&nid, sizeof(nid));
@@ -541,7 +541,7 @@ InitializeNetTaskbarNotifications(
            }
            pItem = pItem->pNext;
        }
-        return S_OK;
+       return S_OK;
     }
     /* get an instance to of IConnectionManager */
 
@@ -767,7 +767,7 @@ static const IOleCommandTargetVtbl vt_OleCommandTarget =
 HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     ILanStatusImpl * This;
-    static ILanStatusImpl *cached_This = NULL;
+    static volatile ILanStatusImpl *cached_This = NULL;
 
     if (!ppv)
         return E_POINTER;
@@ -784,7 +784,7 @@ HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid
     This->lpNetMan = NULL;
     This->pHead = NULL;
 
-    if (InterlockedCompareExchangePointer((void *)&cached_This, This, NULL) != NULL)
+    if (InterlockedCompareExchangePointer((volatile void **)&cached_This, This, NULL) != NULL)
     {
         CoTaskMemFree(This);
     }
