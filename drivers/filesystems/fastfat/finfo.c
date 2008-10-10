@@ -443,6 +443,10 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 }
 
 
+_SEH_FINALLYFUNC(VfatGetEaInformationFinal_PSEH) 
+{
+}
+
 static NTSTATUS
 VfatGetEaInformation(PFILE_OBJECT FileObject,
 		     PVFATFCB Fcb,
@@ -452,15 +456,19 @@ VfatGetEaInformation(PFILE_OBJECT FileObject,
 {
     PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 
-    /* FIXME - use SEH to access the buffer! */
-    Info->EaSize = 0;
-    *BufferLength -= sizeof(*Info);
-    if (DeviceExt->FatInfo.FatType == FAT12 ||
-        DeviceExt->FatInfo.FatType == FAT16)
+    _SEH_TRY
     {
-        /* FIXME */
-        DPRINT1("VFAT: FileEaInformation not implemented!\n");
+        RtlZeroMemory(Info, sizeof(FILE_EA_INFORMATION));
+        if (DeviceExt->FatInfo.FatType == FAT12 ||
+            DeviceExt->FatInfo.FatType == FAT16)
+        {
+            /* FIXME */
+            DPRINT1("VFAT: FileEaInformation not implemented!\n");
+        }
+        *BufferLength -= sizeof(FILE_EA_INFORMATION);
     }
+    _SEH_FINALLY(VfatGetEaInformationFinal_PSEH)
+    _SEH_END;
     return STATUS_SUCCESS;
 }
 

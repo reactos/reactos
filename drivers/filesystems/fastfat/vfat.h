@@ -608,15 +608,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
 
 /*  --------------------------------------------------------  string.c  */
 
-VOID
-vfatSplitPathName(PUNICODE_STRING PathNameU,
-		  PUNICODE_STRING DirNameU,
-		  PUNICODE_STRING FileNameU);
-
 BOOLEAN vfatIsLongIllegal(WCHAR c);
-
-BOOLEAN wstrcmpjoki (PWSTR s1,
-                     PWSTR s2);
 
 /*  -----------------------------------------------------------  fat.c  */
 
@@ -701,6 +693,11 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
 			     BOOLEAN First);
 
 /*  -----------------------------------------------------------  fcb.c  */
+
+VOID
+vfatSplitPathName(PUNICODE_STRING PathNameU,
+		  PUNICODE_STRING DirNameU,
+		  PUNICODE_STRING FileNameU);
 
 PVFATFCB vfatNewFCB (PDEVICE_EXTENSION  pVCB,
                         PUNICODE_STRING pFileNameU);
