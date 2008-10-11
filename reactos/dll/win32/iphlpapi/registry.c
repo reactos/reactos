@@ -73,7 +73,7 @@ PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName ) {
 			&ReturnedSize ) != 0) {
     return 0;
   } else {
-    Name = malloc( ReturnedSize );
+    Name = malloc( ReturnedSize);
     RegQueryValueExW( RegHandle, ValueName, NULL, NULL, (PVOID)Name,
 		      &ReturnedSize );
     return Name;

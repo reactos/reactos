@@ -51,6 +51,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
+typedef struct _NAME_SERVER_LIST_CONTEXT {
+    ULONG uSizeAvailable;
+    ULONG uSizeRequired;
+    PIP_PER_ADAPTER_INFO pData;
+    UINT NumServers;
+    IP_ADDR_STRING *pLastAddr;
+} NAME_SERVER_LIST_CONTEXT, *PNAME_SERVER_LIST_CONTEXT;
+
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
   switch (fdwReason) {
@@ -1463,13 +1471,77 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
  *  DWORD
  *
  */
+static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
+						    PWCHAR Server,
+						    PVOID Data )
+{
+  IP_ADDR_STRING *pNext;
+  PNAME_SERVER_LIST_CONTEXT Context = (PNAME_SERVER_LIST_CONTEXT)Data;
+
+
+  if (!Context->NumServers)
+  {
+    if (Context->uSizeAvailable >= Context->uSizeRequired)
+    {
+      WideCharToMultiByte(CP_ACP, 0, Server, -1, Context->pData->DnsServerList.IpAddress.String, 16, NULL, NULL);
+      Context->pData->DnsServerList.IpAddress.String[15] = '\0';
+      Context->pLastAddr = &Context->pData->DnsServerList;
+    }
+  }
+  else
+  {
+     Context->uSizeRequired += sizeof(IP_ADDR_STRING);
+     if (Context->uSizeAvailable >= Context->uSizeRequired)
+     {
+         pNext = ((char*)Context->pLastAddr) + sizeof(IP_ADDR_STRING);
+         WideCharToMultiByte(CP_ACP, 0, Server, -1, pNext->IpAddress.String, 16, NULL, NULL);
+         pNext->IpAddress.String[15] = '\0';
+         Context->pLastAddr->Next = pNext;
+         Context->pLastAddr = pNext;
+         pNext->Next = NULL;
+     }
+  }
+  Context->NumServers++;
+}
+
 DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
 {
-  TRACE("IfIndex %ld, pPerAdapterInfo %p, pOutBufLen %p\n", IfIndex,
-   pPerAdapterInfo, pOutBufLen);
-  FIXME(":stub\n");
-  /* marking Win2K+ functions not supported */
-  return ERROR_NOT_SUPPORTED;
+  HKEY hkey;
+  const char *ifName;
+  NAME_SERVER_LIST_CONTEXT Context;
+  WCHAR keyname[200] = L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+
+  if (!pOutBufLen)
+    return ERROR_INVALID_PARAMETER;
+
+  ifName = getInterfaceNameByIndex(IfIndex);
+  if (!ifName)
+    return ERROR_INVALID_PARAMETER;
+
+  MultiByteToWideChar(CP_ACP, 0, ifName, -1, &keyname[62], sizeof(keyname) - (63 * sizeof(WCHAR)));
+  HeapFree(GetProcessHeap(), 0, (LPVOID)ifName);
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyname, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+  {
+    return ERROR_NOT_SUPPORTED;
+  }
+  Context.NumServers = 0;
+  Context.uSizeAvailable = *pOutBufLen;
+  Context.uSizeRequired = sizeof(IP_PER_ADAPTER_INFO);
+  Context.pData = pPerAdapterInfo;
+
+  if (*pOutBufLen >= sizeof(IP_PER_ADAPTER_INFO))
+    ZeroMemory(pPerAdapterInfo, sizeof(IP_PER_ADAPTER_INFO));
+
+  EnumNameServers(hkey, &keyname[62], &Context, CreateNameServerListEnumNamesFunc);
+
+  if (Context.uSizeRequired > Context.uSizeAvailable)
+  {
+    *pOutBufLen = Context.uSizeRequired;
+    return ERROR_BUFFER_OVERFLOW;
+  }
+
+  return NOERROR;
 }
 
 

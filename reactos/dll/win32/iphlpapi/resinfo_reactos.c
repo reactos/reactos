@@ -82,9 +82,7 @@ RtlUnicodeToMultiByteN (
 	ULONG	UnicodeSize
 	);
 
-typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
-				     PWCHAR NameServer,
-				     PVOID Data );
+
 typedef VOID (*EnumInterfacesFunc)( HKEY ChildKeyHandle,
 				    PWCHAR ChildKeyName,
 				    PVOID Data );
@@ -123,7 +121,7 @@ static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
  * EnumNameServers
  */
 
-static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
+void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
     PWCHAR NameServerString =
 	QueryRegistryValueString(RegHandle, L"NameServer");
@@ -135,10 +133,10 @@ static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 	    if (NameServerString[ch] == ',') {
 		if (ch - LastNameStart > 0) { /* Skip empty entries */
 		    PWCHAR NameServer =
-			malloc(ch - LastNameStart + 1);
+			malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
 		    if (NameServer) {
 			memcpy(NameServer,NameServerString + LastNameStart,
-			       (ch - LastNameStart));
+			       (ch - LastNameStart) * sizeof(WCHAR));
 			NameServer[ch - LastNameStart] = 0;
 			cb( Interface, NameServer, Data );
 			free(NameServer);
@@ -174,7 +172,7 @@ static void CreateNameServerListEnumIfFuncCount( HKEY RegHandle,
 		    CreateNameServerListEnumNamesFuncCount);
 }
 
-static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
+VOID CreateNameServerListEnumNamesFunc( PWCHAR Interface,
 					       PWCHAR Server,
 					       PVOID _Data ) {
     PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
