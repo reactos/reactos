@@ -1010,21 +1010,25 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    /*
     * Find the driver object
     */
+   Status = ObReferenceObjectByName(&ObjectName,
+                                    0,
+                                    0,
+                                    0,
+                                    IoDriverObjectType,
+                                    KernelMode,
+                                    0,
+                                    (PVOID*)&DriverObject);
 
-   Status = ObReferenceObjectByName(&ObjectName, 0, 0, 0, IoDriverObjectType,
-      KernelMode, 0, (PVOID*)&DriverObject);
+   /*
+    * Free the buffer for driver object name
+    */
+   ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
       return Status;
    }
-
-   /*
-    * Free the buffer for driver object name
-    */
-
-   ExFreePool(ObjectName.Buffer);
 
    /*
     * Get path of service...
@@ -1097,9 +1101,14 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
              FALSE, NULL);
       }
 
+      /* Mark the driver object temporary, so it could be deleted later */
+      ObMakeTemporaryObject(DriverObject);
+
+      /* Dereference it 2 times */
+      ObDereferenceObject(DriverObject);
+      ObDereferenceObject(DriverObject);
+
       /* Unload the driver */
-      ObDereferenceObject(DriverObject);
-      ObDereferenceObject(DriverObject);
       MmUnloadSystemImage(DriverObject->DriverSection);
 
       return STATUS_SUCCESS;
