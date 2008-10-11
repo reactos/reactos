@@ -2363,11 +2363,11 @@ CopyIpAddrString(
            break;
         }
         ZeroMemory(pNew, sizeof(IP_ADDR));
-        pNew->IpAddress = GetIpAddressFromStringA(pSrc->IpAddress.String);
+        pNew->IpAddress = GetIpAddressFromStringA(pCurrent->IpAddress.String);
 
        if (Type == SUBMASK)
        {
-           pNew->u.Subnetmask = GetIpAddressFromStringA(pSrc->IpMask.String);
+           pNew->u.Subnetmask = GetIpAddressFromStringA(pCurrent->IpMask.String);
        }
        else if (Type == METRIC)
        {
@@ -2385,6 +2385,7 @@ CopyIpAddrString(
 
         pLast = pNew;
         pCurrent = pCurrent->Next;
+
     }
     pLast->Next = NULL;
     return S_OK;
