@@ -2826,7 +2826,7 @@ InitializeTcpipBasicDlg(TcpipConfNotifyImpl * This)
         CopyIpAddrString(&pCurrentAdapter->IpAddressList, &pCurSettings->Ip, SUBMASK, NULL);
         CopyIpAddrString(&pCurrentAdapter->GatewayList, &pCurSettings->Gw, METRIC, NULL); //FIXME
     }
-
+    uLength = 0;
     if (GetPerAdapterInfo(pCurrentAdapter->Index, NULL, &uLength) == ERROR_BUFFER_OVERFLOW)
     {
         pPerInfo = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(uLength);
