@@ -1471,13 +1471,10 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
  *  DWORD
  *
  */
-static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
-						    PWCHAR Server,
-						    PVOID Data )
+static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, PVOID Data)
 {
   IP_ADDR_STRING *pNext;
   PNAME_SERVER_LIST_CONTEXT Context = (PNAME_SERVER_LIST_CONTEXT)Data;
-
 
   if (!Context->NumServers)
   {
@@ -1518,7 +1515,7 @@ DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterIn
   if (!ifName)
     return ERROR_INVALID_PARAMETER;
 
-  MultiByteToWideChar(CP_ACP, 0, ifName, -1, &keyname[62], sizeof(keyname) - (63 * sizeof(WCHAR)));
+  MultiByteToWideChar(CP_ACP, 0, ifName, -1, &keyname[62], sizeof(keyname)/sizeof(WCHAR) - 63);
   HeapFree(GetProcessHeap(), 0, (LPVOID)ifName);
 
   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyname, 0, KEY_READ, &hkey) != ERROR_SUCCESS)

@@ -136,19 +136,20 @@ void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
 		    if (NameServer) {
 			memcpy(NameServer,NameServerString + LastNameStart,
-			       (ch - LastNameStart) * sizeof(WCHAR));
+				   (ch - LastNameStart) * sizeof(WCHAR));
 			NameServer[ch - LastNameStart] = 0;
 			cb( Interface, NameServer, Data );
 			free(NameServer);
+			LastNameStart = ch +1;
 		    }
 		}
 		LastNameStart = ch + 1; /* The first one after the comma */
 	    }
 	}
 	if (ch - LastNameStart > 0) { /* A last name? */
-	    PWCHAR NameServer = malloc(ch - LastNameStart + 1);
+	    PWCHAR NameServer = malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
 	    memcpy(NameServer,NameServerString + LastNameStart,
-		   (ch - LastNameStart));
+		   (ch - LastNameStart) * sizeof(WCHAR));
 	    NameServer[ch - LastNameStart] = 0;
 	    cb( Interface, NameServer, Data );
 	    free(NameServer);
