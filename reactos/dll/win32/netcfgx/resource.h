@@ -39,6 +39,7 @@
 #define IDC_METRIC          2009
 #define IDC_METRICTXT       2010
 #define IDC_USEMETRIC       2011
+#define IDC_OK              2012
 
 #define IDC_DNSADDRLIST     3000
 #define IDC_DNSADDRUP       3001

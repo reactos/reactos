@@ -681,7 +681,4 @@ HRESULT WINAPI INetCfg_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * 
 
     INetCfg_Release((INetCfg*)This);
     return S_OK;
-
-
-    return S_OK;
 }

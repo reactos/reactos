@@ -179,7 +179,7 @@ TcpipFilterPortDlg(
                 EndDialog(hwndDlg, FALSE);
                 break;
             }
-            else if (LOWORD(wParam) == IDOK)
+            else if (LOWORD(wParam) == IDC_OK)
             {
                 pPort = (TcpipPortSettings*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 Num = GetDlgItemInt(hwndDlg, IDC_PORT_VAL, NULL, TRUE);
@@ -225,7 +225,7 @@ InitFilterListBox(LPWSTR pData, HWND hwndDlg, HWND hDlgCtrl, UINT AllowButton, U
     LPWSTR pCur;
     INT iItem;
 
-    if (!_wtoi(pData))
+    if (!pData || !_wtoi(pData))
     {
         SendDlgItemMessageW(hwndDlg, AllowButton, BM_SETCHECK, BST_CHECKED, 0);
         EnableWindow(GetDlgItem(hwndDlg, AddButton), FALSE);
@@ -453,15 +453,18 @@ TcpipFilterSettingsDlg(
             }
             switch(LOWORD(wParam))
             {
-                case IDOK:
+                case IDC_OK:
                     pContext = (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                     pFilter = StoreTcpipFilterSettings(hwndDlg);
                     if (pFilter)
                     {
-                        CoTaskMemFree(pContext->pCurrentConfig->pFilter->szTCPAllowedPorts);
-                        CoTaskMemFree(pContext->pCurrentConfig->pFilter->szUDPAllowedPorts);
-                        CoTaskMemFree(pContext->pCurrentConfig->pFilter->szRawIPAllowedProtocols);
-                        CoTaskMemFree(pContext->pCurrentConfig->pFilter);
+                        if (pContext->pCurrentConfig->pFilter)
+                        {
+                            CoTaskMemFree(pContext->pCurrentConfig->pFilter->szTCPAllowedPorts);
+                            CoTaskMemFree(pContext->pCurrentConfig->pFilter->szUDPAllowedPorts);
+                            CoTaskMemFree(pContext->pCurrentConfig->pFilter->szRawIPAllowedProtocols);
+                            CoTaskMemFree(pContext->pCurrentConfig->pFilter);
+                        }
                         pContext->pCurrentConfig->pFilter = pFilter;
                     }
                     EndDialog(hwndDlg, (INT_PTR)TRUE);
@@ -722,9 +725,9 @@ TcpipAdvGwDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_ADD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
-                EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_OK), FALSE);
                 SendDlgItemMessageW(hwndDlg, IDC_USEMETRIC, BM_SETCHECK, BST_CHECKED, 0);
             }
             else
@@ -732,7 +735,7 @@ TcpipAdvGwDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_MOD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_SETTEXT, 0, (LPARAM)pGwSettings->szIP);
                 if (pGwSettings->Metric)
@@ -774,7 +777,7 @@ TcpipAdvGwDlg(
                 EndDialog(hwndDlg, FALSE);
                 break;
             }
-            else if (LOWORD(wParam) == IDOK)
+            else if (LOWORD(wParam) == IDC_OK)
             {
                 if (SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) == 4)
                 {
@@ -813,7 +816,7 @@ TcpipAdvGwDlg(
                 if (lpnmipa->hdr.idFrom == IDC_IPADDR)
                 {
                     if (SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) == 4)
-                        EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_OK), TRUE);
                 }
             }
             break;
@@ -885,16 +888,16 @@ TcpipAddIpDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_ADD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
-                EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_OK), FALSE);
             }
             else
             {
                 if (LoadStringW(netcfgx_hInstance, IDS_MOD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_SETTEXT, 0, (LPARAM)pIpSettings->szIP);
                 SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, WM_SETTEXT, 0, (LPARAM)pIpSettings->szMask);
@@ -914,13 +917,13 @@ TcpipAddIpDlg(
                             SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)MAKEIPADDRESS(255, 255, 0, 0));
                         else if (dwIpAddr <= MAKEIPADDRESS(223, 255, 255, 255))
                             SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)MAKEIPADDRESS(255, 255, 255, 0));
-                        EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_OK), TRUE);
                      }
                 }
             }
             break;
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK)
+            if (LOWORD(wParam) == IDC_OK)
             {
                 pIpSettings = (TcpipIpSettings*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_GETTEXT, 16, (LPARAM)pIpSettings->szIP);
@@ -990,7 +993,7 @@ TcpipAddSuffixDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_MOD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 CoTaskMemFree(pSettings->Suffix);
                 pSettings->Suffix = NULL;
@@ -1000,7 +1003,7 @@ TcpipAddSuffixDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_ADD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
             }
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pSettings);
@@ -1011,7 +1014,7 @@ TcpipAddSuffixDlg(
                EndDialog(hwndDlg, FALSE);
                break;
            }
-           else if (LOWORD(wParam) == IDOK)
+           else if (LOWORD(wParam) == IDC_OK)
            {
                lLength = SendDlgItemMessageW(hwndDlg, IDC_SUFFIX, WM_GETTEXTLENGTH, 0, 0);
                if (lLength)
@@ -1463,19 +1466,19 @@ TcpipAddDNSDlg(
                 if (LoadStringW(netcfgx_hInstance, IDS_MOD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_SETTEXT, 0, (LPARAM)pSettings->szIP);
-                EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_OK), TRUE);
             }
             else
             {
                 if (LoadStringW(netcfgx_hInstance, IDS_ADD, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                 {
                     szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
-                    SendDlgItemMessageW(hwndDlg, IDOK, WM_SETTEXT, 0, (LPARAM)szBuffer);
+                    SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
-                EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_OK), FALSE);
             }
             return TRUE;
         case WM_COMMAND:
@@ -1484,7 +1487,7 @@ TcpipAddDNSDlg(
                 EndDialog(hwndDlg, FALSE);
                 break;
             }
-            else if (LOWORD(wParam) == IDOK)
+            else if (LOWORD(wParam) == IDC_OK)
             {
                 pSettings = (TcpipDnsSettings*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 SendDlgItemMessageW(hwndDlg, IDC_IPADDR, WM_GETTEXT, 16, (LPARAM)pSettings->szIP);
@@ -1511,7 +1514,7 @@ TcpipAddDNSDlg(
                 if (lpnmipa->hdr.idFrom == IDC_IPADDR)
                 {
                     if (SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_GETADDRESS, 0, (LPARAM)&dwIpAddr) == 4)
-                        EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_OK), TRUE);
                 }
             }
             break;
@@ -1544,7 +1547,8 @@ InitializeTcpipAdvancedDNSDlg(
     }
     SendDlgItemMessageW(hwndDlg, IDC_DNSADDRLIST, LB_SETCURSEL, 0, 0);
 
-
+    if (!This->pCurrentConfig->pDNS)
+        return;
 
     if (This->pCurrentConfig->pDNS->RegisterAdapterName)
         SendDlgItemMessageW(hwndDlg, IDC_REGSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
@@ -1563,6 +1567,8 @@ InitializeTcpipAdvancedDNSDlg(
     if (!This->pCurrentConfig->pDNS->szSearchList || (wcslen(This->pCurrentConfig->pDNS->szSearchList) == 0))
     {
         SendDlgItemMessageW(hwndDlg, IDC_PRIMSUFFIX, BM_SETCHECK, BST_CHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNSSUFFIXADD), FALSE);
+
         return;
     }
 
@@ -2044,11 +2050,17 @@ LaunchAdvancedTcpipSettings(
 {
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[3];
-
+    WCHAR szBuffer[100];
 
     hppages[0] = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_TCPIP_ADVIP_DLG), TcpipAdvancedIpDlg, (LPARAM)This, NULL);
     hppages[1] = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_TCPIP_ADVDNS_DLG), TcpipAdvancedDnsDlg, (LPARAM)This, NULL);
     hppages[2] = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_TCPIP_ADVOPT_DLG), TcpipAdvancedOptDlg, (LPARAM)This, NULL);
+
+
+    if (LoadStringW(netcfgx_hInstance, IDS_TCPIP, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+        szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+    else
+        szBuffer[0] = L'\0';
 
     ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
@@ -2056,6 +2068,7 @@ LaunchAdvancedTcpipSettings(
     pinfo.u3.phpage = hppages;
     pinfo.nPages = 3;
     pinfo.hwndParent = hDlg;
+    pinfo.pszCaption = szBuffer;
 
     StoreTcpipBasicSettings(hwndDlg, This, FALSE);
     PropertySheetW(&pinfo);
@@ -2303,9 +2316,9 @@ InitializeTcpipBasicDlgCtrls(
     }
     else
     {
+        SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_SETCHECK, BST_CHECKED, 0);
         if (pCurSettings->Ns)
         {
-            SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_SETCHECK, BST_CHECKED, 0);
             SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->IpAddress);
             if (pCurSettings->Ns->Next)
             {
@@ -2488,6 +2501,7 @@ TcpipBasicDlg(
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
                             EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
                         }
+                        break;
                     case IDC_ADVANCED:
                         LaunchAdvancedTcpipSettings(GetParent(hwndDlg), hwndDlg, (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER));
                         break;
@@ -2603,7 +2617,6 @@ INetCfgComponentPropertyUi_fnSetContext(
     return S_OK;
 }
 
-static
 HRESULT
 LoadDNSSettings(
     TcpipConfNotifyImpl * This)
@@ -2659,7 +2672,6 @@ LoadDNSSettings(
     return S_OK;
 }
 
-static
 LPWSTR
 LoadTcpFilterSettingsFromRegistry(HKEY hKey, LPCWSTR szName, LPDWORD Size)
 {
@@ -2682,7 +2694,6 @@ LoadTcpFilterSettingsFromRegistry(HKEY hKey, LPCWSTR szName, LPDWORD Size)
     return pData;
 }
 
-static
 HRESULT
 LoadFilterSettings(
     TcpipConfNotifyImpl * This)
@@ -2719,8 +2730,9 @@ LoadFilterSettings(
     swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
     CoTaskMemFree(pStr);
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-        return E_FAIL;
-
+    {
+        return S_OK;
+    }
     pFilter->szTCPAllowedPorts = LoadTcpFilterSettingsFromRegistry(hKey, L"TCPAllowedPorts", &pFilter->TCPSize);
     pFilter->szUDPAllowedPorts = LoadTcpFilterSettingsFromRegistry(hKey, L"UDPAllowedPorts", &pFilter->UDPSize);
     pFilter->szRawIPAllowedProtocols = LoadTcpFilterSettingsFromRegistry(hKey, L"RawIPAllowedProtocols", &pFilter->IPSize);
@@ -2796,33 +2808,17 @@ InitializeTcpipBasicDlg(TcpipConfNotifyImpl * This)
         return E_FAIL;
     }
 
-    if (GetPerAdapterInfo(pCurrentAdapter->Index, NULL, &uLength) != ERROR_BUFFER_OVERFLOW)
-        return E_FAIL;
-
-    pPerInfo = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(uLength);
-    if (!pPerInfo)
-    {
-        CoTaskMemFree(pInfo);
-        return E_OUTOFMEMORY;
-    }
-
-    if (GetPerAdapterInfo(pCurrentAdapter->Index, pPerInfo, &uLength) != NOERROR)
-    {
-        CoTaskMemFree(pInfo);
-        CoTaskMemFree(pPerInfo);
-        return E_FAIL;
-    }
-
     pCurSettings = CoTaskMemAlloc(sizeof(TcpipSettings));
     if (!pCurSettings)
     {
         CoTaskMemFree(pInfo);
-        CoTaskMemFree(pPerInfo);
         return E_FAIL;
     }
 
     ZeroMemory(pCurSettings, sizeof(TcpipSettings));
     This->pCurrentConfig = pCurSettings;
+    pCurSettings->DhcpEnabled = pCurrentAdapter->DhcpEnabled;
+    pCurSettings->Index = pCurrentAdapter->Index;
 
     if (!pCurrentAdapter->DhcpEnabled)
     {
@@ -2830,14 +2826,23 @@ InitializeTcpipBasicDlg(TcpipConfNotifyImpl * This)
         CopyIpAddrString(&pCurrentAdapter->GatewayList, &pCurSettings->Gw, METRIC, NULL); //FIXME
     }
 
-    if (!pPerInfo->AutoconfigActive)
+    if (GetPerAdapterInfo(pCurrentAdapter->Index, NULL, &uLength) == ERROR_BUFFER_OVERFLOW)
     {
-        CopyIpAddrString(&pPerInfo->DnsServerList, &pCurSettings->Ns, IPADDR, NULL);
+        pPerInfo = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(uLength);
+        if (pPerInfo)
+        {
+            if (GetPerAdapterInfo(pCurrentAdapter->Index, pPerInfo, &uLength) == NOERROR)
+            {
+                if (!pPerInfo->AutoconfigActive)
+                {
+                    CopyIpAddrString(&pPerInfo->DnsServerList, &pCurSettings->Ns, IPADDR, NULL);
+                }
+                pCurSettings->AutoconfigActive = pPerInfo->AutoconfigActive;
+            }
+            CoTaskMemFree(pInfo);
+        }
     }
 
-    pCurSettings->AutoconfigActive = pPerInfo->AutoconfigActive;
-    pCurSettings->DhcpEnabled = pCurrentAdapter->DhcpEnabled;
-    pCurSettings->Index = pCurrentAdapter->Index;
 
     if (FAILED(LoadFilterSettings(This)))
         return E_FAIL;
@@ -2846,7 +2851,6 @@ InitializeTcpipBasicDlg(TcpipConfNotifyImpl * This)
         return E_FAIL;
 
     CoTaskMemFree(pInfo);
-    CoTaskMemFree(pPerInfo);
 
     return S_OK;
 }
@@ -3088,15 +3092,19 @@ INetCfgComponentControl_fnApplyRegistryChanges(
     //MessageBoxW(NULL, L"INetCfgComponentControl_fnApplyRegistryChanges", NULL, MB_OK);
 
 
-    if (RegOpenKeyExW(hKey, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    if (RegCreateKeyExW(hKey, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"UseDomainNameDevolution", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->UseDomainNameDevolution, sizeof(DWORD));
-        RegSetValueExW(hKey, L"SearchList", 0, REG_SZ, (LPBYTE)This->pCurrentConfig->pDNS->szSearchList,
+        if (This->pCurrentConfig->pDNS)
+        {
+            RegSetValueExW(hKey, L"UseDomainNameDevolution", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->UseDomainNameDevolution, sizeof(DWORD));
+            RegSetValueExW(hKey, L"SearchList", 0, REG_SZ, (LPBYTE)This->pCurrentConfig->pDNS->szSearchList,
                        (wcslen(This->pCurrentConfig->pDNS->szSearchList)+1) * sizeof(WCHAR));
-
-        RegSetValueExW(hKey, L"EnableSecurityFilters", 0, REG_DWORD, 
+        }
+        if (This->pCurrentConfig->pFilter)
+        {
+            RegSetValueExW(hKey, L"EnableSecurityFilters", 0, REG_DWORD, 
                       (LPBYTE)&This->pCurrentConfig->pFilter->EnableSecurityFilters, sizeof(DWORD));
-
+        }
         RegCloseKey(hKey);
     }
 
@@ -3106,24 +3114,30 @@ INetCfgComponentControl_fnApplyRegistryChanges(
     swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
     CoTaskMemFree(pStr);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"RegisterAdapterName", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, sizeof(DWORD));
-        RegSetValueExW(hKey, L"RegistrationEnabled", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, sizeof(DWORD));
-        RegSetValueExW(hKey, L"Domain", 0, REG_SZ, (LPBYTE)This->pCurrentConfig->pDNS->szDomain,
+        if (This->pCurrentConfig->pDNS)
+        {
+            RegSetValueExW(hKey, L"RegisterAdapterName", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, sizeof(DWORD));
+            RegSetValueExW(hKey, L"RegistrationEnabled", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, sizeof(DWORD));
+            RegSetValueExW(hKey, L"Domain", 0, REG_SZ, (LPBYTE)This->pCurrentConfig->pDNS->szDomain,
                        (wcslen(This->pCurrentConfig->pDNS->szDomain)+1) * sizeof(WCHAR));
+        }
 
-        RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ, 
+        if (This->pCurrentConfig->pFilter)
+        {
+            RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szTCPAllowedPorts,
                         This->pCurrentConfig->pFilter->TCPSize);
 
-        RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ, 
+            RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szUDPAllowedPorts,
                         This->pCurrentConfig->pFilter->UDPSize);
 
-        RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ, 
+            RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szRawIPAllowedProtocols,
                         This->pCurrentConfig->pFilter->IPSize);
+        }
 
         RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->DhcpEnabled, sizeof(DWORD));
         if (This->pCurrentConfig->DhcpEnabled)

@@ -7,6 +7,7 @@ typedef struct
     LONG  ref;
     NetCfgComponentItem * pItem;
     INetCfgComponentPropertyUi * pProperty;
+    INetCfgComponentControl * pNCCC;
     INetCfg * pNCfg;
 }INetCfgComponentImpl;
 
@@ -324,8 +325,7 @@ HRESULT
 CreateNotificationObject(
     INetCfgComponentImpl * This,
     INetCfgComponent * iface,
-    IUnknown  *pUnk,
-    INetCfgComponentPropertyUi ** pOut)
+    IUnknown  *pUnk)
 {
     WCHAR szName[150];
     HKEY hKey;
@@ -419,7 +419,9 @@ CreateNotificationObject(
         INetCfgComponentPropertyUi_Release(pNCCPU);
         return hr;
     }
-    *pOut = pNCCPU;
+    This->pProperty = pNCCPU;
+    This->pNCCC = pNCCC;
+
     return S_OK;
 }
 
@@ -441,7 +443,7 @@ INetCfgComponent_fnRaisePropertyUi(
 
     if (!This->pProperty)
     {
-         hr = CreateNotificationObject(This,iface, pUnk, &This->pProperty);
+         hr = CreateNotificationObject(This,iface, pUnk);
          if (FAILED(hr))
              return hr;
          if (dwFlags == NCRP_QUERY_PROPERTY_UI)
@@ -450,6 +452,7 @@ INetCfgComponent_fnRaisePropertyUi(
 
     dwDefPages = 0;
     Pages = 0;
+
     hr = INetCfgComponentPropertyUi_MergePropPages(This->pProperty, &dwDefPages, (BYTE**)&hppages, &Pages, hwndParent, NULL);
     if (FAILED(hr) || !Pages)
     {
@@ -464,15 +467,18 @@ INetCfgComponent_fnRaisePropertyUi(
     pinfo.pszCaption = This->pItem->szDisplayName;
 
     iResult = PropertySheetW(&pinfo);
+
     CoTaskMemFree(hppages);
     if (iResult < 0)
     {
-        INetCfgComponentPropertyUi_CancelProperties(This->pProperty);
+        //FIXME
+        INetCfgComponentControl_CancelChanges(This->pNCCC);
         return E_ABORT;
     }
     else
     {
-        INetCfgComponentPropertyUi_ApplyProperties(This->pProperty);
+        //FIXME
+        INetCfgComponentControl_ApplyRegistryChanges(This->pNCCC);
         return S_OK;
     }
 }
@@ -521,9 +527,6 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
     }
 
     INetCfgComponent_Release((INetCfgComponent*)This);
-    return S_OK;
-
-
     return S_OK;
 }
 
