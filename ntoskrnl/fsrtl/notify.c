@@ -12,6 +12,20 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _INT_NOTIFY_SYNC
+{
+    ULONG Unknown0;
+    ULONG Unknown1;
+    ULONG Unknown2;
+    USHORT Unknown3;
+    USHORT Unknown4;
+    ULONG Unknown5;
+    LIST_ENTRY Unknown6;
+    ULONG Unknown7;
+    ULONG Unknown8;
+    ULONG Unknown9;
+} INT_NOTIFY_SYNC, * PINT_NOTIFY_SYNC;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -352,23 +366,38 @@ FsRtlNotifyFullReportChange(IN PNOTIFY_SYNC NotifySync,
 
 /*++
  * @name FsRtlNotifyInitializeSync
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Allocates the internal structure associated with notifications.
  *
  * @param NotifySync
- *        FILLME
+ *        Opaque pointer. It will receive the address of the allocated internal structure.
  *
  * @return None
  *
- * @remarks None
+ * @remarks This function raise an exception in case of a failure.
  *
  *--*/
 VOID
 NTAPI
 FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    KEBUGCHECK(0);
+    PINT_NOTIFY_SYNC IntNotifySync;
+
+    *NotifySync = NULL;
+    
+    IntNotifySync = FsRtlAllocatePoolWithTag(NonPagedPool, sizeof(INT_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
+    IntNotifySync->Unknown1 = 0;
+    IntNotifySync->Unknown2 = 0;
+    IntNotifySync->Unknown5 = 0;
+    IntNotifySync->Unknown0 = 1;
+    IntNotifySync->Unknown3 = 1;
+    IntNotifySync->Unknown4 = 4;
+    InitializeListHead(&(IntNotifySync->Unknown6));
+    IntNotifySync->Unknown8 = 0;
+    IntNotifySync->Unknown9 = 0;
+
+    *NotifySync = IntNotifySync;
 }
 
 /*++
