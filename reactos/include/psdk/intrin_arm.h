@@ -54,6 +54,17 @@ static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchang
 	return a;
 }
 
+static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const dest, const long long exch, const long long comp)
+{
+    //
+    // FIXME
+    //
+    long long result;
+    result = *dest;
+    if (*dest == comp) *dest = exch;
+    return result;
+}
+
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
     return (void*)_InterlockedCompareExchange((volatile long* const)Destination, (const long)Exchange, (const long)Comperand);
