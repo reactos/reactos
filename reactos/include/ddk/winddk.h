@@ -7655,7 +7655,7 @@ VOID
 NTAPI
 ProbeForRead(
   IN CONST VOID  *Address,
-  IN ULONG  Length,
+  IN SIZE_T  Length,
   IN ULONG  Alignment);
 
 NTKERNELAPI
@@ -7663,7 +7663,7 @@ VOID
 NTAPI
 ProbeForWrite(
   IN PVOID  Address,
-  IN ULONG  Length,
+  IN SIZE_T  Length,
   IN ULONG  Alignment);
 
 
