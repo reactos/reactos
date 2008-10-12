@@ -584,11 +584,20 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
    VolumeFcb->Flags |= VCB_IS_DIRTY;
 
-   /* Initialize notify sync */
-   InitializeListHead(&(DeviceExt->NotifyList));
-   FsRtlNotifyInitializeSync(&(DeviceExt->NotifySync));
-
    Status = STATUS_SUCCESS;
+
+   /* Initialize notify sync */
+   _SEH_TRY
+   {
+      InitializeListHead(&(DeviceExt->NotifyList));
+      FsRtlNotifyInitializeSync(&(DeviceExt->NotifySync));
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+
 ByeBye:
 
   if (!NT_SUCCESS(Status))
