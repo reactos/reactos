@@ -157,12 +157,12 @@ FsRtlFindInTunnelCache(IN PTUNNEL Cache,
 
 /*++
  * @name FsRtlDeleteTunnelCache
- * @unimplemented
+ * @implemented
  *
- * FILLME
+ * Initialize a tunnel cache
  *
  * @param Cache
- *        FILLME
+ *        Pointer to an allocated TUNNEL structure
  *
  * @return None
  *
@@ -173,8 +173,10 @@ VOID
 NTAPI
 FsRtlInitializeTunnelCache(IN PTUNNEL Cache)
 {
-    /* Unimplemented */
-    KEBUGCHECK(0);
+    ExInitializeFastMutex(&(Cache->Mutex));
+    Cache->Cache = 0;
+    InitializeListHead(&(Cache->TimerQueue));
+    Cache->NumEntries = 0;
 }
 
 /* EOF */
