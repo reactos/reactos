@@ -263,7 +263,7 @@ FsRtlNotifyFilterChangeDirectory
 FsRtlNotifyFilterReportChange
 FsRtlNotifyFullChangeDirectory@40
 FsRtlNotifyFullReportChange
-FsRtlNotifyInitializeSync
+FsRtlNotifyInitializeSync@4
 FsRtlNotifyReportChange
 FsRtlNotifyUninitializeSync@4
 FsRtlNotifyVolumeEvent
