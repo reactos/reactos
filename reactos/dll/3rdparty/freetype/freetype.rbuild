@@ -7,6 +7,7 @@
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="FT2_BUILD_LIBRARY"  />
+	<library>libcntpr</library>
 	<if property="NSWPAT" value="0">
 		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />
 	</if>
@@ -15,9 +16,16 @@
 	</if>
 	<library>ntoskrnl</library>
 	<library>libcntpr</library>
+	<if property="ARCH" value="i386">
 	<directory name="i386">
 		<file>setjmplongjmp.s</file>
 	</directory>
+	</if>
+	<if property="ARCH" value="amd64">
+	<directory name="amd64">
+		<file>setjmplongjmp.s</file>
+	</directory>
+	</if>
 	<directory name="src">
 		<directory name="base">
 			<file>ftsystem.c</file>
