@@ -14,16 +14,9 @@
 
 typedef struct _INT_NOTIFY_SYNC
 {
-    ULONG Unknown0;
-    ULONG Unknown1;
-    ULONG Unknown2;
-    USHORT Unknown3;
-    USHORT Unknown4;
-    ULONG Unknown5;
-    LIST_ENTRY Unknown6;
-    ULONG Unknown7;
-    ULONG Unknown8;
-    ULONG Unknown9;
+    FAST_MUTEX FastMutex;
+    ULONG_PTR OwningThread;
+    ULONG OwnerCount;
 } INT_NOTIFY_SYNC, * PINT_NOTIFY_SYNC;
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -387,15 +380,9 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
     *NotifySync = NULL;
     
     IntNotifySync = FsRtlAllocatePoolWithTag(NonPagedPool, sizeof(INT_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
-    IntNotifySync->Unknown1 = 0;
-    IntNotifySync->Unknown2 = 0;
-    IntNotifySync->Unknown5 = 0;
-    IntNotifySync->Unknown0 = 1;
-    IntNotifySync->Unknown3 = 1;
-    IntNotifySync->Unknown4 = 4;
-    InitializeListHead(&(IntNotifySync->Unknown6));
-    IntNotifySync->Unknown8 = 0;
-    IntNotifySync->Unknown9 = 0;
+    ExInitializeFastMutex(&(IntNotifySync->FastMutex));
+    IntNotifySync->OwningThread = 0;
+    IntNotifySync->OwnerCount = 0;
 
     *NotifySync = IntNotifySync;
 }
