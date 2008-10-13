@@ -159,6 +159,10 @@ NdisFindDevice(
 VOID
 NdisStartDevices();
 
+VOID
+NTAPI
+MiniportWorker(IN PVOID WorkItem);
+
 #endif /* __MINIPORT_H */
 
 /* EOF */
