@@ -201,6 +201,8 @@ VOID STDCALL ProtocolOpenAdapterComplete(
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
+    Adapter->NdisStatus = Status;
+
     KeSetEvent(&Adapter->Event, 0, FALSE);
 }
 
@@ -235,7 +237,13 @@ VOID STDCALL ProtocolResetComplete(
  *     Status         = Status of the operation
  */
 {
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+
+    TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    Adapter->NdisStatus = Status;
+
+    KeSetEvent(&Adapter->Event, 0, FALSE);
 }
 
 
