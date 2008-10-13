@@ -412,11 +412,13 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
             TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_CONNECTED);
+            if (!NCE) return NULL;
             NCE->EventTimer = 0;
             NCE->EventCount = 0;
         } else {
             NCE = NBAddNeighbor(Interface, Address, NULL,
                                 Interface->AddressLength, NUD_INCOMPLETE);
+            if (!NCE) return NULL;
             NCE->EventTimer = 1;
             NCE->EventCount = 0;
         }
