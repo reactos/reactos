@@ -798,13 +798,13 @@ NdisRegisterProtocol(
           /* Put protocol binding struct on global list */
           ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
         }
-
-      /*
       else if(*Status != NDIS_STATUS_PENDING)
         {
-          // what to do here?
+          ExFreePool(Protocol);
+          ExFreePool(KeyInformation);
+          *NdisProtocolHandle = NULL;
+          return;
         }
-       */
     }
 
   ExFreePool(KeyInformation);

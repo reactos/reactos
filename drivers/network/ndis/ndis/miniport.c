@@ -662,37 +662,52 @@ MiniQueueWorkItem(
  *     Status of operation
  */
 {
-    PNDIS_MINIPORT_WORK_ITEM Item;
+    PNDIS_MINIPORT_WORK_ITEM MiniportWorkItem;
+    PNDIS_WORK_ITEM NdisWorkItem;
+    PWORK_QUEUE_ITEM WorkQueueItem;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     ASSERT(Adapter);
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-    Item = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
-    if (Item == NULL)
+    MiniportWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_MINIPORT_WORK_ITEM));
+    if (!MiniportWorkItem)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NDIS_STATUS_RESOURCES;
     }
 
-    Item->WorkItemType    = WorkItemType;
-    Item->WorkItemContext = WorkItemContext;
+    NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_WORK_ITEM));
+    if (!NdisWorkItem)
+    {
+        ExFreePool(MiniportWorkItem);
+        return NDIS_STATUS_RESOURCES;
+    }
+
+    MiniportWorkItem->WorkItemType    = WorkItemType;
+    MiniportWorkItem->WorkItemContext = WorkItemContext;
 
     /* safe due to adapter lock held */
-    Item->Link.Next = NULL;
+    MiniportWorkItem->Link.Next = NULL;
     if (!Adapter->WorkQueueHead)
     {
-        Adapter->WorkQueueHead = Item;
-        Adapter->WorkQueueTail = Item;
+        Adapter->WorkQueueHead = MiniportWorkItem;
+        Adapter->WorkQueueTail = MiniportWorkItem;
     }
     else
     {
-        Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)Item;
-        Adapter->WorkQueueTail = Item;
+        Adapter->WorkQueueTail->Link.Next = (PSINGLE_LIST_ENTRY)MiniportWorkItem;
+        Adapter->WorkQueueTail = MiniportWorkItem;
     }
 
-    KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
+    WorkQueueItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
+
+    NdisWorkItem->Context = Adapter;
+
+    ExInitializeWorkItem(WorkQueueItem, MiniportWorker, NdisWorkItem);
+
+    ExQueueWorkItem(WorkQueueItem, CriticalWorkQueue);
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -717,30 +732,38 @@ MiniDequeueWorkItem(
  *     Status of operation
  */
 {
-    PNDIS_MINIPORT_WORK_ITEM Item;
+    PNDIS_MINIPORT_WORK_ITEM MiniportWorkItem;
+    PNDIS_WORK_ITEM NdisWorkItem;
+    PWORK_QUEUE_ITEM WorkQueueItem;
+
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     if (Adapter->MiniportBusy) {
         NDIS_DbgPrint(MID_TRACE, ("Waiting for miniport to become free.\n"));
-        KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
+        NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_WORK_ITEM));
+        if (!NdisWorkItem) return NDIS_STATUS_RESOURCES;
+        WorkQueueItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
+        NdisWorkItem->Context = Adapter;
+        ExInitializeWorkItem(WorkQueueItem, MiniportWorker, NdisWorkItem);
+        ExQueueWorkItem(WorkQueueItem, CriticalWorkQueue);
         return NDIS_STATUS_FAILURE;
     }
 
-    Item = Adapter->WorkQueueHead;
+    MiniportWorkItem = Adapter->WorkQueueHead;
 
-    if (Item)
+    if (MiniportWorkItem)
     {
         /* safe due to adapter lock held */
-        Adapter->WorkQueueHead = (PNDIS_MINIPORT_WORK_ITEM)Item->Link.Next;
+        Adapter->WorkQueueHead = (PNDIS_MINIPORT_WORK_ITEM)MiniportWorkItem->Link.Next;
 
-        if (Item == Adapter->WorkQueueTail)
+        if (MiniportWorkItem == Adapter->WorkQueueTail)
             Adapter->WorkQueueTail = NULL;
 
-        *WorkItemType    = Item->WorkItemType;
-        *WorkItemContext = Item->WorkItemContext;
+        *WorkItemType    = MiniportWorkItem->WorkItemType;
+        *WorkItemContext = MiniportWorkItem->WorkItemContext;
 
-        ExFreePool(Item);
+        ExFreePool(MiniportWorkItem);
 
         Adapter->MiniportBusy = TRUE;
 
@@ -997,38 +1020,6 @@ VOID NTAPI MiniportWorker(IN PVOID WorkItem)
   ExFreePool(WorkItem);
 }
 
-
-
-VOID NTAPI MiniportDpc(
-    IN PKDPC Dpc,
-    IN PVOID DeferredContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2)
-/*
- * FUNCTION: Deferred routine to handle serialization
- * ARGUMENTS:
- *     Dpc             = Pointer to DPC object
- *     DeferredContext = Pointer to context information (LOGICAL_ADAPTER)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- */
-{
-  PNDIS_WORK_ITEM NdisWorkItem;
-  PWORK_QUEUE_ITEM WorkItem;
-
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
-
-  NdisWorkItem = ExAllocatePool(NonPagedPool, sizeof(NDIS_WORK_ITEM));
-  if (!NdisWorkItem) return;
-
-  WorkItem = (PWORK_QUEUE_ITEM)NdisWorkItem->WrapperReserved;
-
-  NdisWorkItem->Context = DeferredContext;
-
-  ExInitializeWorkItem(WorkItem, MiniportWorker, NdisWorkItem);
-
-  ExQueueWorkItem(WorkItem, CriticalWorkQueue);
-}
 
 
 VOID
@@ -1665,13 +1656,18 @@ NdisIPnPStartDevice(
 
   ZwClose(WrapperContext.RegistryHandle);
 
-  if (NdisStatus != NDIS_STATUS_SUCCESS ||
-      SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-      if (NdisStatus == NDIS_STATUS_SUCCESS) NdisStatus = NDIS_STATUS_FAILURE;
       return NdisStatus;
+    }
+
+  if (SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
+    {
+      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
@@ -1762,6 +1758,8 @@ NdisIPnPStopDevice(
   RemoveEntryList(&Adapter->ListEntry);
   KeReleaseSpinLock(&AdapterListLock, OldIrql);
 
+  KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
 
   if (Adapter->LookaheadBuffer)
@@ -1782,8 +1780,6 @@ NdisIPnPStopDevice(
 
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
-
-  KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
   return STATUS_SUCCESS;
 }
@@ -1995,7 +1991,6 @@ NdisIAddDevice(
 
   KeInitializeTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
   KeInitializeDpc(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Dpc, MiniportHangDpc, Adapter);
-  KeInitializeDpc(&Adapter->NdisMiniportBlock.DeferredDpc, MiniportDpc, Adapter);
 
   DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
