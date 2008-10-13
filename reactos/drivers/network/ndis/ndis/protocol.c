@@ -215,14 +215,18 @@ ProSend(
   if ((Adapter->NdisMiniportBlock.MacOptions & NDIS_MAC_OPTION_NO_LOOPBACK) &&
       MiniAdapterHasAddress(Adapter, Packet))
     {
-      NDIS_DbgPrint(MID_TRACE, ("Queuing packet.\n"));
+        if(Adapter->MiniportBusy) {
+           MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, Packet);
+           KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
+           return NDIS_STATUS_PENDING;
+        }
 
-      MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
-      KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
-      return NDIS_STATUS_PENDING;
+        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
+
+        return ProIndicatePacket(Adapter, Packet);
     } else {
         if(Adapter->MiniportBusy) {
-           MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
+           MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet);
            KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, SpinOldIrql);
            return NDIS_STATUS_PENDING;
         }
@@ -794,13 +798,13 @@ NdisRegisterProtocol(
           /* Put protocol binding struct on global list */
           ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
         }
-
-      /*
       else if(*Status != NDIS_STATUS_PENDING)
         {
-          // what to do here?
+          ExFreePool(Protocol);
+          ExFreePool(KeyInformation);
+          *NdisProtocolHandle = NULL;
+          return;
         }
-       */
     }
 
   ExFreePool(KeyInformation);

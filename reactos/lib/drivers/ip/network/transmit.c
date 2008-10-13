@@ -204,9 +204,7 @@ NTSTATUS SendFragments(
     /* Prepare next fragment for transmission and send it */
 
     PrepareNextFragment(IFC);
-    IPSendFragment(IFC->NdisPacket, NCE, IFC);
-
-    return STATUS_SUCCESS;
+    return IPSendFragment(IFC->NdisPacket, NCE, IFC);
 }
 
 NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
