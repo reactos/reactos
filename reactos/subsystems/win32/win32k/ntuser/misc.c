@@ -437,7 +437,7 @@ GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
     PW32THREADINFO ti;
-    PW32CLIENTINFO ci;
+    PCLIENTINFO ci;
     PW32THREAD W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread == NULL)
@@ -477,7 +477,7 @@ GetW32ThreadInfo(VOID)
             W32Thread->ThreadInfo = ti;
             /* update the TEB */
             Teb = NtCurrentTeb();
-            ci = ((PW32CLIENTINFO)Teb->Win32ClientInfo);
+            ci = GetWin32ClientInfo();
             _SEH_TRY
             {
                 ProbeForWrite(Teb,

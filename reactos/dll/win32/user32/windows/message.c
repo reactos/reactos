@@ -1081,7 +1081,7 @@ BOOL
 STDCALL
 InSendMessage(VOID)
 {
-  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+  PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 //  FIXME("ISM %x\n",pcti);
   if ( pcti )
   {
@@ -1103,7 +1103,7 @@ STDCALL
 InSendMessageEx(
   LPVOID lpReserved)
 {
-  PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+  PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 //  FIXME("ISMEX %x\n",pcti);
   if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE)) return ISMEX_NOSEND;
   else
@@ -2336,7 +2336,7 @@ DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
 {  // Fixme: Need to fully implement this! FF uses this and polls it when Min/Max
-   PCLIENTTHREADINFO pcti = ((PW32CLIENTINFO)GetWin32ClientInfo())->pClientThreadInfo;
+   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
 //   FIXME("IIMPH %x\n",pcti);
    return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }

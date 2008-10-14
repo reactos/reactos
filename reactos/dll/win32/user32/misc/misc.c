@@ -462,12 +462,12 @@ FASTCALL
 ValidateHwnd(HWND hwnd)
 {
     PWINDOW Wnd;
-    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
     /* See if the window is cached */
-    if (hwnd == ClientInfo->hWND)
-        return ClientInfo->pvWND;
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pvWnd;
 
     Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
@@ -501,12 +501,12 @@ FASTCALL
 ValidateHwndNoErr(HWND hwnd)
 {
     PWINDOW Wnd;
-    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
     /* See if the window is cached */
-    if (hwnd == ClientInfo->hWND)
-        return ClientInfo->pvWND;
+    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+        return ClientInfo->CallbackWnd.pvWnd;
 
     Wnd = ValidateHandleNoErr((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)

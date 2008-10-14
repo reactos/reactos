@@ -297,6 +297,11 @@ typedef struct _W32PROCESSINFO
 typedef struct _CLIENTTHREADINFO
 {
     DWORD CTI_flags;
+    WORD  fsChangeBits;
+    WORD  fsWakeBits;
+    WORD  fsWakeBitsJournal;
+    WORD  fsWakeMask;
+    LONG  timeLastRead;
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
@@ -340,34 +345,39 @@ typedef struct _CALLBACKWND
 
 #define CI_CURTHPRHOOK    0x00000010
 
-typedef struct _W32CLIENTINFO
+typedef struct _CLIENTINFO
 {
     ULONG CI_flags;
     ULONG cSpins;
-    ULONG ulWindowsVersion;
-    ULONG ulAppCompatFlags;
-    ULONG ulAppCompatFlags2;
+    DWORD dwExpWinVer;
+    DWORD dwCompatFlags;
+    DWORD dwCompatFlags2;
     DWORD dwTIFlags;
     PVOID pDeskInfo;
     ULONG_PTR ulClientDelta;
     PHOOK phkCurrent;
     ULONG fsHooks;
-    HWND  hWND;  // Will be replaced with CALLBACKWND.
-    PVOID pvWND; // " "
+    CALLBACKWND CallbackWnd;
     ULONG Win32ClientInfo;
     DWORD dwHookCurrent;
-    ULONG Win32ClientInfo1;
+    INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
     DWORD dwHookData;
     DWORD dwKeyCache;
-    ULONG Win32ClientInfo2[7];
+    DWORD afKeyState[2];
+    DWORD dwAsyncKeyCache;
+    DWORD afAsyncKeyState[2];
+    DWORD afAsyncKeyStateRecentDow[2];
+    HKL hKL;
     USHORT CodePage;
-    USHORT csCF;
-    HANDLE hKL;
+    USHORT achDbcsCF;
     ULONG Win32ClientInfo3[35];
-} W32CLIENTINFO, *PW32CLIENTINFO;
+} CLIENTINFO, *PCLIENTINFO;
 
-#define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
+/* Make sure it fits exactly into the TEB */
+C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+
+#define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001

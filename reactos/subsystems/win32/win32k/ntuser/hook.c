@@ -296,7 +296,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
    PHOOK Hook, SaveHook;
    PW32THREAD Win32Thread;
-   PW32CLIENTINFO ClientInfo;
+   PCLIENTINFO ClientInfo;
    PHOOKTABLE Table;
    LRESULT Result;
    PWINSTATION_OBJECT WinStaObj;
@@ -886,7 +886,7 @@ NtUserCallNextHookEx(
    BOOL Ansi)
 {
    PHOOK HookObj, NextObj;
-   PW32CLIENTINFO ClientInfo;
+   PCLIENTINFO ClientInfo;
    PWINSTATION_OBJECT WinStaObj;
    NTSTATUS Status;
    DECLARE_RETURN(LRESULT);
@@ -962,7 +962,7 @@ NtUserSetWindowsHookEx(
    BOOL Ansi)
 {
    PWINSTATION_OBJECT WinStaObj;
-   PW32CLIENTINFO ClientInfo;
+   PCLIENTINFO ClientInfo;
    BOOLEAN Global;
    PETHREAD Thread;
    PHOOK Hook;

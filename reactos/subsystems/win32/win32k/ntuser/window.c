@@ -330,13 +330,13 @@ static void IntSendDestroyMsg(HWND hWnd)
 static VOID
 UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
 {
-    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     PWINDOW Wnd = WindowObject->Wnd;
 
-    if (ClientInfo->pvWND == DesktopHeapAddressToUser(WindowObject->Wnd))
+    if (ClientInfo->CallbackWnd.pvWnd == DesktopHeapAddressToUser(WindowObject->Wnd))
     {
-        ClientInfo->hWND = NULL;
-        ClientInfo->pvWND = NULL;
+        ClientInfo->CallbackWnd.hWnd = NULL;
+        ClientInfo->CallbackWnd.pvWnd = NULL;
     }
 
    if (Wnd->WindowName.Buffer != NULL)

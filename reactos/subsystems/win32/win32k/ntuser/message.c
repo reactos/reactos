@@ -2110,7 +2110,7 @@ NtUserMessageCall(
       case FNID_CALLWNDPROC:
       case FNID_CALLWNDPROCRET:
       {
-         PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+         PCLIENTINFO ClientInfo = GetWin32ClientInfo();
          PHOOK NextObj, Hook = ClientInfo->phkCurrent;
 
          if (!ClientInfo || !Hook) break;
