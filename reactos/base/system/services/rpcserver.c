@@ -4995,7 +4995,7 @@ DWORD REnumServicesStatusExW(
     *pcbBytesNeeded = dwRequiredSize;
 
     /* If there was no services that matched */
-    if (!dwServiceCount)
+    if ((!dwServiceCount) && (dwError != ERROR_MORE_DATA))
     {
         dwError = ERROR_SERVICE_DOES_NOT_EXIST;
         goto Done;
