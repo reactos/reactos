@@ -314,6 +314,7 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
 static NTSTATUS
 vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 {
+        NTSTATUS Status = STATUS_SUCCESS;
 	PFILE_OBJECT  fileObject;
 	PVFATCCB  newCCB;
 
@@ -332,14 +333,27 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 	fcb->FileObject = fileObject;
 	fcb->RefCount++;
 
-	CcInitializeCacheMap(fileObject,
-		(PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
-		FALSE,
-		&VfatGlobalData->CacheMgrCallbacks,
-		fcb);
+	_SEH_TRY
+        {
+ 		CcInitializeCacheMap(fileObject,
+ 			(PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
+ 			FALSE,
+ 			&VfatGlobalData->CacheMgrCallbacks,
+ 			fcb);
+        }
+        _SEH_HANDLE
+        {
+        	Status =  _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        { 
+        	return Status;
+        }
 
 	fcb->Flags |= FCB_CACHE_INITIALIZED;
-	return STATUS_SUCCESS;
+	return Status;
 }
 
 PVFATFCB

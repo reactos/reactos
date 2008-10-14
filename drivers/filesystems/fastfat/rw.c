@@ -671,11 +671,24 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       CHECKPOINT;
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-        CcInitializeCacheMap(IrpContext->FileObject,
-                             (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                             FALSE,
-                             &(VfatGlobalData->CacheMgrCallbacks),
-                             Fcb);
+         _SEH_TRY
+         {
+            CcInitializeCacheMap(IrpContext->FileObject,
+                                 (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                 FALSE,
+                                 &(VfatGlobalData->CacheMgrCallbacks),
+                                 Fcb);
+         }
+         _SEH_HANDLE
+         {
+            Status =  _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+
+         if (!NT_SUCCESS(Status))
+         {
+            goto ByeBye;
+         }
       }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT), Buffer,
@@ -964,11 +977,24 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
       if (IrpContext->FileObject->PrivateCacheMap == NULL)
       {
-         CcInitializeCacheMap(IrpContext->FileObject,
-                              (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                              FALSE,
-                              &VfatGlobalData->CacheMgrCallbacks,
-                              Fcb);
+         _SEH_TRY
+         {
+            CcInitializeCacheMap(IrpContext->FileObject,
+                                 (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                                 FALSE,
+                                 &(VfatGlobalData->CacheMgrCallbacks),
+                                 Fcb);
+         }
+         _SEH_HANDLE
+         {
+            Status =  _SEH_GetExceptionCode();
+         }
+         _SEH_END;
+
+         if (!NT_SUCCESS(Status))
+         {
+            goto ByeBye;
+         }
       }
       if (ByteOffset.QuadPart > OldFileSize.QuadPart)
       {
