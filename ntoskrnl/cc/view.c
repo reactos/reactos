@@ -1238,7 +1238,7 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 }
 
 
-NTSTATUS NTAPI
+VOID NTAPI
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
                          ULONG CacheSegmentSize,
                          PCACHE_MANAGER_CALLBACKS CallBacks,
@@ -1260,7 +1260,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
        if (Bcb == NULL)
        {
            KeReleaseGuardedMutex(&ViewLock);
-           return(STATUS_UNSUCCESSFUL);
+           ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
        }
        memset(Bcb, 0, sizeof(BCB));
        ObReferenceObjectByPointer(FileObject,
@@ -1293,8 +1293,6 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
        Bcb->BcbRemoveListEntry.Flink = NULL;
    }
    KeReleaseGuardedMutex(&ViewLock);
-
-   return(STATUS_SUCCESS);
 }
 
 /*

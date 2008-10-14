@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
-NTSTATUS NTAPI
+VOID NTAPI
 CcRosInitializeFileCache(PFILE_OBJECT FileObject,
                          ULONG CacheSegmentSize,
                          PCACHE_MANAGER_CALLBACKS CallBacks,
