@@ -686,7 +686,8 @@ DriverEntry(
     FILE_DEVICE_NETWORK, 0, FALSE, &RawIPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create RawIP device object. Status (0x%X).\n", Status));
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
     return Status;
   }
 
@@ -695,7 +696,9 @@ DriverEntry(
     FILE_DEVICE_NETWORK, 0, FALSE, &UDPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create UDP device object. Status (0x%X).\n", Status));
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
     return Status;
   }
 
@@ -704,7 +707,10 @@ DriverEntry(
     FILE_DEVICE_NETWORK, 0, FALSE, &TCPDeviceObject);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create TCP device object. Status (0x%X).\n", Status));
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
     return Status;
   }
 
@@ -713,7 +719,11 @@ DriverEntry(
   EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
   if (!EntityList) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -733,14 +743,25 @@ DriverEntry(
   /* Allocate NDIS packet descriptors */
   NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    ExFreePool(EntityList);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
   /* Allocate NDIS buffer descriptors */
   NdisAllocateBufferPool(&NdisStatus, &GlobalBufferPool, 100);
   if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    ExFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -762,19 +783,46 @@ DriverEntry(
   /* Initialize transport level protocol subsystems */
   Status = RawIPStartup();
   if( !NT_SUCCESS(Status) ) {
-	TiUnload(DriverObject);
+        ChewShutdown();
+        IoDeleteDevice(IPDeviceObject);
+        IoDeleteDevice(RawIPDeviceObject);
+        IoDeleteDevice(UDPDeviceObject);
+        IoDeleteDevice(TCPDeviceObject);
+        ExFreePool(EntityList);
+        NdisFreePacketPool(GlobalPacketPool);
+        NdisFreeBufferPool(GlobalBufferPool);
+        IPShutdown();
 	return Status;
   }
 
   Status = UDPStartup();
   if( !NT_SUCCESS(Status) ) {
-	TiUnload(DriverObject);
+        ChewShutdown();
+        IoDeleteDevice(IPDeviceObject);
+        IoDeleteDevice(RawIPDeviceObject);
+        IoDeleteDevice(UDPDeviceObject);
+        IoDeleteDevice(TCPDeviceObject);
+        ExFreePool(EntityList);
+        NdisFreePacketPool(GlobalPacketPool);
+        NdisFreeBufferPool(GlobalBufferPool);
+        IPShutdown();
+        RawIPShutdown();
 	return Status;
   }
 
   Status = TCPStartup();
   if( !NT_SUCCESS(Status) ) {
-	TiUnload(DriverObject);
+        ChewShutdown();
+        IoDeleteDevice(IPDeviceObject);
+        IoDeleteDevice(RawIPDeviceObject);
+        IoDeleteDevice(UDPDeviceObject);
+        IoDeleteDevice(TCPDeviceObject);
+        ExFreePool(EntityList);
+        NdisFreePacketPool(GlobalPacketPool);
+        NdisFreeBufferPool(GlobalBufferPool);
+        IPShutdown();
+        RawIPShutdown();
+        UDPShutdown();
 	return Status;
   }
 
@@ -794,15 +842,41 @@ DriverEntry(
       NULL,
       0,
       NULL);
-    TiUnload(DriverObject);
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    ExFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
+    NdisFreeBufferPool(GlobalBufferPool);
+    IPShutdown();
+    RawIPShutdown();
+    UDPShutdown();
+    TCPShutdown();
+    LANShutdown();
     return Status;
   }
 
   /* Open loopback adapter */
-  if (!NT_SUCCESS(LoopRegisterAdapter(NULL, NULL))) {
+  Status = LoopRegisterAdapter(NULL, NULL);
+  if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
-    TiUnload(DriverObject);
-    return STATUS_INSUFFICIENT_RESOURCES;
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    ExFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
+    NdisFreeBufferPool(GlobalBufferPool);
+    IPShutdown();
+    RawIPShutdown();
+    UDPShutdown();
+    TCPShutdown();
+    LANShutdown();
+    LANUnregisterProtocol();
+    return Status;
   }
 
   /* Use direct I/O */
