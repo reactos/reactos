@@ -109,7 +109,7 @@ typedef struct _SHARED_CACHE_MAP
     LIST_ENTRY SharedCacheMapLinks;
     ULONG Flags;
     ULONG Status;
-    PMCB Mbcb;
+    PMBCB Mbcb;
     PVOID Section;
     PKEVENT CreateEvent;
     PKEVENT WaitOnActiveCount;
