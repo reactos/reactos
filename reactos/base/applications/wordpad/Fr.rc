@@ -164,8 +164,9 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Enveloppement de ligne", 0, 10, 10, 170, 85
-    RADIOBUTTON "Enveloppe le texte à partir de la bordure de fenêtre", IDC_PAGEFMT_WW, 18, 25, 145, 15
-    RADIOBUTTON "Enveloppe le texte à partir de la &marge", IDC_PAGEFMT_WM, 18, 45, 145, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 145, 15
+    RADIOBUTTON "Enveloppe le texte à partir de la bordure de fenêtre", IDC_PAGEFMT_WW, 18, 45, 145, 15
+    RADIOBUTTON "Enveloppe le texte à partir de la &marge", IDC_PAGEFMT_WM, 18, 65, 145, 15
     GROUPBOX "Barres d'outils", 0, 170, 10, 120, 85
     CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 180, 20, 80, 15
     CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 180, 38, 80, 15

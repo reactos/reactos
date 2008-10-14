@@ -164,8 +164,9 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Liniebrydning", 0, 10, 10, 130, 85
-    RADIOBUTTON "Bryd tekst efter v&indusbredden", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Bryd tekst efter &margen", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Bryd tekst efter v&indusbredden", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "Bryd tekst efter &margen", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Værktøjslinier", 0, 150, 10, 120, 85
     CHECKBOX "&Værktøjslinie", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatteringlinie", IDC_PAGEFMT_FB, 160, 38, 80, 15

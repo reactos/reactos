@@ -166,8 +166,9 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Line wrapping", 0, 10, 10, 130, 85
-    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Toolbars", 0, 150, 10, 120, 85
     CHECKBOX "&Toolbar", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatbar", IDC_PAGEFMT_FB, 160, 38, 80, 15

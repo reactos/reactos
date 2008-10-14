@@ -92,7 +92,7 @@ BEGIN
 	IDS_FORMAT_KBIT             "%u KBit/s"
 	IDS_FORMAT_MBIT             "%u MBit/s"
 	IDS_FORMAT_GBIT             "%u GBit/s"
-	IDS_DURATION_DAY            "%d Day %s"
-	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_DURATION_DAY            "%d Día %s"
+	IDS_DURATION_DAYS           "%d Días %s"
 END
 

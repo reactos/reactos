@@ -164,8 +164,9 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Перенос по словам", 0, 10, 10, 130, 85
-    RADIOBUTTON "В границах &окна", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "В границах &полей", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "В границах &окна", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "В границах &полей", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Панели", 0, 150, 10, 120, 85
     CHECKBOX "&Инструментов", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Форматирования", IDC_PAGEFMT_FB, 160, 38, 80, 15
@@ -234,4 +235,5 @@ BEGIN
                                  "этой операции?"
     STRING_INVALID_NUMBER,       "Неправильный числовой формат"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются"
+    STRING_PRINTING_NOT_IMPLEMENTED, "Печать не поддерживается"
 END
