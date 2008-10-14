@@ -964,7 +964,7 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
 
 		hr = IShellFolder_BindToObject(folder, next_pidl, 0, &IID_IShellFolder, (void**)&child);
-		if (!SUCCEEDED(hr))
+		if (FAILED(hr))
 			break;
 
 		read_directory(entry, NULL, sortOrder, hwnd);
@@ -1070,7 +1070,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 			memset(pidls, 0, sizeof(pidls));
 
 			hr = IEnumIDList_Next(idlist, FETCH_ITEM_COUNT, pidls, &cnt);
-			if (!SUCCEEDED(hr))
+			if (FAILED(hr))
 				break;
 
 			if (hr == S_FALSE)
