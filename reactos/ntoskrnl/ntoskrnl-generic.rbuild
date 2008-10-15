@@ -26,7 +26,7 @@
 	<library>hal</library>
 	<library>pseh</library>
 	<library>cmlib</library>
-	<library>rtl</library>
+	<library>rtl_kmode</library>
 	<library>rossym</library>
 	<library>libcntpr</library>
 	<library>kdcom</library>
