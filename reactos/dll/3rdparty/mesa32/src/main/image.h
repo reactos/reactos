@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -181,7 +181,7 @@ _mesa_pack_stencil_span( const GLcontext *ctx, GLuint n,
 
 extern void
 _mesa_unpack_depth_span( const GLcontext *ctx, GLuint n,
-                         GLenum dstType, GLvoid *dest, GLfloat depthScale,
+                         GLenum dstType, GLvoid *dest, GLuint depthMax,
                          GLenum srcType, const GLvoid *source,
                          const struct gl_pixelstore_attrib *srcPacking );
 

@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -30,21 +30,141 @@
  */
 
 
-#include "glheader.h"
-#include "colormac.h"
-#include "context.h"
-#include "macros.h"
-#include "imports.h"
-#include "prog_instruction.h"
-#include "prog_statevars.h"
-#include "prog_execute.h"
-
-#include "tnl.h"
-#include "t_context.h"
-#include "t_pipeline.h"
-
+#include "main/glheader.h"
+#include "main/colormac.h"
+#include "main/context.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "shader/prog_instruction.h"
+#include "shader/prog_statevars.h"
+#include "shader/prog_execute.h"
 #include "swrast/s_context.h"
 #include "swrast/s_texfilter.h"
+
+#include "tnl/tnl.h"
+#include "tnl/t_context.h"
+#include "tnl/t_pipeline.h"
+
+
+
+/*!
+ * Private storage for the vertex program pipeline stage.
+ */
+struct vp_stage_data {
+   /** The results of running the vertex program go into these arrays. */
+   GLvector4f results[VERT_RESULT_MAX];
+
+   GLvector4f ndcCoords;              /**< normalized device coords */
+   GLubyte *clipmask;                 /**< clip flags */
+   GLubyte ormask, andmask;           /**< for clipping */
+};
+
+
+#define VP_STAGE_DATA(stage) ((struct vp_stage_data *)(stage->privatePtr))
+
+
+static void
+userclip( GLcontext *ctx,
+          GLvector4f *clip,
+          GLubyte *clipmask,
+          GLubyte *clipormask,
+          GLubyte *clipandmask )
+{
+   GLuint p;
+
+   for (p = 0; p < ctx->Const.MaxClipPlanes; p++) {
+      if (ctx->Transform.ClipPlanesEnabled & (1 << p)) {
+	 GLuint nr, i;
+	 const GLfloat a = ctx->Transform._ClipUserPlane[p][0];
+	 const GLfloat b = ctx->Transform._ClipUserPlane[p][1];
+	 const GLfloat c = ctx->Transform._ClipUserPlane[p][2];
+	 const GLfloat d = ctx->Transform._ClipUserPlane[p][3];
+         GLfloat *coord = (GLfloat *)clip->data;
+         GLuint stride = clip->stride;
+         GLuint count = clip->count;
+
+	 for (nr = 0, i = 0 ; i < count ; i++) {
+	    GLfloat dp = (coord[0] * a + 
+			  coord[1] * b +
+			  coord[2] * c +
+			  coord[3] * d);
+
+	    if (dp < 0) {
+	       nr++;
+	       clipmask[i] |= CLIP_USER_BIT;
+	    }
+
+	    STRIDE_F(coord, stride);
+	 }
+
+	 if (nr > 0) {
+	    *clipormask |= CLIP_USER_BIT;
+	    if (nr == count) {
+	       *clipandmask |= CLIP_USER_BIT;
+	       return;
+	    }
+	 }
+      }
+   }
+}
+
+
+static GLboolean
+do_ndc_cliptest(GLcontext *ctx, struct vp_stage_data *store)
+{
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   struct vertex_buffer *VB = &tnl->vb;
+   /* Cliptest and perspective divide.  Clip functions must clear
+    * the clipmask.
+    */
+   store->ormask = 0;
+   store->andmask = CLIP_FRUSTUM_BITS;
+
+   if (tnl->NeedNdcCoords) {
+      VB->NdcPtr =
+         _mesa_clip_tab[VB->ClipPtr->size]( VB->ClipPtr,
+                                            &store->ndcCoords,
+                                            store->clipmask,
+                                            &store->ormask,
+                                            &store->andmask );
+   }
+   else {
+      VB->NdcPtr = NULL;
+      _mesa_clip_np_tab[VB->ClipPtr->size]( VB->ClipPtr,
+                                            NULL,
+                                            store->clipmask,
+                                            &store->ormask,
+                                            &store->andmask );
+   }
+
+   if (store->andmask) {
+      /* All vertices are outside the frustum */
+      return GL_FALSE;
+   }
+
+   /* Test userclip planes.  This contributes to VB->ClipMask.
+    */
+   /** XXX NEW_SLANG _Enabled ??? */
+   if (ctx->Transform.ClipPlanesEnabled && (!ctx->VertexProgram._Enabled ||
+      ctx->VertexProgram.Current->IsPositionInvariant)) {
+      userclip( ctx,
+		VB->ClipPtr,
+		store->clipmask,
+		&store->ormask,
+		&store->andmask );
+
+      if (store->andmask) {
+	 return GL_FALSE;
+      }
+   }
+
+   VB->ClipAndMask = store->andmask;
+   VB->ClipOrMask = store->ormask;
+   VB->ClipMask = store->clipmask;
+
+   return GL_TRUE;
+}
+
 
 /**
  * XXX the texture sampling code in this module is a bit of a hack.
@@ -52,7 +172,6 @@
  * real dependencies on the rest of swrast.  It should probably be
  * moved into main/ someday.
  */
-
 static void
 vp_fetch_texel(GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
                GLuint unit, GLfloat color[4])
@@ -83,22 +202,6 @@ _tnl_program_string(GLcontext *ctx, GLenum target, struct gl_program *program)
     * stage we'd recompute/validate it here.
     */
 }
-
-
-/*!
- * Private storage for the vertex program pipeline stage.
- */
-struct vp_stage_data {
-   /** The results of running the vertex program go into these arrays. */
-   GLvector4f results[VERT_RESULT_MAX];
-
-   GLvector4f ndcCoords;              /**< normalized device coords */
-   GLubyte *clipmask;                 /**< clip flags */
-   GLubyte ormask, andmask;           /**< for clipping */
-};
-
-
-#define VP_STAGE_DATA(stage) ((struct vp_stage_data *)(stage->privatePtr))
 
 
 /**
@@ -139,96 +242,50 @@ init_machine(GLcontext *ctx, struct gl_program_machine *machine)
 
    machine->FetchTexelLod = vp_fetch_texel;
    machine->FetchTexelDeriv = NULL; /* not used by vertex programs */
+
+   machine->Samplers = ctx->VertexProgram._Current->Base.SamplerUnits;
 }
 
 
 /**
- * Copy the 16 elements of a matrix into four consecutive program
- * registers starting at 'pos'.
+ * Map the texture images which the vertex program will access (if any).
  */
 static void
-load_matrix(GLfloat registers[][4], GLuint pos, const GLfloat mat[16])
+map_textures(GLcontext *ctx, const struct gl_vertex_program *vp)
 {
-   GLuint i;
-   for (i = 0; i < 4; i++) {
-      registers[pos + i][0] = mat[0 + i];
-      registers[pos + i][1] = mat[4 + i];
-      registers[pos + i][2] = mat[8 + i];
-      registers[pos + i][3] = mat[12 + i];
+   GLuint u;
+
+   if (!ctx->Driver.MapTexture)
+      return;
+
+   for (u = 0; u < ctx->Const.MaxVertexTextureImageUnits; u++) {
+      if (vp->Base.TexturesUsed[u]) {
+         /* Note: _Current *should* correspond to the target indicated
+          * in TexturesUsed[u].
+          */
+         ctx->Driver.MapTexture(ctx, ctx->Texture.Unit[u]._Current);
+      }
    }
 }
 
 
 /**
- * As above, but transpose the matrix.
+ * Unmap the texture images which were used by the vertex program (if any).
  */
 static void
-load_transpose_matrix(GLfloat registers[][4], GLuint pos,
-                      const GLfloat mat[16])
+unmap_textures(GLcontext *ctx, const struct gl_vertex_program *vp)
 {
-   MEMCPY(registers[pos], mat, 16 * sizeof(GLfloat));
-}
+   GLuint u;
 
+   if (!ctx->Driver.MapTexture)
+      return;
 
-/**
- * Load current vertex program's parameter registers with tracked
- * matrices (if NV program).  This only needs to be done per
- * glBegin/glEnd, not per-vertex.
- */
-void
-_mesa_load_tracked_matrices(GLcontext *ctx)
-{
-   GLuint i;
-
-   for (i = 0; i < MAX_NV_VERTEX_PROGRAM_PARAMS / 4; i++) {
-      /* point 'mat' at source matrix */
-      GLmatrix *mat;
-      if (ctx->VertexProgram.TrackMatrix[i] == GL_MODELVIEW) {
-         mat = ctx->ModelviewMatrixStack.Top;
-      }
-      else if (ctx->VertexProgram.TrackMatrix[i] == GL_PROJECTION) {
-         mat = ctx->ProjectionMatrixStack.Top;
-      }
-      else if (ctx->VertexProgram.TrackMatrix[i] == GL_TEXTURE) {
-         mat = ctx->TextureMatrixStack[ctx->Texture.CurrentUnit].Top;
-      }
-      else if (ctx->VertexProgram.TrackMatrix[i] == GL_COLOR) {
-         mat = ctx->ColorMatrixStack.Top;
-      }
-      else if (ctx->VertexProgram.TrackMatrix[i]==GL_MODELVIEW_PROJECTION_NV) {
-         /* XXX verify the combined matrix is up to date */
-         mat = &ctx->_ModelProjectMatrix;
-      }
-      else if (ctx->VertexProgram.TrackMatrix[i] >= GL_MATRIX0_NV &&
-               ctx->VertexProgram.TrackMatrix[i] <= GL_MATRIX7_NV) {
-         GLuint n = ctx->VertexProgram.TrackMatrix[i] - GL_MATRIX0_NV;
-         ASSERT(n < MAX_PROGRAM_MATRICES);
-         mat = ctx->ProgramMatrixStack[n].Top;
-      }
-      else {
-         /* no matrix is tracked, but we leave the register values as-is */
-         assert(ctx->VertexProgram.TrackMatrix[i] == GL_NONE);
-         continue;
-      }
-
-      /* load the matrix values into sequential registers */
-      if (ctx->VertexProgram.TrackMatrixTransform[i] == GL_IDENTITY_NV) {
-         load_matrix(ctx->VertexProgram.Parameters, i*4, mat->m);
-      }
-      else if (ctx->VertexProgram.TrackMatrixTransform[i] == GL_INVERSE_NV) {
-         _math_matrix_analyse(mat); /* update the inverse */
-         ASSERT(!_math_matrix_is_dirty(mat));
-         load_matrix(ctx->VertexProgram.Parameters, i*4, mat->inv);
-      }
-      else if (ctx->VertexProgram.TrackMatrixTransform[i] == GL_TRANSPOSE_NV) {
-         load_transpose_matrix(ctx->VertexProgram.Parameters, i*4, mat->m);
-      }
-      else {
-         assert(ctx->VertexProgram.TrackMatrixTransform[i]
-                == GL_INVERSE_TRANSPOSE_NV);
-         _math_matrix_analyse(mat); /* update the inverse */
-         ASSERT(!_math_matrix_is_dirty(mat));
-         load_transpose_matrix(ctx->VertexProgram.Parameters, i*4, mat->inv);
+   for (u = 0; u < ctx->Const.MaxVertexTextureImageUnits; u++) {
+      if (vp->Base.TexturesUsed[u]) {
+         /* Note: _Current *should* correspond to the target indicated
+          * in TexturesUsed[u].
+          */
+         ctx->Driver.UnmapTexture(ctx, ctx->Texture.Unit[u]._Current);
       }
    }
 }
@@ -259,12 +316,15 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
       _mesa_load_state_parameters(ctx, program->Base.Parameters);
    }
 
+   /* make list of outputs to save some time below */
    numOutputs = 0;
    for (i = 0; i < VERT_RESULT_MAX; i++) {
       if (program->Base.OutputsWritten & (1 << i)) {
          outputs[numOutputs++] = i;
       }
    }
+
+   map_textures(ctx, program);
 
    for (i = 0; i < VB->Count; i++) {
       GLuint attr;
@@ -317,6 +377,8 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 #endif
    }
 
+   unmap_textures(ctx, program);
+
    /* Fixup fog and point size results if needed */
    if (program->IsNVProgram) {
       if (ctx->Fog.Enabled &&
@@ -334,12 +396,39 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
       }
    }
 
-   /* Setup the VB pointers so that the next pipeline stages get
-    * their data from the right place (the program output arrays).
-    */
-   VB->ClipPtr = &store->results[VERT_RESULT_HPOS];
-   VB->ClipPtr->size = 4;
-   VB->ClipPtr->count = VB->Count;
+   if (program->IsPositionInvariant) {
+      /* We need the exact same transform as in the fixed function path here
+       * to guarantee invariance, depending on compiler optimization flags
+       * results could be different otherwise.
+       */
+      VB->ClipPtr = TransformRaw( &store->results[0],
+				  &ctx->_ModelProjectMatrix,
+				  VB->AttribPtr[0] );
+
+      /* Drivers expect this to be clean to element 4...
+       */
+      switch (VB->ClipPtr->size) {
+      case 1:
+	 /* impossible */
+      case 2:
+	 _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 2 );
+	 /* fall-through */
+      case 3:
+	 _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 3 );
+	 /* fall-through */
+      case 4:
+	 break;
+      }
+   }
+   else {
+      /* Setup the VB pointers so that the next pipeline stages get
+       * their data from the right place (the program output arrays).
+       */
+      VB->ClipPtr = &store->results[VERT_RESULT_HPOS];
+      VB->ClipPtr->size = 4;
+      VB->ClipPtr->count = VB->Count;
+   }
+
    VB->ColorPtr[0] = &store->results[VERT_RESULT_COL0];
    VB->ColorPtr[1] = &store->results[VERT_RESULT_BFC0];
    VB->SecondaryColorPtr[0] = &store->results[VERT_RESULT_COL1];
@@ -365,41 +454,10 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
       }
    }
 
-   /* Cliptest and perspective divide.  Clip functions must clear
-    * the clipmask.
+
+   /* Perform NDC and cliptest operations:
     */
-   store->ormask = 0;
-   store->andmask = CLIP_FRUSTUM_BITS;
-
-   if (tnl->NeedNdcCoords) {
-      VB->NdcPtr =
-         _mesa_clip_tab[VB->ClipPtr->size]( VB->ClipPtr,
-                                            &store->ndcCoords,
-                                            store->clipmask,
-                                            &store->ormask,
-                                            &store->andmask );
-   }
-   else {
-      VB->NdcPtr = NULL;
-      _mesa_clip_np_tab[VB->ClipPtr->size]( VB->ClipPtr,
-                                            NULL,
-                                            store->clipmask,
-                                            &store->ormask,
-                                            &store->andmask );
-   }
-
-   if (store->andmask)  /* All vertices are outside the frustum */
-      return GL_FALSE;
-
-
-   /* This is where we'd do clip testing against the user-defined
-    * clipping planes, but they're not supported by vertex programs.
-    */
-
-   VB->ClipOrMask = store->ormask;
-   VB->ClipMask = store->clipmask;
-
-   return GL_TRUE;
+   return do_ndc_cliptest(ctx, store);
 }
 
 

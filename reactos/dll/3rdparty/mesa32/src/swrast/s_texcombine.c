@@ -1080,7 +1080,6 @@ _swrast_texture_span( GLcontext *ctx, SWspan *span )
    GLuint unit;
 
    ASSERT(span->end < MAX_WIDTH);
-   ASSERT(span->arrayMask & SPAN_TEXTURE);
 
    /*
     * Save copy of the incoming fragment colors (the GL_PRIMARY_COLOR)

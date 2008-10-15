@@ -31,8 +31,8 @@
 #include "context.h"
 #include "imports.h"
 #include "macros.h"
-#include "glapioffsets.h"
-#include "dispatch.h"
+#include "glapi/glapioffsets.h"
+#include "glapi/dispatch.h"
 
 typedef void (GLAPIENTRY *array_func)( const void * );
 

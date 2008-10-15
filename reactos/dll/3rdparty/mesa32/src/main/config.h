@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  7.0
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -82,7 +82,7 @@
 /** Minimum point size */
 #define MIN_POINT_SIZE 1.0
 /** Maximum point size */
-#define MAX_POINT_SIZE 20.0
+#define MAX_POINT_SIZE 60.0
 /** Point size granularity */
 #define POINT_SIZE_GRANULARITY 0.1
 
@@ -107,6 +107,9 @@
 
 /** Maximum rectangular texture size - GL_NV_texture_rectangle */
 #define MAX_TEXTURE_RECT_SIZE 2048
+
+/** Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array */
+#define MAX_ARRAY_TEXTURE_LAYERS 64
 
 /** Number of texture units - GL_ARB_multitexture
  * This needs to be the larger of MAX_TEXTURE_COORD_UNITS and
@@ -160,25 +163,6 @@
 /** For GL_EXT_texture_lod_bias (typically MAX_TEXTURE_LEVELS - 1) */
 #define MAX_TEXTURE_LOD_BIAS 11.0
 
-/** For GL_NV_vertex_program */
-/*@{*/
-#define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
-#define MAX_NV_VERTEX_PROGRAM_TEMPS         12
-#define MAX_NV_VERTEX_PROGRAM_PARAMS        128	/* KW: power of two */
-#define MAX_NV_VERTEX_PROGRAM_INPUTS        16
-#define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
-/*@}*/
-
-/** For GL_NV_fragment_program */
-/*@{*/
-#define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 1024 /* 72 for GL_ARB_f_p */
-#define MAX_NV_FRAGMENT_PROGRAM_TEMPS         96
-#define MAX_NV_FRAGMENT_PROGRAM_PARAMS        64
-#define MAX_NV_FRAGMENT_PROGRAM_INPUTS        12
-#define MAX_NV_FRAGMENT_PROGRAM_OUTPUTS        3
-#define MAX_NV_FRAGMENT_PROGRAM_WRITE_ONLYS    2
-/*@}*/
-
 /** For GL_ARB_vertex_program */
 /*@{*/
 #define MAX_VERTEX_PROGRAM_ADDRESS_REGS 1
@@ -204,12 +188,33 @@
 #define MAX_PROGRAM_ADDRESS_REGS 2
 #define MAX_UNIFORMS 128
 #define MAX_VARYING 8
+#define MAX_SAMPLERS 8
 /*@}*/
+
+/** For GL_NV_vertex_program */
+/*@{*/
+#define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
+#define MAX_NV_VERTEX_PROGRAM_TEMPS         12
+#define MAX_NV_VERTEX_PROGRAM_PARAMS        MAX_PROGRAM_ENV_PARAMS
+#define MAX_NV_VERTEX_PROGRAM_INPUTS        16
+#define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
+/*@}*/
+
+/** For GL_NV_fragment_program */
+/*@{*/
+#define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 1024 /* 72 for GL_ARB_f_p */
+#define MAX_NV_FRAGMENT_PROGRAM_TEMPS         96
+#define MAX_NV_FRAGMENT_PROGRAM_PARAMS        64
+#define MAX_NV_FRAGMENT_PROGRAM_INPUTS        12
+#define MAX_NV_FRAGMENT_PROGRAM_OUTPUTS        3
+#define MAX_NV_FRAGMENT_PROGRAM_WRITE_ONLYS    2
+/*@}*/
+
 
 /** For GL_ARB_vertex_shader */
 /*@{*/
 #define MAX_VERTEX_ATTRIBS 16
-#define MAX_VERTEX_TEXTURE_IMAGE_UNITS 0
+#define MAX_VERTEX_TEXTURE_IMAGE_UNITS MAX_TEXTURE_UNITS
 #define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_TEXTURE_IMAGE_UNITS + MAX_VERTEX_TEXTURE_IMAGE_UNITS)
 /*@}*/
 
@@ -298,6 +303,7 @@
 #define FEATURE_ARB_shader_objects (FEATURE_ARB_vertex_shader || FEATURE_ARB_fragment_shader)
 #define FEATURE_ARB_shading_language_100 FEATURE_ARB_shader_objects
 #define FEATURE_ARB_shading_language_120 FEATURE_ARB_shader_objects
+#define FEATURE_es2_glsl 0
 
 #define FEATURE_EXT_framebuffer_blit _HAVE_FULL_GL
 #define FEATURE_EXT_framebuffer_object _HAVE_FULL_GL

@@ -577,6 +577,32 @@ const struct gl_texture_format _mesa_texformat_rgb_dxt1 = {
    NULL					/* StoreTexel */
 };
 
+#if FEATURE_EXT_texture_sRGB
+const struct gl_texture_format _mesa_texformat_srgb_dxt1 = {
+   MESA_FORMAT_SRGB_DXT1,		/* MesaFormat */
+   GL_RGB,				/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   4, /*approx*/			/* RedBits */
+   4, /*approx*/			/* GreenBits */
+   4, /*approx*/			/* BlueBits */
+   0,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   0,					/* DepthBits */
+   0,					/* StencilBits */
+   0,					/* TexelBytes */
+   texstore_rgb_dxt1,			/* StoreTexImageFunc */
+   NULL, /*impossible*/ 		/* FetchTexel1D */
+   fetch_texel_2d_rgb_dxt1, 		/* FetchTexel2D */
+   NULL, /*impossible*/ 		/* FetchTexel3D */
+   NULL, /*impossible*/ 		/* FetchTexel1Df */
+   fetch_texel_2d_f_rgb_dxt1, 		/* FetchTexel2Df */
+   NULL, /*impossible*/ 		/* FetchTexel3Df */
+   NULL					/* StoreTexel */
+};
+#endif
+
 const struct gl_texture_format _mesa_texformat_rgba_dxt1 = {
    MESA_FORMAT_RGBA_DXT1,		/* MesaFormat */
    GL_RGBA,				/* BaseFormat */

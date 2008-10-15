@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@
  */
 
 
+#include "buffers.h"
 #include "context.h"
 #include "fbobject.h"
 #include "framebuffer.h"
@@ -63,6 +64,27 @@ static struct gl_renderbuffer DummyRenderbuffer;
 #define IS_CUBE_FACE(TARGET) \
    ((TARGET) >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && \
     (TARGET) <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+
+
+static void
+delete_dummy_renderbuffer(struct gl_renderbuffer *rb)
+{
+   /* no op */
+}
+
+static void
+delete_dummy_framebuffer(struct gl_framebuffer *fb)
+{
+   /* no op */
+}
+
+
+void
+_mesa_init_fbobjects(GLcontext *ctx)
+{
+   DummyFramebuffer.Delete = delete_dummy_framebuffer;
+   DummyRenderbuffer.Delete = delete_dummy_renderbuffer;
+}
 
 
 /**
@@ -158,7 +180,6 @@ _mesa_remove_attachment(GLcontext *ctx, struct gl_renderbuffer_attachment *att)
       ASSERT(!att->Texture);
    }
    if (att->Type == GL_TEXTURE || att->Type == GL_RENDERBUFFER_EXT) {
-      ASSERT(att->Renderbuffer);
       ASSERT(!att->Texture);
       _mesa_reference_renderbuffer(&att->Renderbuffer, NULL); /* unbind */
       ASSERT(!att->Renderbuffer);
@@ -302,7 +323,7 @@ test_attachment_completeness(const GLcontext *ctx, GLenum format,
             /* OK */
          }
          else if (ctx->Extensions.EXT_packed_depth_stencil &&
-                  att->Renderbuffer->_BaseFormat == GL_DEPTH_STENCIL_EXT) {
+                  texImage->TexFormat->BaseFormat == GL_DEPTH_STENCIL_EXT) {
             /* OK */
          }
          else {
@@ -908,8 +929,7 @@ check_end_texture_render(GLcontext *ctx, struct gl_framebuffer *fb)
       GLuint i;
       for (i = 0; i < BUFFER_COUNT; i++) {
          struct gl_renderbuffer_attachment *att = fb->Attachment + i;
-         struct gl_texture_object *texObj = att->Texture;
-         if (texObj) {
+         if (att->Texture && att->Renderbuffer) {
             ctx->Driver.FinishRenderTexture(ctx, att);
          }
       }
@@ -920,7 +940,7 @@ check_end_texture_render(GLcontext *ctx, struct gl_framebuffer *fb)
 void GLAPIENTRY
 _mesa_BindFramebufferEXT(GLenum target, GLuint framebuffer)
 {
-   struct gl_framebuffer *newFb;
+   struct gl_framebuffer *newFb, *newFbread;
    GLboolean bindReadBuf, bindDrawBuf;
    GET_CURRENT_CONTEXT(ctx);
 
@@ -961,9 +981,11 @@ _mesa_BindFramebufferEXT(GLenum target, GLuint framebuffer)
    }
 
    FLUSH_VERTICES(ctx, _NEW_BUFFERS);
+
    if (ctx->Driver.Flush) {  
       ctx->Driver.Flush(ctx);
    }
+
    if (framebuffer) {
       /* Binding a user-created framebuffer object */
       newFb = _mesa_lookup_framebuffer(ctx, framebuffer);
@@ -979,14 +1001,15 @@ _mesa_BindFramebufferEXT(GLenum target, GLuint framebuffer)
 	    return;
 	 }
          _mesa_HashInsert(ctx->Shared->FrameBuffers, framebuffer, newFb);
-         ASSERT(newFb->RefCount == 1);
       }
+      newFbread = newFb;
    }
    else {
       /* Binding the window system framebuffer (which was originally set
        * with MakeCurrent).
        */
       newFb = ctx->WinSysDrawBuffer;
+      newFbread = ctx->WinSysReadBuffer;
    }
 
    ASSERT(newFb);
@@ -997,14 +1020,14 @@ _mesa_BindFramebufferEXT(GLenum target, GLuint framebuffer)
     */
 
    if (bindReadBuf) {
-      _mesa_reference_framebuffer(&ctx->ReadBuffer, newFb);
+      _mesa_reference_framebuffer(&ctx->ReadBuffer, newFbread);
    }
 
    if (bindDrawBuf) {
       /* check if old FB had any texture attachments */
       check_end_texture_render(ctx, ctx->DrawBuffer);
 
-      /* bind new drawing buffer */
+      /* check if time to delete this framebuffer */
       _mesa_reference_framebuffer(&ctx->DrawBuffer, newFb);
 
       if (newFb->Name != 0) {
@@ -1014,7 +1037,7 @@ _mesa_BindFramebufferEXT(GLenum target, GLuint framebuffer)
    }
 
    if (ctx->Driver.BindFramebuffer) {
-      ctx->Driver.BindFramebuffer(ctx, target, newFb);
+      ctx->Driver.BindFramebuffer(ctx, target, newFb, newFbread);
    }
 }
 
@@ -1178,9 +1201,16 @@ framebuffer_texture(GLcontext *ctx, const char *caller, GLenum target,
 
       texObj = _mesa_lookup_texture(ctx, texture);
       if (texObj != NULL) {
-         err = (texObj->Target == GL_TEXTURE_CUBE_MAP)
-             ? !IS_CUBE_FACE(textarget)
-             : (texObj->Target != textarget);
+         if (textarget == 0) {
+            err = (texObj->Target != GL_TEXTURE_3D) &&
+                (texObj->Target != GL_TEXTURE_1D_ARRAY_EXT) &&
+                (texObj->Target != GL_TEXTURE_2D_ARRAY_EXT);
+         }
+         else {
+            err = (texObj->Target == GL_TEXTURE_CUBE_MAP)
+                ? !IS_CUBE_FACE(textarget)
+                : (texObj->Target != textarget);
+         }
       }
 
       if (err) {
@@ -1194,11 +1224,19 @@ framebuffer_texture(GLcontext *ctx, const char *caller, GLenum target,
          const GLint maxSize = 1 << (ctx->Const.Max3DTextureLevels - 1);
          if (zoffset < 0 || zoffset >= maxSize) {
             _mesa_error(ctx, GL_INVALID_VALUE,
-                        "glFramebufferTexture%sEXT(zoffset)", 
-                        caller);
+                        "glFramebufferTexture%sEXT(zoffset)", caller);
             return;
          }
       }
+      else if ((texObj->Target == GL_TEXTURE_1D_ARRAY_EXT) ||
+               (texObj->Target == GL_TEXTURE_2D_ARRAY_EXT)) {
+         if (zoffset < 0 || zoffset >= ctx->Const.MaxArrayTextureLayers) {
+            _mesa_error(ctx, GL_INVALID_VALUE,
+                        "glFramebufferTexture%sEXT(layer)", caller);
+            return;
+         }
+      }
+
 
       if ((level < 0) || 
           (level >= _mesa_max_texture_levels(ctx, texObj->Target))) {
@@ -1287,6 +1325,17 @@ _mesa_FramebufferTexture3DEXT(GLenum target, GLenum attachment,
 
    framebuffer_texture(ctx, "3D", target, attachment, textarget, texture,
                        level, zoffset);
+}
+
+
+void GLAPIENTRY
+_mesa_FramebufferTextureLayerEXT(GLenum target, GLenum attachment,
+                                 GLuint texture, GLint level, GLint layer)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   framebuffer_texture(ctx, "Layer", target, attachment, 0, texture,
+                       level, layer);
 }
 
 
@@ -1464,7 +1513,12 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
       return;
    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE_EXT:
       if (att->Type == GL_TEXTURE) {
-	 *params = GL_TEXTURE_CUBE_MAP_POSITIVE_X + att->CubeMapFace;
+         if (att->Texture && att->Texture->Target == GL_TEXTURE_CUBE_MAP) {
+            *params = GL_TEXTURE_CUBE_MAP_POSITIVE_X + att->CubeMapFace;
+         }
+         else {
+            *params = 0;
+         }
       }
       else {
 	 _mesa_error(ctx, GL_INVALID_ENUM,
@@ -1473,7 +1527,12 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
       return;
    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_3D_ZOFFSET_EXT:
       if (att->Type == GL_TEXTURE) {
-	 *params = att->Zoffset;
+         if (att->Texture && att->Texture->Target == GL_TEXTURE_3D) {
+            *params = att->Zoffset;
+         }
+         else {
+            *params = 0;
+         }
       }
       else {
 	 _mesa_error(ctx, GL_INVALID_ENUM,
@@ -1515,7 +1574,7 @@ _mesa_GenerateMipmapEXT(GLenum target)
 
    /* XXX this might not handle cube maps correctly */
    _mesa_lock_texture(ctx, texObj);
-   _mesa_generate_mipmap(ctx, target, texUnit, texObj);
+   ctx->Driver.GenerateMipmap(ctx, target, texObj);
    _mesa_unlock_texture(ctx, texObj);
 }
 

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -55,7 +55,9 @@ clear_rgba_buffer_with_masking(GLcontext *ctx, struct gl_renderbuffer *rb)
 
    /* Initialize color span with clear color */
    /* XXX optimize for clearcolor == black/zero (bzero) */
-   INIT_SPAN(span, GL_BITMAP, width, 0, SPAN_RGBA);
+   INIT_SPAN(span, GL_BITMAP);
+   span.end = width;
+   span.arrayMask = SPAN_RGBA;
    span.array->ChanType = rb->DataType;
    if (span.array->ChanType == GL_UNSIGNED_BYTE) {
       GLubyte clearColor[4];
@@ -119,7 +121,9 @@ clear_ci_buffer_with_masking(GLcontext *ctx, struct gl_renderbuffer *rb)
    ASSERT(rb->DataType == GL_UNSIGNED_INT);
 
    /* Initialize index span with clear index */
-   INIT_SPAN(span, GL_BITMAP, width, 0, SPAN_RGBA);
+   INIT_SPAN(span, GL_BITMAP);
+   span.end = width;
+   span.arrayMask = SPAN_INDEX;
    for (i = 0; i < width;i++) {
       span.array->index[i] = ctx->Color.ClearIndex;
    }
@@ -247,7 +251,7 @@ static void
 clear_color_buffers(GLcontext *ctx)
 {
    GLboolean masking;
-   GLuint i;
+   GLuint buf;
 
    if (ctx->Visual.rgbMode) {
       if (ctx->Color.ColorMask[0] && 
@@ -261,7 +265,7 @@ clear_color_buffers(GLcontext *ctx)
       }
    }
    else {
-      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];
       const GLuint indexBits = (1 << rb->IndexBits) - 1;
       if ((ctx->Color.IndexMask & indexBits) == indexBits) {
          masking = GL_FALSE;
@@ -271,8 +275,8 @@ clear_color_buffers(GLcontext *ctx)
       }
    }
 
-   for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers[0]; i++) {
-      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0][i];
+   for (buf = 0; buf < ctx->DrawBuffer->_NumColorDrawBuffers; buf++) {
+      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[buf];
       if (ctx->Visual.rgbMode) {
          if (masking) {
             clear_rgba_buffer_with_masking(ctx, rb);
@@ -327,7 +331,8 @@ _swrast_Clear(GLcontext *ctx, GLbitfield buffers)
 
    /* do software clearing here */
    if (buffers) {
-      if (buffers & ctx->DrawBuffer->_ColorDrawBufferMask[0]) {
+      if ((buffers & BUFFER_BITS_COLOR)
+          && (ctx->DrawBuffer->_NumColorDrawBuffers > 0)) {
          clear_color_buffers(ctx);
       }
       if (buffers & BUFFER_BIT_DEPTH) {

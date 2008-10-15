@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  7.2
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,13 +26,14 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "imports.h"
-#include "mtypes.h"
-#include "macros.h"
-#include "light.h"
-#include "state.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/context.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
+#include "main/light.h"
+#include "main/state.h"
 
 #include "vbo_context.h"
 
@@ -115,8 +116,12 @@ static void vbo_bind_vertex_list( GLcontext *ctx,
     */
    switch (get_program_mode(ctx)) {
    case VP_NONE:
-      memcpy(arrays,      vbo->legacy_currval, 16 * sizeof(arrays[0]));
-      memcpy(arrays + 16, vbo->mat_currval,    MAT_ATTRIB_MAX * sizeof(arrays[0]));
+      for (attr = 0; attr < 16; attr++) {
+         save->inputs[attr] = &vbo->legacy_currval[attr];
+      }
+      for (attr = 0; attr < MAT_ATTRIB_MAX; attr++) {
+         save->inputs[attr + 16] = &vbo->mat_currval[attr];
+      }
       map = vbo->map_vp_none;
       break;
    case VP_NV:
@@ -125,28 +130,35 @@ static void vbo_bind_vertex_list( GLcontext *ctx,
        * occurred.  NV vertex programs cannot access material values,
        * nor attributes greater than VERT_ATTRIB_TEX7.  
        */
-      memcpy(arrays,      vbo->legacy_currval,  16 * sizeof(arrays[0]));
-      memcpy(arrays + 16, vbo->generic_currval, 16 * sizeof(arrays[0]));
+      for (attr = 0; attr < 16; attr++) {
+         save->inputs[attr] = &vbo->legacy_currval[attr];
+         save->inputs[attr + 16] = &vbo->generic_currval[attr];
+      }
       map = vbo->map_vp_arb;
       break;
    }
 
-   for (attr = 0; attr < VBO_ATTRIB_MAX; attr++) {
+   for (attr = 0; attr < VERT_ATTRIB_MAX; attr++) {
       GLuint src = map[attr];
 
       if (node->attrsz[src]) {
-	 arrays[attr].Ptr = (const GLubyte *)data;
+         /* override the default array set above */
+         save->inputs[attr] = &arrays[attr];
+
+	 arrays[attr].Ptr = (const GLubyte *) data;
 	 arrays[attr].Size = node->attrsz[src];
 	 arrays[attr].StrideB = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Type = GL_FLOAT;
 	 arrays[attr].Enabled = 1;
-	 arrays[attr].BufferObj = node->vertex_store->bufferobj;
+         _mesa_reference_buffer_object(ctx,
+                                       &arrays[attr].BufferObj,
+                                       node->vertex_store->bufferobj);
 	 arrays[attr]._MaxElement = node->count; /* ??? */
 	 
 	 assert(arrays[attr].BufferObj->Name);
 
-	 data += node->attrsz[attr] * sizeof(GLfloat);
+	 data += node->attrsz[src] * sizeof(GLfloat);
       }
    }
 }

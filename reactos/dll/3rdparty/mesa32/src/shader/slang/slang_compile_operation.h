@@ -93,7 +93,7 @@ typedef enum slang_operation_type_
    SLANG_OPER_NOT,              /* "!" [expr] */
    SLANG_OPER_SUBSCRIPT,        /* [expr] "[" [expr] "]" */
    SLANG_OPER_CALL,             /* [func name] [param] [param] [...] */
-   SLANG_OPER_INLINED_CALL,     /* inlined function call */
+   SLANG_OPER_NON_INLINED_CALL, /* a real function call */
    SLANG_OPER_FIELD,            /* i.e.: ".next" or ".xzy" or ".xxx" etc */
    SLANG_OPER_POSTINCREMENT,    /* [var] "++" */
    SLANG_OPER_POSTDECREMENT     /* [var] "--" */
@@ -127,6 +127,11 @@ slang_operation_construct(slang_operation *);
 
 extern void
 slang_operation_destruct(slang_operation *);
+
+extern void
+slang_replace_scope(slang_operation *oper,
+                    slang_variable_scope *oldScope,
+                    slang_variable_scope *newScope);
 
 extern GLboolean
 slang_operation_copy(slang_operation *, const slang_operation *);

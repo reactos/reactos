@@ -57,6 +57,7 @@ extern GLboolean _mesa_texstore_a8(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_ci8(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_ycbcr(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_z24_s8(TEXSTORE_PARAMS);
+extern GLboolean _mesa_texstore_s8_z24(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_z16(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_z32(TEXSTORE_PARAMS);
 extern GLboolean _mesa_texstore_rgba_float32(TEXSTORE_PARAMS);
@@ -214,8 +215,8 @@ _mesa_get_teximage(GLcontext *ctx, GLenum target, GLint level,
 extern void
 _mesa_get_compressed_teximage(GLcontext *ctx, GLenum target, GLint level,
                               GLvoid *img,
-                              const struct gl_texture_object *texObj,
-                              const struct gl_texture_image *texImage);
+                              struct gl_texture_object *texObj,
+                              struct gl_texture_image *texImage);
 
 extern const GLvoid *
 _mesa_validate_pbo_teximage(GLcontext *ctx, GLuint dimensions,

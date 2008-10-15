@@ -99,7 +99,23 @@ arb_input_attrib_string(GLint index, GLenum progType)
       "vertex.texcoord[4]",
       "vertex.texcoord[5]",
       "vertex.texcoord[6]",
-      "vertex.texcoord[7]"
+      "vertex.texcoord[7]",
+      "vertex.attrib[0]",
+      "vertex.attrib[1]",
+      "vertex.attrib[2]",
+      "vertex.attrib[3]",
+      "vertex.attrib[4]",
+      "vertex.attrib[5]",
+      "vertex.attrib[6]",
+      "vertex.attrib[7]",
+      "vertex.attrib[8]",
+      "vertex.attrib[9]",
+      "vertex.attrib[10]",
+      "vertex.attrib[11]",
+      "vertex.attrib[12]",
+      "vertex.attrib[13]",
+      "vertex.attrib[14]",
+      "vertex.attrib[15]"
    };
    const char *fragAttribs[] = {
       "fragment.position",
@@ -190,7 +206,7 @@ arb_output_attrib_string(GLint index, GLenum progType)
  */
 static const char *
 reg_string(enum register_file f, GLint index, gl_prog_print_mode mode,
-           const struct gl_program *prog)
+           GLboolean relAddr, const struct gl_program *prog)
 {
    static char str[100];
 
@@ -198,7 +214,10 @@ reg_string(enum register_file f, GLint index, gl_prog_print_mode mode,
 
    switch (mode) {
    case PROG_PRINT_DEBUG:
-      sprintf(str, "%s[%d]", file_string(f, mode), index);
+      if (relAddr)
+         sprintf(str, "%s[ADDR%s%d]", file_string(f, mode), (index > 0) ? "+" : "", index);
+      else
+         sprintf(str, "%s[%d]", file_string(f, mode), index);
       break;
 
    case PROG_PRINT_ARB:
@@ -294,7 +313,7 @@ reg_string(enum register_file f, GLint index, gl_prog_print_mode mode,
 const char *
 _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended)
 {
-   static const char swz[] = "xyzw01?!";
+   static const char swz[] = "xyzw01!?";  /* See SWIZZLE_x definitions */
    static char s[20];
    GLuint i = 0;
 
@@ -304,7 +323,7 @@ _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended)
    if (!extended)
       s[i++] = '.';
 
-   if (negateBase & 0x1)
+   if (negateBase & NEGATE_X)
       s[i++] = '-';
    s[i++] = swz[GET_SWZ(swizzle, 0)];
 
@@ -312,7 +331,7 @@ _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended)
       s[i++] = ',';
    }
 
-   if (negateBase & 0x2)
+   if (negateBase & NEGATE_Y)
       s[i++] = '-';
    s[i++] = swz[GET_SWZ(swizzle, 1)];
 
@@ -320,7 +339,7 @@ _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended)
       s[i++] = ',';
    }
 
-   if (negateBase & 0x4)
+   if (negateBase & NEGATE_Z)
       s[i++] = '-';
    s[i++] = swz[GET_SWZ(swizzle, 2)];
 
@@ -328,7 +347,7 @@ _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended)
       s[i++] = ',';
    }
 
-   if (negateBase & 0x8)
+   if (negateBase & NEGATE_W)
       s[i++] = '-';
    s[i++] = swz[GET_SWZ(swizzle, 3)];
 
@@ -385,7 +404,7 @@ print_dst_reg(const struct prog_dst_register *dstReg, gl_prog_print_mode mode,
 {
    _mesa_printf("%s%s",
                 reg_string((enum register_file) dstReg->File,
-                           dstReg->Index, mode, prog),
+                           dstReg->Index, mode, GL_FALSE, prog),
                 writemask_string(dstReg->WriteMask));
 
    if (dstReg->CondMask != COND_TR) {
@@ -408,9 +427,9 @@ print_src_reg(const struct prog_src_register *srcReg, gl_prog_print_mode mode,
 {
    _mesa_printf("%s%s",
                 reg_string((enum register_file) srcReg->File,
-                           srcReg->Index, mode, prog),
+                           srcReg->Index, mode, srcReg->RelAddr, prog),
                 _mesa_swizzle_string(srcReg->Swizzle,
-                               srcReg->NegateBase, GL_FALSE));
+                                     srcReg->NegateBase, GL_FALSE));
 #if 0
    _mesa_printf("%s[%d]%s",
                 file_string((enum register_file) srcReg->File, mode),
@@ -525,7 +544,7 @@ _mesa_print_instruction_opt(const struct prog_instruction *inst, GLint indent,
          _mesa_printf("_SAT");
       _mesa_printf(" ");
       print_dst_reg(&inst->DstReg, mode, prog);
-      _mesa_printf("%s[%d], %s",
+      _mesa_printf(", %s[%d], %s",
                    file_string((enum register_file) inst->SrcReg[0].File,
                                mode),
                    inst->SrcReg[0].Index,
@@ -535,6 +554,7 @@ _mesa_print_instruction_opt(const struct prog_instruction *inst, GLint indent,
       break;
    case OPCODE_TEX:
    case OPCODE_TXP:
+   case OPCODE_TXL:
    case OPCODE_TXB:
       _mesa_printf("%s", _mesa_opcode_string(inst->Opcode));
       if (inst->SaturateMode == SATURATE_ZERO_ONE)
@@ -555,8 +575,27 @@ _mesa_print_instruction_opt(const struct prog_instruction *inst, GLint indent,
       }
       print_comment(inst);
       break;
+
+   case OPCODE_KIL:
+      _mesa_printf("%s", _mesa_opcode_string(inst->Opcode));
+      _mesa_printf(" ");
+      print_src_reg(&inst->SrcReg[0], mode, prog);
+      print_comment(inst);
+      break;
+   case OPCODE_KIL_NV:
+      _mesa_printf("%s", _mesa_opcode_string(inst->Opcode));
+      _mesa_printf(" ");
+      _mesa_printf("%s.%s",
+                   _mesa_condcode_string(inst->DstReg.CondMask),
+                   _mesa_swizzle_string(inst->DstReg.CondSwizzle,
+                                        GL_FALSE, GL_FALSE));
+      print_comment(inst);
+      break;
+
    case OPCODE_ARL:
-      _mesa_printf("ARL addr.x, ");
+      _mesa_printf("ARL ");
+      print_dst_reg(&inst->DstReg, mode, prog);
+      _mesa_printf(", ");
       print_src_reg(&inst->SrcReg[0], mode, prog);
       print_comment(inst);
       break;
@@ -719,6 +758,8 @@ _mesa_print_program_opt(const struct gl_program *prog,
 void
 _mesa_print_program_parameters(GLcontext *ctx, const struct gl_program *prog)
 {
+   GLuint i;
+
    _mesa_printf("InputsRead: 0x%x\n", prog->InputsRead);
    _mesa_printf("OutputsWritten: 0x%x\n", prog->OutputsWritten);
    _mesa_printf("NumInstructions=%d\n", prog->NumInstructions);
@@ -726,9 +767,14 @@ _mesa_print_program_parameters(GLcontext *ctx, const struct gl_program *prog)
    _mesa_printf("NumParameters=%d\n", prog->NumParameters);
    _mesa_printf("NumAttributes=%d\n", prog->NumAttributes);
    _mesa_printf("NumAddressRegs=%d\n", prog->NumAddressRegs);
-	
+   _mesa_printf("Samplers=[ ");
+   for (i = 0; i < MAX_SAMPLERS; i++) {
+      _mesa_printf("%d ", prog->SamplerUnits[i]);
+   }
+   _mesa_printf("]\n");
+
    _mesa_load_state_parameters(ctx, prog->Parameters);
-			
+
 #if 0
    _mesa_printf("Local Params:\n");
    for (i = 0; i < MAX_PROGRAM_LOCAL_PARAMS; i++){
@@ -745,6 +791,9 @@ _mesa_print_parameter_list(const struct gl_program_parameter_list *list)
 {
    const gl_prog_print_mode mode = PROG_PRINT_DEBUG;
    GLuint i;
+
+   if (!list)
+      return;
 
    _mesa_printf("param list %p\n", (void *) list);
    for (i = 0; i < list->NumParameters; i++){

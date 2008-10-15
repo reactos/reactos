@@ -25,11 +25,11 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "imports.h"
-#include "state.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/imports.h"
+#include "main/state.h"
+#include "main/mtypes.h"
 
 #include "t_context.h"
 #include "t_pipeline.h"
@@ -199,11 +199,11 @@ const struct tnl_pipeline_stage *_tnl_default_pipeline[] = {
    &_tnl_vertex_transform_stage,
    &_tnl_normal_transform_stage,
    &_tnl_lighting_stage,
-   &_tnl_fog_coordinate_stage,
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
    &_tnl_vertex_program_stage, 
+   &_tnl_fog_coordinate_stage,
    &_tnl_render_stage,
    NULL 
 };

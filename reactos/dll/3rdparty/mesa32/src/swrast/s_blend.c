@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -880,7 +880,8 @@ blend_general(GLcontext *ctx, GLuint n, const GLubyte mask[],
       }
    }
    else {
-      blend_general_float(ctx, n, mask, rgbaF, destF, chanType);
+      blend_general_float(ctx, n, mask, (GLfloat (*)[4]) src,
+                          (GLfloat (*)[4]) dst, chanType);
    }
 }
 

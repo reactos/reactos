@@ -213,7 +213,7 @@ put_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
                const void *values, const GLubyte *mask)
 {
    struct gl_renderbuffer *dsrb = z24rb->Wrapped;
-   const GLubyte *src = (const GLubyte *) values;
+   const GLuint *src = (const GLuint *) values;
    ASSERT(z24rb->DataType == GL_UNSIGNED_INT);
    ASSERT(dsrb->_ActualFormat == GL_DEPTH24_STENCIL8_EXT);
    ASSERT(dsrb->DataType == GL_UNSIGNED_INT_24_8_EXT);

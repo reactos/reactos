@@ -27,9 +27,9 @@
  */
 
 
-#include "mtypes.h"
-#include "macros.h"
-#include "enums.h"
+#include "main/mtypes.h"
+#include "main/macros.h"
+#include "main/enums.h"
 #include "vbo_split.h"
 
 

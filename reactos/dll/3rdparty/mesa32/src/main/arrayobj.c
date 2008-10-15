@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.2
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * (C) Copyright IBM Corporation 2006
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -46,7 +46,7 @@
 #include "bufferobj.h"
 #endif
 #include "arrayobj.h"
-#include "dispatch.h"
+#include "glapi/dispatch.h"
 
 
 /**
@@ -77,7 +77,7 @@ lookup_arrayobj(GLcontext *ctx, GLuint id)
 struct gl_array_object *
 _mesa_new_array_object( GLcontext *ctx, GLuint name )
 {
-   struct gl_array_object *obj = MALLOC_STRUCT(gl_array_object);
+   struct gl_array_object *obj = CALLOC_STRUCT(gl_array_object);
    if (obj)
       _mesa_initialize_array_object(ctx, obj, name);
    return obj;
@@ -210,6 +210,15 @@ _mesa_remove_array_object( GLcontext *ctx, struct gl_array_object *obj )
 }
 
 
+static void
+unbind_buffer_object( GLcontext *ctx, struct gl_buffer_object *bufObj )
+{
+   if (bufObj != ctx->Array.NullBufferObj) {
+      _mesa_reference_buffer_object(ctx, &bufObj, NULL);
+   }
+}
+
+
 /**********************************************************************/
 /* API Functions                                                      */
 /**********************************************************************/
@@ -311,18 +320,18 @@ _mesa_DeleteVertexArraysAPPLE(GLsizei n, const GLuint *ids)
 	 /* Unbind any buffer objects that might be bound to arrays in
 	  * this array object.
 	  */
-	 _mesa_unbind_buffer_object( ctx, obj->Vertex.BufferObj );
-	 _mesa_unbind_buffer_object( ctx, obj->Normal.BufferObj );
-	 _mesa_unbind_buffer_object( ctx, obj->Color.BufferObj );
-	 _mesa_unbind_buffer_object( ctx, obj->SecondaryColor.BufferObj );
-	 _mesa_unbind_buffer_object( ctx, obj->FogCoord.BufferObj );
-	 _mesa_unbind_buffer_object( ctx, obj->Index.BufferObj );
+	 unbind_buffer_object( ctx, obj->Vertex.BufferObj );
+	 unbind_buffer_object( ctx, obj->Normal.BufferObj );
+	 unbind_buffer_object( ctx, obj->Color.BufferObj );
+	 unbind_buffer_object( ctx, obj->SecondaryColor.BufferObj );
+	 unbind_buffer_object( ctx, obj->FogCoord.BufferObj );
+	 unbind_buffer_object( ctx, obj->Index.BufferObj );
 	 for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
-	    _mesa_unbind_buffer_object( ctx, obj->TexCoord[i].BufferObj );
+	    unbind_buffer_object( ctx, obj->TexCoord[i].BufferObj );
 	 }
-	 _mesa_unbind_buffer_object( ctx, obj->EdgeFlag.BufferObj );
+	 unbind_buffer_object( ctx, obj->EdgeFlag.BufferObj );
 	 for (i = 0; i < VERT_ATTRIB_MAX; i++) {
-	    _mesa_unbind_buffer_object( ctx, obj->VertexAttrib[i].BufferObj );
+	    unbind_buffer_object( ctx, obj->VertexAttrib[i].BufferObj );
 	 }
 #endif
 

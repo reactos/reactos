@@ -28,11 +28,22 @@
 #include "glheader.h"
 #include "macros.h"
 #include "enums.h"
-#include "prog_parameter.h"
-#include "prog_instruction.h"
-#include "prog_print.h"
-#include "prog_statevars.h"
+#include "shader/program.h"
+#include "shader/prog_parameter.h"
+#include "shader/prog_instruction.h"
+#include "shader/prog_print.h"
+#include "shader/prog_statevars.h"
 #include "texenvprogram.h"
+
+
+struct texenvprog_cache_item
+{
+   GLuint hash;
+   void *key;
+   struct gl_fragment_program *data;
+   struct texenvprog_cache_item *next;
+};
+
 
 /**
  * This MAX is probably a bit generous, but that's OK.  There can be
@@ -57,6 +68,7 @@ struct state_key {
    struct {
       GLuint enabled:1;
       GLuint source_index:3;   /* one of TEXTURE_1D/2D/3D/CUBE/RECT_INDEX */
+      GLuint shadow:1;
       GLuint ScaleShiftRGB:2;
       GLuint ScaleShiftA:2;
 
@@ -199,8 +211,8 @@ static void make_state_key( GLcontext *ctx,  struct state_key *key )
 
    for (i=0;i<MAX_TEXTURE_UNITS;i++) {
       const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
-		
-      if (!texUnit->_ReallyEnabled)
+
+      if (!texUnit->_ReallyEnabled || !texUnit->Enabled)
          continue;
 
       key->unit[i].enabled = 1;
@@ -208,6 +220,7 @@ static void make_state_key( GLcontext *ctx,  struct state_key *key )
 
       key->unit[i].source_index = 
 	 translate_tex_src_bit(texUnit->_ReallyEnabled);		
+      key->unit[i].shadow = texUnit->_Current->CompareMode == GL_COMPARE_R_TO_TEXTURE;
 
       key->unit[i].NumArgsRGB = texUnit->_CurrentCombine->_NumArgsRGB;
       key->unit[i].NumArgsA = texUnit->_CurrentCombine->_NumArgsA;
@@ -934,11 +947,13 @@ static void load_texture( struct texenv_fragment_program *p, GLuint unit )
 			  
       /* TODO: Use D0_MASK_XY where possible.
        */
-      if (p->state->unit[unit].enabled) 
+      if (p->state->unit[unit].enabled) {
 	 p->src_texture[unit] = emit_texld( p, OPCODE_TXP,
 					    tmp, WRITEMASK_XYZW, 
 					    unit, dim, texcoord );
-      else
+	 if (p->state->unit[unit].shadow)
+	    p->program->Base.ShadowSamplers |= 1 << unit;
+      } else
 	 p->src_texture[unit] = get_zero(p);
    }
 }
@@ -1133,7 +1148,7 @@ search_cache(const struct texenvprog_cache *cache,
 
    for (c = cache->items[hash % cache->size]; c; c = c->next) {
       if (c->hash == hash && memcmp(c->key, key, keysize) == 0)
-	 return (struct gl_fragment_program *) c->data;
+	 return c->data;
    }
 
    return NULL;
@@ -1161,7 +1176,7 @@ static void rehash( struct texenvprog_cache *cache )
    cache->size = size;
 }
 
-static void clear_cache( struct texenvprog_cache *cache )
+static void clear_cache(GLcontext *ctx, struct texenvprog_cache *cache)
 {
    struct texenvprog_cache_item *c, *next;
    GLuint i;
@@ -1170,8 +1185,7 @@ static void clear_cache( struct texenvprog_cache *cache )
       for (c = cache->items[i]; c; c = next) {
 	 next = c->next;
 	 _mesa_free(c->key);
-	 cache->ctx->Driver.DeleteProgram(cache->ctx,
-                                          (struct gl_program *) c->data);
+         _mesa_reference_fragprog(ctx, &c->data, NULL);
 	 _mesa_free(c);
       }
       cache->items[i] = NULL;
@@ -1182,25 +1196,25 @@ static void clear_cache( struct texenvprog_cache *cache )
 }
 
 
-static void cache_item( struct texenvprog_cache *cache,
+static void cache_item( GLcontext *ctx,
+                        struct texenvprog_cache *cache,
 			GLuint hash,
 			const struct state_key *key,
-			void *data )
+                        struct gl_fragment_program *prog)
 {
-   struct texenvprog_cache_item *c
-      = (struct texenvprog_cache_item *) MALLOC(sizeof(*c));
+   struct texenvprog_cache_item *c = CALLOC_STRUCT(texenvprog_cache_item);
    c->hash = hash;
 
    c->key = _mesa_malloc(sizeof(*key));
    memcpy(c->key, key, sizeof(*key));
 
-   c->data = (struct gl_fragment_program *) data;
+   c->data = prog;
 
    if (cache->n_items > cache->size * 1.5) {
       if (cache->size < 1000)
 	 rehash(cache);
       else 
-	 clear_cache(cache);
+	 clear_cache(ctx, cache);
    }
 
    cache->n_items++;
@@ -1242,36 +1256,35 @@ _mesa_UpdateTexEnvProgram( GLcontext *ctx )
 
    /* If a conventional fragment program/shader isn't in effect... */
    if (!ctx->FragmentProgram._Enabled &&
-       !ctx->Shader.CurrentProgram) {
+       (!ctx->Shader.CurrentProgram || !ctx->Shader.CurrentProgram->FragmentProgram)) {
+      struct gl_fragment_program *newProg;
+
       make_state_key(ctx, &key);
       hash = hash_key(&key);
       
-      ctx->FragmentProgram._Current =
-      ctx->FragmentProgram._TexEnvProgram =
-         search_cache(&ctx->Texture.env_fp_cache, hash, &key, sizeof(key));
+      newProg = search_cache(&ctx->Texture.env_fp_cache, hash, &key, sizeof(key));
 
-      if (!ctx->FragmentProgram._TexEnvProgram) {
+      if (!newProg) {
+         /* create new tex env program */
+
          if (0)
             _mesa_printf("Building new texenv proggy for key %x\n", hash);
 
-         /* create new tex env program */
-	 ctx->FragmentProgram._Current =
-         ctx->FragmentProgram._TexEnvProgram =
-            (struct gl_fragment_program *) 
+         newProg = (struct gl_fragment_program *) 
             ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
 
-         create_new_program(ctx, &key, ctx->FragmentProgram._TexEnvProgram);
+         create_new_program(ctx, &key, newProg);
 
-         cache_item(&ctx->Texture.env_fp_cache, hash, &key,
-                    ctx->FragmentProgram._TexEnvProgram);
+         /* Our ownership of newProg is transferred to the cache */
+         cache_item(ctx, &ctx->Texture.env_fp_cache, hash, &key, newProg);
       }
-      else {
-         if (0)
-            _mesa_printf("Found existing texenv program for key %x\n", hash);
-      }
+
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, newProg);
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram, newProg);
    } 
    else {
-      ctx->FragmentProgram._Current = ctx->FragmentProgram.Current;
+      /* _Current pointer has been updated in update_program */
+      /* ctx->FragmentProgram._Current = ctx->FragmentProgram.Current; */
    }
 
    /* Tell the driver about the change.  Could define a new target for
@@ -1297,6 +1310,6 @@ void _mesa_TexEnvProgramCacheInit( GLcontext *ctx )
 
 void _mesa_TexEnvProgramCacheDestroy( GLcontext *ctx )
 {
-   clear_cache(&ctx->Texture.env_fp_cache);
+   clear_cache(ctx, &ctx->Texture.env_fp_cache);
    _mesa_free(ctx->Texture.env_fp_cache.items);
 }

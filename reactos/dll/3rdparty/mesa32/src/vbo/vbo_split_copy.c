@@ -29,11 +29,11 @@
 /* Split indexed primitives with per-vertex copying.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "macros.h"
-#include "enums.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/macros.h"
+#include "main/enums.h"
+#include "main/mtypes.h"
 
 #include "vbo_split.h"
 #include "vbo.h"
@@ -129,11 +129,11 @@ static GLuint attr_size( const struct gl_client_array *array )
  */
 static GLboolean check_flush( struct copy_context *copy )
 {
-   GLenum mode = copy->dstprim[copy->dstprim_nr].mode;
+   GLenum mode = copy->dstprim[copy->dstprim_nr].mode; 
 
    if (GL_TRIANGLE_STRIP == mode &&
        copy->dstelt_nr & 1) { /* see bug9962 */
-      return GL_FALSE;
+       return GL_FALSE;
    }
 
    if (copy->dstbuf_nr + 4 > copy->dstbuf_size)
@@ -465,7 +465,7 @@ static void replay_init( struct copy_context *copy )
       dst->StrideB = copy->vertex_size;
       dst->Ptr = copy->dstbuf + offset;
       dst->Enabled = GL_TRUE;
-      dst->Normalized = src->Normalized;
+      dst->Normalized = src->Normalized; 
       dst->BufferObj = ctx->Array.NullBufferObj;
       dst->_MaxElement = copy->dstbuf_size; /* may be less! */
 

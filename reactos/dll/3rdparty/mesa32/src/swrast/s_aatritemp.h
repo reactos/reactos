@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.0.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -35,16 +35,15 @@
  *    DO_Z         - if defined, compute Z values
  *    DO_RGBA      - if defined, compute RGBA values
  *    DO_INDEX     - if defined, compute color index values
- *    DO_SPEC      - if defined, compute specular RGB values
  *    DO_ATTRIBS   - if defined, compute texcoords, varying, etc.
  */
 
 /*void triangle( GLcontext *ctx, GLuint v0, GLuint v1, GLuint v2, GLuint pv )*/
 {
    const SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const GLfloat *p0 = v0->win;
-   const GLfloat *p1 = v1->win;
-   const GLfloat *p2 = v2->win;
+   const GLfloat *p0 = v0->attrib[FRAG_ATTRIB_WPOS];
+   const GLfloat *p1 = v1->attrib[FRAG_ATTRIB_WPOS];
+   const GLfloat *p2 = v2->attrib[FRAG_ATTRIB_WPOS];
    const SWvertex *vMin, *vMid, *vMax;
    GLint iyMin, iyMax;
    GLfloat yMin, yMax;
@@ -56,39 +55,28 @@
 #ifdef DO_Z
    GLfloat zPlane[4];
 #endif
-#ifdef DO_FOG
-   GLfloat fogPlane[4];
-#else
-   GLfloat *fog = NULL;
-#endif
 #ifdef DO_RGBA
    GLfloat rPlane[4], gPlane[4], bPlane[4], aPlane[4];
 #endif
 #ifdef DO_INDEX
    GLfloat iPlane[4];
 #endif
-#ifdef DO_SPEC
-   GLfloat srPlane[4], sgPlane[4], sbPlane[4];
-#endif
 #if defined(DO_ATTRIBS)
-   GLfloat sPlane[FRAG_ATTRIB_MAX][4];  /* texture S */
-   GLfloat tPlane[FRAG_ATTRIB_MAX][4];  /* texture T */
-   GLfloat uPlane[FRAG_ATTRIB_MAX][4];  /* texture R */
-   GLfloat vPlane[FRAG_ATTRIB_MAX][4];  /* texture Q */
-   GLfloat texWidth[FRAG_ATTRIB_MAX];
-   GLfloat texHeight[FRAG_ATTRIB_MAX];
+   GLfloat attrPlane[FRAG_ATTRIB_MAX][4][4];
+   GLfloat wPlane[4];  /* win[3] */
 #endif
-   GLfloat bf = SWRAST_CONTEXT(ctx)->_BackfaceSign;
+   GLfloat bf = SWRAST_CONTEXT(ctx)->_BackfaceCullSign;
    
    (void) swrast;
 
-   INIT_SPAN(span, GL_POLYGON, 0, 0, SPAN_COVERAGE);
+   INIT_SPAN(span, GL_POLYGON);
+   span.arrayMask = SPAN_COVERAGE;
 
    /* determine bottom to top order of vertices */
    {
-      GLfloat y0 = v0->win[1];
-      GLfloat y1 = v1->win[1];
-      GLfloat y2 = v2->win[1];
+      GLfloat y0 = v0->attrib[FRAG_ATTRIB_WPOS][1];
+      GLfloat y1 = v1->attrib[FRAG_ATTRIB_WPOS][1];
+      GLfloat y2 = v2->attrib[FRAG_ATTRIB_WPOS][1];
       if (y0 <= y1) {
 	 if (y1 <= y2) {
 	    vMin = v0;   vMid = v1;   vMax = v2;   /* y0<=y1<=y2 */
@@ -113,17 +101,20 @@
       }
    }
 
-   majDx = vMax->win[0] - vMin->win[0];
-   majDy = vMax->win[1] - vMin->win[1];
+   majDx = vMax->attrib[FRAG_ATTRIB_WPOS][0] - vMin->attrib[FRAG_ATTRIB_WPOS][0];
+   majDy = vMax->attrib[FRAG_ATTRIB_WPOS][1] - vMin->attrib[FRAG_ATTRIB_WPOS][1];
 
+   /* front/back-face determination and cullling */
    {
-      const GLfloat botDx = vMid->win[0] - vMin->win[0];
-      const GLfloat botDy = vMid->win[1] - vMin->win[1];
+      const GLfloat botDx = vMid->attrib[FRAG_ATTRIB_WPOS][0] - vMin->attrib[FRAG_ATTRIB_WPOS][0];
+      const GLfloat botDy = vMid->attrib[FRAG_ATTRIB_WPOS][1] - vMin->attrib[FRAG_ATTRIB_WPOS][1];
       const GLfloat area = majDx * botDy - botDx * majDy;
       /* Do backface culling */
       if (area * bf < 0 || area == 0 || IS_INF_OR_NAN(area))
 	 return;
       ltor = (GLboolean) (area < 0.0F);
+
+      span.facing = area * swrast->_BackfaceSign > 0.0F;
    }
 
    /* Plane equation setup:
@@ -134,14 +125,6 @@
 #ifdef DO_Z
    compute_plane(p0, p1, p2, p0[2], p1[2], p2[2], zPlane);
    span.arrayMask |= SPAN_Z;
-#endif
-#ifdef DO_FOG
-   compute_plane(p0, p1, p2,
-                 v0->attrib[FRAG_ATTRIB_FOGC][0],
-                 v1->attrib[FRAG_ATTRIB_FOGC][0],
-                 v2->attrib[FRAG_ATTRIB_FOGC][0],
-                 fogPlane);
-   span.arrayMask |= SPAN_FOG;
 #endif
 #ifdef DO_RGBA
    if (ctx->Light.ShadeModel == GL_SMOOTH) {
@@ -160,62 +143,43 @@
 #endif
 #ifdef DO_INDEX
    if (ctx->Light.ShadeModel == GL_SMOOTH) {
-      compute_plane(p0, p1, p2, (GLfloat) v0->index,
-                    v1->index, v2->index, iPlane);
+      compute_plane(p0, p1, p2, (GLfloat) v0->attrib[FRAG_ATTRIB_CI][0],
+                    v1->attrib[FRAG_ATTRIB_CI][0], v2->attrib[FRAG_ATTRIB_CI][0], iPlane);
    }
    else {
-      constant_plane(v2->index, iPlane);
+      constant_plane(v2->attrib[FRAG_ATTRIB_CI][0], iPlane);
    }
    span.arrayMask |= SPAN_INDEX;
 #endif
-#ifdef DO_SPEC
-   if (ctx->Light.ShadeModel == GL_SMOOTH) {
-      compute_plane(p0, p1, p2, v0->specular[RCOMP], v1->specular[RCOMP], v2->specular[RCOMP], srPlane);
-      compute_plane(p0, p1, p2, v0->specular[GCOMP], v1->specular[GCOMP], v2->specular[GCOMP], sgPlane);
-      compute_plane(p0, p1, p2, v0->specular[BCOMP], v1->specular[BCOMP], v2->specular[BCOMP], sbPlane);
-   }
-   else {
-      constant_plane(v2->specular[RCOMP], srPlane);
-      constant_plane(v2->specular[GCOMP], sgPlane);
-      constant_plane(v2->specular[BCOMP], sbPlane);
-   }
-   span.arrayMask |= SPAN_SPEC;
-#endif
 #if defined(DO_ATTRIBS)
    {
-      const GLfloat invW0 = v0->win[3];
-      const GLfloat invW1 = v1->win[3];
-      const GLfloat invW2 = v2->win[3];
+      const GLfloat invW0 = v0->attrib[FRAG_ATTRIB_WPOS][3];
+      const GLfloat invW1 = v1->attrib[FRAG_ATTRIB_WPOS][3];
+      const GLfloat invW2 = v2->attrib[FRAG_ATTRIB_WPOS][3];
+      compute_plane(p0, p1, p2, invW0, invW1, invW2, wPlane);
+      span.attrStepX[FRAG_ATTRIB_WPOS][3] = plane_dx(wPlane);
+      span.attrStepY[FRAG_ATTRIB_WPOS][3] = plane_dy(wPlane);
       ATTRIB_LOOP_BEGIN
-         const GLfloat s0 = v0->attrib[attr][0] * invW0;
-         const GLfloat s1 = v1->attrib[attr][0] * invW1;
-         const GLfloat s2 = v2->attrib[attr][0] * invW2;
-         const GLfloat t0 = v0->attrib[attr][1] * invW0;
-         const GLfloat t1 = v1->attrib[attr][1] * invW1;
-         const GLfloat t2 = v2->attrib[attr][1] * invW2;
-         const GLfloat r0 = v0->attrib[attr][2] * invW0;
-         const GLfloat r1 = v1->attrib[attr][2] * invW1;
-         const GLfloat r2 = v2->attrib[attr][2] * invW2;
-         const GLfloat q0 = v0->attrib[attr][3] * invW0;
-         const GLfloat q1 = v1->attrib[attr][3] * invW1;
-         const GLfloat q2 = v2->attrib[attr][3] * invW2;
-         compute_plane(p0, p1, p2, s0, s1, s2, sPlane[attr]);
-         compute_plane(p0, p1, p2, t0, t1, t2, tPlane[attr]);
-         compute_plane(p0, p1, p2, r0, r1, r2, uPlane[attr]);
-         compute_plane(p0, p1, p2, q0, q1, q2, vPlane[attr]);
-         if (attr < FRAG_ATTRIB_VAR0 && attr >= FRAG_ATTRIB_TEX0) {
-            const GLuint u = attr - FRAG_ATTRIB_TEX0;
-            const struct gl_texture_object *obj = ctx->Texture.Unit[u]._Current;
-            const struct gl_texture_image *texImage = obj->Image[0][obj->BaseLevel];
-            texWidth[attr]  = (GLfloat) texImage->Width;
-            texHeight[attr] = (GLfloat) texImage->Height;
+         GLuint c;
+         if (swrast->_InterpMode[attr] == GL_FLAT) {
+            for (c = 0; c < 4; c++) {
+               constant_plane(v2->attrib[attr][c] * invW2, attrPlane[attr][c]);
+            }
          }
          else {
-            texWidth[attr] = texHeight[attr] = 1.0;
+            for (c = 0; c < 4; c++) {
+               const GLfloat a0 = v0->attrib[attr][c] * invW0;
+               const GLfloat a1 = v1->attrib[attr][c] * invW1;
+               const GLfloat a2 = v2->attrib[attr][c] * invW2;
+               compute_plane(p0, p1, p2, a0, a1, a2, attrPlane[attr][c]);
+            }
+         }
+         for (c = 0; c < 4; c++) {
+            span.attrStepX[attr][c] = plane_dx(attrPlane[attr][c]);
+            span.attrStepY[attr][c] = plane_dy(attrPlane[attr][c]);
          }
       ATTRIB_LOOP_END
    }
-   span.arrayMask |= (SPAN_TEXTURE | SPAN_LAMBDA | SPAN_VARYING);
 #endif
 
    /* Begin bottom-to-top scan over the triangle.
@@ -224,16 +188,16 @@
     * edges, stopping when we find that coverage = 0.  If the long edge
     * is on the left we scan left-to-right.  Else, we scan right-to-left.
     */
-   yMin = vMin->win[1];
-   yMax = vMax->win[1];
+   yMin = vMin->attrib[FRAG_ATTRIB_WPOS][1];
+   yMax = vMax->attrib[FRAG_ATTRIB_WPOS][1];
    iyMin = (GLint) yMin;
    iyMax = (GLint) yMax + 1;
 
    if (ltor) {
       /* scan left to right */
-      const GLfloat *pMin = vMin->win;
-      const GLfloat *pMid = vMid->win;
-      const GLfloat *pMax = vMax->win;
+      const GLfloat *pMin = vMin->attrib[FRAG_ATTRIB_WPOS];
+      const GLfloat *pMid = vMid->attrib[FRAG_ATTRIB_WPOS];
+      const GLfloat *pMax = vMax->attrib[FRAG_ATTRIB_WPOS];
       const GLfloat dxdy = majDx / majDy;
       const GLfloat xAdj = dxdy < 0.0F ? -dxdy : 0.0F;
       GLfloat x = pMin[0] - (yMin - iyMin) * dxdy;
@@ -253,6 +217,18 @@
 
          /* enter interior of triangle */
          ix = startX;
+
+#if defined(DO_ATTRIBS)
+         /* compute attributes at left-most fragment */
+         span.attrStart[FRAG_ATTRIB_WPOS][3] = solve_plane(ix + 0.5, iy + 0.5, wPlane);
+         ATTRIB_LOOP_BEGIN
+            GLuint c;
+            for (c = 0; c < 4; c++) {
+               span.attrStart[attr][c] = solve_plane(ix + 0.5, iy + 0.5, attrPlane[attr][c]);
+            }
+         ATTRIB_LOOP_END
+#endif
+
          count = 0;
          while (coverage > 0.0F) {
             /* (cx,cy) = center of fragment */
@@ -266,9 +242,6 @@
 #ifdef DO_Z
             array->z[count] = (GLuint) solve_plane(cx, cy, zPlane);
 #endif
-#ifdef DO_FOG
-	    array->attribs[FRAG_ATTRIB_FOGC][count][0] = solve_plane(cx, cy, fogPlane);
-#endif
 #ifdef DO_RGBA
             array->rgba[count][RCOMP] = solve_plane_chan(cx, cy, rPlane);
             array->rgba[count][GCOMP] = solve_plane_chan(cx, cy, gPlane);
@@ -277,25 +250,6 @@
 #endif
 #ifdef DO_INDEX
             array->index[count] = (GLint) solve_plane(cx, cy, iPlane);
-#endif
-#ifdef DO_SPEC
-            array->spec[count][RCOMP] = solve_plane_chan(cx, cy, srPlane);
-            array->spec[count][GCOMP] = solve_plane_chan(cx, cy, sgPlane);
-            array->spec[count][BCOMP] = solve_plane_chan(cx, cy, sbPlane);
-#endif
-#if defined(DO_ATTRIBS)
-            ATTRIB_LOOP_BEGIN
-               GLfloat invQ = solve_plane_recip(cx, cy, vPlane[attr]);
-               array->attribs[attr][count][0] = solve_plane(cx, cy, sPlane[attr]) * invQ;
-               array->attribs[attr][count][1] = solve_plane(cx, cy, tPlane[attr]) * invQ;
-               array->attribs[attr][count][2] = solve_plane(cx, cy, uPlane[attr]) * invQ;
-               if (attr < FRAG_ATTRIB_VAR0 && attr >= FRAG_ATTRIB_TEX0) {
-                  const GLuint unit = attr - FRAG_ATTRIB_TEX0;
-                  array->lambda[unit][count] = compute_lambda(sPlane[attr], tPlane[attr],
-                                                              vPlane[attr], cx, cy, invQ,
-                                                              texWidth[attr], texHeight[attr]);
-               }
-            ATTRIB_LOOP_END
 #endif
             ix++;
             count++;
@@ -308,7 +262,6 @@
          span.x = startX;
          span.y = iy;
          span.end = (GLuint) ix - (GLuint) startX;
-         ASSERT(span.interpMask == 0);
 #if defined(DO_RGBA)
          _swrast_write_rgba_span(ctx, &span);
 #else
@@ -318,9 +271,9 @@
    }
    else {
       /* scan right to left */
-      const GLfloat *pMin = vMin->win;
-      const GLfloat *pMid = vMid->win;
-      const GLfloat *pMax = vMax->win;
+      const GLfloat *pMin = vMin->attrib[FRAG_ATTRIB_WPOS];
+      const GLfloat *pMid = vMid->attrib[FRAG_ATTRIB_WPOS];
+      const GLfloat *pMax = vMax->attrib[FRAG_ATTRIB_WPOS];
       const GLfloat dxdy = majDx / majDy;
       const GLfloat xAdj = dxdy > 0 ? dxdy : 0.0F;
       GLfloat x = pMin[0] - (yMin - iyMin) * dxdy;
@@ -336,7 +289,7 @@
          }
 
          /* skip fragments with zero coverage */
-         while (startX >= 0) {
+         while (startX > 0) {
             coverage = compute_coveragef(pMin, pMax, pMid, startX, iy);
             if (coverage > 0.0F)
                break;
@@ -350,6 +303,7 @@
             /* (cx,cy) = center of fragment */
             const GLfloat cx = ix + 0.5F, cy = iy + 0.5F;
             SWspanarrays *array = span.array;
+            ASSERT(ix >= 0);
 #ifdef DO_INDEX
             array->coverage[ix] = (GLfloat) compute_coveragei(pMin, pMax, pMid, ix, iy);
 #else
@@ -357,9 +311,6 @@
 #endif
 #ifdef DO_Z
             array->z[ix] = (GLuint) solve_plane(cx, cy, zPlane);
-#endif
-#ifdef DO_FOG
-            array->attribs[FRAG_ATTRIB_FOGC][ix][0] = solve_plane(cx, cy, fogPlane);
 #endif
 #ifdef DO_RGBA
             array->rgba[ix][RCOMP] = solve_plane_chan(cx, cy, rPlane);
@@ -370,33 +321,22 @@
 #ifdef DO_INDEX
             array->index[ix] = (GLint) solve_plane(cx, cy, iPlane);
 #endif
-#ifdef DO_SPEC
-            array->spec[ix][RCOMP] = solve_plane_chan(cx, cy, srPlane);
-            array->spec[ix][GCOMP] = solve_plane_chan(cx, cy, sgPlane);
-            array->spec[ix][BCOMP] = solve_plane_chan(cx, cy, sbPlane);
-#endif
-#if defined(DO_ATTRIBS)
-            ATTRIB_LOOP_BEGIN
-               GLfloat invQ = solve_plane_recip(cx, cy, vPlane[attr]);
-               array->attribs[attr][ix][0] = solve_plane(cx, cy, sPlane[attr]) * invQ;
-               array->attribs[attr][ix][1] = solve_plane(cx, cy, tPlane[attr]) * invQ;
-               array->attribs[attr][ix][2] = solve_plane(cx, cy, uPlane[attr]) * invQ;
-               if (attr < FRAG_ATTRIB_VAR0 && attr >= FRAG_ATTRIB_TEX0) {
-                  const GLuint unit = attr - FRAG_ATTRIB_TEX0;
-                  array->lambda[unit][ix] = compute_lambda(sPlane[attr],
-                                                           tPlane[attr],
-                                                           vPlane[attr],
-                                                           cx, cy, invQ,
-                                                           texWidth[attr],
-                                                           texHeight[attr]);
-               }
-            ATTRIB_LOOP_END
-#endif
             ix--;
             count++;
             coverage = compute_coveragef(pMin, pMax, pMid, ix, iy);
          }
          
+#if defined(DO_ATTRIBS)
+         /* compute attributes at left-most fragment */
+         span.attrStart[FRAG_ATTRIB_WPOS][3] = solve_plane(ix + 1.5, iy + 0.5, wPlane);
+         ATTRIB_LOOP_BEGIN
+            GLuint c;
+            for (c = 0; c < 4; c++) {
+               span.attrStart[attr][c] = solve_plane(ix + 1.5, iy + 0.5, attrPlane[attr][c]);
+            }
+         ATTRIB_LOOP_END
+#endif
+
          if (startX <= ix)
             continue;
 
@@ -410,11 +350,9 @@
             SWspanarrays *array = span.array;
             GLint j;
             for (j = 0; j < (GLint) n; j++) {
+               array->coverage[j] = array->coverage[j + left];
 #ifdef DO_RGBA
                COPY_CHAN4(array->rgba[j], array->rgba[j + left]);
-#endif
-#ifdef DO_SPEC
-               COPY_CHAN4(array->spec[j], array->spec[j + left]);
 #endif
 #ifdef DO_INDEX
                array->index[j] = array->index[j + left];
@@ -422,36 +360,12 @@
 #ifdef DO_Z
                array->z[j] = array->z[j + left];
 #endif
-#ifdef DO_FOG
-               array->attribs[FRAG_ATTRIB_FOGC][j][0]
-                  = array->attribs[FRAG_ATTRIB_FOGC][j + left][0];
-#endif
-#if defined(DO_ATTRIBS)
-               array->lambda[0][j] = array->lambda[0][j + left];
-#endif
-               array->coverage[j] = array->coverage[j + left];
             }
          }
-#ifdef DO_ATTRIBS
-         /* shift texcoords, varying */
-         {
-            SWspanarrays *array = span.array;
-            ATTRIB_LOOP_BEGIN
-               GLint j;
-               for (j = 0; j < (GLint) n; j++) {
-                  array->attribs[attr][j][0] = array->attribs[attr][j + left][0];
-                  array->attribs[attr][j][1] = array->attribs[attr][j + left][1];
-                  array->attribs[attr][j][2] = array->attribs[attr][j + left][2];
-                  /*array->lambda[unit][j] = array->lambda[unit][j + left];*/
-               }
-            ATTRIB_LOOP_END
-         }
-#endif
 
          span.x = left;
          span.y = iy;
          span.end = n;
-         ASSERT(span.interpMask == 0);
 #if defined(DO_RGBA)
          _swrast_write_rgba_span(ctx, &span);
 #else
@@ -462,30 +376,8 @@
 }
 
 
-#ifdef DO_Z
 #undef DO_Z
-#endif
-
-#ifdef DO_FOG
-#undef DO_FOG
-#endif
-
-#ifdef DO_RGBA
 #undef DO_RGBA
-#endif
-
-#ifdef DO_INDEX
 #undef DO_INDEX
-#endif
-
-#ifdef DO_SPEC
-#undef DO_SPEC
-#endif
-
-#ifdef DO_ATTRIBS
 #undef DO_ATTRIBS
-#endif
-
-#ifdef DO_OCCLUSION_TEST
 #undef DO_OCCLUSION_TEST
-#endif

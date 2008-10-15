@@ -19,7 +19,7 @@ INCLUDE_DIRS = \
 default: matypes.h
 
 clean:
-	rm -f matypes.h
+	-rm -f matypes.h
 
 
 # need some special rules here, unfortunately

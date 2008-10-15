@@ -28,7 +28,7 @@
  * \author Michal Krol
  */
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
 #include "slang_mem.h"
 
@@ -267,6 +267,7 @@ slang_variable_construct(slang_variable * var)
    var->size = 0;
    var->isTemp = GL_FALSE;
    var->aux = NULL;
+   var->declared = 0;
    return 1;
 }
 
@@ -325,16 +326,23 @@ slang_variable_copy(slang_variable * x, const slang_variable * y)
 }
 
 
+/**
+ * Search for named variable in given scope.
+ * \param all  if true, search parent scopes too.
+ */
 slang_variable *
 _slang_locate_variable(const slang_variable_scope * scope,
                        const slang_atom a_name, GLboolean all)
 {
-   GLuint i;
-
-   for (i = 0; i < scope->num_variables; i++)
-      if (a_name == scope->variables[i]->a_name)
-         return scope->variables[i];
-   if (all && scope->outer_scope != NULL)
-      return _slang_locate_variable(scope->outer_scope, a_name, 1);
+   while (scope) {
+      GLuint i;
+      for (i = 0; i < scope->num_variables; i++)
+         if (a_name == scope->variables[i]->a_name)
+            return scope->variables[i];
+      if (all)
+         scope = scope->outer_scope;
+      else
+         scope = NULL;
+   }
    return NULL;
 }

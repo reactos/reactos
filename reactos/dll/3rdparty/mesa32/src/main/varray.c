@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.2
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,7 +32,7 @@
 #include "mtypes.h"
 #include "varray.h"
 #include "arrayobj.h"
-#include "dispatch.h"
+#include "glapi/dispatch.h"
 
 
 /**
@@ -62,14 +62,9 @@ update_array(GLcontext *ctx, struct gl_client_array *array,
    array->Normalized = normalized;
    array->Ptr = (const GLubyte *) ptr;
 #if FEATURE_ARB_vertex_buffer_object
-   array->BufferObj->RefCount--;
-   if (array->BufferObj->RefCount <= 0) {
-      ASSERT(array->BufferObj->Name);
-      _mesa_remove_buffer_object( ctx, array->BufferObj );
-      (*ctx->Driver.DeleteBuffer)( ctx, array->BufferObj );
-   }
-   array->BufferObj = ctx->Array.ArrayBufferObj;
-   array->BufferObj->RefCount++;
+   _mesa_reference_buffer_object(ctx, &array->BufferObj,
+                                 ctx->Array.ArrayBufferObj);
+
    /* Compute the index of the last array element that's inside the buffer.
     * Later in glDrawArrays we'll check if start + count > _MaxElement to
     * be sure we won't go out of bounds.
@@ -443,7 +438,7 @@ void GLAPIENTRY
 _mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
                             GLsizei stride, const GLvoid *ptr)
 {
-   const GLboolean normalized = GL_FALSE;
+   GLboolean normalized = GL_FALSE;
    GLsizei elementSize;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
@@ -471,6 +466,7 @@ _mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
    /* check for valid 'type' and compute StrideB right away */
    switch (type) {
       case GL_UNSIGNED_BYTE:
+         normalized = GL_TRUE;
          elementSize = size * sizeof(GLubyte);
          break;
       case GL_SHORT:
@@ -519,11 +515,6 @@ _mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
 
    if (stride < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glVertexAttribPointerARB(stride)");
-      return;
-   }
-
-   if (type == GL_UNSIGNED_BYTE && size != 4) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glVertexAttribPointerARB(size!=4)");
       return;
    }
 
@@ -809,15 +800,21 @@ _mesa_LockArraysEXT(GLint first, GLsizei count)
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glLockArrays %d %d\n", first, count);
 
-   if (first == 0 && count > 0 &&
-       count <= (GLint) ctx->Const.MaxArrayLockSize) {
-      ctx->Array.LockFirst = first;
-      ctx->Array.LockCount = count;
+   if (first < 0) {
+      _mesa_error( ctx, GL_INVALID_VALUE, "glLockArraysEXT(first)" );
+      return;
    }
-   else {
-      ctx->Array.LockFirst = 0;
-      ctx->Array.LockCount = 0;
+   if (count <= 0) {
+      _mesa_error( ctx, GL_INVALID_VALUE, "glLockArraysEXT(count)" );
+      return;
    }
+   if (ctx->Array.LockCount != 0) {
+      _mesa_error( ctx, GL_INVALID_OPERATION, "glLockArraysEXT(reentry)" );
+      return;
+   }
+
+   ctx->Array.LockFirst = first;
+   ctx->Array.LockCount = count;
 
    ctx->NewState |= _NEW_ARRAY;
    ctx->Array.NewState |= _NEW_ARRAY_ALL;
@@ -835,6 +832,11 @@ _mesa_UnlockArraysEXT( void )
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glUnlockArrays\n");
+
+   if (ctx->Array.LockCount == 0) {
+      _mesa_error( ctx, GL_INVALID_OPERATION, "glUnlockArraysEXT(reexit)" );
+      return;
+   }
 
    ctx->Array.LockFirst = 0;
    ctx->Array.LockCount = 0;

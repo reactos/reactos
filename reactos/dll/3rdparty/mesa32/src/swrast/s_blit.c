@@ -135,7 +135,7 @@ blit_nearest(GLcontext *ctx,
    switch (buffer) {
    case GL_COLOR_BUFFER_BIT:
       readRb = ctx->ReadBuffer->_ColorReadBuffer;
-      drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+      drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0];
       comps = 4;
       break;
    case GL_DEPTH_BUFFER_BIT:
@@ -319,7 +319,7 @@ blit_linear(GLcontext *ctx,
             GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1)
 {
    struct gl_renderbuffer *readRb = ctx->ReadBuffer->_ColorReadBuffer;
-   struct gl_renderbuffer *drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+   struct gl_renderbuffer *drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0];
 
    const GLint srcWidth = ABS(srcX1 - srcX0);
    const GLint dstWidth = ABS(dstX1 - dstX0);
@@ -493,7 +493,7 @@ simple_blit(GLcontext *ctx,
    switch (buffer) {
    case GL_COLOR_BUFFER_BIT:
       readRb = ctx->ReadBuffer->_ColorReadBuffer;
-      drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0][0];
+      drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0];
       comps = 4;
       break;
    case GL_DEPTH_BUFFER_BIT:
@@ -744,6 +744,9 @@ _swrast_BlitFramebuffer(GLcontext *ctx,
       GL_STENCIL_BUFFER_BIT
    };
    GLint i;
+
+   if (!ctx->DrawBuffer->_NumColorDrawBuffers)
+      return;
 
    if (!clip_blit(ctx, &srcX0, &srcY0, &srcX1, &srcY1,
                   &dstX0, &dstY0, &dstX1, &dstY1)) {

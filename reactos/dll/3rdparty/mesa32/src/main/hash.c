@@ -37,7 +37,7 @@
 
 #include "glheader.h"
 #include "imports.h"
-#include "glthread.h"
+#include "glapi/glthread.h"
 #include "hash.h"
 
 

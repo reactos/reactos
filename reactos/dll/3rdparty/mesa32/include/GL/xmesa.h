@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  7.1
  * 
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -394,6 +394,25 @@ extern void XMesaResizeBuffers( XMesaBuffer b );
  */
 extern XMesaBuffer XMesaCreatePBuffer(XMesaVisual v, XMesaColormap cmap,
                                       unsigned int width, unsigned int height);
+
+
+
+/*
+ * Texture from Pixmap
+ * New in Mesa 7.1
+ */
+extern void
+XMesaBindTexImage(XMesaDisplay *dpy, XMesaBuffer drawable, int buffer,
+                  const int *attrib_list);
+
+extern void
+XMesaReleaseTexImage(XMesaDisplay *dpy, XMesaBuffer drawable, int buffer);
+
+
+extern XMesaBuffer
+XMesaCreatePixmapTextureBuffer(XMesaVisual v, XMesaPixmap p,
+                               XMesaColormap cmap,
+                               int format, int target, int mipmap);
 
 
 

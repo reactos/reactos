@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.2
  *
- * Copyright (C) 2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,14 +31,6 @@
 extern void
 _slang_link(GLcontext *ctx, GLhandleARB h,
             struct gl_shader_program *shProg);
-
-extern void
-_slang_resolve_samplers(struct gl_shader_program *shProg,
-                        struct gl_program *prog);
-
-extern void
-_slang_remap_attribute(struct gl_program *prog, GLuint oldAttrib,
-                       GLuint newAttrib);
 
 
 #endif

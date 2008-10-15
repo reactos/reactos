@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.2
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -101,7 +101,6 @@ static void
 copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
                       GLint width, GLint height, GLint destx, GLint desty)
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLint row;
    const GLboolean zoom = ctx->Pixel.ZoomX != 1.0F || ctx->Pixel.ZoomY != 1.0F;
    const GLbitfield transferOps = ctx->_ImageTransferState;
@@ -110,13 +109,10 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
    GLfloat *dest, *tmpImage, *convImage;
    SWspan span;
 
-   INIT_SPAN(span, GL_BITMAP, 0, 0, SPAN_RGBA);
-
-   if (ctx->Depth.Test)
-      _swrast_span_default_z(ctx, &span);
-   if (swrast->_FogEnabled)
-      _swrast_span_default_fog(ctx, &span);
-   _swrast_span_default_secondary_color(ctx, &span);
+   INIT_SPAN(span, GL_BITMAP);
+   _swrast_span_default_attribs(ctx, &span);
+   span.arrayMask = SPAN_RGBA;
+   span.arrayAttribs = FRAG_BIT_COL0;
 
    /* allocate space for GLfloat image */
    tmpImage = (GLfloat *) _mesa_malloc(width * height * 4 * sizeof(GLfloat));
@@ -169,7 +165,7 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
       /* write the new image */
       for (row = 0; row < height; row++) {
          const GLfloat *src = convImage + row * width * 4;
-         GLvoid *rgba = (GLvoid *) span.array->attribs[FRAG_ATTRIB_COL0];
+         GLfloat *rgba = (GLfloat *) span.array->attribs[FRAG_ATTRIB_COL0];
 
          /* copy convolved colors into span array */
          _mesa_memcpy(rgba, src, width * 4 * sizeof(GLfloat));
@@ -201,7 +197,6 @@ static void
 copy_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
                  GLint width, GLint height, GLint destx, GLint desty)
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLfloat *tmpImage, *p;
    GLint sy, dy, stepy, row;
    const GLboolean zoom = ctx->Pixel.ZoomX != 1.0F || ctx->Pixel.ZoomY != 1.0F;
@@ -246,12 +241,10 @@ copy_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
       stepy = 1;
    }
 
-   INIT_SPAN(span, GL_BITMAP, 0, 0, SPAN_RGBA);
-   if (ctx->Depth.Test)
-      _swrast_span_default_z(ctx, &span);
-   if (swrast->_FogEnabled)
-      _swrast_span_default_fog(ctx, &span);
-   _swrast_span_default_secondary_color(ctx, &span);
+   INIT_SPAN(span, GL_BITMAP);
+   _swrast_span_default_attribs(ctx, &span);
+   span.arrayMask = SPAN_RGBA;
+   span.arrayAttribs = FRAG_BIT_COL0; /* we'll fill in COL0 attrib values */
 
    if (overlapping) {
       tmpImage = (GLfloat *) _mesa_malloc(width * height * sizeof(GLfloat) * 4);
@@ -320,7 +313,6 @@ copy_ci_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
                 GLint width, GLint height,
                 GLint destx, GLint desty )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLuint *tmpImage,*p;
    GLint sy, dy, stepy;
    GLint j;
@@ -333,7 +325,9 @@ copy_ci_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
       return;
    }
 
-   INIT_SPAN(span, GL_BITMAP, 0, 0, SPAN_INDEX);
+   INIT_SPAN(span, GL_BITMAP);
+   _swrast_span_default_attribs(ctx, &span);
+   span.arrayMask = SPAN_INDEX;
 
    if (ctx->DrawBuffer == ctx->ReadBuffer) {
       overlapping = regions_overlap(srcx, srcy, destx, desty, width, height,
@@ -356,11 +350,6 @@ copy_ci_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
       dy = desty;
       stepy = 1;
    }
-
-   if (ctx->Depth.Test)
-      _swrast_span_default_z(ctx, &span);
-   if (swrast->_FogEnabled)
-      _swrast_span_default_fog(ctx, &span);
 
    if (overlapping) {
       GLint ssy = sy;
@@ -457,7 +446,6 @@ copy_depth_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
                    GLint width, GLint height,
                    GLint destx, GLint desty )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    struct gl_framebuffer *fb = ctx->ReadBuffer;
    struct gl_renderbuffer *readRb = fb->_DepthBuffer;
    GLfloat *p, *tmpImage;
@@ -472,7 +460,9 @@ copy_depth_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
       return;
    }
 
-   INIT_SPAN(span, GL_BITMAP, 0, 0, SPAN_Z);
+   INIT_SPAN(span, GL_BITMAP);
+   _swrast_span_default_attribs(ctx, &span);
+   span.arrayMask = SPAN_Z;
 
    if (ctx->DrawBuffer == ctx->ReadBuffer) {
       overlapping = regions_overlap(srcx, srcy, destx, desty, width, height,
@@ -495,11 +485,6 @@ copy_depth_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
       dy = desty;
       stepy = 1;
    }
-
-   _swrast_span_default_color(ctx, &span);
-   _swrast_span_default_secondary_color(ctx, &span);
-   if (swrast->_FogEnabled)
-      _swrast_span_default_fog(ctx, &span);
 
    if (overlapping) {
       GLint ssy = sy;
@@ -845,10 +830,10 @@ fast_copy_pixels(GLcontext *ctx,
    }
 
    if (type == GL_COLOR) {
-      if (dstFb->_NumColorDrawBuffers[0] != 1)
+      if (dstFb->_NumColorDrawBuffers != 1)
          return GL_FALSE;
       srcRb = srcFb->_ColorReadBuffer;
-      dstRb = dstFb->_ColorDrawBuffers[0][0];
+      dstRb = dstFb->_ColorDrawBuffers[0];
    }
    else if (type == GL_STENCIL) {
       srcRb = srcFb->_StencilBuffer;

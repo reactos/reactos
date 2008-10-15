@@ -32,8 +32,8 @@
  * \author Brian Paul
  */
 
-#include "context.h"
-#include "macros.h"
+#include "main/context.h"
+#include "main/macros.h"
 #include "slang_mem.h"
 
 

@@ -111,13 +111,13 @@ _swrast_alpha_test(const GLcontext *ctx, SWspan *span)
    if (span->arrayMask & SPAN_RGBA) {
       /* Use array's alpha values */
       if (span->array->ChanType == GL_UNSIGNED_BYTE) {
-         GLubyte (*rgba)[4] = span->array->color.sz1.rgba;
+         GLubyte (*rgba)[4] = span->array->rgba8;
          GLubyte ref;
          CLAMPED_FLOAT_TO_UBYTE(ref, ctx->Color.AlphaRef);
          ALPHA_TEST(rgba[i][ACOMP], ;);
       }
       else if (span->array->ChanType == GL_UNSIGNED_SHORT) {
-         GLushort (*rgba)[4] = span->array->color.sz2.rgba;
+         GLushort (*rgba)[4] = span->array->rgba16;
          GLushort ref;
          CLAMPED_FLOAT_TO_USHORT(ref, ctx->Color.AlphaRef);
          ALPHA_TEST(rgba[i][ACOMP], ;);

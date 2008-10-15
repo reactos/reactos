@@ -1,4 +1,4 @@
-#if defined(USE_X86_ASM) || defined(SLANG_X86)
+#if defined(__i386__) || defined(__386__)
 
 #include "imports.h"
 #include "x86sse.h"
@@ -6,54 +6,78 @@
 #define DISASSEM 0
 #define X86_TWOB 0x0f
 
+static unsigned char *cptr( void (*label)() )
+{
+   return (unsigned char *)(unsigned long)label;
+}
+
+
+static void do_realloc( struct x86_function *p )
+{
+   if (p->size == 0) {
+      p->size = 1024;
+      p->store = _mesa_exec_malloc(p->size);
+      p->csr = p->store;
+   }
+   else {
+      unsigned used = p->csr - p->store;
+      unsigned char *tmp = p->store;
+      p->size *= 2;
+      p->store = _mesa_exec_malloc(p->size);
+      memcpy(p->store, tmp, used);
+      p->csr = p->store + used;
+      _mesa_exec_free(tmp);
+   }
+}
+
 /* Emit bytes to the instruction stream:
  */
-static void emit_1b( struct x86_function *p, GLbyte b0 )
+static unsigned char *reserve( struct x86_function *p, int bytes )
 {
-   *(GLbyte *)(p->csr++) = b0;
-}
+   if (p->csr + bytes - p->store > p->size)
+      do_realloc(p);
 
-static void emit_1i( struct x86_function *p, GLint i0 )
-{
-   *(GLint *)(p->csr) = i0;
-   p->csr += 4;
-}
-
-static void disassem( struct x86_function *p, const char *fn )
-{
-#if DISASSEM && 0
-   if (fn && fn != p->fn) {
-      _mesa_printf("0x%x: %s\n", p->csr, fn);
-      p->fn = fn;
+   {
+      unsigned char *csr = p->csr;
+      p->csr += bytes;
+      return csr;
    }
-#endif
 }
 
-static void emit_1ub_fn( struct x86_function *p, GLubyte b0, const char *fn )
+
+
+static void emit_1b( struct x86_function *p, char b0 )
 {
-   disassem(p, fn);
-   *(p->csr++) = b0;
+   char *csr = (char *)reserve(p, 1);
+   *csr = b0;
 }
 
-static void emit_2ub_fn( struct x86_function *p, GLubyte b0, GLubyte b1, const char *fn )
+static void emit_1i( struct x86_function *p, int i0 )
 {
-   disassem(p, fn);
-   *(p->csr++) = b0;
-   *(p->csr++) = b1;
+   int *icsr = (int *)reserve(p, sizeof(i0));
+   *icsr = i0;
 }
 
-static void emit_3ub_fn( struct x86_function *p, GLubyte b0, GLubyte b1, GLubyte b2, const char *fn )
+static void emit_1ub( struct x86_function *p, unsigned char b0 )
 {
-   disassem(p, fn);
-   *(p->csr++) = b0;
-   *(p->csr++) = b1;
-   *(p->csr++) = b2;
+   unsigned char *csr = reserve(p, 1);
+   *csr++ = b0;
 }
 
-#define emit_1ub(p, b0)         emit_1ub_fn(p, b0, __FUNCTION__)
-#define emit_2ub(p, b0, b1)     emit_2ub_fn(p, b0, b1, __FUNCTION__)
-#define emit_3ub(p, b0, b1, b2) emit_3ub_fn(p, b0, b1, b2, __FUNCTION__)
+static void emit_2ub( struct x86_function *p, unsigned char b0, unsigned char b1 )
+{
+   unsigned char *csr = reserve(p, 2);
+   *csr++ = b0;
+   *csr++ = b1;
+}
 
+static void emit_3ub( struct x86_function *p, unsigned char b0, unsigned char b1, unsigned char b2 )
+{
+   unsigned char *csr = reserve(p, 3);
+   *csr++ = b0;
+   *csr++ = b1;
+   *csr++ = b2;
+}
 
 
 /* Build a modRM byte + possible displacement.  No treatment of SIB
@@ -63,7 +87,7 @@ static void emit_modrm( struct x86_function *p,
 			struct x86_reg reg, 
 			struct x86_reg regmem )
 {
-   GLubyte val = 0;
+   unsigned char val = 0;
    
    assert(reg.mod == mod_REG);
    
@@ -71,13 +95,13 @@ static void emit_modrm( struct x86_function *p,
    val |= reg.idx << 3;		/* reg field */
    val |= regmem.idx;		/* r/m field */
    
-   emit_1ub_fn(p, val, 0);
+   emit_1ub(p, val);
 
    /* Oh-oh we've stumbled into the SIB thing.
     */
    if (regmem.file == file_REG32 &&
        regmem.idx == reg_SP) {
-      emit_1ub_fn(p, 0x24, 0);		/* simplistic! */
+      emit_1ub(p, 0x24);		/* simplistic! */
    }
 
    switch (regmem.mod) {
@@ -98,7 +122,7 @@ static void emit_modrm( struct x86_function *p,
 
 
 static void emit_modrm_noreg( struct x86_function *p,
-			      GLuint op,
+			      unsigned op,
 			      struct x86_reg regmem )
 {
    struct x86_reg dummy = x86_make_reg(file_REG32, op);
@@ -111,21 +135,21 @@ static void emit_modrm_noreg( struct x86_function *p,
  * the arguments presented.
  */
 static void emit_op_modrm( struct x86_function *p,
-			   GLubyte op_dst_is_reg, 
-			   GLubyte op_dst_is_mem,
+			   unsigned char op_dst_is_reg, 
+			   unsigned char op_dst_is_mem,
 			   struct x86_reg dst,
 			   struct x86_reg src )
 {  
    switch (dst.mod) {
    case mod_REG:
-      emit_1ub_fn(p, op_dst_is_reg, 0);
+      emit_1ub(p, op_dst_is_reg);
       emit_modrm(p, dst, src);
       break;
    case mod_INDIRECT:
    case mod_DISP32:
    case mod_DISP8:
       assert(src.mod == mod_REG);
-      emit_1ub_fn(p, op_dst_is_mem, 0);
+      emit_1ub(p, op_dst_is_mem);
       emit_modrm(p, src, dst);
       break;
    default:
@@ -156,7 +180,7 @@ struct x86_reg x86_make_reg( enum x86_reg_file file,
 }
 
 struct x86_reg x86_make_disp( struct x86_reg reg,
-			      GLint disp )
+			      int disp )
 {
    assert(reg.file == file_REG32);
 
@@ -185,7 +209,7 @@ struct x86_reg x86_get_base_reg( struct x86_reg reg )
    return x86_make_reg( reg.file, reg.idx );
 }
 
-GLubyte *x86_get_label( struct x86_function *p )
+unsigned char *x86_get_label( struct x86_function *p )
 {
    return p->csr;
 }
@@ -199,13 +223,13 @@ GLubyte *x86_get_label( struct x86_function *p )
 
 void x86_jcc( struct x86_function *p,
 	      enum x86_cc cc,
-	      GLubyte *label )
+	      unsigned char *label )
 {
-   GLint offset = label - (x86_get_label(p) + 2);
+   int offset = label - (x86_get_label(p) + 2);
    
    if (offset <= 127 && offset >= -128) {
       emit_1ub(p, 0x70 + cc);
-      emit_1b(p, (GLbyte) offset);
+      emit_1b(p, (char) offset);
    }
    else {
       offset = label - (x86_get_label(p) + 6);
@@ -216,7 +240,7 @@ void x86_jcc( struct x86_function *p,
 
 /* Always use a 32bit offset for forward jumps:
  */
-GLubyte *x86_jcc_forward( struct x86_function *p,
+unsigned char *x86_jcc_forward( struct x86_function *p,
 			  enum x86_cc cc )
 {
    emit_2ub(p, 0x0f, 0x80 + cc);
@@ -224,14 +248,14 @@ GLubyte *x86_jcc_forward( struct x86_function *p,
    return x86_get_label(p);
 }
 
-GLubyte *x86_jmp_forward( struct x86_function *p)
+unsigned char *x86_jmp_forward( struct x86_function *p)
 {
    emit_1ub(p, 0xe9);
    emit_1i(p, 0);
    return x86_get_label(p);
 }
 
-GLubyte *x86_call_forward( struct x86_function *p)
+unsigned char *x86_call_forward( struct x86_function *p)
 {
    emit_1ub(p, 0xe8);
    emit_1i(p, 0);
@@ -241,28 +265,41 @@ GLubyte *x86_call_forward( struct x86_function *p)
 /* Fixup offset from forward jump:
  */
 void x86_fixup_fwd_jump( struct x86_function *p,
-			 GLubyte *fixup )
+			 unsigned char *fixup )
 {
    *(int *)(fixup - 4) = x86_get_label(p) - fixup;
 }
 
-void x86_jmp( struct x86_function *p, GLubyte *label)
+void x86_jmp( struct x86_function *p, unsigned char *label)
 {
    emit_1ub(p, 0xe9);
    emit_1i(p, label - x86_get_label(p) - 4);
 }
 
-void x86_call( struct x86_function *p, GLubyte *label)
+#if 0
+/* This doesn't work once we start reallocating & copying the
+ * generated code on buffer fills, because the call is relative to the
+ * current pc.
+ */
+void x86_call( struct x86_function *p, void (*label)())
 {
    emit_1ub(p, 0xe8);
-   emit_1i(p, label - x86_get_label(p) - 4);
+   emit_1i(p, cptr(label) - x86_get_label(p) - 4);
 }
+#else
+void x86_call( struct x86_function *p, struct x86_reg reg)
+{
+   emit_1ub(p, 0xff);
+   emit_modrm(p, reg, reg);
+}
+#endif
+
 
 /* michal:
  * Temporary. As I need immediate operands, and dont want to mess with the codegen,
  * I load the immediate into general purpose register and use it.
  */
-void x86_mov_reg_imm( struct x86_function *p, struct x86_reg dst, GLint imm )
+void x86_mov_reg_imm( struct x86_function *p, struct x86_reg dst, int imm )
 {
    assert(dst.mod == mod_REG);
    emit_1ub(p, 0xb8 + dst.idx);
@@ -502,6 +539,14 @@ void sse_addss( struct x86_function *p,
    emit_modrm( p, dst, src );
 }
 
+void sse_andnps( struct x86_function *p,
+                 struct x86_reg dst,
+                 struct x86_reg src )
+{
+   emit_2ub(p, X86_TWOB, 0x55);
+   emit_modrm( p, dst, src );
+}
+
 void sse_andps( struct x86_function *p,
 		struct x86_reg dst,
 		struct x86_reg src )
@@ -510,6 +555,13 @@ void sse_andps( struct x86_function *p,
    emit_modrm( p, dst, src );
 }
 
+void sse_rsqrtps( struct x86_function *p,
+                  struct x86_reg dst,
+                  struct x86_reg src )
+{
+   emit_2ub(p, X86_TWOB, 0x52);
+   emit_modrm( p, dst, src );
+}
 
 void sse_rsqrtss( struct x86_function *p,
 		  struct x86_reg dst,
@@ -538,6 +590,21 @@ void sse_movlhps( struct x86_function *p,
    emit_modrm( p, dst, src );
 }
 
+void sse_orps( struct x86_function *p,
+               struct x86_reg dst,
+               struct x86_reg src )
+{
+   emit_2ub(p, X86_TWOB, 0x56);
+   emit_modrm( p, dst, src );
+}
+
+void sse_xorps( struct x86_function *p,
+                struct x86_reg dst,
+                struct x86_reg src )
+{
+   emit_2ub(p, X86_TWOB, 0x57);
+   emit_modrm( p, dst, src );
+}
 
 void sse_cvtps2pi( struct x86_function *p,
 		   struct x86_reg dst,
@@ -559,7 +626,7 @@ void sse_cvtps2pi( struct x86_function *p,
 void sse_shufps( struct x86_function *p,
 		 struct x86_reg dest,
 		 struct x86_reg arg0,
-		 GLubyte shuf) 
+		 unsigned char shuf) 
 {
    emit_2ub(p, X86_TWOB, 0xC6);
    emit_modrm(p, dest, arg0);
@@ -569,11 +636,19 @@ void sse_shufps( struct x86_function *p,
 void sse_cmpps( struct x86_function *p,
 		struct x86_reg dest,
 		struct x86_reg arg0,
-		GLubyte cc) 
+		unsigned char cc) 
 {
    emit_2ub(p, X86_TWOB, 0xC2);
    emit_modrm(p, dest, arg0);
    emit_1ub(p, cc); 
+}
+
+void sse_pmovmskb( struct x86_function *p,
+                   struct x86_reg dest,
+                   struct x86_reg src)
+{
+    emit_3ub(p, 0x66, X86_TWOB, 0xD7);
+    emit_modrm(p, dest, src);
 }
 
 /***********************************************************************
@@ -586,11 +661,19 @@ void sse_cmpps( struct x86_function *p,
 void sse2_pshufd( struct x86_function *p,
 		  struct x86_reg dest,
 		  struct x86_reg arg0,
-		  GLubyte shuf) 
+		  unsigned char shuf) 
 {
    emit_3ub(p, 0x66, X86_TWOB, 0x70);
    emit_modrm(p, dest, arg0);
    emit_1ub(p, shuf); 
+}
+
+void sse2_cvttps2dq( struct x86_function *p,
+                     struct x86_reg dst,
+                     struct x86_reg src )
+{
+   emit_3ub( p, 0xF3, X86_TWOB, 0x5B );
+   emit_modrm( p, dst, src );
 }
 
 void sse2_cvtps2dq( struct x86_function *p,
@@ -622,6 +705,14 @@ void sse2_packuswb( struct x86_function *p,
 		    struct x86_reg src )
 {
    emit_3ub(p, 0x66, X86_TWOB, 0x67);
+   emit_modrm( p, dst, src );
+}
+
+void sse2_rcpps( struct x86_function *p,
+                 struct x86_reg dst,
+                 struct x86_reg src )
+{
+   emit_2ub(p, X86_TWOB, 0x53);
    emit_modrm( p, dst, src );
 }
 
@@ -712,11 +803,11 @@ void x87_fclex( struct x86_function *p )
 
 
 static void x87_arith_op( struct x86_function *p, struct x86_reg dst, struct x86_reg arg,
-			  GLubyte dst0ub0,
-			  GLubyte dst0ub1,
-			  GLubyte arg0ub0,
-			  GLubyte arg0ub1,
-			  GLubyte argmem_noreg)
+			  unsigned char dst0ub0,
+			  unsigned char dst0ub1,
+			  unsigned char arg0ub0,
+			  unsigned char arg0ub1,
+			  unsigned char argmem_noreg)
 {
    assert(dst.file == file_x87);
 
@@ -729,7 +820,7 @@ static void x87_arith_op( struct x86_function *p, struct x86_reg dst, struct x86
 	 assert(0);
    }
    else if (dst.idx == 0) {
-      assert(arg.file = file_REG32);
+      assert(arg.file == file_REG32);
       emit_1ub(p, 0xd8);
       emit_modrm_noreg(p, argmem_noreg, arg);
    }
@@ -1056,44 +1147,42 @@ void mmx_movq( struct x86_function *p,
  * account any push/pop activity:
  */
 struct x86_reg x86_fn_arg( struct x86_function *p,
-			   GLuint arg )
+			   unsigned arg )
 {
    return x86_make_disp(x86_make_reg(file_REG32, reg_SP), 
 			p->stack_offset + arg * 4);	/* ??? */
 }
 
 
-/**
- * Initialize an x86_function object, allocating space for up to
- * 'code_size' bytes of code.
- */
-GLboolean x86_init_func( struct x86_function *p, GLuint code_size )
+void x86_init_func( struct x86_function *p )
 {
-   assert(!p->store);
+   p->size = 0;
+   p->store = NULL;
+   p->csr = p->store;
+}
+
+int x86_init_func_size( struct x86_function *p, unsigned code_size )
+{
+   p->size = code_size;
    p->store = _mesa_exec_malloc(code_size);
-   if (p->store) {
-      p->csr = p->store;
-      return GL_TRUE;
-   }
-   else {
-      p->csr = NULL;
-      return GL_FALSE;
-   }
+   p->csr = p->store;
+   return p->store != NULL;
 }
 
 void x86_release_func( struct x86_function *p )
 {
-   if (p->store)
-      _mesa_exec_free(p->store);
-   p->store = p->csr = NULL;
+   _mesa_exec_free(p->store);
+   p->store = NULL;
+   p->csr = NULL;
+   p->size = 0;
 }
 
 
 void (*x86_get_func( struct x86_function *p ))(void)
 {
-   if (DISASSEM)
+   if (DISASSEM && p->store)
       _mesa_printf("disassemble %p %p\n", p->store, p->csr);
-   return (void (*)(void))p->store;
+   return (void (*)(void)) (unsigned long) p->store;
 }
 
 #else

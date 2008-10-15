@@ -28,7 +28,7 @@
  * \author Michal Krol
  */
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
 #include "slang_mem.h"
 
@@ -69,8 +69,31 @@ slang_operation_destruct(slang_operation * oper)
    oper->locals = NULL;
 }
 
+
+/**
+ * Recursively traverse 'oper', replacing occurances of 'oldScope' with
+ * 'newScope' in the oper->locals->outer_scope field.
+ */
+void
+slang_replace_scope(slang_operation *oper,
+                    slang_variable_scope *oldScope,
+                    slang_variable_scope *newScope)
+{
+   GLuint i;
+   if (oper->locals != newScope &&
+       oper->locals->outer_scope == oldScope) {
+      oper->locals->outer_scope = newScope;
+   }
+   for (i = 0; i < oper->num_children; i++) {
+      slang_replace_scope(&oper->children[i], oldScope, newScope);
+   }
+}
+
+
 /**
  * Recursively copy a slang_operation node.
+ * \param x  copy target
+ * \param y  copy source
  * \return GL_TRUE for success, GL_FALSE if failure
  */
 GLboolean
@@ -121,6 +144,14 @@ slang_operation_copy(slang_operation * x, const slang_operation * y)
 #endif
    slang_operation_destruct(x);
    *x = z;
+
+   /* If this operation declares a new scope, we need to make sure
+    * all children point to it, not the original operation's scope!
+    */
+   if (x->type == SLANG_OPER_BLOCK_NEW_SCOPE) {
+      slang_replace_scope(x, y->locals, x->locals);
+   }
+
    return GL_TRUE;
 }
 

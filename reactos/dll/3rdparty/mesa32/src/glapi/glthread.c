@@ -25,11 +25,16 @@
 
 /*
  * XXX There's probably some work to do in order to make this file
- * truly reusable outside of Mesa.  First, the glheader.h include must go.
+ * truly reusable outside of Mesa.
  */
 
 
-#include "glheader.h"
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
 #include "glthread.h"
 
 
