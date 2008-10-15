@@ -1018,7 +1018,7 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	if ( !module.pch || !use_pch )
 		return NULL;
 	return new FileLocation ( IntermediateDirectory,
-	                          module.pch->file->relative_path,
+	                          module.pch->file->relative_path + "/.gch_" + module.name,
 	                          module.pch->file->name + ".gch" );
 }
 
@@ -2081,14 +2081,14 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
 		return;
 
-	if (module.name != "psdk" && 
+	if (module.name != "psdk" &&
 		module.name != "dxsdk")
 	{
 		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
 		dependencies.push_back ( "$(DXSDK_TARGET) $(dxsdk_HEADERS)" );
 	}
 
-	if (module.name != "errcodes" && 
+	if (module.name != "errcodes" &&
 		module.name != "bugcodes" &&
 		module.name != "ntstatus")
 	{
@@ -3139,9 +3139,9 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 
 	vSourceFiles.push_back ( reactosDff );
 
-	/* 
+	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
-		Iso/LiveIso outputs are generated in code base root 
+		Iso/LiveIso outputs are generated in code base root
 	*/
 	string IsoName = module.output->name;
 
@@ -3320,9 +3320,9 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	const FileLocation *isoboot = bootModule->output;
 
-	/* 
+	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
-		Iso/LiveIso outputs are generated in code base root 
+		Iso/LiveIso outputs are generated in code base root
 	*/
 	IsoName = module.output->name;
 
@@ -3435,7 +3435,7 @@ MingwCabinetModuleHandler::Process ()
 	string targetMacro ( GetTargetMacro (module) );
 
 	GenerateRules ();
-	
+
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: $(CABMAN_TARGET) | %s\n",
 	          targetMacro.c_str (),
