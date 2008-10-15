@@ -614,7 +614,7 @@ NdisRegisterProtocol(
 
   if (CharacteristicsLength < MinSize)
     {
-      NDIS_DbgPrint(DEBUG_PROTOCOL, ("Bad protocol characteristics.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Bad protocol characteristics.\n"));
       *Status = NDIS_STATUS_BAD_CHARACTERISTICS;
       return;
     }
@@ -680,7 +680,7 @@ NdisRegisterProtocol(
 
     if(!NT_SUCCESS(NtStatus))
       {
-        NDIS_DbgPrint(MID_TRACE, ("Unable to open protocol configuration\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to open protocol configuration\n"));
         ExFreePool(Protocol);
         *Status = NDIS_STATUS_FAILURE;
         return;
@@ -698,7 +698,7 @@ NdisRegisterProtocol(
     NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, NULL, 0, &ResultLength);
     if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL && NtStatus != STATUS_SUCCESS)
       {
-        NDIS_DbgPrint(MID_TRACE, ("Unable to query the Bind value for size\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value for size\n"));
         ZwClose(DriverKeyHandle);
         ExFreePool(Protocol);
         *Status = NDIS_STATUS_FAILURE;
@@ -800,6 +800,7 @@ NdisRegisterProtocol(
         }
       else if(*Status != NDIS_STATUS_PENDING)
         {
+          NDIS_DbgPrint(MIN_TRACE, ("ProtocolBindAdapter failed with status 0x%x\n", *Status));
           ExFreePool(Protocol);
           ExFreePool(KeyInformation);
           *NdisProtocolHandle = NULL;
