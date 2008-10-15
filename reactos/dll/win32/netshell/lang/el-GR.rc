@@ -98,5 +98,7 @@ BEGIN
 	IDS_FORMAT_GBIT             "%u GBit/s"
 	IDS_DURATION_DAY            "%d Day %s"
 	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_ASSIGNED_DHCP           "Ορίστηκε από το DHCP"
+	IDS_ASSIGNED_MANUAL         "Ορίστηκε χειροκίνητα"
 END
 

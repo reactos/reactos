@@ -284,7 +284,6 @@ ShowNetworkComponentProperties(
 
     pItem = (PNET_ITEM)lvItem.lParam;
     pNCfgComp = (INetCfgComponent*) pItem->pNCfgComp;
-
     hr = INetCfgComponent_RaisePropertyUi(pNCfgComp, GetParent(hwndDlg), NCRP_QUERY_PROPERTY_UI, (IUnknown*)This);
     if (SUCCEEDED(hr))
     {

@@ -105,4 +105,6 @@ BEGIN
 	IDS_FORMAT_GBIT             "%u GBitov/s"
 	IDS_DURATION_DAY            "%d deò %s"
 	IDS_DURATION_DAYS           "%d dní %s"
+	IDS_ASSIGNED_DHCP           "Pridelená DHCP serverom"
+	IDS_ASSIGNED_MANUAL         "Nakonfigurovaná manuálne"
 END

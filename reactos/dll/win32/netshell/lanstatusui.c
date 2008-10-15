@@ -30,8 +30,12 @@ typedef struct
     HWND hwndDlg;               /* status dialog window */
     DWORD dwAdapterIndex;
     UINT_PTR nIDEvent;
+    UINT DHCPEnabled;
     DWORD dwInOctets;
     DWORD dwOutOctets;
+    DWORD IpAddress;
+    DWORD SubnetMask;
+    DWORD Gateway;
     UINT uID;
     UINT Status;
 }LANSTATUSUI_CONTEXT;
@@ -260,10 +264,7 @@ VOID
 InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 {
     WCHAR szBuffer[MAX_PATH] = {0};
-    NETCON_PROPERTIES * pProperties = NULL;
-    DWORD dwSize, dwAdapterIndex, dwResult;
-    LPOLESTR pStr;
-    IP_ADAPTER_INFO * pAdapterInfo;
+    NETCON_PROPERTIES * pProperties;
 
     if (INetConnection_GetProperties(pContext->pNet, &pProperties) != NOERROR)
         return;
@@ -279,52 +280,13 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
 
     SendDlgItemMessageW(hwndDlg, IDC_STATUS, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
-    if (FAILED(StringFromCLSID(&pProperties->guidId, &pStr)))
-    {
-        NcFreeNetconProperties(pProperties);
-        return;
-    }
-    NcFreeNetconProperties(pProperties);
-
-    /* get the IfTable */
-    dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
-    if (dwResult!= ERROR_BUFFER_OVERFLOW)
-    {
-        CoTaskMemFree(pStr);
-        return;
-    }
-
-    pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
-    if (!pAdapterInfo)
-    {
-        CoTaskMemFree(pAdapterInfo);
-        CoTaskMemFree(pStr);
-        return;
-    }
-
-    if (GetAdaptersInfo(pAdapterInfo, &dwSize) != NO_ERROR)
-    {
-        CoTaskMemFree(pAdapterInfo);
-        CoTaskMemFree(pStr);
-        return;
-    }
-
-    if (!GetAdapterIndexFromNetCfgInstanceId(pAdapterInfo, pStr, &dwAdapterIndex))
-    {
-        CoTaskMemFree(pAdapterInfo);
-        CoTaskMemFree(pStr);
-        return;
-    }
-    CoTaskMemFree(pStr);
-    pContext->dwAdapterIndex = dwAdapterIndex;
     pContext->dwInOctets = 0;
     pContext->dwOutOctets = 0;
 
     /* update adapter info */
     pContext->Status = -1;
     UpdateLanStatus(hwndDlg, pContext);
-    CoTaskMemFree(pAdapterInfo);
+    NcFreeNetconProperties(pProperties);
 }
 
 INT_PTR
@@ -336,8 +298,11 @@ LANStatusUiAdvancedDlg(
     LPARAM lParam
 )
 {
+    WCHAR szBuffer[100] = {0};
     PROPSHEETPAGE *page;
     LANSTATUSUI_CONTEXT * pContext;
+    DWORD dwIpAddr;
+
 
     switch(uMsg)
     {
@@ -345,6 +310,31 @@ LANStatusUiAdvancedDlg(
             page = (PROPSHEETPAGE*)lParam;
             pContext = (LANSTATUSUI_CONTEXT*)page->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
+            if (pContext->DHCPEnabled)
+                LoadStringW(netshell_hInstance, IDS_ASSIGNED_DHCP, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
+            else
+                LoadStringW(netshell_hInstance, IDS_ASSIGNED_MANUAL, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
+
+            szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
+            SendDlgItemMessageW(hwndDlg, IDC_DETAILSTYPE, WM_SETTEXT, 0, (LPARAM)szBuffer);
+
+
+            dwIpAddr = ntohl(pContext->IpAddress);
+            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            SendDlgItemMessageW(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)szBuffer);
+
+            dwIpAddr = ntohl(pContext->SubnetMask);
+            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            SendDlgItemMessageW(hwndDlg, IDC_DETAILSSUBNET, WM_SETTEXT, 0, (LPARAM)szBuffer);
+
+            dwIpAddr = ntohl(pContext->Gateway);
+            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            SendDlgItemMessageW(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)szBuffer);
+
+
             return TRUE;
         default:
             break;
@@ -406,6 +396,65 @@ LANStatusUiDlg(
 }
 
 VOID
+InitializePropertyDialog(
+    LANSTATUSUI_CONTEXT * pContext,
+    NETCON_PROPERTIES * pProperties)
+{
+    DWORD dwSize, dwAdapterIndex, dwResult;
+    LPOLESTR pStr;
+    IP_ADAPTER_INFO * pAdapterInfo, *pCurAdapter;
+
+    if (FAILED(StringFromCLSID(&pProperties->guidId, &pStr)))
+    {
+        return;
+    }
+
+    /* get the IfTable */
+    dwSize = 0;
+    dwResult = GetAdaptersInfo(NULL, &dwSize); 
+    if (dwResult!= ERROR_BUFFER_OVERFLOW)
+    {
+        CoTaskMemFree(pStr);
+        return;
+    }
+
+    pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+    if (!pAdapterInfo)
+    {
+        CoTaskMemFree(pAdapterInfo);
+        CoTaskMemFree(pStr);
+        return;
+    }
+
+    if (GetAdaptersInfo(pAdapterInfo, &dwSize) != NO_ERROR)
+    {
+        CoTaskMemFree(pAdapterInfo);
+        CoTaskMemFree(pStr);
+        return;
+    }
+
+    if (!GetAdapterIndexFromNetCfgInstanceId(pAdapterInfo, pStr, &dwAdapterIndex))
+    {
+        CoTaskMemFree(pAdapterInfo);
+        CoTaskMemFree(pStr);
+        return;
+    }
+
+    pCurAdapter = pAdapterInfo;
+    while(pCurAdapter->Index != dwAdapterIndex)
+        pCurAdapter = pCurAdapter->Next;
+
+
+    pContext->IpAddress = inet_addr(pCurAdapter->IpAddressList.IpAddress.String);
+    pContext->SubnetMask = inet_addr(pCurAdapter->IpAddressList.IpMask.String);
+    pContext->Gateway = inet_addr(pCurAdapter->GatewayList.IpAddress.String);
+    pContext->DHCPEnabled = pCurAdapter->DhcpEnabled;
+    CoTaskMemFree(pStr);
+    CoTaskMemFree(pAdapterInfo);
+    pContext->dwAdapterIndex = dwAdapterIndex;
+}
+
+VOID
 ShowStatusPropertyDialog(
     LANSTATUSUI_CONTEXT * pContext,
     HWND hwndDlg)
@@ -428,7 +477,7 @@ ShowStatusPropertyDialog(
             pinfo.pszCaption = pProperties->pszwName;
             pinfo.dwFlags |= PSH_PROPTITLE;
         }
-
+        InitializePropertyDialog(pContext, pProperties);
         if (pProperties->MediaType == NCM_LAN && pProperties->Status == NCS_CONNECTED)
         {
             hppages[0] = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_LAN_NETSTATUS), LANStatusUiDlg, (LPARAM)pContext, NULL);
@@ -449,6 +498,7 @@ ShowStatusPropertyDialog(
         {
             ShowNetConnectionProperties(pContext->pNet, pContext->hwndDlg);
         }
+
         NcFreeNetconProperties(pProperties);
     }
 }

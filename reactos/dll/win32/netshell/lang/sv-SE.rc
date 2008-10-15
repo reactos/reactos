@@ -99,4 +99,6 @@ BEGIN
 	IDS_FORMAT_GBIT             "%u GBit/s"
 	IDS_DURATION_DAY            "%d Day %s"
 	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_ASSIGNED_DHCP           "Assigned by DHCP"
+	IDS_ASSIGNED_MANUAL         "Manually configured"
 END

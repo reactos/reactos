@@ -99,4 +99,6 @@ BEGIN
 	IDS_FORMAT_GBIT             "%u ГБайт/s"
 	IDS_DURATION_DAY            "%d День %s"
 	IDS_DURATION_DAYS           "%d Дней %s"
+	IDS_ASSIGNED_DHCP           "Присвоен DHCP"
+	IDS_ASSIGNED_MANUAL         "Настроен вручную"
 END

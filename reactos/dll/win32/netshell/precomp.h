@@ -14,7 +14,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
+#include <winsock2.h>
 #include <windows.h>
 
 #include <shlguid.h>

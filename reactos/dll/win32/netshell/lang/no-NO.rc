@@ -103,5 +103,7 @@ BEGIN
 	IDS_FORMAT_GBIT             "%u GBit/s"
 	IDS_DURATION_DAY            "%d dag %s"
 	IDS_DURATION_DAYS           "%d dager %s"
+	IDS_ASSIGNED_DHCP           "Tilordnet av DHCP"
+	IDS_ASSIGNED_MANUAL         "Manuelt konfigurert"
 END
 
