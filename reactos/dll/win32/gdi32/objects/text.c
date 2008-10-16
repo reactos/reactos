@@ -365,14 +365,13 @@ GetTextFaceW(HDC hDC,
 {
     INT retValue;
 
-    if (!pFaceName || (pFaceName && nCount))
+    if (pFaceName && !nCount)
     {
-        retValue = NtGdiGetTextFaceW(hDC, nCount, pFaceName, 0);
+        retValue = 0;
     }
     else
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        retValue = 0;
+        retValue = NtGdiGetTextFaceW(hDC, nCount, pFaceName, 0);
     }
 
     return retValue;
