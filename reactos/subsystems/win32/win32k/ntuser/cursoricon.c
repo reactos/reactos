@@ -1850,7 +1850,6 @@ UserShowCursor(BOOL bShow)
     BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
     if ( !BitmapObj )
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
         return showpointer; /* No Mouse */
     }
 
