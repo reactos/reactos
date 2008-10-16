@@ -358,20 +358,24 @@ ExtTextOutW(
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 GetTextFaceW(HDC hDC,
-             int nCount,
-             LPWSTR	lpFaceName)
+             INT nCount,
+             PWSTR pFaceName)
 {
-    INT retValue = 0;
-    if ((!lpFaceName) || (nCount))
+    INT retValue;
+
+    if ((pFaceName && nCount) ||
+        !(pFaceName && nCount))
     {
-        retValue = NtGdiGetTextFaceW(hDC,nCount,lpFaceName,0);
+        retValue = NtGdiGetTextFaceW(hDC, nCount, pFaceName, 0);
     }
     else
     {
         SetLastError(ERROR_INVALID_PARAMETER);
+        retValue = 0;
     }
+
     return retValue;
 }
 
