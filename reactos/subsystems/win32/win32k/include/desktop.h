@@ -198,11 +198,13 @@ static __inline ULONG_PTR
 DesktopHeapGetUserDelta(VOID)
 {
     PW32HEAP_USER_MAPPING Mapping;
+    PTHREADINFO pti;
     HANDLE hDesktopHeap;
     ULONG_PTR Delta = 0;
 
-    ASSERT(PsGetCurrentThreadWin32Thread()->Desktop != NULL);
-    hDesktopHeap = PsGetCurrentThreadWin32Thread()->Desktop->hDesktopHeap;
+    pti = PsGetCurrentThreadWin32Thread();
+    ASSERT(pti->Desktop != NULL);
+    hDesktopHeap = pti->Desktop->hDesktopHeap;
 
     Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     while (Mapping != NULL)

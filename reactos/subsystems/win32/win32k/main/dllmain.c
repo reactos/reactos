@@ -174,7 +174,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
 {
     struct _EPROCESS *Process;
-    PW32THREAD Win32Thread;
+    PTHREADINFO Win32Thread;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kThreadCallback\n");
@@ -190,12 +190,12 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     {
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(W32THREAD),
+                                            sizeof(THREADINFO),
                                             TAG('W', '3', '2', 't'));
 
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
-        RtlZeroMemory(Win32Thread, sizeof(W32THREAD));
+        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
 
         PsSetThreadWin32Thread(Thread, Win32Thread);
         /* FIXME - unlock the process */
@@ -344,11 +344,11 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
   if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(W32THREAD));
+      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(THREADINFO));
       if (Thread->Tcb.Win32Thread == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(W32THREAD));
+      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(THREADINFO));
 
       Win32kThreadCallback(Thread, PsW32ThreadCalloutInitialize);
     }

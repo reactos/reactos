@@ -46,7 +46,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                      WINEVENTPROC Proc);
 
 VOID FASTCALL
-IntCleanupThreadCallbacks(PW32THREAD W32Thread);
+IntCleanupThreadCallbacks(PTHREADINFO W32Thread);
 
 PVOID FASTCALL
 IntCbAllocateMemory(ULONG Size);

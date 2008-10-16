@@ -918,6 +918,7 @@ HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
    NTSTATUS Status;
+   PTHREADINFO pti;
    HWINSTA WinSta;
 
    if(PsGetCurrentProcess() != CsrProcess)
@@ -927,7 +928,8 @@ UserGetProcessWindowStation(VOID)
    else
    {
       DPRINT1("Should use ObFindHandleForObject\n");
-      Status = ObOpenObjectByPointer(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+      pti = PsGetCurrentThreadWin32Thread();
+      Status = ObOpenObjectByPointer(pti->Desktop->WindowStation,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -970,7 +972,7 @@ PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
    PWINSTATION_OBJECT WinStaObj;
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PEPROCESS CurrentProcess;
 
    /*

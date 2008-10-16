@@ -130,12 +130,12 @@ NtUserGetGUIThreadInfo(
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = ((PW32THREAD)Thread->Tcb.Win32Thread)->Desktop;
+      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop;
    }
    else
    {
       /* get the foreground thread */
-      PW32THREAD W32Thread = (PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread;
+      PTHREADINFO W32Thread = (PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread;
       Desktop = W32Thread->Desktop;
       if(Desktop)
       {
@@ -438,7 +438,7 @@ GetW32ThreadInfo(VOID)
     PTEB Teb;
     PW32THREADINFO ti;
     PCLIENTINFO ci;
-    PW32THREAD W32Thread = PsGetCurrentThreadWin32Thread();
+    PTHREADINFO W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread == NULL)
     {
@@ -446,7 +446,7 @@ GetW32ThreadInfo(VOID)
         return NULL;
     }
 
-    /* allocate a W32THREAD structure if neccessary */
+    /* allocate a THREADINFO structure if neccessary */
     if (W32Thread->ThreadInfo == NULL)
     {
         ti = UserHeapAlloc(sizeof(W32THREADINFO));

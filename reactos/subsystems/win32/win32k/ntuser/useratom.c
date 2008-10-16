@@ -33,9 +33,11 @@ RTL_ATOM FASTCALL
 IntAddAtom(LPWSTR AtomName)
 {
    NTSTATUS Status = STATUS_SUCCESS;
+   PTHREADINFO pti;
    RTL_ATOM Atom;
 
-   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
    {
       SetLastNtError(Status);
       return (RTL_ATOM)0;
@@ -55,9 +57,11 @@ ULONG FASTCALL
 IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
 {
    NTSTATUS Status = STATUS_SUCCESS;
+   PTHREADINFO pti;
    ULONG Size = nSize;
 
-   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
    {
       SetLastNtError(Status);
       return 0;

@@ -407,7 +407,7 @@ BOOL UserUnloadKbl(PKBL pKbl)
    return TRUE;
 }
 
-static PKBL co_UserActivateKbl(PW32THREAD w32Thread, PKBL pKbl, UINT Flags)
+static PKBL co_UserActivateKbl(PTHREADINFO w32Thread, PKBL pKbl, UINT Flags)
 {
    PKBL Prev;
 
@@ -444,7 +444,7 @@ UserGetKeyboardLayout(
 {
    NTSTATUS Status;
    PETHREAD Thread;
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    HKL Ret;
 
    if(!dwThreadId)
@@ -523,13 +523,15 @@ NtUserGetKeyboardLayoutName(
 {
    BOOL ret = FALSE;
    PKBL pKbl;
+   PTHREADINFO pti;
 
    UserEnterShared();
 
    _SEH_TRY
    {
       ProbeForWrite(lpszName, KL_NAMELENGTH*sizeof(WCHAR), 1);
-      pKbl = PsGetCurrentThreadWin32Thread()->KeyboardLayout;
+      pti = PsGetCurrentThreadWin32Thread();
+      pKbl = pti->KeyboardLayout;
       RtlCopyMemory(lpszName,  pKbl->Name, KL_NAMELENGTH*sizeof(WCHAR));
       ret = TRUE;
    }
@@ -614,7 +616,7 @@ NtUserActivateKeyboardLayout(
 {
    PKBL pKbl;
    HKL Ret = NULL;
-   PW32THREAD pWThread;
+   PTHREADINFO pWThread;
 
    UserEnterExclusive();
 

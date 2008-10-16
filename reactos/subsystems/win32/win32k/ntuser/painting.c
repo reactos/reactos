@@ -636,7 +636,7 @@ IntIsWindowDirty(PWINDOW_OBJECT Window)
 }
 
 HWND FASTCALL
-IntFindWindowToRepaint(PWINDOW_OBJECT Window, PW32THREAD Thread)
+IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
 {
    HWND hChild;
    PWINDOW_OBJECT TempWindow;
@@ -680,7 +680,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PW32THREAD Thread)
 
 BOOL FASTCALL
 IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
-                   PW32THREAD Thread, MSG *Message, BOOL Remove)
+                   PTHREADINFO Thread, MSG *Message, BOOL Remove)
 {
    PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
 
@@ -721,7 +721,7 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 
    ASSERT_REFS_CO(Window);
 
-   Desktop = ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->Desktop;
+   Desktop = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->Desktop;
    CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 

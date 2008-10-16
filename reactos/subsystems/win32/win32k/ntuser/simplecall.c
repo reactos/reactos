@@ -493,7 +493,7 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
-            PUSER_MESSAGE_QUEUE MsgQueue = ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
+            PUSER_MESSAGE_QUEUE MsgQueue = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
 
             ASSERT(MsgQueue);
             RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));

@@ -105,7 +105,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PW32THREAD)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
+   Status = co_MsqSendMessage(((PTHREADINFO)pEH->Thread->Tcb.Win32Thread)->MessageQueue,
                                            hwnd,
                                           event,
                                               0,

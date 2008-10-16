@@ -580,7 +580,8 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = PsGetCurrentThreadWin32Thread()->Desktop;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PDESKTOP_OBJECT pdo = pti->Desktop;
    if (NULL == pdo)
    {
       DPRINT1("Thread doesn't have a desktop\n");
@@ -782,7 +783,8 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
  */
 BOOL IntRegisterShellHookWindow(HWND hWnd)
 {
-   PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PDESKTOP_OBJECT Desktop = pti->Desktop;
    PSHELL_HOOK_WINDOW Entry;
 
    DPRINT("IntRegisterShellHookWindow\n");
@@ -813,7 +815,8 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
  */
 BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
-   PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PDESKTOP_OBJECT Desktop = pti->Desktop;
    PSHELL_HOOK_WINDOW Current;
 
    LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
@@ -1363,7 +1366,8 @@ NtUserPaintDesktop(HDC hDC)
    COLORREF color_old;
    UINT align_old;
    int mode_old;
-   PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PWINSTATION_OBJECT WinSta = pti->Desktop->WindowStation;
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
@@ -1674,14 +1678,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    {
       /* just return the handle, we queried the desktop handle of a thread running
          in the same context */
-      Ret = ((PW32THREAD)Thread->Tcb.Win32Thread)->hDesktop;
+      Ret = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hDesktop;
       ObDereferenceObject(Thread);
       RETURN(Ret);
    }
 
    /* get the desktop handle and the desktop of the thread */
-   if(!(hThreadDesktop = ((PW32THREAD)Thread->Tcb.Win32Thread)->hDesktop) ||
-         !(DesktopObject = ((PW32THREAD)Thread->Tcb.Win32Thread)->Desktop))
+   if(!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hDesktop) ||
+         !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop))
    {
       ObDereferenceObject(Thread);
       DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);
@@ -1854,7 +1858,7 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
                     IN BOOL FreeOnFailure)
 {
     PDESKTOP_OBJECT OldDesktop;
-    PW32THREAD W32Thread;
+    PTHREADINFO W32Thread;
     NTSTATUS Status;
     BOOL MapHeap;
 

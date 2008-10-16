@@ -72,9 +72,9 @@ PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
 static PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    PHOOK Hook;
-   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue);
+   PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue);
    HANDLE Handle;
 
    if (NULL == Table)
@@ -90,7 +90,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       }
       else
       {
-         MsqSetHooks(((PW32THREAD)Thread->Tcb.Win32Thread)->MessageQueue, Table);
+         MsqSetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue, Table);
       }
    }
 
@@ -106,7 +106,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
 
    if (Thread)
    {
-      W32Thread = ((PW32THREAD)Thread->Tcb.Win32Thread);
+      W32Thread = ((PTHREADINFO)Thread->Tcb.Win32Thread);
       ASSERT(W32Thread != NULL);
       W32Thread->Hooks |= HOOKID_TO_FLAG(HookId);
       if (W32Thread->ThreadInfo != NULL)
@@ -130,7 +130,7 @@ IntGetTable(PHOOK Hook)
       return GlobalHooks;
    }
 
-   return MsqGetHooks(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
+   return MsqGetHooks(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
 }
 
 /* get the first hook in the chain */
@@ -208,7 +208,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
 static VOID
 IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    PHOOKTABLE Table = IntGetTable(Hook);
 
    ASSERT(NULL != Table);
@@ -217,7 +217,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
       return;
    }
 
-   W32Thread = ((PW32THREAD)Hook->Thread->Tcb.Win32Thread);
+   W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
    ASSERT(W32Thread != NULL);
    W32Thread->Hooks &= ~HOOKID_TO_FLAG(Hook->HookId);
    if (W32Thread->ThreadInfo != NULL)
@@ -274,7 +274,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage(((PW32THREAD)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
+   Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
                                     (HWND) Code,
                                    Hook->HookId,
                                          wParam,
@@ -295,7 +295,7 @@ FASTCALL
 co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
    PHOOK Hook, SaveHook;
-   PW32THREAD Win32Thread;
+   PTHREADINFO pti;
    PCLIENTINFO ClientInfo;
    PHOOKTABLE Table;
    LRESULT Result;
@@ -304,14 +304,14 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 
    ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if (NULL == Win32Thread)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (!pti)
    {
       Table = NULL;
    }
    else
    {
-      Table = MsqGetHooks(Win32Thread->MessageQueue);
+      Table = MsqGetHooks(pti->MessageQueue);
    }
 
    if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
@@ -361,7 +361,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      IntReleaseHookChain(MsqGetHooks(PsGetCurrentThreadWin32Thread()->MessageQueue), HookId, WinStaObj);
+      IntReleaseHookChain(MsqGetHooks(pti->MessageQueue), HookId, WinStaObj);
       IntReleaseHookChain(GlobalHooks, HookId, WinStaObj);
       ObDereferenceObject(WinStaObj);
    }
