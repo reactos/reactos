@@ -35,7 +35,7 @@ extern "C" {
 // Win32K Process/Thread Functions
 //
 NTKERNELAPI
-struct _W32THREAD*
+PVOID
 NTAPI
 PsGetCurrentThreadWin32Thread(
     VOID
