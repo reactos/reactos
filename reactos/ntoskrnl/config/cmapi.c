@@ -1307,7 +1307,7 @@ CmDeleteKey(IN PCM_KEY_BODY KeyBody)
 
                 /* Update the write time */
                 KeQuerySystemTime(&Parent->LastWriteTime);
-                KeQuerySystemTime(&Kcb->ParentKcb->KcbLastWriteTime);
+                Kcb->ParentKcb->KcbLastWriteTime = Parent->LastWriteTime;
 
                 /* Release the cell */
                 HvReleaseCell(Hive, ParentCell);
