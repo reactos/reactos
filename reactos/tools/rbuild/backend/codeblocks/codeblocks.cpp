@@ -94,9 +94,9 @@ void CBBackend::Process()
 
 void CBBackend::ProcessModules()
 {
-	for(size_t i = 0; i < ProjectNode.modules.size(); i++)
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module &module = *ProjectNode.modules[i];
+		Module &module = *p->second;
 		MingwAddImplicitLibraries( module );
 		_generate_cbproj ( module );
 	}
@@ -282,9 +282,9 @@ CBBackend::_get_object_files ( const Module& module, vector<string>& out) const
 void
 CBBackend::_clean_project_files ( void )
 {
-	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module& module = *ProjectNode.modules[i];
+		Module& module = *p->second;
 		vector<string> out;
 		printf("Cleaning project %s %s\n", module.name.c_str (), module.output->relative_path.c_str () );
 
@@ -312,9 +312,9 @@ CBBackend::_generate_workspace ( FILE* OUT )
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\r\n" );
 	fprintf ( OUT, "<CodeBlocks_workspace_file>\r\n" );
 	fprintf ( OUT, "\t<Workspace title=\"ReactOS\">\r\n" );
-	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module& module = *ProjectNode.modules[i];
+		Module& module = *p->second;
 
 		if ((module.type != Iso) &&
 			(module.type != LiveIso) &&
@@ -477,9 +477,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 			vars.push_back( variables[i]->name );
 			values.push_back( variables[i]->value );
 		}*/
-		for ( i = 0; i < data.properties.size(); i++ )
+		for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
 		{
-			Property& prop = *data.properties[i];
+			Property& prop = *p->second;
 			if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
 				baseaddr = prop.value;
 		}
@@ -883,20 +883,20 @@ CBBackend::MingwAddImplicitLibraries( Module &module )
 const Property*
 CBBackend::_lookup_property ( const Module& module, const std::string& name ) const
 {
+	std::map<std::string, Property*>::const_iterator p;
+
 	/* Check local values */
-	for ( size_t i = 0; i < module.non_if_data.properties.size(); i++ )
-	{
-		const Property& property = *module.non_if_data.properties[i];
-		if ( property.name == name )
-			return &property;
-	}
+	p = module.non_if_data.properties.find(name);
+
+	if ( p != module.non_if_data.properties.end() )
+		return p->second;
+
 	// TODO FIXME - should we check local if-ed properties?
-	for ( size_t i = 0; i < module.project.non_if_data.properties.size(); i++ )
-	{
-		const Property& property = *module.project.non_if_data.properties[i];
-		if ( property.name == name )
-			return &property;
-	}
+	p = module.project.non_if_data.properties.find(name);
+
+	if ( p != module.project.non_if_data.properties.end() )
+		return p->second;
+
 	// TODO FIXME - should we check global if-ed properties?
 	return NULL;
 }

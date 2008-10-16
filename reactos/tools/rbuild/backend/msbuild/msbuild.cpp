@@ -197,9 +197,9 @@ MsBuildBackend::_generate_sources ( const Module& module )
 
 void MsBuildBackend::ProcessModules()
 {
-	for(size_t i = 0; i < ProjectNode.modules.size(); i++)
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module &module = *ProjectNode.modules[i];
+		Module &module = *p->second;
 		_generate_makefile ( module );
 		_generate_sources ( module );
 	}
@@ -208,9 +208,9 @@ void MsBuildBackend::ProcessModules()
 void
 MsBuildBackend::_clean_project_files ( void )
 {
-	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module& module = *ProjectNode.modules[i];
+		Module& module = *p->second;
 		printf("Cleaning project %s %s\n", module.name.c_str (), module.output->relative_path.c_str () );
 
 		string makefile = module.output->relative_path + "\\makefile";
@@ -230,20 +230,20 @@ MsBuildConfiguration::MsBuildConfiguration ( const std::string &name )
 const Property*
 MsBuildBackend::_lookup_property ( const Module& module, const std::string& name ) const
 {
+	std::map<std::string, Property*>::const_iterator p;
+
 	/* Check local values */
-	for ( size_t i = 0; i < module.non_if_data.properties.size(); i++ )
-	{
-		const Property& property = *module.non_if_data.properties[i];
-		if ( property.name == name )
-			return &property;
-	}
+	p = module.non_if_data.properties.find(name);
+
+	if ( p != module.non_if_data.properties.end() )
+		return p->second;
+
 	// TODO FIXME - should we check local if-ed properties?
-	for ( size_t i = 0; i < module.project.non_if_data.properties.size(); i++ )
-	{
-		const Property& property = *module.project.non_if_data.properties[i];
-		if ( property.name == name )
-			return &property;
-	}
+	p = module.project.non_if_data.properties.find(name);
+
+	if ( p != module.project.non_if_data.properties.end() )
+		return p->second;
+
 	// TODO FIXME - should we check global if-ed properties?
 	return NULL;
 }

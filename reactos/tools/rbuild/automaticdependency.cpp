@@ -286,8 +286,8 @@ AutomaticDependency::~AutomaticDependency ()
 void
 AutomaticDependency::ParseFiles ()
 {
-	for ( size_t i = 0; i < project.modules.size (); i++ )
-		ParseFiles ( *project.modules[i] );
+	for( std::map<std::string, Module*>::const_iterator p = project.modules.begin(); p != project.modules.end(); ++ p )
+		ParseFiles ( *p->second );
 }
 
 void
@@ -455,9 +455,9 @@ void
 AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 {
 	ParseFiles ();
-	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
+	for( std::map<std::string, Module*>::const_iterator p = project.modules.begin(); p != project.modules.end(); ++ p )
 	{
-		Module& module = *project.modules[mi];
+		Module& module = *p->second;
 		CheckAutomaticDependencies ( module, verbose );
 	}
 }

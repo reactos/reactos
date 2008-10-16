@@ -255,9 +255,9 @@ MingwBackend::ProcessModules ()
 	vector<MingwModuleHandler*> v;
 	size_t i;
 
-	for ( i = 0; i < ProjectNode.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
 	{
-		Module& module = *ProjectNode.modules[i];
+		Module& module = *p->second;
 		if ( !module.enabled )
 			continue;
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
@@ -409,11 +409,9 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 	const char* assignmentOperation,
 	const IfableData& data ) const
 {
-	size_t i;
-
-	for ( i = 0; i < data.properties.size(); i++ )
+	for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
 	{
-		Property& prop = *data.properties[i];
+		Property& prop = *p->second;
 
 		if (!prop.isInternal)
 		{
@@ -1055,7 +1053,7 @@ MingwBackend::DetectPCHSupport ()
 			NUL );
 		system ( cmd.c_str () );
 		path += ".gch";
-	
+
 		FILE* f = fopen ( path.c_str (), "rb" );
 		if ( f )
 		{
@@ -1093,9 +1091,9 @@ void
 MingwBackend::GetModuleInstallTargetFiles (
 	vector<FileLocation>& out ) const
 {
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
 	{
-		const Module& module = *ProjectNode.modules[i];
+		const Module& module = *p->second;
 		if ( !module.enabled )
 			continue;
 		if ( module.install )
@@ -1154,9 +1152,9 @@ MingwBackend::GetAliasedModuleOrModule ( const Module& module ) const
 void
 MingwBackend::OutputModuleInstallTargets ()
 {
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
 	{
-		const Module& module = *ProjectNode.modules[i];
+		const Module& module = *p->second;
 		if ( !module.enabled )
 			continue;
 		if ( module.install )
@@ -1241,9 +1239,9 @@ void
 MingwBackend::GetModuleTestTargets (
 	vector<string>& out ) const
 {
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin (); p != ProjectNode.modules.end (); ++ p )
 	{
-		const Module& module = *ProjectNode.modules[i];
+		const Module& module = *p->second;
 		if ( !module.enabled )
 			continue;
 		if ( module.type == Test )

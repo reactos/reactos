@@ -172,7 +172,7 @@ Project::Project ( const Configuration& configuration,
 			if ( !existing )
 			{
 				Property* property = new Property ( *this, NULL, it->first, it->second );
-				non_if_data.properties.push_back (property );
+				non_if_data.properties.insert ( std::make_pair ( property->name, property ) );
 			}
 		}
 	}
@@ -202,13 +202,12 @@ Project::~Project ()
 const Property*
 Project::LookupProperty ( const string& name ) const
 {
-	for ( size_t i = 0; i < non_if_data.properties.size (); i++ )
-	{
-		const Property* property = non_if_data.properties[i];
-		if ( property->name == name )
-			return property;
-	}
-	return NULL;
+	std::map<std::string, Property*>::const_iterator p = non_if_data.properties.find(name);
+
+	if ( p == non_if_data.properties.end () )
+		return NULL;
+
+	return p->second;
 }
 
 string
@@ -253,8 +252,8 @@ Project::ResolveProperties ( const string& s ) const
 void
 Project::ExecuteInvocations ()
 {
-	for ( size_t i = 0; i < modules.size (); i++ )
-		modules[i]->InvokeModule ();
+	for( std::map<std::string, Module*>::const_iterator p = modules.begin(); p != modules.end(); ++ p )
+		p->second->InvokeModule ();
 }
 
 void
@@ -312,8 +311,8 @@ Project::ProcessXML ( const string& path )
 
 	for ( i = 0; i < linkerFlags.size (); i++ )
 		linkerFlags[i]->ProcessXML ();
-	for ( i = 0; i < modules.size (); i++ )
-		modules[i]->ProcessXML ();
+	for( std::map<std::string, Module*>::const_iterator p = modules.begin(); p != modules.end(); ++ p )
+		p->second->ProcessXML ();
 	for ( i = 0; i < cdfiles.size (); i++ )
 		cdfiles[i]->ProcessXML ();
 	for ( i = 0; i < installfiles.size (); i++ )
@@ -414,7 +413,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "property" )
 	{
 		Property* property = new Property ( e, *this, NULL );
-		non_if_data.properties.push_back ( property );
+		non_if_data.properties.insert ( std::make_pair ( property->name, property ) );
 	}
 	if ( subs_invalid && e.subElements.size() )
 	{
@@ -430,25 +429,23 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 Module*
 Project::LocateModule ( const string& name )
 {
-	for ( size_t i = 0; i < modules.size (); i++ )
-	{
-		if (modules[i]->name == name)
-			return modules[i];
-	}
+	std::map<std::string, Module*>::const_iterator p = modules.find(name);
 
-	return NULL;
+	if ( p == modules.end() )
+		return NULL;
+
+	return p->second;
 }
 
 const Module*
 Project::LocateModule ( const string& name ) const
 {
-	for ( size_t i = 0; i < modules.size (); i++ )
-	{
-		if ( modules[i]->name == name )
-			return modules[i];
-	}
+	std::map<std::string, Module*>::const_iterator p = modules.find(name);
 
-	return NULL;
+	if ( p == modules.end() )
+		return NULL;
+
+	return p->second;
 }
 
 const std::string&

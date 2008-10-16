@@ -1191,13 +1191,12 @@ MingwModuleHandler::GenerateGccCommand (
 string
 MingwModuleHandler::GetPropertyValue ( const Module& module, const std::string& name )
 {
-	for ( size_t i = 0; i < module.project.non_if_data.properties.size (); i++ )
-	{
-		const Property& property = *module.project.non_if_data.properties[i];
-		if ( property.name == name )
-			return property.value;
-	}
-	return string ( "" );
+	const Property* property = module.project.LookupProperty(name);
+
+	if (property)
+		return property->value;
+	else
+		return string ( "" );
 }
 
 /* caller needs to delete the returned object */
@@ -2979,9 +2978,9 @@ void
 MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 	const string& bootcdDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3016,9 +3015,9 @@ void
 MingwIsoModuleHandler::GetBootstrapCdDirectories ( vector<FileLocation>& out,
                                                    const string& bootcdDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3061,9 +3060,9 @@ void
 MingwIsoModuleHandler::GetBootstrapCdFiles (
 	vector<FileLocation>& out ) const
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3217,9 +3216,9 @@ void
 MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
                                                       string& reactosDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.install )

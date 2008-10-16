@@ -42,9 +42,9 @@ void
 ProxyMakefile::GenerateProxyMakefiles ( bool verbose,
                                         string outputTree )
 {
-	for ( size_t i = 0; i < project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = project.modules.begin (); p != project.modules.end (); ++ p )
 	{
-		Module& module = *project.modules[i];
+		Module& module = *p->second;
 		if ( !module.enabled )
 			continue;
 		if ( !GenerateProxyMakefile ( module ) )
