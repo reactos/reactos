@@ -352,7 +352,7 @@ RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
     else
     {
         /* Otherwise, try using the real successor */
-        FoundNode = RtlRealSuccessor(Table->TableRoot);
+        FoundNode = RtlRealSuccessor(*RestartKey);
         if (FoundNode) Table->TableRoot = RtlSplay(FoundNode);
     }
 
