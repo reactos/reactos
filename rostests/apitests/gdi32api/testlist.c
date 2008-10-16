@@ -34,6 +34,7 @@
 #include "tests/GetDIBits.c"
 #include "tests/GetObject.c"
 #include "tests/GetStockObject.c"
+#include "tests/GetTextFace.c"
 #include "tests/SelectObject.c"
 #include "tests/SetDCPenColor.c"
 #include "tests/SetMapMode.c"
@@ -74,6 +75,7 @@ TESTENTRY TestList[] =
 	{ L"GetDIBits", Test_GetDIBits },
 	{ L"GetObject", Test_GetObject },
 	{ L"GetStockObject", Test_GetStockObject },
+	{ L"GetTextFace", Test_GetTextFace },
 	{ L"SelectObject", Test_SelectObject },
 	{ L"SetDCPenColor", Test_SetDCPenColor },
 	{ L"SetMapMode", Test_SetMapMode },
