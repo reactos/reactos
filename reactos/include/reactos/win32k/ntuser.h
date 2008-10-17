@@ -312,7 +312,6 @@ typedef struct _W32THREADINFO
     PDESKTOPINFO Desktop;
     PVOID DesktopHeapBase;
     ULONG_PTR DesktopHeapLimit;
-    ULONG_PTR DesktopHeapDelta;
     /* A mask of what hooks are currently active */
     ULONG Hooks;
     CLIENTTHREADINFO ClientThreadInfo;

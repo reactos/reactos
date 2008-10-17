@@ -1768,9 +1768,9 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
             ti->Desktop = NULL;
             ti->DesktopHeapBase = NULL;
             ti->DesktopHeapLimit = 0;
-            ti->DesktopHeapDelta = 0;
         }
     }
+    GetWin32ClientInfo()->ulClientDelta = 0;
 
     return Status;
 }
@@ -1846,9 +1846,9 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
             ti->Desktop = DesktopObject->DesktopInfo;
             ti->DesktopHeapBase = DesktopObject->hDesktopHeap;
             ti->DesktopHeapLimit = ViewSize;
-            ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
         }
     }
+    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
 
     return STATUS_SUCCESS;
 }
@@ -1895,8 +1895,13 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             if (ti != NULL)
             {
                 ti->Desktop = NULL;
-                ti->DesktopHeapDelta = 0;
             }
+        }
+
+        /* Hack for system threads */
+        if (NtCurrentTeb())
+        {
+            GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
         }
 
         if (OldDesktop != NULL &&

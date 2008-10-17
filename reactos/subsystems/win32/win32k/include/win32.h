@@ -28,6 +28,7 @@ typedef struct _THREADINFO
 {
     W32THREAD W32Thread;
     PDESKTOPINFO pDeskInfo;
+    PCLIENTINFO pClientInfo;
     LIST_ENTRY PtiLink;
 
   struct _USER_MESSAGE_QUEUE* MessageQueue;

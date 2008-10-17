@@ -65,12 +65,14 @@ static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
     PW32THREADINFO ti = GetW32ThreadInfo();
+    PCLIENTINFO pci = GetWin32ClientInfo();
+
     ASSERT(Ptr != NULL);
     ASSERT(ti != NULL);
     if ((ULONG_PTR)Ptr >= (ULONG_PTR)ti->DesktopHeapBase &&
         (ULONG_PTR)Ptr < (ULONG_PTR)ti->DesktopHeapBase + ti->DesktopHeapLimit)
     {
-        return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
+        return (PVOID)((ULONG_PTR)Ptr - pci->ulClientDelta);
     }
     else
     {

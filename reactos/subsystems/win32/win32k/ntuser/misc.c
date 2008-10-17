@@ -464,14 +464,12 @@ GetW32ThreadInfo(VOID)
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;
                 ti->DesktopHeapBase = W32Thread->Desktop->DesktopInfo->hKernelHeap;
                 ti->DesktopHeapLimit = W32Thread->Desktop->DesktopInfo->HeapLimit;
-                ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
             }
             else
             {
                 ti->Desktop = NULL;
                 ti->DesktopHeapBase = NULL;
                 ti->DesktopHeapLimit = 0;
-                ti->DesktopHeapDelta = 0;
             }
 
             W32Thread->ThreadInfo = ti;

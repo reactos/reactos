@@ -10,6 +10,8 @@ typedef struct _DESKTOP
     CSHORT Size;
     LIST_ENTRY ListEntry;
 
+    LIST_ENTRY PtiList;
+
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
@@ -203,7 +205,9 @@ DesktopHeapGetUserDelta(VOID)
     ULONG_PTR Delta = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
-    ASSERT(pti->Desktop != NULL);
+    if (!pti->Desktop)
+        return 0;
+
     hDesktopHeap = pti->Desktop->hDesktopHeap;
 
     Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
