@@ -5,15 +5,8 @@
 	<include base="ncpa">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
-	<library>wine</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
-	<library>user32</library>
-	<library>comctl32</library>
-	<library>iphlpapi</library>
-	<library>ws2_32</library>
-	<library>dhcpcsvc</library>
+	<library>shell32</library>
 	<file>ncpa.c</file>
-	<file>tcpip_properties.c</file>
-	<file>ncpa.rc</file>
 </module>
