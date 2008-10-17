@@ -1504,6 +1504,7 @@ static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, 
 DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterInfo, PULONG pOutBufLen)
 {
   HKEY hkey;
+  DWORD dwSize = 0;
   const char *ifName;
   NAME_SERVER_LIST_CONTEXT Context;
   WCHAR keyname[200] = L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
@@ -1535,9 +1536,16 @@ DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterIn
   if (Context.uSizeRequired > Context.uSizeAvailable)
   {
     *pOutBufLen = Context.uSizeRequired;
+    RegCloseKey(hkey);
     return ERROR_BUFFER_OVERFLOW;
   }
 
+  if(RegQueryValueExW(hkey, L"DHCPNameServer", NULL, NULL, NULL, &dwSize) == ERROR_SUCCESS)
+  {
+    pPerAdapterInfo->AutoconfigEnabled = TRUE;
+  }
+
+  RegCloseKey(hkey);
   return NOERROR;
 }
 
