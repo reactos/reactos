@@ -365,7 +365,7 @@ GetTextFaceW(HDC hDC,
 {
     INT retValue;
 
-    if (pFaceName && !nCount)
+    if (pFaceName && nCount <= 0)
     {
         retValue = 0;
     }
