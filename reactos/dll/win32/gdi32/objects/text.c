@@ -363,18 +363,12 @@ GetTextFaceW(HDC hDC,
              INT nCount,
              PWSTR pFaceName)
 {
-    INT retValue;
-
     if (pFaceName && nCount <= 0)
     {
-        retValue = 0;
+        // GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
     }
-    else
-    {
-        retValue = NtGdiGetTextFaceW(hDC, nCount, pFaceName, 0);
-    }
-
-    return retValue;
+    return NtGdiGetTextFaceW(hDC, nCount, pFaceName, FALSE);
 }
 
 
@@ -400,6 +394,25 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
     HeapFree( GetProcessHeap(), 0, nameW );
     return res;
 }
+
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+GetTextFaceAliasW(HDC hdc,
+                  int cChar,
+                  LPWSTR pszOut)
+{
+   if ( pszOut && !cChar )
+   {
+      GdiSetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+   return NtGdiGetTextFaceW(hdc,cChar,pszOut,TRUE);
+}
+
 
 BOOL
 STDCALL
