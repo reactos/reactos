@@ -783,6 +783,7 @@ DriverEntry(
   /* Initialize transport level protocol subsystems */
   Status = RawIPStartup();
   if( !NT_SUCCESS(Status) ) {
+        IPShutdown();
         ChewShutdown();
         IoDeleteDevice(IPDeviceObject);
         IoDeleteDevice(RawIPDeviceObject);
@@ -791,12 +792,13 @@ DriverEntry(
         ExFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
-        IPShutdown();
 	return Status;
   }
 
   Status = UDPStartup();
   if( !NT_SUCCESS(Status) ) {
+        RawIPShutdown();
+        IPShutdown();
         ChewShutdown();
         IoDeleteDevice(IPDeviceObject);
         IoDeleteDevice(RawIPDeviceObject);
@@ -805,13 +807,14 @@ DriverEntry(
         ExFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
-        IPShutdown();
-        RawIPShutdown();
 	return Status;
   }
 
   Status = TCPStartup();
   if( !NT_SUCCESS(Status) ) {
+        UDPShutdown();
+        RawIPShutdown();
+        IPShutdown();
         ChewShutdown();
         IoDeleteDevice(IPDeviceObject);
         IoDeleteDevice(RawIPDeviceObject);
@@ -820,9 +823,6 @@ DriverEntry(
         ExFreePool(EntityList);
         NdisFreePacketPool(GlobalPacketPool);
         NdisFreeBufferPool(GlobalBufferPool);
-        IPShutdown();
-        RawIPShutdown();
-        UDPShutdown();
 	return Status;
   }
 
@@ -842,6 +842,11 @@ DriverEntry(
       NULL,
       0,
       NULL);
+    LANShutdown();
+    TCPShutdown();
+    UDPShutdown();
+    RawIPShutdown();
+    IPShutdown();
     ChewShutdown();
     IoDeleteDevice(IPDeviceObject);
     IoDeleteDevice(RawIPDeviceObject);
@@ -850,11 +855,6 @@ DriverEntry(
     ExFreePool(EntityList);
     NdisFreePacketPool(GlobalPacketPool);
     NdisFreeBufferPool(GlobalBufferPool);
-    IPShutdown();
-    RawIPShutdown();
-    UDPShutdown();
-    TCPShutdown();
-    LANShutdown();
     return Status;
   }
 
@@ -862,6 +862,11 @@ DriverEntry(
   Status = LoopRegisterAdapter(NULL, NULL);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
+    LANShutdown();
+    TCPShutdown();
+    UDPShutdown();
+    RawIPShutdown();
+    IPShutdown();
     ChewShutdown();
     IoDeleteDevice(IPDeviceObject);
     IoDeleteDevice(RawIPDeviceObject);
@@ -870,11 +875,6 @@ DriverEntry(
     ExFreePool(EntityList);
     NdisFreePacketPool(GlobalPacketPool);
     NdisFreeBufferPool(GlobalBufferPool);
-    IPShutdown();
-    RawIPShutdown();
-    UDPShutdown();
-    TCPShutdown();
-    LANShutdown();
     LANUnregisterProtocol();
     return Status;
   }
