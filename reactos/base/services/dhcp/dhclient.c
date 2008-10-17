@@ -450,8 +450,9 @@ dhcpack(struct packet *packet)
 	bind_lease(ip);
 }
 
-void set_name_servers( struct client_lease *new_lease ) {
+void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     if( new_lease->options[DHO_DOMAIN_NAME_SERVERS].len ) {
+        CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
         HKEY RegKey;
         struct iaddr nameserver;
         char *nsbuf;
@@ -462,10 +463,11 @@ void set_name_servers( struct client_lease *new_lease ) {
                addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
         nsbuf[0] = 0;
+        strcat(Buffer, Adapter->DhclientInfo.name);
 
         if( nsbuf && !RegOpenKeyEx
             ( HKEY_LOCAL_MACHINE,
-              "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+              Buffer,
               0, KEY_WRITE, &RegKey ) ) {
             for( i = 0; i < addrs; i++ ) {
                 nameserver.len = sizeof(ULONG);
@@ -567,7 +569,7 @@ bind_lease(struct interface_info *ip)
     if( Adapter )  setup_adapter( Adapter, new_lease );
     else warning("Could not find adapter for info %p\n", ip);
 
-    set_name_servers( new_lease );
+    set_name_servers( Adapter, new_lease );
 
     reinitialize_interfaces();
 }
