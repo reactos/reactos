@@ -964,7 +964,6 @@ BOOLEAN BindAdapter(
     IP_ADDRESS DefaultMask = { 0 };
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
-    HANDLE RegHandle = 0;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
@@ -1007,16 +1006,10 @@ BOOLEAN BindAdapter(
 
     GetName( RegistryPath, &IF->Name );
 
-    Status = OpenRegistryKey( RegistryPath, &RegHandle );
+    Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
 
-    if(NT_SUCCESS(Status)) {
-	Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
-        TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
-                    &IF->Description));
-    } else {
-	IPDestroyInterface( IF );
-	return FALSE;
-    }
+    TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
+                &IF->Description));
 
     DefaultMask.Type = IP_ADDRESS_V4;
 
