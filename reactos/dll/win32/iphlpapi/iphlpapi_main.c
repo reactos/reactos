@@ -1542,7 +1542,7 @@ DWORD WINAPI GetPerAdapterInfo(ULONG IfIndex, PIP_PER_ADAPTER_INFO pPerAdapterIn
 
   if(RegQueryValueExW(hkey, L"DHCPNameServer", NULL, NULL, NULL, &dwSize) == ERROR_SUCCESS)
   {
-    pPerAdapterInfo->AutoconfigEnabled = TRUE;
+    pPerAdapterInfo->AutoconfigActive = TRUE;
   }
 
   RegCloseKey(hkey);

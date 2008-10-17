@@ -2364,6 +2364,11 @@ CopyIpAddrString(
         }
         ZeroMemory(pNew, sizeof(IP_ADDR));
         pNew->IpAddress = GetIpAddressFromStringA(pCurrent->IpAddress.String);
+        if (!pNew->IpAddress)
+        {
+            CoTaskMemFree(pNew);
+            return E_FAIL;
+        }
 
        if (Type == SUBMASK)
        {
