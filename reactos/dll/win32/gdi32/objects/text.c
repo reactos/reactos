@@ -363,11 +363,15 @@ GetTextFaceW(HDC hDC,
              INT nCount,
              PWSTR pFaceName)
 {
+    /* Validate parameters */
     if (pFaceName && nCount <= 0)
     {
+        /* Set last error and return failure */
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
+
+    /* Forward to kernel */
     return NtGdiGetTextFaceW(hDC, nCount, pFaceName, FALSE);
 }
 
