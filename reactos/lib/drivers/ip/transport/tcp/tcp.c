@@ -406,10 +406,9 @@ TimerThread(PVOID Context)
         Timeout.QuadPart = (LONGLONG) (Next - Current) * -1000000; /* 100 ms */
         Status = KeWaitForSingleObject(&TimerLoopEvent, Executive, KernelMode,
                                        FALSE, &Timeout);
-        if (STATUS_SUCCESS == Status) {
-            PsTerminateSystemThread(STATUS_SUCCESS);
+        if (Status != STATUS_TIMEOUT) {
+            PsTerminateSystemThread(Status);
         }
-        ASSERT(STATUS_TIMEOUT == Status);
 
         TcpipRecursiveMutexEnter( &TCPLock, TRUE );
         TimerOskitTCP( Next == NextFast, Next == NextSlow );
