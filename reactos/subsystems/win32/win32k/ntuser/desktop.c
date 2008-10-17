@@ -41,13 +41,13 @@
 static
 VOID
 IntFreeDesktopHeap(
-    IN OUT PDESKTOP_OBJECT Desktop
+    IN OUT PDESKTOP Desktop
 );
 
 /* GLOBALS *******************************************************************/
 
 /* Currently active desktop */
-PDESKTOP_OBJECT InputDesktop = NULL;
+PDESKTOP InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
 BOOL g_PaintDesktopVersion = FALSE;
@@ -90,7 +90,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                       OUT PVOID *Object)
 {
     NTSTATUS Status;
-    PDESKTOP_OBJECT Desktop;
+    PDESKTOP Desktop;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PLIST_ENTRY NextEntry, ListHead;
     PWINSTATION_OBJECT WinStaObject = (PWINSTATION_OBJECT)ParseObject;
@@ -102,7 +102,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     while (NextEntry != ListHead)
     {
         /* Get the current desktop */
-        Desktop = CONTAINING_RECORD(NextEntry, DESKTOP_OBJECT, ListEntry);
+        Desktop = CONTAINING_RECORD(NextEntry, DESKTOP, ListEntry);
 
         /* Get its name */
         DesktopName = GET_DESKTOP_NAME(Desktop);
@@ -155,7 +155,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                             &ObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DESKTOP_OBJECT),
+                            sizeof(DESKTOP),
                             0,
                             0,
                             (PVOID)&Desktop);
@@ -177,7 +177,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 VOID STDCALL
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
-   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)Parameters->Object;
+   PDESKTOP Desktop = (PDESKTOP)Parameters->Object;
 
    DPRINT("Deleting desktop (0x%X)\n", Desktop);
 
@@ -194,7 +194,7 @@ FASTCALL
 InitDesktopImpl(VOID)
 {
     /* Set Desktop Object Attributes */
-    ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
+    ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP);
     ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
     return STATUS_SUCCESS;
 }
@@ -420,7 +420,7 @@ IntValidateDesktopHandle(
    HDESK Desktop,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PDESKTOP_OBJECT *Object)
+   PDESKTOP *Object)
 {
    NTSTATUS Status;
 
@@ -439,7 +439,7 @@ IntValidateDesktopHandle(
 }
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
+IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect)
 {
    PRECT Ret;
 
@@ -468,7 +468,7 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
    }
 }
 
-PDESKTOP_OBJECT FASTCALL
+PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID)
 {
    return InputDesktop;
@@ -478,7 +478,7 @@ IntGetActiveDesktop(VOID)
  * returns or creates a handle to the desktop object
  */
 HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
 {
    NTSTATUS Status;
    HDESK Ret;
@@ -516,7 +516,7 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
    if (!pdo)
    {
       DPRINT("No active desktop\n");
@@ -529,7 +529,7 @@ VOID FASTCALL
 IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 {
    PUSER_MESSAGE_QUEUE Old;
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
    if (!pdo)
    {
       DPRINT("No active desktop\n");
@@ -555,7 +555,7 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 
 HWND FASTCALL IntGetDesktopWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
    if (!pdo)
    {
       DPRINT("No active desktop\n");
@@ -566,7 +566,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 
 PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
 
    if (!pdo)
    {
@@ -581,7 +581,7 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP_OBJECT pdo = pti->Desktop;
+   PDESKTOP pdo = pti->Desktop;
    if (NULL == pdo)
    {
       DPRINT1("Thread doesn't have a desktop\n");
@@ -648,7 +648,7 @@ UserRedrawDesktop()
 
 
 NTSTATUS FASTCALL
-co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
 {
    CSR_API_MESSAGE Request;
 
@@ -661,7 +661,7 @@ co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 }
 
 NTSTATUS FASTCALL
-IntHideDesktop(PDESKTOP_OBJECT Desktop)
+IntHideDesktop(PDESKTOP Desktop)
 {
 #if 0
    CSRSS_API_REQUEST Request;
@@ -693,7 +693,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 
 static
 HWND* FASTCALL
-UserBuildShellHookHwndList(PDESKTOP_OBJECT Desktop)
+UserBuildShellHookHwndList(PDESKTOP Desktop)
 {
    ULONG entries=0;
    PSHELL_HOOK_WINDOW Current;
@@ -726,7 +726,7 @@ UserBuildShellHookHwndList(PDESKTOP_OBJECT Desktop)
  */
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 {
-   PDESKTOP_OBJECT Desktop = IntGetActiveDesktop();
+   PDESKTOP Desktop = IntGetActiveDesktop();
    HWND* HwndList;
 
    static UINT MsgType = 0;
@@ -784,7 +784,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 BOOL IntRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP_OBJECT Desktop = pti->Desktop;
+   PDESKTOP Desktop = pti->Desktop;
    PSHELL_HOOK_WINDOW Entry;
 
    DPRINT("IntRegisterShellHookWindow\n");
@@ -816,7 +816,7 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
 BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP_OBJECT Desktop = pti->Desktop;
+   PDESKTOP Desktop = pti->Desktop;
    PSHELL_HOOK_WINDOW Current;
 
    LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
@@ -833,7 +833,7 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 }
 
 static VOID
-IntFreeDesktopHeap(IN OUT PDESKTOP_OBJECT Desktop)
+IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 {
     if (Desktop->DesktopHeapSection != NULL)
     {
@@ -886,7 +886,7 @@ NtUserCreateDesktop(
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    PWINSTATION_OBJECT WinStaObject;
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    UNICODE_STRING DesktopName;
    NTSTATUS Status;
    HDESK Desktop;
@@ -1219,7 +1219,7 @@ NtUserOpenInputDesktop(
    BOOL fInherit,
    ACCESS_MASK dwDesiredAccess)
 {
-   PDESKTOP_OBJECT Object;
+   PDESKTOP Object;
    NTSTATUS Status;
    HDESK Desktop;
    DECLARE_RETURN(HDESK);
@@ -1296,7 +1296,7 @@ CLEANUP:
 BOOL STDCALL
 NtUserCloseDesktop(HDESK hDesktop)
 {
-   PDESKTOP_OBJECT Object;
+   PDESKTOP Object;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
@@ -1571,7 +1571,7 @@ CLEANUP:
 BOOL STDCALL
 NtUserSwitchDesktop(HDESK hDesktop)
 {
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
@@ -1653,7 +1653,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 {
    NTSTATUS Status;
    PETHREAD Thread;
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    HDESK Ret, hThreadDesktop;
    OBJECT_HANDLE_INFORMATION HandleInformation;
    DECLARE_RETURN(HDESK);
@@ -1728,7 +1728,7 @@ CLEANUP:
 }
 
 static NTSTATUS
-IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
+IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
@@ -1776,7 +1776,7 @@ IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
 }
 
 static NTSTATUS
-IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
+IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
@@ -1854,10 +1854,10 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
 }
 
 BOOL
-IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
+IntSetThreadDesktop(IN PDESKTOP DesktopObject,
                     IN BOOL FreeOnFailure)
 {
-    PDESKTOP_OBJECT OldDesktop;
+    PDESKTOP OldDesktop;
     PTHREADINFO W32Thread;
     NTSTATUS Status;
     BOOL MapHeap;
@@ -1942,7 +1942,7 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
 BOOL STDCALL
 NtUserSetThreadDesktop(HDESK hDesktop)
 {
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 

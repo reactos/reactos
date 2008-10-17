@@ -4,7 +4,7 @@
 #include "msgqueue.h"
 #include "window.h"
 
-typedef struct _DESKTOP_OBJECT
+typedef struct _DESKTOP
 {
     CSHORT Type;
     CSHORT Size;
@@ -26,9 +26,9 @@ typedef struct _DESKTOP_OBJECT
     HANDLE hDesktopHeap;
     PSECTION_OBJECT DesktopHeapSection;
     PDESKTOPINFO DesktopInfo;
-} DESKTOP_OBJECT, *PDESKTOP_OBJECT;
+} DESKTOP, *PDESKTOP;
 
-extern PDESKTOP_OBJECT InputDesktop;
+extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PWINDOWCLASS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
@@ -63,7 +63,7 @@ VOID STDCALL
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
+IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect);
 
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -86,19 +86,19 @@ IntGetFocusMessageQueue(VOID);
 VOID FASTCALL
 IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
 
-PDESKTOP_OBJECT FASTCALL
+PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID);
 
 NTSTATUS FASTCALL
-co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height);
 
 NTSTATUS FASTCALL
-IntHideDesktop(PDESKTOP_OBJECT Desktop);
+IntHideDesktop(PDESKTOP Desktop);
 
 HDESK FASTCALL
-IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
 
-BOOL IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
+BOOL IntSetThreadDesktop(IN PDESKTOP DesktopObject,
                          IN BOOL FreeOnFailure);
 
 NTSTATUS FASTCALL
@@ -106,7 +106,7 @@ IntValidateDesktopHandle(
    HDESK Desktop,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PDESKTOP_OBJECT *Object);
+   PDESKTOP *Object);
 
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,

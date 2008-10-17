@@ -1575,7 +1575,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   PDESKTOP_OBJECT desk;
+   PDESKTOP desk;
 
    /* remove the message queue from any desktops */
    if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))

@@ -755,7 +755,7 @@ NtUserGetObjectInformation(
    PDWORD nLengthNeeded)
 {
    PWINSTATION_OBJECT WinStaObject = NULL;
-   PDESKTOP_OBJECT DesktopObject = NULL;
+   PDESKTOP DesktopObject = NULL;
    NTSTATUS Status;
    PVOID pvData = NULL;
    DWORD nDataSize = 0;
@@ -1367,7 +1367,7 @@ BuildDesktopNameList(
    PWINSTATION_OBJECT WindowStation;
    KIRQL OldLevel;
    PLIST_ENTRY DesktopEntry;
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    DWORD EntryCount;
    ULONG ReturnLength;
    WCHAR NullWchar;
@@ -1392,7 +1392,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       ReturnLength += ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + sizeof(WCHAR);
       EntryCount++;
    }
@@ -1435,7 +1435,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       Status = MmCopyToCaller(lpBuffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length);
       if (! NT_SUCCESS(Status))
       {

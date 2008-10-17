@@ -101,7 +101,7 @@ NtUserGetGUIThreadInfo(
    NTSTATUS Status;
    PTHRDCARETINFO CaretInfo;
    GUITHREADINFO SafeGui;
-   PDESKTOP_OBJECT Desktop;
+   PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
    PETHREAD Thread = NULL;
    DECLARE_RETURN(BOOLEAN);

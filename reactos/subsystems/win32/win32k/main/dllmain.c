@@ -243,7 +243,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         if (hDesk != NULL)
         {
-          PDESKTOP_OBJECT DesktopObject;
+          PDESKTOP DesktopObject;
           Win32Thread->Desktop = NULL;
           Status = ObReferenceObjectByHandle(hDesk,
                                              0,

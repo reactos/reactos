@@ -466,7 +466,7 @@ IntSystemParametersInfo(
          {
             RECT *rc;
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP_OBJECT Desktop = pti->Desktop;
+            PDESKTOP Desktop = pti->Desktop;
 
             if(!Desktop)
             {
@@ -484,7 +484,7 @@ IntSystemParametersInfo(
       case SPI_GETWORKAREA:
          {
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP_OBJECT Desktop = pti->Desktop;
+            PDESKTOP Desktop = pti->Desktop;
 
             if(!Desktop)
             {

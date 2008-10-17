@@ -32,7 +32,7 @@ typedef struct _THREADINFO
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   struct _KBL* KeyboardLayout;
-  struct _DESKTOP_OBJECT* Desktop;
+  struct _DESKTOP* Desktop;
   HANDLE hDesktop;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;

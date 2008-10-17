@@ -116,7 +116,7 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY LocalDispatchingMessagesHead;
 
   /* Desktop that the message queue is attached to */
-  struct _DESKTOP_OBJECT *Desktop;
+  struct _DESKTOP *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 BOOL FASTCALL

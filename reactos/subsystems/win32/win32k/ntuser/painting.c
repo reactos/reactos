@@ -714,7 +714,7 @@ static
 HWND FASTCALL
 co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 {
-   PDESKTOP_OBJECT Desktop;
+   PDESKTOP Desktop;
    PTHRDCARETINFO CaretInfo;
    HWND hWndCaret;
    PWINDOW_OBJECT WndCaret;

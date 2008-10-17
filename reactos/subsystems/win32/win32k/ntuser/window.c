@@ -753,7 +753,7 @@ HWND FASTCALL
 IntGetFocusWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE Queue;
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
 
    if( !pdo )
       return NULL;
@@ -1229,7 +1229,7 @@ NtUserBuildHwndList(
 
    if (hwndParent || !dwThreadId)
    {
-      PDESKTOP_OBJECT Desktop;
+      PDESKTOP Desktop;
       PWINDOW_OBJECT Parent, Window;
 
       if(!hwndParent)
