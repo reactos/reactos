@@ -3195,7 +3195,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->Desktop) ((PDESKTOP)ti->Desktop)->hShellWindow = hwndShell;
+   if (ti->Desktop) ti->Desktop->hShellWindow = hwndShell;
 
    UserDerefObjectCo(WndShell);
 

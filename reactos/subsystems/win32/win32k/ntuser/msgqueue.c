@@ -520,7 +520,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
-   PDESKTOP Desk = NULL;
+   PDESKTOPINFO Desk = NULL;
 
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;

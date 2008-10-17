@@ -35,7 +35,7 @@ typedef struct _USER_OBJHDR
     HANDLE Handle;
 } USER_OBJHDR, PUSER_OBJHDR;
 
-typedef struct _DESKTOP
+typedef struct _DESKTOPINFO
 {
     HANDLE hKernelHeap;
     ULONG_PTR HeapLimit;
@@ -54,7 +54,7 @@ typedef struct _DESKTOP
     };
 
     WCHAR szDesktopName[1];
-} DESKTOP, *PDESKTOP;
+} DESKTOPINFO, *PDESKTOPINFO;
 
 typedef struct _CALLPROC
 {
@@ -70,7 +70,7 @@ typedef struct _WINDOWCLASS
     struct _WINDOWCLASS *Next;
     struct _WINDOWCLASS *Clone;
     struct _WINDOWCLASS *Base;
-    PDESKTOP Desktop;
+    PDESKTOPINFO Desktop;
     RTL_ATOM Atom;
     ULONG Windows;
 
@@ -309,7 +309,7 @@ typedef struct _W32THREADINFO
 {
     PW32PROCESSINFO pi; /* [USER] */
     PW32PROCESSINFO kpi; /* [KERNEL] */
-    PDESKTOP Desktop;
+    PDESKTOPINFO Desktop;
     PVOID DesktopHeapBase;
     ULONG_PTR DesktopHeapLimit;
     ULONG_PTR DesktopHeapDelta;

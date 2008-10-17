@@ -1620,7 +1620,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Action == UIS_INITIALIZE)
             {
-                PDESKTOP Desk = GetThreadDesktopInfo();
+                PDESKTOPINFO Desk = GetThreadDesktopInfo();
                 if (Desk == NULL)
                     break;
 
@@ -1702,7 +1702,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Action == UIS_INITIALIZE)
             {
-                PDESKTOP Desk = GetThreadDesktopInfo();
+                PDESKTOPINFO Desk = GetThreadDesktopInfo();
                 if (Desk == NULL)
                     break;
 

@@ -96,11 +96,11 @@ IsThreadHooked(PW32THREADINFO ti)
     return ti->Hooks != 0;
 }
 
-static __inline PDESKTOP
+static __inline PDESKTOPINFO
 GetThreadDesktopInfo(VOID)
 {
     PW32THREADINFO ti;
-    PDESKTOP di = NULL;
+    PDESKTOPINFO di = NULL;
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)

@@ -395,7 +395,7 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 static PWINDOWCLASS
 IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                       IN OUT PWINDOWCLASS *ClassLink,
-                      IN PDESKTOP Desktop)
+                      IN PDESKTOPINFO Desktop)
 {
     SIZE_T ClassSize;
     PWINDOWCLASS Class;
@@ -502,7 +502,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
 PWINDOWCLASS
 IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
                   IN OUT PWINDOWCLASS *ClassLink,
-                  IN PDESKTOP Desktop)
+                  IN PDESKTOPINFO Desktop)
 {
     PWINDOWCLASS Class;
 
@@ -563,7 +563,7 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
-                    IN PDESKTOP Desktop,
+                    IN PDESKTOPINFO Desktop,
                     IN PW32PROCESSINFO pi)
 {
     PWINDOWCLASS *PrevLink, BaseClass, CurrentClass;
@@ -680,7 +680,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 }
 
 static VOID
-IntCheckDesktopClasses(IN PDESKTOP Desktop,
+IntCheckDesktopClasses(IN PDESKTOPINFO Desktop,
                        IN OUT PWINDOWCLASS *ClassList,
                        IN BOOL FreeOnFailure,
                        OUT BOOL *Ret)
@@ -749,7 +749,7 @@ IntCheckDesktopClasses(IN PDESKTOP Desktop,
 }
 
 BOOL
-IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
+IntCheckProcessDesktopClasses(IN PDESKTOPINFO Desktop,
                               IN BOOL FreeOnFailure)
 {
     PW32PROCESSINFO pi;
@@ -792,7 +792,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING MenuName,
                IN WNDPROC wpExtra,
                IN DWORD dwFlags,
-               IN PDESKTOP Desktop,
+               IN PDESKTOPINFO Desktop,
                IN PW32PROCESSINFO pi)
 {
     SIZE_T ClassSize;

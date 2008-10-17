@@ -23,15 +23,15 @@ WNDPROC
 GetCallProcHandle(IN PCALLPROC CallProc);
 
 VOID
-DestroyCallProc(IN PDESKTOP Desktop,
+DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROC CallProc);
 
 PCALLPROC
-CloneCallProc(IN PDESKTOP Desktop,
+CloneCallProc(IN PDESKTOPINFO Desktop,
               IN PCALLPROC CallProc);
 
 PCALLPROC
-CreateCallProc(IN PDESKTOP Desktop,
+CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PW32PROCESSINFO pi);
@@ -46,11 +46,11 @@ DestroyProcessClasses(PW32PROCESS Process );
 PWINDOWCLASS
 IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
                   IN OUT PWINDOWCLASS *ClassLink,
-                  IN PDESKTOP Desktop);
+                  IN PDESKTOPINFO Desktop);
 
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
-                    IN PDESKTOP Desktop,
+                    IN PDESKTOPINFO Desktop,
                     IN PW32PROCESSINFO pi);
 
 RTL_ATOM
@@ -95,7 +95,7 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
                            OUT RTL_ATOM *Atom);
 
 BOOL
-IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
+IntCheckProcessDesktopClasses(IN PDESKTOPINFO Desktop,
                               IN BOOL FreeOnFailure);
 
 #endif /* _WIN32K_CLASS_H */

@@ -703,7 +703,7 @@ SetShellWindow(HWND hwndShell)
 HWND STDCALL
 GetShellWindow(VOID)
 {
-   PDESKTOP pdi;
+   PDESKTOPINFO pdi;
    pdi = GetThreadDesktopInfo();
    if (pdi) return pdi->hShellWindow;
    return NULL;

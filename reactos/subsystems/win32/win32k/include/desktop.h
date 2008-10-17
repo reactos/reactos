@@ -25,7 +25,7 @@ typedef struct _DESKTOP_OBJECT
 
     HANDLE hDesktopHeap;
     PSECTION_OBJECT DesktopHeapSection;
-    PDESKTOP DesktopInfo;
+    PDESKTOPINFO DesktopInfo;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 extern PDESKTOP_OBJECT InputDesktop;
@@ -134,7 +134,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 
 
 static __inline PVOID
-DesktopHeapAlloc(IN PDESKTOP Desktop,
+DesktopHeapAlloc(IN PDESKTOPINFO Desktop,
                  IN SIZE_T Bytes)
 {
     return RtlAllocateHeap(Desktop->hKernelHeap,
@@ -143,7 +143,7 @@ DesktopHeapAlloc(IN PDESKTOP Desktop,
 }
 
 static __inline BOOL
-DesktopHeapFree(IN PDESKTOP Desktop,
+DesktopHeapFree(IN PDESKTOPINFO Desktop,
                 IN PVOID lpMem)
 {
     return RtlFreeHeap(Desktop->hKernelHeap,
@@ -152,7 +152,7 @@ DesktopHeapFree(IN PDESKTOP Desktop,
 }
 
 static __inline PVOID
-DesktopHeapReAlloc(IN PDESKTOP Desktop,
+DesktopHeapReAlloc(IN PDESKTOPINFO Desktop,
                    IN PVOID lpMem,
                    IN SIZE_T Bytes)
 {

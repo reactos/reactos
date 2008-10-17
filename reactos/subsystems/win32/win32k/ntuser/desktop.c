@@ -991,7 +991,7 @@ NtUserCreateDesktop(
        RETURN(NULL);
    }
 
-   DesktopInfoSize = FIELD_OFFSET(DESKTOP,
+   DesktopInfoSize = FIELD_OFFSET(DESKTOPINFO,
                                   szDesktopName[(lpszDesktopName->Length / sizeof(WCHAR)) + 1]);
 
    DesktopObject->DesktopInfo = RtlAllocateHeap(DesktopObject->hDesktopHeap,
