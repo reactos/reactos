@@ -125,8 +125,12 @@ void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
     PWCHAR NameServerString =
 	QueryRegistryValueString(RegHandle, L"NameServer");
-    /* Now, count the non-empty comma separated */
+
+    if (!NameServerString)
+		NameServerString = QueryRegistryValueString(RegHandle, L"DhcpNameServer");
+
     if (NameServerString) {
+    /* Now, count the non-empty comma separated */
 	DWORD ch;
 	DWORD LastNameStart = 0;
 	for (ch = 0; NameServerString[ch]; ch++) {
