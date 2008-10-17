@@ -365,7 +365,7 @@ GetTextFaceW(HDC hDC,
 {
     if (pFaceName && nCount <= 0)
     {
-        // GdiSetLastError(ERROR_INVALID_PARAMETER);
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
     return NtGdiGetTextFaceW(hDC, nCount, pFaceName, FALSE);
