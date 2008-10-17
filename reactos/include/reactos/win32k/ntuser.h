@@ -315,9 +315,6 @@ typedef struct _W32THREADINFO
     ULONG_PTR DesktopHeapDelta;
     /* A mask of what hooks are currently active */
     ULONG Hooks;
-    /* Application compatibility flags */
-    DWORD AppCompatFlags;
-    DWORD AppCompatFlags2;
     CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
