@@ -313,6 +313,7 @@ PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
    PMENU_OBJECT Menu;
+   PW32PROCESS CurrentWin32Process;
 
    Menu = (PMENU_OBJECT)UserCreateObject(
              gHandleTable, Handle,
@@ -346,7 +347,8 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuItemList = NULL;
 
    /* Insert menu item into process menu handle list */
-   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry);
+   CurrentWin32Process = PsGetCurrentProcessWin32Process();
+   InsertTailList(&CurrentWin32Process->MenuListHead, &Menu->ListEntry);
 
    return Menu;
 }
@@ -416,6 +418,7 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
 PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source)
 {
+   PW32PROCESS CurrentWin32Process;
    HANDLE hMenu;
    PMENU_OBJECT Menu;
 
@@ -450,7 +453,8 @@ IntCloneMenu(PMENU_OBJECT Source)
    Menu->MenuItemList = NULL;
 
    /* Insert menu item into process menu handle list */
-   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry);
+   CurrentWin32Process = PsGetCurrentProcessWin32Process();
+   InsertTailList(&CurrentWin32Process->MenuListHead, &Menu->ListEntry);
 
    IntCloneMenuItems(Menu, Source);
 

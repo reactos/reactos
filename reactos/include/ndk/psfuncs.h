@@ -42,7 +42,7 @@ PsGetCurrentThreadWin32Thread(
 );
 
 NTKERNELAPI
-struct _W32PROCESS*
+PVOID
 NTAPI
 PsGetCurrentProcessWin32Process(
     VOID

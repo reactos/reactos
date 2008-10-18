@@ -1732,10 +1732,14 @@ static NTSTATUS
 IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
+    PW32PROCESS CurrentWin32Process;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("DO %p\n");
+
+    CurrentWin32Process = PsGetCurrentProcessWin32Process();
+    PrevLink = &CurrentWin32Process->HeapMappings.Next;
 
     /* unmap if we're the last thread using the desktop */
     HeapMapping = *PrevLink;
@@ -1780,11 +1784,15 @@ static NTSTATUS
 IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
+    PW32PROCESS CurrentWin32Process;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     PVOID UserBase = NULL;
     SIZE_T ViewSize = 0;
     LARGE_INTEGER Offset;
     NTSTATUS Status;
+
+    CurrentWin32Process = PsGetCurrentProcessWin32Process();
+    PrevLink = &CurrentWin32Process->HeapMappings.Next;
 
     /* find out if another thread already mapped the desktop heap */
     HeapMapping = *PrevLink;
