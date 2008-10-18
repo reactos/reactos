@@ -3301,7 +3301,7 @@ NTAPI
 ObIsKernelHandle(IN HANDLE Handle)
 {
     /* We know we're kernel mode, so just check for the kernel handle flag */
-    return (BOOLEAN)((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG);
+    return (BOOLEAN)(((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG) != 0);
 }
 
 /* EOF */
