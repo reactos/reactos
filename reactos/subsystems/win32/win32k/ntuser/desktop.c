@@ -1022,6 +1022,7 @@ NtUserCreateDesktop(
    IntGetDesktopWorkArea(DesktopObject, NULL);
 
    /* Initialize some local (to win32k) desktop state. */
+   InitializeListHead(&DesktopObject->PtiList);
    DesktopObject->ActiveMessageQueue = NULL;
    ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
@@ -1918,9 +1919,14 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             return FALSE;
         }
 
+        /* Remove the thread from the old desktop's list */
+        RemoveEntryList(&W32Thread->PtiLink);
+
         if (DesktopObject != NULL)
         {
             ObReferenceObject(DesktopObject);
+            /* Insert into new desktop's list */
+            InsertTailList(&DesktopObject->PtiList, &W32Thread->PtiLink);
         }
 
         if (OldDesktop != NULL)

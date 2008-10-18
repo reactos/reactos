@@ -27,6 +27,7 @@ typedef struct _W32THREAD
 typedef struct _THREADINFO
 {
     W32THREAD W32Thread;
+    PVOID ppi; // FIXME: use PPROCESSINFO
     PDESKTOPINFO pDeskInfo;
     PCLIENTINFO pClientInfo;
     LIST_ENTRY PtiLink;

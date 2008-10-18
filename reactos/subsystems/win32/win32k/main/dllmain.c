@@ -212,6 +212,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       InitializeListHead(&Win32Thread->WindowListHead);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
+      InitializeListHead(&Win32Thread->PtiLink);
 
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
@@ -268,6 +269,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->IsExiting = FALSE;
       co_IntDestroyCaret(Win32Thread);
+      Win32Thread->ppi = PsGetCurrentProcessWin32Process();
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       if (Win32Thread->ThreadInfo)
