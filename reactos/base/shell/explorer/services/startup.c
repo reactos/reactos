@@ -390,6 +390,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     }
 
     free(szValue);
+    free(szCmdLine);
     res=ERROR_SUCCESS;
 
 end:
