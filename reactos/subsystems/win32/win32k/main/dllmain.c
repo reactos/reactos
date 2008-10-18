@@ -203,6 +203,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
   if (Type == PsW32ThreadCalloutInitialize)
     {
       HWINSTA hWinSta = NULL;
+      PTEB pTeb;
       HDESK hDesk = NULL;
       NTSTATUS Status;
       PUNICODE_STRING DesktopPath;
@@ -270,6 +271,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->IsExiting = FALSE;
       co_IntDestroyCaret(Win32Thread);
       Win32Thread->ppi = PsGetCurrentProcessWin32Process();
+      pTeb = NtCurrentTeb();
+      if (pTeb)
+          Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       if (Win32Thread->ThreadInfo)
