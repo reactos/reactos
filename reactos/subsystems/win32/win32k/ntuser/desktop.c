@@ -1914,7 +1914,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
         }
 
         if (OldDesktop != NULL &&
-            !IntCheckProcessDesktopClasses(OldDesktop->DesktopInfo,
+            !IntCheckProcessDesktopClasses(OldDesktop,
                                            FreeOnFailure))
         {
             DPRINT1("Failed to move process classes to shared heap!\n");

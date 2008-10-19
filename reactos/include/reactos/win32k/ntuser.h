@@ -73,7 +73,6 @@ typedef struct _WINDOWCLASS
     struct _WINDOWCLASS *Next;
     struct _WINDOWCLASS *Clone;
     struct _WINDOWCLASS *Base;
-    PDESKTOPINFO Desktop;
     struct _DESKTOP *rpdeskParent;
     RTL_ATOM Atom;
     ULONG Windows;

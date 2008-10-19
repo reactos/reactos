@@ -85,9 +85,9 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
     }
 
     /* free the structure */
-    if (Class->Desktop != NULL)
+    if (Class->rpdeskParent != NULL)
     {
-        DesktopHeapFree(Class->Desktop,
+        DesktopHeapFree(Class->rpdeskParent,
                         Class);
     }
     else
@@ -395,7 +395,7 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 static PWINDOWCLASS
 IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                       IN OUT PWINDOWCLASS *ClassLink,
-                      IN PDESKTOPINFO Desktop)
+                      IN PDESKTOP Desktop)
 {
     SIZE_T ClassSize;
     PWINDOWCLASS Class;
@@ -403,7 +403,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     ASSERT(Desktop != NULL);
     ASSERT(BaseClass->Base == BaseClass);
 
-    if (BaseClass->Desktop == Desktop)
+    if (BaseClass->rpdeskParent == Desktop)
     {
         /* it is most likely that a window is created on the same
            desktop as the window class. */
@@ -411,7 +411,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
         return BaseClass;
     }
 
-    if (BaseClass->Desktop == NULL)
+    if (BaseClass->rpdeskParent == NULL)
     {
         ASSERT(BaseClass->Windows == 0);
         ASSERT(BaseClass->Clone == NULL);
@@ -430,7 +430,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
         Class = BaseClass->Clone;
         while (Class != NULL)
         {
-            if (Class->Desktop == Desktop)
+            if (Class->rpdeskParent == Desktop)
             {
                 ASSERT(Class->Base == BaseClass);
                 ASSERT(Class->Clone == NULL);
@@ -457,10 +457,10 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                           ClassSize);
 
             /* update some pointers and link the class */
-            Class->Desktop = Desktop;
+            Class->rpdeskParent = Desktop;
             Class->Windows = 0;
 
-            if (BaseClass->Desktop == NULL)
+            if (BaseClass->rpdeskParent == NULL)
             {
                 /* we don't really need the base class on the shared
                    heap anymore, delete it so the only class left is
@@ -502,7 +502,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
 PWINDOWCLASS
 IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
                   IN OUT PWINDOWCLASS *ClassLink,
-                  IN PDESKTOPINFO Desktop)
+                  IN PDESKTOP Desktop)
 {
     PWINDOWCLASS Class;
 
@@ -528,9 +528,9 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 
     ASSERT(Class->Base != Class);
     ASSERT(Class->Base->Clone != NULL);
-    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->rpdeskParent != NULL);
     ASSERT(Class->Windows != 0);
-    ASSERT(Class->Base->Desktop != NULL);
+    ASSERT(Class->Base->rpdeskParent != NULL);
     ASSERT(Class->Base->Windows == 0);
 
     /* unlink the clone */
@@ -648,7 +648,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
     SIZE_T ClassSize;
 
     ASSERT(Class->Base == Class);
-    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->rpdeskParent != NULL);
     ASSERT(Class->Windows == 0);
     ASSERT(Class->Clone == NULL);
 
@@ -662,7 +662,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
                       Class,
                       ClassSize);
 
-        NewClass->Desktop = NULL;
+        NewClass->rpdeskParent = NULL;
         NewClass->Base = NewClass;
 
         /* replace the class in the list */
@@ -680,7 +680,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 }
 
 static VOID
-IntCheckDesktopClasses(IN PDESKTOPINFO Desktop,
+IntCheckDesktopClasses(IN PDESKTOP Desktop,
                        IN OUT PWINDOWCLASS *ClassList,
                        IN BOOL FreeOnFailure,
                        OUT BOOL *Ret)
@@ -704,7 +704,7 @@ IntCheckDesktopClasses(IN PDESKTOPINFO Desktop,
 
         ASSERT(Class->Base == Class);
 
-        if (Class->Desktop == Desktop &&
+        if (Class->rpdeskParent == Desktop &&
             Class->Windows == 0)
         {
             /* there shouldn't be any clones around anymore! */
@@ -749,7 +749,7 @@ IntCheckDesktopClasses(IN PDESKTOPINFO Desktop,
 }
 
 BOOL
-IntCheckProcessDesktopClasses(IN PDESKTOPINFO Desktop,
+IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                               IN BOOL FreeOnFailure)
 {
     PW32PROCESSINFO pi;
@@ -792,7 +792,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING MenuName,
                IN WNDPROC wpExtra,
                IN DWORD dwFlags,
-               IN PDESKTOPINFO Desktop,
+               IN PDESKTOP Desktop,
                IN PW32PROCESSINFO pi)
 {
     SIZE_T ClassSize;
@@ -838,7 +838,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         RtlZeroMemory(Class,
                       ClassSize);
 
-        Class->Desktop = Desktop;
+        Class->rpdeskParent = Desktop;
         Class->Base = Class;
         Class->Atom = Atom;
 
@@ -1131,6 +1131,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN WNDPROC wpExtra,
                   IN DWORD dwFlags)
 {
+    PTHREADINFO pti;
     PW32THREADINFO ti;
     PW32PROCESSINFO pi;
     PWINDOWCLASS Class;
@@ -1139,6 +1140,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     /* NOTE: Accessing the buffers in ClassName and MenuName may raise exceptions! */
 
+    pti = PsGetCurrentThreadWin32Thread();
     ti = GetW32ThreadInfo();
     if (ti == NULL || !ti->kpi->RegisteredSysClasses)
     {
@@ -1180,7 +1182,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                            MenuName,
                            wpExtra,
                            dwFlags,
-                           ti->Desktop,
+                           pti->Desktop,
                            pi);
 
     if (Class != NULL)

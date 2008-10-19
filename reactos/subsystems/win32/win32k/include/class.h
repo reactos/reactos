@@ -2,6 +2,7 @@
 #define _WIN32K_CLASS_H
 
 #include <include/win32.h>
+#include <include/desktop.h>
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -46,7 +47,7 @@ DestroyProcessClasses(PW32PROCESS Process );
 PWINDOWCLASS
 IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
                   IN OUT PWINDOWCLASS *ClassLink,
-                  IN PDESKTOPINFO Desktop);
+                  IN PDESKTOP Desktop);
 
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
@@ -95,7 +96,7 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
                            OUT RTL_ATOM *Atom);
 
 BOOL
-IntCheckProcessDesktopClasses(IN PDESKTOPINFO Desktop,
+IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                               IN BOOL FreeOnFailure);
 
 #endif /* _WIN32K_CLASS_H */

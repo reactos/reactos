@@ -136,31 +136,31 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 
 
 static __inline PVOID
-DesktopHeapAlloc(IN PDESKTOPINFO Desktop,
+DesktopHeapAlloc(IN PDESKTOP Desktop,
                  IN SIZE_T Bytes)
 {
-    return RtlAllocateHeap(Desktop->hKernelHeap,
+    return RtlAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
                            HEAP_NO_SERIALIZE,
                            Bytes);
 }
 
 static __inline BOOL
-DesktopHeapFree(IN PDESKTOPINFO Desktop,
+DesktopHeapFree(IN PDESKTOP Desktop,
                 IN PVOID lpMem)
 {
-    return RtlFreeHeap(Desktop->hKernelHeap,
+    return RtlFreeHeap(Desktop->DesktopInfo->hKernelHeap,
                        HEAP_NO_SERIALIZE,
                        lpMem);
 }
 
 static __inline PVOID
-DesktopHeapReAlloc(IN PDESKTOPINFO Desktop,
+DesktopHeapReAlloc(IN PDESKTOP Desktop,
                    IN PVOID lpMem,
                    IN SIZE_T Bytes)
 {
 #if 0
     /* NOTE: ntoskrnl doesn't export RtlReAllocateHeap... */
-    return RtlReAllocateHeap(Desktop->hKernelHeap,
+    return RtlReAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
                              HEAP_NO_SERIALIZE,
                              lpMem,
                              Bytes);
@@ -168,14 +168,14 @@ DesktopHeapReAlloc(IN PDESKTOPINFO Desktop,
     SIZE_T PrevSize;
     PVOID pNew;
 
-    PrevSize = RtlSizeHeap(Desktop->hKernelHeap,
+    PrevSize = RtlSizeHeap(Desktop->DesktopInfo->hKernelHeap,
                            HEAP_NO_SERIALIZE,
                            lpMem);
 
     if (PrevSize == Bytes)
         return lpMem;
 
-    pNew = RtlAllocateHeap(Desktop->hKernelHeap,
+    pNew = RtlAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
                            HEAP_NO_SERIALIZE,
                            Bytes);
     if (pNew != NULL)
@@ -187,7 +187,7 @@ DesktopHeapReAlloc(IN PDESKTOPINFO Desktop,
                       lpMem,
                       Bytes);
 
-        RtlFreeHeap(Desktop->hKernelHeap,
+        RtlFreeHeap(Desktop->DesktopInfo->hKernelHeap,
                     HEAP_NO_SERIALIZE,
                     lpMem);
     }
