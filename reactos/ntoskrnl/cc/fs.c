@@ -120,7 +120,7 @@ CcPurgeCacheSection (
 	IN	BOOLEAN				UninitializeCacheMaps
 	)
 {
-	UNIMPLEMENTED;
+	//UNIMPLEMENTED;
 	return FALSE;
 }
 

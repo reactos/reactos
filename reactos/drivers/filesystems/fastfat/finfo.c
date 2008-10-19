@@ -91,7 +91,7 @@ VfatGetStandardInformation(PVFATFCB FCB,
       StandardInfo->EndOfFile = FCB->RFCB.FileSize;
       StandardInfo->Directory = FALSE;
     }
-  StandardInfo->NumberOfLinks = 0;
+  StandardInfo->NumberOfLinks = 1;
   StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
@@ -271,7 +271,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 #endif
 
-   DPRINT ("FsdSetDispositionInformation()\n");
+   DPRINT ("FsdSetDispositionInformation(<%wZ>, Delete %d)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
    ASSERT(DeviceExt != NULL);
    ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
@@ -551,7 +551,8 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG NCluster;
   BOOLEAN AllocSizeChanged = FALSE;
 
-  DPRINT("VfatSetAllocationSizeInformation()\n");
+  DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %d)\n", &Fcb->PathNameU,
+      AllocationSize->HighPart, AllocationSize->LowPart);
 
   if (Fcb->Flags & FCB_IS_FATX_ENTRY)
     OldSize = Fcb->entry.FatX.FileSize;
