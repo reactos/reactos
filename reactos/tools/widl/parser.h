@@ -39,6 +39,7 @@ int parser_lex(void);
 extern int import_stack_ptr;
 int do_import(char *fname);
 void abort_import(void);
+void pop_import(void);
 
 #define parse_only import_stack_ptr
 

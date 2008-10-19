@@ -63,7 +63,10 @@
 # endif
 #endif
 
+#define YYERROR_VERBOSE
+
 unsigned char pointer_default = RPC_FC_UP;
+static int is_object_interface = FALSE;
 
 typedef struct list typelist_t;
 struct typenode {
@@ -92,7 +95,7 @@ static expr_t *make_expr3(enum expr_type type, expr_t *expr1, expr_t *expr2, exp
 static type_t *make_type(unsigned char type, type_t *ref);
 static expr_list_t *append_expr(expr_list_t *list, expr_t *expr);
 static array_dims_t *append_array(array_dims_t *list, expr_t *expr);
-static void set_type(var_t *v, type_t *type, int ptr_level, array_dims_t *arr, int top);
+static void set_type(var_t *v, type_t *type, const pident_t *pident, array_dims_t *arr, int top);
 static ifref_list_t *append_ifref(ifref_list_t *list, ifref_t *iface);
 static ifref_t *make_ifref(type_t *iface);
 static var_list_t *append_var(var_list_t *list, var_t *var);
@@ -180,6 +183,7 @@ static void check_all_user_types(ifref_list_t *ifaces);
 %token tENTRY tENUM tERRORSTATUST
 %token tEXPLICITHANDLE tEXTERN
 %token tFALSE
+%token tFASTCALL
 %token tFLOAT
 %token tHANDLE
 %token tHANDLET
@@ -207,6 +211,7 @@ static void check_all_user_types(ifref_list_t *ifaces);
 %token tOBJECT tODL tOLEAUTOMATION
 %token tOPTIONAL
 %token tOUT
+%token tPASCAL
 %token tPOINTERDEFAULT
 %token tPROPERTIES
 %token tPROPGET tPROPPUT tPROPPUTREF
@@ -259,14 +264,15 @@ static void check_all_user_types(ifref_list_t *ifaces);
 %type <var> arg field s_field case enum constdef externdef
 %type <var_list> m_args no_args args fields cases enums enum_list dispint_props
 %type <var> m_ident t_ident ident
-%type <pident> p_ident pident
+%type <pident> pident func_ident direct_ident
 %type <pident_list> pident_list
 %type <func> funcdef
 %type <func_list> int_statements dispint_meths
 %type <type> coclass coclasshdr coclassdef
 %type <num> pointer_type version
-%type <str> libraryhdr
+%type <str> libraryhdr callconv
 %type <uuid> uuid_string
+%type <num> import_start
 
 %left ','
 %right '?' ':'
@@ -328,8 +334,11 @@ int_statements:					{ $$ = NULL; }
 	| int_statements statement		{ $$ = $1; }
 	;
 
-statement: ';'					{}
-	| constdef ';'				{ if (!parse_only && do_header) { write_constdef($1); } }
+semicolon_opt:
+	| ';'
+	;
+
+statement: constdef ';'				{ if (!parse_only && do_header) { write_constdef($1); } }
 	| cppquote				{}
 	| enumdef ';'				{ if (!parse_only && do_header) {
 						    write_type_def_or_decl(header, $1, FALSE, NULL);
@@ -354,12 +363,17 @@ statement: ';'					{}
 cppquote: tCPPQUOTE '(' aSTRING ')'		{ if (!parse_only && do_header) fprintf(header, "%s\n", $3); }
 	;
 import_start: tIMPORT aSTRING ';'		{ assert(yychar == YYEMPTY);
-						  if (!do_import($2)) yychar = aEOF; }
-	;
-import:   import_start imp_statements aEOF	{}
+						  $$ = do_import($2);
+						  if (!$$) yychar = aEOF;
+						}
 	;
 
-importlib: tIMPORTLIB '(' aSTRING ')'		{ if(!parse_only) add_importlib($3); }
+import: import_start imp_statements aEOF
+						{ if ($1) pop_import(); }
+	;
+
+importlib: tIMPORTLIB '(' aSTRING ')'
+	   semicolon_opt			{ if(!parse_only) add_importlib($3); }
 	;
 
 libraryhdr: tLIBRARY aIDENTIFIER		{ $$ = $2; }
@@ -369,7 +383,8 @@ library_start: attributes libraryhdr '{'	{ if (!parse_only) start_typelib($2, $1
 						  if (!parse_only && do_idfile) write_libid($2, $1);
 						}
 	;
-librarydef: library_start imp_statements '}'	{ if (!parse_only) end_typelib(); }
+librarydef: library_start imp_statements '}'
+	    semicolon_opt			{ if (!parse_only) end_typelib(); }
 	;
 
 m_args:						{ $$ = NULL; }
@@ -387,23 +402,12 @@ args:	  arg					{ check_arg($1); $$ = append_var( NULL, $1 ); }
 /* split into two rules to get bison to resolve a tVOID conflict */
 arg:	  attributes type pident array		{ $$ = $3->var;
 						  $$->attrs = $1;
-						  set_type($$, $2, $3->ptr_level, $4, TRUE);
+						  set_type($$, $2, $3, $4, TRUE);
 						  free($3);
 						}
 	| type pident array			{ $$ = $2->var;
-						  set_type($$, $1, $2->ptr_level, $3, TRUE);
+						  set_type($$, $1, $2, $3, TRUE);
 						  free($2);
-						}
-	| attributes type pident '(' m_args ')'	{ $$ = $3->var;
-						  $$->attrs = $1;
-						  set_type($$, $2, $3->ptr_level - 1, NULL, TRUE);
-						  free($3);
-						  $$->args = $5;
-						}
-	| type pident '(' m_args ')'		{ $$ = $2->var;
-						  set_type($$, $1, $2->ptr_level - 1, NULL, TRUE);
-						  free($2);
-						  $$->args = $4;
 						}
 	;
 
@@ -519,8 +523,10 @@ uuid_string:
 						  $$ = parse_uuid($1); }
         ;
 
-callconv:
-	| tSTDCALL
+callconv: tCDECL				{ $$ = $<str>1; }
+	| tFASTCALL				{ $$ = $<str>1; }
+	| tPASCAL				{ $$ = $<str>1; }
+	| tSTDCALL				{ $$ = $<str>1; }
 	;
 
 cases:						{ $$ = NULL; }
@@ -538,7 +544,7 @@ case:	  tCASE expr ':' field			{ attr_t *a = make_attrp(ATTR_CASE, append_expr( 
 	;
 
 constdef: tCONST type ident '=' expr_const	{ $$ = reg_const($3);
-						  set_type($$, $2, 0, NULL, FALSE);
+						  set_type($$, $2, NULL, NULL, FALSE);
 						  $$->eval = $5;
 						}
 	;
@@ -572,7 +578,7 @@ enum:	  ident '=' expr_const			{ $$ = reg_const($1);
 
 enumdef: tENUM t_ident '{' enums '}'		{ $$ = get_typev(RPC_FC_ENUM16, $2, tsENUM);
 						  $$->kind = TKIND_ENUM;
-						  $$->fields = $4;
+						  $$->fields_or_args = $4;
 						  $$->defined = TRUE;
                                                   if(in_typelib)
                                                       add_typelib_entry($$);
@@ -632,7 +638,7 @@ expr_const: expr				{ $$ = $1;
 	;
 
 externdef: tEXTERN tCONST type ident		{ $$ = $4;
-						  set_type($$, $3, 0, NULL, FALSE);
+						  set_type($$, $3, NULL, NULL, FALSE);
 						}
 	;
 
@@ -648,18 +654,18 @@ field:	  s_field ';'				{ $$ = $1; }
 
 s_field:  m_attributes type pident array	{ $$ = $3->var;
 						  $$->attrs = $1;
-						  set_type($$, $2, $3->ptr_level, $4, FALSE);
+						  set_type($$, $2, $3, $4, FALSE);
 						  free($3);
 						}
 	;
 
 funcdef:
-	  m_attributes type callconv pident
-	  '(' m_args ')'			{ var_t *v = $4->var;
+	  m_attributes type pident		{ var_t *v = $3->var;
+						  var_list_t *args = $3->args;
 						  v->attrs = $1;
-						  set_type(v, $2, $4->ptr_level, NULL, FALSE);
-						  free($4);
-						  $$ = make_func(v, $6);
+						  set_type(v, $2, $3, NULL, FALSE);
+						  free($3);
+						  $$ = make_func(v, args);
 						  if (is_attr(v->attrs, ATTR_IN)) {
 						    error_loc("inapplicable attribute [in] for function '%s'\n",$$->def->name);
 						  }
@@ -738,7 +744,8 @@ coclasshdr: attributes coclass			{ $$ = $2;
 						}
 	;
 
-coclassdef: coclasshdr '{' coclass_ints '}'	{ $$ = $1;
+coclassdef: coclasshdr '{' coclass_ints '}' semicolon_opt
+						{ $$ = $1;
 						  $$->ifaces = $3;
 						  $$->defined = TRUE;
 						}
@@ -757,6 +764,7 @@ dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(0, $2, 0); $$->kind = 
 	;
 
 dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
+						  is_object_interface = TRUE;
 						  $$ = $2;
 						  if ($$->defined) error_loc("multiple definition error\n");
 						  attrs = make_attr(ATTR_DISPINTERFACE);
@@ -780,14 +788,14 @@ dispinterfacedef: dispinterfacehdr '{'
 	  dispint_props
 	  dispint_meths
 	  '}'					{ $$ = $1;
-						  $$->fields = $3;
+						  $$->fields_or_args = $3;
 						  $$->funcs = $4;
 						  if (!parse_only && do_header) write_dispinterface($$);
 						  if (!parse_only && do_idfile) write_diid($$);
 						}
 	| dispinterfacehdr
-	 '{' interface ';' '}'			{ $$ = $1;
-						  $$->fields = $3->fields;
+	 '{' interface ';' '}' 			{ $$ = $1;
+						  $$->fields_or_args = $3->fields_or_args;
 						  $$->funcs = $3->funcs;
 						  if (!parse_only && do_header) write_dispinterface($$);
 						  if (!parse_only && do_idfile) write_diid($$);
@@ -806,6 +814,7 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 						  $$.old_pointer_default = pointer_default;
 						  if (is_attr($1, ATTR_POINTERDEFAULT))
 						    pointer_default = get_attrv($1, ATTR_POINTERDEFAULT);
+						  is_object_interface = is_object($1);
 						  if ($2->defined) error_loc("multiple definition error\n");
 						  $2->attrs = $1;
 						  $2->defined = TRUE;
@@ -814,7 +823,7 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 	;
 
 interfacedef: interfacehdr inherit
-	  '{' int_statements '}'		{ $$ = $1.interface;
+	  '{' int_statements '}' semicolon_opt	{ $$ = $1.interface;
 						  $$->ref = $2;
 						  $$->funcs = $4;
 						  compute_method_indexes($$);
@@ -826,7 +835,8 @@ interfacedef: interfacehdr inherit
 /* MIDL is able to import the definition of a base class from inside the
  * definition of a derived class, I'll try to support it with this rule */
 	| interfacehdr ':' aIDENTIFIER
-	  '{' import int_statements '}'		{ $$ = $1.interface;
+	  '{' import int_statements '}'
+	   semicolon_opt			{ $$ = $1.interface;
 						  $$->ref = find_type2($3, 0);
 						  if (!$$->ref) error_loc("base class '%s' not found in import\n", $3);
 						  $$->funcs = $6;
@@ -836,7 +846,7 @@ interfacedef: interfacehdr inherit
 						  if (!parse_only && do_idfile) write_iid($$);
 						  pointer_default = $1.old_pointer_default;
 						}
-	| dispinterfacedef			{ $$ = $1; }
+	| dispinterfacedef semicolon_opt	{ $$ = $1; }
 	;
 
 interfacedec:
@@ -853,19 +863,35 @@ modulehdr: attributes module			{ $$ = $2;
 						}
 	;
 
-moduledef: modulehdr '{' int_statements '}'	{ $$ = $1;
+moduledef: modulehdr '{' int_statements '}'
+	   semicolon_opt			{ $$ = $1;
 						  $$->funcs = $3;
 						  /* FIXME: if (!parse_only && do_header) write_module($$); */
 						}
 	;
 
-p_ident:  '*' pident %prec PPTR			{ $$ = $2; $$->ptr_level++; }
-	| tCONST p_ident			{ $$ = $2; /* FIXME */ }
+pident:   '*' pident %prec PPTR			{ $$ = $2; $$->ptr_level++; }
+	| tCONST pident				{ $$ = $2; /* FIXME */ }
+	| callconv pident                       { $$ = $2;
+						  if ($$->callconv) parser_warning("multiple calling conventions %s, %s for function %s\n", $$->callconv, $1, $$->var->name);
+						  $$->callconv = $1;
+						}
+	| direct_ident
 	;
 
-pident:	  ident					{ $$ = make_pident($1); }
-	| p_ident
+func_ident: direct_ident '(' m_args ')'
+						{ $$ = $1;
+						  $1->args = $3;
+						  $1->is_func = TRUE;
+						}
+	;
+
+direct_ident: ident				{ $$ = make_pident($1); }
 	| '(' pident ')'			{ $$ = $2; }
+	| func_ident				{ $$ = $1;
+						  $$->func_ptr_level = $$->ptr_level;
+						  $$->ptr_level = 0;
+						}
 	;
 
 pident_list:
@@ -883,7 +909,7 @@ structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, ts
                                                   /* overwrite RPC_FC_STRUCT with a more exact type */
 						  $$->type = get_struct_type( $4 );
 						  $$->kind = TKIND_RECORD;
-						  $$->fields = $4;
+						  $$->fields_or_args = $4;
 						  $$->defined = TRUE;
                                                   if(in_typelib)
                                                       add_typelib_entry($$);
@@ -910,7 +936,7 @@ typedef: tTYPEDEF m_attributes type pident_list	{ reg_typedefs($3, $4, $2);
 
 uniondef: tUNION t_ident '{' fields '}'		{ $$ = get_typev(RPC_FC_NON_ENCAPSULATED_UNION, $2, tsUNION);
 						  $$->kind = TKIND_UNION;
-						  $$->fields = $4;
+						  $$->fields_or_args = $4;
 						  $$->defined = TRUE;
 						}
 	| tUNION t_ident
@@ -921,10 +947,10 @@ uniondef: tUNION t_ident '{' fields '}'		{ $$ = get_typev(RPC_FC_NON_ENCAPSULATE
 						  if (!u) u = make_var( xstrdup("tagged_union") );
 						  u->type = make_type(RPC_FC_NON_ENCAPSULATED_UNION, NULL);
 						  u->type->kind = TKIND_UNION;
-						  u->type->fields = $9;
+						  u->type->fields_or_args = $9;
 						  u->type->defined = TRUE;
-						  $$->fields = append_var( $$->fields, $5 );
-						  $$->fields = append_var( $$->fields, u );
+						  $$->fields_or_args = append_var( $$->fields_or_args, $5 );
+						  $$->fields_or_args = append_var( $$->fields_or_args, u );
 						  $$->defined = TRUE;
 						}
 	;
@@ -1289,7 +1315,7 @@ static type_t *make_type(unsigned char type, type_t *ref)
   t->attrs = NULL;
   t->orig = NULL;
   t->funcs = NULL;
-  t->fields = NULL;
+  t->fields_or_args = NULL;
   t->ifaces = NULL;
   t->dim = 0;
   t->size_is = NULL;
@@ -1308,7 +1334,7 @@ static type_t *make_type(unsigned char type, type_t *ref)
   return t;
 }
 
-static void set_type(var_t *v, type_t *type, int ptr_level, array_dims_t *arr,
+static void set_type(var_t *v, type_t *type, const pident_t *pident, array_dims_t *arr,
                      int top)
 {
   expr_list_t *sizes = get_attrp(v->attrs, ATTR_SIZEIS);
@@ -1318,6 +1344,7 @@ static void set_type(var_t *v, type_t *type, int ptr_level, array_dims_t *arr,
   int sizeless, has_varconf;
   expr_t *dim;
   type_t *atype, **ptype;
+  int ptr_level = (pident ? pident->ptr_level : 0);
 
   v->type = type;
 
@@ -1346,6 +1373,21 @@ static void set_type(var_t *v, type_t *type, int ptr_level, array_dims_t *arr,
     }
     else if (!arr && ptr_attr)
       error("%s: pointer attribute applied to non-pointer type\n", v->name);
+  }
+
+  if (pident && pident->is_func) {
+    int func_ptr_level = pident->func_ptr_level;
+    v->type = make_type(RPC_FC_FUNCTION, v->type);
+    v->type->fields_or_args = pident->args;
+    if (pident->callconv)
+      v->type->attrs = append_attr(NULL, make_attrp(ATTR_CALLCONV, pident->callconv));
+    else if (is_object_interface) {
+      static char *stdmethodcalltype;
+      if (!stdmethodcalltype) stdmethodcalltype = strdup("STDMETHODCALLTYPE");
+      v->type->attrs = append_attr(NULL, make_attrp(ATTR_CALLCONV, stdmethodcalltype));
+    }
+    for (; func_ptr_level > 0; func_ptr_level--)
+      v->type = make_type(ptr_type, v->type);
   }
 
   sizeless = FALSE;
@@ -1499,7 +1541,6 @@ static var_t *make_var(char *name)
   var_t *v = xmalloc(sizeof(var_t));
   v->name = name;
   v->type = NULL;
-  v->args = NULL;
   v->attrs = NULL;
   v->eval = NULL;
   return v;
@@ -1520,7 +1561,11 @@ static pident_t *make_pident(var_t *var)
 {
   pident_t *p = xmalloc(sizeof(*p));
   p->var = var;
+  p->is_func = FALSE;
   p->ptr_level = 0;
+  p->func_ptr_level = 0;
+  p->args = NULL;
+  p->callconv = NULL;
   return p;
 }
 
@@ -1621,7 +1666,7 @@ static void fix_type(type_t *t)
   if (t->kind == TKIND_ALIAS && is_incomplete(t)) {
     type_t *ot = t->orig;
     fix_type(ot);
-    t->fields = ot->fields;
+    t->fields_or_args = ot->fields_or_args;
     t->defined = ot->defined;
   }
 }
@@ -1690,6 +1735,20 @@ static type_t *reg_typedefs(type_t *type, pident_list_t *pidents, attr_list_t *a
           cur = cur->ref;
           cptr++;
         }
+      }
+      if (pident->is_func) {
+        int func_ptr_level = pident->func_ptr_level;
+        cur = make_type(RPC_FC_FUNCTION, cur);
+        cur->fields_or_args = pident->args;
+        if (pident->callconv)
+          cur->attrs = append_attr(NULL, make_attrp(ATTR_CALLCONV, pident->callconv));
+        else if (is_object_interface) {
+          static char *stdmethodcalltype;
+          if (!stdmethodcalltype) stdmethodcalltype = strdup("STDMETHODCALLTYPE");
+          cur->attrs = append_attr(NULL, make_attrp(ATTR_CALLCONV, stdmethodcalltype));
+        }
+        for (; func_ptr_level > 0; func_ptr_level--)
+          cur = make_type(pointer_default, cur);
       }
       cur = alias(cur, name->name);
       cur->attrs = attrs;
@@ -2072,7 +2131,7 @@ static void check_all_user_types(ifref_list_t *ifrefs)
   {
     const func_list_t *fs = ifref->iface->funcs;
     if (fs) LIST_FOR_EACH_ENTRY(f, fs, const func_t, entry)
-      check_for_user_types_and_context_handles(f->args);
+      check_for_additional_prototype_types(f->args);
   }
 }
 

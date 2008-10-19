@@ -60,13 +60,21 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
     LIST_FOR_EACH_ENTRY( func, iface->funcs, const func_t, entry )
     {
         const var_t *def = func->def;
+        const var_t* context_handle_var = NULL;
+        const var_t* explicit_generic_handle_var = NULL;
         int has_full_pointer = is_full_pointer_function(func);
 
         /* check for a defined binding handle */
         explicit_handle_var = get_explicit_handle_var(func);
+        if (!explicit_handle_var)
+        {
+            explicit_generic_handle_var = get_explicit_generic_handle_var(func);
+            if (!explicit_generic_handle_var)
+                context_handle_var = get_context_handle_var(func);
+        }
         if (explicit_handle)
         {
-            if (!explicit_handle_var)
+            if (!explicit_handle_var && !explicit_generic_handle_var && !context_handle_var)
             {
                 error("%s() does not define an explicit binding handle!\n", def->name);
                 return;
@@ -164,7 +172,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         assign_stub_out_args(server, indent, func);
 
         /* Call the real server function */
-        if (!is_void(def->type))
+        if (!is_void(get_func_return_type(func)))
             print_server("_RetVal = ");
         else
             print_server("");
@@ -184,9 +192,13 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
                     fprintf(server, ",\n");
                 if (is_context_handle(var->type))
                 {
+                    /* if the context_handle attribute appears in the chain of types
+                     * without pointers being followed, then the context handle must
+                     * be direct, otherwise it is a pointer */
+                    int is_ch_ptr = is_aliaschain_attr(var->type, ATTR_CONTEXTHANDLE) ? FALSE : TRUE;
                     print_server("(");
                     write_type_decl_left(server, var->type);
-                    fprintf(server, ")%sNDRSContextValue(%s)", is_ptr(var->type) ? "" : "*", var->name);
+                    fprintf(server, ")%sNDRSContextValue(%s)", is_ch_ptr ? "" : "*", var->name);
                 }
                 else
                 {
@@ -208,7 +220,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         {
             write_remoting_arguments(server, indent, func, PASS_OUT, PHASE_BUFFERSIZE);
 
-            if (!is_void(def->type))
+            if (!is_void(get_func_return_type(func)))
                 write_remoting_arguments(server, indent, func, PASS_RETURN, PHASE_BUFFERSIZE);
 
             print_server("_pRpcMessage->BufferLength = _StubMsg.BufferLength;\n");
@@ -227,7 +239,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         write_remoting_arguments(server, indent, func, PASS_OUT, PHASE_MARSHAL);
 
         /* marshall the return value */
-        if (!is_void(def->type))
+        if (!is_void(get_func_return_type(func)))
             write_remoting_arguments(server, indent, func, PASS_RETURN, PHASE_MARSHAL);
 
         indent--;
