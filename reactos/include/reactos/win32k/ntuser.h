@@ -37,6 +37,9 @@ typedef struct _USER_OBJHDR
 
 typedef struct _DESKTOPINFO
 {
+    PVOID pvDesktopBase;
+    PVOID pvDesktopLimit;
+
     HANDLE hKernelHeap;
     ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
@@ -71,6 +74,7 @@ typedef struct _WINDOWCLASS
     struct _WINDOWCLASS *Clone;
     struct _WINDOWCLASS *Base;
     PDESKTOPINFO Desktop;
+    struct _DESKTOP *rpdeskParent;
     RTL_ATOM Atom;
     ULONG Windows;
 
@@ -113,6 +117,7 @@ typedef struct _WINDOW
              is moved to this structure */
     struct _W32PROCESSINFO *pi; /* FIXME: Move to object header some day */
     struct _W32THREADINFO *ti;
+    struct _DESKTOP *pdesktop;
     RECT WindowRect;
     RECT ClientRect;
 
