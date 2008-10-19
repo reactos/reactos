@@ -744,6 +744,10 @@ extern "C" {
 #define TC_VA_ABLE 16384
 #define TC_RESERVED 32768
 #define TC_SCROLLBLT 65536
+/* CLIPCAPS */
+#define CP_NONE 0
+#define CP_RECTANGLE 1
+#define CP_REGION 2
 #define GCP_DBCS 1
 #define GCP_ERROR 0x8000
 #define GCP_CLASSIN 0x80000
@@ -863,6 +867,20 @@ extern "C" {
 #define TCI_SRCCHARSET 1
 #define TCI_SRCCODEPAGE 2
 #define TCI_SRCFONTSIG 3
+#if (_WIN32_WINNT >= 0x0500)
+/* SHADEBLENDCAPS */
+#define SB_NONE           0x00000000
+#define SB_CONST_ALPHA    0x00000001
+#define SB_PIXEL_ALPHA    0x00000002
+#define SB_PREMULT_ALPHA  0x00000004
+#define SB_GRAD_RECT      0x00000010
+#define SB_GRAD_TRI       0x00000020
+/* Color Management caps */
+#define CM_NONE           0x00000000
+#define CM_DEVICE_ICM     0x00000001
+#define CM_GAMMA_RAMP     0x00000002
+#define CM_CMYK_COLOR     0x00000004
+#endif
 #define ICM_ON 2
 #define ICM_OFF 1
 #define ICM_QUERY 3

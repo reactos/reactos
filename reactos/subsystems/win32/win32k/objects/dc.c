@@ -687,6 +687,9 @@ IntCreatePrimarySurface()
    EngUnlockSurface(SurfObj);
    co_IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 
+   // Init Primary Displays Device Capabilities.
+   IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
+
    if (!calledFromUser){
       UserLeave();
    }
@@ -1768,6 +1771,162 @@ NtGdiGetDeviceCaps(HDC  hDC,
   DC_UnlockDc( dc );
   return ret;
 }
+
+INT
+FASTCALL
+IntcFonts(PGDIDEVICE pDevObj)
+{
+  ULONG_PTR Junk;
+// Msdn DrvQueryFont:
+// If the number of fonts in DEVINFO is -1 and iFace is zero, the driver
+// should return the number of fonts it supports.
+  if ( pDevObj->DevInfo.cFonts == -1)
+  {
+     if (pDevObj->DriverFunctions.QueryFont)
+        pDevObj->DevInfo.cFonts =
+        (ULONG)pDevObj->DriverFunctions.QueryFont(pDevObj->hPDev, 0, 0, &Junk);
+     else
+        pDevObj->DevInfo.cFonts = 0;
+  }
+  return pDevObj->DevInfo.cFonts;
+}
+
+INT
+FASTCALL
+IntGetColorManagementCaps(PGDIDEVICE pDevObj)
+{
+  INT ret = CM_NONE;
+
+  if ( pDevObj->flFlags & PDEV_DISPLAY)
+  {
+     if ( pDevObj->DevInfo.iDitherFormat == BMF_8BPP ||
+          pDevObj->DevInfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP)
+        ret = CM_GAMMA_RAMP;
+  }
+  if (pDevObj->DevInfo.flGraphicsCaps & GCAPS_CMYKCOLOR)
+     ret |= CM_CMYK_COLOR;
+  if (pDevObj->DevInfo.flGraphicsCaps & GCAPS_ICM)
+     ret |= CM_DEVICE_ICM;
+  return ret;
+}
+
+VOID
+FASTCALL
+IntvGetDeviceCaps(
+    PGDIDEVICE pDevObj,
+    PDEVCAPS pDevCaps)
+{
+  ULONG Tmp = 0;
+  PGDIINFO pGdiInfo = &pDevObj->GDIInfo;
+
+  pDevCaps->ulVersion         = pGdiInfo->ulVersion;
+  pDevCaps->ulTechnology      = pGdiInfo->ulTechnology;
+  pDevCaps->ulHorzSizeM       = (pGdiInfo->ulHorzSize + 500) / 0x3E8u;
+  pDevCaps->ulVertSizeM       = (pGdiInfo->ulVertSize + 500) / 0x3E8u;
+  pDevCaps->ulHorzSize        = pGdiInfo->ulHorzSize;
+  pDevCaps->ulVertSize        = pGdiInfo->ulVertSize;
+  pDevCaps->ulHorzRes         = pGdiInfo->ulHorzRes;
+  pDevCaps->ulVertRes         = pGdiInfo->ulVertRes;
+  pDevCaps->ulVRefresh        = pGdiInfo->ulVRefresh;
+  pDevCaps->ulDesktopHorzRes  = pGdiInfo->ulHorzRes;
+  pDevCaps->ulDesktopVertRes  = pGdiInfo->ulVertRes;
+  pDevCaps->ulBltAlignment    = pGdiInfo->ulBltAlignment;
+  pDevCaps->ulPlanes          = pGdiInfo->cPlanes;
+
+  pDevCaps->ulBitsPixel       = pGdiInfo->cBitsPixel;
+  if (pGdiInfo->cBitsPixel == 15) pDevCaps->ulBitsPixel = 16;
+
+  Tmp = pGdiInfo->ulNumColors;
+  if ( Tmp != -1 ) Tmp *= 5;
+  pDevCaps->ulNumPens = Tmp;
+  pDevCaps->ulNumColors       = pGdiInfo->ulNumColors;
+  
+  pDevCaps->ulNumFonts        = IntcFonts(pDevObj);
+
+  pDevCaps->ulRasterCaps      = pGdiInfo->flRaster;
+  pDevCaps->ulShadeBlend      = pGdiInfo->flShadeBlend;
+  pDevCaps->ulAspectX         = pGdiInfo->ulAspectX;
+  pDevCaps->ulAspectY         = pGdiInfo->ulAspectY;
+  pDevCaps->ulAspectXY        = pGdiInfo->ulAspectXY;
+  pDevCaps->ulLogPixelsX      = pGdiInfo->ulLogPixelsX;
+  pDevCaps->ulLogPixelsY      = pGdiInfo->ulLogPixelsY;
+  pDevCaps->ulSizePalette     = pGdiInfo->ulNumPalReg;
+  pDevCaps->ulColorRes        = pGdiInfo->ulDACRed + pGdiInfo->ulDACGreen + pGdiInfo->ulDACBlue;
+  pDevCaps->ulPhysicalWidth   = pGdiInfo->szlPhysSize.cx;
+  pDevCaps->ulPhysicalHeight  = pGdiInfo->szlPhysSize.cy;
+  pDevCaps->ulPhysicalOffsetX = pGdiInfo->ptlPhysOffset.x;
+  pDevCaps->ulPhysicalOffsetY = pGdiInfo->ptlPhysOffset.y;
+
+  Tmp = 0;
+  Tmp = pGdiInfo->flTextCaps | (TC_SO_ABLE|TC_UA_ABLE|TC_CP_STROKE|TC_OP_STROKE|TC_OP_CHARACTER);
+
+  pDevCaps->ulTextCaps = pGdiInfo->flTextCaps | (TC_SO_ABLE|TC_UA_ABLE|TC_CP_STROKE|TC_OP_STROKE|TC_OP_CHARACTER);
+
+  if (pGdiInfo->ulTechnology)
+     pDevCaps->ulTextCaps = Tmp | TC_VA_ABLE;
+  
+  pDevCaps->ulColorMgmtCaps = IntGetColorManagementCaps(pDevObj);
+
+  return;
+}
+
+ /*
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtGdiGetDeviceCapsAll (
+    IN HDC hDC,
+    OUT PDEVCAPS pDevCaps)
+{
+  PDC  dc;
+  PDEVCAPS pSafeDevCaps;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+
+  pSafeDevCaps = ExAllocatePoolWithTag(PagedPool, sizeof(DEVCAPS), TAG_DC);
+
+  if (!pSafeDevCaps)
+  {
+     DC_UnlockDc(dc);
+     return FALSE;    
+  }
+
+  IntvGetDeviceCaps(dc->pPDev, pSafeDevCaps);
+
+  _SEH_TRY
+  {
+      ProbeForWrite(pDevCaps,
+                    sizeof(DEVCAPS),
+                    1);
+      RtlCopyMemory(pDevCaps, pSafeDevCaps, sizeof(DEVCAPS));
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    ExFreePoolWithTag(pSafeDevCaps, TAG_DC);
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  ExFreePoolWithTag(pSafeDevCaps, TAG_DC);
+  DC_UnlockDc( dc );
+  return TRUE;
+}
+
+
 
 BOOL
 APIENTRY

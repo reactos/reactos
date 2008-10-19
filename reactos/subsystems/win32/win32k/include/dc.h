@@ -267,6 +267,7 @@ VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
+VOID FASTCALL IntvGetDeviceCaps(PGDIDEVICE, PDEVCAPS);
 
 extern PGDIDEVICE pPrimarySurface;
 
