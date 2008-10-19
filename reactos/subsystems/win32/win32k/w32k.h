@@ -71,7 +71,7 @@ typedef DRIVEROBJ *PDRIVEROBJ;
 /* User heap */
 extern HANDLE GlobalUserHeap;
 
-HANDLE
+PWIN32HEAP
 UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize);

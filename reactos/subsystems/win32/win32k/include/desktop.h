@@ -25,7 +25,7 @@ typedef struct _DESKTOP
 
     LIST_ENTRY ShellHookWindows;
 
-    HANDLE hDesktopHeap;
+    PWIN32HEAP pheapDesktop;
     PSECTION_OBJECT DesktopHeapSection;
     PDESKTOPINFO DesktopInfo;
 } DESKTOP, *PDESKTOP;
@@ -139,7 +139,7 @@ static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,
                  IN SIZE_T Bytes)
 {
-    return RtlAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
+    return RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
 }
@@ -148,7 +148,7 @@ static __inline BOOL
 DesktopHeapFree(IN PDESKTOP Desktop,
                 IN PVOID lpMem)
 {
-    return RtlFreeHeap(Desktop->DesktopInfo->hKernelHeap,
+    return RtlFreeHeap(Desktop->pheapDesktop,
                        HEAP_NO_SERIALIZE,
                        lpMem);
 }
@@ -160,7 +160,7 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
 {
 #if 0
     /* NOTE: ntoskrnl doesn't export RtlReAllocateHeap... */
-    return RtlReAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
+    return RtlReAllocateHeap(Desktop->pheapDesktop,
                              HEAP_NO_SERIALIZE,
                              lpMem,
                              Bytes);
@@ -168,14 +168,14 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
     SIZE_T PrevSize;
     PVOID pNew;
 
-    PrevSize = RtlSizeHeap(Desktop->DesktopInfo->hKernelHeap,
+    PrevSize = RtlSizeHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            lpMem);
 
     if (PrevSize == Bytes)
         return lpMem;
 
-    pNew = RtlAllocateHeap(Desktop->DesktopInfo->hKernelHeap,
+    pNew = RtlAllocateHeap(Desktop->pheapDesktop,
                            HEAP_NO_SERIALIZE,
                            Bytes);
     if (pNew != NULL)
@@ -187,7 +187,7 @@ DesktopHeapReAlloc(IN PDESKTOP Desktop,
                       lpMem,
                       Bytes);
 
-        RtlFreeHeap(Desktop->DesktopInfo->hKernelHeap,
+        RtlFreeHeap(Desktop->pheapDesktop,
                     HEAP_NO_SERIALIZE,
                     lpMem);
     }
@@ -202,20 +202,20 @@ DesktopHeapGetUserDelta(VOID)
     PW32HEAP_USER_MAPPING Mapping;
     PTHREADINFO pti;
     PW32PROCESS W32Process;
-    HANDLE hDesktopHeap;
+    PWIN32HEAP pheapDesktop;
     ULONG_PTR Delta = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
     if (!pti->Desktop)
         return 0;
 
-    hDesktopHeap = pti->Desktop->hDesktopHeap;
+    pheapDesktop = pti->Desktop->pheapDesktop;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;
     while (Mapping != NULL)
     {
-        if (Mapping->KernelMapping == (PVOID)hDesktopHeap)
+        if (Mapping->KernelMapping == (PVOID)pheapDesktop)
         {
             Delta = (ULONG_PTR)Mapping->KernelMapping - (ULONG_PTR)Mapping->UserMapping;
             break;

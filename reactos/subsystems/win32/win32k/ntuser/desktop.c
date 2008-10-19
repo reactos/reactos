@@ -981,10 +981,10 @@ NtUserCreateDesktop(
    if (!NT_SUCCESS(Status)) RETURN(NULL);
 
    DesktopObject->DesktopHeapSection = NULL;
-   DesktopObject->hDesktopHeap = UserCreateHeap(&DesktopObject->DesktopHeapSection,
+   DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->DesktopHeapSection,
                                                 &DesktopHeapSystemBase,
                                                 HeapLimit);
-   if (DesktopObject->hDesktopHeap == NULL)
+   if (DesktopObject->pheapDesktop == NULL)
    {
        ObDereferenceObject(DesktopObject);
        DPRINT1("Failed to create desktop heap!\n");
@@ -994,7 +994,7 @@ NtUserCreateDesktop(
    DesktopInfoSize = FIELD_OFFSET(DESKTOPINFO,
                                   szDesktopName[(lpszDesktopName->Length / sizeof(WCHAR)) + 1]);
 
-   DesktopObject->DesktopInfo = RtlAllocateHeap(DesktopObject->hDesktopHeap,
+   DesktopObject->DesktopInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
                                                 HEAP_NO_SERIALIZE,
                                                 DesktopInfoSize);
 
@@ -1008,8 +1008,8 @@ NtUserCreateDesktop(
    RtlZeroMemory(DesktopObject->DesktopInfo,
                  DesktopInfoSize);
 
-   DesktopObject->DesktopInfo->hKernelHeap = DesktopObject->hDesktopHeap;
-   DesktopObject->DesktopInfo->HeapLimit = HeapLimit;
+   DesktopObject->DesktopInfo->pvDesktopBase = DesktopHeapSystemBase;
+   DesktopObject->DesktopInfo->pvDesktopLimit = (PVOID)HeapLimit;
    RtlCopyMemory(DesktopObject->DesktopInfo->szDesktopName,
                  lpszDesktopName->Buffer,
                  lpszDesktopName->Length);
@@ -1745,7 +1745,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
-        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->hDesktopHeap)
+        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->pheapDesktop)
         {
             if (--HeapMapping->Count == 0)
             {
@@ -1798,7 +1798,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
-        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->hDesktopHeap)
+        if (HeapMapping->KernelMapping == (PVOID)DesktopObject->pheapDesktop)
         {
             HeapMapping->Count++;
             return STATUS_SUCCESS;
@@ -1809,7 +1809,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     }
 
     /* we're the first, map the heap */
-    DPRINT("Noone mapped the desktop heap %p yet, so - map it!\n", DesktopObject->hDesktopHeap);
+    DPRINT("Noone mapped the desktop heap %p yet, so - map it!\n", DesktopObject->pheapDesktop);
     Offset.QuadPart = 0;
     Status = MmMapViewOfSection(DesktopObject->DesktopHeapSection,
                                 PsGetCurrentProcess(),
@@ -1838,7 +1838,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     }
 
     HeapMapping->Next = NULL;
-    HeapMapping->KernelMapping = (PVOID)DesktopObject->hDesktopHeap;
+    HeapMapping->KernelMapping = (PVOID)DesktopObject->pheapDesktop;
     HeapMapping->UserMapping = UserBase;
     HeapMapping->Limit = ViewSize;
     HeapMapping->Count = 1;
@@ -1853,7 +1853,7 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
         if (ti->Desktop == NULL)
         {
             ti->Desktop = DesktopObject->DesktopInfo;
-            ti->DesktopHeapBase = DesktopObject->hDesktopHeap;
+            ti->DesktopHeapBase = DesktopObject->pheapDesktop;
             ti->DesktopHeapLimit = ViewSize;
         }
     }

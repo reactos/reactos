@@ -40,8 +40,6 @@ typedef struct _DESKTOPINFO
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
 
-    HANDLE hKernelHeap;
-    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
