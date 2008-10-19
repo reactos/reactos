@@ -343,12 +343,12 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
    {
        Wnd->WindowName.Length = 0;
        Wnd->WindowName.MaximumLength = 0;
-       DesktopHeapFree(Wnd->ti->Desktop,
+       DesktopHeapFree(Wnd->pdesktop->DesktopInfo,
                        Wnd->WindowName.Buffer);
        Wnd->WindowName.Buffer = NULL;
    }
 
-    DesktopHeapFree(ti->Desktop, Wnd);
+    DesktopHeapFree(Wnd->pdesktop->DesktopInfo, Wnd);
     WindowObject->Wnd = NULL;
 }
 
@@ -1601,7 +1601,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    Class = IntReferenceClass(Class,
                              ClassLink,
-                             ti->Desktop);
+                             pti->Desktop->DesktopInfo);
    if (Class == NULL)
    {
        DPRINT1("Failed to reference window class!\n");
@@ -1619,7 +1619,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                             otWindow, sizeof(WINDOW_OBJECT));
    if (Window)
    {
-       Window->Wnd = DesktopHeapAlloc(ti->Desktop,
+       Window->Wnd = DesktopHeapAlloc(pti->Desktop->DesktopInfo,
                                       sizeof(WINDOW) + Class->WndExtra);
        if (!Window->Wnd)
            goto AllocErr;
@@ -1630,6 +1630,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
        Wnd->ti = ti;
        Wnd->pi = ti->kpi;
+       Wnd->pdesktop = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
 
@@ -1718,7 +1719,7 @@ AllocErr:
 
    if (NULL != WindowName->Buffer && WindowName->Length > 0)
    {
-      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop->DesktopInfo,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
       if (Wnd->WindowName.Buffer == NULL)
       {
@@ -4591,11 +4592,11 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
               Wnd->WindowName.Buffer = NULL;
               if (buf != NULL)
               {
-                  DesktopHeapFree(Wnd->ti->Desktop,
+                  DesktopHeapFree(Wnd->pdesktop->DesktopInfo,
                                   buf);
               }
 
-              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop->DesktopInfo,
                                                         SafeText.Length + sizeof(UNICODE_NULL));
               if (Wnd->WindowName.Buffer != NULL)
               {
