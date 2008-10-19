@@ -1821,8 +1821,8 @@ IntvGetDeviceCaps(
 
   pDevCaps->ulVersion         = pGdiInfo->ulVersion;
   pDevCaps->ulTechnology      = pGdiInfo->ulTechnology;
-  pDevCaps->ulHorzSizeM       = (pGdiInfo->ulHorzSize + 500) / 0x3E8u;
-  pDevCaps->ulVertSizeM       = (pGdiInfo->ulVertSize + 500) / 0x3E8u;
+  pDevCaps->ulHorzSizeM       = (pGdiInfo->ulHorzSize + 500) / 1000;
+  pDevCaps->ulVertSizeM       = (pGdiInfo->ulVertSize + 500) / 1000;
   pDevCaps->ulHorzSize        = pGdiInfo->ulHorzSize;
   pDevCaps->ulVertSize        = pGdiInfo->ulVertSize;
   pDevCaps->ulHorzRes         = pGdiInfo->ulHorzRes;
