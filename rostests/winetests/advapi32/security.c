@@ -2558,9 +2558,6 @@ START_TEST(security)
     init();
     if (!hmod) return;
 
-    /* temp temp -- will be removed in next commit */
-    return;
-
     if (myARGC >= 3)
     {
         test_process_security_child();
