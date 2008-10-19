@@ -895,7 +895,7 @@ NtUserCreateDesktop(
    SIZE_T DesktopInfoSize;
    UNICODE_STRING SafeDesktopName;
    ULONG DummyContext;
-   ULONG_PTR HeapLimit = 4 * 1024 * 1024; /* FIXME */
+   ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
    DECLARE_RETURN(HDESK);
 
 
@@ -983,7 +983,7 @@ NtUserCreateDesktop(
    DesktopObject->DesktopHeapSection = NULL;
    DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->DesktopHeapSection,
                                                 &DesktopHeapSystemBase,
-                                                HeapLimit);
+                                                HeapSize);
    if (DesktopObject->pheapDesktop == NULL)
    {
        ObDereferenceObject(DesktopObject);
@@ -1009,7 +1009,7 @@ NtUserCreateDesktop(
                  DesktopInfoSize);
 
    DesktopObject->DesktopInfo->pvDesktopBase = DesktopHeapSystemBase;
-   DesktopObject->DesktopInfo->pvDesktopLimit = (PVOID)HeapLimit;
+   DesktopObject->DesktopInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
    RtlCopyMemory(DesktopObject->DesktopInfo->szDesktopName,
                  lpszDesktopName->Buffer,
                  lpszDesktopName->Length);
@@ -1771,8 +1771,6 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
         if (ti->Desktop == DesktopObject->DesktopInfo)
         {
             ti->Desktop = NULL;
-            ti->DesktopHeapBase = NULL;
-            ti->DesktopHeapLimit = 0;
         }
     }
     GetWin32ClientInfo()->ulClientDelta = 0;
@@ -1853,8 +1851,6 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
         if (ti->Desktop == NULL)
         {
             ti->Desktop = DesktopObject->DesktopInfo;
-            ti->DesktopHeapBase = DesktopObject->pheapDesktop;
-            ti->DesktopHeapLimit = ViewSize;
         }
     }
     GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
@@ -1910,7 +1906,12 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
         /* Hack for system threads */
         if (NtCurrentTeb())
         {
-            GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
+            PCLIENTINFO pci = GetWin32ClientInfo();
+            pci->ulClientDelta = DesktopHeapGetUserDelta();
+            if (DesktopObject)
+            {
+                pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->DesktopInfo - pci->ulClientDelta);
+            }
         }
 
         if (OldDesktop != NULL &&

@@ -64,13 +64,14 @@ SharedPtrToUser(PVOID Ptr)
 static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
-    PW32THREADINFO ti = GetW32ThreadInfo();
+    GetW32ThreadInfo();
     PCLIENTINFO pci = GetWin32ClientInfo();
+    PDESKTOPINFO pdi = pci->pDeskInfo;
 
     ASSERT(Ptr != NULL);
-    ASSERT(ti != NULL);
-    if ((ULONG_PTR)Ptr >= (ULONG_PTR)ti->DesktopHeapBase &&
-        (ULONG_PTR)Ptr < (ULONG_PTR)ti->DesktopHeapBase + ti->DesktopHeapLimit)
+    ASSERT(pdi != NULL);
+    if ((ULONG_PTR)Ptr >= (ULONG_PTR)pdi->pvDesktopBase &&
+        (ULONG_PTR)Ptr < (ULONG_PTR)pdi->pvDesktopLimit)
     {
         return (PVOID)((ULONG_PTR)Ptr - pci->ulClientDelta);
     }

@@ -40,6 +40,8 @@ typedef struct _DESKTOPINFO
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
 
+    HANDLE hKernelHeap;
+    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
@@ -312,8 +314,8 @@ typedef struct _W32THREADINFO
     PW32PROCESSINFO pi; /* [USER] */
     PW32PROCESSINFO kpi; /* [KERNEL] */
     PDESKTOPINFO Desktop;
-    PVOID DesktopHeapBase;
-    ULONG_PTR DesktopHeapLimit;
+//    PVOID DesktopHeapBase;
+//    ULONG_PTR DesktopHeapLimit;
     /* A mask of what hooks are currently active */
     ULONG Hooks;
     CLIENTTHREADINFO ClientThreadInfo;
@@ -351,7 +353,7 @@ typedef struct _CLIENTINFO
     DWORD dwCompatFlags;
     DWORD dwCompatFlags2;
     DWORD dwTIFlags;
-    PVOID pDeskInfo;
+    PDESKTOPINFO pDeskInfo;
     ULONG_PTR ulClientDelta;
     PHOOK phkCurrent;
     ULONG fsHooks;

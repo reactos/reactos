@@ -462,14 +462,10 @@ GetW32ThreadInfo(VOID)
             if (W32Thread->Desktop != NULL)
             {
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;
-                ti->DesktopHeapBase = W32Thread->Desktop->DesktopInfo->pvDesktopBase;
-                ti->DesktopHeapLimit = (ULONG_PTR)W32Thread->Desktop->DesktopInfo->pvDesktopLimit;
             }
             else
             {
                 ti->Desktop = NULL;
-                ti->DesktopHeapBase = NULL;
-                ti->DesktopHeapLimit = 0;
             }
 
             W32Thread->ThreadInfo = ti;
