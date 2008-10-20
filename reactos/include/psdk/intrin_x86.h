@@ -1054,9 +1054,15 @@ static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], con
 
 static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
 {
+#ifdef _M_AMD64
+	unsigned long long low, high;
+	__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));
+	return low | (high << 32);
+#else
 	unsigned long long retval;
 	__asm__ __volatile__("rdtsc" : "=A"(retval));
 	return retval;
+#endif
 }
 
 static __inline__ __attribute__((always_inline)) void __writeeflags(uintptr_t Value)
