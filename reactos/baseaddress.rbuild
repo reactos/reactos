@@ -192,7 +192,7 @@
   <property name="BASEADDRESS_MSVCRT40" value="0x78700000" />
   <property name="BASEADDRESS_MSCOREE" value="0x79000000" />
   <property name="BASEADDRESS_FUSION" value="0x79040000" />
-  <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
+  <property name="BASEADDRESS_KERNEL32" value="0x7c700000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />
   <property name="BASEADDRESS_SXS" value="0x7e690000" />
