@@ -87,6 +87,7 @@ KeInitExceptions(VOID)
         KiIdt[i].Reserved1 = 0;
     }
 
+    KeGetPcr()->IdtBase = KiIdt;
     __lidt(&KiIdtDescriptor.Limit);
 }
 
