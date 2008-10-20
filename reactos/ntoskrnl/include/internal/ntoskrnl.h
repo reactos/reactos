@@ -212,7 +212,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                             ULONG ClassListEntries,
                             PVOID Buffer,
                             ULONG BufferLength,
-                            PULONG ReturnLength,
+                            PSIZE_T ReturnLength,
                             KPROCESSOR_MODE PreviousMode)
 {
     NTSTATUS Status = STATUS_SUCCESS;

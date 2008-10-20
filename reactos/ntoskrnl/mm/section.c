@@ -2052,7 +2052,7 @@ NTSTATUS STDCALL
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
                    PVOID Address,
                    PMEMORY_BASIC_INFORMATION Info,
-                   PULONG ResultLength)
+                   PSIZE_T ResultLength)
 {
    PMM_REGION Region;
    PVOID RegionBaseAddress;

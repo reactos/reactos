@@ -438,9 +438,9 @@ NTAPI
 NtGetWriteWatch(IN HANDLE ProcessHandle,
                 IN ULONG Flags,
                 IN PVOID BaseAddress,
-                IN ULONG RegionSize,
+                IN SIZE_T RegionSize,
                 IN PVOID *UserAddressArray,
-                OUT PULONG EntriesInUserAddressArray,
+                OUT PULONG_PTR EntriesInUserAddressArray,
                 OUT PULONG Granularity)
 {
     UNIMPLEMENTED;

@@ -752,7 +752,7 @@ MmQueryAnonMem(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 VOID
@@ -1410,7 +1410,7 @@ MmQuerySectionView(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 NTSTATUS
@@ -1503,8 +1503,8 @@ MiQueryVirtualMemory(
     IN PVOID Address,
     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 /* sysldr.c ******************************************************************/
