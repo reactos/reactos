@@ -12,7 +12,7 @@
 		<define name="_WIN32_WINNT">0x0502</define>
 		<define name="_NTOSKRNL_" />
 		<define name="__NO_CTYPE_INLINES" />
-		<library>rtl</library>
+		<library>rtl_umode</library>
 		<library>ntdllsys</library>
 		<library>libcntpr</library>
 		<library>pseh</library>

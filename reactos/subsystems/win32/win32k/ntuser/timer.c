@@ -61,6 +61,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 {
    PWINDOW_OBJECT Window;
    UINT_PTR Ret = 0;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
@@ -84,7 +85,8 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
-      MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+      pti = PsGetCurrentThreadWin32Thread();
+      MessageQueue = pti->MessageQueue;
    }
    else
    {
@@ -149,16 +151,18 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 BOOL FASTCALL
 IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
+   PTHREADINFO pti;
    PWINDOW_OBJECT Window = NULL;
    
    DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
           Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
+   pti = PsGetCurrentThreadWin32Thread();
    if (Wnd)
    {
       Window = UserGetWindowObject(Wnd);
    
-      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+      if (! MsqKillTimer(pti->MessageQueue, Wnd,
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
          // Give it another chance to find the timer.
@@ -175,7 +179,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
    /* window-less timer? */
    if ((Wnd == NULL) && ! SystemTimer)
    {
-      if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
+      if (! MsqKillTimer(pti->MessageQueue, Wnd,
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
          DPRINT1("Unable to locate timer in message queue for Window-less timer.\n");

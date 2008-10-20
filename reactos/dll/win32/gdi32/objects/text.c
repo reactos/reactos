@@ -358,21 +358,21 @@ ExtTextOutW(
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 GetTextFaceW(HDC hDC,
-             int nCount,
-             LPWSTR	lpFaceName)
+             INT nCount,
+             PWSTR pFaceName)
 {
-    INT retValue = 0;
-    if ((!lpFaceName) || (nCount))
+    /* Validate parameters */
+    if (pFaceName && nCount <= 0)
     {
-        retValue = NtGdiGetTextFaceW(hDC,nCount,lpFaceName,0);
+        /* Set last error and return failure */
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
     }
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
-    return retValue;
+
+    /* Forward to kernel */
+    return NtGdiGetTextFaceW(hDC, nCount, pFaceName, FALSE);
 }
 
 
@@ -398,6 +398,25 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
     HeapFree( GetProcessHeap(), 0, nameW );
     return res;
 }
+
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+GetTextFaceAliasW(HDC hdc,
+                  int cChar,
+                  LPWSTR pszOut)
+{
+   if ( pszOut && !cChar )
+   {
+      GdiSetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+   return NtGdiGetTextFaceW(hdc,cChar,pszOut,TRUE);
+}
+
 
 BOOL
 STDCALL

@@ -848,9 +848,9 @@ MSVCBackend::_generate_wine_dsw ( FILE* OUT )
 {
 	_generate_dsw_header(OUT);
 	// TODO FIXME - is it necessary to sort them?
-	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	for( std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p )
 	{
-		Module& module = *ProjectNode.modules[i];
+		Module& module = *p->second;
 
 		std::string dsp_file = DspFileName ( module );
 

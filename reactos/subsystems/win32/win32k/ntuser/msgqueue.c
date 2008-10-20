@@ -93,7 +93,7 @@ IdlePing(VOID)
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PUSER_MESSAGE_QUEUE MessageQueue;
    HANDLE MessageEventHandle;
 
@@ -111,7 +111,7 @@ IntMsqSetWakeMask(DWORD WakeMask)
 BOOL FASTCALL
 IntMsqClearWakeMask(VOID)
 {
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
@@ -235,17 +235,19 @@ MsqInsertSystemMessage(MSG* Msg)
 BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
+   PTHREADINFO pti;
    PWINSTATION_OBJECT WinStaObject;
    PSYSTEM_CURSORINFO CurInfo;
    LONG dX, dY;
    BOOL Res;
 
-   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
+   pti = PsGetCurrentThreadWin32Thread();
+   if (pti->Desktop == NULL)
    {
       return FALSE;
    }
 
-   WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   WinStaObject = pti->Desktop->WindowStation;
 
    CurInfo = IntGetSysCursorInfo(WinStaObject);
    Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) &&
@@ -518,7 +520,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
-   PDESKTOP Desk = NULL;
+   PDESKTOPINFO Desk = NULL;
 
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
@@ -811,7 +813,7 @@ VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
    PWINDOW_OBJECT Window;
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PWINSTATION_OBJECT WinSta;
    MSG Mesg;
    LARGE_INTEGER LargeTickCount;
@@ -1100,6 +1102,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   UINT uTimeout, BOOL Block, INT HookMessage,
                   ULONG_PTR *uResult)
 {
+   PTHREADINFO pti;
    PUSER_SENT_MESSAGE Message;
    KEVENT CompletionEvent;
    NTSTATUS WaitStatus;
@@ -1116,7 +1119,8 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
-   ThreadQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
    ASSERT(ThreadQueue != MessageQueue);
 
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
@@ -1571,7 +1575,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   PDESKTOP_OBJECT desk;
+   PDESKTOP desk;
 
    /* remove the message queue from any desktops */
    if ((desk = InterlockedExchangePointer((PVOID*)&MessageQueue->Desktop, 0)))
@@ -1603,9 +1607,11 @@ LPARAM FASTCALL
 MsqSetMessageExtraInfo(LPARAM lParam)
 {
    LPARAM Ret;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
    if(!MessageQueue)
    {
       return 0;
@@ -1620,9 +1626,11 @@ MsqSetMessageExtraInfo(LPARAM lParam)
 LPARAM FASTCALL
 MsqGetMessageExtraInfo(VOID)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
    if(!MessageQueue)
    {
       return 0;
@@ -1822,6 +1830,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    LARGE_INTEGER LargeTickCount;
    PLIST_ENTRY EnumEntry;
    BOOLEAN GotMessage;
+   PTHREADINFO pti;
 
    DPRINT("MsqGetTimerMessage queue %p msg %p restart %s\n",
           MessageQueue, Msg, Restart ? "TRUE" : "FALSE");
@@ -1873,7 +1882,8 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->lParam = (LPARAM) Timer->TimerFunc;
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-   IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+   pti = PsGetCurrentThreadWin32Thread();
+   IntGetCursorLocation(pti->Desktop->WindowStation,
                         &Msg->pt);
 
    if (Restart)

@@ -1,10 +1,12 @@
 # Makefile for core library for VMS
-# contributed by Jouk Jansen  joukj@hrem.stm.tudelft.nl
-# Last revision : 16 June 2003
+# contributed by Jouk Jansen  joukj@hrem.nano.tudelft.nl
+# Last revision : 3 October 2007
 
 .first
 	define gl [---.include.gl]
 	define math [-.math]
+	define glapi [-.glapi]
+	define main [-.main]
 
 .include [---]mms-config.
 

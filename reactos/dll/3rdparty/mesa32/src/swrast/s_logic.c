@@ -229,13 +229,13 @@ _swrast_logicop_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
    if (span->array->ChanType == GL_UNSIGNED_BYTE) {
       /* treat 4*GLubyte as GLuint */
       logicop_uint1(ctx, span->end,
-                    (GLuint *) span->array->color.sz1.rgba,
+                    (GLuint *) span->array->rgba8,
                     (const GLuint *) rbPixels, span->array->mask);
    }
    else if (span->array->ChanType == GL_UNSIGNED_SHORT) {
       /* treat 2*GLushort as GLuint */
       logicop_uint2(ctx, 2 * span->end,
-                    (GLuint *) span->array->color.sz2.rgba,
+                    (GLuint *) span->array->rgba16,
                     (const GLuint *) rbPixels, span->array->mask);
    }
    else {

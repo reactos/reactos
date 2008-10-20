@@ -169,8 +169,9 @@ Caption ""
 FONT 9, "MS Song"
 BEGIN
     GROUPBOX "自动换行", 0, 10, 10, 130, 85
-    RADIOBUTTON "按视窗宽度(&W)", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "按纸张宽度(&M)", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "按视窗宽度(&W)", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "按纸张宽度(&M)", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "工具栏", 0, 150, 10, 120, 85
     CHECKBOX "工具栏(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "格式工具栏(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15

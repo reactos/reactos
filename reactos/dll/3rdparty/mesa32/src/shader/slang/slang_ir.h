@@ -33,10 +33,10 @@
 #define SLANG_IR_H
 
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
 #include "slang_label.h"
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 
 /**
@@ -70,14 +70,14 @@ typedef enum
                  /* n->Parent = ptr to parent IR_LOOP Node */
    IR_BREAK,     /* break loop */
 
-   IR_BREAK_IF_TRUE,
+   IR_BREAK_IF_TRUE, /**< Children[0] = the condition expression */
    IR_CONT_IF_TRUE,
-                 /* Children[0] = the condition expression */
 
-   IR_MOVE,
+   IR_COPY,       /**< assignment/copy */
+   IR_MOVE,       /**< assembly MOV instruction */
 
    /* vector ops: */
-   IR_ADD,
+   IR_ADD,        /**< assembly ADD instruction */
    IR_SUB,
    IR_MUL,
    IR_DIV,
@@ -146,6 +146,12 @@ struct _slang_ir_storage
    GLint Size;  /**< number of floats */
    GLuint Swizzle;
    GLint RefCount; /**< Used during IR tree delete */
+   GLboolean RelAddr;
+
+   /** If Parent is non-null, Index is relative to parent.
+    * The other fields are ignored.
+    */
+   struct _slang_ir_storage *Parent;
 };
 
 typedef struct _slang_ir_storage slang_ir_storage;
@@ -164,7 +170,6 @@ typedef struct slang_ir_node_
 
    /** special fields depending on Opcode: */
    const char *Field;  /**< If Opcode == IR_FIELD */
-   int FieldOffset;  /**< If Opcode == IR_FIELD */
    GLuint Writemask;  /**< If Opcode == IR_MOVE */
    GLfloat Value[4];    /**< If Opcode == IR_FLOAT */
    slang_variable *Var;  /**< If Opcode == IR_VAR or IR_VAR_DECL */
@@ -190,6 +195,20 @@ typedef struct
 
 extern const slang_ir_info *
 _slang_ir_info(slang_ir_opcode opcode);
+
+
+extern slang_ir_storage *
+_slang_new_ir_storage(enum register_file file, GLint index, GLint size);
+
+
+extern slang_ir_storage *
+_slang_new_ir_storage_swz(enum register_file file, GLint index, GLint size,
+                          GLuint swizzle);
+
+extern slang_ir_storage *
+_slang_new_ir_storage_relative(GLint index, GLint size,
+                               slang_ir_storage *parent);
+
 
 
 extern void

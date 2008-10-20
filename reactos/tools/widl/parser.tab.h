@@ -80,89 +80,91 @@
      tEXPLICITHANDLE = 306,
      tEXTERN = 307,
      tFALSE = 308,
-     tFLOAT = 309,
-     tHANDLE = 310,
-     tHANDLET = 311,
-     tHELPCONTEXT = 312,
-     tHELPFILE = 313,
-     tHELPSTRING = 314,
-     tHELPSTRINGCONTEXT = 315,
-     tHELPSTRINGDLL = 316,
-     tHIDDEN = 317,
-     tHYPER = 318,
-     tID = 319,
-     tIDEMPOTENT = 320,
-     tIIDIS = 321,
-     tIMMEDIATEBIND = 322,
-     tIMPLICITHANDLE = 323,
-     tIMPORT = 324,
-     tIMPORTLIB = 325,
-     tIN = 326,
-     tINLINE = 327,
-     tINPUTSYNC = 328,
-     tINT = 329,
-     tINT64 = 330,
-     tINTERFACE = 331,
-     tLCID = 332,
-     tLENGTHIS = 333,
-     tLIBRARY = 334,
-     tLOCAL = 335,
-     tLONG = 336,
-     tMETHODS = 337,
-     tMODULE = 338,
-     tNONBROWSABLE = 339,
-     tNONCREATABLE = 340,
-     tNONEXTENSIBLE = 341,
-     tOBJECT = 342,
-     tODL = 343,
-     tOLEAUTOMATION = 344,
-     tOPTIONAL = 345,
-     tOUT = 346,
-     tPOINTERDEFAULT = 347,
-     tPROPERTIES = 348,
-     tPROPGET = 349,
-     tPROPPUT = 350,
-     tPROPPUTREF = 351,
-     tPTR = 352,
-     tPUBLIC = 353,
-     tRANGE = 354,
-     tREADONLY = 355,
-     tREF = 356,
-     tREQUESTEDIT = 357,
-     tRESTRICTED = 358,
-     tRETVAL = 359,
-     tSAFEARRAY = 360,
-     tSHORT = 361,
-     tSIGNED = 362,
-     tSINGLE = 363,
-     tSIZEIS = 364,
-     tSIZEOF = 365,
-     tSMALL = 366,
-     tSOURCE = 367,
-     tSTDCALL = 368,
-     tSTRICTCONTEXTHANDLE = 369,
-     tSTRING = 370,
-     tSTRUCT = 371,
-     tSWITCH = 372,
-     tSWITCHIS = 373,
-     tSWITCHTYPE = 374,
-     tTRANSMITAS = 375,
-     tTRUE = 376,
-     tTYPEDEF = 377,
-     tUNION = 378,
-     tUNIQUE = 379,
-     tUNSIGNED = 380,
-     tUUID = 381,
-     tV1ENUM = 382,
-     tVARARG = 383,
-     tVERSION = 384,
-     tVOID = 385,
-     tWCHAR = 386,
-     tWIREMARSHAL = 387,
-     CAST = 388,
-     PPTR = 389,
-     NEG = 390,
-     ADDRESSOF = 391
+     tFASTCALL = 309,
+     tFLOAT = 310,
+     tHANDLE = 311,
+     tHANDLET = 312,
+     tHELPCONTEXT = 313,
+     tHELPFILE = 314,
+     tHELPSTRING = 315,
+     tHELPSTRINGCONTEXT = 316,
+     tHELPSTRINGDLL = 317,
+     tHIDDEN = 318,
+     tHYPER = 319,
+     tID = 320,
+     tIDEMPOTENT = 321,
+     tIIDIS = 322,
+     tIMMEDIATEBIND = 323,
+     tIMPLICITHANDLE = 324,
+     tIMPORT = 325,
+     tIMPORTLIB = 326,
+     tIN = 327,
+     tINLINE = 328,
+     tINPUTSYNC = 329,
+     tINT = 330,
+     tINT64 = 331,
+     tINTERFACE = 332,
+     tLCID = 333,
+     tLENGTHIS = 334,
+     tLIBRARY = 335,
+     tLOCAL = 336,
+     tLONG = 337,
+     tMETHODS = 338,
+     tMODULE = 339,
+     tNONBROWSABLE = 340,
+     tNONCREATABLE = 341,
+     tNONEXTENSIBLE = 342,
+     tOBJECT = 343,
+     tODL = 344,
+     tOLEAUTOMATION = 345,
+     tOPTIONAL = 346,
+     tOUT = 347,
+     tPASCAL = 348,
+     tPOINTERDEFAULT = 349,
+     tPROPERTIES = 350,
+     tPROPGET = 351,
+     tPROPPUT = 352,
+     tPROPPUTREF = 353,
+     tPTR = 354,
+     tPUBLIC = 355,
+     tRANGE = 356,
+     tREADONLY = 357,
+     tREF = 358,
+     tREQUESTEDIT = 359,
+     tRESTRICTED = 360,
+     tRETVAL = 361,
+     tSAFEARRAY = 362,
+     tSHORT = 363,
+     tSIGNED = 364,
+     tSINGLE = 365,
+     tSIZEIS = 366,
+     tSIZEOF = 367,
+     tSMALL = 368,
+     tSOURCE = 369,
+     tSTDCALL = 370,
+     tSTRICTCONTEXTHANDLE = 371,
+     tSTRING = 372,
+     tSTRUCT = 373,
+     tSWITCH = 374,
+     tSWITCHIS = 375,
+     tSWITCHTYPE = 376,
+     tTRANSMITAS = 377,
+     tTRUE = 378,
+     tTYPEDEF = 379,
+     tUNION = 380,
+     tUNIQUE = 381,
+     tUNSIGNED = 382,
+     tUUID = 383,
+     tV1ENUM = 384,
+     tVARARG = 385,
+     tVERSION = 386,
+     tVOID = 387,
+     tWCHAR = 388,
+     tWIREMARSHAL = 389,
+     CAST = 390,
+     PPTR = 391,
+     NEG = 392,
+     ADDRESSOF = 393
    };
 #endif
 /* Tokens.  */
@@ -217,95 +219,97 @@
 #define tEXPLICITHANDLE 306
 #define tEXTERN 307
 #define tFALSE 308
-#define tFLOAT 309
-#define tHANDLE 310
-#define tHANDLET 311
-#define tHELPCONTEXT 312
-#define tHELPFILE 313
-#define tHELPSTRING 314
-#define tHELPSTRINGCONTEXT 315
-#define tHELPSTRINGDLL 316
-#define tHIDDEN 317
-#define tHYPER 318
-#define tID 319
-#define tIDEMPOTENT 320
-#define tIIDIS 321
-#define tIMMEDIATEBIND 322
-#define tIMPLICITHANDLE 323
-#define tIMPORT 324
-#define tIMPORTLIB 325
-#define tIN 326
-#define tINLINE 327
-#define tINPUTSYNC 328
-#define tINT 329
-#define tINT64 330
-#define tINTERFACE 331
-#define tLCID 332
-#define tLENGTHIS 333
-#define tLIBRARY 334
-#define tLOCAL 335
-#define tLONG 336
-#define tMETHODS 337
-#define tMODULE 338
-#define tNONBROWSABLE 339
-#define tNONCREATABLE 340
-#define tNONEXTENSIBLE 341
-#define tOBJECT 342
-#define tODL 343
-#define tOLEAUTOMATION 344
-#define tOPTIONAL 345
-#define tOUT 346
-#define tPOINTERDEFAULT 347
-#define tPROPERTIES 348
-#define tPROPGET 349
-#define tPROPPUT 350
-#define tPROPPUTREF 351
-#define tPTR 352
-#define tPUBLIC 353
-#define tRANGE 354
-#define tREADONLY 355
-#define tREF 356
-#define tREQUESTEDIT 357
-#define tRESTRICTED 358
-#define tRETVAL 359
-#define tSAFEARRAY 360
-#define tSHORT 361
-#define tSIGNED 362
-#define tSINGLE 363
-#define tSIZEIS 364
-#define tSIZEOF 365
-#define tSMALL 366
-#define tSOURCE 367
-#define tSTDCALL 368
-#define tSTRICTCONTEXTHANDLE 369
-#define tSTRING 370
-#define tSTRUCT 371
-#define tSWITCH 372
-#define tSWITCHIS 373
-#define tSWITCHTYPE 374
-#define tTRANSMITAS 375
-#define tTRUE 376
-#define tTYPEDEF 377
-#define tUNION 378
-#define tUNIQUE 379
-#define tUNSIGNED 380
-#define tUUID 381
-#define tV1ENUM 382
-#define tVARARG 383
-#define tVERSION 384
-#define tVOID 385
-#define tWCHAR 386
-#define tWIREMARSHAL 387
-#define CAST 388
-#define PPTR 389
-#define NEG 390
-#define ADDRESSOF 391
+#define tFASTCALL 309
+#define tFLOAT 310
+#define tHANDLE 311
+#define tHANDLET 312
+#define tHELPCONTEXT 313
+#define tHELPFILE 314
+#define tHELPSTRING 315
+#define tHELPSTRINGCONTEXT 316
+#define tHELPSTRINGDLL 317
+#define tHIDDEN 318
+#define tHYPER 319
+#define tID 320
+#define tIDEMPOTENT 321
+#define tIIDIS 322
+#define tIMMEDIATEBIND 323
+#define tIMPLICITHANDLE 324
+#define tIMPORT 325
+#define tIMPORTLIB 326
+#define tIN 327
+#define tINLINE 328
+#define tINPUTSYNC 329
+#define tINT 330
+#define tINT64 331
+#define tINTERFACE 332
+#define tLCID 333
+#define tLENGTHIS 334
+#define tLIBRARY 335
+#define tLOCAL 336
+#define tLONG 337
+#define tMETHODS 338
+#define tMODULE 339
+#define tNONBROWSABLE 340
+#define tNONCREATABLE 341
+#define tNONEXTENSIBLE 342
+#define tOBJECT 343
+#define tODL 344
+#define tOLEAUTOMATION 345
+#define tOPTIONAL 346
+#define tOUT 347
+#define tPASCAL 348
+#define tPOINTERDEFAULT 349
+#define tPROPERTIES 350
+#define tPROPGET 351
+#define tPROPPUT 352
+#define tPROPPUTREF 353
+#define tPTR 354
+#define tPUBLIC 355
+#define tRANGE 356
+#define tREADONLY 357
+#define tREF 358
+#define tREQUESTEDIT 359
+#define tRESTRICTED 360
+#define tRETVAL 361
+#define tSAFEARRAY 362
+#define tSHORT 363
+#define tSIGNED 364
+#define tSINGLE 365
+#define tSIZEIS 366
+#define tSIZEOF 367
+#define tSMALL 368
+#define tSOURCE 369
+#define tSTDCALL 370
+#define tSTRICTCONTEXTHANDLE 371
+#define tSTRING 372
+#define tSTRUCT 373
+#define tSWITCH 374
+#define tSWITCHIS 375
+#define tSWITCHTYPE 376
+#define tTRANSMITAS 377
+#define tTRUE 378
+#define tTYPEDEF 379
+#define tUNION 380
+#define tUNIQUE 381
+#define tUNSIGNED 382
+#define tUUID 383
+#define tV1ENUM 384
+#define tVARARG 385
+#define tVERSION 386
+#define tVOID 387
+#define tWCHAR 388
+#define tWIREMARSHAL 389
+#define CAST 390
+#define PPTR 391
+#define NEG 392
+#define ADDRESSOF 393
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 136 "parser.y"
+#line 139 "parser.y"
 typedef union YYSTYPE {
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -329,7 +333,7 @@ typedef union YYSTYPE {
 	interface_info_t ifinfo;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 333 "parser.tab.h"
+#line 337 "parser.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

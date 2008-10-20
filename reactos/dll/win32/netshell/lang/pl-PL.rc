@@ -93,11 +93,13 @@ BEGIN
 	IDS_NET_DELETE              "Usuñ"
 	IDS_NET_PROPERTIES          "W³aœciwoœci"
 
-	IDS_FORMAT_BIT              "%u Bytes/s"
-	IDS_FORMAT_KBIT             "%u KBytes/s"
-	IDS_FORMAT_MBIT             "%u MBytes/s"
-	IDS_FORMAT_GBIT             "%u GBytes/s"
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
 	IDS_DURATION_DAY            "%d Day %s"
 	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_ASSIGNED_DHCP           "Przydzielony przez DHCP"
+	IDS_ASSIGNED_MANUAL         "Ustawiony rêcznie"
 END
 

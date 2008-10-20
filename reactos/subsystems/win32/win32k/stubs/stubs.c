@@ -1972,19 +1972,6 @@ NtGdiGetColorSpaceforBitmap(
  */
 BOOL
 APIENTRY
-NtGdiGetDeviceCapsAll (
-    IN HDC hdc,
-    OUT PDEVCAPS pDevCaps)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiGetETM(
     IN HDC hdc,
     OUT EXTTEXTMETRIC *petm)

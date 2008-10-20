@@ -210,7 +210,7 @@ public:
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 	std::vector<Library*> libraries;
-	std::vector<Property*> properties;
+	std::map<std::string, Property*> properties;
 	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
 	int asmFiles; // number of .asm files in compilationUnits
@@ -218,7 +218,7 @@ public:
 	IfableData();
 	~IfableData();
 	void ProcessXML();
-	void ExtractModules( std::vector<Module*> &modules );
+	void ExtractModules( std::map<std::string, Module*> &modules );
 };
 
 class Project
@@ -234,7 +234,7 @@ public:
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<CDFile*> cdfiles;
 	std::vector<InstallFile*> installfiles;
-	std::vector<Module*> modules;
+	std::map<std::string, Module*> modules;
 	IfableData non_if_data;
 
 	Project ( const Configuration& configuration,

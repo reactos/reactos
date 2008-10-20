@@ -299,7 +299,7 @@ static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWST
 {
     HRESULT res = S_OK;
     WCHAR dll_module[MAX_PATH];
-    LPOLESTR clsidString;
+    LPOLESTR clsidString = NULL;
     HKEY hkeyClsid;
     HKEY hkeySub;
     HKEY hkeyInproc32;
@@ -321,6 +321,7 @@ static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWST
 
     for (i = 0; i < count; i++)
     {
+	hkeySub = 0;
         if (SUCCEEDED(res))
 	{
 	    res = StringFromCLSID(pRegInfo[i].clsid, &clsidString);
@@ -361,7 +362,7 @@ static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWST
 			   (lstrlenW(pszThreadingModel) + 1) * sizeof(WCHAR));
             RegCloseKey(hkeyInproc32);
         }
-        RegCloseKey(hkeySub);
+        if (hkeySub) RegCloseKey(hkeySub);
 	CoTaskMemFree(clsidString);
 	clsidString = NULL;
     }

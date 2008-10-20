@@ -138,6 +138,11 @@ void ConsumeRegValueString( PWCHAR NameServer );
 BOOL isInterface( TDIEntityID *if_maybe );
 BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe );
 
+typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
+				     PWCHAR NameServer,
+				     PVOID Data );
+void EnumNameServers( HANDLE RegHandle, PWCHAR Interface, PVOID Data, EnumNameServersFunc cb );
+
 #include <w32api.h>
 /* This is here until we switch to version 2.5 of the mingw headers */
 #if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)

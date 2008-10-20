@@ -850,7 +850,7 @@ PsSetThreadHardErrorsAreDisabled(IN PETHREAD Thread,
 /*
  * @implemented
  */
-struct _W32THREAD*
+PVOID
 NTAPI
 PsGetCurrentThreadWin32Thread(VOID)
 {

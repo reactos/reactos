@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -129,6 +129,10 @@ _mesa_copy_texture_state( const GLcontext *src, GLcontext *dst )
                              src->Texture.Unit[i].CurrentCubeMap);
       _mesa_reference_texobj(&dst->Texture.Unit[i].CurrentRect,
                              src->Texture.Unit[i].CurrentRect);
+      _mesa_reference_texobj(&dst->Texture.Unit[i].Current1DArray,
+                             src->Texture.Unit[i].Current1DArray);
+      _mesa_reference_texobj(&dst->Texture.Unit[i].Current2DArray,
+                             src->Texture.Unit[i].Current2DArray);
 
       _mesa_unlock_context_textures(dst);
    }
@@ -208,6 +212,9 @@ calculate_derived_texenv( struct gl_tex_env_combine_state *state,
       _mesa_problem(NULL, "Invalid texBaseFormat in calculate_derived_texenv");
       return;
    }
+
+   if (mode == GL_REPLACE_EXT)
+      mode = GL_REPLACE;
 
    switch (mode) {
    case GL_REPLACE:
@@ -311,7 +318,9 @@ _mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param )
       switch (pname) {
       case GL_TEXTURE_ENV_MODE:
          {
-            const GLenum mode = (GLenum) (GLint) *param;
+            GLenum mode = (GLenum) (GLint) *param;
+            if (mode == GL_REPLACE_EXT)
+               mode = GL_REPLACE;
 	    if (texUnit->EnvMode == mode)
 	       return;
             if (mode == GL_MODULATE ||
@@ -1112,26 +1121,29 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
 /*                       Texture Parameters                           */
 /**********************************************************************/
 
+/**
+ * Check if a coordinate wrap mode is supported for the texture target.
+ * \return GL_TRUE if legal, GL_FALSE otherwise
+ */
 static GLboolean 
-_mesa_validate_texture_wrap_mode(GLcontext * ctx,
-				 GLenum target, GLenum eparam)
+validate_texture_wrap_mode(GLcontext * ctx, GLenum target, GLenum wrap)
 {
    const struct gl_extensions * const e = & ctx->Extensions;
 
-   if (eparam == GL_CLAMP || eparam == GL_CLAMP_TO_EDGE ||
-       (eparam == GL_CLAMP_TO_BORDER && e->ARB_texture_border_clamp)) {
+   if (wrap == GL_CLAMP || wrap == GL_CLAMP_TO_EDGE ||
+       (wrap == GL_CLAMP_TO_BORDER && e->ARB_texture_border_clamp)) {
       /* any texture target */
       return GL_TRUE;
    }
    else if (target != GL_TEXTURE_RECTANGLE_NV &&
-	    (eparam == GL_REPEAT ||
-	     (eparam == GL_MIRRORED_REPEAT &&
+	    (wrap == GL_REPEAT ||
+	     (wrap == GL_MIRRORED_REPEAT &&
 	      e->ARB_texture_mirrored_repeat) ||
-	     (eparam == GL_MIRROR_CLAMP_EXT &&
+	     (wrap == GL_MIRROR_CLAMP_EXT &&
 	      (e->ATI_texture_mirror_once || e->EXT_texture_mirror_clamp)) ||
-	     (eparam == GL_MIRROR_CLAMP_TO_EDGE_EXT &&
+	     (wrap == GL_MIRROR_CLAMP_TO_EDGE_EXT &&
 	      (e->ATI_texture_mirror_once || e->EXT_texture_mirror_clamp)) ||
-	     (eparam == GL_MIRROR_CLAMP_TO_BORDER_EXT &&
+	     (wrap == GL_MIRROR_CLAMP_TO_BORDER_EXT &&
 	      (e->EXT_texture_mirror_clamp)))) {
       /* non-rectangle texture */
       return GL_TRUE;
@@ -1196,6 +1208,20 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
          }
          texObj = texUnit->CurrentRect;
          break;
+      case GL_TEXTURE_1D_ARRAY_EXT:
+         if (!ctx->Extensions.MESA_texture_array) {
+            _mesa_error( ctx, GL_INVALID_ENUM, "glTexParameter(target)" );
+            return;
+         }
+         texObj = texUnit->Current1DArray;
+         break;
+      case GL_TEXTURE_2D_ARRAY_EXT:
+         if (!ctx->Extensions.MESA_texture_array) {
+            _mesa_error( ctx, GL_INVALID_ENUM, "glTexParameter(target)" );
+            return;
+         }
+         texObj = texUnit->Current2DArray;
+         break;
       default:
          _mesa_error( ctx, GL_INVALID_ENUM, "glTexParameter(target)" );
          return;
@@ -1240,7 +1266,7 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
       case GL_TEXTURE_WRAP_S:
          if (texObj->WrapS == eparam)
             return;
-         if (_mesa_validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
+         if (validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texObj->WrapS = eparam;
          }
@@ -1251,7 +1277,7 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
       case GL_TEXTURE_WRAP_T:
          if (texObj->WrapT == eparam)
             return;
-         if (_mesa_validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
+         if (validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texObj->WrapT = eparam;
          }
@@ -1262,7 +1288,7 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
       case GL_TEXTURE_WRAP_R:
          if (texObj->WrapR == eparam)
             return;
-         if (_mesa_validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
+         if (validate_texture_wrap_mode(ctx, texObj->Target, eparam)) {
             FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texObj->WrapR = eparam;
          }
@@ -1380,6 +1406,7 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
          break;
       case GL_GENERATE_MIPMAP_SGIS:
          if (ctx->Extensions.SGIS_generate_mipmap) {
+            FLUSH_VERTICES(ctx, _NEW_TEXTURE);
             texObj->GenerateMipmap = params[0] ? GL_TRUE : GL_FALSE;
          }
          else {
@@ -1472,7 +1499,7 @@ _mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params )
          return;
    }
 
-   texObj->Complete = GL_FALSE;
+   texObj->_Complete = GL_FALSE;
 
    if (ctx->Driver.TexParameter) {
       (*ctx->Driver.TexParameter)( ctx, target, texObj, pname, params );
@@ -1549,6 +1576,12 @@ tex_image_dimensions(GLcontext *ctx, GLenum target)
       case GL_TEXTURE_RECTANGLE_NV:
       case GL_PROXY_TEXTURE_RECTANGLE_NV:
          return ctx->Extensions.NV_texture_rectangle ? 2 : 0;
+      case GL_TEXTURE_1D_ARRAY_EXT:
+      case GL_PROXY_TEXTURE_1D_ARRAY_EXT:
+         return ctx->Extensions.MESA_texture_array ? 2 : 0;
+      case GL_TEXTURE_2D_ARRAY_EXT:
+      case GL_PROXY_TEXTURE_2D_ARRAY_EXT:
+         return ctx->Extensions.MESA_texture_array ? 3 : 0;
       default:
          _mesa_problem(ctx, "bad target in _mesa_tex_target_dimensions()");
          return 0;
@@ -2744,6 +2777,47 @@ update_texture_matrices( GLcontext *ctx )
 
 
 /**
+ * Update texture object's _Function field.  We need to do this
+ * whenever any of the texture object's shadow-related fields change
+ * or when we start/stop using a fragment program.
+ *
+ * This function could be expanded someday to update additional per-object
+ * fields that depend on assorted state changes.
+ */
+static void
+update_texture_compare_function(GLcontext *ctx,
+                                struct gl_texture_object *tObj)
+{
+   /* XXX temporarily disable this test since it breaks the GLSL
+    * shadow2D(), etc. functions.
+    */
+   if (0 /*ctx->FragmentProgram._Current*/) {
+      /* Texel/coordinate comparison is ignored for programs.
+       * See GL_ARB_fragment_program/shader spec for details.
+       */
+      tObj->_Function = GL_NONE;
+   }
+   else if (tObj->CompareFlag) {
+      /* GL_SGIX_shadow */
+      if (tObj->CompareOperator == GL_TEXTURE_LEQUAL_R_SGIX) {
+         tObj->_Function = GL_LEQUAL;
+      }
+      else {
+         ASSERT(tObj->CompareOperator == GL_TEXTURE_GEQUAL_R_SGIX);
+         tObj->_Function = GL_GEQUAL;
+      }
+   }
+   else if (tObj->CompareMode == GL_COMPARE_R_TO_TEXTURE_ARB) {
+      /* GL_ARB_shadow */
+      tObj->_Function = tObj->CompareFunc;
+   }
+   else {
+      tObj->_Function = GL_NONE;  /* pass depth through as grayscale */
+   }
+}
+
+
+/**
  * Helper function for determining which texture object (1D, 2D, cube, etc)
  * should actually be used.
  */
@@ -2753,12 +2827,13 @@ texture_override(GLcontext *ctx,
                  struct gl_texture_object *texObj, GLuint textureBit)
 {
    if (!texUnit->_ReallyEnabled && (enableBits & textureBit)) {
-      if (!texObj->Complete) {
+      if (!texObj->_Complete) {
          _mesa_test_texobj_completeness(ctx, texObj);
       }
-      if (texObj->Complete) {
+      if (texObj->_Complete) {
          texUnit->_ReallyEnabled = textureBit;
          texUnit->_Current = texObj;
+         update_texture_compare_function(ctx, texObj);
       }
    }
 }
@@ -2839,6 +2914,10 @@ update_texture_state( GLcontext *ctx )
        * complete.  That's the one we'll use for texturing.  If we're using
        * a fragment program we're guaranteed that bitcount(enabledBits) <= 1.
        */
+      texture_override(ctx, texUnit, enableBits,
+                       texUnit->Current2DArray, TEXTURE_2D_ARRAY_BIT);
+      texture_override(ctx, texUnit, enableBits,
+                       texUnit->Current1DArray, TEXTURE_1D_ARRAY_BIT);
       texture_override(ctx, texUnit, enableBits,
                        texUnit->CurrentCubeMap, TEXTURE_CUBE_BIT);
       texture_override(ctx, texUnit, enableBits,
@@ -2921,6 +3000,24 @@ update_texture_state( GLcontext *ctx )
          _mesa_problem(ctx, "invalid Alpha combine mode in update_texture_state");
 	 break;
       }
+   }
+
+   /* Determine which texture coordinate sets are actually needed */
+   if (fprog) {
+      const GLuint coordMask = (1 << MAX_TEXTURE_COORD_UNITS) - 1;
+      ctx->Texture._EnabledCoordUnits
+         = (fprog->Base.InputsRead >> FRAG_ATTRIB_TEX0) & coordMask;
+   }
+   else {
+      ctx->Texture._EnabledCoordUnits = ctx->Texture._EnabledUnits;
+   }
+
+   /* Setup texgen for those texture coordinate sets that are in use */
+   for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++) {
+      struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
+
+      if (!(ctx->Texture._EnabledCoordUnits & (1 << unit)))
+	 continue;
 
       if (texUnit->TexGenEnabled) {
 	 if (texUnit->TexGenEnabled & S_BIT) {
@@ -2942,16 +3039,6 @@ update_texture_state( GLcontext *ctx )
 
       if (ctx->TextureMatrixStack[unit].Top->type != MATRIX_IDENTITY)
 	 ctx->Texture._TexMatEnabled |= ENABLE_TEXMAT(unit);
-   }
-
-   /* Determine which texture coordinate sets are actually needed */
-   if (fprog) {
-      const GLuint coordMask = (1 << MAX_TEXTURE_COORD_UNITS) - 1;
-      ctx->Texture._EnabledCoordUnits
-         = (fprog->Base.InputsRead >> FRAG_ATTRIB_TEX0) & coordMask;
-   }
-   else {
-      ctx->Texture._EnabledCoordUnits = ctx->Texture._EnabledUnits;
    }
 }
 
@@ -2987,42 +3074,32 @@ _mesa_update_texture( GLcontext *ctx, GLuint new_state )
 static GLboolean
 alloc_proxy_textures( GLcontext *ctx )
 {
-   ctx->Texture.Proxy1D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_1D);
-   if (!ctx->Texture.Proxy1D)
-      goto cleanup;
+   static const GLenum targets[] = {
+      GL_TEXTURE_1D,
+      GL_TEXTURE_2D,
+      GL_TEXTURE_3D,
+      GL_TEXTURE_CUBE_MAP_ARB,
+      GL_TEXTURE_RECTANGLE_NV,
+      GL_TEXTURE_1D_ARRAY_EXT,
+      GL_TEXTURE_2D_ARRAY_EXT
+   };
+   GLint tgt;
 
-   ctx->Texture.Proxy2D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_2D);
-   if (!ctx->Texture.Proxy2D)
-      goto cleanup;
+   ASSERT(Elements(targets) == NUM_TEXTURE_TARGETS);
 
-   ctx->Texture.Proxy3D = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_3D);
-   if (!ctx->Texture.Proxy3D)
-      goto cleanup;
+   for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++) {
+      if (!(ctx->Texture.ProxyTex[tgt]
+            = ctx->Driver.NewTextureObject(ctx, 0, targets[tgt]))) {
+         /* out of memory, free what we did allocate */
+         while (--tgt >= 0) {
+            ctx->Driver.DeleteTexture(ctx, ctx->Texture.ProxyTex[tgt]);
+         }
+         return GL_FALSE;
+      }
+   }
 
-   ctx->Texture.ProxyCubeMap = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_CUBE_MAP_ARB);
-   if (!ctx->Texture.ProxyCubeMap)
-      goto cleanup;
-
-   ctx->Texture.ProxyRect = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_RECTANGLE_NV);
-   if (!ctx->Texture.ProxyRect)
-      goto cleanup;
-
-   assert(ctx->Texture.Proxy1D->RefCount == 1);
-
+   assert(ctx->Texture.ProxyTex[0]->RefCount == 1); /* sanity check */
    return GL_TRUE;
-
- cleanup:
-   if (ctx->Texture.Proxy1D)
-      (ctx->Driver.DeleteTexture)(ctx, ctx->Texture.Proxy1D);
-   if (ctx->Texture.Proxy2D)
-      (ctx->Driver.DeleteTexture)(ctx, ctx->Texture.Proxy2D);
-   if (ctx->Texture.Proxy3D)
-      (ctx->Driver.DeleteTexture)(ctx, ctx->Texture.Proxy3D);
-   if (ctx->Texture.ProxyCubeMap)
-      (ctx->Driver.DeleteTexture)(ctx, ctx->Texture.ProxyCubeMap);
-   if (ctx->Texture.ProxyRect)
-      (ctx->Driver.DeleteTexture)(ctx, ctx->Texture.ProxyRect);
-   return GL_FALSE;
 }
 
 
@@ -3070,6 +3147,8 @@ init_texture_unit( GLcontext *ctx, GLuint unit )
    _mesa_reference_texobj(&texUnit->Current3D, ctx->Shared->Default3D);
    _mesa_reference_texobj(&texUnit->CurrentCubeMap, ctx->Shared->DefaultCubeMap);
    _mesa_reference_texobj(&texUnit->CurrentRect, ctx->Shared->DefaultRect);
+   _mesa_reference_texobj(&texUnit->Current1DArray, ctx->Shared->Default1DArray);
+   _mesa_reference_texobj(&texUnit->Current2DArray, ctx->Shared->Default2DArray);
 }
 
 
@@ -3109,12 +3188,12 @@ _mesa_init_texture(GLcontext *ctx)
 
 
 /**
- * Free dynamically-allocated texture data attached to the given context.
+ * Free dynamically-allocted texture data attached to the given context.
  */
 void
 _mesa_free_texture_data(GLcontext *ctx)
 {
-   GLuint u;
+   GLuint u, tgt;
 
    /* unreference current textures */
    for (u = 0; u < MAX_TEXTURE_IMAGE_UNITS; u++) {
@@ -3124,17 +3203,40 @@ _mesa_free_texture_data(GLcontext *ctx)
       _mesa_reference_texobj(&unit->Current3D, NULL);
       _mesa_reference_texobj(&unit->CurrentCubeMap, NULL);
       _mesa_reference_texobj(&unit->CurrentRect, NULL);
+      _mesa_reference_texobj(&unit->Current1DArray, NULL);
+      _mesa_reference_texobj(&unit->Current2DArray, NULL);
    }
 
    /* Free proxy texture objects */
-   (ctx->Driver.DeleteTexture)(ctx,  ctx->Texture.Proxy1D );
-   (ctx->Driver.DeleteTexture)(ctx,  ctx->Texture.Proxy2D );
-   (ctx->Driver.DeleteTexture)(ctx,  ctx->Texture.Proxy3D );
-   (ctx->Driver.DeleteTexture)(ctx,  ctx->Texture.ProxyCubeMap );
-   (ctx->Driver.DeleteTexture)(ctx,  ctx->Texture.ProxyRect );
+   for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++)
+      ctx->Driver.DeleteTexture(ctx, ctx->Texture.ProxyTex[tgt]);
 
    for (u = 0; u < MAX_TEXTURE_IMAGE_UNITS; u++)
       _mesa_free_colortable_data( &ctx->Texture.Unit[u].ColorTable );
 
    _mesa_TexEnvProgramCacheDestroy( ctx );
+}
+
+
+/**
+ * Update the default texture objects in the given context to reference those
+ * specified in the shared state and release those referencing the old 
+ * shared state.
+ */
+void
+_mesa_update_default_objects_texture(GLcontext *ctx)
+{
+   GLuint i;
+
+   for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
+      struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
+
+      _mesa_reference_texobj(&texUnit->Current1D, ctx->Shared->Default1D);
+      _mesa_reference_texobj(&texUnit->Current2D, ctx->Shared->Default2D);
+      _mesa_reference_texobj(&texUnit->Current3D, ctx->Shared->Default3D);
+      _mesa_reference_texobj(&texUnit->CurrentCubeMap, ctx->Shared->DefaultCubeMap);
+      _mesa_reference_texobj(&texUnit->CurrentRect, ctx->Shared->DefaultRect);
+      _mesa_reference_texobj(&texUnit->Current1DArray, ctx->Shared->Default1DArray);
+      _mesa_reference_texobj(&texUnit->Current2DArray, ctx->Shared->Default2DArray);
+   }
 }

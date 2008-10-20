@@ -116,6 +116,7 @@
 		<file>prog_parameter.c</file>
 		<file>prog_print.c</file>
 		<file>prog_statevars.c</file>
+		<file>prog_uniform.c</file>
 		<file>program.c</file>
 		<file>programopt.c</file>
 		<directory name="grammar">

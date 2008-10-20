@@ -171,7 +171,7 @@ uniform gl_FogParameters gl_Fog;
 float radians(const float deg)
 {
    const float c = 3.1415926 / 180.0;
-   __asm vec4_multiply __retVal.x, deg, c;
+   __asm vec4_multiply __retVal, deg, c;
 }
 
 vec2 radians(const vec2 deg)
@@ -198,24 +198,24 @@ vec4 radians(const vec4 deg)
 float degrees(const float rad)
 {
    const float c = 180.0 / 3.1415926;
-   __asm vec4_multiply __retVal.x, rad, c;
+   __asm vec4_multiply __retVal, rad, c;
 }
 
 vec2 degrees(const vec2 rad)
 {
-   const float c = 3.1415926 / 180.0;
+   const float c = 180.0 / 3.1415926;
    __asm vec4_multiply __retVal.xy, rad.xy, c.xx;
 }
 
 vec3 degrees(const vec3 rad)
 {
-   const float c = 3.1415926 / 180.0;
+   const float c = 180.0 / 3.1415926;
    __asm vec4_multiply __retVal.xyz, rad.xyz, c.xxx;
 }
 
 vec4 degrees(const vec4 rad)
 {
-   const float c = 3.1415926 / 180.0;
+   const float c = 180.0 / 3.1415926;
    __asm vec4_multiply __retVal, rad, c.xxxx;
 }
 
@@ -224,7 +224,7 @@ vec4 degrees(const vec4 rad)
 
 float sin(const float radians)
 {
-   __asm float_sine __retVal.x, radians;
+   __asm float_sine __retVal, radians;
 }
 
 vec2 sin(const vec2 radians)
@@ -253,7 +253,7 @@ vec4 sin(const vec4 radians)
 
 float cos(const float radians)
 {
-   __asm float_cosine __retVal.x, radians;
+   __asm float_cosine __retVal, radians;
 }
 
 vec2 cos(const vec2 radians)
@@ -343,6 +343,7 @@ vec4 asin(const vec4 v)
    __retVal.x = asin(v.x);
    __retVal.y = asin(v.y);
    __retVal.z = asin(v.z);
+   __retVal.w = asin(v.w);
 }
 
 float acos(const float x)
@@ -400,16 +401,17 @@ vec4 atan(const vec4 y_over_x)
 
 float atan(const float y, const float x)
 {
-    if (x == 0.0)
-       return 0.0;
-    float z = atan(y / x);
-    if (x < 0.0)
-    {
-        if (y < 0.0)
-            return z - 3.141593;
-        return z + 3.141593;
-    }
-    return z;
+   float r;
+   if (abs(x) > 1.0e-4) {
+      r = atan(y / x);
+      if (x < 0.0) {
+         r = r + sign(y) * 3.141593;
+      }
+   }
+   else {
+      r = sign(y) * 1.5707965;  // pi/2
+   }
+   return r;
 }
 
 vec2 atan(const vec2 u, const vec2 v)
@@ -442,7 +444,7 @@ vec4 atan(const vec4 u, const vec4 v)
 
 float pow(const float a, const float b)
 {
-   __asm float_power __retVal.x, a, b;
+   __asm float_power __retVal, a, b;
 }
 
 vec2 pow(const vec2 a, const vec2 b)
@@ -471,32 +473,33 @@ vec4 pow(const vec4 a, const vec4 b)
 
 float exp(const float a)
 {
-   const float e = 2.71828;
-   __asm float_power __retVal, e, a;
+   // NOTE: log2(e) = 1.44269502
+   float t = a * 1.44269502;
+   __asm float_exp2 __retVal, t;
 }
 
 vec2 exp(const vec2 a)
 {
-   const float e = 2.71828;
-   __asm float_power __retVal.x, e, a.x;
-   __asm float_power __retVal.y, e, a.y;
+   vec2 t = a * 1.44269502;
+   __asm float_exp2 __retVal.x, t.x;
+   __asm float_exp2 __retVal.y, t.y;
 }
 
 vec3 exp(const vec3 a)
 {
-   const float e = 2.71828;
-   __asm float_power __retVal.x, e, a.x;
-   __asm float_power __retVal.y, e, a.y;
-   __asm float_power __retVal.z, e, a.z;
+   vec3 t = a * 1.44269502;
+   __asm float_exp2 __retVal.x, t.x;
+   __asm float_exp2 __retVal.y, t.y;
+   __asm float_exp2 __retVal.z, t.z;
 }
 
 vec4 exp(const vec4 a)
 {
-   const float e = 2.71828;
-   __asm float_power __retVal.x, e, a.x;
-   __asm float_power __retVal.y, e, a.y;
-   __asm float_power __retVal.z, e, a.z;
-   __asm float_power __retVal.w, e, a.w;
+   vec4 t = a * 1.44269502;
+   __asm float_exp2 __retVal.x, t.x;
+   __asm float_exp2 __retVal.y, t.y;
+   __asm float_exp2 __retVal.z, t.z;
+   __asm float_exp2 __retVal.w, t.w;
 }
 
 
@@ -505,7 +508,7 @@ vec4 exp(const vec4 a)
 
 float log2(const float x)
 {
-   __asm float_log2 __retVal.x, x;
+   __asm float_log2 __retVal, x;
 }
 
 vec2 log2(const vec2 v)
@@ -564,7 +567,7 @@ vec4 log(const vec4 v)
 
 float exp2(const float a)
 {
-   __asm float_exp2 __retVal.x, a;
+   __asm float_exp2 __retVal, a;
 }
 
 vec2 exp2(const vec2 a)
@@ -595,7 +598,7 @@ float sqrt(const float x)
 {
    float r;
    __asm float_rsq r, x;
-   __asm float_rcp __retVal.x, r;
+   __asm float_rcp __retVal, r;
 }
 
 vec2 sqrt(const vec2 v)
@@ -665,13 +668,13 @@ vec4 inversesqrt(const vec4 v)
 
 float normalize(const float x)
 {
-   __retVal.x = 1.0;
+   __retVal = 1.0;
 }
 
 vec2 normalize(const vec2 v)
 {
    const float s = inversesqrt(dot(v, v));
-   __asm vec4_multiply __retVal.xy, v, s.xx;
+   __asm vec4_multiply __retVal.xy, v, s;
 }
 
 vec3 normalize(const vec3 v)
@@ -684,7 +687,7 @@ vec3 normalize(const vec3 v)
    float tmp;
    __asm vec3_dot tmp, v, v;
    __asm float_rsq tmp, tmp;
-   __asm vec4_multiply __retVal.xyz, v, tmp.xxx;
+   __asm vec4_multiply __retVal.xyz, v, tmp;
 }
 
 vec4 normalize(const vec4 v)
@@ -692,7 +695,7 @@ vec4 normalize(const vec4 v)
    float tmp;
    __asm vec4_dot tmp, v, v;
    __asm float_rsq tmp, tmp;
-   __asm vec4_multiply __retVal.xyz, v, tmp.xxx;
+   __asm vec4_multiply __retVal.xyz, v, tmp;
 }
 
 
@@ -706,7 +709,7 @@ vec4 normalize(const vec4 v)
 
 float abs(const float a)
 {
-   __asm vec4_abs __retVal.x, a;
+   __asm vec4_abs __retVal, a;
 }
 
 vec2 abs(const vec2 a)
@@ -730,9 +733,9 @@ vec4 abs(const vec4 a)
 float sign(const float x)
 {
    float p, n;
-   __asm vec4_sgt p.x, x, 0.0;            // p = (x > 0)
-   __asm vec4_sgt n.x, 0.0, x;            // n = (x < 0)
-   __asm vec4_subtract __retVal.x, p, n;  // sign = p - n
+   __asm vec4_sgt p, x, 0.0;            // p = (x > 0)
+   __asm vec4_sgt n, 0.0, x;            // n = (x < 0)
+   __asm vec4_subtract __retVal, p, n;  // sign = p - n
 }
 
 vec2 sign(const vec2 v)
@@ -764,7 +767,7 @@ vec4 sign(const vec4 v)
 
 float floor(const float a)
 {
-   __asm vec4_floor __retVal.x, a;
+   __asm vec4_floor __retVal, a;
 }
 
 vec2 floor(const vec2 a)
@@ -790,7 +793,7 @@ float ceil(const float a)
    // XXX this could be improved
    float b = -a;
    __asm vec4_floor b, b;
-   __retVal.x = -b;
+   __retVal = -b;
 }
 
 vec2 ceil(const vec2 a)
@@ -819,7 +822,7 @@ vec4 ceil(const vec4 a)
 
 float fract(const float a)
 {
-   __asm vec4_frac __retVal.x, a;
+   __asm vec4_frac __retVal, a;
 }
 
 vec2 fract(const vec2 a)
@@ -844,7 +847,7 @@ float mod(const float a, const float b)
 {
     float oneOverB;
     __asm float_rcp oneOverB, b;
-    __retVal.x = a - b * floor(a * oneOverB);
+    __retVal = a - b * floor(a * oneOverB);
 }
 
 vec2 mod(const vec2 a, const float b)
@@ -870,35 +873,29 @@ vec4 mod(const vec4 a, const float b)
 
 vec2 mod(const vec2 a, const vec2 b)
 {
-    float oneOverBx, oneOverBy;
-    __asm float_rcp oneOverBx, b.x;
-    __asm float_rcp oneOverBy, b.y;
-    __retVal.x = a.x - b.x * floor(a.x * oneOverBx);
-    __retVal.y = a.y - b.y * floor(a.y * oneOverBy);
+    vec2 oneOverB;
+    __asm float_rcp oneOverB.x, b.x;
+    __asm float_rcp oneOverB.y, b.y;
+    __retVal = a - b * floor(a * oneOverB);
 }
 
 vec3 mod(const vec3 a, const vec3 b)
 {
-    float oneOverBx, oneOverBy, oneOverBz;
-    __asm float_rcp oneOverBx, b.x;
-    __asm float_rcp oneOverBy, b.y;
-    __asm float_rcp oneOverBz, b.z;
-    __retVal.x = a.x - b.x * floor(a.x * oneOverBx);
-    __retVal.y = a.y - b.y * floor(a.y * oneOverBy);
-    __retVal.z = a.z - b.z * floor(a.z * oneOverBz);
+    vec3 oneOverB;
+    __asm float_rcp oneOverB.x, b.x;
+    __asm float_rcp oneOverB.y, b.y;
+    __asm float_rcp oneOverB.z, b.z;
+    __retVal = a - b * floor(a * oneOverB);
 }
 
 vec4 mod(const vec4 a, const vec4 b)
 {
-    float oneOverBx, oneOverBy, oneOverBz, oneOverBw;
-    __asm float_rcp oneOverBx, b.x;
-    __asm float_rcp oneOverBy, b.y;
-    __asm float_rcp oneOverBz, b.z;
-    __asm float_rcp oneOverBw, b.w;
-    __retVal.x = a.x - b.x * floor(a.x * oneOverBx);
-    __retVal.y = a.y - b.y * floor(a.y * oneOverBy);
-    __retVal.z = a.z - b.z * floor(a.z * oneOverBz);
-    __retVal.w = a.w - b.w * floor(a.w * oneOverBw);
+    vec4 oneOverB;
+    __asm float_rcp oneOverB.x, b.x;
+    __asm float_rcp oneOverB.y, b.y;
+    __asm float_rcp oneOverB.z, b.z;
+    __asm float_rcp oneOverB.w, b.w;
+    __retVal = a - b * floor(a * oneOverB);
 }
 
 
@@ -906,7 +903,7 @@ vec4 mod(const vec4 a, const vec4 b)
 
 float min(const float a, const float b)
 {
-   __asm vec4_min __retVal.x, a.x, b.x;
+   __asm vec4_min __retVal, a, b;
 }
 
 vec2 min(const vec2 a, const vec2 b)
@@ -926,17 +923,17 @@ vec4 min(const vec4 a, const vec4 b)
 
 vec2 min(const vec2 a, const float b)
 {
-   __asm vec4_min __retVal, a.xy, b.xx;
+   __asm vec4_min __retVal, a.xy, b;
 }
 
 vec3 min(const vec3 a, const float b)
 {
-   __asm vec4_min __retVal, a.xyz, b.xxx;
+   __asm vec4_min __retVal, a.xyz, b;
 }
 
 vec4 min(const vec4 a, const float b)
 {
-   __asm vec4_min __retVal, a, b.xxxx;
+   __asm vec4_min __retVal, a, b;
 }
 
 
@@ -944,7 +941,7 @@ vec4 min(const vec4 a, const float b)
 
 float max(const float a, const float b)
 {
-   __asm vec4_max __retVal.x, a.x, b.x;
+   __asm vec4_max __retVal, a, b;
 }
 
 vec2 max(const vec2 a, const vec2 b)
@@ -964,17 +961,17 @@ vec4 max(const vec4 a, const vec4 b)
 
 vec2 max(const vec2 a, const float b)
 {
-   __asm vec4_max __retVal, a.xy, b.xx;
+   __asm vec4_max __retVal, a.xy, b;
 }
 
 vec3 max(const vec3 a, const float b)
 {
-   __asm vec4_max __retVal, a.xyz, b.xxx;
+   __asm vec4_max __retVal, a.xyz, b;
 }
 
 vec4 max(const vec4 a, const float b)
 {
-   __asm vec4_max __retVal, a, b.xxxx;
+   __asm vec4_max __retVal, a, b;
 }
 
 
@@ -1054,45 +1051,45 @@ vec4 mix(const vec4 x, const vec4 y, const vec4 a)
 }
 
 
-//// step (untested)
+//// step
 
 float step(const float edge, const float x)
 {
-   __asm vec4_sgt __retVal.x, x, edge;
+   __asm vec4_sge __retVal, x, edge;
 }
 
 vec2 step(const vec2 edge, const vec2 x)
 {
-   __asm vec4_sgt __retVal.xy, x, edge;
+   __asm vec4_sge __retVal.xy, x, edge;
 }
 
 vec3 step(const vec3 edge, const vec3 x)
 {
-   __asm vec4_sgt __retVal.xyz, x, edge;
+   __asm vec4_sge __retVal.xyz, x, edge;
 }
 
 vec4 step(const vec4 edge, const vec4 x)
 {
-   __asm vec4_sgt __retVal, x, edge;
+   __asm vec4_sge __retVal, x, edge;
 }
 
 vec2 step(const float edge, const vec2 v)
 {
-   __asm vec4_sgt __retVal.xy, v, edge.xx;
+   __asm vec4_sge __retVal.xy, v, edge;
 }
 
 vec3 step(const float edge, const vec3 v)
 {
-   __asm vec4_sgt __retVal.xyz, v, edge.xxx;
+   __asm vec4_sge __retVal.xyz, v, edge;
 }
 
 vec4 step(const float edge, const vec4 v)
 {
-   __asm vec4_sgt __retVal, v, edge.xxxx;
+   __asm vec4_sge __retVal, v, edge;
 }
 
 
-//// smoothstep (untested)
+//// smoothstep
 
 float smoothstep(const float edge0, const float edge1, const float x)
 {
@@ -1163,7 +1160,7 @@ float length(const vec3 v)
    float r;
    const float p = dot(v, v);      // p = v.x * v.x + v.y * v.y + v.z * v.z
    __asm float_rsq r, p;           // r = 1 / sqrt(p)
-   __asm float_rcp __retVal.x, r;  // retVal = 1 / r
+   __asm float_rcp __retVal, r;    // retVal = 1 / r
 }
 
 float length(const vec4 v)
@@ -1171,7 +1168,7 @@ float length(const vec4 v)
    float r;
    const float p = dot(v, v);      // p = v.x * v.x + v.y * v.y + ...
    __asm float_rsq r, p;           // r = 1 / sqrt(p)
-   __asm float_rcp __retVal.x, r;  // retVal = 1 / r
+   __asm float_rcp __retVal, r;    // retVal = 1 / r
 }
 
 
@@ -1217,7 +1214,7 @@ float faceforward(const float N, const float I, const float Nref)
     // this could probably be done better
     const float d = dot(Nref, I);
     float s;
-    __asm vec4_sgt s.x, 0.0, d;  // s = (0.0 > d) ? 1 : 0
+    __asm vec4_sgt s, 0.0, d;  // s = (0.0 > d) ? 1 : 0
     return mix(-N, N, s);
 }
 
@@ -1226,7 +1223,7 @@ vec2 faceforward(const vec2 N, const vec2 I, const vec2 Nref)
     // this could probably be done better
     const float d = dot(Nref, I);
     float s;
-    __asm vec4_sgt s.x, 0.0, d;  // s = (0.0 > d) ? 1 : 0
+    __asm vec4_sgt s, 0.0, d;  // s = (0.0 > d) ? 1 : 0
     return mix(-N, N, s);
 }
 
@@ -1235,7 +1232,7 @@ vec3 faceforward(const vec3 N, const vec3 I, const vec3 Nref)
     // this could probably be done better
     const float d = dot(Nref, I);
     float s;
-    __asm vec4_sgt s.x, 0.0, d;  // s = (0.0 > d) ? 1 : 0
+    __asm vec4_sgt s, 0.0, d;  // s = (0.0 > d) ? 1 : 0
     return mix(-N, N, s);
 }
 
@@ -1244,7 +1241,7 @@ vec4 faceforward(const vec4 N, const vec4 I, const vec4 Nref)
     // this could probably be done better
     const float d = dot(Nref, I);
     float s;
-    __asm vec4_sgt s.x, 0.0, d;  // s = (0.0 > d) ? 1 : 0
+    __asm vec4_sgt s, 0.0, d;  // s = (0.0 > d) ? 1 : 0
     return mix(-N, N, s);
 }
 
@@ -1275,34 +1272,50 @@ vec4 reflect(const vec4 I, const vec4 N)
 
 float refract(const float I, const float N, const float eta)
 {
-   float k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+   float n_dot_i = dot(N, I);
+   float k = 1.0 - eta * eta * (1.0 - n_dot_i * n_dot_i);
+   float retval;
    if (k < 0.0)
-       return 0.0;
-   return eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+      retval = 0.0;
+   else
+      retval = eta * I - (eta * n_dot_i + sqrt(k)) * N;
+   return retval;
 }
 
 vec2 refract(const vec2 I, const vec2 N, const float eta)
 {
-   float k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+   float n_dot_i = dot(N, I);
+   float k = 1.0 - eta * eta * (1.0 - n_dot_i * n_dot_i);
+   vec2 retval;
    if (k < 0.0)
-      return 0.0;
-   return eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+      retval = vec2(0.0);
+   else
+      retval = eta * I - (eta * n_dot_i + sqrt(k)) * N;
+   return retval;
 }
 
 vec3 refract(const vec3 I, const vec3 N, const float eta)
 {
-   float k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+   float n_dot_i = dot(N, I);
+   float k = 1.0 - eta * eta * (1.0 - n_dot_i * n_dot_i);
+   vec3 retval;
    if (k < 0.0)
-      return 0.0;
-   return eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+      retval = vec3(0.0);
+   else
+      retval = eta * I - (eta * n_dot_i + sqrt(k)) * N;
+   return retval;
 }
 
 vec4 refract(const vec4 I, const vec4 N, const float eta)
 {
-   float k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+   float n_dot_i = dot(N, I);
+   float k = 1.0 - eta * eta * (1.0 - n_dot_i * n_dot_i);
+   vec4 retval;
    if (k < 0.0)
-      return 0.0;
-   return eta * I - (eta * dot(N, I) + sqrt(k)) * N;
+      retval = vec4(0.0);
+   else
+      retval = eta * I - (eta * n_dot_i + sqrt(k)) * N;
+   return retval;
 }
 
 
@@ -1416,7 +1429,7 @@ bvec4 greaterThan(const vec4 u, const vec4 v)
 
 bvec2 greaterThan(const ivec2 u, const ivec2 v)
 {
-   __asm vec4_sgt __retVal.xy, u, v;
+   __asm vec4_sgt __retVal.xy, u.xy, v.xy;
 }
 
 bvec3 greaterThan(const ivec3 u, const ivec3 v)
@@ -1495,6 +1508,23 @@ bvec4 equal(const ivec4 u, const ivec4 v)
    __asm vec4_seq __retVal, u, v;
 }
 
+bvec2 equal(const bvec2 u, const bvec2 v)
+{
+   __asm vec4_seq __retVal.xy, u, v;
+}
+
+bvec3 equal(const bvec3 u, const bvec3 v)
+{
+   __asm vec4_seq __retVal.xyz, u, v;
+}
+
+bvec4 equal(const bvec4 u, const bvec4 v)
+{
+   __asm vec4_seq __retVal, u, v;
+}
+
+
+
 
 //// notEqual
 
@@ -1528,6 +1558,22 @@ bvec4 notEqual(const ivec4 u, const ivec4 v)
    __asm vec4_sne __retVal, u, v;
 }
 
+bvec2 notEqual(const bvec2 u, const bvec2 v)
+{
+   __asm vec4_sne __retVal.xy, u, v;
+}
+
+bvec3 notEqual(const bvec3 u, const bvec3 v)
+{
+   __asm vec4_sne __retVal.xyz, u, v;
+}
+
+bvec4 notEqual(const bvec4 u, const bvec4 v)
+{
+   __asm vec4_sne __retVal, u, v;
+}
+
+
 
 //// any
 
@@ -1558,29 +1604,28 @@ bool any(const bvec4 v)
 
 //// all
 
-bool all (const vec2 v)
+bool all (const bvec2 v)
 {
    float prod;
-   __asm vec4_multiply prod.x, v.x, v.y;
-   __asm vec4_sne __retVal.x, prod.x, 0.0;
-    return v.x && v.y;
+   __asm vec4_multiply prod, v.x, v.y;
+   __asm vec4_sne __retVal, prod, 0.0;
 }
 
 bool all (const bvec3 v)
 {
    float prod;
-   __asm vec4_multiply prod.x, v.x, v.y;
-   __asm vec4_multiply prod.x, prod.x, v.z;
-   __asm vec4_sne __retVal.x, prod.x, 0.0;
+   __asm vec4_multiply prod, v.x, v.y;
+   __asm vec4_multiply prod, prod, v.z;
+   __asm vec4_sne __retVal, prod, 0.0;
 }
 
 bool all (const bvec4 v)
 {
    float prod;
-   __asm vec4_multiply prod.x, v.x, v.y;
-   __asm vec4_multiply prod.x, prod.x, v.z;
-   __asm vec4_multiply prod.x, prod.x, v.w;
-   __asm vec4_sne __retVal.x, prod.x, 0.0;
+   __asm vec4_multiply prod, v.x, v.y;
+   __asm vec4_multiply prod, prod, v.z;
+   __asm vec4_multiply prod, prod, v.w;
+   __asm vec4_sne __retVal, prod, 0.0;
 }
 
 

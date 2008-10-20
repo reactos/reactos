@@ -27,7 +27,7 @@
 #define SLANG_CODEGEN_H
 
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_compile.h"
 
 

@@ -16,40 +16,43 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
-    POPUP "ƒtƒ@ƒCƒ‹(&F)"
+    POPUP "ãƒ•ã‚¡ã‚¤ãƒ«(&F)"
     BEGIN
-        MENUITEM "V‹Kì¬(&N)...\tCtrl+N", ID_FILE_NEW
-        MENUITEM "ŠJ‚­(&O)...\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "ã‘‚«•Û‘¶(&S)\tCtrl+S",  ID_FILE_SAVE
-        MENUITEM "–¼‘O‚ð•t‚¯‚Ä•Û‘¶(&A)...", ID_FILE_SAVEAS
+        MENUITEM "æ–°è¦ä½œæˆ(&N)...\tCtrl+N", ID_FILE_NEW
+        MENUITEM "é–‹ã(&O)...\tCtrl+O",     ID_FILE_OPEN
+        MENUITEM "ä¸Šæ›¸ãä¿å­˜(&S)\tCtrl+S",  ID_FILE_SAVE
+        MENUITEM "åå‰ã‚’ä»˜ã‘ã¦ä¿å­˜(&A)...", ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "ˆóü(&P)...\tCtrl+P",     ID_PRINT
-        MENUITEM "ˆóüƒvƒŒƒrƒ…[(&W)...",   ID_PREVIEW
-        MENUITEM "ƒy[ƒWÝ’è(&E)...",       ID_PRINTSETUP
+        MENUITEM "å°åˆ·(&P)...\tCtrl+P",     ID_PRINT
+        MENUITEM "å°åˆ·ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼(&W)...",   ID_PREVIEW
+        MENUITEM "ãƒšãƒ¼ã‚¸è¨­å®š(&E)...",       ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "I—¹(&X)",                ID_FILE_EXIT
+        MENUITEM "çµ‚äº†(&X)",                ID_FILE_EXIT
     END
-    POPUP "•ÒW(&E)"
+    POPUP "ç·¨é›†(&E)"
     BEGIN
-        MENUITEM "Œ³‚É–ß‚·(&U)\tCtrl+Z",        ID_EDIT_UNDO
-        MENUITEM "‚â‚è’¼‚µ(&E)\tCtrl+Y",        ID_EDIT_REDO
+        MENUITEM "å…ƒã«æˆ»ã™(&U)\tCtrl+Z",        ID_EDIT_UNDO
+        MENUITEM "ã‚„ã‚Šç›´ã—(&E)\tCtrl+Y",        ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Ø‚èŽæ‚è(&T)\tCtrl+X",        ID_EDIT_CUT
-        MENUITEM "ƒRƒs[(&C)\tCtrl+C",          ID_EDIT_COPY
-        MENUITEM "“\\‚è•t‚¯(&P)\tCtrl+V",        ID_EDIT_PASTE
-        MENUITEM "ƒNƒŠƒA(&C)\tDEL",             ID_EDIT_CLEAR
-        MENUITEM "‚·‚×‚Ä‘I‘ð(&S)\tCtrl+A",      ID_EDIT_SELECTALL
+        MENUITEM "åˆ‡ã‚Šå–ã‚Š(&T)\tCtrl+X",        ID_EDIT_CUT
+        MENUITEM "ã‚³ãƒ”ãƒ¼(&C)\tCtrl+C",          ID_EDIT_COPY
+        MENUITEM "è²¼ã‚Šä»˜ã‘(&P)\tCtrl+V",        ID_EDIT_PASTE
+        MENUITEM "ã‚¯ãƒªã‚¢(&C)\tDEL",             ID_EDIT_CLEAR
+        MENUITEM "ã™ã¹ã¦é¸æŠž(&S)\tCtrl+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "ŒŸõ(&F)...\tCrtl+F",         ID_FIND
-        MENUITEM "ŽŸ‚ðŒŸõ(&N)\tF3",            ID_FIND_NEXT
-        MENUITEM "’uŠ·(&R)...\tCtrl+H",         ID_REPLACE
+        MENUITEM "æ¤œç´¢(&F)...\tCrtl+F",         ID_FIND
+        MENUITEM "æ¬¡ã‚’æ¤œç´¢(&N)\tF3",            ID_FIND_NEXT
+        MENUITEM "ç½®æ›(&R)...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "“Ç‚ÝŽæ‚èê—p(&O)",            ID_EDIT_READONLY
-        MENUITEM "•ÏX‚ ‚è(&M)",                ID_EDIT_MODIFIED
+        MENUITEM "èª­ã¿å–ã‚Šå°‚ç”¨(&O)",            ID_EDIT_READONLY
+        MENUITEM "å¤‰æ›´ã‚ã‚Š(&M)",                ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "E&xtras"
         BEGIN
@@ -60,34 +63,34 @@ BEGIN
             MENUITEM "&Get text",               ID_EDIT_GETTEXT
         END
     END
-    POPUP "•\\Ž¦(&V)"
+    POPUP "è¡¨ç¤º(&V)"
     BEGIN
-        MENUITEM "ƒc[ƒ‹ƒo[(&T)",              ID_TOGGLE_TOOLBAR
-        MENUITEM "‘Ž®ƒo[(&F)",                ID_TOGGLE_FORMATBAR
-        MENUITEM "ƒ‹[ƒ‰[(&R)",                ID_TOGGLE_RULER
-        MENUITEM "ƒXƒe[ƒ^ƒX ƒo[(&S)",         ID_TOGGLE_STATUSBAR
+        MENUITEM "ãƒ„ãƒ¼ãƒ«ãƒãƒ¼(&T)",              ID_TOGGLE_TOOLBAR
+        MENUITEM "æ›¸å¼ãƒãƒ¼(&F)",                ID_TOGGLE_FORMATBAR
+        MENUITEM "ãƒ«ãƒ¼ãƒ©ãƒ¼(&R)",                ID_TOGGLE_RULER
+        MENUITEM "ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ ãƒãƒ¼(&S)",         ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "ƒIƒvƒVƒ‡ƒ“(&O)...",           ID_VIEWPROPERTIES
+        MENUITEM "ã‚ªãƒ—ã‚·ãƒ§ãƒ³(&O)...",           ID_VIEWPROPERTIES
     END
-    POPUP "‘}“ü(&I)"
+    POPUP "æŒ¿å…¥(&I)"
     BEGIN
-        MENUITEM "“ú•t‚ÆŽž(&D)...",           ID_DATETIME
+        MENUITEM "æ—¥ä»˜ã¨æ™‚åˆ»(&D)...",           ID_DATETIME
     END
-    POPUP "‘Ž®(&O)"
+    POPUP "æ›¸å¼(&O)"
     BEGIN
-        MENUITEM "ƒtƒHƒ“ƒg(&F)...",             ID_FONTSETTINGS
-        MENUITEM "‰Óð‘‚«(&B)"                 ID_BULLET
-        MENUITEM "’i—Ž(&P)..."                  ID_PARAFORMAT
-        MENUITEM "ƒ^ƒu(&T)..."                  ID_TABSTOPS
-        POPUP "”wŒi(&D)"
+        MENUITEM "ãƒ•ã‚©ãƒ³ãƒˆ(&F)...",             ID_FONTSETTINGS
+        MENUITEM "ç®‡æ¡æ›¸ã(&B)"                 ID_BULLET
+        MENUITEM "æ®µè½(&P)..."                  ID_PARAFORMAT
+        MENUITEM "ã‚¿ãƒ–(&T)..."                  ID_TABSTOPS
+        POPUP "èƒŒæ™¯(&D)"
         BEGIN
-            MENUITEM "ƒVƒXƒeƒ€(&S)\tCtrl+1",        ID_BACK_1
+            MENUITEM "ã‚·ã‚¹ãƒ†ãƒ (&S)\tCtrl+1",        ID_BACK_1
             MENUITEM "&PostThat yellowish\tCtrl+2", ID_BACK_2
         END
     END
-    POPUP "ƒwƒ‹ƒv(&H)"
+    POPUP "ãƒ˜ãƒ«ãƒ—(&H)"
     BEGIN
-        MENUITEM "Wine Wordpad‚É‚Â‚¢‚Ä(&A)"      ID_ABOUT
+        MENUITEM "Wine Wordpadã«ã¤ã„ã¦(&A)"      ID_ABOUT
     END
 END
 
@@ -95,67 +98,67 @@ IDM_POPUP MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Ø‚èŽæ‚è(&T)",        ID_EDIT_CUT
-        MENUITEM "ƒRƒs[(&C)",          ID_EDIT_COPY
-        MENUITEM "“\\‚è•t‚¯(&P)",        ID_EDIT_PASTE
+        MENUITEM "åˆ‡ã‚Šå–ã‚Š(&T)",        ID_EDIT_CUT
+        MENUITEM "ã‚³ãƒ”ãƒ¼(&C)",          ID_EDIT_COPY
+        MENUITEM "è²¼ã‚Šä»˜ã‘(&P)",        ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "‰Óð‘‚«(&B)"         ID_BULLET
-        MENUITEM "’i—Ž(&P)..."          ID_PARAFORMAT
+        MENUITEM "ç®‡æ¡æ›¸ã(&B)"         ID_BULLET
+        MENUITEM "æ®µè½(&P)..."          ID_PARAFORMAT
     END
 END
 
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "“ú•t‚ÆŽž"
+CAPTION "æ—¥ä»˜ã¨æ™‚åˆ»"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT        "—˜—p‚Å‚«‚éŒ`Ž®",0,3,2,100,15
+    LTEXT        "åˆ©ç”¨ã§ãã‚‹å½¢å¼",0,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT|LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
-    PUSHBUTTON   "ƒLƒƒƒ“ƒZƒ‹(&C)",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "ã‚­ãƒ£ãƒ³ã‚»ãƒ«(&C)",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "V‹Kì¬"
+CAPTION "æ–°è¦ä½œæˆ"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT        "V‚µ‚¢•¶‘Œ`Ž®",0,3,2,100,15
+    LTEXT        "æ–°ã—ã„æ–‡æ›¸å½¢å¼",0,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
-    PUSHBUTTON   "ƒLƒƒƒ“ƒZƒ‹(&C)",IDCANCEL,97,26,40,12
+    PUSHBUTTON   "ã‚­ãƒ£ãƒ³ã‚»ãƒ«(&C)",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "’i—Ž‚ÌÝ’è"
+CAPTION "æ®µè½ã®è¨­å®š"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ƒCƒ“ƒfƒ“ƒg", 0, 10, 10, 120, 68
-    LTEXT "¶(&L)", 0, 15, 22, 40, 13
+    GROUPBOX "ã‚¤ãƒ³ãƒ‡ãƒ³ãƒˆ", 0, 10, 10, 120, 68
+    LTEXT "å·¦(&L)", 0, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "‰E(&R)", 0, 15, 40, 40, 13
+    LTEXT "å³(&R)", 0, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Å‰‚Ìs(&F)", 0, 15, 58, 40, 13
+    LTEXT "æœ€åˆã®è¡Œ(&F)", 0, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "®—ñ(&A)", 0, 15, 87, 40, 13
+    LTEXT "æ•´åˆ—(&A)", 0, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "ƒLƒƒƒ“ƒZƒ‹(&C)", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "ã‚­ãƒ£ãƒ³ã‚»ãƒ«(&C)", IDCANCEL, 137, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒ^ƒu‚ÌÝ’è"
+CAPTION "ã‚¿ãƒ–ã®è¨­å®š"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ƒ^ƒu‚Ì’âŽ~ˆÊ’u(&T)", 0, 10, 10, 120, 90
+    GROUPBOX "ã‚¿ãƒ–ã®åœæ­¢ä½ç½®(&T)", 0, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
-    DEFPUSHBUTTON "’Ç‰Á(&A)", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "íœ(&R)", ID_TAB_DEL, 72, 80, 45, 15
+    DEFPUSHBUTTON "è¿½åŠ (&A)", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "å‰Šé™¤(&R)", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "ƒLƒƒƒ“ƒZƒ‹(&C)", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "‚·‚×‚Äíœ(&L)", ID_TAB_EMPTY, 137, 51, 50, 15
+    PUSHBUTTON "ã‚­ãƒ£ãƒ³ã‚»ãƒ«(&C)", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "ã™ã¹ã¦å‰Šé™¤(&L)", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
 IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
@@ -163,59 +166,60 @@ STYLE DS_SYSMODAL
 CAPTION ""
 FONT 9, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "s‚ÌÜ‚è•Ô‚µ", 0, 10, 10, 130, 85
-    RADIOBUTTON "ƒEƒBƒ“ƒhƒE‚Ì‹«ŠE‚ÅÜ‚è•Ô‚·(&W)", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "ƒ}[ƒWƒ“‚ÅÜ‚è•Ô‚·(&M)", IDC_PAGEFMT_WM, 18, 45, 117, 15
-    GROUPBOX "ƒc[ƒ‹ƒo[", 0, 150, 10, 120, 85
-    CHECKBOX "ƒc[ƒ‹ƒo[(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "‘Ž®ƒo[(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "ƒ‹[ƒ‰[(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "ƒXƒe[ƒ^ƒXƒo[(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    GROUPBOX "è¡Œã®æŠ˜ã‚Šè¿”ã—", 0, 10, 10, 130, 85
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å¢ƒç•Œã§æŠ˜ã‚Šè¿”ã™(&W)", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "ãƒžãƒ¼ã‚¸ãƒ³ã§æŠ˜ã‚Šè¿”ã™(&M)", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX "ãƒ„ãƒ¼ãƒ«ãƒãƒ¼", 0, 150, 10, 120, 85
+    CHECKBOX "ãƒ„ãƒ¼ãƒ«ãƒãƒ¼(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX "æ›¸å¼ãƒãƒ¼(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX "ãƒ«ãƒ¼ãƒ©ãƒ¼(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "ƒŠƒbƒ`ƒeƒLƒXƒgŒ`Ž® (*.rtf)"
-    STRING_TEXT_FILES_TXT,         "ƒeƒLƒXƒg•¶‘ (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "UnicodeƒeƒLƒXƒg•¶‘(*.txt)"
-    STRING_ALL_FILES,              "‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹ (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "ãƒªãƒƒãƒãƒ†ã‚­ã‚¹ãƒˆå½¢å¼ (*.rtf)"
+    STRING_TEXT_FILES_TXT,         "ãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸ (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Unicodeãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸(*.txt)"
+    STRING_ALL_FILES,              "ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ« (*.*)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_ALIGN_LEFT,            "¶"
-    STRING_ALIGN_RIGHT,           "‰E"
-    STRING_ALIGN_CENTER,          "’†‰›"
+    STRING_ALIGN_LEFT,            "å·¦"
+    STRING_ALIGN_RIGHT,           "å³"
+    STRING_ALIGN_CENTER,          "ä¸­å¤®"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_NEWFILE_RICHTEXT,     "ƒŠƒbƒ`ƒeƒLƒXƒg•¶‘"
-    STRING_NEWFILE_TXT,          "ƒeƒLƒXƒg•¶‘"
-    STRING_NEWFILE_TXT_UNICODE,  "UnicodeƒeƒLƒXƒg•¶‘"
+    STRING_NEWFILE_RICHTEXT,     "ãƒªãƒƒãƒãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸"
+    STRING_NEWFILE_TXT,          "ãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸"
+    STRING_NEWFILE_TXT_UNICODE,  "Unicodeãƒ†ã‚­ã‚¹ãƒˆæ–‡æ›¸"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_PRINTER_FILES_PRN,        "ƒvƒŠƒ“ƒ^ƒtƒ@ƒCƒ‹ (*.PRN)"
+    STRING_PRINTER_FILES_PRN,        "ãƒ—ãƒªãƒ³ã‚¿ãƒ•ã‚¡ã‚¤ãƒ« (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_VIEWPROPS_TITLE,          "ƒIƒvƒVƒ‡ƒ“"
-    STRING_VIEWPROPS_TEXT,           "ƒeƒLƒXƒg"
-    STRING_VIEWPROPS_RICHTEXT,       "ƒŠƒbƒ`ƒeƒLƒXƒg"
+    STRING_VIEWPROPS_TITLE,          "ã‚ªãƒ—ã‚·ãƒ§ãƒ³"
+    STRING_VIEWPROPS_TEXT,           "ãƒ†ã‚­ã‚¹ãƒˆ"
+    STRING_VIEWPROPS_RICHTEXT,       "ãƒªãƒƒãƒãƒ†ã‚­ã‚¹ãƒˆ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_PREVIEW_PRINT,            "ˆóü"
-    STRING_PREVIEW_NEXTPAGE,         "ŽŸ‚Ìƒy[ƒW"
-    STRING_PREVIEW_PREVPAGE,         "‘O‚Ìƒy[ƒW"
-    STRING_PREVIEW_TWOPAGES,         "2ƒy[ƒW"
-    STRING_PREVIEW_ONEPAGE,          "1ƒy[ƒW"
-    STRING_PREVIEW_CLOSE,            "•Â‚¶‚é"
+    STRING_PREVIEW_PRINT,            "å°åˆ·"
+    STRING_PREVIEW_NEXTPAGE,         "æ¬¡ã®ãƒšãƒ¼ã‚¸"
+    STRING_PREVIEW_PREVPAGE,         "å‰ã®ãƒšãƒ¼ã‚¸"
+    STRING_PREVIEW_TWOPAGES,         "2ãƒšãƒ¼ã‚¸"
+    STRING_PREVIEW_ONEPAGE,          "1ãƒšãƒ¼ã‚¸"
+    STRING_PREVIEW_CLOSE,            "é–‰ã˜ã‚‹"
 END
 
 STRINGTABLE DISCARDABLE
@@ -225,17 +229,19 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_DEFAULT_FILENAME,     "•¶‘"
-    STRING_PROMPT_SAVE_CHANGES,  "'%s'‚Ö‚Ì•ÏX‚ð•Û‘¶‚µ‚Ü‚·‚©?"
-    STRING_SEARCH_FINISHED,      "•¶‘‚ÌŒŸõ‚ðŠ®—¹B"
-    STRING_LOAD_RICHED_FAILED,   "RichEditƒ‰ƒCƒuƒ‰ƒŠ‚Ì“Ç‚Ýž‚Ý‚ÉŽ¸”sB"
-    STRING_SAVE_LOSEFORMATTING,  "ƒvƒŒ[ƒ“ƒeƒLƒXƒgŒ`Ž®‚Å•Û‘¶‚·‚é‚ÆA" \
-                                 "‚·‚×‚Ä‚Ì‘Ž®‚ªŽ¸‚í‚ê‚Ü‚·B" \
-                                 "‚»‚ê‚Å‚à‚æ‚¢‚Å‚·‚©H"
-    STRING_INVALID_NUMBER,       "”‚Ì‘Ž®‚ª•s³"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLEƒXƒgƒŒ[ƒW•¶‘‚ÍƒTƒ|[ƒg‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB"
-    STRING_WRITE_FAILED,              "ƒtƒ@ƒCƒ‹‚ð•Û‘¶‚Å‚«‚Ü‚¹‚ñB"
-    STRING_WRITE_ACCESS_DENIED,       "ƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚éŒ ŒÀ‚ª‚ ‚è‚Ü‚¹‚ñB"
-    STRING_OPEN_FAILED,               "ƒtƒ@ƒCƒ‹‚ðŠJ‚¯‚Ü‚¹‚ñB"
-    STRING_OPEN_ACCESS_DENIED,        "ƒtƒ@ƒCƒ‹‚ðŠJ‚­Œ ŒÀ‚ª‚ ‚è‚Ü‚¹‚ñB"
+    STRING_DEFAULT_FILENAME,     "æ–‡æ›¸"
+    STRING_PROMPT_SAVE_CHANGES,  "'%s'ã¸ã®å¤‰æ›´ã‚’ä¿å­˜ã—ã¾ã™ã‹?"
+    STRING_SEARCH_FINISHED,      "æ–‡æ›¸ã®æ¤œç´¢ã‚’å®Œäº†ã€‚"
+    STRING_LOAD_RICHED_FAILED,   "RichEditãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®èª­ã¿è¾¼ã¿ã«å¤±æ•—ã€‚"
+    STRING_SAVE_LOSEFORMATTING,  "ãƒ—ãƒ¬ãƒ¼ãƒ³ãƒ†ã‚­ã‚¹ãƒˆå½¢å¼ã§ä¿å­˜ã™ã‚‹ã¨ã€" \
+                                 "ã™ã¹ã¦ã®æ›¸å¼ãŒå¤±ã‚ã‚Œã¾ã™ã€‚" \
+                                 "ãã‚Œã§ã‚‚ã‚ˆã„ã§ã™ã‹ï¼Ÿ"
+    STRING_INVALID_NUMBER,       "æ•°ã®æ›¸å¼ãŒä¸æ­£"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLEã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸æ–‡æ›¸ã¯ã‚µãƒãƒ¼ãƒˆã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚"
+    STRING_WRITE_FAILED,              "ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä¿å­˜ã§ãã¾ã›ã‚“ã€‚"
+    STRING_WRITE_ACCESS_DENIED,       "ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã™ã‚‹æ¨©é™ãŒã‚ã‚Šã¾ã›ã‚“ã€‚"
+    STRING_OPEN_FAILED,               "ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã‘ã¾ã›ã‚“ã€‚"
+    STRING_OPEN_ACCESS_DENIED,        "ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ãæ¨©é™ãŒã‚ã‚Šã¾ã›ã‚“ã€‚"
 END
+
+#pragma code_page(default)

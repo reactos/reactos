@@ -31,10 +31,11 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
+#include "main/glheader.h"
+#include "main/context.h"
 #include "prog_parameter.h"
 #include "prog_statevars.h"
+#include "program.h"
 #include "programopt.h"
 #include "prog_instruction.h"
 
@@ -102,7 +103,7 @@ _mesa_insert_mvp_code(GLcontext *ctx, struct gl_vertex_program *vprog)
    _mesa_copy_instructions (newInst + 4, vprog->Base.Instructions, origLen);
 
    /* free old instructions */
-   _mesa_free(vprog->Base.Instructions);
+   _mesa_free_instructions(vprog->Base.Instructions, origLen);
 
    /* install new instructions */
    vprog->Base.Instructions = newInst;
@@ -192,13 +193,13 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
       inst->DstReg.WriteMask = WRITEMASK_X;
       inst->SrcReg[0].File = PROGRAM_INPUT;
       inst->SrcReg[0].Index = FRAG_ATTRIB_FOGC;
-      inst->SrcReg[0].Swizzle = SWIZZLE_X;
+      inst->SrcReg[0].Swizzle = SWIZZLE_XXXX;
       inst->SrcReg[1].File = PROGRAM_STATE_VAR;
       inst->SrcReg[1].Index = fogPRefOpt;
-      inst->SrcReg[1].Swizzle = SWIZZLE_X;
+      inst->SrcReg[1].Swizzle = SWIZZLE_XXXX;
       inst->SrcReg[2].File = PROGRAM_STATE_VAR;
       inst->SrcReg[2].Index = fogPRefOpt;
-      inst->SrcReg[2].Swizzle = SWIZZLE_Y;
+      inst->SrcReg[2].Swizzle = SWIZZLE_YYYY;
       inst->SaturateMode = SATURATE_ZERO_ONE;
       inst++;
    }
@@ -214,10 +215,10 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
       inst->SrcReg[0].File = PROGRAM_STATE_VAR;
       inst->SrcReg[0].Index = fogPRefOpt;
       inst->SrcReg[0].Swizzle
-         = (fprog->FogOption == GL_EXP) ? SWIZZLE_Z : SWIZZLE_W;
+         = (fprog->FogOption == GL_EXP) ? SWIZZLE_ZZZZ : SWIZZLE_WWWW;
       inst->SrcReg[1].File = PROGRAM_INPUT;
       inst->SrcReg[1].Index = FRAG_ATTRIB_FOGC;
-      inst->SrcReg[1].Swizzle = SWIZZLE_X;
+      inst->SrcReg[1].Swizzle = SWIZZLE_XXXX;
       inst++;
       if (fprog->FogOption == GL_EXP2) {
          /* MUL fogFactorTemp.x, fogFactorTemp.x, fogFactorTemp.x; */
@@ -227,10 +228,10 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
          inst->DstReg.WriteMask = WRITEMASK_X;
          inst->SrcReg[0].File = PROGRAM_TEMPORARY;
          inst->SrcReg[0].Index = fogFactorTemp;
-         inst->SrcReg[0].Swizzle = SWIZZLE_X;
+         inst->SrcReg[0].Swizzle = SWIZZLE_XXXX;
          inst->SrcReg[1].File = PROGRAM_TEMPORARY;
          inst->SrcReg[1].Index = fogFactorTemp;
-         inst->SrcReg[1].Swizzle = SWIZZLE_X;
+         inst->SrcReg[1].Swizzle = SWIZZLE_XXXX;
          inst++;
       }
       /* EX2_SAT fogFactorTemp.x, -fogFactorTemp.x; */
@@ -240,8 +241,8 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
       inst->DstReg.WriteMask = WRITEMASK_X;
       inst->SrcReg[0].File = PROGRAM_TEMPORARY;
       inst->SrcReg[0].Index = fogFactorTemp;
-      inst->SrcReg[0].NegateBase = GL_TRUE;
-      inst->SrcReg[0].Swizzle = SWIZZLE_X;
+      inst->SrcReg[0].NegateBase = NEGATE_XYZW;
+      inst->SrcReg[0].Swizzle = SWIZZLE_XXXX;
       inst->SaturateMode = SATURATE_ZERO_ONE;
       inst++;
    }
@@ -252,8 +253,7 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
    inst->DstReg.WriteMask = WRITEMASK_XYZ;
    inst->SrcReg[0].File = PROGRAM_TEMPORARY;
    inst->SrcReg[0].Index = fogFactorTemp;
-   inst->SrcReg[0].Swizzle
-      = MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+   inst->SrcReg[0].Swizzle = SWIZZLE_XXXX;
    inst->SrcReg[1].File = PROGRAM_TEMPORARY;
    inst->SrcReg[1].Index = colorTemp;
    inst->SrcReg[1].Swizzle = SWIZZLE_NOOP;
@@ -275,7 +275,7 @@ _mesa_append_fog_code(GLcontext *ctx, struct gl_fragment_program *fprog)
    inst++;
 
    /* free old instructions */
-   _mesa_free(fprog->Base.Instructions);
+   _mesa_free_instructions(fprog->Base.Instructions, origLen);
 
    /* install new instructions */
    fprog->Base.Instructions = newInst;
@@ -365,3 +365,96 @@ _mesa_count_texture_instructions(struct gl_program *prog)
    }
 }
 
+
+/**
+ * Scan/rewrite program to remove reads of custom (output) registers.
+ * The passed type has to be either PROGRAM_OUTPUT or PROGRAM_VARYING
+ * (for vertex shaders).
+ * In GLSL shaders, varying vars can be read and written.
+ * On some hardware, trying to read an output register causes trouble.
+ * So, rewrite the program to use a temporary register in this case.
+ */
+void
+_mesa_remove_output_reads(struct gl_program *prog, enum register_file type)
+{
+   GLuint i;
+   GLint outputMap[VERT_RESULT_MAX];
+   GLuint numVaryingReads = 0;
+
+   assert(type == PROGRAM_VARYING || type == PROGRAM_OUTPUT);
+   assert(prog->Target == GL_VERTEX_PROGRAM_ARB || type != PROGRAM_VARYING);
+
+   for (i = 0; i < VERT_RESULT_MAX; i++)
+      outputMap[i] = -1;
+
+   /* look for instructions which read from varying vars */
+   for (i = 0; i < prog->NumInstructions; i++) {
+      struct prog_instruction *inst = prog->Instructions + i;
+      const GLuint numSrc = _mesa_num_inst_src_regs(inst->Opcode);
+      GLuint j;
+      for (j = 0; j < numSrc; j++) {
+         if (inst->SrcReg[j].File == type) {
+            /* replace the read with a temp reg */
+            const GLuint var = inst->SrcReg[j].Index;
+            if (outputMap[var] == -1) {
+               numVaryingReads++;
+               outputMap[var] = _mesa_find_free_register(prog,
+                                                         PROGRAM_TEMPORARY);
+            }
+            inst->SrcReg[j].File = PROGRAM_TEMPORARY;
+            inst->SrcReg[j].Index = outputMap[var];
+         }
+      }
+   }
+
+   if (numVaryingReads == 0)
+      return; /* nothing to be done */
+
+   /* look for instructions which write to the varying vars identified above */
+   for (i = 0; i < prog->NumInstructions; i++) {
+      struct prog_instruction *inst = prog->Instructions + i;
+      const GLuint numSrc = _mesa_num_inst_src_regs(inst->Opcode);
+      GLuint j;
+      for (j = 0; j < numSrc; j++) {
+         if (inst->DstReg.File == type &&
+             outputMap[inst->DstReg.Index] >= 0) {
+            /* change inst to write to the temp reg, instead of the varying */
+            inst->DstReg.File = PROGRAM_TEMPORARY;
+            inst->DstReg.Index = outputMap[inst->DstReg.Index];
+         }
+      }
+   }
+
+   /* insert new instructions to copy the temp vars to the varying vars */
+   {
+      struct prog_instruction *inst;
+      GLint endPos, var;
+
+      /* Look for END instruction and insert the new varying writes */
+      endPos = -1;
+      for (i = 0; i < prog->NumInstructions; i++) {
+         struct prog_instruction *inst = prog->Instructions + i;
+         if (inst->Opcode == OPCODE_END) {
+            endPos = i;
+            _mesa_insert_instructions(prog, i, numVaryingReads);
+            break;
+         }
+      }
+
+      assert(endPos >= 0);
+
+      /* insert new MOV instructions here */
+      inst = prog->Instructions + endPos;
+      for (var = 0; var < VERT_RESULT_MAX; var++) {
+         if (outputMap[var] >= 0) {
+            /* MOV VAR[var], TEMP[tmp]; */
+            inst->Opcode = OPCODE_MOV;
+            inst->DstReg.File = type;
+            inst->DstReg.Index = var;
+            inst->SrcReg[0].File = PROGRAM_TEMPORARY;
+            inst->SrcReg[0].Index = outputMap[var];
+            inst++;
+         }
+      }
+   }
+}

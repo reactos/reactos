@@ -33,43 +33,22 @@
 
 /**
  * \defgroup SpanFlags
- * Bitflags used for interpMask and arrayMask fields below to indicate
- * which interpolant values and fragment arrays are in use, respectively.
+ * Special bitflags to describe span data.
  *
- * XXX We should replace these flags with the FRAG_BIT_ values someday...
+ * In general, the point/line/triangle functions interpolate/emit the
+ * attributes specified by swrast->_ActiveAttribs (i.e. FRAT_BIT_* values).
+ * Some things don't fit into that, though, so we have these flags.
  */
 /*@{*/
-#define SPAN_RGBA         0x001
-#define SPAN_SPEC         0x002
-#define SPAN_INDEX        0x004
-#define SPAN_Z            0x008
-#define SPAN_W            0x010
-#define SPAN_FOG          0x020
-#define SPAN_TEXTURE      0x040
-#define SPAN_INT_TEXTURE  0x080
-#define SPAN_LAMBDA       0x100
-#define SPAN_COVERAGE     0x200
-#define SPAN_FLAT         0x400  /**< flat shading? */
-#define SPAN_XY           0x800
-#define SPAN_MASK        0x1000
-#define SPAN_VARYING     0x2000
+#define SPAN_RGBA       0x01  /**< interpMask and arrayMask */
+#define SPAN_INDEX      0x02  /**< interpMask and arrayMask */
+#define SPAN_Z          0x04  /**< interpMask and arrayMask */
+#define SPAN_FLAT       0x08  /**< interpMask: flat shading? */
+#define SPAN_XY         0x10  /**< array.x[], y[] valid? */
+#define SPAN_MASK       0x20  /**< was array.mask[] filled in by caller? */
+#define SPAN_LAMBDA     0x40  /**< array.lambda[] valid? */
+#define SPAN_COVERAGE   0x80  /**< array.coverage[] valid? */
 /*@}*/
-
-
-#if 0
-/* alternate arrangement for code below */
-struct arrays2 {
-   union {
-      GLubyte  sz1[MAX_WIDTH][4]; /* primary color */
-      GLushort sz2[MAX_WIDTH][4];
-   } rgba;
-   union {
-      GLubyte  sz1[MAX_WIDTH][4]; /* specular color and temp storage */
-      GLushort sz2[MAX_WIDTH][4];
-   } spec;
-};
-#endif
-
 
 
 /**
@@ -92,26 +71,19 @@ typedef struct sw_span_arrays
    GLubyte mask[MAX_WIDTH];
 
    GLenum ChanType; /**< Color channel type, GL_UNSIGNED_BYTE, GL_FLOAT */
-   union {
-      struct {
-         GLubyte rgba[MAX_WIDTH][4]; /**< primary color */
-         GLubyte spec[MAX_WIDTH][4]; /**< specular color and temp storage */
-      } sz1;
-      struct {
-         GLushort rgba[MAX_WIDTH][4];
-         GLushort spec[MAX_WIDTH][4];
-      } sz2;
-   } color;
-   /** XXX these are temporary fields, pointing into above color arrays */
-   GLchan (*rgba)[4];
-   GLchan (*spec)[4];
 
+   /** Attribute arrays that don't fit into attribs[] array above */
+   /*@{*/
+   GLubyte rgba8[MAX_WIDTH][4];
+   GLushort rgba16[MAX_WIDTH][4];
+   GLchan (*rgba)[4];  /** either == rgba8 or rgba16 */
    GLint   x[MAX_WIDTH];  /**< fragment X coords */
    GLint   y[MAX_WIDTH];  /**< fragment Y coords */
    GLuint  z[MAX_WIDTH];  /**< fragment Z coords */
    GLuint  index[MAX_WIDTH];  /**< Color indexes */
    GLfloat lambda[MAX_TEXTURE_COORD_UNITS][MAX_WIDTH]; /**< Texture LOD */
    GLfloat coverage[MAX_WIDTH];  /**< Fragment coverage for AA/smoothing */
+   /*@}*/
 } SWspanarrays;
 
 
@@ -160,32 +132,21 @@ typedef struct sw_span
    /* For horizontal spans, step is the partial derivative wrt X.
     * For lines, step is the delta from one fragment to the next.
     */
-#if CHAN_TYPE == GL_FLOAT
-   GLfloat red, redStep;
-   GLfloat green, greenStep;
-   GLfloat blue, blueStep;
-   GLfloat alpha, alphaStep;
-   GLfloat specRed, specRedStep;
-   GLfloat specGreen, specGreenStep;
-   GLfloat specBlue, specBlueStep;
-#else /* CHAN_TYPE == GL_UNSIGNED_BYTE or GL_UNSIGNED_SHORT */
    GLfixed red, redStep;
    GLfixed green, greenStep;
    GLfixed blue, blueStep;
    GLfixed alpha, alphaStep;
-   GLfixed specRed, specRedStep;
-   GLfixed specGreen, specGreenStep;
-   GLfixed specBlue, specBlueStep;
-#endif
    GLfixed index, indexStep;
-   GLfixed z, zStep;    /* XXX z should probably be GLuint */
-   GLfixed intTex[2], intTexStep[2];  /* s, t only */
+   GLfixed z, zStep;    /**< XXX z should probably be GLuint */
+   GLfixed intTex[2], intTexStep[2];  /**< (s,t) for unit[0] only */
 
    /**
     * This bitmask (of \link SpanFlags SPAN_* flags\endlink) indicates
     * which of the fragment arrays in the span_arrays struct are relevant.
     */
    GLbitfield arrayMask;
+
+   GLbitfield arrayAttribs;
 
    /**
     * We store the arrays of fragment values in a separate struct so
@@ -198,35 +159,24 @@ typedef struct sw_span
 
 
 
-#define INIT_SPAN(S, PRIMITIVE, END, INTERP_MASK, ARRAY_MASK)	\
-do {								\
-   (S).primitive = (PRIMITIVE);					\
-   (S).interpMask = (INTERP_MASK);				\
-   (S).arrayMask = (ARRAY_MASK);				\
-   (S).end = (END);						\
-   (S).facing = 0;						\
-   (S).array = SWRAST_CONTEXT(ctx)->SpanArrays;			\
+#define INIT_SPAN(S, PRIMITIVE)			\
+do {						\
+   (S).primitive = (PRIMITIVE);			\
+   (S).interpMask = 0x0;			\
+   (S).arrayMask = 0x0;				\
+   (S).arrayAttribs = 0x0;			\
+   (S).end = 0;					\
+   (S).facing = 0;				\
+   (S).array = SWRAST_CONTEXT(ctx)->SpanArrays;	\
 } while (0)
 
 
 
 extern void
-_swrast_span_default_z( GLcontext *ctx, SWspan *span );
+_swrast_span_default_attribs(GLcontext *ctx, SWspan *span);
 
 extern void
 _swrast_span_interpolate_z( const GLcontext *ctx, SWspan *span );
-
-extern void
-_swrast_span_default_fog( GLcontext *ctx, SWspan *span );
-
-extern void
-_swrast_span_default_color( GLcontext *ctx, SWspan *span );
-
-extern void
-_swrast_span_default_secondary_color(GLcontext *ctx, SWspan *span);
-
-extern void
-_swrast_span_default_texcoords( GLcontext *ctx, SWspan *span );
 
 extern GLfloat
 _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,

@@ -15,27 +15,8 @@
 #define DATA_DELAYED_RENDER  0
 #define DATA_SYNTHESIZED_RENDER -1
 
-#define USE_WINSTA \
-    PWINSTATION_OBJECT WinStaObj; \
-    WinStaObj = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
-
-#define WINSTA_ClipboardThread WinStaObj->Clipboard->ClipboardThread
-#define WINSTA_ClipboardOwnerThread WinStaObj->Clipboard->ClipboardOwnerThread
-#define WINSTA_ClipboardWindow WinStaObj->Clipboard->ClipboardWindow
-#define WINSTA_ClipboardViewerWindow WinStaObj->Clipboard->ClipboardViewerWindow
-#define WINSTA_ClipboardOwnerWindow WinStaObj->Clipboard->ClipboardOwnerWindow
-#define WINSTA_sendDrawClipboardMsg WinStaObj->Clipboard->sendDrawClipboardMsg
-#define WINSTA_recentlySetClipboard WinStaObj->Clipboard->recentlySetClipboard
-#define WINSTA_delayedRender WinStaObj->Clipboard->delayedRender
-#define WINSTA_lastEnumClipboardFormats WinStaObj->Clipboard->lastEnumClipboardFormats
-#define WINSTA_ClipboardSequenceNumber WinStaObj->Clipboard->ClipboardSequenceNumber
-#define WINSTA_WindowsChain WinStaObj->Clipboard->WindowsChain
-#define WINSTA_ClipboardData WinStaObj->Clipboard->ClipboardData
-#define WINSTA_synthesizedData WinStaObj->Clipboard->synthesizedData
-#define WINSTA_synthesizedDataSize WinStaObj->Clipboard->synthesizedDataSize
-
-PW32THREAD      ClipboardThread;
-PW32THREAD      ClipboardOwnerThread;
+PTHREADINFO      ClipboardThread;
+PTHREADINFO      ClipboardOwnerThread;
 PWINDOW_OBJECT  ClipboardWindow;
 PWINDOW_OBJECT  ClipboardViewerWindow;
 PWINDOW_OBJECT  ClipboardOwnerWindow;
@@ -1145,11 +1126,13 @@ IntEnumClipboardFormats(UINT uFormat)
 VOID FASTCALL
 IntIncrementSequenceNumber(VOID)
 {
+    PTHREADINFO pti;
+    PWINSTATION_OBJECT WinStaObj;
 
-    USE_WINSTA
+    pti = PsGetCurrentThreadWin32Thread();
+    WinStaObj = pti->Desktop->WindowStation;
 
-    WINSTA_ClipboardSequenceNumber++;
-
+    WinStaObj->Clipboard->ClipboardSequenceNumber++;
 }
 
 DWORD STDCALL

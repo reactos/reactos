@@ -42,7 +42,7 @@
 
 typedef struct _INT_CALLBACK_HEADER
 {
-   /* list entry in the W32THREAD structure */
+   /* list entry in the THREADINFO structure */
    LIST_ENTRY ListEntry;
 }
 INT_CALLBACK_HEADER, *PINT_CALLBACK_HEADER;
@@ -51,7 +51,7 @@ PVOID FASTCALL
 IntCbAllocateMemory(ULONG Size)
 {
    PINT_CALLBACK_HEADER Mem;
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
 
    if(!(Mem = ExAllocatePoolWithTag(PagedPool, Size + sizeof(INT_CALLBACK_HEADER),
                                     TAG_CALLBACK)))
@@ -73,7 +73,7 @@ VOID FASTCALL
 IntCbFreeMemory(PVOID Data)
 {
    PINT_CALLBACK_HEADER Mem;
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
 
    ASSERT(Data);
 
@@ -90,7 +90,7 @@ IntCbFreeMemory(PVOID Data)
 }
 
 VOID FASTCALL
-IntCleanupThreadCallbacks(PW32THREAD W32Thread)
+IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
 {
    PLIST_ENTRY CurrentEntry;
    PINT_CALLBACK_HEADER Mem;
@@ -116,22 +116,22 @@ IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
 {
   HWND hWndS = *hWnd;
   PWINDOW_OBJECT Window = UserGetWindowObject(*hWnd);
-  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+  PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
-  *hWnd = ClientInfo->hWND;
-  *pWnd = ClientInfo->pvWND;
+  *hWnd = ClientInfo->CallbackWnd.hWnd;
+  *pWnd = ClientInfo->CallbackWnd.pvWnd;
 
-  ClientInfo->hWND  = hWndS;
-  ClientInfo->pvWND = DesktopHeapAddressToUser(Window->Wnd);
+  ClientInfo->CallbackWnd.hWnd  = hWndS;
+  ClientInfo->CallbackWnd.pvWnd = DesktopHeapAddressToUser(Window->Wnd);
 }
 
 static VOID
 IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
 {
-  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+  PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
-  ClientInfo->hWND  = hWnd;
-  ClientInfo->pvWND = pWnd;
+  ClientInfo->CallbackWnd.hWnd = hWnd;
+  ClientInfo->CallbackWnd.pvWnd = pWnd;
 }
 
 /* FUNCTIONS *****************************************************************/

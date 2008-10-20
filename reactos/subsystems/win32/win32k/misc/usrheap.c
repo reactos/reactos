@@ -102,7 +102,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
     return Status;
 }
 
-static HANDLE
+static PWIN32HEAP
 IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
                   IN PVOID *SystemMappedBase,
                   IN ULONG HeapSize)
@@ -111,7 +111,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
     LARGE_INTEGER Offset;
     SIZE_T ViewSize = PAGE_SIZE;
     RTL_HEAP_PARAMETERS Parameters = {0};
-    HANDLE hHeap;
+    PVOID pHeap;
     NTSTATUS Status;
 
     Offset.QuadPart = 0;
@@ -150,23 +150,23 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
     Parameters.InitialReserve = (SIZE_T)HeapSize;
     Parameters.CommitRoutine = IntUserHeapCommitRoutine;
 
-    hHeap = RtlCreateHeap(HEAP_ZERO_MEMORY | HEAP_NO_SERIALIZE,
+    pHeap = RtlCreateHeap(HEAP_ZERO_MEMORY | HEAP_NO_SERIALIZE,
                           *SystemMappedBase,
                           (SIZE_T)HeapSize,
                           ViewSize,
                           NULL,
                           &Parameters);
 
-    return hHeap;
+    return pHeap;
 }
 
-HANDLE
+PWIN32HEAP
 UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize)
 {
     LARGE_INTEGER SizeHeap;
-    HANDLE hHeap = NULL;
+    PWIN32HEAP pHeap = NULL;
     NTSTATUS Status;
 
     SizeHeap.QuadPart = HeapSize;
@@ -200,11 +200,11 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
     }
 
     /* create the heap */
-    hHeap = IntUserHeapCreate(*SectionObject,
+    pHeap = IntUserHeapCreate(*SectionObject,
                               SystemBase,
                               HeapSize);
 
-    if (hHeap == NULL)
+    if (pHeap == NULL)
     {
         ObDereferenceObject(*SectionObject);
         *SectionObject = NULL;
@@ -212,5 +212,5 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
         SetLastNtError(STATUS_UNSUCCESSFUL);
     }
 
-    return hHeap;
+    return pHeap;
 }

@@ -82,9 +82,7 @@ RtlUnicodeToMultiByteN (
 	ULONG	UnicodeSize
 	);
 
-typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
-				     PWCHAR NameServer,
-				     PVOID Data );
+
 typedef VOID (*EnumInterfacesFunc)( HKEY ChildKeyHandle,
 				    PWCHAR ChildKeyName,
 				    PVOID Data );
@@ -123,34 +121,39 @@ static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
  * EnumNameServers
  */
 
-static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
+void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
     PWCHAR NameServerString =
 	QueryRegistryValueString(RegHandle, L"NameServer");
-    /* Now, count the non-empty comma separated */
+
+    if (!NameServerString)
+		NameServerString = QueryRegistryValueString(RegHandle, L"DhcpNameServer");
+
     if (NameServerString) {
+    /* Now, count the non-empty comma separated */
 	DWORD ch;
 	DWORD LastNameStart = 0;
 	for (ch = 0; NameServerString[ch]; ch++) {
 	    if (NameServerString[ch] == ',') {
 		if (ch - LastNameStart > 0) { /* Skip empty entries */
 		    PWCHAR NameServer =
-			malloc(ch - LastNameStart + 1);
+			malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
 		    if (NameServer) {
 			memcpy(NameServer,NameServerString + LastNameStart,
-			       (ch - LastNameStart));
+				   (ch - LastNameStart) * sizeof(WCHAR));
 			NameServer[ch - LastNameStart] = 0;
 			cb( Interface, NameServer, Data );
 			free(NameServer);
+			LastNameStart = ch +1;
 		    }
 		}
 		LastNameStart = ch + 1; /* The first one after the comma */
 	    }
 	}
 	if (ch - LastNameStart > 0) { /* A last name? */
-	    PWCHAR NameServer = malloc(ch - LastNameStart + 1);
+	    PWCHAR NameServer = malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
 	    memcpy(NameServer,NameServerString + LastNameStart,
-		   (ch - LastNameStart));
+		   (ch - LastNameStart) * sizeof(WCHAR));
 	    NameServer[ch - LastNameStart] = 0;
 	    cb( Interface, NameServer, Data );
 	    free(NameServer);
@@ -174,7 +177,7 @@ static void CreateNameServerListEnumIfFuncCount( HKEY RegHandle,
 		    CreateNameServerListEnumNamesFuncCount);
 }
 
-static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
+VOID CreateNameServerListEnumNamesFunc( PWCHAR Interface,
 					       PWCHAR Server,
 					       PVOID _Data ) {
     PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
@@ -226,7 +229,7 @@ PIPHLP_RES_INFO getResInfo() {
     Str = QueryRegistryValueString( hKey, L"NameServer" );
 
     /* If NameServer is empty */
-    if (*Str == L'\0')
+    if (!Str || *Str == L'\0')
     {
         /* Then use DhcpNameServer */
         Str = QueryRegistryValueString( hKey, L"DhcpNameServer" );

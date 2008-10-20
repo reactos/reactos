@@ -175,6 +175,7 @@ typedef struct _NIC_ADAPTER
     /* Flags used for driver cleanup */
     BOOLEAN IOPortRangeRegistered;
     BOOLEAN InterruptRegistered;
+    BOOLEAN ShutdownHandlerRegistered;
 } NIC_ADAPTER, *PNIC_ADAPTER;
 
 /* Global driver information */

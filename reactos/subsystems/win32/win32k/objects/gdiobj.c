@@ -366,7 +366,7 @@ LockHandle:
         PrevProcId = _InterlockedCompareExchangePointer((PVOID*)&Entry->ProcessId, LockedProcessId, 0);
         if (PrevProcId == NULL)
         {
-            PW32THREAD Thread = PsGetCurrentThreadWin32Thread();
+            PW32THREAD Thread = (PW32THREAD)PsGetCurrentThreadWin32Thread();
             HGDIOBJ Handle;
 
             Entry->KernelData = newObject;
@@ -803,7 +803,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
             if ( (Entry->KernelData != NULL) &&
                  ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) == HandleUpper) )
             {
-                PW32THREAD Thread = PsGetCurrentThreadWin32Thread();
+                PW32THREAD Thread = (PW32THREAD)PsGetCurrentThreadWin32Thread();
                 Object = Entry->KernelData;
 
                 if (Object->cExclusiveLock == 0)
@@ -1046,7 +1046,7 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
 
     DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", hObj);
 
-    Thread = PsGetCurrentThreadWin32Thread();
+    Thread = (PW32THREAD)PsGetCurrentThreadWin32Thread();
 
     if (!GDI_HANDLE_IS_STOCKOBJ(hObj))
     {
@@ -1172,7 +1172,7 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 
     DPRINT("GDIOBJ_SetOwnership: hObj: 0x%x, NewProcess: 0x%x\n", ObjectHandle, (NewOwner ? PsGetProcessId(NewOwner) : 0));
 
-    Thread = PsGetCurrentThreadWin32Thread();
+    Thread = (PW32THREAD)PsGetCurrentThreadWin32Thread();
 
     if (!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
     {
@@ -1301,7 +1301,7 @@ GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 
     DPRINT("GDIOBJ_CopyOwnership: from: 0x%x, to: 0x%x\n", CopyFrom, CopyTo);
 
-    Thread = PsGetCurrentThreadWin32Thread();
+    Thread = (PW32THREAD)PsGetCurrentThreadWin32Thread();
 
     if (!GDI_HANDLE_IS_STOCKOBJ(CopyFrom) && !GDI_HANDLE_IS_STOCKOBJ(CopyTo))
     {

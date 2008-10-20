@@ -420,7 +420,8 @@ static BOOL CreateCPanelEnumList(
 
                 if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
                     strcpy(p, wfd.cFileName);
-                    SHELL_RegisterCPanelApp((IEnumIDList*)iface, szPath);
+                    if (strcmp(wfd.cFileName, "ncpa.cpl"))
+                        SHELL_RegisterCPanelApp((IEnumIDList*)iface, szPath);
                 }
             } while(FindNextFileA(hFile, &wfd));
             FindClose(hFile);

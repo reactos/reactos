@@ -25,8 +25,8 @@
 #if !defined SLANG_COMPILE_H
 #define SLANG_COMPILE_H
 
-#include "imports.h"
-#include "mtypes.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
 #include "slang_typeinfo.h"
 #include "slang_compile_variable.h"
 #include "slang_compile_struct.h"

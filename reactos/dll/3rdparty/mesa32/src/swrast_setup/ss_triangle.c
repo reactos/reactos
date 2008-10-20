@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  7.1
  *
- * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -57,7 +57,7 @@ static void _swsetup_render_line_tri( GLcontext *ctx,
    SWvertex *v1 = &verts[e1];
    SWvertex *v2 = &verts[e2];
    GLchan c[2][4];
-   GLchan s[2][4];
+   GLfloat s[2][4];
    GLfloat i[2];
 
    /* cull testing */
@@ -68,20 +68,22 @@ static void _swsetup_render_line_tri( GLcontext *ctx,
          return;
    }
 
+   _swrast_SetFacing(ctx, facing);
+
    if (ctx->Light.ShadeModel == GL_FLAT) {
       COPY_CHAN4(c[0], v0->color);
       COPY_CHAN4(c[1], v1->color);
-      COPY_CHAN4(s[0], v0->specular);
-      COPY_CHAN4(s[1], v1->specular);
-      i[0] = v0->index;
-      i[1] = v1->index;
+      COPY_4V(s[0], v0->attrib[FRAG_ATTRIB_COL1]);
+      COPY_4V(s[1], v1->attrib[FRAG_ATTRIB_COL1]);
+      i[0] = v0->attrib[FRAG_ATTRIB_CI][0];
+      i[1] = v1->attrib[FRAG_ATTRIB_CI][0];
 
       COPY_CHAN4(v0->color, v2->color);
       COPY_CHAN4(v1->color, v2->color);
-      COPY_CHAN4(v0->specular, v2->specular);
-      COPY_CHAN4(v1->specular, v2->specular);
-      v0->index = v2->index;
-      v1->index = v2->index;
+      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
+      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
+      v0->attrib[FRAG_ATTRIB_CI][0] = v2->attrib[FRAG_ATTRIB_CI][0];
+      v1->attrib[FRAG_ATTRIB_CI][0] = v2->attrib[FRAG_ATTRIB_CI][0];
    }
 
    if (swsetup->render_prim == GL_POLYGON) {
@@ -97,10 +99,10 @@ static void _swsetup_render_line_tri( GLcontext *ctx,
    if (ctx->Light.ShadeModel == GL_FLAT) {
       COPY_CHAN4(v0->color, c[0]);
       COPY_CHAN4(v1->color, c[1]);
-      COPY_CHAN4(v0->specular, s[0]);
-      COPY_CHAN4(v1->specular, s[1]);
-      v0->index = i[0];
-      v1->index = i[1];
+      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], s[0]);
+      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], s[1]);
+      v0->attrib[FRAG_ATTRIB_CI][0] = i[0];
+      v1->attrib[FRAG_ATTRIB_CI][0] = i[1];
    }
 }
 
@@ -116,7 +118,7 @@ static void _swsetup_render_point_tri( GLcontext *ctx,
    SWvertex *v1 = &verts[e1];
    SWvertex *v2 = &verts[e2];
    GLchan c[2][4];
-   GLchan s[2][4];
+   GLfloat s[2][4];
    GLfloat i[2];
 
    /* cull testing */
@@ -127,22 +129,24 @@ static void _swsetup_render_point_tri( GLcontext *ctx,
          return;
    }
 
+   _swrast_SetFacing(ctx, facing);
+
    if (ctx->Light.ShadeModel == GL_FLAT) {
       /* save colors/indexes for v0, v1 vertices */
       COPY_CHAN4(c[0], v0->color);
       COPY_CHAN4(c[1], v1->color);
-      COPY_CHAN4(s[0], v0->specular);
-      COPY_CHAN4(s[1], v1->specular);
-      i[0] = v0->index;
-      i[1] = v1->index;
+      COPY_4V(s[0], v0->attrib[FRAG_ATTRIB_COL1]);
+      COPY_4V(s[1], v1->attrib[FRAG_ATTRIB_COL1]);
+      i[0] = v0->attrib[FRAG_ATTRIB_CI][0];
+      i[1] = v1->attrib[FRAG_ATTRIB_CI][0];
 
       /* copy v2 color/indexes to v0, v1 indexes */
       COPY_CHAN4(v0->color, v2->color);
       COPY_CHAN4(v1->color, v2->color);
-      COPY_CHAN4(v0->specular, v2->specular);
-      COPY_CHAN4(v1->specular, v2->specular);
-      v0->index = v2->index;
-      v1->index = v2->index;
+      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
+      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], v2->attrib[FRAG_ATTRIB_COL1]);
+      v0->attrib[FRAG_ATTRIB_CI][0] = v2->attrib[FRAG_ATTRIB_CI][0];
+      v1->attrib[FRAG_ATTRIB_CI][0] = v2->attrib[FRAG_ATTRIB_CI][0];
    }
 
    if (ef[e0]) _swrast_Point( ctx, v0 );
@@ -153,10 +157,10 @@ static void _swsetup_render_point_tri( GLcontext *ctx,
       /* restore v0, v1 colores/indexes */
       COPY_CHAN4(v0->color, c[0]);
       COPY_CHAN4(v1->color, c[1]);
-      COPY_CHAN4(v0->specular, s[0]);
-      COPY_CHAN4(v1->specular, s[1]);
-      v0->index = i[0];
-      v1->index = i[1];
+      COPY_4V(v0->attrib[FRAG_ATTRIB_COL1], s[0]);
+      COPY_4V(v1->attrib[FRAG_ATTRIB_COL1], s[1]);
+      v0->attrib[FRAG_ATTRIB_CI][0] = i[0];
+      v1->attrib[FRAG_ATTRIB_CI][0] = i[1];
    }
    _swrast_flush(ctx);
 }
@@ -290,10 +294,8 @@ void _swsetup_choose_trifuncs( GLcontext *ctx )
        ctx->Polygon.OffsetFill)
       ind |= SS_OFFSET_BIT;
 
-   /* Note: gl_FrontFacing lives in fragment input FOGC.Y at this time */
    if ((ctx->Light.Enabled && ctx->Light.Model.TwoSide) ||
-       (ctx->VertexProgram._Enabled && ctx->VertexProgram.TwoSideEnabled) ||
-       (ctx->FragmentProgram._Current && ctx->FragmentProgram._Current->Base.InputsRead & (1 << FRAG_ATTRIB_FOGC)))
+       (ctx->VertexProgram._Current && ctx->VertexProgram.TwoSideEnabled))
       ind |= SS_TWOSIDE_BIT;
 
    /* We piggyback the two-sided stencil front/back determination on the
@@ -311,6 +313,4 @@ void _swsetup_choose_trifuncs( GLcontext *ctx )
    tnl->Driver.Render.Quad = quad_tab[ind];
    tnl->Driver.Render.Line = swsetup_line;
    tnl->Driver.Render.Points = swsetup_points;
-
-   ctx->_Facing = 0;
 }

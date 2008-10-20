@@ -235,7 +235,7 @@ static struct state_key *make_state_key( GLcontext *ctx )
  */
 #define PREFER_DP4 0
 
-#define MAX_INSN 256
+#define MAX_INSN 350
 
 /* Use uregs to represent registers internally, translate to Mesa's
  * expected formats on emit.  
@@ -890,7 +890,6 @@ static void build_lighting( struct tnl_program *p )
    {
       struct ureg shininess = get_material(p, 0, STATE_SHININESS);
       emit_op1(p, OPCODE_MOV, dots,  WRITEMASK_W, swizzle1(shininess,X));
-      release_temp(p, shininess);
 
       _col0 = make_temp(p, get_scenecolor(p, 0));
       if (separate)
@@ -904,7 +903,6 @@ static void build_lighting( struct tnl_program *p )
       struct ureg shininess = get_material(p, 1, STATE_SHININESS);
       emit_op1(p, OPCODE_MOV, dots, WRITEMASK_Z, 
 	       negate(swizzle1(shininess,X)));
-      release_temp(p, shininess);
 
       _bfc0 = make_temp(p, get_scenecolor(p, 1));
       if (separate)
@@ -972,7 +970,6 @@ static void build_lighting( struct tnl_program *p )
 	    struct ureg tmpPpli = get_temp(p);
 
 	    VPpli = get_temp(p); 
-	    half = get_temp(p);
  
             /* In homogeneous object coordinates
              */
@@ -982,6 +979,9 @@ static void build_lighting( struct tnl_program *p )
 	    /* Calculate VPpli vector
 	     */
 	    emit_op2(p, OPCODE_SUB, VPpli, 0, tmpPpli, V); 
+
+            /* we're done with tmpPpli now */
+	    release_temp(p, tmpPpli);
 
 	    /* Normalize VPpli.  The dist value also used in
 	     * attenuation below.
@@ -997,10 +997,14 @@ static void build_lighting( struct tnl_program *p )
 		p->state->unit[i].light_attenuated) {
 	       att = calculate_light_attenuation(p, i, VPpli, dist);
 	    }
+	    
+	    /* We're done with dist now */
+	    release_temp(p, dist);
 	 
       
 	    /* Calculate viewer direction, or use infinite viewer:
 	     */
+	    half = get_temp(p);
 	    if (p->state->light_local_viewer) {
 	       struct ureg eye_hat = get_eye_position_normalized(p);
 	       emit_op2(p, OPCODE_SUB, half, 0, VPpli, eye_hat);
@@ -1011,9 +1015,6 @@ static void build_lighting( struct tnl_program *p )
 	    }
 
 	    emit_normalize_vec3(p, half, half);
-
-	    release_temp(p, dist);
-	    release_temp(p, tmpPpli);
 	 }
 
 	 /* Calculate dot products:
@@ -1021,6 +1022,10 @@ static void build_lighting( struct tnl_program *p )
 	 emit_op2(p, OPCODE_DP3, dots, WRITEMASK_X, normal, VPpli);
 	 emit_op2(p, OPCODE_DP3, dots, WRITEMASK_Y, normal, half);
 
+	 /* we're done with VPpli and half now, so free them as to not drive up
+	    our temp usage unnecessary */
+	 release_temp(p, VPpli);
+	 release_temp(p, half);
 	
 	 /* Front face lighting:
 	  */
@@ -1109,8 +1114,6 @@ static void build_lighting( struct tnl_program *p )
 	    release_temp(p, specular);
 	 }
 
-	 release_temp(p, half);
-	 release_temp(p, VPpli);
 	 release_temp(p, att);
       }
    }
@@ -1461,20 +1464,21 @@ create_new_program( const struct state_key *key,
    build_tnl_program( &p );
 }
 
-static void *search_cache( struct tnl_cache *cache,
-			   GLuint hash,
-			   const void *key,
-			   GLuint keysize)
+
+static struct gl_vertex_program *
+search_cache(struct tnl_cache *cache, GLuint hash,
+             const void *key, GLuint keysize)
 {
    struct tnl_cache_item *c;
 
    for (c = cache->items[hash % cache->size]; c; c = c->next) {
       if (c->hash == hash && _mesa_memcmp(c->key, key, keysize) == 0)
-	 return c->data;
+	 return c->prog;
    }
 
    return NULL;
 }
+
 
 static void rehash( struct tnl_cache *cache )
 {
@@ -1498,15 +1502,17 @@ static void rehash( struct tnl_cache *cache )
    cache->size = size;
 }
 
-static void cache_item( struct tnl_cache *cache,
+static void cache_item( GLcontext *ctx,
+                        struct tnl_cache *cache,
 			GLuint hash,
 			void *key,
-			void *data )
+			struct gl_vertex_program *prog )
 {
-   struct tnl_cache_item *c = (struct tnl_cache_item*) _mesa_malloc(sizeof(*c));
+   struct tnl_cache_item *c = CALLOC_STRUCT(tnl_cache_item);
    c->hash = hash;
    c->key = key;
-   c->data = data;
+
+   c->prog = prog;
 
    if (++cache->n_items > cache->size * 1.5)
       rehash(cache);
@@ -1537,6 +1543,8 @@ void _tnl_UpdateFixedFunctionProgram( GLcontext *ctx )
 
    if (!ctx->VertexProgram._Current ||
        ctx->VertexProgram._Current == ctx->VertexProgram._TnlProgram) {
+      struct gl_vertex_program *newProg;
+
       /* Grab all the relevent state and put it in a single structure:
        */
       key = make_state_key(ctx);
@@ -1544,33 +1552,33 @@ void _tnl_UpdateFixedFunctionProgram( GLcontext *ctx )
 
       /* Look for an already-prepared program for this state:
        */
-      ctx->VertexProgram._TnlProgram = (struct gl_vertex_program *)
-	 search_cache( tnl->vp_cache, hash, key, sizeof(*key) );
+      newProg = search_cache( tnl->vp_cache, hash, key, sizeof(*key));
    
       /* OK, we'll have to build a new one:
        */
-      if (!ctx->VertexProgram._TnlProgram) {
+      if (!newProg) {
+
 	 if (0)
 	    _mesa_printf("Build new TNL program\n");
 	 
-	 ctx->VertexProgram._TnlProgram = (struct gl_vertex_program *)
+	 newProg = (struct gl_vertex_program *)
 	    ctx->Driver.NewProgram(ctx, GL_VERTEX_PROGRAM_ARB, 0); 
 
-	 create_new_program( key, ctx->VertexProgram._TnlProgram, 
-			     ctx->Const.VertexProgram.MaxTemps );
+	 create_new_program( key, newProg, ctx->Const.VertexProgram.MaxTemps );
 
 	 if (ctx->Driver.ProgramStringNotify)
 	    ctx->Driver.ProgramStringNotify( ctx, GL_VERTEX_PROGRAM_ARB, 
-                                       &ctx->VertexProgram._TnlProgram->Base );
+                                             &newProg->Base );
 
-	 cache_item(tnl->vp_cache, hash, key, ctx->VertexProgram._TnlProgram );
+         /* Our ownership of newProg is transferred to the cache */
+	 cache_item(ctx, tnl->vp_cache, hash, key, newProg);
       }
       else {
 	 FREE(key);
-	 if (0) 
-	    _mesa_printf("Found existing TNL program for key %x\n", hash);
       }
-      ctx->VertexProgram._Current = ctx->VertexProgram._TnlProgram;
+
+      _mesa_reference_vertprog(ctx, &ctx->VertexProgram._TnlProgram, newProg);
+      _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, newProg);
    }
 
    /* Tell the driver about the change.  Could define a new target for
@@ -1603,7 +1611,7 @@ void _tnl_ProgramCacheDestroy( GLcontext *ctx )
       for (c = tnl->vp_cache->items[i]; c; c = next) {
 	 next = c->next;
 	 FREE(c->key);
-	 FREE(c->data);
+	 _mesa_reference_vertprog(ctx, &c->prog, NULL);
 	 FREE(c);
       }
 

@@ -740,7 +740,7 @@ MaskBlt(
 	                    xMask,
 	                    yMask,
 	                    dwRop,
-	                    0);
+	                    GetBkColor(hdcSrc));
 }
 
 
@@ -771,5 +771,5 @@ PlgBlt(
 	                   hbmMask,
 	                   xMask,
 	                   yMask,
-	                   0);
+	                   GetBkColor(hdcSrc));
 }

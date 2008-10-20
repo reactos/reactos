@@ -26,7 +26,7 @@
 #ifndef SLANG_BUILTIN_H
 #define SLANG_BUILTIN_H
 
-#include "prog_parameter.h"
+#include "shader/prog_parameter.h"
 #include "slang_utility.h"
 #include "slang_ir.h"
 

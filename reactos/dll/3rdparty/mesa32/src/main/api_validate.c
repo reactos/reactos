@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.2
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -108,10 +108,10 @@ _mesa_validate_DrawElements(GLcontext *ctx,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions */
-   if (!ctx->Array.ArrayObj->Vertex.Enabled
-       && !(ctx->VertexProgram._Enabled
-            && ctx->Array.ArrayObj->VertexAttrib[0].Enabled))
+   /* Always need vertex positions, unless a vertex program is in use */
+   if (!ctx->VertexProgram._Current &&
+       !ctx->Array.ArrayObj->Vertex.Enabled &&
+       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
       return GL_FALSE;
 
    /* Vertex buffer object tests */
@@ -190,10 +190,10 @@ _mesa_validate_DrawRangeElements(GLcontext *ctx, GLenum mode,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions */
-   if (!ctx->Array.ArrayObj->Vertex.Enabled
-       && !(ctx->VertexProgram._Enabled
-            && ctx->Array.ArrayObj->VertexAttrib[0].Enabled))
+   /* Always need vertex positions, unless a vertex program is in use */
+   if (!ctx->VertexProgram._Current &&
+       !ctx->Array.ArrayObj->Vertex.Enabled &&
+       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
       return GL_FALSE;
 
    /* Vertex buffer object tests */
@@ -261,9 +261,10 @@ _mesa_validate_DrawArrays(GLcontext *ctx,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions */
-   if (!ctx->Array.ArrayObj->Vertex.Enabled
-       && !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
+   /* Always need vertex positions, unless a vertex program is in use */
+   if (!ctx->VertexProgram._Current &&
+       !ctx->Array.ArrayObj->Vertex.Enabled &&
+       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
       return GL_FALSE;
 
    if (ctx->Const.CheckArrayBounds) {

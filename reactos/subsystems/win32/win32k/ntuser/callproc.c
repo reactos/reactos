@@ -43,7 +43,7 @@ GetCallProcHandle(IN PCALLPROC CallProc)
 }
 
 VOID
-DestroyCallProc(IN PDESKTOP Desktop,
+DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROC CallProc)
 {
     /* FIXME - use new object manager! */
@@ -54,7 +54,7 @@ DestroyCallProc(IN PDESKTOP Desktop,
 }
 
 PCALLPROC
-CloneCallProc(IN PDESKTOP Desktop,
+CloneCallProc(IN PDESKTOPINFO Desktop,
               IN PCALLPROC CallProc)
 {
     PCALLPROC NewCallProc;
@@ -78,7 +78,7 @@ CloneCallProc(IN PDESKTOP Desktop,
 }
 
 PCALLPROC
-CreateCallProc(IN PDESKTOP Desktop,
+CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PW32PROCESSINFO pi)

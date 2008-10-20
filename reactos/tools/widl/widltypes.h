@@ -43,6 +43,8 @@ typedef GUID UUID;
 #endif
 #define FALSE 0
 
+#define RPC_FC_FUNCTION 0xfe
+
 typedef struct _attr_t attr_t;
 typedef struct _expr_t expr_t;
 typedef struct _type_t type_t;
@@ -77,6 +79,7 @@ enum attr_type
     ATTR_AUTO_HANDLE,
     ATTR_BINDABLE,
     ATTR_CALLAS,
+    ATTR_CALLCONV, /* calling convention pseudo-attribute */
     ATTR_CASE,
     ATTR_CONTEXTHANDLE,
     ATTR_CONTROL,
@@ -221,7 +224,7 @@ struct _type_t {
   struct _type_t *ref;
   const attr_list_t *attrs;
   func_list_t *funcs;             /* interfaces and modules */
-  var_list_t *fields;             /* interfaces, structures and enumerations */
+  var_list_t *fields_or_args;     /* interfaces, structures, enumerations and functions (for args) */
   ifref_list_t *ifaces;           /* coclasses */
   unsigned long dim;              /* array dimension */
   expr_t *size_is, *length_is;
@@ -242,7 +245,6 @@ struct _type_t {
 struct _var_t {
   char *name;
   type_t *type;
-  var_list_t *args;  /* for function pointers */
   attr_list_t *attrs;
   expr_t *eval;
 
@@ -253,6 +255,12 @@ struct _var_t {
 struct _pident_t {
   var_t *var;
   int ptr_level;
+
+  int is_func;
+  /* levels of indirection for function pointers */
+  int func_ptr_level;
+  var_list_t *args;
+  char *callconv;
 
   /* parser-internal */
   struct list entry;
@@ -321,7 +329,7 @@ struct _user_type_t {
 extern unsigned char pointer_default;
 
 extern user_type_list_t user_type_list;
-void check_for_user_types_and_context_handles(const var_list_t *list);
+void check_for_additional_prototype_types(const var_list_t *list);
 
 void init_types(void);
 type_t *alloc_type(void);
@@ -336,5 +344,10 @@ int is_var_ptr(const var_t *v);
 int cant_be_null(const var_t *v);
 int is_struct(unsigned char tc);
 int is_union(unsigned char tc);
+
+static inline type_t *get_func_return_type(const func_t *func)
+{
+  return func->def->type->ref;
+}
 
 #endif

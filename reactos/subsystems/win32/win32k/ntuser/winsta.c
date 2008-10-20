@@ -755,7 +755,7 @@ NtUserGetObjectInformation(
    PDWORD nLengthNeeded)
 {
    PWINSTATION_OBJECT WinStaObject = NULL;
-   PDESKTOP_OBJECT DesktopObject = NULL;
+   PDESKTOP DesktopObject = NULL;
    NTSTATUS Status;
    PVOID pvData = NULL;
    DWORD nDataSize = 0;
@@ -918,6 +918,7 @@ HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
    NTSTATUS Status;
+   PTHREADINFO pti;
    HWINSTA WinSta;
 
    if(PsGetCurrentProcess() != CsrProcess)
@@ -927,7 +928,8 @@ UserGetProcessWindowStation(VOID)
    else
    {
       DPRINT1("Should use ObFindHandleForObject\n");
-      Status = ObOpenObjectByPointer(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+      pti = PsGetCurrentThreadWin32Thread();
+      Status = ObOpenObjectByPointer(pti->Desktop->WindowStation,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -970,7 +972,7 @@ PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
    PWINSTATION_OBJECT WinStaObj;
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PEPROCESS CurrentProcess;
 
    /*
@@ -1365,7 +1367,7 @@ BuildDesktopNameList(
    PWINSTATION_OBJECT WindowStation;
    KIRQL OldLevel;
    PLIST_ENTRY DesktopEntry;
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    DWORD EntryCount;
    ULONG ReturnLength;
    WCHAR NullWchar;
@@ -1390,7 +1392,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       ReturnLength += ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + sizeof(WCHAR);
       EntryCount++;
    }
@@ -1433,7 +1435,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       Status = MmCopyToCaller(lpBuffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length);
       if (! NT_SUCCESS(Status))
       {

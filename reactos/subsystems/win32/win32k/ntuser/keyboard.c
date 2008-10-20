@@ -420,6 +420,7 @@ BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg,
                        HKL dwhkl)
 {
+   PTHREADINFO pti;
    static INT dead_char = 0;
    LONG UState = 0;
    WCHAR wp[2] = { 0 };
@@ -428,8 +429,8 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    BOOL Result = FALSE;
    DWORD ScanCode = 0;
 
-
-   keyLayout = PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables;
+   pti = PsGetCurrentThreadWin32Thread();
+   keyLayout = pti->KeyboardLayout->KBTables;
    if( !keyLayout )
       return FALSE;
 
@@ -439,7 +440,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    /* All messages have to contain the cursor point. */
-   IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+   IntGetCursorLocation(pti->Desktop->WindowStation,
                         &NewMsg.pt);
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
@@ -476,14 +477,14 @@ IntTranslateKbdMessage(LPMSG lpMsg,
          NewMsg.wParam = dead_char;
          NewMsg.lParam = lpMsg->lParam;
          dead_char = 0;
-         MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+         MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       }
 
       NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
-      MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+      MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
    else if (UState == -1)
@@ -494,7 +495,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
-      MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+      MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
 
@@ -664,13 +665,15 @@ UINT
 STDCALL
 NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
 {
+   PTHREADINFO pti;
    PKBDTABLES keyLayout;
    DECLARE_RETURN(UINT);
 
    DPRINT("Enter NtUserMapVirtualKeyEx\n");
    UserEnterExclusive();
 
-   keyLayout = PsGetCurrentThreadWin32Thread() ? PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0;
+   pti = PsGetCurrentThreadWin32Thread();
+   keyLayout = pti ? pti->KeyboardLayout->KBTables : 0;
 
    if( !keyLayout )
       RETURN(0);
@@ -695,6 +698,7 @@ NtUserToUnicodeEx(
    UINT wFlags,
    HKL dwhkl )
 {
+   PTHREADINFO pti;
    BYTE KeyStateBuf[0x100];
    PWCHAR OutPwszBuff = 0;
    int ret = 0;
@@ -723,14 +727,14 @@ NtUserToUnicodeEx(
       }
       RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
 
+      pti = PsGetCurrentThreadWin32Thread();
       ret = ToUnicodeInner( wVirtKey,
                             wScanCode,
                             KeyStateBuf,
                             OutPwszBuff,
                             cchBuff,
                             wFlags,
-                            PsGetCurrentThreadWin32Thread() ?
-                               PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0 );
+                            pti ? pti->KeyboardLayout->KBTables : 0 );
 
       MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
       ExFreePool(OutPwszBuff);
@@ -757,6 +761,7 @@ DWORD
 STDCALL
 NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
 {
+   PTHREADINFO pti;
    int i;
    DWORD ret = 0;
    UINT CareVk = 0;
@@ -770,8 +775,8 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    DPRINT("Enter NtUserGetKeyNameText\n");
    UserEnterShared();
 
-   keyLayout = PsGetCurrentThreadWin32Thread() ?
-      PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0;
+   pti = PsGetCurrentThreadWin32Thread();
+   keyLayout = pti ? pti->KeyboardLayout->KBTables : 0;
 
    if( !keyLayout || nSize < 1 )
       RETURN(0);

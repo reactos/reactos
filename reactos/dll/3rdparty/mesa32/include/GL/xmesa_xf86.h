@@ -39,11 +39,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _XMESA_XF86_H_
 #define _XMESA_XF86_H_
 
+#include "GL/glxtokens.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "gcstruct.h"
+#include "servermd.h"
 
-typedef struct _XMesaImageRec XMesaImage;
+
+typedef struct _XMesaImageRec {
+    int width, height;
+    char *data;
+    int bytes_per_line; /* Padded to 32 bits */
+    int bits_per_pixel;
+} XMesaImage;
 
 typedef ScreenRec   XMesaDisplay;
 typedef PixmapPtr   XMesaPixmap;
@@ -120,6 +128,26 @@ do { \
     (*__gc->ops->PolyFillRect)((DrawablePtr)__b, __gc, 1, __r); \
 } while (0)
 
+static _X_INLINE XMesaImage *XMesaGetImage(XMesaDisplay *dpy, PixmapPtr p, int x,
+					int y, unsigned int width,
+					unsigned int height,
+					unsigned long plane_mask, int format)
+{
+    XMesaImage *img = Xcalloc(sizeof(*img));
+
+    img->width = p->drawable.width;
+    img->height = p->drawable.height;
+    img->bits_per_pixel = p->drawable.bitsPerPixel;
+    img->bytes_per_line = PixmapBytePad(width, p->drawable.depth);
+    img->data = malloc(height * img->bytes_per_line);
+
+    /* Assumes: Images are always in ZPixmap format */
+    (*p->drawable.pScreen->GetImage)(&p->drawable, x, y, width, height,
+				     plane_mask, ZPixmap, img->data);
+
+    return img;
+}
+
 #define XMesaPutImage(__d,__b,__gc,__i,__sx,__sy,__x,__y,__w,__h) \
 do { \
     /* Assumes: Images are always in ZPixmap format */ \
@@ -141,8 +169,13 @@ do { \
 
 
 /* CreatePixmap returns a PixmapPtr; so, it cannot be inside braces */
+#ifdef CREATE_PIXMAP_USAGE_SCRATCH
+#define XMesaCreatePixmap(__d,__b,__w,__h,__depth) \
+  (*__d->CreatePixmap)(__d, __w, __h, __depth, 0)
+#else
 #define XMesaCreatePixmap(__d,__b,__w,__h,__depth) \
     (*__d->CreatePixmap)(__d, __w, __h, __depth)
+#endif
 
 #define XMesaFreePixmap(__d,__b) \
     (*__d->DestroyPixmap)(__b)

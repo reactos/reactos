@@ -97,11 +97,13 @@ BEGIN
 	IDS_NET_DELETE              "Slett"
 	IDS_NET_PROPERTIES          "Egenskaper"
 
-	IDS_FORMAT_BIT              "%u Byte/s"
-	IDS_FORMAT_KBIT             "%u KB/s"
-	IDS_FORMAT_MBIT             "%u MB/s"
-	IDS_FORMAT_GBIT             "%u GB/s"
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
 	IDS_DURATION_DAY            "%d dag %s"
 	IDS_DURATION_DAYS           "%d dager %s"
+	IDS_ASSIGNED_DHCP           "Tilordnet av DHCP"
+	IDS_ASSIGNED_MANUAL         "Manuelt konfigurert"
 END
 

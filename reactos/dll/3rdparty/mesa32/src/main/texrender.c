@@ -16,10 +16,13 @@
  */
 struct texture_renderbuffer
 {
-   struct gl_renderbuffer Base;   /* Base class object */
+   struct gl_renderbuffer Base;   /**< Base class object */
    struct gl_texture_image *TexImage;
    StoreTexelFunc Store;
-   GLint Zoffset;
+   GLint Yoffset;                 /**< Layer for 1D array textures. */
+   GLint Zoffset;                 /**< Layer for 2D array textures, or slice
+				   * for 3D textures
+				   */
 };
 
 
@@ -37,6 +40,8 @@ texture_get_row(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
    ASSERT(trb->TexImage->Width == rb->Width);
    ASSERT(trb->TexImage->Height == rb->Height);
+
+   y += trb->Yoffset;
 
    if (rb->DataType == CHAN_TYPE) {
       GLchan *rgbaOut = (GLchan *) values;
@@ -87,15 +92,16 @@ texture_get_values(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    if (rb->DataType == CHAN_TYPE) {
       GLchan *rgbaOut = (GLchan *) values;
       for (i = 0; i < count; i++) {
-         trb->TexImage->FetchTexelc(trb->TexImage, x[i], y[i], z,
-                                    rgbaOut + 4 * i);
+         trb->TexImage->FetchTexelc(trb->TexImage, x[i], y[i] + trb->Yoffset,
+				    z, rgbaOut + 4 * i);
       }
    }
    else if (rb->DataType == GL_UNSIGNED_INT) {
       GLuint *zValues = (GLuint *) values;
       for (i = 0; i < count; i++) {
          GLfloat flt;
-         trb->TexImage->FetchTexelf(trb->TexImage, x[i], y[i], z, &flt);
+         trb->TexImage->FetchTexelf(trb->TexImage, x[i], y[i] + trb->Yoffset,
+				    z, &flt);
 #if 0
          zValues[i] = (GLuint) (flt * 0xffffffff);
 #else
@@ -107,7 +113,8 @@ texture_get_values(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       GLuint *zValues = (GLuint *) values;
       for (i = 0; i < count; i++) {
          GLfloat flt;
-         trb->TexImage->FetchTexelf(trb->TexImage, x[i], y[i], z, &flt);
+         trb->TexImage->FetchTexelf(trb->TexImage, x[i], y[i] + trb->Yoffset,
+				    z, &flt);
          zValues[i] = ((GLuint) (flt * 0xffffff)) << 8;
       }
    }
@@ -128,6 +135,8 @@ texture_put_row(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       = (const struct texture_renderbuffer *) rb;
    const GLint z = trb->Zoffset;
    GLuint i;
+
+   y += trb->Yoffset;
 
    if (rb->DataType == CHAN_TYPE) {
       const GLchan *rgba = (const GLchan *) values;
@@ -169,6 +178,8 @@ texture_put_mono_row(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       = (const struct texture_renderbuffer *) rb;
    const GLint z = trb->Zoffset;
    GLuint i;
+
+   y += trb->Yoffset;
 
    if (rb->DataType == CHAN_TYPE) {
       const GLchan *rgba = (const GLchan *) value;
@@ -215,7 +226,7 @@ texture_put_values(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       const GLchan *rgba = (const GLchan *) values;
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
-            trb->Store(trb->TexImage, x[i], y[i], z, rgba);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z, rgba);
          }
          rgba += 4;
       }
@@ -224,7 +235,8 @@ texture_put_values(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       const GLuint *zValues = (const GLuint *) values;
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
-            trb->Store(trb->TexImage, x[i], y[i], z, zValues + i);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z,
+		       zValues + i);
          }
       }
    }
@@ -233,7 +245,7 @@ texture_put_values(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
             GLfloat flt = (zValues[i] >> 8) * (1.0 / 0xffffff);
-            trb->Store(trb->TexImage, x[i], y[i], z, &flt);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z, &flt);
          }
       }
    }
@@ -257,7 +269,7 @@ texture_put_mono_values(GLcontext *ctx, struct gl_renderbuffer *rb,
       const GLchan *rgba = (const GLchan *) value;
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
-            trb->Store(trb->TexImage, x[i], y[i], z, rgba);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z, rgba);
          }
       }
    }
@@ -265,7 +277,7 @@ texture_put_mono_values(GLcontext *ctx, struct gl_renderbuffer *rb,
       const GLuint zValue = *((const GLuint *) value);
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
-            trb->Store(trb->TexImage, x[i], y[i], z, &zValue);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z, &zValue);
          }
       }
    }
@@ -274,7 +286,7 @@ texture_put_mono_values(GLcontext *ctx, struct gl_renderbuffer *rb,
       const GLfloat flt = (zValue >> 8) * (1.0 / 0xffffff);
       for (i = 0; i < count; i++) {
          if (!mask || mask[i]) {
-            trb->Store(trb->TexImage, x[i], y[i], z, &flt);
+            trb->Store(trb->TexImage, x[i], y[i] + trb->Yoffset, z, &flt);
          }
       }
    }
@@ -350,7 +362,14 @@ update_wrapper(GLcontext *ctx, const struct gl_renderbuffer_attachment *att)
    trb->Store = trb->TexImage->TexFormat->StoreTexel;
    ASSERT(trb->Store);
 
-   trb->Zoffset = att->Zoffset;
+   if (att->Texture->Target == GL_TEXTURE_1D_ARRAY_EXT) {
+      trb->Yoffset = att->Zoffset;
+      trb->Zoffset = 0;
+   }
+   else {
+      trb->Yoffset = 0;
+      trb->Zoffset = att->Zoffset;
+   }
 
    trb->Base.Width = trb->TexImage->Width;
    trb->Base.Height = trb->TexImage->Height;

@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.0.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -32,6 +32,7 @@ typedef void (*FetchTexelLodFunc)(GLcontext *ctx, const GLfloat texcoord[4],
 typedef void (*FetchTexelDerivFunc)(GLcontext *ctx, const GLfloat texcoord[4],
                                     const GLfloat texdx[4],
                                     const GLfloat texdy[4],
+                                    GLfloat lodBias,
                                     GLuint unit, GLfloat color[4]);
 
 
@@ -61,6 +62,8 @@ struct gl_program_machine
    GLfloat (*EnvParams)[4]; /**< Vertex or Fragment env parameters */
    GLuint CondCodes[4];  /**< COND_* value for x/y/z/w */
    GLint AddressReg[MAX_PROGRAM_ADDRESS_REGS][4];
+
+   const GLubyte *Samplers;  /** Array mapping sampler var to tex unit */
 
    GLuint CallStack[MAX_PROGRAM_CALL_DEPTH]; /**< For CAL/RET instructions */
    GLuint StackDepth; /**< Index/ptr to top of CallStack[] */

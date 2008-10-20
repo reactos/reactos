@@ -104,7 +104,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     /* for more easy to free the memory if something goes wrong */
     DxHeapMemAlloc(slist_gbl, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_GBL ) );
-    if( slist_lcl == NULL )
+    if( slist_gbl == NULL )
     {
         DxHeapMemFree(slist_int);
         return DDERR_OUTOFMEMORY;
@@ -112,7 +112,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     /* for more easy to free the memory if something goes wrong */
     DxHeapMemAlloc(slist_more, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_MORE ) );
-    if( slist_lcl == NULL )
+    if( slist_more == NULL )
     {
         DxHeapMemFree(slist_int);
         return DDERR_OUTOFMEMORY;

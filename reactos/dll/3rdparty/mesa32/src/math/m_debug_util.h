@@ -185,7 +185,7 @@ extern char *mesa_profile;
 
 #endif
 
-#elif defined(__amd64__)
+#elif defined(__x86_64__)
 
 #define rdtscll(val) do { \
      unsigned int a,d; \

@@ -2200,7 +2200,7 @@ DWORD REnumServicesStatusW(
     DWORD dwRequiredSize;
     DWORD dwServiceCount;
     DWORD dwSize;
-    DWORD dwLastResumeCount;
+    DWORD dwLastResumeCount = 0;
     LPENUM_SERVICE_STATUSW lpStatusPtr;
     LPWSTR lpStringPtr;
 
@@ -2216,6 +2216,21 @@ DWORD REnumServicesStatusW(
         return ERROR_INVALID_HANDLE;
     }
 
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
+
+    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    {
+        DPRINT("Not a valid Service Type!\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    {
+        DPRINT("Not a valid Service State!\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
     /* Check access rights */
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
@@ -2225,10 +2240,7 @@ DWORD REnumServicesStatusW(
         return ERROR_ACCESS_DENIED;
     }
 
-    *pcbBytesNeeded = 0;
-    *lpServicesReturned = 0;
-
-    dwLastResumeCount = *lpResumeHandle;
+    if (lpResumeHandle) dwLastResumeCount = *lpResumeHandle;
 
     /* FIXME: Lock the service list shared */
 
@@ -2306,7 +2318,7 @@ DWORD REnumServicesStatusW(
 
     DPRINT("*pcbBytesNeeded: %lu\n", dwRequiredSize);
 
-    *lpResumeHandle = dwLastResumeCount;
+    if (lpResumeHandle) *lpResumeHandle = dwLastResumeCount;
     *lpServicesReturned = dwServiceCount;
     *pcbBytesNeeded = dwRequiredSize;
 
@@ -2357,6 +2369,12 @@ DWORD REnumServicesStatusW(
 
         lpStatusPtr++;
         dwRequiredSize += dwSize;
+    }
+
+    if (dwError == 0) 
+    {
+        *pcbBytesNeeded = 0;
+        if (lpResumeHandle) *lpResumeHandle = 0;
     }
 
 Done:;
@@ -3357,8 +3375,88 @@ DWORD REnumServicesStatusA(
     LPBOUNDED_DWORD_256K lpServicesReturned,
     LPBOUNDED_DWORD_256K lpResumeHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPENUM_SERVICE_STATUSW lpStatusPtrW = NULL;
+    LPENUM_SERVICE_STATUSA lpStatusPtrA = NULL;
+    LPWSTR lpStringPtrW;
+    LPSTR lpStringPtrA;
+    DWORD dwError;
+    DWORD dwServiceCount;
+
+    DPRINT("REnumServicesStatusA() called\n");
+
+    if ((dwBufSize > 0) && (lpBuffer))
+    {
+        lpStatusPtrW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufSize);
+        if (!lpStatusPtrW)
+        {
+            DPRINT1("Failed to allocate buffer!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+
+    dwError = REnumServicesStatusW(BindingHandle,
+                                   hSCManager,
+                                   dwServiceType,
+                                   dwServiceState,
+                                   (LPBYTE)lpStatusPtrW,
+                                   dwBufSize,
+                                   pcbBytesNeeded,
+                                   lpServicesReturned,
+                                   lpResumeHandle);
+
+    /* if no services were returned then we are Done */
+    if (*lpServicesReturned == 0) goto Done;
+
+    lpStatusPtrA = (LPENUM_SERVICE_STATUSA)lpBuffer;
+    lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
+                  *lpServicesReturned * sizeof(ENUM_SERVICE_STATUSA));
+    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW + 
+                  *lpServicesReturned * sizeof(ENUM_SERVICE_STATUSW));
+
+    for (dwServiceCount = 0; dwServiceCount < *lpServicesReturned; dwServiceCount++)
+    {
+        /* Copy the service name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpStringPtrW,
+                            -1,
+                            lpStringPtrA,
+                            wcslen(lpStringPtrW),
+                            0,
+                            0);
+
+        lpStatusPtrA->lpServiceName = (LPSTR)((ULONG_PTR)lpStringPtrA - (ULONG_PTR)lpBuffer);
+        lpStringPtrA += wcslen(lpStringPtrW) + 1;
+        lpStringPtrW += wcslen(lpStringPtrW) + 1;
+
+        /* Copy the display name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpStringPtrW,
+                            -1,
+                            lpStringPtrA,
+                            wcslen(lpStringPtrW),
+                            0,
+                            0);
+
+        lpStatusPtrA->lpDisplayName = (LPSTR)((ULONG_PTR)lpStringPtrA - (ULONG_PTR)lpBuffer);
+        lpStringPtrA += wcslen(lpStringPtrW) + 1;
+        lpStringPtrW += wcslen(lpStringPtrW) + 1;
+
+        /* Copy the status information */
+        memcpy(&lpStatusPtrA->ServiceStatus,
+               &lpStatusPtrW->ServiceStatus,
+               sizeof(SERVICE_STATUS));
+
+        lpStatusPtrA++;
+    }
+
+Done:;
+    if (lpStatusPtrW) HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
+
+    DPRINT("REnumServicesStatusA() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
@@ -4299,10 +4397,111 @@ DWORD REnumServicesStatusExA(
     LPBOUNDED_DWORD_256K lpResumeIndex,
     LPCSTR pszGroupName)
 {
-    UNIMPLEMENTED;
-    *pcbBytesNeeded = 0;
-    *lpServicesReturned = 0;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtrW = NULL;
+    LPENUM_SERVICE_STATUS_PROCESSA lpStatusPtrA = NULL;
+    LPWSTR lpStringPtrW;
+    LPSTR lpStringPtrA;
+    LPWSTR pszGroupNameW = NULL;
+    DWORD dwError;
+    DWORD dwServiceCount;
+
+    DPRINT("REnumServicesStatusExA() called\n");
+
+    if (pszGroupName)
+    {
+        pszGroupNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (strlen(pszGroupName) + 1) * sizeof(WCHAR));
+        if (!pszGroupNameW)
+        {
+             DPRINT1("Failed to allocate buffer!\n");
+             return ERROR_NOT_ENOUGH_MEMORY;
+        }
+        MultiByteToWideChar(CP_ACP,
+                            0,
+                            pszGroupName,
+                            -1,
+                            pszGroupNameW,
+                            strlen(pszGroupName) + 1);
+    }
+
+    if ((cbBufSize > 0) && (lpBuffer))
+    {
+        lpStatusPtrW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbBufSize);
+        if (!lpStatusPtrW)
+        {
+            DPRINT1("Failed to allocate buffer!\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+
+    dwError = REnumServicesStatusExW(BindingHandle,
+                                     hSCManager,
+                                     InfoLevel,
+                                     dwServiceType,
+                                     dwServiceState,
+                                     (LPBYTE)lpStatusPtrW,
+                                     cbBufSize,
+                                     pcbBytesNeeded,
+                                     lpServicesReturned,
+                                     lpResumeIndex,
+                                     pszGroupNameW);
+
+    /* if no services were returned then we are Done */
+    if (*lpServicesReturned == 0) goto Done;
+
+    lpStatusPtrA = (LPENUM_SERVICE_STATUS_PROCESSA)lpBuffer;
+    lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
+                  *lpServicesReturned * sizeof(ENUM_SERVICE_STATUS_PROCESSA));
+    lpStringPtrW = (LPWSTR)((ULONG_PTR)lpStatusPtrW + 
+                  *lpServicesReturned * sizeof(ENUM_SERVICE_STATUS_PROCESSW));
+
+    for (dwServiceCount = 0; dwServiceCount < *lpServicesReturned; dwServiceCount++)
+    {
+        /* Copy the service name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpStringPtrW,
+                            -1,
+                            lpStringPtrA,
+                            wcslen(lpStringPtrW),
+                            0,
+                            0);
+
+        lpStatusPtrA->lpServiceName = (LPSTR)((ULONG_PTR)lpStringPtrA - (ULONG_PTR)lpBuffer);
+        lpStringPtrA += wcslen(lpStringPtrW) + 1;
+        lpStringPtrW += wcslen(lpStringPtrW) + 1;
+
+        /* Copy the display name */
+        WideCharToMultiByte(CP_ACP,
+                            0,
+                            lpStringPtrW,
+                            -1,
+                            lpStringPtrA,
+                            wcslen(lpStringPtrW),
+                            0,
+                            0);
+
+        lpStatusPtrA->lpDisplayName = (LPSTR)((ULONG_PTR)lpStringPtrA - (ULONG_PTR)lpBuffer);
+        lpStringPtrA += wcslen(lpStringPtrW) + 1;
+        lpStringPtrW += wcslen(lpStringPtrW) + 1;
+
+        /* Copy the status information */
+        memcpy(&lpStatusPtrA->ServiceStatusProcess,
+               &lpStatusPtrW->ServiceStatusProcess,
+               sizeof(SERVICE_STATUS));
+
+        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrW->ServiceStatusProcess.dwProcessId; /* FIXME */
+        lpStatusPtrA->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
+        lpStatusPtrA++;
+    }
+
+Done:;
+    if (pszGroupNameW) HeapFree(GetProcessHeap(), 0, pszGroupNameW);
+
+    if (lpStatusPtrW) HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
+
+    DPRINT("REnumServicesStatusExA() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
@@ -4329,7 +4528,7 @@ DWORD REnumServicesStatusExW(
     DWORD dwRequiredSize;
     DWORD dwServiceCount;
     DWORD dwSize;
-    DWORD dwLastResumeCount;
+    DWORD dwLastResumeCount = 0;
     LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtr;
     LPWSTR lpStringPtr;
 
@@ -4348,6 +4547,21 @@ DWORD REnumServicesStatusExW(
         return ERROR_INVALID_HANDLE;
     }
 
+    *pcbBytesNeeded = 0;
+    *lpServicesReturned = 0;
+
+    if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
+    {
+        DPRINT1("Not a valid Service Type!\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
+    {
+        DPRINT1("Not a valid Service State!\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
     /* Check access rights */
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
@@ -4357,10 +4571,7 @@ DWORD REnumServicesStatusExW(
         return ERROR_ACCESS_DENIED;
     }
 
-    *pcbBytesNeeded = 0;
-    *lpServicesReturned = 0;
-
-    dwLastResumeCount = *lpResumeIndex;
+    if (lpResumeIndex) dwLastResumeCount = *lpResumeIndex;
 
     /* Lock the service list shared */
 
@@ -4471,9 +4682,16 @@ DWORD REnumServicesStatusExW(
 
     DPRINT("*pcbBytesNeeded: %lu\n", dwRequiredSize);
 
-    *lpResumeIndex = dwLastResumeCount;
+    if (lpResumeIndex) *lpResumeIndex = dwLastResumeCount;
     *lpServicesReturned = dwServiceCount;
     *pcbBytesNeeded = dwRequiredSize;
+
+    /* If there was no services that matched */
+    if ((!dwServiceCount) && (dwError != ERROR_MORE_DATA))
+    {
+        dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+        goto Done;
+    }
 
     lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpBuffer;
     lpStringPtr = (LPWSTR)((ULONG_PTR)lpBuffer +
@@ -4545,7 +4763,12 @@ DWORD REnumServicesStatusExW(
         {
             break;
         }
+    }
 
+    if (dwError == 0) 
+    {
+        *pcbBytesNeeded = 0;
+        if (lpResumeIndex) *lpResumeIndex = 0;
     }
 
 Done:;

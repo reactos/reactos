@@ -343,7 +343,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Return",
+        "   ENTER = Дзайлижну",
         TEXT_TYPE_STATUS
     },
     {
@@ -545,7 +545,7 @@ static MUI_ENTRY elGRComputerPageEntries[] =
     {
         8,
         14,
-        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зжиЮЪжчгЬдЮ",
+        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зижЮЪжчгЬдЮ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -597,7 +597,7 @@ static MUI_ENTRY elGRFlushPageEntries[] =
     {
         0,
         0,
-        "   ДббШЯсиЮйЮ зижйриадщд ШиоЬхрд...",
+        "   ДббШЯсиайЮ зижйриадщд ШиоЬхрд...",
         TEXT_TYPE_STATUS
     },
     {
@@ -826,7 +826,7 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  ПШлуйлЬ ПАМЧ у ЙАТЧ ЪаШ дШ ЬзавтеЬлЬ тдШ йлжаотаж лЮк вхйлШк.",
+        "\x07  ПШлуйлЬ ПАМЧ у ЙАТЧ ЪаШ дШ ЬзавтеЬлЬ тдШ йлжаоЬхж лЮк вхйлШк.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -912,7 +912,7 @@ static MUI_ENTRY elGRInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Ж ЬЪбШлсйлШйЮ ШдлаЪиснЬа лШ ШиохШ лжм ReactOS йлж ЬзавЬЪгтдж ЫаШгтиайгШ.",
+        "Ж ЬЪбШлсйлШйЮ ШдлаЪиснЬа лШ ШиоЬхШ лжм ReactOS йлж ЬзавЬЪгтдж ЫаШгтиайгШ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -930,7 +930,7 @@ static MUI_ENTRY elGRInstallDirectoryEntries[] =
     {
         6,
         15,
-        "ЫаШЪиспЬлЬ оШиШблуиЬк бШа гЬлс звЮближвжЪхйлЬ лжд нсбЬвж йлжд жзжхж",
+        "ЫаШЪиспЬлЬ оШиШблуиЬк бШа гЬлс звЮближвжЪЬхйлЬ лжд нсбЬвж йлжд жзжхж",
         TEXT_STYLE_NORMAL
     },
     {
@@ -970,7 +970,7 @@ static MUI_ENTRY elGRFileCopyEntries[] =
     {
         0,
         13,
-        "лШ ШиоЬхШ йлжд нсбЬвж ЬЪбШлсйлШйЮк",
+        "лШ ШиоЬхШ йлж нсбЬвж ЬЪбШлсйлШйЮк",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1074,7 +1074,7 @@ static MUI_ENTRY elGRKeyboardSettingsEntries[] =
     {
         8,
         14,
-        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зжиЮЪжчгЬдЮ",
+        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зижЮЪжчгЬдЮ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1108,7 +1108,7 @@ static MUI_ENTRY elGRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "ПШиШбШвщ ЬзавтелЬ гаШ ЫаслШеЮ ЪаШ дШ ЬЪбШлШйлШЯЬх рк зижЬзавЬЪгтдЮ.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1126,7 +1126,7 @@ static MUI_ENTRY elGRLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зжиЮЪжчгЬдЮ",
+        "\x07  ПШлуйлЬ лж звуближ ESC ЪаШ дШ ЬзайлитпЬлЬ йлЮд зижЮЪжчгЬдЮ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1261,7 +1261,7 @@ static MUI_ENTRY elGRDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = ГШаЪиШну Partition   ESC = АбчирйЮ   F3 = АзжощиЮйЮ",
+        "   D = ГаШЪиШну Partition   ESC = АбчирйЮ   F3 = АзжощиЮйЮ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1421,7 +1421,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         //ERROR_FIND_REGISTRY
-        "Ж ЬЪбШлсйШйЮ ШзтлмоШ дШ ЩиЬа лШ ШиоЬхШ ЫЬЫжгтдрд лжм гЮлищжм.",
+        "Ж ЬЪбШлсйШйЮ ШзтлмоЬ дШ ЩиЬа лШ ШиоЬхШ ЫЬЫжгтдрд лжм гЮлищжм.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
@@ -1431,7 +1431,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
+        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ШиоабжзжауйЬа лж гЮлищж.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
@@ -1499,7 +1499,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Ж ЬЪбШлсймШйЮ ШзтлмоЬ дШ зижйЯтйЬа лак ЫаШлсеЬак звЮближвжЪхрд йлж гЮлищж.\n"
+        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ зижйЯтйЬа лак ЫаШлсеЬак звЮближвжЪхрд йлж гЮлищж.\n"
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
@@ -1612,73 +1612,73 @@ MUI_PAGE elGRPages[] =
 MUI_STRING elGRStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Please wait..."},
+     "   ПШиШбШвщ зЬиагтдЬлЬ..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+     "   ENTER = ДЪбШлсйлШйЮ   C = ГЮгажмиЪхШ Partition   F3 = АзжощиЮйЮ"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+     "   ENTER = ДЪбШлсйлШйЮ   D = ГаШЪиШну Partition   F3 = АзжощиЮйЮ"},
     {STRING_PARTITIONSIZE,
-     "Size of new partition:"},
+     "ЛтЪЬЯжк лжм дтжм partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a new partition on"},
+     "ДзавтеШлЬ дШ ЫЮгажмиЪуйЬлЬ тдШ дтж partition on"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "ПШиШбШвщ ЫщйлЬ лж гтЪЬЯжк лжм partition йЬ megabytes."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+     "   ENTER = ГЮгажмиЪхШ Partition   ESC = АбчирйЮ   F3 = АзжощиЮйЮ"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    "Амлц лж Partition ЯШ ЫаШгжинрЯЬх гЬлс."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "ДзавтеШлЬ дШ ЬЪбШлШйлуйЬлЬ лж ReactOS йЬ тдШ дтж у гЮ ЫаШгжинргтдж Partition."},
     {STRING_INSTALLONPART,
     "Setup install ReactOS onto Partition"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "Ж ЬЪбШлсйлШйЮ ЬвтЪоЬа лщиШ лж ЬзавЬЪгтдж partition."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3= АзжощиЮйЮ  ENTER = СмдтоЬаШ"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"},
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "\xB3 АдлаЪиснЬлШа лж ШиоЬхж: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Setup is copying files..."},
+     "Ж ЬЪбШлсйлШйЮ ШдлаЪиснЬа ШиоЬхШ..."},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   ВхдЬлШа ШдШдтрйЮ лрд registry hives..."},
     {STRING_IMPORTFILE,
-    "   Importing %S..."},
+    "   ВхдЬлШа ЬайШЪрЪу лжм %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЬгнсдайЮк лжм гЮлищжм..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЪвщййШк..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЫаслШеЮк звЮближвжЪхжм..."},
     {STRING_CODEPAGEINFOUPDATE,
     "   Adding codepage information to registry..."},
     {STRING_DONE,
-    "   Done..."},
+    "   ОвжбвЮищЯЮбЬ..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = ДзЬдаббхдЮйЮ мзжвжЪайлу"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "АЫчдШлж дШ ШджаолЬх Ю бждйцвШ\n\n"},
     {STRING_CONSOLEFAIL2,
     "The most common cause of this is using an USB keyboard\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "ТШ USB звЮближвцЪаШ ЫЬд ЬхдШа звуирк мзжйлЮиаЭцгЬдШ ШбцгШ\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "Ж ЬЪбШлсйлШйЮ ЫаШгжинщдЬа лж Ыхйбж йШк"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Ж ЬЪбШлсйлШйЮ ЬвтЪоЬа лж Ыхйбж йШк"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " ГаШгцинрйЮ лжм partition рк %S йчйлЮгШ ШиоЬхрд (ЪиуЪжиЮ ЫаШгцинрйЮ) "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " ГаШгцинрйЮ лжм partition рк %S йчйлЮгШ ШиоЬхрд "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " МШ зШиШгЬхдЬа лж йчйлЮгШ ШиоЬхрд рк тоЬа (бШгхШ ШввШЪу) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
@@ -1686,29 +1686,29 @@ MUI_STRING elGRStrings[] =
     {STRING_HDDINFOUNK3,
     "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "СбвЮицк Ыхйбжк %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  Type %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "Ж ЬЪбШлсйлШйЮ ЫЮгажчиЪЮйЬ тдШ дтж partition йлж"},
     {STRING_UNPSPACE,
     "    Unpartitioned space              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "MB (гЬЪ. %lu MB)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "Мтж (ЛЮ ЫаШгжинргтдж)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "АоиЮйагжзжхЮлж"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "ъЪдрйлж"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1716,7 +1716,7 @@ MUI_STRING elGRStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "ВхдЬлШа зижйЯубЮ лрд ЫаШлсеЬрд звЮближвжЪхжм"},
     {0, 0}
 };
 

@@ -43,7 +43,7 @@ void write_procformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t 
 void write_typeformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t pred);
 void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase, enum pass pass, const var_t *var, const char *varname);
 void write_remoting_arguments(FILE *file, int indent, const func_t *func, enum pass pass, enum remoting_phase phase);
-size_t get_size_procformatstring_var(const var_t *var);
+size_t get_size_procformatstring_type(const char *name, const type_t *type, const attr_list_t *attrs);
 size_t get_size_procformatstring_func(const func_t *func);
 size_t get_size_procformatstring(const ifref_list_t *ifaces, type_pred_t pred);
 size_t get_size_typeformatstring(const ifref_list_t *ifaces, type_pred_t pred);

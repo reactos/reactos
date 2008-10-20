@@ -190,6 +190,7 @@ typedef DWORD LFTYPE;
 #define GCABCW_INDICES 0x0002
 
 /* CAPS1 support */
+#define CAPS1             94
 //#define C1_TRANSPARENT    0x0001
 #define TC_TT_ABLE        0x0002
 #define C1_TT_CR_ANY      0x0004
@@ -203,6 +204,7 @@ typedef DWORD LFTYPE;
 #define C1_COLORCURSOR    0x0800
 #define C1_CMYK_ABLE      0x1000
 #define C1_SLOW_CARD      0x2000
+#define C1_MIRRORING      0X4000
 
 // NtGdiGetRandomRgn iCodes
 #define CLIPRGN 1 // GetClipRgn
@@ -212,6 +214,7 @@ typedef DWORD LFTYPE;
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
+typedef PVOID PUMDHPDEV;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
 

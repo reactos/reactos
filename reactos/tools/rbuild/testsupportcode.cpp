@@ -51,11 +51,11 @@ TestSupportCode::IsTestModule ( const Module& module )
 void
 TestSupportCode::GenerateTestSupportCode ( bool verbose )
 {
-	for ( size_t i = 0; i < project.modules.size (); i++ )
+	for( std::map<std::string, Module*>::const_iterator p = project.modules.begin(); p != project.modules.end(); ++ p )
 	{
-		if ( IsTestModule ( *project.modules[i] ) )
+		if ( IsTestModule ( *p->second ) )
 		{
-			GenerateTestSupportCodeForModule ( *project.modules[i],
+			GenerateTestSupportCodeForModule ( *p->second,
 			                                   verbose );
 		}
 	}

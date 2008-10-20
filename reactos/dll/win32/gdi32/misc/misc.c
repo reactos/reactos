@@ -224,7 +224,7 @@ VOID
 STDCALL
 GdiSetLastError(DWORD dwErrCode)
 {
-    NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrCode;
+    NtCurrentTeb()->LastErrorValue = (ULONG) dwErrCode;
 }
 
 BOOL

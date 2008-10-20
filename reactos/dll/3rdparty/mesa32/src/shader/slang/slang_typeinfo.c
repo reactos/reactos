@@ -28,12 +28,12 @@
  * \author Michal Krol
  */
 
-#include "imports.h"
+#include "main/imports.h"
+#include "shader/prog_instruction.h"
 #include "slang_typeinfo.h"
 #include "slang_compile.h"
 #include "slang_log.h"
 #include "slang_mem.h"
-#include "prog_instruction.h"
 
 
 /**
@@ -273,6 +273,7 @@ slang_type_specifier_compatible(const slang_type_specifier * x,
 GLboolean
 slang_typeinfo_construct(slang_typeinfo * ti)
 {
+   _mesa_bzero(ti, sizeof(*ti));
    slang_type_specifier_ctr(&ti->spec);
    ti->array_len = 0;
    return GL_TRUE;
@@ -304,10 +305,16 @@ _slang_typeof_function(slang_atom a_name,
                        slang_function **funFound,
                        slang_atom_pool *atoms, slang_info_log *log)
 {
+   GLboolean error;
+
    *funFound = _slang_locate_function(space->funcs, a_name, params,
-                                      num_params, space, atoms, log);
+                                      num_params, space, atoms, log, &error);
+   if (error)
+      return GL_FALSE;
+
    if (!*funFound)
       return GL_TRUE;  /* yes, not false */
+
    return slang_type_specifier_copy(spec, &(*funFound)->header.type.specifier);
 }
 
@@ -385,7 +392,6 @@ _slang_typeof_operation_(slang_operation * op,
    switch (op->type) {
    case SLANG_OPER_BLOCK_NO_NEW_SCOPE:
    case SLANG_OPER_BLOCK_NEW_SCOPE:
-   case SLANG_OPER_VARIABLE_DECL:
    case SLANG_OPER_ASM:
    case SLANG_OPER_BREAK:
    case SLANG_OPER_CONTINUE:
@@ -470,6 +476,7 @@ _slang_typeof_operation_(slang_operation * op,
       }
       break;
    case SLANG_OPER_IDENTIFIER:
+   case SLANG_OPER_VARIABLE_DECL:
       {
          slang_variable *var;
          var = _slang_locate_variable(op->locals, op->a_id, GL_TRUE);
@@ -755,51 +762,66 @@ slang_function *
 _slang_locate_function(const slang_function_scope * funcs, slang_atom a_name,
                        slang_operation * args, GLuint num_args,
                        const slang_name_space * space, slang_atom_pool * atoms,
-                       slang_info_log *log)
+                       slang_info_log *log, GLboolean *error)
 {
+   slang_typeinfo arg_ti[100];
    GLuint i;
 
-   for (i = 0; i < funcs->num_functions; i++) {
-      slang_function *f = &funcs->functions[i];
-      const GLuint haveRetValue = _slang_function_has_return_value(f);
-      GLuint j;
+   *error = GL_FALSE;
 
-      if (a_name != f->header.a_name)
-         continue;
-      if (f->param_count - haveRetValue != num_args)
-         continue;
-
-      /* compare parameter / argument types */
-      for (j = 0; j < num_args; j++) {
-         slang_typeinfo ti;
-
-         if (!slang_typeinfo_construct(&ti))
-            return NULL;
-         if (!_slang_typeof_operation_(&args[j], space, &ti, atoms, log)) {
-            slang_typeinfo_destruct(&ti);
-            return NULL;
-         }
-         if (!slang_type_specifier_compatible(&ti.spec,
-             &f->parameters->variables[j]->type.specifier)) {
-            slang_typeinfo_destruct(&ti);
-            break;
-         }
-         slang_typeinfo_destruct(&ti);
-
-         /* "out" and "inout" formal parameter requires the actual
-          * parameter to be l-value.
-          */
-         if (!ti.can_be_referenced &&
-             (f->parameters->variables[j]->type.qualifier == SLANG_QUAL_OUT ||
-              f->parameters->variables[j]->type.qualifier == SLANG_QUAL_INOUT))
-            break;
+   /* determine type of each argument */
+   assert(num_args < 100);
+   for (i = 0; i < num_args; i++) {
+      if (!slang_typeinfo_construct(&arg_ti[i]))
+         return NULL;
+      if (!_slang_typeof_operation_(&args[i], space, &arg_ti[i], atoms, log)) {
+         return NULL;
       }
-      if (j == num_args)
-         return f;
    }
-   if (funcs->outer_scope != NULL)
-      return _slang_locate_function(funcs->outer_scope, a_name, args,
-                                    num_args, space, atoms, log);
+
+   /* loop over function scopes */
+   while (funcs) {
+
+      /* look for function with matching name and argument/param types */
+      for (i = 0; i < funcs->num_functions; i++) {
+         slang_function *f = &funcs->functions[i];
+         const GLuint haveRetValue = _slang_function_has_return_value(f);
+         GLuint j;
+
+         if (a_name != f->header.a_name)
+            continue;
+         if (f->param_count - haveRetValue != num_args)
+            continue;
+
+         /* compare parameter / argument types */
+         for (j = 0; j < num_args; j++) {
+            if (!slang_type_specifier_compatible(&arg_ti[j].spec,
+                              &f->parameters->variables[j]->type.specifier)) {
+               /* param/arg types don't match */
+               break;
+            }
+
+            /* "out" and "inout" formal parameter requires the actual
+             * argument to be an l-value.
+             */
+            if (!arg_ti[j].can_be_referenced &&
+                (f->parameters->variables[j]->type.qualifier == SLANG_QUAL_OUT ||
+                 f->parameters->variables[j]->type.qualifier == SLANG_QUAL_INOUT)) {
+               /* param is not an lvalue! */
+               *error = GL_TRUE;
+               return NULL;
+            }
+         }
+
+         if (j == num_args) {
+            /* name and args match! */
+            return f;
+         }
+      }
+
+      funcs = funcs->outer_scope;
+   }
+
    return NULL;
 }
 
@@ -845,6 +867,34 @@ _slang_type_is_vector(slang_type_specifier_type ty)
    case SLANG_SPEC_BVEC2:
    case SLANG_SPEC_BVEC3:
    case SLANG_SPEC_BVEC4:
+      return GL_TRUE;
+   default:
+      return GL_FALSE;
+   }
+}
+
+
+/**
+ * Determine if a type is a float, float vector or float matrix.
+ * \return GL_TRUE if so, GL_FALSE otherwise
+ */
+GLboolean
+_slang_type_is_float_vec_mat(slang_type_specifier_type ty)
+{
+   switch (ty) {
+   case SLANG_SPEC_FLOAT:
+   case SLANG_SPEC_VEC2:
+   case SLANG_SPEC_VEC3:
+   case SLANG_SPEC_VEC4:
+   case SLANG_SPEC_MAT2:
+   case SLANG_SPEC_MAT3:
+   case SLANG_SPEC_MAT4:
+   case SLANG_SPEC_MAT23:
+   case SLANG_SPEC_MAT32:
+   case SLANG_SPEC_MAT24:
+   case SLANG_SPEC_MAT42:
+   case SLANG_SPEC_MAT34:
+   case SLANG_SPEC_MAT43:
       return GL_TRUE;
    default:
       return GL_FALSE;

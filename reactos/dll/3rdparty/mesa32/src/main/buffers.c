@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -140,7 +140,9 @@ _mesa_Clear( GLbitfield mask )
       return;
    }
 
-   if (ctx->DrawBuffer->Width == 0 || ctx->DrawBuffer->Height == 0)
+   if (ctx->DrawBuffer->Width == 0 || ctx->DrawBuffer->Height == 0 ||
+       ctx->DrawBuffer->_Xmin >= ctx->DrawBuffer->_Xmax ||
+       ctx->DrawBuffer->_Ymin >= ctx->DrawBuffer->_Ymax)
       return;
 
    if (ctx->RenderMode == GL_RENDER) {
@@ -157,7 +159,10 @@ _mesa_Clear( GLbitfield mask )
        */
       bufferMask = 0;
       if (mask & GL_COLOR_BUFFER_BIT) {
-         bufferMask |= ctx->DrawBuffer->_ColorDrawBufferMask[0];
+         GLuint i;
+         for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
+            bufferMask |= (1 << ctx->DrawBuffer->_ColorDrawBufferIndexes[i]);
+         }
       }
 
       if ((mask & GL_DEPTH_BUFFER_BIT)
@@ -184,17 +189,19 @@ _mesa_Clear( GLbitfield mask )
 
 /**
  * Return bitmask of BUFFER_BIT_* flags indicating which color buffers are
- * available to the rendering context.
- * This depends on the framebuffer we're writing to.  For window system
- * framebuffers we look at the framebuffer's visual.  But for user-
- * create framebuffers we look at the number of supported color attachments.
+ * available to the rendering context (for drawing or reading).
+ * This depends on the type of framebuffer.  For window system framebuffers
+ * we look at the framebuffer's visual.  But for user-create framebuffers we
+ * look at the number of supported color attachments.
+ * \param fb  the framebuffer to draw to, or read from
+ * \return  bitmask of BUFFER_BIT_* flags
  */
 static GLbitfield
-supported_buffer_bitmask(const GLcontext *ctx, GLuint framebufferID)
+supported_buffer_bitmask(const GLcontext *ctx, const struct gl_framebuffer *fb)
 {
    GLbitfield mask = 0x0;
 
-   if (framebufferID > 0) {
+   if (fb->Name > 0) {
       /* A user-created renderbuffer */
       GLuint i;
       ASSERT(ctx->Extensions.EXT_framebuffer_object);
@@ -203,20 +210,20 @@ supported_buffer_bitmask(const GLcontext *ctx, GLuint framebufferID)
       }
    }
    else {
-      /* A window system renderbuffer */
+      /* A window system framebuffer */
       GLint i;
       mask = BUFFER_BIT_FRONT_LEFT; /* always have this */
-      if (ctx->Visual.stereoMode) {
+      if (fb->Visual.stereoMode) {
          mask |= BUFFER_BIT_FRONT_RIGHT;
-         if (ctx->Visual.doubleBufferMode) {
+         if (fb->Visual.doubleBufferMode) {
             mask |= BUFFER_BIT_BACK_LEFT | BUFFER_BIT_BACK_RIGHT;
          }
       }
-      else if (ctx->Visual.doubleBufferMode) {
+      else if (fb->Visual.doubleBufferMode) {
          mask |= BUFFER_BIT_BACK_LEFT;
       }
 
-      for (i = 0; i < ctx->Visual.numAuxBuffers; i++) {
+      for (i = 0; i < fb->Visual.numAuxBuffers; i++) {
          mask |= (BUFFER_BIT_AUX0 << i);
       }
    }
@@ -271,6 +278,14 @@ draw_buffer_enum_to_bitmask(GLenum buffer)
          return BUFFER_BIT_COLOR2;
       case GL_COLOR_ATTACHMENT3_EXT:
          return BUFFER_BIT_COLOR3;
+      case GL_COLOR_ATTACHMENT4_EXT:
+         return BUFFER_BIT_COLOR4;
+      case GL_COLOR_ATTACHMENT5_EXT:
+         return BUFFER_BIT_COLOR5;
+      case GL_COLOR_ATTACHMENT6_EXT:
+         return BUFFER_BIT_COLOR6;
+      case GL_COLOR_ATTACHMENT7_EXT:
+         return BUFFER_BIT_COLOR7;
       default:
          /* error */
          return BAD_MASK;
@@ -320,6 +335,14 @@ read_buffer_enum_to_index(GLenum buffer)
          return BUFFER_COLOR2;
       case GL_COLOR_ATTACHMENT3_EXT:
          return BUFFER_COLOR3;
+      case GL_COLOR_ATTACHMENT4_EXT:
+         return BUFFER_COLOR4;
+      case GL_COLOR_ATTACHMENT5_EXT:
+         return BUFFER_COLOR5;
+      case GL_COLOR_ATTACHMENT6_EXT:
+         return BUFFER_COLOR6;
+      case GL_COLOR_ATTACHMENT7_EXT:
+         return BUFFER_COLOR7;
       default:
          /* error */
          return -1;
@@ -334,11 +357,24 @@ read_buffer_enum_to_index(GLenum buffer)
  * \sa _mesa_DrawBuffersARB
  *
  * \param buffer  buffer token such as GL_LEFT or GL_FRONT_AND_BACK, etc.
+ *
+ * Note that the behaviour of this function depends on whether the
+ * current ctx->DrawBuffer is a window-system framebuffer (Name=0) or
+ * a user-created framebuffer object (Name!=0).
+ *   In the former case, we update the per-context ctx->Color.DrawBuffer
+ *   state var _and_ the FB's ColorDrawBuffer state.
+ *   In the later case, we update the FB's ColorDrawBuffer state only.
+ *
+ * Furthermore, upon a MakeCurrent() or BindFramebuffer() call, if the
+ * new FB is a window system FB, we need to re-update the FB's
+ * ColorDrawBuffer state to match the context.  This is handled in
+ * _mesa_update_framebuffer().
+ *
+ * See the GL_EXT_framebuffer_object spec for more info.
  */
 void GLAPIENTRY
 _mesa_DrawBuffer(GLenum buffer)
 {
-   GLuint bufferID;
    GLbitfield destMask;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx); /* too complex... */
@@ -347,13 +383,12 @@ _mesa_DrawBuffer(GLenum buffer)
       _mesa_debug(ctx, "glDrawBuffer %s\n", _mesa_lookup_enum_by_nr(buffer));
    }
 
-   bufferID = ctx->DrawBuffer->Name;
-
    if (buffer == GL_NONE) {
       destMask = 0x0;
    }
    else {
-      const GLbitfield supportedMask = supported_buffer_bitmask(ctx, bufferID);
+      const GLbitfield supportedMask
+         = supported_buffer_bitmask(ctx, ctx->DrawBuffer);
       destMask = draw_buffer_enum_to_bitmask(buffer);
       if (destMask == BAD_MASK) {
          /* totally bogus buffer */
@@ -370,6 +405,14 @@ _mesa_DrawBuffer(GLenum buffer)
 
    /* if we get here, there's no error so set new state */
    _mesa_drawbuffers(ctx, 1, &buffer, &destMask);
+
+   /*
+    * Call device driver function.
+    */
+   if (ctx->Driver.DrawBuffers)
+      ctx->Driver.DrawBuffers(ctx, 1, &buffer);
+   else if (ctx->Driver.DrawBuffer)
+      ctx->Driver.DrawBuffer(ctx, buffer);
 }
 
 
@@ -386,7 +429,6 @@ void GLAPIENTRY
 _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
 {
    GLint output;
-   GLuint bufferID;
    GLbitfield usedBufferMask, supportedMask;
    GLbitfield destMask[MAX_DRAW_BUFFERS];
    GET_CURRENT_CONTEXT(ctx);
@@ -401,9 +443,7 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
       return;
    }
 
-   bufferID = ctx->DrawBuffer->Name;
-
-   supportedMask = supported_buffer_bitmask(ctx, bufferID);
+   supportedMask = supported_buffer_bitmask(ctx, ctx->DrawBuffer);
    usedBufferMask = 0x0;
 
    /* complicated error checking... */
@@ -438,80 +478,6 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
 
    /* OK, if we get here, there were no errors so set the new state */
    _mesa_drawbuffers(ctx, n, buffers, destMask);
-}
-
-
-/**
- * Set color output state.  Traditionally, there was only one color
- * output, but fragment programs can now have several distinct color
- * outputs (see GL_ARB_draw_buffers).  This function sets the state
- * for one such color output.
- * \param ctx  current context
- * \param output  which fragment program output
- * \param buffer  buffer to write to (like GL_LEFT)
- * \param destMask  BUFFER_* bitmask
- *                  (like BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT).
- */
-static void
-set_color_output(GLcontext *ctx, GLuint output, GLenum buffer,
-                 GLbitfield destMask)
-{
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
-
-   ASSERT(output < ctx->Const.MaxDrawBuffers);
-
-   /* Set per-FBO state */
-   fb->ColorDrawBuffer[output] = buffer;
-   fb->_ColorDrawBufferMask[output] = destMask;
-   /* not really needed, will be set later */
-   fb->_NumColorDrawBuffers[output] = 0;
-
-   /* Set traditional state var */
-   ctx->Color.DrawBuffer[output] = buffer;
-}
-
-
-/**
- * Helper routine used by _mesa_DrawBuffer, _mesa_DrawBuffersARB and
- * _mesa_PopAttrib to set drawbuffer state.
- * All error checking will have been done prior to calling this function
- * so nothing should go wrong at this point.
- * \param ctx  current context
- * \param n    number of color outputs to set
- * \param buffers  array[n] of colorbuffer names, like GL_LEFT.
- * \param destMask  array[n] of BUFFER_* bitmasks which correspond to the
- *                  colorbuffer names.  (i.e. GL_FRONT_AND_BACK =>
- *                  BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT).
- */
-void
-_mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
-                  const GLbitfield *destMask)
-{
-   GLbitfield mask[MAX_DRAW_BUFFERS];
-   GLuint output;
-
-   if (!destMask) {
-      /* compute destMask values now */
-      const GLuint bufferID = ctx->DrawBuffer->Name;
-      const GLbitfield supportedMask = supported_buffer_bitmask(ctx, bufferID);
-      for (output = 0; output < n; output++) {
-         mask[output] = draw_buffer_enum_to_bitmask(buffers[output]);
-         ASSERT(mask[output] != BAD_MASK);
-         mask[output] &= supportedMask;
-      }
-      destMask = mask;
-   }
-
-   for (output = 0; output < n; output++) {
-      set_color_output(ctx, output, buffers[output], destMask[output]);
-   }
-
-   /* set remaining color outputs to NONE */
-   for (output = n; output < ctx->Const.MaxDrawBuffers; output++) {
-      set_color_output(ctx, output, GL_NONE, 0x0);
-   }
-
-   ctx->NewState |= _NEW_COLOR;
 
    /*
     * Call device driver function.
@@ -520,6 +486,111 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
       ctx->Driver.DrawBuffers(ctx, n, buffers);
    else if (ctx->Driver.DrawBuffer)
       ctx->Driver.DrawBuffer(ctx, buffers[0]);
+}
+
+
+/**
+ * Helper function to set the GL_DRAW_BUFFER state in the context and
+ * current FBO.
+ *
+ * All error checking will have been done prior to calling this function
+ * so nothing should go wrong at this point.
+ *
+ * \param ctx  current context
+ * \param n    number of color outputs to set
+ * \param buffers  array[n] of colorbuffer names, like GL_LEFT.
+ * \param destMask  array[n] of BUFFER_BIT_* bitmasks which correspond to the
+ *                  colorbuffer names.  (i.e. GL_FRONT_AND_BACK =>
+ *                  BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT).
+ */
+void
+_mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
+                  const GLbitfield *destMask)
+{
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   GLbitfield mask[MAX_DRAW_BUFFERS];
+
+   if (!destMask) {
+      /* compute destMask values now */
+      const GLbitfield supportedMask = supported_buffer_bitmask(ctx, fb);
+      GLuint output;
+      for (output = 0; output < n; output++) {
+         mask[output] = draw_buffer_enum_to_bitmask(buffers[output]);
+         ASSERT(mask[output] != BAD_MASK);
+         mask[output] &= supportedMask;
+      }
+      destMask = mask;
+   }
+
+   if (n == 1) {
+      GLuint buf, count = 0;
+      /* init to -1 to help catch errors */
+      fb->_ColorDrawBufferIndexes[0] = -1;
+      for (buf = 0; buf < BUFFER_COUNT; buf++) {
+         if (destMask[0] & (1 << buf)) {
+            fb->_ColorDrawBufferIndexes[count] = buf;
+            count++;
+         }
+      }
+      fb->ColorDrawBuffer[0] = buffers[0];
+      fb->_NumColorDrawBuffers = count;
+   }
+   else {
+      GLuint buf, count = 0;
+      for (buf = 0; buf < n; buf++ ) {
+         if (destMask[buf]) {
+            fb->_ColorDrawBufferIndexes[buf] = _mesa_ffs(destMask[buf]) - 1;
+            fb->ColorDrawBuffer[buf] = buffers[buf];
+            count = buf + 1;
+         }
+         else {
+            fb->_ColorDrawBufferIndexes[buf] = -1;
+         }
+      }
+      /* set remaining outputs to -1 (GL_NONE) */
+      while (buf < ctx->Const.MaxDrawBuffers) {
+         fb->_ColorDrawBufferIndexes[buf] = -1;
+         fb->ColorDrawBuffer[buf] = GL_NONE;
+         buf++;
+      }
+      fb->_NumColorDrawBuffers = count;
+   }
+
+   if (fb->Name == 0) {
+      /* also set context drawbuffer state */
+      GLuint buf;
+      for (buf = 0; buf < ctx->Const.MaxDrawBuffers; buf++) {
+         ctx->Color.DrawBuffer[buf] = fb->ColorDrawBuffer[buf];
+      }
+   }
+
+   ctx->NewState |= _NEW_COLOR;
+}
+
+
+/**
+ * Like \sa _mesa_drawbuffers(), this is a helper function for setting
+ * GL_READ_BUFFER state in the context and current FBO.
+ * \param ctx  the rendering context
+ * \param buffer  GL_FRONT, GL_BACK, GL_COLOR_ATTACHMENT0, etc.
+ * \param bufferIndex  the numerical index corresponding to 'buffer'
+ */
+void
+_mesa_readbuffer(GLcontext *ctx, GLenum buffer, GLint bufferIndex)
+{
+   struct gl_framebuffer *fb = ctx->ReadBuffer;
+
+   if (fb->Name == 0) {
+      /* Only update the per-context READ_BUFFER state if we're bound to
+       * a window-system framebuffer.
+       */
+      ctx->Pixel.ReadBuffer = buffer;
+   }
+
+   fb->ColorReadBuffer = buffer;
+   fb->_ColorReadBufferIndex = bufferIndex;
+
+   ctx->NewState |= _NEW_PIXEL;
 }
 
 
@@ -534,17 +605,18 @@ _mesa_ReadBuffer(GLenum buffer)
    struct gl_framebuffer *fb;
    GLbitfield supportedMask;
    GLint srcBuffer;
-   GLuint bufferID;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   fb = ctx->ReadBuffer;
-   bufferID = fb->Name;
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glReadBuffer %s\n", _mesa_lookup_enum_by_nr(buffer));
 
-   if (bufferID > 0 && buffer == GL_NONE) {
+   fb = ctx->ReadBuffer;
+
+   if (MESA_VERBOSE & VERBOSE_API)
+      _mesa_debug(ctx, "glReadBuffer %s\n", _mesa_lookup_enum_by_nr(buffer));
+
+   if (fb->Name > 0 && buffer == GL_NONE) {
       /* This is legal for user-created framebuffer objects */
       srcBuffer = -1;
    }
@@ -552,23 +624,21 @@ _mesa_ReadBuffer(GLenum buffer)
       /* general case / window-system framebuffer */
       srcBuffer = read_buffer_enum_to_index(buffer);
       if (srcBuffer == -1) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "glReadBuffer(buffer=0x%x)", buffer);
+         _mesa_error(ctx, GL_INVALID_ENUM,
+                     "glReadBuffer(buffer=0x%x)", buffer);
          return;
       }
-      supportedMask = supported_buffer_bitmask(ctx, bufferID);
+      supportedMask = supported_buffer_bitmask(ctx, fb);
       if (((1 << srcBuffer) & supportedMask) == 0) {
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glReadBuffer(buffer=0x%x)", buffer);
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glReadBuffer(buffer=0x%x)", buffer);
          return;
       }
    }
 
-   if (bufferID == 0) {
-      ctx->Pixel.ReadBuffer = buffer;
-   }
-   fb->ColorReadBuffer = buffer;
-   fb->_ColorReadBufferIndex = srcBuffer;
+   /* OK, all error checking has been completed now */
 
-   ctx->NewState |= _NEW_PIXEL;
+   _mesa_readbuffer(ctx, buffer, srcBuffer);
 
    /*
     * Call device driver function.
@@ -759,7 +829,7 @@ _mesa_init_scissor(GLcontext *ctx)
 void
 _mesa_init_multisample(GLcontext *ctx)
 {
-   ctx->Multisample.Enabled = GL_FALSE;
+   ctx->Multisample.Enabled = GL_TRUE;
    ctx->Multisample.SampleAlphaToCoverage = GL_FALSE;
    ctx->Multisample.SampleAlphaToOne = GL_FALSE;
    ctx->Multisample.SampleCoverage = GL_FALSE;

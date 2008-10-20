@@ -32,7 +32,7 @@
 #ifndef _VBO_H
 #define _VBO_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 struct _mesa_prim {
    GLuint mode:8;

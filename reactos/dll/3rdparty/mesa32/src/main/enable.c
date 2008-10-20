@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.0.3
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -38,6 +38,7 @@
 #include "enums.h"
 #include "math/m_matrix.h"
 #include "math/m_xform.h"
+#include "api_arrayelt.h"
 
 
 
@@ -129,6 +130,9 @@ client_state(GLcontext *ctx, GLenum cap, GLboolean state)
 
    FLUSH_VERTICES(ctx, _NEW_ARRAY);
    ctx->Array.NewState |= flag;
+
+   _ae_invalidate_state(ctx, _NEW_ARRAY);
+
    *var = state;
 
    if (state)
@@ -364,12 +368,12 @@ _mesa_set_enable(GLcontext *ctx, GLenum cap, GLboolean state)
       case GL_LIGHTING:
          if (ctx->Light.Enabled == state)
             return;
+         FLUSH_VERTICES(ctx, _NEW_LIGHT);
+         ctx->Light.Enabled = state;
          if (ctx->Light.Enabled && ctx->Light.Model.TwoSide)
             ctx->_TriangleCaps |= DD_TRI_LIGHT_TWOSIDE;
          else
             ctx->_TriangleCaps &= ~DD_TRI_LIGHT_TWOSIDE;
-         FLUSH_VERTICES(ctx, _NEW_LIGHT);
-         ctx->Light.Enabled = state;
          break;
       case GL_LINE_SMOOTH:
          if (ctx->Line.SmoothFlag == state)
@@ -935,6 +939,22 @@ _mesa_set_enable(GLcontext *ctx, GLenum cap, GLboolean state)
 	ctx->ATIFragmentShader.Enabled = state;
         break;
 #endif
+
+      /* GL_MESA_texture_array */
+      case GL_TEXTURE_1D_ARRAY_EXT:
+         CHECK_EXTENSION(MESA_texture_array, cap);
+         if (!enable_texture(ctx, state, TEXTURE_1D_ARRAY_BIT)) {
+            return;
+         }
+         break;
+
+      case GL_TEXTURE_2D_ARRAY_EXT:
+         CHECK_EXTENSION(MESA_texture_array, cap);
+         if (!enable_texture(ctx, state, TEXTURE_2D_ARRAY_BIT)) {
+            return;
+         }
+         break;
+
       default:
          _mesa_error(ctx, GL_INVALID_ENUM,
                      "%s(0x%x)", state ? "glEnable" : "glDisable", cap);

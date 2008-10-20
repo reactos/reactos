@@ -193,7 +193,7 @@ CallNextHookEx(
   WPARAM wParam,
   LPARAM lParam)
 {
-  PW32CLIENTINFO ClientInfo;
+  PCLIENTINFO ClientInfo;
   DWORD Flags, Save;
   PHOOK pHook;
   LRESULT lResult = 0;

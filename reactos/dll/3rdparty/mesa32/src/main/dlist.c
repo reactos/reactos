@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.2
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -33,10 +33,6 @@
 #include "api_arrayelt.h"
 #include "api_loopback.h"
 #include "config.h"
-#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-#include "arbprogram.h"
-#include "program.h"
-#endif
 #include "attrib.h"
 #include "blend.h"
 #include "buffers.h"
@@ -57,7 +53,7 @@
 #include "extensions.h"
 #include "feedback.h"
 #include "get.h"
-#include "glapi.h"
+#include "glapi/glapi.h"
 #include "hash.h"
 #include "histogram.h"
 #include "image.h"
@@ -76,18 +72,22 @@
 #include "texstate.h"
 #include "mtypes.h"
 #include "varray.h"
+#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
+#include "shader/arbprogram.h"
+#include "shader/program.h"
+#endif
 #if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
-#include "nvprogram.h"
-#include "program.h"
+#include "shader/nvprogram.h"
+#include "shader/program.h"
 #endif
 #if FEATURE_ATI_fragment_shader
-#include "atifragshader.h"
+#include "shader/atifragshader.h"
 #endif
 
 #include "math/m_matrix.h"
 #include "math/m_xform.h"
 
-#include "dispatch.h"
+#include "glapi/dispatch.h"
 
 
 /**
@@ -303,7 +303,6 @@ typedef enum
    OPCODE_EXECUTE_PROGRAM_NV,
    OPCODE_REQUEST_RESIDENT_PROGRAMS_NV,
    OPCODE_LOAD_PROGRAM_NV,
-   OPCODE_PROGRAM_PARAMETER4F_NV,
    OPCODE_TRACK_MATRIX_NV,
    /* GL_NV_fragment_program */
    OPCODE_PROGRAM_LOCAL_PARAMETER_ARB,
@@ -612,9 +611,9 @@ destroy_list(GLcontext *ctx, GLuint list)
 
 
 /*
- * Translate the nth element of list from type to GLuint.
+ * Translate the nth element of list from <type> to GLint.
  */
-static GLuint
+static GLint
 translate_id(GLsizei n, GLenum type, const GLvoid * list)
 {
    GLbyte *bptr;
@@ -628,37 +627,40 @@ translate_id(GLsizei n, GLenum type, const GLvoid * list)
    switch (type) {
    case GL_BYTE:
       bptr = (GLbyte *) list;
-      return (GLuint) *(bptr + n);
+      return (GLint) bptr[n];
    case GL_UNSIGNED_BYTE:
       ubptr = (GLubyte *) list;
-      return (GLuint) *(ubptr + n);
+      return (GLint) ubptr[n];
    case GL_SHORT:
       sptr = (GLshort *) list;
-      return (GLuint) *(sptr + n);
+      return (GLint) sptr[n];
    case GL_UNSIGNED_SHORT:
       usptr = (GLushort *) list;
-      return (GLuint) *(usptr + n);
+      return (GLint) usptr[n];
    case GL_INT:
       iptr = (GLint *) list;
-      return (GLuint) *(iptr + n);
+      return iptr[n];
    case GL_UNSIGNED_INT:
       uiptr = (GLuint *) list;
-      return (GLuint) *(uiptr + n);
+      return (GLint) uiptr[n];
    case GL_FLOAT:
       fptr = (GLfloat *) list;
-      return (GLuint) *(fptr + n);
+      return (GLint) FLOORF(fptr[n]);
    case GL_2_BYTES:
       ubptr = ((GLubyte *) list) + 2 * n;
-      return (GLuint) *ubptr * 256 + (GLuint) * (ubptr + 1);
+      return (GLint) ubptr[0] * 256
+           + (GLint) ubptr[1];
    case GL_3_BYTES:
       ubptr = ((GLubyte *) list) + 3 * n;
-      return (GLuint) * ubptr * 65536
-           + (GLuint) *(ubptr + 1) * 256 + (GLuint) * (ubptr + 2);
+      return (GLint) ubptr[0] * 65536
+           + (GLint) ubptr[1] * 256
+           + (GLint) ubptr[2];
    case GL_4_BYTES:
       ubptr = ((GLubyte *) list) + 4 * n;
-      return (GLuint) *ubptr * 16777216
-           + (GLuint) *(ubptr + 1) * 65536
-           + (GLuint) *(ubptr + 2) * 256 + (GLuint) * (ubptr + 3);
+      return (GLint) ubptr[0] * 16777216
+           + (GLint) ubptr[1] * 65536
+           + (GLint) ubptr[2] * 256
+           + (GLint) ubptr[3];
    default:
       return 0;
    }
@@ -993,10 +995,10 @@ _mesa_save_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
    }
 
    for (i = 0; i < n; i++) {
-      GLuint list = translate_id(i, type, lists);
+      GLint list = translate_id(i, type, lists);
       Node *n = ALLOC_INSTRUCTION(ctx, OPCODE_CALL_LIST_OFFSET, 2);
       if (n) {
-         n[1].ui = list;
+         n[1].i = list;
          n[2].b = typeErrorFlag;
       }
    }
@@ -3246,6 +3248,36 @@ save_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 
 
 static void GLAPIENTRY
+save_StencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, GLint ref,
+                            GLuint mask)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   /* GL_FRONT */
+   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
+   if (n) {
+      n[1].e = GL_FRONT;
+      n[2].e = frontfunc;
+      n[3].i = ref;
+      n[4].ui = mask;
+   }
+   /* GL_BACK */
+   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
+   if (n) {
+      n[1].e = GL_BACK;
+      n[2].e = backfunc;
+      n[3].i = ref;
+      n[4].ui = mask;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_StencilFuncSeparate(ctx->Exec, (GL_FRONT, frontfunc, ref, mask));
+      CALL_StencilFuncSeparate(ctx->Exec, (GL_BACK, backfunc, ref, mask));
+   }
+}
+
+
+static void GLAPIENTRY
 save_StencilMaskSeparate(GLenum face, GLuint mask)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -4247,7 +4279,91 @@ save_BindProgramNV(GLenum target, GLuint id)
       CALL_BindProgramNV(ctx->Exec, (target, id));
    }
 }
-#endif /* FEATURE_NV_vertex_program || FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program */
+
+static void GLAPIENTRY
+save_ProgramEnvParameter4fARB(GLenum target, GLuint index,
+                              GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
+   if (n) {
+      n[1].e = target;
+      n[2].ui = index;
+      n[3].f = x;
+      n[4].f = y;
+      n[5].f = z;
+      n[6].f = w;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramEnvParameter4fARB(ctx->Exec, (target, index, x, y, z, w));
+   }
+}
+
+
+static void GLAPIENTRY
+save_ProgramEnvParameter4fvARB(GLenum target, GLuint index,
+                               const GLfloat *params)
+{
+   save_ProgramEnvParameter4fARB(target, index, params[0], params[1],
+                                 params[2], params[3]);
+}
+
+
+static void GLAPIENTRY
+save_ProgramEnvParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
+				const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+
+   if (count > 0) {
+      GLint i;
+      const GLfloat * p = params;
+
+      for (i = 0 ; i < count ; i++) {
+	 n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
+	 if (n) {
+	    n[1].e = target;
+	    n[2].ui = index;
+	    n[3].f = p[0];
+	    n[4].f = p[1];
+	    n[5].f = p[2];
+	    n[6].f = p[3];
+	    p += 4;
+	 }
+      }
+   }
+
+   if (ctx->ExecuteFlag) {
+      CALL_ProgramEnvParameters4fvEXT(ctx->Exec, (target, index, count, params));
+   }
+}
+
+
+static void GLAPIENTRY
+save_ProgramEnvParameter4dARB(GLenum target, GLuint index,
+                              GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   save_ProgramEnvParameter4fARB(target, index,
+                                 (GLfloat) x,
+                                 (GLfloat) y, (GLfloat) z, (GLfloat) w);
+}
+
+
+static void GLAPIENTRY
+save_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
+                               const GLdouble *params)
+{
+   save_ProgramEnvParameter4fARB(target, index,
+                                 (GLfloat) params[0],
+                                 (GLfloat) params[1],
+                                 (GLfloat) params[2], (GLfloat) params[3]);
+}
+
+#endif /* FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program || FEATURE_NV_vertex_program */
 
 #if FEATURE_NV_vertex_program
 static void GLAPIENTRY
@@ -4272,62 +4388,12 @@ save_ExecuteProgramNV(GLenum target, GLuint id, const GLfloat *params)
 
 
 static void GLAPIENTRY
-save_ProgramParameter4fNV(GLenum target, GLuint index,
-                          GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_PARAMETER4F_NV, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].ui = index;
-      n[3].f = x;
-      n[4].f = y;
-      n[5].f = z;
-      n[6].f = w;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ProgramParameter4fNV(ctx->Exec, (target, index, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ProgramParameter4fvNV(GLenum target, GLuint index,
-                           const GLfloat *params)
-{
-   save_ProgramParameter4fNV(target, index, params[0], params[1],
-                             params[2], params[3]);
-}
-
-
-static void GLAPIENTRY
-save_ProgramParameter4dNV(GLenum target, GLuint index,
-                          GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   save_ProgramParameter4fNV(target, index, (GLfloat) x, (GLfloat) y,
-                             (GLfloat) z, (GLfloat) w);
-}
-
-
-static void GLAPIENTRY
-save_ProgramParameter4dvNV(GLenum target, GLuint index,
-                           const GLdouble *params)
-{
-   save_ProgramParameter4fNV(target, index, (GLfloat) params[0],
-                             (GLfloat) params[1], (GLfloat) params[2],
-                             (GLfloat) params[3]);
-}
-
-
-static void GLAPIENTRY
 save_ProgramParameters4dvNV(GLenum target, GLuint index,
                             GLuint num, const GLdouble *params)
 {
    GLuint i;
    for (i = 0; i < num; i++) {
-      save_ProgramParameter4dvNV(target, index + i, params + 4 * i);
+      save_ProgramEnvParameter4dvARB(target, index + i, params + 4 * i);
    }
 }
 
@@ -4338,7 +4404,7 @@ save_ProgramParameters4fvNV(GLenum target, GLuint index,
 {
    GLuint i;
    for (i = 0; i < num; i++) {
-      save_ProgramParameter4fvNV(target, index + i, params + 4 * i);
+      save_ProgramEnvParameter4fvARB(target, index + i, params + 4 * i);
    }
 }
 
@@ -4664,90 +4730,6 @@ save_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
    if (ctx->ExecuteFlag) {
       CALL_ProgramStringARB(ctx->Exec, (target, format, len, string));
    }
-}
-
-
-static void GLAPIENTRY
-save_ProgramEnvParameter4fARB(GLenum target, GLuint index,
-                              GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
-   if (n) {
-      n[1].e = target;
-      n[2].ui = index;
-      n[3].f = x;
-      n[4].f = y;
-      n[5].f = z;
-      n[6].f = w;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ProgramEnvParameter4fARB(ctx->Exec, (target, index, x, y, z, w));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ProgramEnvParameter4fvARB(GLenum target, GLuint index,
-                               const GLfloat *params)
-{
-   save_ProgramEnvParameter4fARB(target, index, params[0], params[1],
-                                 params[2], params[3]);
-}
-
-
-static void GLAPIENTRY
-save_ProgramEnvParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
-				const GLfloat * params)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (count > 0) {
-      GLint i;
-      const GLfloat * p = params;
-
-      for (i = 0 ; i < count ; i++) {
-	 n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
-	 if (n) {
-	    n[1].e = target;
-	    n[2].ui = index;
-	    n[3].f = p[0];
-	    n[4].f = p[1];
-	    n[5].f = p[2];
-	    n[6].f = p[3];
-	    p += 4;
-	 }
-      }
-   }
-
-   if (ctx->ExecuteFlag) {
-      CALL_ProgramEnvParameters4fvEXT(ctx->Exec, (target, index, count, params));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ProgramEnvParameter4dARB(GLenum target, GLuint index,
-                              GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   save_ProgramEnvParameter4fARB(target, index,
-                                 (GLfloat) x,
-                                 (GLfloat) y, (GLfloat) z, (GLfloat) w);
-}
-
-
-static void GLAPIENTRY
-save_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
-                               const GLdouble *params)
-{
-   save_ProgramEnvParameter4fARB(target, index,
-                                 (GLfloat) params[0],
-                                 (GLfloat) params[1],
-                                 (GLfloat) params[2], (GLfloat) params[3]);
 }
 
 #endif /* FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program */
@@ -5629,6 +5611,27 @@ save_VertexAttrib4fvARB(GLuint index, const GLfloat * v)
 }
 
 
+/* GL_ARB_shader_objects, GL_ARB_vertex/fragment_shader */
+
+static void GLAPIENTRY
+exec_BindAttribLocationARB(GLuint program, GLuint index, const GLchar *name)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_VERTICES(ctx, 0);
+   CALL_BindAttribLocationARB(ctx->Exec, (program, index, name));
+}
+
+static GLint GLAPIENTRY
+exec_GetAttribLocationARB(GLuint program, const GLchar *name)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_VERTICES(ctx, 0);
+   return CALL_GetAttribLocationARB(ctx->Exec, (program, name));
+}
+/* XXX more shader functions needed here */
+
+
+
 #if FEATURE_EXT_framebuffer_blit
 static void GLAPIENTRY
 save_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
@@ -5804,7 +5807,8 @@ execute_list(GLcontext *ctx, GLuint list)
                _mesa_error(ctx, GL_INVALID_ENUM, "glCallLists(type)");
             }
             else if (ctx->ListState.CallDepth < MAX_LIST_NESTING) {
-               execute_list(ctx, ctx->List.ListBase + n[1].ui);
+               GLuint list = (GLuint) (ctx->List.ListBase + n[1].i);
+               execute_list(ctx, list);
             }
             break;
          case OPCODE_CLEAR:
@@ -6429,10 +6433,6 @@ execute_list(GLcontext *ctx, GLuint list)
             CALL_LoadProgramNV(ctx->Exec, (n[1].e, n[2].ui, n[3].i,
                                            (const GLubyte *) n[4].data));
             break;
-         case OPCODE_PROGRAM_PARAMETER4F_NV:
-            CALL_ProgramParameter4fNV(ctx->Exec, (n[1].e, n[2].ui, n[3].f,
-                                                  n[4].f, n[5].f, n[6].f));
-            break;
          case OPCODE_TRACK_MATRIX_NV:
             CALL_TrackMatrixNV(ctx->Exec, (n[1].e, n[2].ui, n[3].e, n[4].e));
             break;
@@ -6463,6 +6463,8 @@ execute_list(GLcontext *ctx, GLuint list)
             CALL_ProgramStringARB(ctx->Exec,
                                   (n[1].e, n[2].e, n[3].i, n[4].data));
             break;
+#endif
+#if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program || FEATURE_NV_vertex_program
          case OPCODE_PROGRAM_ENV_PARAMETER_ARB:
             CALL_ProgramEnvParameter4fARB(ctx->Exec, (n[1].e, n[2].ui, n[3].f,
                                                       n[4].f, n[5].f,
@@ -6599,9 +6601,6 @@ execute_list(GLcontext *ctx, GLuint list)
          case OPCODE_EVAL_P2:
             CALL_EvalPoint2(ctx->Exec, (n[1].i, n[2].i));
             break;
-
-
-
 
          case OPCODE_CONTINUE:
             n = (Node *) n[1].next;
@@ -6789,6 +6788,11 @@ _mesa_EndList(void)
       _mesa_error(ctx, GL_INVALID_OPERATION, "glEndList");
       return;
    }
+   
+   /* Call before emitting END_OF_LIST, in case the driver wants to
+    * emit opcodes itself.
+    */
+   ctx->Driver.EndList(ctx);
 
    (void) ALLOC_INSTRUCTION(ctx, OPCODE_END_OF_LIST, 0);
 
@@ -6801,8 +6805,6 @@ _mesa_EndList(void)
 
    if (MESA_VERBOSE & VERBOSE_DISPLAY_LIST)
       mesa_print_display_list(ctx->ListState.CurrentListNum);
-
-   ctx->Driver.EndList(ctx);
 
    ctx->ListState.CurrentList = NULL;
    ctx->ListState.CurrentListNum = 0;
@@ -6857,7 +6859,6 @@ void GLAPIENTRY
 _mesa_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLuint list;
    GLint i;
    GLboolean save_compile_flag;
 
@@ -6889,8 +6890,8 @@ _mesa_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
    ctx->CompileFlag = GL_FALSE;
 
    for (i = 0; i < n; i++) {
-      list = translate_id(i, type, lists);
-      execute_list(ctx, ctx->List.ListBase + list);
+      GLuint list = (GLuint) (ctx->List.ListBase + translate_id(i, type, lists));
+      execute_list(ctx, list);
    }
 
    ctx->CompileFlag = save_compile_flag;
@@ -7870,6 +7871,9 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_StencilMaskSeparate(table, save_StencilMaskSeparate);
    SET_StencilOpSeparate(table, save_StencilOpSeparate);
 
+   /* ATI_separate_stencil */ 
+   SET_StencilFuncSeparateATI(table, save_StencilFuncSeparateATI);
+
    /* GL_ARB_imaging */
    /* Not all are supported */
    SET_BlendColor(table, save_BlendColor);
@@ -8021,10 +8025,10 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_GetVertexAttribPointervNV(table, _mesa_GetVertexAttribPointervNV);
    SET_IsProgramNV(table, _mesa_IsProgramARB);
    SET_LoadProgramNV(table, save_LoadProgramNV);
-   SET_ProgramParameter4dNV(table, save_ProgramParameter4dNV);
-   SET_ProgramParameter4dvNV(table, save_ProgramParameter4dvNV);
-   SET_ProgramParameter4fNV(table, save_ProgramParameter4fNV);
-   SET_ProgramParameter4fvNV(table, save_ProgramParameter4fvNV);
+   SET_ProgramEnvParameter4dARB(table, save_ProgramEnvParameter4dARB);
+   SET_ProgramEnvParameter4dvARB(table, save_ProgramEnvParameter4dvARB);
+   SET_ProgramEnvParameter4fARB(table, save_ProgramEnvParameter4fARB);
+   SET_ProgramEnvParameter4fvARB(table, save_ProgramEnvParameter4fvARB);
    SET_ProgramParameters4dvNV(table, save_ProgramParameters4dvNV);
    SET_ProgramParameters4fvNV(table, save_ProgramParameters4fvNV);
    SET_TrackMatrixNV(table, save_TrackMatrixNV);
@@ -8166,6 +8170,11 @@ _mesa_init_dlist_table(struct _glapi_table *table)
 #if FEATURE_EXT_framebuffer_blit
    SET_BlitFramebufferEXT(table, save_BlitFramebufferEXT);
 #endif
+
+   /* ARB 30/31/32. GL_ARB_shader_objects, GL_ARB_vertex/fragment_shader */
+   SET_BindAttribLocationARB(table, exec_BindAttribLocationARB);
+   SET_GetAttribLocationARB(table, exec_GetAttribLocationARB);
+   /* XXX additional functions need to be implemented here! */
 
    /* 299. GL_EXT_blend_equation_separate */
    SET_BlendEquationSeparateEXT(table, save_BlendEquationSeparateEXT);
@@ -8410,8 +8419,6 @@ print_list(GLcontext *ctx, GLuint list)
          case OPCODE_EVAL_P2:
             _mesa_printf("EVAL_P2 %d %d\n", n[1].i, n[2].i);
             break;
-
-
 
             /*
              * meta opcodes/commands

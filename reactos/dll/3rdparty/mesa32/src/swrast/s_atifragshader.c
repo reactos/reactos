@@ -23,11 +23,10 @@
 #include "glheader.h"
 #include "colormac.h"
 #include "context.h"
-#include "atifragshader.h"
 #include "macros.h"
-#include "program.h"
-
-#include "s_atifragshader.h"
+#include "shader/program.h"
+#include "shader/atifragshader.h"
+#include "swrast/s_atifragshader.h"
 
 
 /**

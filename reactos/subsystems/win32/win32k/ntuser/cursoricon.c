@@ -1820,7 +1820,8 @@ int
 NTAPI
 UserShowCursor(BOOL bShow)
 {
-    PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    PWINSTATION_OBJECT WinSta = pti->Desktop->WindowStation;
     PSYSTEM_CURSORINFO CurInfo;
 
     HDC Screen;
@@ -1850,7 +1851,6 @@ UserShowCursor(BOOL bShow)
     BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
     if ( !BitmapObj )
     {
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
         return showpointer; /* No Mouse */
     }
 

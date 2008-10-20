@@ -1020,7 +1020,7 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	if ( !module.pch || !use_pch )
 		return NULL;
 	return new FileLocation ( IntermediateDirectory,
-	                          module.pch->file->relative_path,
+	                          module.pch->file->relative_path + "/.gch_" + module.name,
 	                          module.pch->file->name + ".gch" );
 }
 
@@ -1208,13 +1208,12 @@ MingwModuleHandler::GenerateGccCommand (
 string
 MingwModuleHandler::GetPropertyValue ( const Module& module, const std::string& name )
 {
-	for ( size_t i = 0; i < module.project.non_if_data.properties.size (); i++ )
-	{
-		const Property& property = *module.project.non_if_data.properties[i];
-		if ( property.name == name )
-			return property.value;
-	}
-	return string ( "" );
+	const Property* property = module.project.LookupProperty(name);
+
+	if (property)
+		return property->value;
+	else
+		return string ( "" );
 }
 
 /* caller needs to delete the returned object */
@@ -2099,14 +2098,14 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
 		return;
 
-	if (module.name != "psdk" && 
+	if (module.name != "psdk" &&
 		module.name != "dxsdk")
 	{
 		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
 		dependencies.push_back ( "$(DXSDK_TARGET) $(dxsdk_HEADERS)" );
 	}
 
-	if (module.name != "errcodes" && 
+	if (module.name != "errcodes" &&
 		module.name != "bugcodes" &&
 		module.name != "ntstatus")
 	{
@@ -2997,9 +2996,9 @@ void
 MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 	const string& bootcdDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3034,9 +3033,9 @@ void
 MingwIsoModuleHandler::GetBootstrapCdDirectories ( vector<FileLocation>& out,
                                                    const string& bootcdDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3079,9 +3078,9 @@ void
 MingwIsoModuleHandler::GetBootstrapCdFiles (
 	vector<FileLocation>& out ) const
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.bootstrap != NULL )
@@ -3157,9 +3156,9 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 
 	vSourceFiles.push_back ( reactosDff );
 
-	/* 
+	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
-		Iso/LiveIso outputs are generated in code base root 
+		Iso/LiveIso outputs are generated in code base root
 	*/
 	string IsoName = module.output->name;
 
@@ -3235,9 +3234,9 @@ void
 MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
                                                       string& reactosDirectory )
 {
-	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
-		const Module& m = *module.project.modules[i];
+		const Module& m = *p->second;
 		if ( !m.enabled )
 			continue;
 		if ( m.install )
@@ -3338,9 +3337,9 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	const FileLocation *isoboot = bootModule->output;
 
-	/* 
+	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
-		Iso/LiveIso outputs are generated in code base root 
+		Iso/LiveIso outputs are generated in code base root
 	*/
 	IsoName = module.output->name;
 
@@ -3453,7 +3452,7 @@ MingwCabinetModuleHandler::Process ()
 	string targetMacro ( GetTargetMacro (module) );
 
 	GenerateRules ();
-	
+
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: $(CABMAN_TARGET) | %s\n",
 	          targetMacro.c_str (),

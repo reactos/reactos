@@ -29,7 +29,9 @@ BEGIN
                     "QEMU - http://fabrice.bellard.free.fr/qemu\n"\
                     "Mesa3D - http://www.mesa3d.org\n"\
                     "FreeBSD - http://www.freebsd.org\n"\
-                    "adns - http://adns.jgaa.com\n"
+                    "adns - http://adns.jgaa.com\n"\
+                    "ICU - http://www.icu-project.org/\n"\
+                    ""
 END
 
 IDR_GPL RT_TEXT "COPYING"

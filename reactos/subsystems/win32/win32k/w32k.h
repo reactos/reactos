@@ -71,7 +71,7 @@ typedef DRIVEROBJ *PDRIVEROBJ;
 /* User heap */
 extern HANDLE GlobalUserHeap;
 
-HANDLE
+PWIN32HEAP
 UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize);
@@ -137,8 +137,9 @@ UserHeapReAlloc(PVOID lpMem,
 static __inline PVOID
 UserHeapAddressToUser(PVOID lpMem)
 {
+    PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
     return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
-                   (ULONG_PTR)PsGetCurrentProcessWin32Process()->HeapMappings.UserMapping);
+                   (ULONG_PTR)W32Process->HeapMappings.UserMapping);
 }
 
 #endif /* __W32K_H */

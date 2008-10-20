@@ -1419,7 +1419,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
 
     /* fill out the basic type information */
     typedata[0] = typedata_size | (index << 16);
-    encode_var(typeinfo->typelib, func->def->type, func->def, &typedata[1], NULL, NULL, &decoded_size);
+    encode_var(typeinfo->typelib, get_func_return_type(func), func->def, &typedata[1], NULL, NULL, &decoded_size);
     typedata[2] = funcflags;
     typedata[3] = ((52 /*sizeof(FUNCDESC)*/ + decoded_size) << 16) | typeinfo->typeinfo->cbSizeVft;
     typedata[4] = (next_idx << 16) | (callconv << 8) | (invokekind << 3) | funckind;
@@ -1946,8 +1946,8 @@ static void add_dispinterface_typeinfo(msft_typelib_t *typelib, type_t *dispinte
     if (dispinterface->funcs)
         LIST_FOR_EACH_ENTRY( func, dispinterface->funcs, const func_t, entry ) idx++;
 
-    if (dispinterface->fields)
-        LIST_FOR_EACH_ENTRY( var, dispinterface->fields, var_t, entry )
+    if (dispinterface->fields_or_args)
+        LIST_FOR_EACH_ENTRY( var, dispinterface->fields_or_args, var_t, entry )
             add_var_desc(msft_typeinfo, idx++, var);
 
     if (dispinterface->funcs)
@@ -2030,8 +2030,8 @@ static void add_structure_typeinfo(msft_typelib_t *typelib, type_t *structure)
     msft_typeinfo = create_msft_typeinfo(typelib, TKIND_RECORD, structure->name, structure->attrs);
     msft_typeinfo->typeinfo->size = 0;
 
-    if (structure->fields)
-        LIST_FOR_EACH_ENTRY( cur, structure->fields, var_t, entry )
+    if (structure->fields_or_args)
+        LIST_FOR_EACH_ENTRY( cur, structure->fields_or_args, var_t, entry )
             add_var_desc(msft_typeinfo, idx++, cur);
 }
 
@@ -2045,8 +2045,8 @@ static void add_enum_typeinfo(msft_typelib_t *typelib, type_t *enumeration)
     msft_typeinfo = create_msft_typeinfo(typelib, TKIND_ENUM, enumeration->name, enumeration->attrs);
     msft_typeinfo->typeinfo->size = 0;
 
-    if (enumeration->fields)
-        LIST_FOR_EACH_ENTRY( cur, enumeration->fields, var_t, entry )
+    if (enumeration->fields_or_args)
+        LIST_FOR_EACH_ENTRY( cur, enumeration->fields_or_args, var_t, entry )
             add_var_desc(msft_typeinfo, idx++, cur);
 }
 

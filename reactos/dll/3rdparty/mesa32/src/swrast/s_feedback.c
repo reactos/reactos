@@ -39,20 +39,15 @@ static void
 feedback_vertex(GLcontext * ctx, const SWvertex * v, const SWvertex * pv)
 {
    GLfloat win[4];
-   GLfloat color[4];
    const GLfloat *vtc = v->attrib[FRAG_ATTRIB_TEX0];
+   const GLfloat *color = v->attrib[FRAG_ATTRIB_COL0];
 
-   win[0] = v->win[0];
-   win[1] = v->win[1];
-   win[2] = v->win[2] / ctx->DrawBuffer->_DepthMaxF;
-   win[3] = 1.0F / v->win[3];
+   win[0] = v->attrib[FRAG_ATTRIB_WPOS][0];
+   win[1] = v->attrib[FRAG_ATTRIB_WPOS][1];
+   win[2] = v->attrib[FRAG_ATTRIB_WPOS][2] / ctx->DrawBuffer->_DepthMaxF;
+   win[3] = 1.0F / v->attrib[FRAG_ATTRIB_WPOS][3];
 
-   color[0] = CHAN_TO_FLOAT(pv->color[0]);
-   color[1] = CHAN_TO_FLOAT(pv->color[1]);
-   color[2] = CHAN_TO_FLOAT(pv->color[2]);
-   color[3] = CHAN_TO_FLOAT(pv->color[3]);
-
-   _mesa_feedback_vertex(ctx, win, color, (GLfloat) v->index, vtc);
+   _mesa_feedback_vertex(ctx, win, color, v->attrib[FRAG_ATTRIB_CI][0], vtc);
 }
 
 
@@ -120,9 +115,10 @@ _swrast_select_triangle(GLcontext *ctx, const SWvertex *v0,
 {
    if (_swrast_culltriangle(ctx, v0, v1, v2)) {
       const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
-      _mesa_update_hitflag(ctx, v0->win[2] * zs);
-      _mesa_update_hitflag(ctx, v1->win[2] * zs);
-      _mesa_update_hitflag(ctx, v2->win[2] * zs);
+
+      _mesa_update_hitflag( ctx, v0->attrib[FRAG_ATTRIB_WPOS][2] * zs );
+      _mesa_update_hitflag( ctx, v1->attrib[FRAG_ATTRIB_WPOS][2] * zs );
+      _mesa_update_hitflag( ctx, v2->attrib[FRAG_ATTRIB_WPOS][2] * zs );
    }
 }
 
@@ -131,8 +127,8 @@ void
 _swrast_select_line(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
 {
    const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
-   _mesa_update_hitflag(ctx, v0->win[2] * zs);
-   _mesa_update_hitflag(ctx, v1->win[2] * zs);
+   _mesa_update_hitflag( ctx, v0->attrib[FRAG_ATTRIB_WPOS][2] * zs );
+   _mesa_update_hitflag( ctx, v1->attrib[FRAG_ATTRIB_WPOS][2] * zs );
 }
 
 
@@ -140,5 +136,5 @@ void
 _swrast_select_point(GLcontext *ctx, const SWvertex *v)
 {
    const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
-   _mesa_update_hitflag(ctx, v->win[2] * zs);
+   _mesa_update_hitflag( ctx, v->attrib[FRAG_ATTRIB_WPOS][2] * zs );
 }

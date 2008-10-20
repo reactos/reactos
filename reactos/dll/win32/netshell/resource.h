@@ -78,4 +78,6 @@
 #define IDS_FORMAT_GBIT             10203
 #define IDS_DURATION_DAY            10204
 #define IDS_DURATION_DAYS           10205
+#define IDS_ASSIGNED_DHCP           10206
+#define IDS_ASSIGNED_MANUAL         10207
 

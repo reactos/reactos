@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -159,12 +159,13 @@ typedef union { GLfloat f; GLint i; } fi_type;
  ***/
 #if defined(__i386__) || defined(__386__) || defined(__sparc__) || \
     defined(__s390x__) || defined(__powerpc__) || \
-    defined(__amd64__) || \
+    defined(__x86_64__) || \
     defined(ia64) || defined(__ia64__) || \
     defined(__hppa__) || defined(hpux) || \
     defined(__mips) || defined(_MIPS_ARCH) || \
     defined(__arm__) || \
     defined(__sh__) || defined(__m32r__) || \
+    (defined(__sun) && defined(_IEEE_754)) || \
     (defined(__alpha__) && (defined(__IEEE_FLOAT) || !defined(VMS)))
 #define USE_IEEE
 #define IEEE_ONE 0x3f800000

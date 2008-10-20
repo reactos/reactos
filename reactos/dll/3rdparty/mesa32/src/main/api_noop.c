@@ -31,7 +31,7 @@
 #include "light.h"
 #include "macros.h"
 #include "dlist.h"
-#include "dispatch.h"
+#include "glapi/dispatch.h"
 
 
 /**

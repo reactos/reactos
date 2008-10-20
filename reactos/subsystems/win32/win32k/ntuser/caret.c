@@ -40,7 +40,7 @@ co_IntHideCaret(PTHRDCARETINFO CaretInfo)
 }
 
 BOOL FASTCALL
-co_IntDestroyCaret(PW32THREAD Win32Thread)
+co_IntDestroyCaret(PTHREADINFO Win32Thread)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    ThreadQueue = (PUSER_MESSAGE_QUEUE)Win32Thread->MessageQueue;
@@ -61,7 +61,8 @@ BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds)
 {
    /* Don't save the new value to the registry! */
-   PWINSTATION_OBJECT WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PWINSTATION_OBJECT WinStaObject = pti->Desktop->WindowStation;
 
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -146,10 +147,12 @@ static
 UINT FASTCALL
 IntGetCaretBlinkTime(VOID)
 {
+   PTHREADINFO pti;
    PWINSTATION_OBJECT WinStaObject;
    UINT Ret;
 
-   WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   pti = PsGetCurrentThreadWin32Thread();
+   WinStaObject = pti->Desktop->WindowStation;
 
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)
@@ -171,8 +174,11 @@ IntGetCaretBlinkTime(VOID)
 BOOL FASTCALL
 co_IntSetCaretPos(int X, int Y)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if(ThreadQueue->CaretInfo->hWnd)
    {
@@ -194,8 +200,11 @@ co_IntSetCaretPos(int X, int Y)
 BOOL FASTCALL
 IntSwitchCaretShowing(PVOID Info)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if(ThreadQueue->CaretInfo->hWnd)
    {
@@ -212,8 +221,11 @@ static
 VOID FASTCALL
 co_IntDrawCaret(HWND hWnd)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if(ThreadQueue->CaretInfo->hWnd && ThreadQueue->CaretInfo->Visible &&
          ThreadQueue->CaretInfo->Showing)
@@ -228,6 +240,7 @@ co_IntDrawCaret(HWND hWnd)
 
 BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
    if (Window) ASSERT_REFS_CO(Window);
@@ -238,7 +251,8 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
       return FALSE;
    }
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if(Window && ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
@@ -261,6 +275,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 
 BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
    if (Window) ASSERT_REFS_CO(Window);
@@ -271,7 +286,8 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
       return FALSE;
    }
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if(Window && ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
@@ -304,6 +320,7 @@ NtUserCreateCaret(
    int nHeight)
 {
    PWINDOW_OBJECT Window;
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(BOOL);
 
@@ -321,7 +338,8 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    if (ThreadQueue->CaretInfo->Visible)
    {
@@ -374,6 +392,7 @@ STDCALL
 NtUserGetCaretPos(
    LPPOINT lpPoint)
 {
+   PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
@@ -381,7 +400,8 @@ NtUserGetCaretPos(
    DPRINT("Enter NtUserGetCaretPos\n");
    UserEnterShared();
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
 
    Status = MmCopyToCaller(lpPoint, &(ThreadQueue->CaretInfo->Pos), sizeof(POINT));
    if(!NT_SUCCESS(Status))

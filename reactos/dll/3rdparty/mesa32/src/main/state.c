@@ -35,10 +35,10 @@
 #include "accum.h"
 #include "api_loopback.h"
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-#include "arbprogram.h"
+#include "shader/arbprogram.h"
 #endif
 #if FEATURE_ATI_fragment_shader
-#include "atifragshader.h"
+#include "shader/atifragshader.h"
 #endif
 #include "attrib.h"
 #include "blend.h"
@@ -85,18 +85,18 @@
 #include "mtypes.h"
 #include "varray.h"
 #if FEATURE_NV_vertex_program
-#include "nvprogram.h"
+#include "shader/nvprogram.h"
 #endif
 #if FEATURE_NV_fragment_program
-#include "nvprogram.h"
-#include "program.h"
+#include "shader/nvprogram.h"
+#include "shader/program.h"
 #include "texenvprogram.h"
 #endif
 #if FEATURE_ARB_shader_objects
 #include "shaders.h"
 #endif
 #include "debug.h"
-#include "dispatch.h"
+#include "glapi/dispatch.h"
 
 
 
@@ -535,10 +535,10 @@ _mesa_init_exec_table(struct _glapi_table *exec)
    SET_GetVertexAttribPointervNV(exec, _mesa_GetVertexAttribPointervNV);
    SET_IsProgramNV(exec, _mesa_IsProgramARB);
    SET_LoadProgramNV(exec, _mesa_LoadProgramNV);
-   SET_ProgramParameter4dNV(exec, _mesa_ProgramParameter4dNV);
-   SET_ProgramParameter4dvNV(exec, _mesa_ProgramParameter4dvNV);
-   SET_ProgramParameter4fNV(exec, _mesa_ProgramParameter4fNV);
-   SET_ProgramParameter4fvNV(exec, _mesa_ProgramParameter4fvNV);
+   SET_ProgramEnvParameter4dARB(exec, _mesa_ProgramEnvParameter4dARB); /* alias to ProgramParameter4dNV */
+   SET_ProgramEnvParameter4dvARB(exec, _mesa_ProgramEnvParameter4dvARB);  /* alias to ProgramParameter4dvNV */
+   SET_ProgramEnvParameter4fARB(exec, _mesa_ProgramEnvParameter4fARB);  /* alias to ProgramParameter4fNV */
+   SET_ProgramEnvParameter4fvARB(exec, _mesa_ProgramEnvParameter4fvARB);  /* alias to ProgramParameter4fvNV */
    SET_ProgramParameters4dvNV(exec, _mesa_ProgramParameters4dvNV);
    SET_ProgramParameters4fvNV(exec, _mesa_ProgramParameters4fvNV);
    SET_TrackMatrixNV(exec, _mesa_TrackMatrixNV);
@@ -813,6 +813,11 @@ _mesa_init_exec_table(struct _glapi_table *exec)
    SET_ProgramLocalParameters4fvEXT(exec, _mesa_ProgramLocalParameters4fvEXT);
 #endif
 
+   /* GL_MESA_texture_array / GL_EXT_texture_array */
+#if FEATURE_EXT_framebuffer_object
+   SET_FramebufferTextureLayerEXT(exec, _mesa_FramebufferTextureLayerEXT);
+#endif
+
    /* GL_ATI_separate_stencil */
    SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
 }
@@ -825,7 +830,7 @@ _mesa_init_exec_table(struct _glapi_table *exec)
 
 
 static void
-update_separate_specular( GLcontext *ctx )
+update_separate_specular(GLcontext *ctx)
 {
    if (NEED_SECONDARY_COLOR(ctx))
       ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
@@ -960,7 +965,7 @@ update_program(GLcontext *ctx)
    ctx->FragmentProgram._Enabled = ctx->FragmentProgram.Enabled
       && ctx->FragmentProgram.Current->Base.Instructions;
    ctx->ATIFragmentShader._Enabled = ctx->ATIFragmentShader.Enabled
-      && ctx->ATIFragmentShader.Current->Instructions;
+      && ctx->ATIFragmentShader.Current->Instructions[0];
 
    /*
     * Set the ctx->VertexProgram._Current and ctx->FragmentProgram._Current
@@ -973,49 +978,59 @@ update_program(GLcontext *ctx)
     *   3. Programs derived from fixed-function state.
     */
 
-   ctx->FragmentProgram._Current = NULL;
+   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
 
    if (shProg && shProg->LinkStatus) {
       /* Use shader programs */
       /* XXX this isn't quite right, since we may have either a vertex
        * _or_ fragment shader (not always both).
        */
-      ctx->VertexProgram._Current = shProg->VertexProgram;
-      ctx->FragmentProgram._Current = shProg->FragmentProgram;
+      _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current,
+                               shProg->VertexProgram);
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
+                               shProg->FragmentProgram);
    }
    else {
       if (ctx->VertexProgram._Enabled) {
          /* use user-defined vertex program */
-         ctx->VertexProgram._Current = ctx->VertexProgram.Current;
+         _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current,
+                                  ctx->VertexProgram.Current);
       }
       else if (ctx->VertexProgram._MaintainTnlProgram) {
          /* Use vertex program generated from fixed-function state.
           * The _Current pointer will get set in
           * _tnl_UpdateFixedFunctionProgram() later if appropriate.
           */
-         ctx->VertexProgram._Current = NULL;
+         _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, NULL);
       }
       else {
          /* no vertex program */
-         ctx->VertexProgram._Current = NULL;
+         _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, NULL);
       }
 
       if (ctx->FragmentProgram._Enabled) {
          /* use user-defined vertex program */
-         ctx->FragmentProgram._Current = ctx->FragmentProgram.Current;
+         _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
+                                  ctx->FragmentProgram.Current);
       }
       else if (ctx->FragmentProgram._MaintainTexEnvProgram) {
          /* Use fragment program generated from fixed-function state.
           * The _Current pointer will get set in _mesa_UpdateTexEnvProgram()
           * later if appropriate.
           */
-         ctx->FragmentProgram._Current = NULL;
+         _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
       }
       else {
          /* no fragment program */
-         ctx->FragmentProgram._Current = NULL;
+         _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
       }
    }
+
+   if (ctx->VertexProgram._Current)
+      assert(ctx->VertexProgram._Current->Base.Parameters);
+   if (ctx->FragmentProgram._Current)
+      assert(ctx->FragmentProgram._Current->Base.Parameters);
+
 
    ctx->FragmentProgram._Active = ctx->FragmentProgram._Enabled;
    if (ctx->FragmentProgram._MaintainTexEnvProgram &&
@@ -1046,6 +1061,20 @@ update_viewport_matrix(GLcontext *ctx)
 
 
 /**
+ * Update derived multisample state.
+ */
+static void
+update_multisample(GLcontext *ctx)
+{
+   ctx->Multisample._Enabled = GL_FALSE;
+   if (ctx->Multisample.Enabled &&
+       ctx->DrawBuffer &&
+       ctx->DrawBuffer->Visual.sampleBuffers)
+      ctx->Multisample._Enabled = GL_TRUE;
+}
+
+
+/**
  * Update derived color/blend/logicop state.
  */
 static void
@@ -1063,19 +1092,17 @@ update_color(GLcontext *ctx)
  * in ctx->_TriangleCaps if needed.
  */
 static void
-update_polygon( GLcontext *ctx )
+update_polygon(GLcontext *ctx)
 {
    ctx->_TriangleCaps &= ~(DD_TRI_CULL_FRONT_BACK | DD_TRI_OFFSET);
 
    if (ctx->Polygon.CullFlag && ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
       ctx->_TriangleCaps |= DD_TRI_CULL_FRONT_BACK;
 
-   /* Any Polygon offsets enabled? */
-   if (ctx->Polygon.OffsetPoint ||
-       ctx->Polygon.OffsetLine ||
-       ctx->Polygon.OffsetFill) {
+   if (   ctx->Polygon.OffsetPoint
+       || ctx->Polygon.OffsetLine
+       || ctx->Polygon.OffsetFill)
       ctx->_TriangleCaps |= DD_TRI_OFFSET;
-   }
 }
 
 
@@ -1097,7 +1124,7 @@ update_tricaps(GLcontext *ctx, GLbitfield new_state)
    if (1/*new_state & _NEW_POINT*/) {
       if (ctx->Point.SmoothFlag)
          ctx->_TriangleCaps |= DD_POINT_SMOOTH;
-      if (ctx->Point._Size != 1.0F)
+      if (ctx->Point.Size != 1.0F)
          ctx->_TriangleCaps |= DD_POINT_SIZE;
       if (ctx->Point._Attenuated)
          ctx->_TriangleCaps |= DD_POINT_ATTEN;
@@ -1111,7 +1138,7 @@ update_tricaps(GLcontext *ctx, GLbitfield new_state)
          ctx->_TriangleCaps |= DD_LINE_SMOOTH;
       if (ctx->Line.StippleFlag)
          ctx->_TriangleCaps |= DD_LINE_STIPPLE;
-      if (ctx->Line._Width != 1.0)
+      if (ctx->Line.Width != 1.0)
          ctx->_TriangleCaps |= DD_LINE_WIDTH;
    }
 
@@ -1209,6 +1236,9 @@ _mesa_update_state_locked( GLcontext *ctx )
 
    if (new_state & (_NEW_BUFFERS | _NEW_VIEWPORT))
       update_viewport_matrix(ctx);
+
+   if (new_state & _NEW_MULTISAMPLE)
+      update_multisample( ctx );
 
    if (new_state & _NEW_COLOR)
       update_color( ctx );

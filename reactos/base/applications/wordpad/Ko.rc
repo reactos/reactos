@@ -166,8 +166,9 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "줄 넘기기", 0, 10, 10, 130, 85
-    RADIOBUTTON "창 가장자리서  글 넘기기(&W)", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "가장자리에서 줄 넘기기(&M)", IDC_PAGEFMT_WM, 18, 45, 117, 15
+    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "창 가장자리서  글 넘기기(&W)", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "가장자리에서 줄 넘기기(&M)", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX " 도구바", 0, 150, 10, 120, 85
     CHECKBOX "도구바(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "형식바(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15

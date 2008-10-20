@@ -350,11 +350,11 @@ PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
       horzsize = rect.right - rect.left;
       Result.QuadPart = (Result.QuadPart * horzsize) / 100;
 
-      rect.right = rect.left + Result.QuadPart;
-      FillRect(drawItem->hDC, &rect, hMagBrush);
+      rect.right = drawItem->rcItem.right - Result.QuadPart;
+      FillRect(drawItem->hDC, &rect, hBlueBrush);
       rect.left = rect.right;
       rect.right = drawItem->rcItem.right;
-      FillRect(drawItem->hDC, &rect, hBlueBrush);
+      FillRect(drawItem->hDC, &rect, hMagBrush);
       DeleteObject(hBlueBrush);
       DeleteObject(hMagBrush);
    }

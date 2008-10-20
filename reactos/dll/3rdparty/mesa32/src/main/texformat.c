@@ -1207,6 +1207,30 @@ const struct gl_texture_format _mesa_texformat_z24_s8 = {
    store_texel_z24_s8			/* StoreTexel */
 };
 
+const struct gl_texture_format _mesa_texformat_s8_z24 = {
+   MESA_FORMAT_S8_Z24,			/* MesaFormat */
+   GL_DEPTH_STENCIL_EXT,		/* BaseFormat */
+   GL_UNSIGNED_NORMALIZED_ARB,		/* DataType */
+   0,					/* RedBits */
+   0,					/* GreenBits */
+   0,					/* BlueBits */
+   0,					/* AlphaBits */
+   0,					/* LuminanceBits */
+   0,					/* IntensityBits */
+   0,					/* IndexBits */
+   24,					/* DepthBits */
+   8,					/* StencilBits */
+   4,					/* TexelBytes */
+   _mesa_texstore_s8_z24,		/* StoreTexImageFunc */
+   NULL,				/* FetchTexel1D */
+   NULL,				/* FetchTexel2D */
+   NULL,				/* FetchTexel3D */
+   fetch_texel_1d_f_s8_z24,		/* FetchTexel1Df */
+   fetch_texel_2d_f_s8_z24,		/* FetchTexel2Df */
+   fetch_texel_3d_f_s8_z24,		/* FetchTexel3Df */
+   store_texel_s8_z24			/* StoreTexel */
+};
+
 const struct gl_texture_format _mesa_texformat_z16 = {
    MESA_FORMAT_Z16,			/* MesaFormat */
    GL_DEPTH_COMPONENT,			/* BaseFormat */

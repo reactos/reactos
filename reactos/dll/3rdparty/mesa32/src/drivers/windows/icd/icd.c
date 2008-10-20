@@ -51,6 +51,7 @@ extern "C" {
 
 typedef void *HPBUFFERARB;
 
+GLAPI const char * GLAPIENTRY wglGetExtensionsStringARB(HDC hdc);
 GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
 GLAPI BOOL GLAPIENTRY wglChoosePixelFormatARB (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
 GLAPI BOOL GLAPIENTRY wglSwapIntervalEXT (int interval);
@@ -159,14 +160,8 @@ WGLAPI BOOL GLAPIENTRY DrvCopyContext(HGLRC hglrcSrc,HGLRC hglrcDst,UINT mask)
 
 WGLAPI HGLRC GLAPIENTRY DrvCreateContext(HDC hdc)
 {
-    HWND		hWnd;
     int i = 0;
 
-    if(!(hWnd = WindowFromDC(hdc)))
-    {
-        SetLastError(0);
-        return(NULL);
-    }
     if (!ctx_count)
     {
     	for(i=0;i<MESAWGL_CTX_MAX_COUNT;i++)
@@ -361,7 +356,7 @@ static struct {
 WGLAPI PROC GLAPIENTRY DrvGetProcAddress(LPCSTR lpszProc)
 {
    int i;
-   PROC p = (PROC) (int) _glapi_get_proc_address((const char *) lpszProc);
+   PROC p = (PROC) _glapi_get_proc_address((const char *) lpszProc);
    if (p)
       return p;
 

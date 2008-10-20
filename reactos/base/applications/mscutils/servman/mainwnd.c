@@ -161,7 +161,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
     for (i = ID_START; i <= ID_RESTART; i++)
     {
         EnableMenuItem(hMainMenu, i, MF_GRAYED);
-        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_START, MF_GRAYED);
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), i, MF_GRAYED);
         SendMessage(Info->hTool, TB_SETSTATE, i,
                     (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
     }

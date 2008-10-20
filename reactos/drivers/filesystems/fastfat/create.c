@@ -198,7 +198,7 @@ FindFile (
 
 	DPRINT ("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %d)\n",
 		Parent, FileToFindU, DirContext->DirIndex);
-	DPRINT ("FindFile: Path %wZ)\n",&Parent->PathNameU);
+	DPRINT ("FindFile: Path %wZ\n",&Parent->PathNameU);
 
 	PathNameBufferLength = LONGNAME_MAX_LENGTH * sizeof(WCHAR);
 	PathNameBuffer = ExAllocatePoolWithTag(NonPagedPool, PathNameBufferLength + sizeof(WCHAR), TAG_VFAT);

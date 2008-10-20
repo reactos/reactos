@@ -141,6 +141,8 @@ static DWORD TIME_CompTimeZoneID ( const TIME_ZONE_INFORMATION *pTZinfo,
     SYSTEMTIME SysTime;
     FILETIME ftTemp;
 
+    ZeroMemory (&SysTime, sizeof (SysTime));
+
     if (pTZinfo->DaylightDate.wMonth != 0)
     {
         /* if year is 0 then date is in day-of-week format, otherwise

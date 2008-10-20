@@ -47,7 +47,7 @@ typedef struct _WINSTATION_OBJECT
     WALLPAPER_MODE WallpaperMode;
 
     ULONG Flags;
-    struct _DESKTOP_OBJECT* ActiveDesktop;
+    struct _DESKTOP* ActiveDesktop;
 
     PCLIPBOARDSYSTEM Clipboard;
     DWORD           ClipboardSequenceNumber;

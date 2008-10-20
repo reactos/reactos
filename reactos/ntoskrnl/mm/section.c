@@ -150,18 +150,59 @@ NTAPI
 MmGetFileNameForAddress(IN PVOID Address,
                         OUT PUNICODE_STRING ModuleName)
 {
-    /*
-     * FIXME: TODO.
-     * Filip says to get the MM_AVL_TABLE from EPROCESS,
-     * then use the MmMarea routines to locate the Marea that
-     * corresponds to the address. Then make sure it's a section
-     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
-     * per-type union to get the .u.SectionView.Section pointer to
-     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
-     * to get the full filename.
-     */
-    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
-    return STATUS_SUCCESS;
+   PROS_SECTION_OBJECT Section;
+   PMEMORY_AREA MemoryArea;
+   PMM_AVL_TABLE AddressSpace;
+   POBJECT_NAME_INFORMATION ModuleNameInformation;
+   NTSTATUS Status = STATUS_ADDRESS_NOT_ASSOCIATED;
+
+   /* Get the MM_AVL_TABLE from EPROCESS */
+   if (Address >= MmSystemRangeStart)
+   {
+      AddressSpace = MmGetKernelAddressSpace();
+   }
+   else
+   {
+      AddressSpace = &PsGetCurrentProcess()->VadRoot;
+   }
+
+   /* Lock address space */
+   MmLockAddressSpace(AddressSpace);
+
+   /* Locate the memory area for the process by address */
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+
+   /* Make sure it's a section view type */
+   if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
+   {
+      /* Get the section pointer to the SECTION_OBJECT */
+      Section = MemoryArea->Data.SectionData.Section;
+
+      /* Unlock address space */
+      MmUnlockAddressSpace(AddressSpace);
+
+      /* Get the filename of the section */
+      Status = MmGetFileNameForSection(Section,&ModuleNameInformation);
+
+      if (NT_SUCCESS(Status))
+      {
+         /* Init modulename */
+         RtlCreateUnicodeString(ModuleName,
+                                ModuleNameInformation->Name.Buffer);
+
+         /* Free temp taged buffer from MmGetFileNameForSection() */
+         ExFreePoolWithTag(ModuleNameInformation, TAG('M', 'm', ' ', ' '));
+         DPRINT("Found ModuleName %S by address %p\n",
+                ModuleName->Buffer,Address);
+      }
+   }
+   else
+   {
+      /* Unlock address space */
+      MmUnlockAddressSpace(AddressSpace);
+   }
+
+   return Status;
 }
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */

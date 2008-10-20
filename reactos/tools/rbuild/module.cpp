@@ -189,11 +189,11 @@ IfableData::IfableData( )
 {
 }
 
-void IfableData::ExtractModules( std::vector<Module*> &modules )
+void IfableData::ExtractModules( std::map<std::string, Module*> &modules )
 {
 	size_t i;
 	for ( i = 0; i < this->modules.size (); i++ )
-		modules.push_back(this->modules[i]);
+		modules.insert(std::make_pair(this->modules[i]->name, this->modules[i]));
 }
 
 IfableData::~IfableData()
@@ -205,8 +205,8 @@ IfableData::~IfableData()
 		delete defines[i];
 	for ( i = 0; i < libraries.size (); i++ )
 		delete libraries[i];
-	for ( i = 0; i < properties.size (); i++ )
-		delete properties[i];
+	for ( std::map<std::string, Property*>::const_iterator p = properties.begin(); p != properties.end(); ++ p )
+		delete p->second;
 	for ( i = 0; i < compilerFlags.size (); i++ )
 		delete compilerFlags[i];
 	for ( i = 0; i < modules.size(); i++ )
@@ -224,8 +224,8 @@ void IfableData::ProcessXML ()
 		defines[i]->ProcessXML ();
 	for ( i = 0; i < libraries.size (); i++ )
 		libraries[i]->ProcessXML ();
-	for ( i = 0; i < properties.size(); i++ )
-		properties[i]->ProcessXML ();
+	for ( std::map<std::string, Property*>::const_iterator p = properties.begin(); p != properties.end(); ++ p )
+		p->second->ProcessXML ();
 	for ( i = 0; i < compilerFlags.size(); i++ )
 		compilerFlags[i]->ProcessXML ();
 	for ( i = 0; i < compilationUnits.size (); i++ )
@@ -527,7 +527,7 @@ Module::~Module ()
 	if ( autoRegister )
 		delete autoRegister;
 	if ( output )
-		delete output;		
+		delete output;
 }
 
 void
@@ -1059,7 +1059,7 @@ Module::GetDefaultModuleEntrypoint () const
             return "DllMainCRTStartup@12";
 		case NativeCUI:
             if (Environment::GetArch() == "arm") return "NtProcessStartup";
-            return "NtProcessStartup@4";            
+            return "NtProcessStartup@4";
 		case Win32DLL:
 		case Win32OCX:
             if (Environment::GetArch() == "arm") return "DllMain";

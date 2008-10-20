@@ -790,14 +790,14 @@ KeyboardThreadMain(PVOID StartContext)
             FocusThread = FocusQueue->Thread;
 
             if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
+                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
                continue;
 
             /* This function uses lParam to fill wParam according to the
              * keyboard layout in use.
              */
             W32kKeyProcessMessage(&msg,
-                                  ((PW32THREAD)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
+                                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -892,9 +892,9 @@ NtUserDragDetect(
 }
 
 BOOL FASTCALL
-IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
+IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
 {
-   PW32THREAD OldBlock;
+   PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
    if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
@@ -1225,7 +1225,7 @@ NtUserSendInput(
    LPINPUT pInput,
    INT cbSize)
 {
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    UINT cnt;
    DECLARE_RETURN(UINT);
 

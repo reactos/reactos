@@ -32,7 +32,7 @@
 #ifndef SWRAST_H
 #define SWRAST_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 /**
  * \struct SWvertex
@@ -44,6 +44,14 @@
  * isolate the swrast module from the internals of the tnl module, and
  * improve its usefulness as a fallback mechanism for hardware
  * drivers.
+ *
+ * wpos = attr[FRAG_ATTRIB_WPOS] and MUST BE THE FIRST values in the
+ * vertex because of the tnl clipping code.
+
+ * wpos[0] and [1] are the screen-coords of SWvertex.
+ * wpos[2] is the z-buffer coord (if 16-bit Z buffer, in range [0,65535]).
+ * wpos[3] is 1/w where w is the clip-space W coord.  This is the value
+ * that clip{XYZ} were multiplied by to get ndc{XYZ}.
  *
  * Full software drivers:
  *   - Register the rastersetup and triangle functions from
@@ -61,18 +69,13 @@
  *     primitives unaccelerated), hook in swrast_setup instead.
  */
 typedef struct {
-   /** win[0], win[1] are the screen-coords of SWvertex.
-    * win[2] is the z-buffer coord (if 16-bit Z buffer, in range [0,65535]).
-    * win[3] is 1/w where w is the clip-space W coord.  This is the value
-    * that clip{XYZ} were multiplied by to get ndc{XYZ}.
-    */
-   GLfloat win[4];
-   GLchan color[4];
-   GLchan specular[4];
-   GLfloat index;
+   GLfloat attrib[FRAG_ATTRIB_MAX][4];
+   GLchan color[4];   /** integer color */
    GLfloat pointSize;
-   GLfloat attrib[FRAG_ATTRIB_MAX][4]; /**< texcoords & varying, more to come */
 } SWvertex;
+
+
+#define FRAG_ATTRIB_CI FRAG_ATTRIB_COL0
 
 
 struct swrast_device_driver;
@@ -139,6 +142,13 @@ _swrast_Accum(GLcontext *ctx, GLenum op, GLfloat value);
  */
 extern void
 _swrast_ResetLineStipple( GLcontext *ctx );
+
+/**
+ * Indicates front/back facing for subsequent points/lines when drawing
+ * unfilled polygons.  Needed for two-side stencil.
+ */
+extern void
+_swrast_SetFacing(GLcontext *ctx, GLuint facing);
 
 /* These will always render the correct point/line/triangle for the
  * current state.

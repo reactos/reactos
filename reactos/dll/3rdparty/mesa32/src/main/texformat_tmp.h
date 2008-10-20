@@ -1117,6 +1117,7 @@ static void FETCH(ci8)( const struct gl_texture_image *texImage,
          break;;
       default:
          _mesa_problem(ctx, "Bad palette format in fetch_texel_ci8");
+         return;
       }
 #if CHAN_TYPE == GL_UNSIGNED_BYTE
       COPY_4UBV(texel, texelUB);
@@ -1362,6 +1363,32 @@ static void store_texel_z24_s8(struct gl_texture_image *texImage,
 }
 #endif
 
+
+/* MESA_TEXFORMAT_S8_Z24 ***************************************************/
+
+static void FETCH(f_s8_z24)( const struct gl_texture_image *texImage,
+                             GLint i, GLint j, GLint k, GLfloat *texel )
+{
+   /* only return Z, not stencil data */
+   const GLuint *src = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
+   const GLfloat scale = 1.0F / (GLfloat) 0xffffff;
+   texel[0] = ((*src) & 0x00ffffff) * scale;
+   ASSERT(texImage->TexFormat->MesaFormat == MESA_FORMAT_S8_Z24);
+   ASSERT(texel[0] >= 0.0F);
+   ASSERT(texel[0] <= 1.0F);
+}
+
+#if DIM == 3
+static void store_texel_s8_z24(struct gl_texture_image *texImage,
+                               GLint i, GLint j, GLint k, const void *texel)
+{
+   /* only store Z, not stencil */
+   GLuint *dst = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
+   GLfloat depth = *((GLfloat *) texel);
+   GLuint zi = (GLuint) (depth * 0xffffff);
+   *dst = zi | (*dst & 0xff000000);
+}
+#endif
 
 
 #undef TEXEL_ADDR

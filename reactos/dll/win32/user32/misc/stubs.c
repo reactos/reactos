@@ -109,12 +109,9 @@ DWORD
 STDCALL
 GetAppCompatFlags(HTASK hTask)
 {
-    PW32THREADINFO ti = GetW32ThreadInfo();
+    PCLIENTINFO pci = GetWin32ClientInfo();
 
-    /* If there is no threadinfo (?!), then return 0 */
-    if (!ti) return 0;
-
-    return ti->AppCompatFlags;
+    return pci->dwCompatFlags;
 }
 
 /*
@@ -124,12 +121,9 @@ DWORD
 STDCALL
 GetAppCompatFlags2(HTASK hTask)
 {
-    PW32THREADINFO ti = GetW32ThreadInfo();
+    PCLIENTINFO pci = GetWin32ClientInfo();
 
-    /* If there is no threadinfo (?!), then return 0 */
-    if (!ti) return 0;
-
-    return ti->AppCompatFlags2;
+    return pci->dwCompatFlags2;
 }
 
 /*

@@ -573,6 +573,9 @@ MiniportHalt(
   /* deregister i/o port range */
   NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, (PVOID)Adapter->PortOffset);
 
+  /* deregister the shutdown routine */
+  NdisMDeregisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle);
+
   /* free shared memory */
   MiFreeSharedMemory(Adapter);
 
@@ -781,6 +784,18 @@ MiTestCard(
 }
 #endif
 
+VOID
+STDCALL
+MiniportShutdown( PVOID Context )
+{
+  PADAPTER Adapter = Context;
+
+  DPRINT("Stopping the chip\n");
+
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STOP);
+}
+
 static NDIS_STATUS
 STDCALL
 MiniportInitialize(
@@ -951,6 +966,8 @@ MiniportInitialize(
   if(!MiTestCard(Adapter))
     ASSERT(0);
 #endif
+
+  NdisMRegisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle, Adapter, MiniportShutdown);
 
   DPRINT("returning 0x%x\n", Status);
   *OpenErrorStatus = Status;

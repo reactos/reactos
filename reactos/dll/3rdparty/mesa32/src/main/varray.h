@@ -146,6 +146,11 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
 				GLenum type, const GLvoid * const * indices,
 				GLsizei primcount, GLint modestride );
 
+extern void GLAPIENTRY
+_mesa_LockArraysEXT(GLint first, GLsizei count);
+
+extern void GLAPIENTRY
+_mesa_UnlockArraysEXT( void );
 
 extern void
 _mesa_init_varray( GLcontext * ctx );

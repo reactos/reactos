@@ -1118,11 +1118,11 @@ PsGetProcessSessionId(PEPROCESS Process)
 /*
  * @implemented
  */
-struct _W32PROCESS*
+PVOID
 NTAPI
 PsGetCurrentProcessWin32Process(VOID)
 {
-    return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
+    return PsGetCurrentProcess()->Win32Process;
 }
 
 /*

@@ -17,6 +17,7 @@
 	<library>uuid</library>
 	<library>advapi32</library>
 	<library>setupapi</library>
+	<library>ws2_32</library>
 	<library>comctl32</library>
 	<pch>precomp.h</pch>
 	<file>netshell.c</file>

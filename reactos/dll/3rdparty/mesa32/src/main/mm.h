@@ -39,7 +39,8 @@ struct mem_block {
    struct mem_block *next, *prev;
    struct mem_block *next_free, *prev_free;
    struct mem_block *heap;
-   int ofs,size;
+   unsigned int ofs;
+   int size;
    unsigned int free:1;
    unsigned int reserved:1;
 };
@@ -50,7 +51,7 @@ struct mem_block {
  * input: total size in bytes
  * return: a heap pointer if OK, NULL if error
  */
-extern struct mem_block *mmInit(int ofs, int size);
+extern struct mem_block *mmInit(unsigned int ofs, int size);
 
 /**
  * Allocate 'size' bytes with 2^align2 bytes alignment,

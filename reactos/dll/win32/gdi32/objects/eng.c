@@ -154,16 +154,15 @@ LPWSTR STDCALL
 EngGetDriverName(HDEV hdev)
 {
   // DHPDEV from NtGdiGetDhpdev must be from print driver.
-  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pDrvInfo2) return NULL;
+  if (!pPDev) return NULL;
   
-  if (pDrvInfo2->cVersion != 0xFEDCBA98 ) // Init mask for ver 2+
+  if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
-        return pDrvInfo1->pName;
+     pPDev = (PUMPDEV)pPDev->Sig;
   }
-  return pDrvInfo2->pDriverPath;
+  return pPDev->pdi5Info->pDriverPath;
 }
 
 /*
@@ -172,16 +171,15 @@ EngGetDriverName(HDEV hdev)
 LPWSTR STDCALL
 EngGetPrinterDataFileName(HDEV hdev)
 {
-  PDRIVER_INFO_2W pDrvInfo2 = (PDRIVER_INFO_2W)NtGdiGetDhpdev(hdev);
+  PUMPDEV pPDev = (PUMPDEV)NtGdiGetDhpdev(hdev);
 
-  if (!pDrvInfo2) return NULL;
+  if (!pPDev) return NULL;
 
-  if (pDrvInfo2->cVersion != 0xFEDCBA98 )
+  if (pPDev->Sig != PDEV_UMPD_ID)
   {
-     PDRIVER_INFO_1W pDrvInfo1 = (PDRIVER_INFO_1W) pDrvInfo2;
-        return pDrvInfo1->pName;
+     pPDev = (PUMPDEV)pPDev->Sig;
   }
-  return pDrvInfo2->pDataFile;
+  return pPDev->pdi5Info->pDataFile;
 }
 
 /*

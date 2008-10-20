@@ -49,8 +49,8 @@
 #ifndef _T_CONTEXT_H
 #define _T_CONTEXT_H
 
-#include "glheader.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
 
 #include "math/m_matrix.h"
 #include "math/m_vector.h"
@@ -388,7 +388,7 @@ struct tnl_clipspace
 struct tnl_cache_item {
    GLuint hash;
    void *key;
-   void *data;
+   struct gl_vertex_program *prog;
    struct tnl_cache_item *next;
 };
 

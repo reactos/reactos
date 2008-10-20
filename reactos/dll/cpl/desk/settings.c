@@ -243,8 +243,6 @@ ByeBye:
 		HeapFree(GetProcessHeap(), 0, name);
 	if (key != NULL)
 		HeapFree(GetProcessHeap(), 0, key);
-	if (devid != NULL)
-		HeapFree(GetProcessHeap(), 0, devid);
 	return FALSE;
 }
 

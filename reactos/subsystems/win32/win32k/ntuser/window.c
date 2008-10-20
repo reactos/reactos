@@ -330,25 +330,25 @@ static void IntSendDestroyMsg(HWND hWnd)
 static VOID
 UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
 {
-    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     PWINDOW Wnd = WindowObject->Wnd;
 
-    if (ClientInfo->pvWND == DesktopHeapAddressToUser(WindowObject->Wnd))
+    if (ClientInfo->CallbackWnd.pvWnd == DesktopHeapAddressToUser(WindowObject->Wnd))
     {
-        ClientInfo->hWND = NULL;
-        ClientInfo->pvWND = NULL;
+        ClientInfo->CallbackWnd.hWnd = NULL;
+        ClientInfo->CallbackWnd.pvWnd = NULL;
     }
 
    if (Wnd->WindowName.Buffer != NULL)
    {
        Wnd->WindowName.Length = 0;
        Wnd->WindowName.MaximumLength = 0;
-       DesktopHeapFree(Wnd->ti->Desktop,
+       DesktopHeapFree(Wnd->pdesktop,
                        Wnd->WindowName.Buffer);
        Wnd->WindowName.Buffer = NULL;
    }
 
-    DesktopHeapFree(ti->Desktop, Wnd);
+    DesktopHeapFree(Wnd->pdesktop, Wnd);
     WindowObject->Wnd = NULL;
 }
 
@@ -363,7 +363,7 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
  */
 static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
                                    PW32PROCESS ProcessData,
-                                   PW32THREAD ThreadData,
+                                   PTHREADINFO ThreadData,
                                    BOOLEAN SendMessages)
 {
    HWND *Children;
@@ -697,11 +697,11 @@ IntSetMenu(
 VOID FASTCALL
 co_DestroyThreadWindows(struct _ETHREAD *Thread)
 {
-   PW32THREAD WThread;
+   PTHREADINFO WThread;
    PLIST_ENTRY Current;
    PWINDOW_OBJECT Wnd;
    USER_REFERENCE_ENTRY Ref;
-   WThread = (PW32THREAD)Thread->Tcb.Win32Thread;
+   WThread = (PTHREADINFO)Thread->Tcb.Win32Thread;
 
    while (!IsListEmpty(&WThread->WindowListHead))
    {
@@ -753,7 +753,7 @@ HWND FASTCALL
 IntGetFocusWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE Queue;
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP pdo = IntGetActiveDesktop();
 
    if( !pdo )
       return NULL;
@@ -771,7 +771,7 @@ PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
 {
    PMENU_OBJECT Menu, NewMenu = NULL, SysMenu = NULL, ret = NULL;
-   PW32THREAD W32Thread;
+   PTHREADINFO W32Thread;
    HMENU hNewMenu, hSysMenu;
    ROSMENUITEMINFO ItemInfo;
 
@@ -1229,7 +1229,7 @@ NtUserBuildHwndList(
 
    if (hwndParent || !dwThreadId)
    {
-      PDESKTOP_OBJECT Desktop;
+      PDESKTOP Desktop;
       PWINDOW_OBJECT Parent, Window;
 
       if(!hwndParent)
@@ -1315,7 +1315,7 @@ NtUserBuildHwndList(
    else
    {
       PETHREAD Thread;
-      PW32THREAD W32Thread;
+      PTHREADINFO W32Thread;
       PLIST_ENTRY Current;
       PWINDOW_OBJECT Window;
 
@@ -1324,7 +1324,7 @@ NtUserBuildHwndList(
       {
          return ERROR_INVALID_PARAMETER;
       }
-      if(!(W32Thread = (PW32THREAD)Thread->Tcb.Win32Thread))
+      if(!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
          DPRINT("Thread is not a GUI Thread!\n");
@@ -1523,8 +1523,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    DECLARE_RETURN(HWND);
    BOOL HasOwner;
    USER_REFERENCE_ENTRY ParentRef, Ref;
+   PTHREADINFO pti;
 
-   ParentWindowHandle = PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow;
+   pti = PsGetCurrentThreadWin32Thread();
+   ParentWindowHandle = pti->Desktop->DesktopWindow;
    OwnerWindowHandle = NULL;
 
    if (hWndParent == HWND_MESSAGE)
@@ -1568,7 +1570,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Check the window station. */
    ti = GetW32ThreadInfo();
-   if (ti == NULL || PsGetCurrentThreadWin32Thread()->Desktop == NULL)
+   if (ti == NULL || pti->Desktop == NULL)
    {
       DPRINT1("Thread is not attached to a desktop! Cannot create window!\n");
       RETURN( (HWND)0);
@@ -1599,14 +1601,14 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    Class = IntReferenceClass(Class,
                              ClassLink,
-                             ti->Desktop);
+                             pti->Desktop);
    if (Class == NULL)
    {
        DPRINT1("Failed to reference window class!\n");
        RETURN(NULL);
    }
 
-   WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
+   WinSta = pti->Desktop->WindowStation;
 
    //FIXME: Reference thread/desktop instead
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
@@ -1617,7 +1619,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                             otWindow, sizeof(WINDOW_OBJECT));
    if (Window)
    {
-       Window->Wnd = DesktopHeapAlloc(ti->Desktop,
+       Window->Wnd = DesktopHeapAlloc(pti->Desktop,
                                       sizeof(WINDOW) + Class->WndExtra);
        if (!Window->Wnd)
            goto AllocErr;
@@ -1628,6 +1630,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
        Wnd->ti = ti;
        Wnd->pi = ti->kpi;
+       Wnd->pdesktop = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
 
@@ -1644,11 +1647,11 @@ AllocErr:
 
    ObDereferenceObject(WinSta);
 
-   if (NULL == PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow)
+   if (NULL == pti->Desktop->DesktopWindow)
    {
       /* If there is no desktop window yet, we must be creating it */
-      PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow = hWnd;
-      PsGetCurrentThreadWin32Thread()->Desktop->DesktopInfo->Wnd = Wnd;
+      pti->Desktop->DesktopWindow = hWnd;
+      pti->Desktop->DesktopInfo->Wnd = Wnd;
    }
 
    /*
@@ -1664,7 +1667,7 @@ AllocErr:
    Wnd->Instance = hInstance;
    Window->hSelf = hWnd;
 
-   Window->MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
+   Window->MessageQueue = pti->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
    Wnd->Parent = ParentWindow ? ParentWindow->Wnd : NULL;
@@ -1716,7 +1719,7 @@ AllocErr:
 
    if (NULL != WindowName->Buffer && WindowName->Length > 0)
    {
-      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
       if (Wnd->WindowName.Buffer == NULL)
       {
@@ -1790,7 +1793,7 @@ AllocErr:
        Wnd->IDMenu = (UINT) hMenu;
 
    /* Insert the window into the thread's window list. */
-   InsertTailList (&PsGetCurrentThreadWin32Thread()->WindowListHead, &Window->ThreadListEntry);
+   InsertTailList (&pti->WindowListHead, &Window->ThreadListEntry);
 
    /*  Handle "CS_CLASSDC", it is tested first. */
    if ((Wnd->Class->Style & CS_CLASSDC) && !(Wnd->Class->Dce)) // One DCE per class to have CLASS.
@@ -1842,7 +1845,7 @@ AllocErr:
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(((PW32THREAD)Window->OwnerThread->Tcb.Win32Thread)->Desktop, &WorkArea);
+      IntGetDesktopWorkArea(((PTHREADINFO)Window->OwnerThread->Tcb.Win32Thread)->Desktop, &WorkArea);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -3193,7 +3196,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    WinStaObject->ShellListView = hwndListView;
 
    ti = GetW32ThreadInfo();
-   if (ti->Desktop) ((PDESKTOP)ti->Desktop)->hShellWindow = hwndShell;
+   if (ti->Desktop) ti->Desktop->hShellWindow = hwndShell;
 
    UserDerefObjectCo(WndShell);
 
@@ -3650,7 +3653,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            WindowStation = ((PW32THREAD)Window->OwnerThread->Tcb.Win32Thread)->Desktop->WindowStation;
+            WindowStation = ((PTHREADINFO)Window->OwnerThread->Tcb.Win32Thread)->Desktop->WindowStation;
             if(WindowStation)
             {
                if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)
@@ -4485,6 +4488,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 
    if ((DesktopWindow = UserGetWindowObject(IntGetDesktopWindow())))
    {
+      PTHREADINFO pti;
       USHORT Hit;
 
       pt.x = X;
@@ -4494,7 +4498,8 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       //its possible this referencing is useless, thou it shouldnt hurt...
       UserRefObjectCo(DesktopWindow, &Ref);
 
-      Hit = co_WinPosWindowFromPoint(DesktopWindow, PsGetCurrentThreadWin32Thread()->MessageQueue, &pt, &Window);
+      pti = PsGetCurrentThreadWin32Thread();
+      Hit = co_WinPosWindowFromPoint(DesktopWindow, pti->MessageQueue, &pt, &Window);
 
       if(Window)
       {
@@ -4587,11 +4592,11 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
               Wnd->WindowName.Buffer = NULL;
               if (buf != NULL)
               {
-                  DesktopHeapFree(Wnd->ti->Desktop,
+                  DesktopHeapFree(Wnd->pdesktop,
                                   buf);
               }
 
-              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
                                                         SafeText.Length + sizeof(UNICODE_NULL));
               if (Wnd->WindowName.Buffer != NULL)
               {

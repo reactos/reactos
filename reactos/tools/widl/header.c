@@ -34,9 +34,12 @@
 #include "parser.h"
 #include "header.h"
 
+typedef struct _user_type_t generic_handle_t;
+
 static int indentation = 0;
 user_type_list_t user_type_list = LIST_INIT(user_type_list);
 static context_handle_list_t context_handle_list = LIST_INIT(context_handle_list);
+static struct list generic_handle_list = LIST_INIT(generic_handle_list);
 
 static void indent(FILE *h, int delta)
 {
@@ -63,6 +66,19 @@ int is_ptrchain_attr(const var_t *var, enum attr_type t)
                 type = type->ref;
             else return 0;
         }
+    }
+}
+
+int is_aliaschain_attr(const type_t *type, enum attr_type attr)
+{
+    const type_t *t = type;
+    for (;;)
+    {
+        if (is_attr(t->attrs, attr))
+            return 1;
+        else if (t->kind == TKIND_ALIAS)
+            t = t->orig;
+        else return 0;
     }
 }
 
@@ -211,7 +227,7 @@ void write_type_left(FILE *h, type_t *t, int declonly)
           else fprintf(h, "enum {\n");
           t->written = TRUE;
           indentation++;
-          write_enums(h, t->fields);
+          write_enums(h, t->fields_or_args);
           indent(h, -1);
           fprintf(h, "}");
         }
@@ -229,7 +245,7 @@ void write_type_left(FILE *h, type_t *t, int declonly)
           else fprintf(h, "struct {\n");
           t->written = TRUE;
           indentation++;
-          write_fields(h, t->fields);
+          write_fields(h, t->fields_or_args);
           indent(h, -1);
           fprintf(h, "}");
         }
@@ -241,7 +257,7 @@ void write_type_left(FILE *h, type_t *t, int declonly)
           else fprintf(h, "union {\n");
           t->written = TRUE;
           indentation++;
-          write_fields(h, t->fields);
+          write_fields(h, t->fields_or_args);
           indent(h, -1);
           fprintf(h, "}");
         }
@@ -280,15 +296,38 @@ void write_type_right(FILE *h, type_t *t, int is_field)
 void write_type_v(FILE *h, type_t *t, int is_field, int declonly,
                   const char *fmt, va_list args)
 {
+  type_t *pt;
+  int ptr_level = 0;
+
   if (!h) return;
 
-  write_type_left(h, t, declonly);
+  for (pt = t; is_ptr(pt); pt = pt->ref, ptr_level++)
+    ;
+
+  if (pt->type == RPC_FC_FUNCTION) {
+    int i;
+    const char *callconv = get_attrp(pt->attrs, ATTR_CALLCONV);
+    if (!callconv) callconv = "";
+    write_type_left(h, pt->ref, declonly);
+    fputc(' ', h);
+    if (ptr_level) fputc('(', h);
+    fprintf(h, "%s ", callconv);
+    for (i = 0; i < ptr_level; i++)
+      fputc('*', h);
+  } else
+    write_type_left(h, t, declonly);
   if (fmt) {
     if (needs_space_after(t))
-      fprintf(h, " ");
+      fputc(' ', h);
     vfprintf(h, fmt, args);
   }
-  write_type_right(h, t, is_field);
+  if (pt->type == RPC_FC_FUNCTION) {
+    if (ptr_level) fputc(')', h);
+    fputc('(', h);
+    write_args(h, pt->fields_or_args, NULL, 0, FALSE);
+    fputc(')', h);
+  } else
+    write_type_right(h, t, is_field);
 }
 
 void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *fmt, ...)
@@ -330,7 +369,18 @@ static int context_handle_registered(const char *name)
   return 0;
 }
 
-void check_for_user_types_and_context_handles(const var_list_t *list)
+static int generic_handle_registered(const char *name)
+{
+  generic_handle_t *gh;
+  LIST_FOR_EACH_ENTRY(gh, &generic_handle_list, generic_handle_t, entry)
+    if (!strcmp(name, gh->name))
+      return 1;
+  return 0;
+}
+
+/* check for types which require additional prototypes to be generated in the
+ * header */
+void check_for_additional_prototype_types(const var_list_t *list)
 {
   const var_t *v;
 
@@ -352,6 +402,16 @@ void check_for_user_types_and_context_handles(const var_list_t *list)
         /* don't carry on parsing fields within this type */
         break;
       }
+      if (type->type != RPC_FC_BIND_PRIMITIVE && is_attr(type->attrs, ATTR_HANDLE)) {
+        if (!generic_handle_registered(name))
+        {
+          generic_handle_t *gh = xmalloc(sizeof(*gh));
+          gh->name = xstrdup(name);
+          list_add_tail(&generic_handle_list, &gh->entry);
+        }
+        /* don't carry on parsing fields within this type */
+        break;
+      }
       if (is_attr(type->attrs, ATTR_WIREMARSHAL)) {
         if (!user_type_registered(name))
         {
@@ -365,7 +425,7 @@ void check_for_user_types_and_context_handles(const var_list_t *list)
       }
       else
       {
-        check_for_user_types_and_context_handles(type->fields);
+        check_for_additional_prototype_types(type->fields_or_args);
       }
     }
   }
@@ -391,6 +451,17 @@ void write_context_handle_rundowns(void)
   {
     const char *name = ch->name;
     fprintf(header, "void __RPC_USER %s_rundown(%s);\n", name, name);
+  }
+}
+
+void write_generic_handle_routines(void)
+{
+  generic_handle_t *gh;
+  LIST_FOR_EACH_ENTRY(gh, &generic_handle_list, generic_handle_t, entry)
+  {
+    const char *name = gh->name;
+    fprintf(header, "handle_t __RPC_USER %s_bind(%s);\n", name, name);
+    fprintf(header, "void __RPC_USER %s_unbind(%s, handle_t);\n", name, name);
   }
 }
 
@@ -524,11 +595,34 @@ const var_t* get_explicit_handle_var(const func_t* func)
     return NULL;
 }
 
+const type_t* get_explicit_generic_handle_type(const var_t* var)
+{
+    const type_t *t;
+    for (t = var->type; is_ptr(t); t = t->ref)
+        if (t->type != RPC_FC_BIND_PRIMITIVE && is_attr(t->attrs, ATTR_HANDLE))
+            return t;
+    return NULL;
+}
+
+const var_t* get_explicit_generic_handle_var(const func_t* func)
+{
+    const var_t* var;
+
+    if (!func->args)
+        return NULL;
+
+    LIST_FOR_EACH_ENTRY( var, func->args, const var_t, entry )
+        if (get_explicit_generic_handle_type(var))
+            return var;
+
+    return NULL;
+}
+
 int has_out_arg_or_return(const func_t *func)
 {
     const var_t *var;
 
-    if (!is_void(func->def->type))
+    if (!is_void(get_func_return_type(func)))
         return 1;
 
     if (!func->args)
@@ -619,17 +713,7 @@ void write_args(FILE *h, const var_list_t *args, const char *name, int method, i
         }
         else fprintf(h, ",");
     }
-    if (arg->args)
-    {
-      write_type_decl_left(h, arg->type);
-      fprintf(h, " (STDMETHODCALLTYPE *");
-      write_name(h,arg);
-      fprintf(h, ")(");
-      write_args(h, arg->args, NULL, 0, FALSE);
-      fprintf(h, ")");
-    }
-    else
-      write_type_decl(h, arg->type, "%s", arg->name);
+    write_type_decl(h, arg->type, "%s", arg->name);
     count++;
   }
   if (do_indent) indentation--;
@@ -647,7 +731,7 @@ static void write_cpp_method_def(const type_t *iface)
     if (!is_callas(def->attrs)) {
       indent(header, 0);
       fprintf(header, "virtual ");
-      write_type_decl_left(header, def->type);
+      write_type_decl_left(header, get_func_return_type(cur));
       fprintf(header, " STDMETHODCALLTYPE ");
       write_name(header, def);
       fprintf(header, "(\n");
@@ -672,7 +756,7 @@ static void do_write_c_method_def(const type_t *iface, const char *name)
     const var_t *def = cur->def;
     if (!is_callas(def->attrs)) {
       indent(header, 0);
-      write_type_decl_left(header, def->type);
+      write_type_decl_left(header, get_func_return_type(cur));
       fprintf(header, " (STDMETHODCALLTYPE *");
       write_name(header, def);
       fprintf(header, ")(\n");
@@ -704,7 +788,7 @@ static void write_method_proto(const type_t *iface)
 
     if (!is_local(def->attrs)) {
       /* proxy prototype */
-      write_type_decl_left(header, def->type);
+      write_type_decl_left(header, get_func_return_type(cur));
       fprintf(header, " CALLBACK %s_", iface->name);
       write_name(header, def);
       fprintf(header, "_Proxy(\n");
@@ -744,14 +828,14 @@ void write_locals(FILE *fp, const type_t *iface, int body)
       if (&m->entry != iface->funcs) {
         const var_t *mdef = m->def;
         /* proxy prototype - use local prototype */
-        write_type_decl_left(fp, mdef->type);
+        write_type_decl_left(fp, get_func_return_type(m));
         fprintf(fp, " CALLBACK %s_", iface->name);
         write_name(fp, mdef);
         fprintf(fp, "_Proxy(\n");
         write_args(fp, m->args, iface->name, 1, TRUE);
         fprintf(fp, ")");
         if (body) {
-          type_t *rt = mdef->type;
+          type_t *rt = get_func_return_type(m);
           fprintf(fp, "\n{\n");
           fprintf(fp, "    %s\n", comment);
           if (rt->name && strcmp(rt->name, "HRESULT") == 0)
@@ -768,7 +852,7 @@ void write_locals(FILE *fp, const type_t *iface, int body)
         else
           fprintf(fp, ";\n");
         /* stub prototype - use remotable prototype */
-        write_type_decl_left(fp, def->type);
+        write_type_decl_left(fp, get_func_return_type(cur));
         fprintf(fp, " __RPC_STUB %s_", iface->name);
         write_name(fp, mdef);
         fprintf(fp, "_Stub(\n");
@@ -791,7 +875,7 @@ static void write_function_proto(const type_t *iface, const func_t *fun, const c
   var_t *def = fun->def;
 
   /* FIXME: do we need to handle call_as? */
-  write_type_decl_left(header, def->type);
+  write_type_decl_left(header, get_func_return_type(fun));
   fprintf(header, " ");
   write_prefix_name(header, prefix, def);
   fprintf(header, "(\n");
@@ -799,7 +883,7 @@ static void write_function_proto(const type_t *iface, const func_t *fun, const c
     write_args(header, fun->args, iface->name, 0, TRUE);
   else
     fprintf(header, "    void");
-  fprintf(header, ");\n");
+  fprintf(header, ");\n\n");
 }
 
 static void write_function_protos(const type_t *iface)
@@ -807,6 +891,8 @@ static void write_function_protos(const type_t *iface)
   const char *implicit_handle = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
   int explicit_handle = is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE);
   const var_t* explicit_handle_var;
+  const var_t* explicit_generic_handle_var = NULL;
+  const var_t* context_handle_var = NULL;
   const func_t *cur;
   int prefixes_differ = strcmp(prefix_client, prefix_server);
 
@@ -817,8 +903,14 @@ static void write_function_protos(const type_t *iface)
 
     /* check for a defined binding handle */
     explicit_handle_var = get_explicit_handle_var(cur);
+    if (!explicit_handle_var)
+    {
+      explicit_generic_handle_var = get_explicit_generic_handle_var(cur);
+      if (!explicit_generic_handle_var)
+        context_handle_var = get_context_handle_var(cur);
+    }
     if (explicit_handle) {
-      if (!explicit_handle_var) {
+      if (!explicit_handle_var && !explicit_generic_handle_var && !context_handle_var) {
         error("%s() does not define an explicit binding handle!\n", def->name);
         return;
       }

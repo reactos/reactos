@@ -7,7 +7,7 @@
 #define IDCARETTIMER (0xffff)
 
 BOOL FASTCALL
-co_IntDestroyCaret(PW32THREAD Win32Thread);
+co_IntDestroyCaret(PTHREADINFO Win32Thread);
 
 BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds);

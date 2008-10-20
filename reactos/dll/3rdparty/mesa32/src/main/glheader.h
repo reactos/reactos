@@ -46,11 +46,6 @@
 #ifndef GLHEADER_H
 #define GLHEADER_H
 
-/* This allows Mesa to be integrated into XFree86 */
-#ifdef HAVE_DIX_CONFIG_H
-#include "dix-config.h"
-#endif
-
 #include <assert.h>
 #include <ctype.h>
 #if defined(__alpha__) && defined(CCPML)
@@ -77,8 +72,38 @@
 #  if _MSC_VER == 1200
      typedef UINT_PTR uintptr_t;
 #  endif 
+#elif defined(__INTERIX)
+/* Interix 3.x has a gcc that shadows this. */
+#  ifndef _UINTPTR_T_DEFINED
+     typedef unsigned long uintptr_t;
+#  define _UINTPTR_T_DEFINED
+#  endif
 #else
 #  include <inttypes.h>
+#endif
+
+/* For platforms that have the C99 standard uint*_t,
+   but not the commonly used u_int*_t */
+#if defined(__sun)
+# define u_int8_t uint8_t
+# define u_int16_t uint16_t
+# define u_int32_t uint32_t
+# define u_int64_t uint64_t
+# define u_intptr_t uintptr_t
+#endif
+
+/* Sun compilers define __i386 instead of the gcc-style __i386__ */
+#ifdef __SUNPRO_C
+# if !defined(__i386__) && defined(__i386)
+#  define __i386__
+# elif !defined(__amd64__) && defined(__amd64)
+#  define __amd64__
+# elif !defined(__sparc__) && defined(__sparc)
+#  define __sparc__
+# endif
+# if !defined(__volatile)
+#  define __volatile volatile
+# endif
 #endif
 
 #if defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__) && !defined(BUILD_FOR_SNAP)
@@ -200,6 +225,12 @@
 #  define INLINE inline
 #elif defined(__WATCOMC__) && (__WATCOMC__ >= 1100)
 #  define INLINE __inline
+#elif defined(__SUNPRO_C) && defined(__C99FEATURES__)
+#  define INLINE inline
+#  define __inline inline
+#  define __inline__ inline
+#elif (__STDC_VERSION__ >= 199901L) /* C99 */
+#  define INLINE inline
 #else
 #  define INLINE
 #endif
@@ -237,7 +268,7 @@
 #endif
 
 
-#if (!defined(__GNUC__) || __GNUC__ < 3) && !defined(__IBMC__)
+#if (!defined(__GNUC__) || __GNUC__ < 3) && (!defined(__IBMC__) || __IBMC__ < 900)
 #  define __builtin_expect(x, y) x
 #endif
 
@@ -245,12 +276,17 @@
  * If we're not using gcc, define __FUNCTION__ as a cpp symbol here.
  * Don't define it if using a newer Windows compiler.
  */
-#if defined(__VMS)
-# define __FUNCTION__ "VMS$NL:"
-#elif __STDC_VERSION__ < 199901L
-# if ((!defined __GNUC__) || (__GNUC__ < 2)) && (!defined __xlC__) && \
+#ifndef __FUNCTION__
+# if defined(__VMS)
+#  define __FUNCTION__ "VMS$NL:"
+# elif ((!defined __GNUC__) || (__GNUC__ < 2)) && (!defined __xlC__) && \
       (!defined(_MSC_VER) || _MSC_VER < 1300)
-#  define __FUNCTION__ "<unknown>"
+#  if (__STDC_VERSION__ >= 199901L) /* C99 */ || \
+    (defined(__SUNPRO_C) && defined(__C99FEATURES__))
+#   define __FUNCTION__ __func__
+#  else
+#   define __FUNCTION__ "<unknown>"
+#  endif
 # endif
 #endif
 

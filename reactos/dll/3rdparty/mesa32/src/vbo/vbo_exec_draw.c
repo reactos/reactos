@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  7.2
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,11 +25,12 @@
  *    Keith Whitwell <keith@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "enums.h"
-#include "state.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/context.h"
+#include "main/enums.h"
+#include "main/state.h"
+#include "main/macros.h"
 
 #include "vbo_context.h"
 
@@ -155,8 +156,12 @@ static void vbo_exec_bind_arrays( GLcontext *ctx )
     */
    switch (get_program_mode(exec->ctx)) {
    case VP_NONE:
-      memcpy(arrays,      vbo->legacy_currval, 16 * sizeof(arrays[0]));
-      memcpy(arrays + 16, vbo->mat_currval,    MAT_ATTRIB_MAX * sizeof(arrays[0]));
+      for (attr = 0; attr < 16; attr++) {
+         exec->vtx.inputs[attr] = &vbo->legacy_currval[attr];
+      }
+      for (attr = 0; attr < MAT_ATTRIB_MAX; attr++) {
+         exec->vtx.inputs[attr + 16] = &vbo->mat_currval[attr];
+      }
       map = vbo->map_vp_none;
       break;
    case VP_NV:
@@ -165,8 +170,10 @@ static void vbo_exec_bind_arrays( GLcontext *ctx )
        * occurred.  NV vertex programs cannot access material values,
        * nor attributes greater than VERT_ATTRIB_TEX7.  
        */
-      memcpy(arrays,      vbo->legacy_currval,  16 * sizeof(arrays[0]));
-      memcpy(arrays + 16, vbo->generic_currval, 16 * sizeof(arrays[0]));
+      for (attr = 0; attr < 16; attr++) {
+         exec->vtx.inputs[attr] = &vbo->legacy_currval[attr];
+         exec->vtx.inputs[attr + 16] = &vbo->generic_currval[attr];
+      }
       map = vbo->map_vp_arb;
       break;
    }
@@ -178,16 +185,21 @@ static void vbo_exec_bind_arrays( GLcontext *ctx )
       GLuint src = map[attr];
 
       if (exec->vtx.attrsz[src]) {
+         /* override the default array set above */
+         exec->vtx.inputs[attr] = &arrays[attr];
+
 	 arrays[attr].Ptr = (void *)data;
 	 arrays[attr].Size = exec->vtx.attrsz[src];
 	 arrays[attr].StrideB = exec->vtx.vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = exec->vtx.vertex_size * sizeof(GLfloat);
 	 arrays[attr].Type = GL_FLOAT;
 	 arrays[attr].Enabled = 1;
-	 arrays[attr].BufferObj = exec->vtx.bufferobj; /* NullBufferObj */
+         _mesa_reference_buffer_object(ctx,
+                                       &arrays[attr].BufferObj,
+                                       exec->vtx.bufferobj);
 	 arrays[attr]._MaxElement = count; /* ??? */
 
-	 data += exec->vtx.attrsz[attr] * sizeof(GLfloat);
+	 data += exec->vtx.attrsz[src] * sizeof(GLfloat);
       }
    }
 }

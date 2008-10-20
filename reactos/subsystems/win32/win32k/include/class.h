@@ -2,6 +2,7 @@
 #define _WIN32K_CLASS_H
 
 #include <include/win32.h>
+#include <include/desktop.h>
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -23,15 +24,15 @@ WNDPROC
 GetCallProcHandle(IN PCALLPROC CallProc);
 
 VOID
-DestroyCallProc(IN PDESKTOP Desktop,
+DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROC CallProc);
 
 PCALLPROC
-CloneCallProc(IN PDESKTOP Desktop,
+CloneCallProc(IN PDESKTOPINFO Desktop,
               IN PCALLPROC CallProc);
 
 PCALLPROC
-CreateCallProc(IN PDESKTOP Desktop,
+CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PW32PROCESSINFO pi);
@@ -50,7 +51,7 @@ IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
 
 VOID
 IntDereferenceClass(IN OUT PWINDOWCLASS Class,
-                    IN PDESKTOP Desktop,
+                    IN PDESKTOPINFO Desktop,
                     IN PW32PROCESSINFO pi);
 
 RTL_ATOM
