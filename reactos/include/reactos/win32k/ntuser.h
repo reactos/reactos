@@ -414,6 +414,19 @@ typedef struct _BROADCASTPARM
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
+typedef struct _SHAREDINFO
+{
+  PSERVERINFO psi;           // global Server Info
+  PVOID       aheList;       // Handle Entry List
+  PVOID       pDispInfo;     // global PDISPLAYINFO pointer
+  ULONG_PTR   ulSharedDelta; // Heap delta
+} SHAREDINFO, *PSHAREDINFO;
+
+typedef struct _USERCONNECT
+{
+  SHAREDINFO  ShareInfo;
+} USERCONNECT, *PUSERCONNECT;
+
 //
 // Non SDK Window Message types.
 //
@@ -1916,12 +1929,12 @@ NtUserPrintWindow(
     HDC  hdcBlt,
     UINT nFlags);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserProcessConnect(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    IN  HANDLE Process,
+    OUT PUSERCONNECT pUserConnect,
+    IN  DWORD dwSize); // sizeof(USERCONNECT)
 
 DWORD
 NTAPI
