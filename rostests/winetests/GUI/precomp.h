@@ -13,7 +13,7 @@ extern HINSTANCE hInstance;
 
 typedef struct _TEST_ITEM
 {
-    WCHAR szSelectedDll[MAX_PATH];
+    WCHAR szSelectedExe[MAX_PATH];
     WCHAR szRunString[MAX_RUN_CMD];
 
 } TEST_ITEM, *PTEST_ITEM;
@@ -24,15 +24,19 @@ typedef struct _MAIN_WND_INFO
     HWND hBrowseDlg;
     HWND hBrowseTV;
     HWND hStatus;
+    HANDLE hPipe;
     int  nCmdShow;
 
     HICON hSmIcon;
     HICON hBgIcon;
 
-    LPWSTR lpDllList;
-    INT numDlls;
+    LPWSTR lpExeList;
+    INT numExes;
 
     TEST_ITEM SelectedTest;
+
+    BOOL bRunOnStart;
+    BOOL bHideConsole;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
@@ -42,8 +46,14 @@ int GetModulesInTest(char **modules);
 int RunTest(const char *lpTest);
 
 
+/* mainwnd.c */
+BOOL SendCommandToClient(PMAIN_WND_INFO pInfo, LPWSTR lpCommand);
+
 /* browsewnd.c */
 BOOL CALLBACK BrowseDlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
+
+/* optionswnd.c */
+BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam);
 
 /* misc.c */
 HIMAGELIST InitImageList(UINT StartResource, UINT EndResource, UINT Width, UINT Height);

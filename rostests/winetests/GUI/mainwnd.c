@@ -8,17 +8,30 @@
  */
 
 #include <precomp.h>
+#include <io.h>
+
+#define BUFSIZE 4096
 
 HINSTANCE hInstance;
 
+WCHAR szPipeName[] = L"\\\\.\\pipe\\winetest_pipe";
+
 typedef int (_cdecl *RUNTEST)(char **);
+
+
+VOID
+CreateClientProcess(PMAIN_WND_INFO pInfo,
+                    LPWSTR lpExePath)
+{
+
+}
+
 
 static BOOL
 OnInitMainDialog(HWND hDlg,
                  LPARAM lParam)
 {
     PMAIN_WND_INFO pInfo;
-    LPWSTR lpAboutText;
 
     pInfo = (PMAIN_WND_INFO)lParam;
 
@@ -65,8 +78,8 @@ RunSelectedTest(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
     WCHAR szTextCmd[MAX_RUN_CMD];
-    LPWSTR lpDllPath;
-    INT sel, len;
+    LPWSTR lpExePath;
+    INT sel;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
 
@@ -79,44 +92,15 @@ RunSelectedTest(PMAIN_WND_INFO pInfo)
         if (SendMessageW(hRunCmd,
                          CB_GETLBTEXT,
                          sel,
-                         szTextCmd) != CB_ERR)
+                         (LPARAM)szTextCmd) != CB_ERR)
         {
-            lpDllPath = SendMessage(hRunCmd,
-                                    CB_GETITEMDATA,
-                                    0,
-                                    0);
-            if (lpDllPath)
+            lpExePath = (LPWSTR)SendMessage(hRunCmd,
+                                            CB_GETITEMDATA,
+                                            0,
+                                            0);
+            if (lpExePath)
             {
-                LPWSTR module = szTextCmd;
-                LPSTR lpTest;
-
-                while (*(module++) != L':' && *module != L'\0')
-                    ;
-
-                if (*module)
-                {
-                    if (UnicodeToAnsi(module, &lpTest))
-                    {
-                        HMODULE hDll;
-                        RUNTEST RunTest;
-
-                        hDll = LoadLibraryW(lpDllPath);
-                        if (hDll)
-                        {
-                            RunTest = (RUNTEST)GetProcAddress(hDll, "RunTest");
-                            if (RunTest)
-                            {
-                                RunTest(lpTest);
-                            }
-
-                            FreeLibrary(hDll);
-                        }
-                        DisplayError(GetLastError());
-
-                        HeapFree(GetProcessHeap(), 0, lpTest);
-                    }
-                }
-
+                CreateClientProcess(pInfo, lpExePath);
             }
         }
     }
@@ -126,7 +110,7 @@ static VOID
 AddTestToCombo(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
-    LPWSTR lpDllPath;
+    LPWSTR lpExePath;
     INT len;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
@@ -135,21 +119,21 @@ AddTestToCombo(PMAIN_WND_INFO pInfo)
         SendMessageW(hRunCmd,
                      CB_INSERTSTRING,
                      0,
-                     pInfo->SelectedTest.szRunString);
+                     (LPARAM)pInfo->SelectedTest.szRunString);
 
-        len = (wcslen(pInfo->SelectedTest.szSelectedDll) + 1) * sizeof(WCHAR);
-        lpDllPath = HeapAlloc(GetProcessHeap(), 0, len);
-        if (lpDllPath)
+        len = (wcslen(pInfo->SelectedTest.szSelectedExe) + 1) * sizeof(WCHAR);
+        lpExePath = HeapAlloc(GetProcessHeap(), 0, len);
+        if (lpExePath)
         {
-            wcsncpy(lpDllPath,
-                    pInfo->SelectedTest.szSelectedDll,
+            wcsncpy(lpExePath,
+                    pInfo->SelectedTest.szSelectedExe,
                     len / sizeof(WCHAR));
         }
 
         SendMessageW(hRunCmd,
                      CB_SETITEMDATA,
                      0,
-                     lpDllPath);
+                     (LPARAM)lpExePath);
         SendMessageW(hRunCmd,
                      CB_SETCURSEL,
                      0,
@@ -161,8 +145,7 @@ static VOID
 FreeTestCmdStrings(PMAIN_WND_INFO pInfo)
 {
     HWND hRunCmd;
-    WCHAR szTextCmd[MAX_RUN_CMD];
-    LPWSTR lpDllPath;
+    LPWSTR lpExePath;
     INT cnt, i;
 
     hRunCmd = GetDlgItem(pInfo->hMainWnd, IDC_TESTSELECTION);
@@ -175,13 +158,13 @@ FreeTestCmdStrings(PMAIN_WND_INFO pInfo)
     {
         for (i = 0; i < cnt; i++)
         {
-            lpDllPath = SendMessage(hRunCmd,
-                                    CB_GETITEMDATA,
-                                    i,
-                                    0);
-            if (lpDllPath)
+            lpExePath = (LPWSTR)SendMessage(hRunCmd,
+                                            CB_GETITEMDATA,
+                                            i,
+                                            0);
+            if (lpExePath)
             {
-                HeapFree(GetProcessHeap(), 0, lpDllPath);
+                HeapFree(GetProcessHeap(), 0, lpExePath);
             }
         }
     }
@@ -228,6 +211,13 @@ MainDlgProc(HWND hDlg,
 
                     break;
                 }
+                case IDC_OPTIONS:
+                    DialogBoxParamW(hInstance,
+                                    MAKEINTRESOURCEW(IDD_OPTIONS),
+                                    hDlg,
+                                    (DLGPROC)OptionsDlgProc,
+                                    (LPARAM)pInfo);
+                    break;
 
                 case IDC_RUN:
                     RunSelectedTest(pInfo);
@@ -271,7 +261,12 @@ wWinMain(HINSTANCE hInst,
 {
     INITCOMMONCONTROLSEX iccx;
     PMAIN_WND_INFO pInfo;
-    INT Ret = 1;
+    HANDLE hThread;
+    INT Ret = -1;
+
+    UNREFERENCED_PARAMETER(hPrev);
+    UNREFERENCED_PARAMETER(Cmd);
+    UNREFERENCED_PARAMETER(iCmd); 
 
     hInstance = hInst;
 
@@ -280,7 +275,9 @@ wWinMain(HINSTANCE hInst,
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    pInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(MAIN_WND_INFO));
+    pInfo = HeapAlloc(GetProcessHeap(),
+                      0,
+                      sizeof(MAIN_WND_INFO));
     if (pInfo)
     {
         Ret = (DialogBoxParamW(hInstance,
@@ -289,8 +286,9 @@ wWinMain(HINSTANCE hInst,
                                (DLGPROC)MainDlgProc,
                                (LPARAM)pInfo) == IDOK);
 
-        HeapFree(GetProcessHeap(), 0, pInfo);
-
+        HeapFree(GetProcessHeap(),
+                 0,
+                 pInfo);
     }
 
     return Ret;

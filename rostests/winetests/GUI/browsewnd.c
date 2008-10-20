@@ -9,18 +9,16 @@
 
 #include <precomp.h>
 
-#define DLL_SEARCH_DIR L"\\Debug\\testlibs\\*"
+#define EXE_SEARCH_DIR L"\\Debug\\testexes\\*"
 #define IL_MAIN 0
 #define IL_TEST 1
 
 #define HAS_NO_CHILD 0
 #define HAS_CHILD 1
 
-typedef wchar_t *(__cdecl *DLLNAME)();
-typedef int (_cdecl *MODULES)(char **);
 
 static INT
-GetNumberOfDllsInFolder(LPWSTR lpFolder)
+GetNumberOfExesInFolder(LPWSTR lpFolder)
 {
     HANDLE hFind;
     WIN32_FIND_DATAW findFileData;
@@ -46,52 +44,52 @@ GetNumberOfDllsInFolder(LPWSTR lpFolder)
 }
 
 static INT
-GetListOfTestDlls(PMAIN_WND_INFO pInfo)
+GetListOfTestExes(PMAIN_WND_INFO pInfo)
 {
     HANDLE hFind;
     WIN32_FIND_DATAW findFileData;
-    WCHAR szDllPath[MAX_PATH];
+    WCHAR szExePath[MAX_PATH];
     LPWSTR ptr;
     INT numFiles = 0;
     INT len;
 
-    len = GetCurrentDirectory(MAX_PATH, szDllPath);
+    len = GetCurrentDirectory(MAX_PATH, szExePath);
     if (!len) return 0;
 
-    wcsncat(szDllPath, DLL_SEARCH_DIR, MAX_PATH - (len + 1));
+    wcsncat(szExePath, EXE_SEARCH_DIR, MAX_PATH - (len + 1));
 
-    numFiles = GetNumberOfDllsInFolder(szDllPath);
+    numFiles = GetNumberOfExesInFolder(szExePath);
     if (!numFiles) return 0;
 
-    pInfo->lpDllList = HeapAlloc(GetProcessHeap(),
+    pInfo->lpExeList = HeapAlloc(GetProcessHeap(),
                                  0,
                                  numFiles * (MAX_PATH * sizeof(WCHAR)));
-    if (!pInfo->lpDllList)
+    if (!pInfo->lpExeList)
         return 0;
 
-    hFind = FindFirstFileW(szDllPath,
+    hFind = FindFirstFileW(szExePath,
                            &findFileData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         DisplayError(GetLastError());
-        HeapFree(GetProcessHeap(), 0, pInfo->lpDllList);
+        HeapFree(GetProcessHeap(), 0, pInfo->lpExeList);
         return 0;
     }
 
     /* remove the glob */
-    ptr = wcschr(szDllPath, L'*');
+    ptr = wcschr(szExePath, L'*');
     if (ptr)
         *ptr = L'\0';
 
-    /* don't mod our base pointer */
-    ptr = pInfo->lpDllList;
+    /* don't modify our base pointer */
+    ptr = pInfo->lpExeList;
 
     do
     {
         if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             /* set the path */
-            wcscpy(ptr, szDllPath);
+            wcscpy(ptr, szExePath);
 
             /* tag the file onto the path */
             len = MAX_PATH - (wcslen(ptr) + 1);
@@ -207,7 +205,7 @@ InsertIntoTreeView(HWND hTreeView,
 }
 
 static PTEST_ITEM
-BuildTestItemData(LPWSTR lpDll,
+BuildTestItemData(LPWSTR lpExe,
                   LPWSTR lpRun)
 {
     PTEST_ITEM pItem;
@@ -217,8 +215,8 @@ BuildTestItemData(LPWSTR lpDll,
                                   sizeof(TEST_ITEM));
     if (pItem)
     {
-        if (lpDll)
-            wcsncpy(pItem->szSelectedDll, lpDll, MAX_PATH);
+        if (lpExe)
+            wcsncpy(pItem->szSelectedExe, lpExe, MAX_PATH);
         if (lpRun)
             wcsncpy(pItem->szRunString, lpRun, MAX_RUN_CMD);
     }
@@ -232,12 +230,9 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
     HTREEITEM hRoot;
     HIMAGELIST hImgList;
     PTEST_ITEM pTestItem;
-    DLLNAME GetTestName;
-    MODULES GetModulesInTest;
-    HMODULE hDll;
-    LPWSTR lpDllPath;
+    LPWSTR lpExePath;
     LPWSTR lpTestName;
-    INT RootImage, i;
+    INT i;
 
     pInfo->hBrowseTV = GetDlgItem(pInfo->hBrowseDlg, IDC_TREEVIEW);
 
@@ -259,76 +254,36 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
     hRoot = InsertIntoTreeView(pInfo->hBrowseTV,
                                NULL,
                                L"Full",
-                               pTestItem,
+                               (LPARAM)pTestItem,
                                IL_MAIN,
                                HAS_CHILD);
 
-    for (i = 0; i < pInfo->numDlls; i++)
+    for (i = 0; i < pInfo->numExes; i++)
     {
-        lpDllPath = pInfo->lpDllList + (MAX_PATH * i);
+        HTREEITEM hParent;
+        LPWSTR lpStr;
 
-        hDll = LoadLibraryW(lpDllPath);
-        if (hDll)
+        lpExePath = pInfo->lpExeList + (MAX_PATH * i);
+
+        lpTestName = wcsrchr(lpExePath, L'\\');
+        if (lpTestName)
         {
-            GetTestName = (DLLNAME)GetProcAddress(hDll, "GetTestName");
-            if (GetTestName)
+            lpTestName++;
+
+            lpStr = wcschr(lpTestName, L'_');
+            if (lpStr)
             {
-                HTREEITEM hParent;
-                LPSTR lpModules, ptr;
-                LPWSTR lpModW;
-                INT numMods;
+                //FIXME: Query the test name from the exe directly
 
-                lpTestName = GetTestName();
-
-                pTestItem = BuildTestItemData(lpDllPath, lpTestName);
+                pTestItem = BuildTestItemData(lpExePath, lpTestName);
 
                 hParent = InsertIntoTreeView(pInfo->hBrowseTV,
                                              hRoot,
                                              lpTestName,
-                                             pTestItem,
+                                             (LPARAM)pTestItem,
                                              IL_TEST,
                                              HAS_CHILD);
-                if (hParent)
-                {
-                    /* Get the list of modules a dll offers. This is returned as list of
-                     * Ansi null-terminated strings, terminated with an empty string (double null) */
-                    GetModulesInTest = (MODULES)GetProcAddress(hDll, "GetModulesInTest");
-                    if ((numMods = GetModulesInTest(&lpModules)))
-                    {
-                        ptr = lpModules;
-                        while (numMods && *ptr != '\0')
-                        {
-                            /* convert the string to unicode */
-                            if (AnsiToUnicode(ptr, &lpModW))
-                            {
-                                WCHAR szRunCmd[MAX_RUN_CMD];
-
-                                _snwprintf(szRunCmd, MAX_RUN_CMD, L"%s:%s", lpTestName, lpModW);
-                                pTestItem = BuildTestItemData(lpDllPath, szRunCmd);
-
-                                InsertIntoTreeView(pInfo->hBrowseTV,
-                                                   hParent,
-                                                   lpModW,
-                                                   pTestItem,
-                                                   IL_TEST,
-                                                   HAS_NO_CHILD);
-
-                                HeapFree(GetProcessHeap(), 0, lpModW);
-                            }
-
-                            /* move onto next string */
-                            while (*(ptr++) != '\0')
-                                ;
-
-                            numMods--;
-                        }
-
-                        HeapFree(GetProcessHeap(), 0, lpModules);
-                    }
-                }
             }
-
-            FreeLibrary(hDll);
         }
     }
 
@@ -343,8 +298,8 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
 static VOID
 PopulateTestList(PMAIN_WND_INFO pInfo)
 {
-    pInfo->numDlls = GetListOfTestDlls(pInfo);
-    if (pInfo->numDlls)
+    pInfo->numExes = GetListOfTestExes(pInfo);
+    if (pInfo->numExes)
     {
         PopulateTreeView(pInfo);
     }
@@ -417,16 +372,17 @@ BrowseDlgProc(HWND hDlg,
                         DisplayMessage(L"Please select an item");
                     }
 
-                    break;
+                    return TRUE;
                 }
 
                 case IDCANCEL:
                 {
-                    HeapFree(GetProcessHeap(), 0, pInfo->lpDllList);
-                    pInfo->lpDllList = NULL;
+                    HeapFree(GetProcessHeap(), 0, pInfo->lpExeList);
+                    pInfo->lpExeList = NULL;
 
                     EndDialog(hDlg,
                               LOWORD(wParam));
+
                     return TRUE;
                 }
             }
