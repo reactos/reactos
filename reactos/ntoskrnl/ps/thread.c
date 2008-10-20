@@ -129,7 +129,7 @@ _SEH_FILTER(PspUnhandledExceptionInSystemThread)
             ExceptionPointers->ExceptionRecord->ExceptionInformation[3]);
 
     /* Bugcheck the system */
-    KeBugCheckEx(0x7E,
+    KeBugCheckEx(SYSTEM_THREAD_EXCEPTION_NOT_HANDLED,
                  ExceptionPointers->ExceptionRecord->ExceptionCode,
                  (ULONG_PTR)ExceptionPointers->ExceptionRecord->ExceptionAddress,
                  (ULONG_PTR)ExceptionPointers->ExceptionRecord,

@@ -216,23 +216,23 @@ KiGetCpuVendor(VOID)
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpCyrixID))
     {
-        DPRINT1("Cyrix CPUs not fully supported\n");
-        return 0;
+        DPRINT1("Cyrix CPU support not fully tested!\n");
+        return CPU_CYRIX;
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpTransmetaID))
     {
-        DPRINT1("Transmeta CPUs not fully supported\n");
-        return 0;
+        DPRINT1("Transmeta CPU support not fully tested!\n");
+        return CPU_TRANSMETA;
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
     {
-        DPRINT1("VIA CPUs not fully supported\n");
-        return 0;
+        DPRINT1("Centaur CPU support not fully tested!\n");
+        return CPU_CENTAUR;
     }
     else if (!strcmp((PCHAR)Prcb->VendorString, CmpRiseID))
     {
-        DPRINT1("Rise CPUs not fully supported\n");
-        return 0;
+        DPRINT1("Rise CPU support not fully tested!\n");
+        return CPU_RISE;
     }
 
     /* Invalid CPU */
@@ -262,95 +262,120 @@ KiGetFeatureBits(VOID)
     /* Set the initial APIC ID */
     Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
 
-    /* Check for AMD CPU */
-    if (Vendor == CPU_AMD)
+    switch (Vendor)
     {
-        /* Check if this is a K5 or higher. */
-        if ((Reg[0] & 0x0F00) >= 0x0500)
-        {
-            /* Check if this is a K5 specifically. */
+        /* Intel CPUs */
+        case CPU_INTEL:
+            /* Check if it's a P6 */
+            if (Prcb->CpuType == 6)
+            {
+                /* Perform the special sequence to get the MicroCode Signature */
+                WRMSR(0x8B, 0);
+                CPUID(Reg, 1);
+                Prcb->UpdateSignature.QuadPart = RDMSR(0x8B);
+            }
+            else if (Prcb->CpuType == 5)
+            {
+                /* On P5, enable workaround for the LOCK errata. */
+                KiI386PentiumLockErrataPresent = TRUE;
+            }
+
+            /* Check for broken P6 with bad SMP PTE implementation */
+            if (((Reg[0] & 0x0FF0) == 0x0610 && (Reg[0] & 0x000F) <= 0x9) ||
+                ((Reg[0] & 0x0FF0) == 0x0630 && (Reg[0] & 0x000F) <= 0x4))
+            {
+                /* Remove support for correct PTE support. */
+                FeatureBits &= ~KF_WORKING_PTE;
+            }
+
+            /* Check if the CPU is too old to support SYSENTER */
+            if ((Prcb->CpuType < 6) ||
+                ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
+            {
+                /* Disable it */
+                Reg[3] &= ~0x800;
+            }
+
+            /* Set the current features */
+            CpuFeatures = Reg[3];
+
+            break;
+
+        /* AMD CPUs */
+        case CPU_AMD:
+
+            /* Check if this is a K5 or K6. (family 5) */
             if ((Reg[0] & 0x0F00) == 0x0500)
             {
                 /* Get the Model Number */
                 switch (Reg[0] & 0x00F0)
                 {
-                    /* Check if this is the Model 1 */
+                    /* Model 1: K5 - 5k86 (initial models) */
                     case 0x0010:
 
                         /* Check if this is Step 0 or 1. They don't support PGE */
                         if ((Reg[0] & 0x000F) > 0x03) break;
 
+                    /* Model 0: K5 - SSA5 */
                     case 0x0000:
 
                         /* Model 0 doesn't support PGE at all. */
                         Reg[3] &= ~0x2000;
                         break;
 
+                    /* Model 8: K6-2 */
                     case 0x0080:
 
                         /* K6-2, Step 8 and over have support for MTRR. */
                         if ((Reg[0] & 0x000F) >= 0x8) FeatureBits |= KF_AMDK6MTRR;
                         break;
 
+                    /* Model 9: K6-III
+                       Model D: K6-2+, K6-III+ */
                     case 0x0090:
+                    case 0x00D0:
 
-                        /* As does the K6-3 */
                         FeatureBits |= KF_AMDK6MTRR;
-                        break;
-
-                    default:
                         break;
                 }
             }
-        }
-        else
-        {
-            /* Families below 5 don't support PGE, PSE or CMOV at all */
-            Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
+            else if((Reg[0] & 0x0F00) < 0x0500)
+            {
+                /* Families below 5 don't support PGE, PSE or CMOV at all */
+                Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
 
-            /* They also don't support advanced CPUID functions. */
-            ExtendedCPUID = FALSE;
-        }
+                /* They also don't support advanced CPUID functions. */
+                ExtendedCPUID = FALSE;
+            }
 
-        /* Set the current features */
-        CpuFeatures = Reg[3];
-    }
+            /* Set the current features */
+            CpuFeatures = Reg[3];
 
-    /* Now check if this is Intel */
-    if (Vendor == CPU_INTEL)
-    {
-        /* Check if it's a P6 */
-        if (Prcb->CpuType == 6)
-        {
-            /* Perform the special sequence to get the MicroCode Signature */
-            WRMSR(0x8B, 0);
-            CPUID(Reg, 1);
-            Prcb->UpdateSignature.QuadPart = RDMSR(0x8B);
-        }
-        else if (Prcb->CpuType == 5)
-        {
-            /* On P5, enable workaround for the LOCK errata. */
-            KiI386PentiumLockErrataPresent = TRUE;
-        }
+            break;
 
-        /* Check for broken P6 with bad SMP PTE implementation */
-        if (((Reg[0] & 0x0FF0) == 0x0610 && (Reg[0] & 0x000F) <= 0x9) ||
-            ((Reg[0] & 0x0FF0) == 0x0630 && (Reg[0] & 0x000F) <= 0x4))
-        {
-            /* Remove support for correct PTE support. */
-            FeatureBits &= ~KF_WORKING_PTE;
-        }
+        /* Cyrix CPUs */
+        case CPU_CYRIX:
+            break;
 
-        /* Check if the CPU is too old to support SYSENTER */
-        if ((Prcb->CpuType < 6) ||
-            ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
-        {
-            /* Disable it */
-            Reg[3] &= ~0x800;
-        }
+        /* Transmeta CPUs */
+        case CPU_TRANSMETA:
+            /* Enable CMPXCHG8B if the family (>= 5), model and stepping (>= 4.2) support it */
+            if ((Reg[0] & 0x0FFF) >= 0x0542)
+            {
+                WRMSR(0x80860004, RDMSR(0x80860004) | 0x0100);
+                FeatureBits |= KF_CMPXCHG8B;
+            }
 
-        /* Set the current features */
-        CpuFeatures = Reg[3];
+            break;
+
+        /* Centaur, IDT, Rise and VIA CPUs */
+        case CPU_CENTAUR:
+        case CPU_RISE:
+            /* These CPUs don't report the presence of CMPXCHG8B through CPUID.
+               However, this feature exists and operates properly without any additional steps. */
+            FeatureBits |= KF_CMPXCHG8B;
+
+            break;
     }
 
     /* Convert all CPUID Feature bits into our format */
@@ -406,6 +431,7 @@ KiGetFeatureBits(VOID)
                 switch (Vendor)
                 {
                     case CPU_AMD:
+                    case CPU_CENTAUR:
                         if (Reg[3] & 0x80000000) FeatureBits |= KF_3DNOW;
                         break;
                 }

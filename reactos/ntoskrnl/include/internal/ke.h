@@ -247,6 +247,18 @@ VOID
 NTAPI
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
+PKTHREAD
+FASTCALL
+KiIdleSchedule(
+    IN PKPRCB Prcb
+);
+
+VOID
+FASTCALL
+KiProcessDeferredReadyList(
+    IN PKPRCB Prcb
+);
+
 KAFFINITY
 FASTCALL
 KiSetAffinityThread(

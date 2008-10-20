@@ -1,0 +1,86 @@
+/*
+ * Credentials UI (Simplified and Traditional Chinese Resource)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IDS_TITLEFORMAT"
+FONT 9, "MS Song"
+BEGIN
+    CONTROL         IDB_BANNER,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,213,37
+    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "用户名(&U):",IDC_STATIC,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "密码(&P):",IDC_STATIC,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "记住我的密码(&R)",IDC_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "确定",IDOK,97,128,50,14
+    PUSHBUTTON      "取消",IDCANCEL,156,128,50,14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TITLEFORMAT     "连接到 %s"
+    IDS_MESSAGEFORMAT   "正在连接到 %s"
+    IDS_INCORRECTPASSWORDTITLE  "登录失败"
+    IDS_INCORRECTPASSWORD       "请确认你输入的用户名和密码\n是否正确."
+    IDS_CAPSLOCKONTITLE "大写锁定开着"
+    IDS_CAPSLOCKON      "开着大写锁定可能导致你输入错误的密码."
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IDS_TITLEFORMAT"
+FONT 8, "PMingLiu"
+BEGIN
+    CONTROL         IDB_BANNER,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,213,37
+    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "用戶名(&U):",IDC_STATIC,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "密碼(&P):",IDC_STATIC,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "記住我的密碼(&R)",IDC_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "確定",IDOK,97,128,50,14
+    PUSHBUTTON      "取消",IDCANCEL,156,128,50,14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TITLEFORMAT     "連接到 %s"
+    IDS_MESSAGEFORMAT   "正在連接到 %s"
+    IDS_INCORRECTPASSWORDTITLE  "登錄失敗"
+    IDS_INCORRECTPASSWORD       "請確認你輸入的用戶名和密碼\n是否正確."
+    IDS_CAPSLOCKONTITLE "大寫鎖定開著"
+    IDS_CAPSLOCKON      "開著大寫鎖定可能導致你輸入錯誤的密碼."
+}
+
+#pragma code_page(default)

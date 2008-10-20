@@ -82,7 +82,7 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Åpne volum kontroll",         ID_TRAY_VOLUME
+        MENUITEM "Åpne volumkontroll",         ID_TRAY_VOLUME
         MENUITEM "Still lyd innstillinger",     ID_VOLUME_PROPERTIES
     END
 END
@@ -93,7 +93,7 @@ BEGIN
     BEGIN
         MENUITEM "&Vis skjulte ikoner",          ID_SHOW_HIDDEN_ICONS
         MENUITEM "Vis Ikon &knapp",           ID_SHOW_ICON_BUTTON
-        MENUITEM "&konfigurere Notifikasjoner...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "&Konfigurere notifikasjoner...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Still Dato/&Tid...",        ID_CONFIG_TIME
         MENUITEM SEPARATOR
         MENUITEM "&Om Explorer...",          ID_ABOUT_EXPLORER
@@ -156,7 +156,7 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Søk Programmer i Start meny"
+CAPTION "Søk etter programmer i startmeny"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
@@ -178,7 +178,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
     CONTROL         "V/topp høyre",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "H/topp vnstr",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "H/topp venstre",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
     CONTROL         "H/topp ned",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
@@ -186,7 +186,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
     CONTROL         "V/bunn høyre",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "H/bunn vnstr",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+    CONTROL         "H/bunn venstre",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
     CONTROL         "H/bunn opp",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
@@ -338,7 +338,7 @@ BEGIN
     IDS_FAVORITES           "Favoritter"
     IDS_PROGRAMS            "Programmer"
     IDS_SETTINGS            "Innstillinger"
-    IDS_EXPLORE             "Explore"
+    IDS_EXPLORE             "Utforsker"
     IDS_EMPTY               "(Tom)"
     IDS_RECENT              "Siste Dokumenter"
     IDS_ADMIN               "Administrasjon"
@@ -347,12 +347,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Start meny"
-    IDS_MINIMIZE_ALL        "minimalisere alle vinduer"
+    IDS_MINIMIZE_ALL        "Minimalisere alle vinduer"
     IDS_DESKTOP_NUM         "Skrivebord %d"
     IDS_VOLUME              "Volum"
-    IDS_ITEMS_CUR           "gjeldende element"
+    IDS_ITEMS_CUR           "Gjeldende element"
     IDS_ITEMS_CONFIGURED    "Konfigurasjon"
-    IDS_ITEMS_VISIBLE       "synlig"
+    IDS_ITEMS_VISIBLE       "Synlig"
     IDS_ITEMS_HIDDEN        "Skjult"
     IDS_NOTIFY_SHOW         "Vise"
     IDS_NOTIFY_HIDE         "skjule"
@@ -381,9 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Skrivebord Innstillinger"
     IDS_DESKTOP             "Skrivebord"
     IDS_TASKBAR             "Oppgavelinje"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "Navn"
+    IDS_PATHCOLUMN          "Mappe"
+    IDS_MENUCOLUMN          "Meny mappe"
 END
 
 #endif    // Norwegian (N.O.) resources

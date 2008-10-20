@@ -4,8 +4,8 @@
 	<library>kernel32</library>
 	<library>scripts</library>
 	<library>libcntpr</library>
-	<compilerflag>-fno-exceptions</compilerflag>
-	<compilerflag>-fno-rtti</compilerflag>
+	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
 	<linkerflag>--entry=0</linkerflag>
 	<include base="icu4ros">icu/source/common</include>
 	<include base="scripts">.</include>

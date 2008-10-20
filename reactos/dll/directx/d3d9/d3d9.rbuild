@@ -14,6 +14,7 @@
 
 	<file>d3d9.c</file>
 	<file>d3d9_baseobject.c</file>
+	<file>d3d9_callbacks.c</file>
 	<file>d3d9_caps.c</file>
 	<file>d3d9_create.c</file>
 	<file>d3d9_cursor.c</file>

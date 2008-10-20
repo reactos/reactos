@@ -16,6 +16,7 @@
 #define IDD_NETPROPERTIES             400
 #define IDD_LAN_NETSTATUS             401
 #define IDD_STATUS                    402
+#define IDD_LAN_NETSTATUSADVANCED     403
 
 
 /* dialog controls */
@@ -37,6 +38,12 @@
 #define IDC_DURATION                 1105
 #define IDC_SPEED                    1106
 #define IDC_NETSTAT                  1107
+
+#define IDC_DETAILSTYPE              1200
+#define IDC_DETAILSIP                1201
+#define IDC_DETAILSSUBNET            1202
+#define IDC_DETAILSGATEWAY           1203
+#define IDC_DETAILS                  1204
 
 
 /* resource constants */

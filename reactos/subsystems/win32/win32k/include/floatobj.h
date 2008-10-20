@@ -35,6 +35,7 @@ _FLOATOBJ_IsLong(FLOATOBJ *pf)
 {
 	EFLOAT_S *pef = (EFLOAT_S*)pf;
 	ULONG Shift = 32 - pef->lExp;
+	if (Shift > 31) return FALSE;
 	return (((pef->lMant >> Shift) << Shift) == pef->lMant);
 }
 

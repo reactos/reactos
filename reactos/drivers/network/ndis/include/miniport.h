@@ -146,7 +146,7 @@ MiniDequeueWorkItem(
 
 NDIS_STATUS
 MiniDoRequest(
-    PNDIS_MINIPORT_BLOCK Adapter,
+    PLOGICAL_ADAPTER Adapter,
     PNDIS_REQUEST NdisRequest);
 
 BOOLEAN

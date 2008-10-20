@@ -17,10 +17,10 @@ typedef struct _RPC_STRING {
     [size_is(MaximumLength), length_is(Length)] LPSTR Buffer;
 } RPC_STRING, *PRPC_STRING;
 
-typedef [context_handle] unsigned long IELF_HANDLE;
+typedef /*[context_handle]*/ unsigned long IELF_HANDLE;
 typedef IELF_HANDLE *PIELF_HANDLE;
-typedef [handle, unique] LPWSTR EVENTLOG_HANDLE_W;
-typedef [handle, unique] LPSTR EVENTLOG_HANDLE_A;
+typedef /*[handle, unique]*/ LPWSTR EVENTLOG_HANDLE_W;
+typedef /*[handle, unique]*/ LPSTR EVENTLOG_HANDLE_A;
 
 typedef struct _RPC_CLIENT_ID {
     DWORD UniqueProcess;

@@ -215,7 +215,12 @@ INetConnection_fnGetProperties(
     NETCON_PROPERTIES **ppProps)
 {
     MIB_IFROW IfEntry;
+    HKEY hKey;
+    LPOLESTR pStr;
+    WCHAR szName[140];
+    DWORD dwShowIcon, dwType, dwSize;
     NETCON_PROPERTIES * pProperties;
+    HRESULT hr;
 
     INetConnectionImpl * This = (INetConnectionImpl*)iface;
 
@@ -226,13 +231,10 @@ INetConnection_fnGetProperties(
     if (!pProperties)
         return E_OUTOFMEMORY;
 
+
     CopyMemory(pProperties, &This->Props, sizeof(NETCON_PROPERTIES));
-    if (This->Props.pszwName)
-    {
-        pProperties->pszwName = CoTaskMemAlloc((wcslen(This->Props.pszwName)+1)*sizeof(WCHAR));
-        if (pProperties->pszwName)
-            wcscpy(pProperties->pszwName, This->Props.pszwName);
-    }
+    pProperties->pszwName = NULL;
+
     if (This->Props.pszwDeviceName)
     {
         pProperties->pszwDeviceName = CoTaskMemAlloc((wcslen(This->Props.pszwDeviceName)+1)*sizeof(WCHAR));
@@ -250,6 +252,47 @@ INetConnection_fnGetProperties(
 
     NormalizeOperStatus(&IfEntry, pProperties);
 
+
+    hr = StringFromCLSID(&This->Props.guidId, &pStr);
+    if (SUCCEEDED(hr))
+    {
+        wcscpy(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
+        wcscat(szName, pStr);
+        wcscat(szName, L"\\Connection");
+
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            dwSize = sizeof(dwShowIcon);
+            if (RegQueryValueExW(hKey, L"ShowIcon", NULL, &dwType, (LPBYTE)&dwShowIcon, &dwSize) == ERROR_SUCCESS && dwType == REG_DWORD)
+            {
+                if (dwShowIcon)
+                    pProperties->dwCharacter |= NCCF_SHOW_ICON;
+                else
+                    pProperties->dwCharacter &= ~NCCF_SHOW_ICON;
+            }
+            dwSize = sizeof(szName);
+            if (RegQueryValueExW(hKey, L"Name", NULL, &dwType, (LPBYTE)szName, &dwSize) == ERROR_SUCCESS)
+            {
+                /* use updated name */
+                dwSize = wcslen(szName) + 1;
+                pProperties->pszwName = CoTaskMemAlloc(dwSize * sizeof(WCHAR));
+                if (pProperties->pszwName)
+                    CopyMemory(pProperties->pszwName, szName, dwSize * sizeof(WCHAR));
+            }
+            else
+            {
+                /* use cached name */
+                if (This->Props.pszwName)
+                {
+                    pProperties->pszwName = CoTaskMemAlloc((wcslen(This->Props.pszwName)+1)*sizeof(WCHAR));
+                    if (pProperties->pszwName)
+                        wcscpy(pProperties->pszwName, This->Props.pszwName);
+                }
+            }
+            RegCloseKey(hKey);
+        }
+        CoTaskMemFree(pStr);
+    }
 
 
     return NOERROR;

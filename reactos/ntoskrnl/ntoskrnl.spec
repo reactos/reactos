@@ -415,7 +415,7 @@
 @ stdcall IoGetFileObjectGenericMapping()
 @ stdcall IoGetInitialStack()
 @ stdcall IoGetLowerDeviceObject(ptr)
-@ stdcall IoGetPagingIoPriority(ptr)
+@ fastcall IoGetPagingIoPriority(ptr)
 @ stdcall IoGetRelatedDeviceObject(ptr)
 @ stdcall IoGetRequestorProcess(ptr)
 @ stdcall IoGetRequestorProcessId(ptr)
@@ -988,7 +988,7 @@
 @ stdcall PsImpersonateClient(ptr ptr long long long)
 @ extern PsInitialSystemProcess
 @ stdcall PsIsProcessBeingDebugged(ptr)
-;PsIsSystemProcess
+@ stdcall PsIsSystemProcess(ptr)
 @ stdcall PsIsSystemThread(ptr)
 @ stdcall PsIsThreadImpersonating(ptr)
 @ stdcall PsIsThreadTerminating(ptr)
@@ -1380,12 +1380,12 @@
 ;WmiFlushTrace
 ;WmiGetClock
 ;WmiQueryTrace
-;WmiQueryTraceInformation
+@ stdcall WmiQueryTraceInformation(long ptr long ptr ptr)
 ;WmiStartTrace
 ;WmiStopTrace
 ;WmiTraceFastEvent
-;WmiTraceMessage
-;WmiTraceMessageVa
+@ cdecl WmiTraceMessage()
+@ stdcall WmiTraceMessageVa(ptr long ptr long long)
 ;WmiUpdateTrace
 ;XIPDispatch
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)

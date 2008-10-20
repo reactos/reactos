@@ -242,12 +242,14 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
 			NUD_PERMANENT);
     if (!NCE) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
+        return;
     }
 
     AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
 
     if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
+        return;
     }
 
     /* Allow TCP to hang some configuration on this interface */
@@ -352,10 +354,10 @@ VOID IPRegisterProtocol(
  *     To unregister a protocol handler, call this function with Handler = NULL
  */
 {
-#ifdef DBG
-    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE)
+    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE) {
         TI_DbgPrint(MIN_TRACE, ("Protocol number is out of range (%d).\n", ProtocolNumber));
-#endif
+        return;
+    }
 
     ProtocolTable[ProtocolNumber] = Handler;
 }

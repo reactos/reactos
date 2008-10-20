@@ -107,7 +107,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    PSYSTEM_CURSORINFO CurInfo;
    PCURICON_OBJECT OldCursor;
    HCURSOR Ret = (HCURSOR)0;
-   HBITMAP dcbmp, hColor = (HBITMAP)0;
+   HBITMAP dcbmp;
    HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
@@ -293,10 +293,6 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
    {
       EngUnlockSurface(soMask);
       EngDeleteSurface((HSURF)hMask);
-   }
-   if(hColor)
-   {
-      EngDeleteSurface((HSURF)hColor);
    }
    if(XlateObj)
    {

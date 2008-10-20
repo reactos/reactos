@@ -661,11 +661,14 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
          Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
                  SrcPixel.col.alpha : BlendFunc.SourceConstantAlpha;
 
-         DstPixel.ul = *Dst;
+         /* copy only 24bits of dst */
+         DstPixel.ul = *(PUSHORT)(Dst) + (*(Dst+2) << 16);
          DstPixel.col.red = Clamp8(DstPixel.col.red * (255 - Alpha) / 255 + SrcPixel.col.red);
          DstPixel.col.green = Clamp8(DstPixel.col.green * (255 - Alpha) / 255 + SrcPixel.col.green);
          DstPixel.col.blue = Clamp8(DstPixel.col.blue * (255 - Alpha) / 255 + SrcPixel.col.blue);
-         *Dst = DstPixel.ul;
+         /* copy back 24bits of result */
+         *(PUSHORT)(Dst) = (USHORT)(DstPixel.ul & 0xFFFF);
+         *(Dst + 2) = (UCHAR)((DstPixel.ul >> 16) & 0xFF);
          Dst = (PUCHAR)((ULONG_PTR)Dst + 3);
       }
       Dst = (PUCHAR)((ULONG_PTR)Dst + DstDelta);

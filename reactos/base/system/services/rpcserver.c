@@ -728,7 +728,7 @@ DWORD RLockServiceDatabase(
 //    return ScmLockDatabase(0, hMgr->0xC, hLock);
 
     /* FIXME: Lock the database */
-    *lpLock = (void *)0x12345678; /* Dummy! */
+    *lpLock = (SC_RPC_LOCK)0x12345678; /* Dummy! */
 
     return ERROR_SUCCESS;
 }

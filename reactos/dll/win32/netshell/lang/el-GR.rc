@@ -1,0 +1,102 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Γενικά"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Σύνδεση με χρήση:", -1, 9,9,217,8
+ EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_DISABLED | WS_BORDER | WS_TABSTOP
+ PUSHBUTTON "&Διαμόρφωση", IDC_CONFIGURE, 189, 38, 50, 14
+ LTEXT "Τα στοιχεία που είναι επιλεγμένα, χρησιμοποιούνται από αυτή τη σύνδεση:", -1, 9, 59, 217, 8
+ LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_NOTIFY | WS_VSCROLL | WS_BORDER | LBS_NOINTEGRALHEIGHT
+ PUSHBUTTON "&Εγκατάσταση", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Απεγκατάσταση", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Ιδιότητες", IDC_PROPERTIES, 174, 130, 65, 14
+ GROUPBOX "Περιγραφή", -1, 9, 153, 230, 46, BS_GROUPBOX
+ LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+ CHECKBOX "Εμφάνιση εικονιδίου στην taskbar όταν είναι συνδεδεμένο", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
+END
+
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Γενικά"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Σύνδεση", -1, 9, 8, 182, 58, BS_GROUPBOX
+ LTEXT "Κατάσταση:", -1, 19, 20, 60, 8
+ LTEXT "Διάρκεια:", -1, 19, 34, 60, 8
+ LTEXT "Ταχύτητα:", -1, 19, 48, 60, 8
+ GROUPBOX "Ενεργητικότητα", -1, 9, 74, 182, 70, BS_GROUPBOX
+ RTEXT "Απεστάλλησαν", -1, 26, 90, 60, 8
+ ICON IDI_NETSTAT, -1, 110, 85, 32, 32
+ LTEXT "Ελήφθησαν", -1, 149, 90, 37, 8
+ LTEXT "Bytes:", -1, 17, 115, 32, 8
+ RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+ RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+ PUSHBUTTON "&Ιδιότητες", IDC_PROPERTIES, 10, 150, 50, 14
+ PUSHBUTTON "&Απενεργοποίηση", IDC_ENDISABLE, 66, 150, 50, 14
+ RTEXT "",IDC_STATUS,83,20,98,8
+ RTEXT "",IDC_DURATION,83,34,98,8
+ RTEXT "",IDC_SPEED,83,48,98,8
+END
+
+IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Υποστήριξη"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Κατάσταση Σύνδεσης", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Τύπος Διεύθυνσης:", -1, 22, 20, 80, 8
+ LTEXT "Διεύθυνση IP:", -1, 22, 34, 80, 8
+ LTEXT "Subnet Mask:", -1, 22, 48, 80, 8
+ LTEXT "Default Gateway:", -1, 22, 62, 80, 8
+
+ RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+
+ PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Network Connection"
+	IDS_SHV_COLUMN_NAME         "Name"
+	IDS_SHV_COLUMN_TYPE         "Type"
+	IDS_SHV_COLUMN_STATE        "Status"
+	IDS_SHV_COLUMN_DEVNAME      "Device Name"
+	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
+	IDS_SHV_COLUMN_OWNER        "Owner"
+	IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
+	IDS_STATUS_NON_OPERATIONAL  "Disabled"
+	IDS_STATUS_UNREACHABLE      "Not Connected"
+	IDS_STATUS_DISCONNECTED     "Network cable unplugged"
+	IDS_STATUS_CONNECTING       "Acquiring network address"
+	IDS_STATUS_CONNECTED        "Connected"
+	IDS_STATUS_OPERATIONAL      "Connected"
+
+	IDS_NET_ACTIVATE            "Enable"
+	IDS_NET_DEACTIVATE          "Disable"
+	IDS_NET_STATUS              "Status"
+	IDS_NET_REPAIR              "Repair"
+	IDS_NET_CREATELINK          "Create Shortcut"
+	IDS_NET_DELETE              "Delete"
+	IDS_NET_PROPERTIES          "Properties"
+
+	IDS_FORMAT_BIT              "%u Bytes/s"
+	IDS_FORMAT_KBIT             "%u KBytes/s"
+	IDS_FORMAT_MBIT             "%u MBytes/s"
+	IDS_FORMAT_GBIT             "%u GBytes/s"
+	IDS_DURATION_DAY            "%d Day %s"
+	IDS_DURATION_DAYS           "%d Days %s"
+END
+

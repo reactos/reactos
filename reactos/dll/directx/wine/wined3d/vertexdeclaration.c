@@ -26,6 +26,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
+#define GLINFO_LOCATION This->wineD3DDevice->adapter->gl_info
+
 static void dump_wined3dvertexelement(const WINED3DVERTEXELEMENT *element) {
     TRACE("     Stream: %d\n", element->Stream);
     TRACE("     Offset: %d\n", element->Offset);
@@ -101,7 +103,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDevice(IWineD3DVertexDecl
 }
 
 static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVertexDeclaration *iface,
-        WINED3DVERTEXELEMENT *elements, size_t *element_count) {
+        WINED3DVERTEXELEMENT *elements, UINT *element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
     HRESULT hr = WINED3D_OK;
 
@@ -117,7 +119,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVerte
 }
 
 static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVertexDeclaration *iface,
-        const WINED3DVERTEXELEMENT *elements, size_t element_count) {
+        const WINED3DVERTEXELEMENT *elements, UINT element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
     HRESULT hr = WINED3D_OK;
     int i, j;
@@ -157,6 +159,18 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
          */
         if(This->pDeclarationWine[i].Stream >= MAX_STREAMS) continue;
 
+        if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_UNUSED) {
+            WARN("The application tries to use WINED3DDECLTYPE_UNUSED, returning E_FAIL\n");
+            /* The caller will release the vdecl, which will free This->pDeclarationWine */
+            return E_FAIL;
+        }
+
+        if(This->pDeclarationWine[i].Offset & 0x3) {
+            WARN("Declaration element %d is not 4 byte aligned(%d), returning E_FAIL\n", i, This->pDeclarationWine[i].Offset);
+            HeapFree(GetProcessHeap(), 0, This->pDeclarationWine);
+            return E_FAIL;
+        }
+
         if(!isPreLoaded[This->pDeclarationWine[i].Stream]) {
             This->streams[This->num_streams] = This->pDeclarationWine[i].Stream;
             This->num_streams++;
@@ -175,7 +189,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
                   (This->swizzled_attribs[j].usage == This->pDeclarationWine[i].Usage &&
                    This->swizzled_attribs[j].idx   >   This->pDeclarationWine[i].UsageIndex)) {
                     memmove(&This->swizzled_attribs[j + 1], &This->swizzled_attribs[j],
-                             sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j - 1)));
+                             sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j + 1)));
                     break;
                 }
             }
@@ -183,6 +197,11 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
             This->swizzled_attribs[j].usage = This->pDeclarationWine[i].Usage;
             This->swizzled_attribs[j].idx = This->pDeclarationWine[i].UsageIndex;
             This->num_swizzled_attribs++;
+        } else if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_2 ||
+                  This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_4) {
+            if(!GL_SUPPORT(NV_HALF_FLOAT)) {
+                This->half_float_conv_needed = TRUE;
+            }
         }
     }
 

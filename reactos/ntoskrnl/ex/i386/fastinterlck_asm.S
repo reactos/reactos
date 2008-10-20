@@ -745,6 +745,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     /* Save flags and lock, and disable interrupts */
     pushfd
     mov esi, [esp+24]
+.startc:
     cli
 
     /* Acquire the spinlock */

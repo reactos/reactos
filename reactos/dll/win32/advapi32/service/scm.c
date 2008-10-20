@@ -2408,7 +2408,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
     {
         /* Call to services.exe using RPC */
         dwError = RUnlockServiceDatabase(BindingHandle,
-                                         (SC_RPC_LOCK)ScLock);
+                                         (LPSC_RPC_LOCK)&ScLock);
     }
     _SEH_HANDLE
     {

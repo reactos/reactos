@@ -50,6 +50,7 @@
   <property name="BASEADDRESS_PSXDLL" value="0x68eb0000" />
   <property name="BASEADDRESS_PSAPI" value="0x68f70000" />
   <property name="BASEADDRESS_KSPROXY" value="0x68f90000" />
+  <property name="BASEADDRESS_GETUNAME" value="0x69110000" />
   <property name="BASEADDRESS_OLEACC" value="0x69640000" />
   <property name="BASEADDRESS_WINMM" value="0x697d0000" />
   <property name="BASEADDRESS_MSIMG32" value="0x69cc0000" />
@@ -153,6 +154,7 @@
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
   <property name="BASEADDRESS_ATL" value="0x76a80000" />
   <property name="BASEADDRESS_SFC" value="0x76b50000" />
+  <property name="BASEADDRESS_CREDUI" value="0x76bf0000" />
   <property name="BASEADDRESS_SFC_OS" value="0x76c10000" />
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />

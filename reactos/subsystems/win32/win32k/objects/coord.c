@@ -657,12 +657,10 @@ IntGdiSetMapMode(PDC  dc,
 
   PrevMapMode = Dc_Attr->iMapMode;
 
-  if (MapMode != Dc_Attr->iMapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
-  {
-    Dc_Attr->iMapMode = MapMode;
+  Dc_Attr->iMapMode = MapMode;
 
-    switch (MapMode)
-    {
+  switch (MapMode)
+  {
       case MM_TEXT:
         Dc_Attr->szlWindowExt.cx = 1;
         Dc_Attr->szlWindowExt.cy = 1;
@@ -674,8 +672,14 @@ IntGdiSetMapMode(PDC  dc,
                              INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
         break;
 
-      case MM_LOMETRIC:
       case MM_ISOTROPIC:
+        Dc_Attr->szlWindowExt.cx = 3600;
+        Dc_Attr->szlWindowExt.cy = 2700;
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        break;
+
+      case MM_LOMETRIC:
         Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 10;
         Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 10;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
@@ -717,10 +721,8 @@ IntGdiSetMapMode(PDC  dc,
       default:
         Dc_Attr->iMapMode = PrevMapMode;
         PrevMapMode = 0;
-    }
-
-    DC_UpdateXforms(dc);
   }
+    DC_UpdateXforms(dc);
 
   return PrevMapMode;
 }

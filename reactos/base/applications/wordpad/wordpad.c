@@ -468,7 +468,7 @@ static void set_default_font(void)
     SendMessageW(hEditorWnd, EM_SETCHARFORMAT,  SCF_DEFAULT, (LPARAM)&fmt);
 }
 
-static void on_fontlist_modified(HWND hwndFontList, LPWSTR wszNewFaceName)
+static void on_fontlist_modified(LPWSTR wszNewFaceName)
 {
     CHARFORMAT2W format;
     ZeroMemory(&format, sizeof(format));
@@ -1703,7 +1703,7 @@ static int context_menu(LPARAM lParam)
     return 0;
 }
 
-static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LRESULT OnCreate( HWND hWnd )
 {
     HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd, hRulerWnd;
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
@@ -1859,7 +1859,7 @@ static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-static LRESULT OnUser( HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LRESULT OnUser( HWND hWnd )
 {
     HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
@@ -1911,7 +1911,7 @@ static LRESULT OnUser( HWND hWnd, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-static LRESULT OnNotify( HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
 {
     HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
@@ -1926,10 +1926,10 @@ static LRESULT OnNotify( HWND hWnd, WPARAM wParam, LPARAM lParam)
             NMCBEENDEDIT *endEdit = (NMCBEENDEDIT *)lParam;
             if(pHdr->hwndFrom == hwndFontList)
             {
-                on_fontlist_modified(hwndFontList, (LPWSTR)endEdit->szText);
+                on_fontlist_modified((LPWSTR)endEdit->szText);
             } else if (pHdr->hwndFrom == hwndSizeList)
             {
-                on_sizelist_modified(hwndSizeList, (LPWSTR)endEdit->szText);
+                on_sizelist_modified(hwndFontList,(LPWSTR)endEdit->szText);
             }
         }
         return 0;
@@ -2323,7 +2323,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
             WCHAR buffer[LF_FACESIZE];
             HWND hwndFontList = (HWND)lParam;
             get_comboexlist_selection(hwndFontList, buffer, LF_FACESIZE);
-            on_fontlist_modified(hwndFontList, buffer);
+            on_fontlist_modified(buffer);
         }
         break;
 
@@ -2344,7 +2344,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-static LRESULT OnInitPopupMenu( HWND hWnd, WPARAM wParam, LPARAM lParam )
+static LRESULT OnInitPopupMenu( HWND hWnd, WPARAM wParam )
 {
     HMENU hMenu = (HMENU)wParam;
     HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
@@ -2457,13 +2457,13 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     switch(msg)
     {
     case WM_CREATE:
-        return OnCreate( hWnd, wParam, lParam );
+        return OnCreate( hWnd );
 
     case WM_USER:
-        return OnUser( hWnd, wParam, lParam );
+        return OnUser( hWnd );
 
     case WM_NOTIFY:
-        return OnNotify( hWnd, wParam, lParam );
+        return OnNotify( hWnd, lParam );
 
     case WM_COMMAND:
         if(preview_isactive())
@@ -2495,7 +2495,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         return 0;
 
     case WM_INITMENUPOPUP:
-        return OnInitPopupMenu( hWnd, wParam, lParam );
+        return OnInitPopupMenu( hWnd, wParam );
 
     case WM_SIZE:
         return OnSize( hWnd, wParam, lParam );

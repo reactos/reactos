@@ -25,7 +25,6 @@ VfatUpdateEntry(
     ULONG dirIndex;
 
     ASSERT(pFcb);
-    ASSERT(pFcb->parentFcb);
 
     if (pFcb->Flags & FCB_IS_FATX_ENTRY)
     {

@@ -485,16 +485,9 @@ NDIS_STATUS STDCALL ProtocolReceive(
     }
     else
     {
-	if (NdisStatus == NDIS_STATUS_SUCCESS)
-        {
-            NdisTransferData(&NdisStatus, Adapter->NdisHandle,
-                             MacReceiveContext, 0, PacketSize,
-			     NdisPacket, &BytesTransferred);
-        }
-        else
-        {
-            BytesTransferred = 0;
-        }
+        NdisTransferData(&NdisStatus, Adapter->NdisHandle,
+                         MacReceiveContext, 0, PacketSize,
+			 NdisPacket, &BytesTransferred);
     }
     TI_DbgPrint(DEBUG_DATALINK, ("Calling complete\n"));
 

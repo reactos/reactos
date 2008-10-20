@@ -1006,7 +1006,6 @@ extern "C" {
 #define SM_CXMAXIMIZED 61
 #define SM_CYMAXIMIZED 62
 #define SM_NETWORK 63
-#define LR_DEFAULTSIZE 64
 #define SM_CLEANBOOT 67
 #define SM_CXDRAG 68
 #define SM_CYDRAG 69
@@ -1022,22 +1021,38 @@ extern "C" {
 #define SM_CYVIRTUALSCREEN 79
 #define SM_CMONITORS 80
 #define SM_SAMEDISPLAYFORMAT 81
-#if (_WIN32_WINNT < 0x0400)
-#define SM_CMETRICS 76
-#else
-#define SM_CMETRICS 83
-#endif
-#if(_WIN32_WINNT >= 0x0501)
+#if(_WIN32_WINNT >= 0x0500)
+#define SM_IMMENABLED 82
+#endif /* _WIN32_WINNT >= 0x0500 */
+#if (_WIN32_WINNT >= 0x0501)
 #define SM_CXFOCUSBORDER 83
 #define SM_CYFOCUSBORDER 84
 #define SM_TABLETPC      86
 #define SM_MEDIACENTER   87
 #define SM_STARTER       88
 #define SM_SERVERR2      89
+#endif /* _WIN32_WINNT >= 0x0501 */
+#if (_WIN32_WINNT >= 0x0600)
+#define SM_MOUSEHORIZONTALWHEELPRESENT 91
+#define SM_CXPADDEDBORDER 92
+#endif /* _WIN32_WINNT >= 0x0600 */
+
+#define SM_REMOTESESSION 0x1000
+#if (_WIN32_WINNT >= 0x0501)
 #define SM_SHUTTINGDOWN 0x2000
 #define SM_REMOTECONTROL 0x2001
 #endif /* _WIN32_WINNT >= 0x0501 */
-#define SM_REMOTESESSION 0X1000
+
+#if (WINVER < 0x0500) && ((_WIN32_WINNT < 0x0400) || !defined(_WIN32_WINNT))
+#define SM_CMETRICS 76
+#elif (WINVER == 0x500)
+#define SM_CMETRICS 83
+#elif (WINVER == 0x501)
+#define SM_CMETRICS 90
+#else
+#define SM_CMETRICS 93
+#endif
+
 #define ARW_BOTTOMLEFT 0
 #define ARW_BOTTOMRIGHT 1
 #define ARW_HIDE 8
@@ -1058,6 +1073,7 @@ extern "C" {
 #define LR_COPYDELETEORG 8
 #define LR_LOADFROMFILE 16
 #define LR_LOADTRANSPARENT 32
+#define LR_DEFAULTSIZE 64
 #define LR_LOADREALSIZE 128
 #define LR_LOADMAP3DCOLORS 4096
 #define LR_CREATEDIBSECTION 8192
@@ -1709,7 +1725,6 @@ extern "C" {
 #define WM_TCARD 82
 #define WM_TIMECHANGE 30
 #define WM_TIMER 275
-#define WM_SYSTIMER 280
 #define WM_UNDO 772
 #define WM_USER 1024
 #define WM_USERCHANGED 84

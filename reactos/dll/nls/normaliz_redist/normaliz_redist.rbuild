@@ -11,8 +11,8 @@
 	<library>normaliz_redist_data</library>
 	<library>libcntpr</library>
 	<library>kernel32</library>
-	<compilerflag>-fno-exceptions</compilerflag>
-	<compilerflag>-fno-rtti</compilerflag>
+	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
 	<include base="icu4ros">icu/source/common</include>
 	<importlibrary definition="normaliz.def" />
 	<file>normaliz.cpp</file>

@@ -25,7 +25,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "Endring i datamaskinnavn"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "(message goes here)", 1017, 7, 5, 218, 30
+    LTEXT "(melding kommer her)", 1017, 7, 5, 218, 30
     LTEXT "&Datamaskinnavn:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
     LTEXT "Fullt datamaskinnavn:", 1016, 7, 72, 218, 10

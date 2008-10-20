@@ -153,7 +153,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 250;
+	rbBand.cx = 120;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -169,7 +169,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	RegisterHotkeys();
 
 	 // prepare Startmenu, but hide it for now
-	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd, STARTMENUROOT_ICON_SIZE));
+	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwndStartButton, STARTMENUROOT_ICON_SIZE));
+    _startMenuRoot->_hwndParent = _hwndStartButton;
 
 	return 0;
 }
@@ -427,9 +428,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_SWITCH_DESKTOP_1:
-	  case ID_SWITCH_DESKTOP_1+1:
-	  case ID_SWITCH_DESKTOP_1+2:
-	  case ID_SWITCH_DESKTOP_1+3: {
+	  case ID_SWITCH_DESKTOP_1+1: {
 		int desktop_idx = id - ID_SWITCH_DESKTOP_1;
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);

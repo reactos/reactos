@@ -2457,9 +2457,9 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     * FIXME: Revise this once a locking order for file size changes is
     * decided
     */
-   if (UMaximumSize != NULL)
+   if ((UMaximumSize != NULL) && (UMaximumSize->QuadPart != 0))
    {
-      MaximumSize = *UMaximumSize;
+         MaximumSize = *UMaximumSize;
    }
    else
    {
@@ -3385,7 +3385,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
                                                     ImageSectionObject, NULL))
       {
          /*
-          * An other thread has initialized the some image in the background
+          * An other thread has initialized the same image in the background
           */
          ExFreePool(ImageSectionObject->Segments);
          ExFreePool(ImageSectionObject);

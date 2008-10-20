@@ -702,7 +702,7 @@ BEGIN
 	IDS_NEWFOLDER               "Ny mappe"
 
 	IDS_DRIVE_FIXED             "Lokal Disk"
-	IDS_DRIVE_CDROM             "CDROM"
+	IDS_DRIVE_CDROM             "CD stasjon"
 	IDS_DRIVE_NETWORK           "Nettverk disk"
 
 	IDS_OPEN_WITH               "Åpne med"

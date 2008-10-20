@@ -524,7 +524,7 @@ NtGdiCreateDIBBrush(
    NTSTATUS Status = STATUS_SUCCESS;
    HBRUSH hBrush;
 
-   SafeBitmapInfoAndData = EngAllocMem(0, BitmapInfoSize, 0);
+   SafeBitmapInfoAndData = EngAllocMem(FL_ZERO_MEMORY, BitmapInfoSize, TAG_DIB);
    if (SafeBitmapInfoAndData == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -599,14 +599,17 @@ NtGdiCreateSolidBrush(COLORREF Color,
 BOOL STDCALL
 NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
-   PDC dc = DC_LockDc(hDC);
-   PDC_ATTR Dc_Attr = dc->pDc_Attr;
-   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   PDC dc;
+   PDC_ATTR Dc_Attr;
+
+   dc = DC_LockDc(hDC);
    if (dc == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   Dc_Attr = dc->pDc_Attr;
+   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
    if (Point != NULL)
    {

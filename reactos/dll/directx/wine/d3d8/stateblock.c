@@ -25,7 +25,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
-/* NOTE: DirectX8 doesn't export a IDirect3DStateBlock8, the interface is used internally to keep d3d8 and d3d9 as simila as possible */
+/* NOTE: DirectX8 doesn't export an IDirect3DStateBlock8, the interface is used internally to keep d3d8 and d3d9 as similar as possible */
 /* IDirect3DStateBlock8 IUnknown parts follow: */
 static HRESULT WINAPI IDirect3DStateBlock8Impl_QueryInterface(IDirect3DStateBlock8 *iface, REFIID riid, LPVOID *ppobj) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;

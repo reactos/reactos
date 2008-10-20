@@ -1032,6 +1032,18 @@ User32DefWindowProc(HWND hWnd,
             return DefWndNCCalcSize(hWnd, (BOOL)wParam, (RECT*)lParam);
         }
 
+        case WM_POPUPSYSTEMMENU:
+        {
+            /* This is an undocumented message used by the windows taskbar to
+               display the system menu of windows that belong to other processes. */
+            HMENU menu = GetSystemMenu(hWnd, FALSE);
+
+            if (menu)
+                TrackPopupMenu(menu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON,
+                               LOWORD(lParam), HIWORD(lParam), 0, hWnd, NULL);
+            return 0;
+        }
+
         case WM_NCACTIVATE:
         {
             return DefWndNCActivate(hWnd, wParam);

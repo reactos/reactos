@@ -287,16 +287,12 @@ LPITEMIDLIST _ILCreateNetConnect()
 {
     LPITEMIDLIST pidlOut;
 
-    pidlOut = _ILAlloc(PT_GUID, sizeof(GUIDStruct));
+    pidlOut = _ILAlloc(PT_GUID, sizeof(PIDLDATA));
     if (pidlOut)
     {
         LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
 
         memcpy(&(pData->u.guid.guid), &CLSID_NetworkConnections, sizeof(GUID));
-    }
-    else
-    {
-        pidlOut = NULL;
     }
     return pidlOut;
 }
@@ -328,18 +324,9 @@ LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem)
 {
     LPITEMIDLIST pidl;
     LPPIDLDATA pdata;
-    int size = sizeof(PIDLDATA);
 
-    pidl = (LPITEMIDLIST)SHAlloc(size + 2 * sizeof(SHITEMID));
-    if (!pidl)
-        return pidl;
-    ZeroMemory(pidl, size + 2 * sizeof(SHITEMID));
-
-    pidl->mkid.cb = size + sizeof(SHITEMID);
-
+    pidl = _ILAlloc(0x99, sizeof(PIDLDATA));
     pdata = _ILGetDataPointer(pidl);
-    pdata->type = 0x99;
-    pdata->u.value.dummy = 0xFF;
     pdata->u.value.pItem = (PVOID)pItem;
 
     return pidl;

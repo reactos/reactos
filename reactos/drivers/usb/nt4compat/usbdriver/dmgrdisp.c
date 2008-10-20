@@ -144,7 +144,8 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
     ULONG ctrl_code;
     USE_NON_PENDING_IRQL;
 
-    if (dev_mgr == NULL || irp == NULL)
+    ASSERT(irp);
+    if (dev_mgr == NULL)
     {
         EXIT_DISPATCH(STATUS_INVALID_PARAMETER, irp);
     }

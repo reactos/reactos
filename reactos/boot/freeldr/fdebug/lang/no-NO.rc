@@ -132,16 +132,16 @@ END
 
 IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Connection Options"
+CAPTION "Tilkobling valg"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Enter the COM port (e.g. COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "Skriv COM port (f.eks COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
     LTEXT           "Enter the baud rate (e.g. 115200):",IDC_STATIC,7,38,114,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,100,79,50,14
+    PUSHBUTTON      "Avbryt",IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
@@ -171,7 +171,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_LICENSE             "Dette programmet er fri programvare; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 #endif    // Norwegian (N.O.) resources

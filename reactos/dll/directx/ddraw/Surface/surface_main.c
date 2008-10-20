@@ -24,7 +24,7 @@ LPDDRAWI_DDRAWSURFACE_INT
 internal_directdrawsurface_int_alloc(LPDDRAWI_DDRAWSURFACE_INT This)
 {
     LPDDRAWI_DDRAWSURFACE_INT  newThis;
-    DxHeapMemAlloc(newThis, sizeof(LPDDRAWI_DDRAWSURFACE_INT));
+    DxHeapMemAlloc(newThis, sizeof(DDRAWI_DDRAWSURFACE_INT));
     if (newThis)
     {
         newThis->lpLcl = This->lpLcl;

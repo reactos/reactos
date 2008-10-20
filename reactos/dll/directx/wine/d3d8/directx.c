@@ -184,7 +184,7 @@ static HRESULT  WINAPI  IDirect3D8Impl_CheckDeviceFormat          (LPDIRECT3D8 i
 
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3D_CheckDeviceFormat(This->WineD3D, Adapter, DeviceType, AdapterFormat,
-                                    Usage, RType, CheckFormat);
+                                    Usage, RType, CheckFormat, SURFACE_OPENGL);
     LeaveCriticalSection(&d3d8_cs);
     return hr;
 }
@@ -231,10 +231,10 @@ static HRESULT  WINAPI  IDirect3D8Impl_GetDeviceCaps(LPDIRECT3D8 iface, UINT Ada
     if(pWineCaps == NULL){
         return D3DERR_INVALIDCALL; /*well this is what MSDN says to return*/
     }
-    D3D8CAPSTOWINECAPS(pCaps, pWineCaps)
     EnterCriticalSection(&d3d8_cs);
     hrc = IWineD3D_GetDeviceCaps(This->WineD3D, Adapter, DeviceType, pWineCaps);
     LeaveCriticalSection(&d3d8_cs);
+    WINECAPSTOD3D8CAPS(pCaps, pWineCaps)
     HeapFree(GetProcessHeap(), 0, pWineCaps);
 
     /* D3D8 doesn't support SM 2.0 or higher, so clamp to 1.x */
@@ -295,7 +295,7 @@ ULONG WINAPI D3D8CB_DestroyRenderTarget(IWineD3DSurface *pSurface) {
     return IDirect3DSurface8_Release((IDirect3DSurface8*) surfaceParent);
 }
 
-/* Callback for creating the inplicite swapchain when the device is created */
+/* Callback for creating the implicit swapchain when the device is created */
 static HRESULT WINAPI D3D8CB_CreateAdditionalSwapChain(IUnknown *device,
                                                 WINED3DPRESENT_PARAMETERS* pPresentationParameters,
                                                 IWineD3DSwapChain ** ppSwapChain){

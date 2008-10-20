@@ -28,7 +28,8 @@ static GENERIC_MAPPING FileGenericMapping =
 };
 
 
-static INT
+static
+INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
 {
@@ -72,7 +73,8 @@ LengthOfStrResource(IN HINSTANCE hInst,
 }
 
 
-static INT
+static
+INT
 AllocAndLoadString(OUT LPTSTR *lpTarget,
                    IN HINSTANCE hInst,
                    IN UINT uID)
@@ -106,7 +108,8 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
 }
 
 
-static VOID
+static
+VOID
 PrintHelp(VOID)
 {
     LPTSTR szHelp;
@@ -125,7 +128,8 @@ PrintHelp(VOID)
 }
 
 
-static VOID
+static
+VOID
 PrintErrorMessage(IN DWORD dwError)
 {
     LPTSTR szError;
@@ -148,7 +152,8 @@ PrintErrorMessage(IN DWORD dwError)
 }
 
 
-static DWORD
+static
+DWORD
 LoadAndPrintString(IN HINSTANCE hInst,
                    IN UINT uID)
 {
@@ -170,7 +175,8 @@ LoadAndPrintString(IN HINSTANCE hInst,
 }
 
 
-static BOOL
+static
+BOOL
 PrintFileDacl(IN LPTSTR FilePath,
               IN LPTSTR FileName)
 {
@@ -507,7 +513,9 @@ PrintSpecialAccess:
 }
 
 
-int __cdecl _tmain(int argc, const TCHAR *argv[])
+int
+__cdecl
+_tmain(int argc, const TCHAR *argv[])
 {
     if (argc < 2)
     {

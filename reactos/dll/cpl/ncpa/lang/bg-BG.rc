@@ -81,7 +81,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общи"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "IP настройките ви могат да се получат сами, ако мрежата ви го поддържа. В противен случай, трябва да попитате мрежовия си управител за правилните IP настройки.", -1, 9, 9, 228, 27
+ LTEXT "IP настройките ви могат да се получат сами, ако мрежата ви го поддържа. В противен случай, трябва да попитате мрежовия си управник за правилните IP настройки.", -1, 9, 9, 228, 27
  CONTROL "Самополучаване на IP адрес", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
  CONTROL "Из&ползване на следния IP адрес:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12

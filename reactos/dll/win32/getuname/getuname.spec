@@ -1,0 +1,1 @@
+@ stdcall GetUName(long ptr)

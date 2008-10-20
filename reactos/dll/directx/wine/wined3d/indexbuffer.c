@@ -5,6 +5,7 @@
  * Copyright 2003-2004 Raphael Junqueira
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
+ * Copyright 2007 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -110,6 +111,27 @@ static void WINAPI IWineD3DIndexBufferImpl_PreLoad(IWineD3DIndexBuffer *iface) {
     IWineD3DResourceImpl_PreLoad((IWineD3DResource *)iface);
 }
 
+static void WINAPI IWineD3DIndexBufferImpl_UnLoad(IWineD3DIndexBuffer *iface) {
+    IWineD3DIndexBufferImpl *This = (IWineD3DIndexBufferImpl *) iface;
+    IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+    TRACE("(%p)\n", This);
+
+    /* This is easy: The whole content is shadowed in This->resource.allocatedMemory,
+     * so we only have to destroy the vbo. Only do it if we have a vbo, which implies
+     * that vbos are supported.
+     * (TODO: Make a IWineD3DBuffer base class for index and vertex buffers and share
+     * this code. Also needed for D3D10)
+     */
+    if(This->vbo) {
+        ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+        ENTER_GL();
+        GL_EXTCALL(glDeleteBuffersARB(1, &This->vbo));
+        checkGLcall("glDeleteBuffersARB");
+        LEAVE_GL();
+        This->vbo = 0;
+    }
+}
+
 static WINED3DRESOURCETYPE WINAPI IWineD3DIndexBufferImpl_GetType(IWineD3DIndexBuffer *iface) {
     return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
 }
@@ -126,7 +148,7 @@ static HRESULT WINAPI IWineD3DIndexBufferImpl_Lock(IWineD3DIndexBuffer *iface, U
     TRACE("(%p) : offset %d, size %d, Flags=%x\n", This, OffsetToLock, SizeToLock, Flags);
 
     InterlockedIncrement(&This->lockcount);
-    *ppbData = (BYTE *)This->resource.allocatedMemory + OffsetToLock;
+    *ppbData = This->resource.allocatedMemory + OffsetToLock;
 
     if(Flags & (WINED3DLOCK_READONLY | WINED3DLOCK_NO_DIRTY_UPDATE) || This->vbo == 0) {
         return WINED3D_OK;
@@ -158,9 +180,7 @@ static HRESULT WINAPI IWineD3DIndexBufferImpl_Unlock(IWineD3DIndexBuffer *iface)
     if(locks == 0 && This->vbo && (This->dirtyend - This->dirtystart) > 0) {
         IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
-        if(device->createParms.BehaviorFlags & WINED3DCREATE_MULTITHREADED) {
-            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
-        }
+        ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
 
         ENTER_GL();
         GL_EXTCALL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, This->vbo));
@@ -203,6 +223,7 @@ const IWineD3DIndexBufferVtbl IWineD3DIndexBuffer_Vtbl =
     IWineD3DIndexBufferImpl_SetPriority,
     IWineD3DIndexBufferImpl_GetPriority,
     IWineD3DIndexBufferImpl_PreLoad,
+    IWineD3DIndexBufferImpl_UnLoad,
     IWineD3DIndexBufferImpl_GetType,
     /* IWineD3DIndexBuffer */
     IWineD3DIndexBufferImpl_Lock,

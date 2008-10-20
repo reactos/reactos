@@ -278,6 +278,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PFONT_ENTRY Entry;
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
+   LARGE_INTEGER SectionSize;
    FT_Fixed XScale, YScale;
    UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
@@ -294,13 +295,14 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Could not font file: %wZ\n", FileName);
+      DPRINT("Could not load font file: %wZ\n", FileName);
       return 0;
    }
 
+   SectionSize.QuadPart = 0LL;
    Status = MmCreateSection((PVOID)&SectionObject, SECTION_ALL_ACCESS,
-                            NULL, NULL, PAGE_READONLY,
-                            0, FileHandle, NULL);
+                            NULL, &SectionSize, PAGE_READONLY,
+                            SEC_COMMIT, FileHandle, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Could not map file: %wZ\n", FileName);
@@ -3354,13 +3356,13 @@ NtGdiGetCharSet(HDC hDC)
   DWORD cscp = IntGdiGetCharSet(hDC);
   // If here, update everything!
   Dc = DC_LockDc(hDC);
-  Dc_Attr = Dc->pDc_Attr;
-  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   if (!Dc)
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
+  Dc_Attr = Dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   Dc_Attr->iCS_CP = cscp;
   Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
   DC_UnlockDc( Dc );

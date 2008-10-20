@@ -177,7 +177,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
     }                                                                       \
 }
 
-#ifndef _CONFIG_SMP
+#ifndef CONFIG_SMP
 //
 // Spinlock Acquire at IRQL >= DISPATCH_LEVEL
 //
@@ -1392,7 +1392,7 @@ KxQueueReadyThread(IN PKTHREAD Thread,
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
     /* Check if this thread is allowed to run in this CPU */
-#ifdef _CONFIG_SMP
+#ifdef CONFIG_SMP
     if ((Thread->Affinity) & (Prcb->SetMember))
 #else
     if (TRUE)

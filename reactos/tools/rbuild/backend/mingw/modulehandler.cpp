@@ -1499,19 +1499,22 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.output->name );
 
-	/* HACK: if we have C++ in kernel, link it with some user mode dlls (kernel32 + msvcrt) ... */
-	static const string libsCppKernel = " '$(shell ${TARGET_CC} -print-file-name=libkernel32.a)' '$(shell ${TARGET_CC} -print-file-name=libmsvcrt.a)'";
+	/* check if we need to add default C++ libraries, ie if we have
+	 * a C++ user-mode module without the -nostdlib linker flag
+	 */
+	bool link_defaultlibs = module.cplusplus &&
+	                        linkerParameters.find ("-nostdlib") == string::npos &&
+	                        !(module.type == KernelModeDLL || module.type == KernelModeDriver);
 
 	if ( !module.HasImportLibrary() )
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s%s %s %s%s %s %s -o %s\n",
+		          "\t%s %s%s %s %s %s %s -o %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
 		          objectsMacro.c_str (),
-		          module.cplusplus ? "$(PROJECT_LPPFLAGS) " : "",
-		          module.cplusplus && (module.type == KernelModeDLL || module.type == KernelModeDriver) ? libsCppKernel.c_str () : "",
+		          link_defaultlibs ? "$(PROJECT_LPPFLAGS) " : "",
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
 		          target_macro.c_str () );
@@ -1532,14 +1535,14 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          module.underscoreSymbols ? " --add-underscore" : "" );
 
 		fprintf ( fMakefile,
-		          "\t%s %s%s %s %s %s%s %s %s -o %s\n",
+		          "\t%s %s%s %s %s %s %s %s -o %s\n",
+
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
 		          backend->GetFullName ( temp_exp ).c_str (),
 		          objectsMacro.c_str (),
-		          module.cplusplus ? "$(PROJECT_LPPFLAGS) " : "",
-		          module.cplusplus && (module.type == KernelModeDLL || module.type == KernelModeDriver) ? libsCppKernel.c_str () : "",
+		          link_defaultlibs ? "$(PROJECT_LPPFLAGS) " : "",
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str (),
 		          target_macro.c_str () );

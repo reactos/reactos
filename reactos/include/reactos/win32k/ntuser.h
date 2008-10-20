@@ -404,6 +404,12 @@ typedef struct _BROADCASTPARM
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
+//
+// Non SDK Window Message types.
+//
+#define WM_SYSTIMER 280
+#define WM_POPUPSYSTEMMENU 787
+
 
 DWORD
 NTAPI

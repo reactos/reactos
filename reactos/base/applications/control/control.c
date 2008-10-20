@@ -13,7 +13,8 @@ static const TCHAR szWindowClass[] = _T("DummyControlClass");
 HANDLE hProcessHeap;
 HINSTANCE hInst;
 
-static INT
+static
+INT
 OpenShellFolder(LPTSTR lpFolderCLSID)
 {
     TCHAR szParameters[MAX_PATH];
@@ -23,10 +24,16 @@ OpenShellFolder(LPTSTR lpFolderCLSID)
     _tcscpy(szParameters, _T("/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
     _tcscat(szParameters, lpFolderCLSID);
 
-    return (INT)(INT_PTR)ShellExecute(NULL, _T("open"), _T("explorer.exe"), szParameters, NULL, SW_SHOWDEFAULT) > 32;
+    return (INT_PTR)ShellExecute(NULL,
+                                 _T("open"),
+                                 _T("explorer.exe"),
+                                 szParameters,
+                                 NULL,
+                                 SW_SHOWDEFAULT) > 32;
 }
 
-static INT
+static
+INT
 RunControlPanel(LPTSTR lpCmd)
 {
     TCHAR szParameters[MAX_PATH];
@@ -37,8 +44,12 @@ RunControlPanel(LPTSTR lpCmd)
     return RUNDLL(szParameters);
 }
 
-int WINAPI
-_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int
+WINAPI
+_tWinMain(HINSTANCE hInstance,
+          HINSTANCE hPrevInstance,
+          LPTSTR lpCmdLine,
+          int nCmdShow)
 {
     HKEY hKey;
 
@@ -71,7 +82,11 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nC
     else if (!_tcsicmp(lpCmdLine, _T("userpasswords2")))  return RUNDLL(_T("netplwiz.dll,UsersRunDll"));   /* Dialog based advanced User Account Manager */
 
     /* It is none of them, so look for a handler in the registry */
-    if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                    _T("Software\\Microsoft\\Windows\\CurrentVersion\\Control Panel\\Cpls"),
+                    0,
+                    KEY_QUERY_VALUE,
+                    &hKey) == ERROR_SUCCESS)
     {
         DWORD dwIndex;
 
@@ -82,7 +97,14 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nC
             TCHAR szValueName[MAX_VALUE_NAME];
 
             /* Get the value name and data size */
-            if(RegEnumValue(hKey, dwIndex, szValueName, &dwValueSize, 0, NULL, NULL, &dwDataSize) != ERROR_SUCCESS)
+            if(RegEnumValue(hKey,
+                            dwIndex,
+                            szValueName,
+                            &dwValueSize,
+                            0,
+                            NULL,
+                            NULL,
+                            &dwDataSize) != ERROR_SUCCESS)
                 break;
 
             /* Check if the parameter is the value name */
@@ -91,11 +113,18 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nC
                 LPTSTR pszData;
 
                 /* Allocate memory for the data plus two more characters, so we can quote the file name if required */
-                pszData = (LPTSTR) HeapAlloc(hProcessHeap, 0, dwDataSize + 2 * sizeof(TCHAR));
+                pszData = (LPTSTR) HeapAlloc(hProcessHeap,
+                                             0,
+                                             dwDataSize + 2 * sizeof(TCHAR));
                 ++pszData;
 
                 /* This value is the one we are looking for, so get the data. It is the path to a .cpl file */
-                if(RegQueryValueEx(hKey, szValueName, 0, NULL, (LPBYTE)pszData, &dwDataSize) == ERROR_SUCCESS)
+                if(RegQueryValueEx(hKey,
+                                   szValueName,
+                                   0,
+                                   NULL,
+                                   (LPBYTE)pszData,
+                                   &dwDataSize) == ERROR_SUCCESS)
                 {
                     INT nReturnValue;
 
@@ -108,13 +137,17 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nC
                     }
 
                     nReturnValue = RunControlPanel(pszData);
-                    HeapFree(hProcessHeap, 0, pszData);
+                    HeapFree(hProcessHeap,
+                             0,
+                             pszData);
                     RegCloseKey(hKey);
 
                     return nReturnValue;
                 }
 
-                HeapFree(hProcessHeap, 0, pszData);
+                HeapFree(hProcessHeap,
+                         0,
+                         pszData);
             }
         }
 

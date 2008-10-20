@@ -11,6 +11,7 @@
 #include "d3d9_helpers.h"
 #include "d3d9_caps.h"
 #include "adapter.h"
+#include "d3d9_callbacks.h"
 
 static INT g_NumDevices = 0;
 
@@ -833,6 +834,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
     }
 
     /* TODO: Set all internal function pointers to create surface, etc. */
+    pD3D9Callbacks->DdGetAvailDriverMemory = &D3d9GetAvailDriverMemory;
 
     /* Set device rect */
     {

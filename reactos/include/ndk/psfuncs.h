@@ -79,6 +79,13 @@ PsGetThreadWin32Thread(
 );
 
 NTKERNELAPI
+PTEB
+NTAPI
+PsGetThreadTeb(
+    IN PETHREAD Thread
+);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
@@ -133,6 +140,13 @@ PsLookupProcessThreadByCid(
 BOOLEAN
 NTAPI
 PsIsProtectedProcess(
+    IN PEPROCESS Process
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemProcess(
     IN PEPROCESS Process
 );
 

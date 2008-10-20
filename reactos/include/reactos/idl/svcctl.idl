@@ -15,20 +15,20 @@ const unsigned short SC_MAX_COMMENT_LENGTH = 128;
 const unsigned short SC_MAX_ARGUMENT_LENGTH = 1024;
 const unsigned short SC_MAX_ARGUMENTS = 1024;
 
-typedef [handle] LPSTR SVCCTL_HANDLEA;
-typedef [handle] LPWSTR SVCCTL_HANDLEW;
-typedef [context_handle] ULONG_PTR SC_RPC_HANDLE;
+typedef /*[handle]*/ LPSTR SVCCTL_HANDLEA;
+typedef /*[handle]*/ LPWSTR SVCCTL_HANDLEW;
+typedef /*[context_handle]*/ ULONG_PTR SC_RPC_HANDLE;
 typedef SC_RPC_HANDLE* LPSC_RPC_HANDLE;
-typedef [context_handle] PVOID SC_RPC_LOCK;
+typedef /*[context_handle]*/ unsigned long SC_RPC_LOCK;
 typedef SC_RPC_LOCK* LPSC_RPC_LOCK;
-typedef [context_handle] ULONG_PTR SC_NOTIFY_RPC_HANDLE;
+typedef /*[context_handle]*/ ULONG_PTR SC_NOTIFY_RPC_HANDLE;
 typedef SC_NOTIFY_RPC_HANDLE* LPSC_NOTIFY_RPC_HANDLE;
 typedef [range(0, 1024 * 4)] DWORD BOUNDED_DWORD_4K;
 typedef BOUNDED_DWORD_4K* LPBOUNDED_DWORD_4K;
 typedef [range(0, 1024 * 8)] DWORD BOUNDED_DWORD_8K;
-typedef BOUNDED_DWORD_4K* LPBOUNDED_DWORD_8K;
+typedef BOUNDED_DWORD_8K* LPBOUNDED_DWORD_8K;
 typedef [range(0, 1024 * 256)] DWORD BOUNDED_DWORD_256K;
-typedef BOUNDED_DWORD_4K* LPBOUNDED_DWORD_256K;
+typedef BOUNDED_DWORD_256K* LPBOUNDED_DWORD_256K;
 
 cpp_quote("#if 0")
 

@@ -1028,7 +1028,6 @@ PATH_FlattenPath(PPATH pPath)
 }
 
 
-HRGN FASTCALL IntCreatePolyPolygonRgn(POINT *Pts, INT *Count, INT nbpolygons,INT mode);
 /* PATH_PathToRegion
  *
  * Creates a region from the specified path using the specified polygon
@@ -1042,7 +1041,7 @@ FASTCALL
 PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
 {
   int    numStrokes, iStroke, i;
-  INT  *pNumPointsInStroke;
+  PULONG  pNumPointsInStroke;
   HRGN hrgn = 0;
 
   ASSERT(pPath!=NULL);
@@ -1060,7 +1059,7 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
       numStrokes++;
 
   /* Allocate memory for number-of-points-in-stroke array */
-  pNumPointsInStroke=(int *)ExAllocatePoolWithTag(PagedPool, sizeof(int) * numStrokes, TAG_PATH);
+  pNumPointsInStroke = ExAllocatePoolWithTag(PagedPool, sizeof(ULONG) * numStrokes, TAG_PATH);
   if(!pNumPointsInStroke)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

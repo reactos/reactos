@@ -14,7 +14,9 @@
 HINSTANCE hInstance;
 
 /* Font-enumeration callback */
-static int CALLBACK
+static
+int
+CALLBACK
 EnumFontNames(ENUMLOGFONTEXW *lpelfe,
               NEWTEXTMETRICEXW *lpntme,
               DWORD FontType,
@@ -55,7 +57,8 @@ EnumFontNames(ENUMLOGFONTEXW *lpelfe,
 
 
 /* Initialize the font-list by enumeration all system fonts */
-static VOID
+static
+VOID
 FillFontStyleComboList(HWND hwndCombo)
 {
     HDC hdc;
@@ -90,7 +93,8 @@ FillFontStyleComboList(HWND hwndCombo)
 }
 
 
-static VOID
+static
+VOID
 ChangeMapFont(HWND hDlg)
 {
     HWND hCombo;
@@ -130,7 +134,8 @@ ChangeMapFont(HWND hDlg)
 }
 
 
-static VOID
+static
+VOID
 AddCharToSelection(HWND hText,
                    WCHAR ch)
 {
@@ -182,7 +187,9 @@ AddCharToSelection(HWND hText,
 }
 
 
-static INT_PTR CALLBACK
+static
+INT_PTR
+CALLBACK
 DlgProc(HWND hDlg,
         UINT Message,
         WPARAM wParam,
@@ -331,7 +338,8 @@ DlgProc(HWND hDlg,
 }
 
 
-INT WINAPI
+INT
+WINAPI
 wWinMain(HINSTANCE hInst,
          HINSTANCE hPrev,
          LPWSTR Cmd,

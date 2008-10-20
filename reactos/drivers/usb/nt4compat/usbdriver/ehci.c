@@ -44,7 +44,7 @@
 #define endp_dir( enDP ) \
 ( DEFAULT_ENDP( enDP )\
   ? 0L\
-  : ( ( enDP )->pusb_endp_desc->bEndpointAddress & USB_DIR_IN ) )
+  : ( ( enDP )->pusb_endp_desc->bEndpointAddress & USB_DIR_IN ) ? 1 : 0 )
 
 #define dev_set_state( pdEV, staTE ) \
 ( pdEV->flags = ( ( pdEV )->flags & ( ~USB_DEV_STATE_MASK ) ) | ( staTE ) )
@@ -2010,7 +2010,7 @@ ehci_internal_submit_int(PEHCI_DEV ehci, PURB purb)
     pipe_content->trans_type = USB_ENDPOINT_XFER_INT;   // bit 0-1
     pipe_content->speed_high = (pdev->flags & USB_DEV_FLAG_HIGH_SPEED) ? 1 : 0; // bit 5
     pipe_content->speed_low = (pdev->flags & USB_DEV_FLAG_LOW_SPEED) ? 1 : 0;   // bit 6
-    pipe_content->trans_dir = endp_dir(purb->pendp) == USB_DIR_IN ? 1 : 0;      // bit 7
+    pipe_content->trans_dir = endp_dir(purb->pendp);    // bit 7
     pipe_content->dev_addr = pdev->dev_addr;    // bit 8-14
     pipe_content->endp_addr = endp_num(purb->pendp);    // bit 15-18
     pipe_content->data_toggle = 1;      // bit 19
@@ -2216,7 +2216,7 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
     pipe_content->trans_type = USB_ENDPOINT_XFER_ISOC;  // bit 0-1
     pipe_content->speed_high = (pdev->flags & USB_DEV_FLAG_HIGH_SPEED) ? 1 : 0; // bit 5
     pipe_content->speed_low = 0;        // bit 6
-    pipe_content->trans_dir = endp_dir(purb->pendp) == USB_DIR_IN ? 1 : 0;      // bit 7
+    pipe_content->trans_dir = endp_dir(purb->pendp);    // bit 7
     pipe_content->dev_addr = pdev->dev_addr;    // bit 8-14
     pipe_content->endp_addr = endp_num(purb->pendp);    // bit 15-18
     pipe_content->data_toggle = 0;      // bit 19

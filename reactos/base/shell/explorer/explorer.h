@@ -54,7 +54,6 @@
 #define	IDW_EXTRABAR			0x102
 #define	IDW_DRIVEBAR			0x103
 #define	IDW_ADDRESSBAR			0x104
-#define	IDW_COMMANDBAR			0x105
 #define	IDW_SIDEBAR				0x106
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 

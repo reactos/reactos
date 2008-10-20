@@ -1292,7 +1292,7 @@ typedef PVOID PKIPI_CONTEXT;
 
 typedef
 VOID
-(*PKIPI_WORKER)(
+(NTAPI *PKIPI_WORKER)(
     IN PKIPI_CONTEXT PacketContext,
     IN PVOID Parameter1,
     IN PVOID Parameter2,
@@ -9756,6 +9756,13 @@ KePulseEvent(
   IN PRKEVENT  Event,
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(
+    VOID
+);
 
 NTHALAPI
 LARGE_INTEGER

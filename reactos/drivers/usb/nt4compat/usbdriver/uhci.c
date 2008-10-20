@@ -2348,7 +2348,7 @@ uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
     PUHCI_TD ptd;
     LIST_ENTRY td_list, *pthis, *pnext;
     int i;
-    BOOLEAN toggle, ret;
+    BOOLEAN toggle = FALSE, ret;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;

@@ -58,7 +58,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 	BOOL bSuccess = FALSE;
 	BYTE b = 0;
 	int iEncoding = ENCODING_ANSI;
-	int iCodePage;
+	int iCodePage = 0;
 	WCHAR szCrlf[2] = { '\r', '\n' };
 	DWORD adwEolnCount[3] = { 0, 0, 0 };
 
@@ -120,8 +120,6 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 			iCodePage = CP_ACP;
 		else if (iEncoding == ENCODING_UTF8)
 			iCodePage = CP_UTF8;
-		else
-			goto done;
 
 		if ((dwSize - dwPos) > 0)
 		{
@@ -225,7 +223,7 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 	DWORD dwPos = 0;
 	DWORD dwByteCount;
 	BYTE buffer[1024];
-	UINT iCodePage;
+	UINT iCodePage = 0;
 	DWORD dwDummy, i;
 	BOOL bSuccess = FALSE;
 	int iBufferSize, iRequiredBytes;
@@ -263,8 +261,6 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 					iCodePage = CP_ACP;
 				else if (iEncoding == ENCODING_UTF8)
 					iCodePage = CP_UTF8;
-				else
-					goto done;
 
 				iRequiredBytes = WideCharToMultiByte(iCodePage, 0, &pszText[dwPos], dwTextLen - dwPos, NULL, 0, NULL, NULL);
 				if (iRequiredBytes <= 0)

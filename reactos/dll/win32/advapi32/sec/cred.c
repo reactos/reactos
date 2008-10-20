@@ -1699,3 +1699,65 @@ BOOL WINAPI CredGetSessionTypes(DWORD persistCount, LPDWORD persists)
     }
     return TRUE;
 }
+
+BOOL
+WINAPI
+CredReadDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo,
+                           DWORD Flags,
+                           DWORD *Count,
+                           PCREDENTIALW **Credential)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}
+
+BOOL
+WINAPI
+CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo,
+                           DWORD Flags,
+                           DWORD *Count,
+                           PCREDENTIALA **Credential)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}
+
+BOOL
+WINAPI
+CredWriteDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo,
+                            PCREDENTIALW Credential,
+                            DWORD Flags)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}
+
+BOOL
+WINAPI
+CredWriteDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo,
+                            PCREDENTIALA Credential,
+                            DWORD Flags)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}
+
+BOOL
+WINAPI
+CredUnmarshalCredentialW(LPCWSTR MarshaledCredential,
+                         PCRED_MARSHAL_TYPE CredType,
+                         PVOID *Credential)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}
+
+BOOL
+WINAPI
+CredUnmarshalCredentialA(LPCSTR MarshaledCredential,
+                         PCRED_MARSHAL_TYPE CredType,
+                         PVOID *Credential)
+{
+    WARN("Not implemented\n");
+    return FALSE;
+}

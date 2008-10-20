@@ -1671,7 +1671,7 @@ NtUserGetMinMaxInfo(
    PWINDOW Wnd;
    MINMAXINFO SafeMinMax;
    NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+   BOOL ret;
    USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetMinMaxInfo\n");
@@ -1679,7 +1679,8 @@ NtUserGetMinMaxInfo(
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      ret = FALSE;
+      goto cleanup;
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1703,17 +1704,18 @@ NtUserGetMinMaxInfo(
    if(!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( FALSE);
+      ret = FALSE;
+      goto cleanup;
    }
 
-   RETURN( TRUE);
+   ret = TRUE;
 
-CLEANUP:
+cleanup:
    if (Window) UserDerefObjectCo(Window);
 
-   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+   return ret;
 }
 
 /* EOF */
