@@ -5179,7 +5179,7 @@ static HRESULT VARIANT_DI_div(const VARIANT_DI * dividend, const VARIANT_DI * di
            to multiply quotient by 10 (without overflowing), while adjusting the scale,
            until scale is 0. If this cannot be done, it is a real overflow.
          */
-        while (!r_overflow && quotientscale < 0) {
+        while (r_overflow == S_OK && quotientscale < 0) {
             memset(remainderplusquotient, 0, sizeof(remainderplusquotient));
             memcpy(remainderplusquotient, quotient->bitsnum, sizeof(quotient->bitsnum));
             VARIANT_int_mulbychar(remainderplusquotient, sizeof(remainderplusquotient)/sizeof(DWORD), 10);
@@ -5189,7 +5189,7 @@ static HRESULT VARIANT_DI_div(const VARIANT_DI * dividend, const VARIANT_DI * di
                 memcpy(quotient->bitsnum, remainderplusquotient, sizeof(quotient->bitsnum));
             } else r_overflow = DISP_E_OVERFLOW;
         }
-        if (!r_overflow) {
+        if (r_overflow == S_OK) {
             if (quotientscale <= 255) quotient->scale = quotientscale;
             else VARIANT_DI_clear(quotient);
         }
@@ -5500,7 +5500,7 @@ HRESULT WINAPI VarDecDiv(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
   VARIANT_DIFromDec(pDecLeft, &di_left);
   VARIANT_DIFromDec(pDecRight, &di_right);
   divresult = VARIANT_DI_div(&di_left, &di_right, &di_result);
-  if (divresult)
+  if (divresult != S_OK)
   {
       /* division actually overflowed */
       hRet = divresult;
@@ -6516,7 +6516,7 @@ HRESULT WINAPI VarBstrFromCy(CY cyIn, LCID lcid, ULONG dwFlags, BSTR *pbstrOut)
     VARIANT_int_add(decVal.bitsnum, 3, &one, 1);
   }
   decVal.bitsnum[2] = 0;
-  VARIANT_DI_tostringW(&decVal, buff, sizeof(buff));
+  VARIANT_DI_tostringW(&decVal, buff, sizeof(buff)/sizeof(buff[0]));
 
   if (dwFlags & LOCALE_USE_NLS)
   {

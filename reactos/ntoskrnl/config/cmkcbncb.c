@@ -354,6 +354,9 @@ BOOLEAN
 NTAPI
 CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Referencing KCB: %p\n", __FUNCTION__, Kcb);
+
     /* Check if this is the KCB's first reference */
     if (Kcb->RefCount == 0)
     {
@@ -570,6 +573,8 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     LONG OldRefCount, NewRefCount;
     ULONG ConvKey;
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Dereferencing KCB: %p\n", __FUNCTION__, Kcb);
 
     /* Get the ref count and update it */
     OldRefCount = *(PLONG)&Kcb->RefCount;
@@ -602,6 +607,9 @@ NTAPI
 CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                       IN BOOLEAN LockHeldExclusively)
 {
+    CMTRACE(CM_REFERENCE_DEBUG,
+            "%s - Dereferencing KCB: %p\n", __FUNCTION__, Kcb);
+
     /* Sanity check */
     ASSERT_KCB_VALID(Kcb);
 

@@ -536,16 +536,16 @@ ParseAceString(
 BOOL STDCALL
 AllocateLocallyUniqueId(PLUID Luid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = NtAllocateLocallyUniqueId (Luid);
-  if (!NT_SUCCESS (Status))
+    Status = NtAllocateLocallyUniqueId (Luid);
+    if (!NT_SUCCESS (Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -553,38 +553,38 @@ AllocateLocallyUniqueId(PLUID Luid)
  * @implemented
  */
 BOOL STDCALL
-AllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
-			  BYTE nSubAuthorityCount,
-			  DWORD dwSubAuthority0,
-			  DWORD dwSubAuthority1,
-			  DWORD dwSubAuthority2,
-			  DWORD dwSubAuthority3,
-			  DWORD dwSubAuthority4,
-			  DWORD dwSubAuthority5,
-			  DWORD dwSubAuthority6,
-			  DWORD dwSubAuthority7,
-			  PSID *pSid)
+AllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
+                         BYTE nSubAuthorityCount,
+                         DWORD dwSubAuthority0,
+                         DWORD dwSubAuthority1,
+                         DWORD dwSubAuthority2,
+                         DWORD dwSubAuthority3,
+                         DWORD dwSubAuthority4,
+                         DWORD dwSubAuthority5,
+                         DWORD dwSubAuthority6,
+                         DWORD dwSubAuthority7,
+                         PSID *pSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlAllocateAndInitializeSid (pIdentifierAuthority,
-					nSubAuthorityCount,
-					dwSubAuthority0,
-					dwSubAuthority1,
-	                                      dwSubAuthority2,
-	                                      dwSubAuthority3,
-	                                      dwSubAuthority4,
-	                                      dwSubAuthority5,
-	                                      dwSubAuthority6,
-	                                      dwSubAuthority7,
-	                                      pSid);
-  if (!NT_SUCCESS (Status))
+    Status = RtlAllocateAndInitializeSid(pIdentifierAuthority,
+                                         nSubAuthorityCount,
+                                         dwSubAuthority0,
+                                         dwSubAuthority1,
+                                         dwSubAuthority2,
+                                         dwSubAuthority3,
+                                         dwSubAuthority4,
+                                         dwSubAuthority5,
+                                         dwSubAuthority6,
+                                         dwSubAuthority7,
+                                         pSid);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -592,23 +592,25 @@ AllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
  * @implemented
  */
 BOOL STDCALL
-CopySid (DWORD nDestinationSidLength,
-	 PSID pDestinationSid,
-	 PSID pSourceSid)
+CopySid(DWORD nDestinationSidLength,
+        PSID pDestinationSid,
+        PSID pSourceSid)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlCopySid (nDestinationSidLength,
-		       pDestinationSid,
-		       pSourceSid);
-  if (!NT_SUCCESS (Status))
+    Status = RtlCopySid(nDestinationSidLength,
+                        pDestinationSid,
+                        pSourceSid);
+    if (!NT_SUCCESS (Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
   return TRUE;
 }
+
+
 /******************************************************************************
  * ConvertStringSecurityDescriptorToSecurityDescriptorW [ADVAPI32.@]
  * @implemented
@@ -830,10 +832,10 @@ BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorA(
  * @implemented
  */
 BOOL STDCALL
-EqualPrefixSid (PSID pSid1,
-		PSID pSid2)
+EqualPrefixSid(PSID pSid1,
+               PSID pSid2)
 {
-  return RtlEqualPrefixSid (pSid1, pSid2);
+    return RtlEqualPrefixSid (pSid1, pSid2);
 }
 
 
@@ -841,10 +843,10 @@ EqualPrefixSid (PSID pSid1,
  * @implemented
  */
 BOOL STDCALL
-EqualSid (PSID pSid1,
-	  PSID pSid2)
+EqualSid(PSID pSid1,
+         PSID pSid2)
 {
-  return RtlEqualSid (pSid1, pSid2);
+    return RtlEqualSid (pSid1, pSid2);
 }
 
 
@@ -856,9 +858,9 @@ EqualSid (PSID pSid1,
  *  even thou it's defined to return a PVOID...
  */
 PVOID STDCALL
-FreeSid (PSID pSid)
+FreeSid(PSID pSid)
 {
-   return RtlFreeSid (pSid);
+    return RtlFreeSid(pSid);
 }
 
 
@@ -866,9 +868,9 @@ FreeSid (PSID pSid)
  * @implemented
  */
 DWORD STDCALL
-GetLengthSid (PSID pSid)
+GetLengthSid(PSID pSid)
 {
-  return (DWORD)RtlLengthSid (pSid);
+    return (DWORD)RtlLengthSid(pSid);
 }
 
 
@@ -876,9 +878,9 @@ GetLengthSid (PSID pSid)
  * @implemented
  */
 PSID_IDENTIFIER_AUTHORITY STDCALL
-GetSidIdentifierAuthority (PSID pSid)
+GetSidIdentifierAuthority(PSID pSid)
 {
-  return RtlIdentifierAuthoritySid (pSid);
+    return RtlIdentifierAuthoritySid(pSid);
 }
 
 
@@ -886,9 +888,9 @@ GetSidIdentifierAuthority (PSID pSid)
  * @implemented
  */
 DWORD STDCALL
-GetSidLengthRequired (UCHAR nSubAuthorityCount)
+GetSidLengthRequired(UCHAR nSubAuthorityCount)
 {
-  return (DWORD)RtlLengthRequiredSid (nSubAuthorityCount);
+    return (DWORD)RtlLengthRequiredSid(nSubAuthorityCount);
 }
 
 
@@ -896,10 +898,10 @@ GetSidLengthRequired (UCHAR nSubAuthorityCount)
  * @implemented
  */
 PDWORD STDCALL
-GetSidSubAuthority (PSID pSid,
-		    DWORD nSubAuthority)
+GetSidSubAuthority(PSID pSid,
+                   DWORD nSubAuthority)
 {
-  return (PDWORD)RtlSubAuthoritySid (pSid, nSubAuthority);
+    return (PDWORD)RtlSubAuthoritySid(pSid, nSubAuthority);
 }
 
 
@@ -907,9 +909,9 @@ GetSidSubAuthority (PSID pSid,
  * @implemented
  */
 PUCHAR STDCALL
-GetSidSubAuthorityCount (PSID pSid)
+GetSidSubAuthorityCount(PSID pSid)
 {
-  return RtlSubAuthorityCountSid (pSid);
+    return RtlSubAuthorityCountSid(pSid);
 }
 
 
@@ -917,22 +919,22 @@ GetSidSubAuthorityCount (PSID pSid)
  * @implemented
  */
 BOOL STDCALL
-InitializeSid (PSID Sid,
-	       PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
-	       BYTE nSubAuthorityCount)
+InitializeSid(PSID Sid,
+              PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
+              BYTE nSubAuthorityCount)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  Status = RtlInitializeSid (Sid,
-			     pIdentifierAuthority,
-			     nSubAuthorityCount);
-  if (!NT_SUCCESS (Status))
+    Status = RtlInitializeSid(Sid,
+                              pIdentifierAuthority,
+                              nSubAuthorityCount);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -940,60 +942,63 @@ InitializeSid (PSID Sid,
  * @implemented
  */
 BOOL STDCALL
-IsValidSid (PSID pSid)
+IsValidSid(PSID pSid)
 {
-  return (BOOL)RtlValidSid (pSid);
+    return (BOOL)RtlValidSid(pSid);
 }
+
 
 /*
  * @implemented
  */
 BOOL STDCALL
-ConvertSidToStringSidW(PSID Sid, LPWSTR *StringSid)
+ConvertSidToStringSidW(PSID Sid,
+                       LPWSTR *StringSid)
 {
-  NTSTATUS Status;
-  UNICODE_STRING UnicodeString;
-  WCHAR FixedBuffer[64];
+    NTSTATUS Status;
+    UNICODE_STRING UnicodeString;
+    WCHAR FixedBuffer[64];
 
-  if (! RtlValidSid(Sid))
+    if (!RtlValidSid(Sid))
     {
-      SetLastError(ERROR_INVALID_SID);
-      return FALSE;
+        SetLastError(ERROR_INVALID_SID);
+        return FALSE;
     }
 
-  UnicodeString.Length = 0;
-  UnicodeString.MaximumLength = sizeof(FixedBuffer);
-  UnicodeString.Buffer = FixedBuffer;
-  Status = RtlConvertSidToUnicodeString(&UnicodeString, Sid, FALSE);
-  if (STATUS_BUFFER_TOO_SMALL == Status)
+    UnicodeString.Length = 0;
+    UnicodeString.MaximumLength = sizeof(FixedBuffer);
+    UnicodeString.Buffer = FixedBuffer;
+    Status = RtlConvertSidToUnicodeString(&UnicodeString, Sid, FALSE);
+    if (STATUS_BUFFER_TOO_SMALL == Status)
     {
-      Status = RtlConvertSidToUnicodeString(&UnicodeString, Sid, TRUE);
-    }
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        Status = RtlConvertSidToUnicodeString(&UnicodeString, Sid, TRUE);
     }
 
-  *StringSid = LocalAlloc(LMEM_FIXED, UnicodeString.Length + sizeof(WCHAR));
-  if (NULL == *StringSid)
+    if (!NT_SUCCESS(Status))
     {
-      if (UnicodeString.Buffer != FixedBuffer)
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    *StringSid = LocalAlloc(LMEM_FIXED, UnicodeString.Length + sizeof(WCHAR));
+    if (NULL == *StringSid)
+    {
+        if (UnicodeString.Buffer != FixedBuffer)
         {
-          RtlFreeUnicodeString(&UnicodeString);
+            RtlFreeUnicodeString(&UnicodeString);
         }
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
-  MoveMemory(*StringSid, UnicodeString.Buffer, UnicodeString.Length);
-  ZeroMemory((PCHAR) *StringSid + UnicodeString.Length, sizeof(WCHAR));
-  if (UnicodeString.Buffer != FixedBuffer)
+    MoveMemory(*StringSid, UnicodeString.Buffer, UnicodeString.Length);
+    ZeroMemory((PCHAR) *StringSid + UnicodeString.Length, sizeof(WCHAR));
+    if (UnicodeString.Buffer != FixedBuffer)
     {
-      RtlFreeUnicodeString(&UnicodeString);
+        RtlFreeUnicodeString(&UnicodeString);
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -1001,41 +1006,43 @@ ConvertSidToStringSidW(PSID Sid, LPWSTR *StringSid)
  * @implemented
  */
 BOOL STDCALL
-ConvertSidToStringSidA(PSID Sid, LPSTR *StringSid)
+ConvertSidToStringSidA(PSID Sid,
+                       LPSTR *StringSid)
 {
-  LPWSTR StringSidW;
-  int Len;
+    LPWSTR StringSidW;
+    int Len;
 
-  if (! ConvertSidToStringSidW(Sid, &StringSidW))
+    if (!ConvertSidToStringSidW(Sid, &StringSidW))
     {
-      return FALSE;
+        return FALSE;
     }
 
-  Len = WideCharToMultiByte(CP_ACP, 0, StringSidW, -1, NULL, 0, NULL, NULL);
-  if (Len <= 0)
+    Len = WideCharToMultiByte(CP_ACP, 0, StringSidW, -1, NULL, 0, NULL, NULL);
+    if (Len <= 0)
     {
-      LocalFree(StringSidW);
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-  *StringSid = LocalAlloc(LMEM_FIXED, Len);
-  if (NULL == *StringSid)
-    {
-      LocalFree(StringSidW);
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
+        LocalFree(StringSidW);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
 
-  if (! WideCharToMultiByte(CP_ACP, 0, StringSidW, -1, *StringSid, Len, NULL, NULL))
+    *StringSid = LocalAlloc(LMEM_FIXED, Len);
+    if (NULL == *StringSid)
     {
-      LocalFree(StringSid);
-      LocalFree(StringSidW);
-      return FALSE;
+        LocalFree(StringSidW);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
 
-  LocalFree(StringSidW);
+    if (!WideCharToMultiByte(CP_ACP, 0, StringSidW, -1, *StringSid, Len, NULL, NULL))
+    {
+        LocalFree(StringSid);
+        LocalFree(StringSidW);
+        return FALSE;
+    }
 
-  return TRUE;
+    LocalFree(StringSidW);
+
+    return TRUE;
 }
 
 
@@ -1077,22 +1084,27 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
     int i;
     TRACE("(%d, %s, %p, %p)\n", WellKnownSidType, debugstr_sid(DomainSid), pSid, cbSid);
 
-    if (DomainSid != NULL) {
+    if (DomainSid != NULL)
+    {
         FIXME("Only local computer supported!\n");
         SetLastError(ERROR_INVALID_PARAMETER);	/* FIXME */
         return FALSE;
     }
 
-    if (cbSid == NULL || pSid == NULL) {
+    if (cbSid == NULL || pSid == NULL)
+    {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++) {
-        if (WellKnownSids[i].Type == WellKnownSidType) {
+    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
+    {
+        if (WellKnownSids[i].Type == WellKnownSidType)
+        {
             DWORD length = GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
 
-            if (*cbSid < length) {
+            if (*cbSid < length)
+            {
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
@@ -1118,10 +1130,14 @@ IsWellKnownSid(IN PSID pSid,
     int i;
     TRACE("(%s, %d)\n", debugstr_sid(pSid), WellKnownSidType);
 
-    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
+    for (i = 0; i < sizeof(WellKnownSids) / sizeof(WellKnownSids[0]); i++)
+    {
         if (WellKnownSids[i].Type == WellKnownSidType)
+        {
             if (EqualSid(pSid, (PSID)((ULONG_PTR)&WellKnownSids[i].Sid.Revision)))
                 return TRUE;
+        }
+    }
 
     return FALSE;
 }
@@ -1131,9 +1147,8 @@ IsWellKnownSid(IN PSID pSid,
  * @implemented
  */
 BOOL STDCALL
-ConvertStringSidToSidA(
-                IN LPCSTR StringSid,
-                OUT PSID* sid)
+ConvertStringSidToSidA(IN LPCSTR StringSid,
+                       OUT PSID* sid)
 {
     BOOL bRetVal = FALSE;
 
@@ -1150,10 +1165,12 @@ ConvertStringSidToSidA(
     return bRetVal;
 }
 
+
 /******************************************************************************
  * ComputeStringSidSize
  */
-static DWORD ComputeStringSidSize(LPCWSTR StringSid)
+static DWORD
+ComputeStringSidSize(LPCWSTR StringSid)
 {
     DWORD size = sizeof(SID);
 
@@ -1229,16 +1246,15 @@ static const RECORD SidTable[] =
  * @implemented
  */
 BOOL WINAPI
-ConvertStringSidToSidW(
-	IN LPCWSTR StringSid,
-	OUT PSID* sid)
+ConvertStringSidToSidW(IN LPCWSTR StringSid,
+                       OUT PSID* sid)
 {
-	DWORD size;
-	DWORD i, cBytes, identAuth, csubauth;
-	BOOL ret;
-	SID* pisid;
+    DWORD size;
+    DWORD i, cBytes, identAuth, csubauth;
+    BOOL ret;
+    SID* pisid;
 
-	TRACE("%s %p\n", debugstr_w(StringSid), sid);
+    TRACE("%s %p\n", debugstr_w(StringSid), sid);
 
 	if (!StringSid)
 	{

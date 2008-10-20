@@ -774,8 +774,8 @@ void Pane::calc_single_width(int col)
 
 	x = _positions[col] + cx;
 
-	for(; col<COLUMNS; ) {
-		_positions[++col] = x;
+	for(; col<COLUMNS; col++) {
+		_positions[col+1] = x;
 		x += _widths[col];
 	}
 

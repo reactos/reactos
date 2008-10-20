@@ -48,7 +48,7 @@ typedef struct _RPC_MESSAGE
     unsigned long RpcFlags;
 } RPC_MESSAGE, *PRPC_MESSAGE;
 
-/* or'd with ProcNum */
+/* or'ed with ProcNum */
 #define RPC_FLAGS_VALID_BIT         0x00008000
 
 #define RPC_CONTEXT_HANDLE_DEFAULT_GUARD ((void *)0xfffff00d)

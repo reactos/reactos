@@ -606,6 +606,10 @@ PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
           Description = L"Fibre Channel controller";
           break;
 
+        case PCI_SUBCLASS_SB_SMBUS:
+          Description = L"SMBus controller";
+          break;
+
         default:
           Description = L"Other serial bus controller";
           break;

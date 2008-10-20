@@ -16,10 +16,19 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 
 IDI_SHELL_NETWORK_FOLDER    ICON "res/netshell.ico"
+IDI_NET_ERROR               ICON "res/neterror.ico"
+IDI_NET_IDLE                ICON "res/netidle.ico"
+IDI_NET_OFF                 ICON "res/netoff.ico"
+IDI_NET_REC                 ICON "res/netrec.ico"
+IDI_NET_TRANS               ICON "res/nettrans.ico"
+IDI_NET_TRANSREC            ICON "res/nettrrec.ico"
 
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
+#include "lang/it-IT.rc"
+#include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"

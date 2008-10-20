@@ -1,10 +1,12 @@
-/* $Id$
- *
- * smapi.c - \SmApiPort LPC port message management
- *
- * Reactos Session Manager
- *
+/*
+ * PROJECT:         ReactOS Session Manager
+ * LICENSE:         GPL v2 or later - See COPYING in the top level directory
+ * FILE:            base/system/smss/print.c
+ * PURPOSE:         \SmApiPort LPC port message management.
+ * PROGRAMMERS:     ReactOS Development Team
  */
+
+/* INCLUDES ******************************************************************/
 #include "smss.h"
 
 #define NDEBUG

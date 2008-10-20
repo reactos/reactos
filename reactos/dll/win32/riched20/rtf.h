@@ -1211,6 +1211,7 @@ void		RTFSetReadHook (RTF_Info *, RTFFuncPtr);
 RTFFuncPtr	RTFGetReadHook (const RTF_Info *);
 void		RTFRouteToken (RTF_Info *);
 void		RTFSkipGroup (RTF_Info *);
+void		RTFReadGroup (RTF_Info *);
 void		RTFExpandStyle (RTF_Info *, int);
 int		RTFCheckCM (const RTF_Info *, int, int);
 int		RTFCheckCMM (const RTF_Info *, int, int, int);

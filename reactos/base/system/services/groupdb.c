@@ -61,7 +61,7 @@ ScmSetServiceGroup(PSERVICE lpService,
 
     lpGroup = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
                                         HEAP_ZERO_MEMORY,
-                                        sizeof(SERVICE_GROUP) + (wcslen(lpGroupName) * sizeof(WCHAR)));
+                                        sizeof(SERVICE_GROUP) + ((wcslen(lpGroupName) + 1)* sizeof(WCHAR)));
     if (lpGroup == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -144,7 +144,7 @@ CreateGroupListRoutine(PWSTR ValueName,
 
         Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
                                           HEAP_ZERO_MEMORY,
-                                          sizeof(SERVICE_GROUP) + (wcslen((const wchar_t*) ValueData) * sizeof(WCHAR)));
+                                          sizeof(SERVICE_GROUP) + ((wcslen((const wchar_t*) ValueData) + 1) * sizeof(WCHAR)));
         if (Group == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;

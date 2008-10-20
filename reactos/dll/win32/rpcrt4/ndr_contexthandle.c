@@ -89,7 +89,10 @@ RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
     LeaveCriticalSection(&ndr_context_cs);
 
     if (!handle)
+    {
+        ERR("invalid handle %p\n", CContext);
         RpcRaiseException(ERROR_INVALID_HANDLE);
+    }
     return handle;
 }
 
@@ -183,7 +186,7 @@ static UINT ndr_update_context_handle(NDR_CCONTEXT *CContext,
         che->magic = NDR_CONTEXT_HANDLE_MAGIC;
         RpcBindingCopy(hBinding, &che->handle);
         list_add_tail(&context_handle_list, &che->entry);
-        memcpy(&che->wire_data, chi, sizeof *chi);
+        che->wire_data = *chi;
     }
 
     *CContext = che;

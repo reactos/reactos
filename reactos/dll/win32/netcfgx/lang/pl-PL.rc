@@ -1,0 +1,31 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ogólne"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Mo¿esz automatycznie pobraæ ustawienia sieciowe protoko³u IP, je¿eli Twoja sieæ obs³uguje te funkcje. W innym przypadku musisz skontaktowaæ siê z administratorem w celu zdobycia odpowiednich ustawieñ.", -1, 9, 9, 228, 27
+ CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+ GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+ CONTROL "&U¿yj nastêpuj¹cego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "Adres IP:", -1, 14, 75, 135, 8
+ CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
+ LTEXT "Maska podsieci:", -1, 14, 90, 135, 8
+ CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
+ LTEXT "Domyœlna brama:", -1, 14, 105, 135, 8
+ CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
+ CONTROL "Pobierz adresy serwerów DNS automatycznie", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+ GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+ CONTROL "&U¿yj poni¿szych adresów serwerów DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Pierwszy serwer DNS:", -1, 14, 171, 135, 8
+ CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
+ LTEXT "Alternatywny serwer DNS:", -1, 14, 186, 135, 8
+ CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
+ PUSHBUTTON "&Zaawansowane", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+	IDS_NET_CONNECT "Network connection"
+END

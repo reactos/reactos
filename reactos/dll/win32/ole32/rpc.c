@@ -1584,7 +1584,7 @@ HRESULT RPC_ResolveOxid(OXID oxid, OXID_INFO *oxid_info)
     oxid_info->ipidRemUnknown.Data1 = 0xffffffff;
     oxid_info->ipidRemUnknown.Data2 = 0xffff;
     oxid_info->ipidRemUnknown.Data3 = 0xffff;
-    memcpy(&oxid_info->ipidRemUnknown.Data4, &oxid, sizeof(OXID));
+    memcpy(oxid_info->ipidRemUnknown.Data4, &oxid, sizeof(OXID));
     oxid_info->psa = NULL /* FIXME */;
 
     return S_OK;

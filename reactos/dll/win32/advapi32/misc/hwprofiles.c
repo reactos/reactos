@@ -30,53 +30,53 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 BOOL STDCALL
 GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
 {
-  HW_PROFILE_INFOW ProfileInfo;
-  UNICODE_STRING StringU;
-  ANSI_STRING StringA;
-  BOOL bResult;
-  NTSTATUS Status;
+    HW_PROFILE_INFOW ProfileInfo;
+    UNICODE_STRING StringU;
+    ANSI_STRING StringA;
+    BOOL bResult;
+    NTSTATUS Status;
 
-  TRACE("GetCurrentHwProfileA() called\n");
+    TRACE("GetCurrentHwProfileA() called\n");
 
-  bResult = GetCurrentHwProfileW(&ProfileInfo);
-  if (bResult == FALSE)
-    return FALSE;
+    bResult = GetCurrentHwProfileW(&ProfileInfo);
+    if (bResult == FALSE)
+        return FALSE;
 
-  lpHwProfileInfo->dwDockInfo = ProfileInfo.dwDockInfo;
+    lpHwProfileInfo->dwDockInfo = ProfileInfo.dwDockInfo;
 
-  /* Convert the profile GUID to ANSI */
-  StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileGuid;
-  StringU.Length = wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
-  StringU.MaximumLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
-  StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileGuid;
-  StringA.Length = 0;
-  StringA.MaximumLength = HW_PROFILE_GUIDLEN;
-  Status = RtlUnicodeStringToAnsiString(&StringA,
-					&StringU,
-					FALSE);
-  if (!NT_SUCCESS(Status))
+    /* Convert the profile GUID to ANSI */
+    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileGuid;
+    StringU.Length = wcslen(ProfileInfo.szHwProfileGuid) * sizeof(WCHAR);
+    StringU.MaximumLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
+    StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileGuid;
+    StringA.Length = 0;
+    StringA.MaximumLength = HW_PROFILE_GUIDLEN;
+    Status = RtlUnicodeStringToAnsiString(&StringA,
+                                          &StringU,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  /* Convert the profile name to ANSI */
-  StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileName;
-  StringU.Length = wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
-  StringU.MaximumLength = MAX_PROFILE_LEN * sizeof(WCHAR);
-  StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileName;
-  StringA.Length = 0;
-  StringA.MaximumLength = MAX_PROFILE_LEN;
-  Status = RtlUnicodeStringToAnsiString(&StringA,
-					&StringU,
-					FALSE);
-  if (!NT_SUCCESS(Status))
+    /* Convert the profile name to ANSI */
+    StringU.Buffer = (PWCHAR)ProfileInfo.szHwProfileName;
+    StringU.Length = wcslen(ProfileInfo.szHwProfileName) * sizeof(WCHAR);
+    StringU.MaximumLength = MAX_PROFILE_LEN * sizeof(WCHAR);
+    StringA.Buffer = (PCHAR)&lpHwProfileInfo->szHwProfileName;
+    StringA.Length = 0;
+    StringA.MaximumLength = MAX_PROFILE_LEN;
+    Status = RtlUnicodeStringToAnsiString(&StringA,
+                                          &StringU,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -86,114 +86,114 @@ GetCurrentHwProfileA(LPHW_PROFILE_INFOA lpHwProfileInfo)
 BOOL STDCALL
 GetCurrentHwProfileW(LPHW_PROFILE_INFOW lpHwProfileInfo)
 {
-  WCHAR szKeyName[256];
-  HKEY hDbKey;
-  HKEY hProfileKey;
-  DWORD dwLength;
-  DWORD dwConfigId;
+    WCHAR szKeyName[256];
+    HKEY hDbKey;
+    HKEY hProfileKey;
+    DWORD dwLength;
+    DWORD dwConfigId;
 
-  TRACE("GetCurrentHwProfileW() called\n");
+    TRACE("GetCurrentHwProfileW() called\n");
 
-  if (lpHwProfileInfo == NULL)
+    if (lpHwProfileInfo == NULL)
     {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		    L"System\\CurrentControlSet\\Control\\IDConfigDB",
-		    0,
-		    KEY_QUERY_VALUE,
-		    &hDbKey))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"System\\CurrentControlSet\\Control\\IDConfigDB",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hDbKey))
     {
-      SetLastError(ERROR_REGISTRY_CORRUPT);
-      return FALSE;
+        SetLastError(ERROR_REGISTRY_CORRUPT);
+        return FALSE;
     }
 
-  dwLength = sizeof(DWORD);
-  if (RegQueryValueExW(hDbKey,
-		       L"CurrentConfig",
-		       0,
-		       NULL,
-		       (LPBYTE)&dwConfigId,
-		       &dwLength))
+    dwLength = sizeof(DWORD);
+    if (RegQueryValueExW(hDbKey,
+                         L"CurrentConfig",
+                         0,
+                         NULL,
+                         (LPBYTE)&dwConfigId,
+                         &dwLength))
     {
-      RegCloseKey(hDbKey);
-      SetLastError(ERROR_REGISTRY_CORRUPT);
-      return FALSE;
+        RegCloseKey(hDbKey);
+        SetLastError(ERROR_REGISTRY_CORRUPT);
+        return FALSE;
     }
 
-  swprintf(szKeyName,
-	   L"Hardware Profile\\%04lu",
-	   dwConfigId);
+    swprintf(szKeyName,
+             L"Hardware Profile\\%04lu",
+             dwConfigId);
 
-  if (RegOpenKeyExW(hDbKey,
-		    szKeyName,
-		    0,
-		    KEY_QUERY_VALUE | KEY_SET_VALUE,
-		    &hProfileKey))
+    if (RegOpenKeyExW(hDbKey,
+                      szKeyName,
+                      0,
+                      KEY_QUERY_VALUE | KEY_SET_VALUE,
+                      &hProfileKey))
     {
-      RegCloseKey(hDbKey);
-      SetLastError(ERROR_REGISTRY_CORRUPT);
-      return FALSE;
+        RegCloseKey(hDbKey);
+        SetLastError(ERROR_REGISTRY_CORRUPT);
+        return FALSE;
     }
 
-  dwLength = sizeof(DWORD);
-  if (RegQueryValueExW(hProfileKey,
-		       L"DockState",
-		       0,
-		       NULL,
-		       (LPBYTE)&lpHwProfileInfo->dwDockInfo,
-		       &dwLength))
+    dwLength = sizeof(DWORD);
+    if (RegQueryValueExW(hProfileKey,
+                         L"DockState",
+                         0,
+                         NULL,
+                         (LPBYTE)&lpHwProfileInfo->dwDockInfo,
+                         &dwLength))
     {
-      lpHwProfileInfo->dwDockInfo =
-	DOCKINFO_DOCKED | DOCKINFO_UNDOCKED | DOCKINFO_USER_SUPPLIED;
+        lpHwProfileInfo->dwDockInfo =
+            DOCKINFO_DOCKED | DOCKINFO_UNDOCKED | DOCKINFO_USER_SUPPLIED;
     }
 
-  dwLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
-  if (RegQueryValueExW(hProfileKey,
-		       L"HwProfileGuid",
-		       0,
-		       NULL,
-		       (LPBYTE)&lpHwProfileInfo->szHwProfileGuid,
-		       &dwLength))
+    dwLength = HW_PROFILE_GUIDLEN * sizeof(WCHAR);
+    if (RegQueryValueExW(hProfileKey,
+                         L"HwProfileGuid",
+                         0,
+                         NULL,
+                         (LPBYTE)&lpHwProfileInfo->szHwProfileGuid,
+                         &dwLength))
     {
-      /* FIXME: Create a new GUID */
-      wcscpy(lpHwProfileInfo->szHwProfileGuid,
-	     L"{00000000-0000-0000-0000-000000000000}");
+        /* FIXME: Create a new GUID */
+        wcscpy(lpHwProfileInfo->szHwProfileGuid,
+               L"{00000000-0000-0000-0000-000000000000}");
 
-      dwLength = (wcslen(lpHwProfileInfo->szHwProfileGuid) + 1) * sizeof(WCHAR);
-      RegSetValueExW(hProfileKey,
-		     L"HwProfileGuid",
-		     0,
-		     REG_SZ,
-		     (LPBYTE)lpHwProfileInfo->szHwProfileGuid,
-		     dwLength);
+        dwLength = (wcslen(lpHwProfileInfo->szHwProfileGuid) + 1) * sizeof(WCHAR);
+        RegSetValueExW(hProfileKey,
+                       L"HwProfileGuid",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)lpHwProfileInfo->szHwProfileGuid,
+                       dwLength);
     }
 
-  dwLength = MAX_PROFILE_LEN * sizeof(WCHAR);
-  if (RegQueryValueExW(hProfileKey,
-		       L"FriendlyName",
-		       0,
-		       NULL,
-		       (LPBYTE)&lpHwProfileInfo->szHwProfileName,
-		       &dwLength))
+    dwLength = MAX_PROFILE_LEN * sizeof(WCHAR);
+    if (RegQueryValueExW(hProfileKey,
+                         L"FriendlyName",
+                         0,
+                         NULL,
+                         (LPBYTE)&lpHwProfileInfo->szHwProfileName,
+                         &dwLength))
     {
-      wcscpy(lpHwProfileInfo->szHwProfileName,
-	     L"Noname Hardware Profile");
-      dwLength = (wcslen(lpHwProfileInfo->szHwProfileName) + 1) * sizeof(WCHAR);
-      RegSetValueExW(hProfileKey,
-		     L"FriendlyName",
-		     0,
-		     REG_SZ,
-		     (LPBYTE)lpHwProfileInfo->szHwProfileName,
-		     dwLength);
+        wcscpy(lpHwProfileInfo->szHwProfileName,
+               L"Noname Hardware Profile");
+        dwLength = (wcslen(lpHwProfileInfo->szHwProfileName) + 1) * sizeof(WCHAR);
+        RegSetValueExW(hProfileKey,
+                       L"FriendlyName",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)lpHwProfileInfo->szHwProfileName,
+                       dwLength);
     }
 
-  RegCloseKey(hProfileKey);
-  RegCloseKey(hDbKey);
+    RegCloseKey(hProfileKey);
+    RegCloseKey(hDbKey);
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

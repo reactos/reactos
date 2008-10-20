@@ -697,7 +697,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                            NULL,
                            NULL,
                            PAGE_READONLY,
-                           SEC_COMMIT | (MapAsDataFile ? 0 : SEC_IMAGE),
+                           MapAsDataFile ? SEC_COMMIT : SEC_IMAGE,
                            FileHandle);
   NtClose(FileHandle);
 
@@ -2048,8 +2048,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     0,
                                     NULL,
                                     &ViewSize,
+                                    ViewShare,
                                     0,
-                                    MEM_COMMIT,
                                     PAGE_READONLY);
         NtCurrentTeb()->Tib.ArbitraryUserPointer = ArbitraryUserPointer;
         if (!NT_SUCCESS(Status))
@@ -3239,4 +3239,29 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
   return (PIMAGE_BASE_RELOCATION)TypeOffset;
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+LdrLockLoaderLock(IN ULONG Flags,
+                  OUT PULONG Disposition OPTIONAL,
+                  OUT PULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrUnlockLoaderLock(IN ULONG Flags,
+                    IN ULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

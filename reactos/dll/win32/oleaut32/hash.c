@@ -486,6 +486,7 @@ static const unsigned char Lookup_224[128 * 3] = {
 
 /***********************************************************************
  *		LHashValOfNameSysA (OLEAUT32.166)
+ *              LHashValOfNameSys  (TYPELIB.4)
  *
  * Produce a string hash value.
  *
@@ -508,6 +509,9 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   ULONG nOffset, nMask = skind == SYS_MAC ? 1 : 0;
   ULONG nHiWord, nLoWord = 0x0deadbee;
   const unsigned char *str = (const unsigned char *)lpStr, *pnLookup = NULL;
+
+  TRACE("(%d, %d, %s) %s\n", skind, lcid, debugstr_a(lpStr),
+    (skind == SYS_WIN16) ? "SYS_WIN16" : (skind == SYS_WIN32) ? "SYS_WIN32" : "");
 
   if (!str)
     return 0;

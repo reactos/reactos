@@ -1011,12 +1011,6 @@ typedef struct _OFSTRUCT {
 	WORD Reserved2;
 	CHAR szPathName[OFS_MAXPATHNAME];
 } OFSTRUCT,*LPOFSTRUCT,*POFSTRUCT;
-typedef struct _WIN_CERTIFICATE {
-      DWORD dwLength;
-      WORD wRevision;
-      WORD wCertificateType;
-      BYTE bCertificate[1];
-} WIN_CERTIFICATE, *LPWIN_CERTIFICATE;
 #if (_WIN32_WINNT >= 0x0501)
 typedef struct tagACTCTXA {
 	ULONG cbSize;

@@ -61,7 +61,7 @@ InitStockObjects(void)
 DWORD STDCALL
 GetSysColor(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColors[nIndex];
   }
@@ -76,7 +76,7 @@ GetSysColor(int nIndex)
 HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColorPens[nIndex];
   }
@@ -91,7 +91,7 @@ GetSysColorPen(int nIndex)
 HBRUSH STDCALL
 GetSysColorBrush(int nIndex)
 {
-  if(nIndex >= 0 && nIndex <= NUM_SYSCOLORS)
+  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
     return g_psi->SysColorBrushes[nIndex];
   }

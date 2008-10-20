@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  24-08-2008
+ * LAST CHANGE:  18-09-2008
  */   
 
 /*
@@ -386,18 +386,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "⁄lohy", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -577,7 +577,7 @@ BEGIN
 	DEFPUSHBUTTON "&Spustiù", IDOK, 53, 100, 60, 14
 	GROUPBOX "Moûnosti kontroly disku", -1, 7, 6, 179, 50
 	PUSHBUTTON "Zruöiù", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "&Automaticky opraviù chyby v syst˝me s˙borov", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Automaticky opraviù chyby v systÈme s˙borov", 14000, 16, 15, 165, 10
 	AUTOCHECKBOX "Vy&hæadaù a pok˙siù sa obnoviù chybnÈ sektory", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
@@ -644,8 +644,8 @@ BEGIN
 	IDS_PROPERTIES              "Vl&astnosti"
 	IDS_CUT                     "&Vystrihn˙ù"
 	IDS_RESTORE                 "&Obnoviù"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
+	IDS_FORMATDRIVE             "Form·tovaù..."
+	IDS_RENAME                  "Premenovaù"
 	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
@@ -719,7 +719,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Moûnosti prieËinka"
 	IDS_RECYCLEBIN_LOCATION     "Umiestnenia Koöa" //Recycle Bin Location
 	IDS_RECYCLEBIN_DISKSPACE    "DostupnÈ miesto"
-	IDS_EMPTY_BITBUCKET         "Vypr·zniù KÙö"
+	IDS_EMPTY_BITBUCKET         "Vypr·zdniù KÙö"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
 	IDS_PICK_ICON_FILTER        "S˙bory ikon(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"

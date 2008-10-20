@@ -220,6 +220,13 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
       new_para->member.para.pCell = run_para->member.para.pCell;
       assert(run_para->member.para.prev_para->member.para.nFlags & MEPF_CELL);
       assert(!(run_para->member.para.prev_para->member.para.nFlags & MEPF_ROWSTART));
+      if (new_para->member.para.pCell != new_para->member.para.next_para->member.para.pCell
+          && new_para->member.para.next_para->member.para.pCell
+          && !new_para->member.para.next_para->member.para.pCell->member.cell.prev_cell)
+      {
+        /* Row starts just after the row that was ended. */
+        new_para->member.para.nFlags |= MEPF_ROWSTART;
+      }
     } else {
       new_para->member.para.pCell = run_para->member.para.pCell;
     }

@@ -889,6 +889,23 @@ static ME_DisplayItem* ME_FindPixelPosInTableRow(int x, int y,
   return para;
 }
 
+static BOOL ME_ReturnFoundPos(ME_TextEditor *editor, ME_DisplayItem *found,
+                               ME_Cursor *result, int rx, BOOL isExact)
+{
+  assert(found);
+  assert(found->type == diRun);
+  if ((found->member.run.nFlags & MERF_ENDPARA) || rx < 0)
+    rx = 0;
+  result->pRun = found;
+  result->nOffset = ME_CharFromPointCursor(editor, rx, &found->member.run);
+  if (editor->pCursors[0].nOffset == found->member.run.strText->nLen && rx)
+  {
+    result->pRun = ME_FindItemFwd(editor->pCursors[0].pRun, diRun);
+    result->nOffset = 0;
+  }
+  return isExact;
+}
+
 /* Finds the run and offset from the pixel position.
  *
  * x & y are pixel positions in virtual coordinates into the rich edit control,
@@ -963,34 +980,21 @@ static BOOL ME_FindPixelPos(ME_TextEditor *editor, int x, int y,
     case diRun:
       rx = x - p->member.run.pt.x;
       if (rx < p->member.run.nWidth)
-      {
-      found_here:
-        assert(p->type == diRun);
-        if ((p->member.run.nFlags & MERF_ENDPARA) || rx < 0)
-          rx = 0;
-        result->pRun = p;
-        result->nOffset = ME_CharFromPointCursor(editor, rx, &p->member.run);
-        if (editor->pCursors[0].nOffset == p->member.run.strText->nLen && rx)
-        {
-          result->pRun = ME_FindItemFwd(editor->pCursors[0].pRun, diRun);
-          result->nOffset = 0;
-        }
-        return isExact;
-      }
+        return ME_ReturnFoundPos(editor, p, result, rx, isExact);
       break;
     case diStartRow:
       isExact = FALSE;
       p = ME_FindItemFwd(p, diRun);
       if (is_eol) *is_eol = 1;
       rx = 0; /* FIXME not sure */
-      goto found_here;
+      return ME_ReturnFoundPos(editor, p, result, rx, isExact);
     case diCell:
     case diParagraph:
     case diTextEnd:
       isExact = FALSE;
       rx = 0; /* FIXME not sure */
       p = last;
-      goto found_here;
+      return ME_ReturnFoundPos(editor, p, result, rx, isExact);
     default: assert(0);
     }
     last = p;

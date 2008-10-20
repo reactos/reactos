@@ -84,20 +84,20 @@ BOOL CRYPT_AsnEncodePKCSDigestedData(CRYPT_DIGESTED_DATA *digestedData,
 
 typedef struct _CRYPT_SIGNED_INFO
 {
-    DWORD              version;
-    DWORD              cCertEncoded;
-    PCERT_BLOB         rgCertEncoded;
-    DWORD              cCrlEncoded;
-    PCRL_BLOB          rgCrlEncoded;
-    CRYPT_CONTENT_INFO content;
-    DWORD              cSignerInfo;
-    PCMSG_SIGNER_INFO  rgSignerInfo;
+    DWORD                 version;
+    DWORD                 cCertEncoded;
+    PCERT_BLOB            rgCertEncoded;
+    DWORD                 cCrlEncoded;
+    PCRL_BLOB             rgCrlEncoded;
+    CRYPT_CONTENT_INFO    content;
+    DWORD                 cSignerInfo;
+    PCMSG_CMS_SIGNER_INFO rgSignerInfo;
 } CRYPT_SIGNED_INFO;
 
-BOOL CRYPT_AsnEncodePKCSSignedInfo(CRYPT_SIGNED_INFO *, void *pvData,
+BOOL CRYPT_AsnEncodeCMSSignedInfo(CRYPT_SIGNED_INFO *, void *pvData,
  DWORD *pcbData);
 
-BOOL CRYPT_AsnDecodePKCSSignedInfo(const BYTE *pbEncoded, DWORD cbEncoded,
+BOOL CRYPT_AsnDecodeCMSSignedInfo(const BYTE *pbEncoded, DWORD cbEncoded,
  DWORD dwFlags, PCRYPT_DECODE_PARA pDecodePara,
  CRYPT_SIGNED_INFO *signedInfo, DWORD *pcbSignedInfo);
 
@@ -227,6 +227,7 @@ typedef struct WINE_CRYPTCERTSTORE
     PFN_CERT_STORE_PROV_CLOSE   closeStore;
     CONTEXT_FUNCS               certs;
     CONTEXT_FUNCS               crls;
+    CONTEXT_FUNCS               ctls;
     PFN_CERT_STORE_PROV_CONTROL control; /* optional */
     PCONTEXT_PROPERTY_LIST      properties;
 } WINECRYPT_CERTSTORE, *PWINECRYPT_CERTSTORE;

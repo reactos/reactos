@@ -59,6 +59,7 @@ static HRESULT WINAPI domcdata_QueryInterface(
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMCDATASection ) ||
+         IsEqualGUID( riid, &IID_IXMLDOMCharacterData) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IUnknown ) )
     {

@@ -168,6 +168,36 @@ DECLARE_INTERFACE_(INetConnectionManager, IUnknown)
 EXTERN_C const CLSID CLSID_ConnectionManager;
 EXTERN_C const IID IID_INetConnectionManager;
 
+typedef enum
+{
+    NCUC_DEFAULT        = 0,
+    NCUC_NO_UI          = 1,
+    NCUC_ENABLE_DISABLE = 2
+}NETCONUI_CONNECT_FLAGS;
+
+#undef  INTERFACE
+#define INTERFACE INetConnectionConnectUi
+DECLARE_INTERFACE_(INetConnectionConnectUi, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,SetConnection)(THIS_ INetConnection* pCon) PURE;
+    STDMETHOD_(HRESULT,Connect) (THIS_ HWND hwndParent, DWORD dwFlags) PURE;
+    STDMETHOD_(HRESULT,Disconnect) (THIS_ HWND hwndParent, DWORD dwFlags);
+};
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+#define INetConnectionConnectUi_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetConnectionConnectUi_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetConnectionConnectUi_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetConnectionConnectUi_SetConnection(p,a)         (p)->lpVtbl->SetConnection(p,a)
+#define INetConnectionConnectUi_Connect(p,a,b)             (p)->lpVtbl->Connect(p,a,b)
+#define INetConnectionConnectUi_Disconnect(p,a,b)          (p)->lpVtbl->Disconnect(p,a,b)
+#endif
+
+EXTERN_C const IID IID_INetConnectionConnectUi;
+
 #undef  INTERFACE
 #define INTERFACE INetConnectionPropertyUi
 DECLARE_INTERFACE_(INetConnectionPropertyUi, IUnknown)

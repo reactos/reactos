@@ -15,530 +15,257 @@ DriverVer = 05/29/2008,0.1
 
 [Font.120]
 
-; cp1252/cp437
+[Font.Reg.96]
+HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
+HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
+
+[Font.Reg.120]
+HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
+HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
+
+[Font.Latin.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
+
+[Font.Cyrillic.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
+
+[Font.Greek.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"DejaVu Sans"
+
+[Font.Hebrew.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"DejaVu Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"DejaVu Sans"
+
+[Font.Unicode.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"DejaVu Sans Mono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"DejaVu Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"DejaVu Sans"
+
+; cp1252/cp437 US
 [Font.CP437.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP437.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-[Font.CP1252.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1252.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1256/cp720
+; cp1256/cp720 Arabic
 [Font.CP720.96]
-DelReg = Font.CP1256.Reg.120
-AddReg = Font.CP1256.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP720.120]
-DelReg = Font.CP1256.Reg.96
-AddReg = Font.CP1256.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
-[Font.CP1256.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1256.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1253/cp737
+; cp1253/cp737 Greek
 [Font.CP737.96]
-DelReg = Font.CP1253.Reg.120
-AddReg = Font.CP1253.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Greek.Reg
 
 [Font.CP737.120]
-DelReg = Font.CP1253.Reg.96
-AddReg = Font.CP1253.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Greek.Reg
 
-[Font.CP1253.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1253.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1257/cp775
+; cp1257/cp775 Baltic
 [Font.CP775.96]
-DelReg = Font.CP1257.Reg.120
-AddReg = Font.CP1257.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP775.120]
-DelReg = Font.CP1257.Reg.96
-AddReg = Font.CP1257.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-[Font.CP1257.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1257.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1252/cp850
+; cp1252/cp850 Multilingual Latin I
 [Font.CP850.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP850.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-; cp1250/cp852
+; cp1250/cp852 Latin II/Central European
 [Font.CP852.96]
-DelReg = Font.CP1250.Reg.120
-AddReg = Font.CP1250.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP852.120]
-DelReg = Font.CP1250.Reg.96
-AddReg = Font.CP1250.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-[Font.CP1250.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1250.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1251/cp855
+; cp1251/cp855 Cyrillic
 [Font.CP855.96]
-DelReg = Font.CP1251.Reg.120
-AddReg = Font.CP1251.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Cyrillic.Reg
 
 [Font.CP855.120]
-DelReg = Font.CP1251.Reg.96
-AddReg = Font.CP1251.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Cyrillic.Reg
 
-[Font.CP1251.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1251.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1254/cp857
+; cp1254/cp857 Turkish
 [Font.CP857.96]
-DelReg = Font.CP1254.Reg.120
-AddReg = Font.CP1254.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP857.120]
-DelReg = Font.CP1254.Reg.96
-AddReg = Font.CP1254.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-[Font.CP1254.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1254.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1252/cp860
+; cp1252/cp860 Portuguese
 [Font.CP860.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP860.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-; cp1252/cp861
+; cp1252/cp861 Icelandic
 [Font.CP861.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
 [Font.CP861.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-; cp1255/cp862
+; cp1255/cp862 Hebrew
 [Font.CP862.96]
-DelReg = Font.CP1255.Reg.120
-AddReg = Font.CP1255.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Hebrew.Reg
 
 [Font.CP862.120]
-DelReg = Font.CP1255.Reg.96
-AddReg = Font.CP1255.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Hebrew.Reg
 
-[Font.CP1255.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1255.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp1252/cp863
+; cp1252/cp863 Canadian-French
 [Font.CP863.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP863.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-; cp1252/cp865
+; cp1252/cp865 Nordic
 [Font.CP865.96]
-DelReg = Font.CP1252.Reg.120
-AddReg = Font.CP1252.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Latin.Reg
 
 [Font.CP865.120]
-DelReg = Font.CP1252.Reg.96
-AddReg = Font.CP1252.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Latin.Reg
 
-; cp1251/cp866
+; cp1251/cp866 Russian
 [Font.CP866.96]
-DelReg = Font.CP1251.Reg.120
-AddReg = Font.CP1251.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Cyrillic.Reg
 
 [Font.CP866.120]
-DelReg = Font.CP1251.Reg.96
-AddReg = Font.CP1251.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Cyrillic.Reg
 
-; cp1253/cp869
+; cp1253/cp869 Modern Greek
 [Font.CP869.96]
-DelReg = Font.CP1253.Reg.120
-AddReg = Font.CP1253.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Greek.Reg
 
 [Font.CP869.120]
-DelReg = Font.CP1253.Reg.96
-AddReg = Font.CP1253.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Greek.Reg
 
 ; cp874/cp874 (Thai)
 [Font.CP874.96]
-DelReg = Font.CP874.Reg.120
-AddReg = Font.CP874.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP874.120]
-DelReg = Font.CP874.Reg.96
-AddReg = Font.CP874.Reg.120
-
-[Font.CP874.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP874.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
 ; cp1258/cp1258 (Vietnamese)
 [Font.CP1258.96]
-DelReg = Font.CP1258.Reg.120
-AddReg = Font.CP1258.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP1258.120]
-DelReg = Font.CP1258.Reg.96
-AddReg = Font.CP1258.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
-[Font.CP1258.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP1258.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp932/cp932
+; cp932/cp932 Japanese
 [Font.CP932.96]
-DelReg = Font.CP932.Reg.120
-AddReg = Font.CP932.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP932.120]
-DelReg = Font.CP932.Reg.96
-AddReg = Font.CP932.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
-[Font.CP932.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP932.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp936/cp936
+; cp936/cp936 Simplified Chinese
 [Font.CP936.96]
-DelReg = Font.CP936.Reg.120
-AddReg = Font.CP936.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP936.120]
-DelReg = Font.CP936.Reg.96
-AddReg = Font.CP936.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
-[Font.CP936.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP936.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp949/cp949
+; cp949/cp949 Korean
 [Font.CP949.96]
-DelReg = Font.CP949.Reg.120
-AddReg = Font.CP949.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP949.120]
-DelReg = Font.CP949.Reg.96
-AddReg = Font.CP949.Reg.120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
-[Font.CP949.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP949.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
-
-; cp950/cp950
+; cp950/cp950 Traditional Chinese
 [Font.CP950.96]
-DelReg = Font.CP950.Reg.120
-AddReg = Font.CP950.Reg.96
+AddReg = Font.Reg.96
+AddReg = Font.Unicode.Reg
 
 [Font.CP950.120]
-DelReg = Font.CP950.Reg.96
-AddReg = Font.CP950.Reg.120
-
-[Font.CP950.Reg.96]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,96
-
-[Font.CP950.Reg.120]
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"DejaVu Sans Mono"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Liberation Sans"
-HKLM,"Software\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,120
-HKLM,"System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts","LogPixels",0x00010003,120
+AddReg = Font.Reg.120
+AddReg = Font.Unicode.Reg
 
 [Font Sizes]
 Small Fonts = 96

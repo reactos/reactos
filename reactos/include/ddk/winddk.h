@@ -4332,6 +4332,7 @@ typedef struct _PCI_COMMON_CONFIG {
 #define PCI_SUBCLASS_SB_SSA                 0x02
 #define PCI_SUBCLASS_SB_USB                 0x03
 #define PCI_SUBCLASS_SB_FIBRE_CHANNEL       0x04
+#define PCI_SUBCLASS_SB_SMBUS               0x05
 
 #define PCI_MAX_DEVICES        32
 #define PCI_MAX_FUNCTION       8

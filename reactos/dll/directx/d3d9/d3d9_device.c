@@ -10,17 +10,25 @@
 #include "adapter.h"
 #include <debug.h>
 #include "d3d9_create.h"
+#include "d3d9_mipmap.h"
 
 #define LOCK_D3DDEVICE9()     if (This->bLockDevice) EnterCriticalSection(&This->CriticalSection);
 #define UNLOCK_D3DDEVICE9()   if (This->bLockDevice) LeaveCriticalSection(&This->CriticalSection);
 
-/* Convert a IDirect3D9 pointer safely to the internal implementation struct */
+/* Convert a IDirect3DDevice9 pointer safely to the internal implementation struct */
 LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
 {
     if (NULL == iface)
         return NULL;
 
     return (LPDIRECT3DDEVICE9_INT)((ULONG_PTR)iface - FIELD_OFFSET(DIRECT3DDEVICE9_INT, lpVtbl));
+}
+
+static HRESULT InvalidCall(LPDIRECT3DDEVICE9_INT This, LPSTR ErrorMsg)
+{
+    DPRINT1(ErrorMsg);
+    UNLOCK_D3DDEVICE9();
+    return D3DERR_INVALIDCALL;
 }
 
 /* IDirect3DDevice9: IUnknown implementation */
@@ -448,11 +456,72 @@ VOID WINAPI IDirect3DDevice9Base_GetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwa
     UNIMPLEMENTED
 }
 
+/*++
+* @name IDirect3DDevice9::CreateTexture
+* @implemented
+*
+* The function IDirect3DDevice9Base_CreateTexture creates a D3D9 texture.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @param UINT Width
+* Desired width of the texture
+*
+* @param UINT Height
+* Desired height of the texture
+*
+* @param UINT Levels
+* Number of mip-maps. If Levels are zero, mip-maps down to size 1x1 will be generated.
+*
+* @param DWORD Usage
+* Valid combinations of the D3DUSAGE constants.
+*
+* @param D3DFORMAT Format
+* One of the D3DFORMAT enum members for the surface format.
+*
+* @param D3DPOOL Pool
+* One of the D3DPOOL enum members for where the texture should be placed.
+*
+* @param IDirect3DTexture9** ppTexture
+* Return parameter for the created texture
+*
+* @param HANDLE* pSharedHandle
+* Set to NULL, shared resources are not implemented yet
+*
+* @return HRESULT
+* Returns D3D_OK if everything went well.
+*
+*/
 HRESULT WINAPI IDirect3DDevice9Base_CreateTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DTexture9** ppTexture, HANDLE* pSharedHandle)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    if (NULL == This)
+        return InvalidCall(This, "Invalid 'this' parameter specified");
+
+    if (NULL == ppTexture)
+        return InvalidCall(This, "Invalid ppTexture parameter specified");
+
+    *ppTexture = NULL;
+
+    if (D3DFMT_UNKNOWN == Format)
+        return InvalidCall(This, "Invalid Format parameter specified, D3DFMT_UNKNOWN is not a valid Format");
+
+    if (NULL != pSharedHandle)
+    {
+        UNIMPLEMENTED;
+        return InvalidCall(This, "Invalid pSharedHandle parameter specified, only NULL is supported at the moment");
+    }
+
+    hResult = CreateD3D9MipMap(This, Width, Height, Levels, Usage, Format, Pool, ppTexture);
+    if (FAILED(hResult))
+        DPRINT1("Failed to create texture");
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_CreateVolumeTexture(LPDIRECT3DDEVICE9 iface, UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture9** ppVolumeTexture, HANDLE* pSharedHandle)

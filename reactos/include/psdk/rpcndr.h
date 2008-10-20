@@ -18,7 +18,7 @@
 
 #ifndef __RPCNDR_H_VERSION__
 /* FIXME: What version?   Perhaps something is better than nothing, however incorrect */
-#define __RPCNDR_H_VERSION__ ( 500 )
+#define __RPCNDR_H_VERSION__ ( 399 )
 #endif
 
 #ifndef __WINE_RPCNDR_H
@@ -175,13 +175,15 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG BufferLength;
   ULONG MemorySize;
   unsigned char *Memory;
-  int IsClient;
+  unsigned char IsClient;
+  unsigned char Pad;
+  unsigned short uFlags2;
   int ReuseBuffer;
   struct NDR_ALLOC_ALL_NODES_CONTEXT *pAllocAllNodesContext;
   struct NDR_POINTER_QUEUE_STATE *pPointerQueueState;
   int IgnoreEmbeddedPointers;
   unsigned char *PointerBufferMark;
-  unsigned char fBufferValid;
+  unsigned char CorrDespIncrement;
   unsigned char uFlags;
   unsigned short UniquePtrCount;
   ULONG_PTR MaxCount;
@@ -203,7 +205,14 @@ typedef struct _MIDL_STUB_MESSAGE
   int fHasReturn:1;
   int fHasExtensions:1;
   int fHasNewCorrDesc:1;
-  int fUnused:10;
+  int fIsIn:1;
+  int fIsOut:1;
+  int fIsOicf:1;
+  int fBufferValid:1;
+  int fHasMemoryValidateCallback:1;
+  int fInFree:1;
+  int fNeedMCCP:1;
+  int fUnused:3;
   int fUnused2:16;
   DWORD dwDestContext;
   void *pvDestContext;
@@ -535,6 +544,9 @@ RPCRTAPI void RPC_ENTRY
 
 RPCRTAPI NDR_SCONTEXT RPC_ENTRY
   NdrServerContextNewUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcSmDestroyClientContext( void **ContextHandle );
 
 RPCRTAPI void RPC_ENTRY
   RpcSsDestroyClientContext( void **ContextHandle );

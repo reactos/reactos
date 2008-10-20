@@ -1,0 +1,32 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Γενικά"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Μπορείτε να ορίσετε τις IP παραμέτρους αυτόματα, εάν το δίκτυό σας υποστηρίζει αυτήξ τη δυνατότητα. Ειδάλλως θα πρέπει να ρωτήσετε τον διαχειριστή δικτύου σας για τις  for the κατάλληλες ρυθμίσεις IP.", -1, 9, 9, 228, 27
+ CONTROL "Να γίνεται εύρεση της διεύθυνσης IP αυτόματα", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+ GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+ CONTROL "&Use the following IP address:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "Διεύθυνση IP:", -1, 14, 75, 135, 8
+ CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
+ LTEXT "Subnet mask:", -1, 14, 90, 135, 8
+ CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
+ LTEXT "Default gateway:", -1, 14, 105, 135, 8
+ CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
+ CONTROL "Να γίνεται εύρεση της διεύθυνσης του DNS διακομιστή αυτόματα", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+ GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+ CONTROL "&Χρήση των παρακάτω διευθύσεων DNS διακομιστών", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Προτιμητέος DNS διακομιστής:", -1, 14, 171, 135, 8
+ CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
+ LTEXT "Επιπλέον DNS διακομιστής:", -1, 14, 186, 135, 8
+ CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
+ PUSHBUTTON "&Για Προχωρημένους", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+	IDS_NET_CONNECT "Network connection"
+END
+

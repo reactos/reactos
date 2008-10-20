@@ -34,7 +34,7 @@ CreateTrayIcon(LPTSTR szLCID)
     HBITMAP hBitmap, hBmpNew, hBmpOld;
     RECT rect;
     DWORD bkColor, bkText;
-    HFONT hFont = NULL;
+    HFONT hFontOld, hFont = NULL;
     ICONINFO IconInfo;
     HICON hIcon = NULL;
 
@@ -72,11 +72,12 @@ CreateTrayIcon(LPTSTR szLCID)
                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                DEFAULT_QUALITY, FF_DONTCARE, _T("Tahoma"));
 
-            SelectObject(hdc, hFont);
+            hFontOld = SelectObject(hdc, hFont);
             DrawText(hdc, _tcsupr(szBuf), 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
             SelectObject(hdc, hBmpNew);
             PatBlt(hdc, 0, 0, 16, 16, BLACKNESS);
             SelectObject(hdc, hBmpOld);
+            SelectObject(hdc, hFontOld);
 
             IconInfo.hbmColor = hBitmap;
             IconInfo.hbmMask = hBmpNew;
@@ -248,6 +249,7 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
                         {
                             _tcscpy(szName, szPath);
                             RegCloseKey(hKey);
+                            FreeLibrary(hLib);
                             return TRUE;
                         }
                         FreeLibrary(hLib);
@@ -285,7 +287,6 @@ ActivateLayout(HWND hwnd, ULONG uLayoutNum)
 
     _ultot(uLayoutNum, szLayoutNum, 10);
     GetLayoutID(szLayoutNum, szLCID);
-    CreateTrayIcon(szLCID);
 
     // Switch to the new keyboard layout
     GetLocaleInfo((LANGID)_tcstoul(szLCID, NULL, 16), LOCALE_SLANGUAGE, (LPTSTR)szLangName, sizeof(szLangName) / sizeof(TCHAR));

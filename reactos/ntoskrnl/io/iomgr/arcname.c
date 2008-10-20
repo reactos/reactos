@@ -217,7 +217,12 @@ IopGetDiskInformation(IN ULONG i,
     PartitionBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                             DiskGeometry.BytesPerSector,
                                             TAG_IO);
-    if (!PartitionBuffer) return FALSE;
+    if (!PartitionBuffer)
+    {
+        /* Try again */
+        ExFreePoolWithTag(DriveLayout, TAG_FILE_SYSTEM);
+        return FALSE;
+    }
 
     /* Build an IRP to read the partition sector */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -228,6 +233,13 @@ IopGetDiskInformation(IN ULONG i,
                                        &PartitionOffset,
                                        &Event,
                                        &StatusBlock);
+    if (!Irp)
+    {
+        /* Try again  */
+        ExFreePoolWithTag(PartitionBuffer, TAG_IO);
+        ExFreePoolWithTag(DriveLayout, TAG_FILE_SYSTEM);
+        return FALSE;
+    }
 
     /* Call the driver and check if we have to wait */
     Status = IoCallDriver(DeviceObject, Irp);

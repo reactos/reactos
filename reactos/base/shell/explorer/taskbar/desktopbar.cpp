@@ -93,6 +93,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create start button
 	ResString start_str(IDS_START);
 	WindowCanvas canvas(_hwnd);
+	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
 	RECT rect = {0, 0};
 	DrawText(canvas, start_str, -1, &rect, DT_SINGLELINE|DT_CALCRECT);
 	int start_btn_width = rect.right+16+8;
@@ -101,6 +102,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	 // create "Start" button
 	HWND hwndStart = Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
+	SetWindowFont(hwndStart, GetStockFont(ANSI_VAR_FONT), FALSE);
 	new StartButton(hwndStart);
 
 	/* Save the handle to the window, needed for push-state handling */

@@ -595,8 +595,8 @@ VOID LANTransmit(
     PETH_HEADER EHeader;
     PCHAR Data;
     UINT Size;
-    KIRQL OldIrql;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)Context;
+    KIRQL OldIrql;
 
     TI_DbgPrint(DEBUG_DATALINK,
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
@@ -675,7 +675,7 @@ VOID LANTransmit(
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));
-        NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
+	NdisSend(&NdisStatus, Adapter->NdisHandle, NdisPacket);
 	TI_DbgPrint(MID_TRACE, ("NdisSend %s\n",
 				NdisStatus == NDIS_STATUS_PENDING ?
 				"Pending" : "Complete"));
@@ -861,6 +861,11 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
             ExFreePool( Kbio );
             KbioLength = ResultLength;
             Kbio = ExAllocatePool( NonPagedPool, KbioLength );
+            if( !Kbio ) {
+                TI_DbgPrint(DEBUG_DATALINK,("Failed to allocate memory\n"));
+                NtClose( EnumKey );
+                return STATUS_NO_MEMORY;
+            }
 
             Status = ZwEnumerateKey( EnumKey, i, KeyBasicInformation,
                                      Kbio, KbioLength, &ResultLength );
@@ -1202,17 +1207,17 @@ NDIS_STATUS LANRegisterAdapter(
     /* Convert returned link speed to bps (it is in 100bps increments) */
     IF->Speed = Speed * 100L;
 
-    /* Add adapter to the adapter list */
-    ExInterlockedInsertTailList(&AdapterListHead,
-                                &IF->ListEntry,
-                                &AdapterListLock);
-
     /* Bind adapter to IP layer */
     if( !BindAdapter(IF, RegistryPath) ) {
 	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (BindAdapter)\n", AdapterName));
 	exFreePool(IF);
 	return NDIS_STATUS_NOT_ACCEPTED;
     }
+
+    /* Add adapter to the adapter list */
+    ExInterlockedInsertTailList(&AdapterListHead,
+                                &IF->ListEntry,
+                                &AdapterListLock);
 
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving.\n"));
 
@@ -1262,7 +1267,7 @@ NDIS_STATUS LANUnregisterAdapter(
 
     FreeAdapter(Adapter);
 
-    return NDIS_STATUS_SUCCESS;
+    return NdisStatus;
 }
 
 

@@ -2594,6 +2594,10 @@ extern "C" {
 #define LWA_COLORKEY 1
 #define LWA_ALPHA 2
 #endif
+#define ULW_COLORKEY        0x00000001
+#define ULW_ALPHA           0x00000002
+#define ULW_OPAQUE          0x00000004
+#define ULW_EX_NORESIZE     0x00000008
 #define GA_PARENT 1
 #define GA_ROOT 2
 #define GA_ROOTOWNER 3
@@ -4279,6 +4283,20 @@ BOOL WINAPI LockSetForegroundWindow(UINT);
 BOOL WINAPI SetLayeredWindowAttributes(HWND,COLORREF,BYTE,DWORD);
 #if defined(_WINGDI_) && !defined(NOGDI)
 BOOL WINAPI UpdateLayeredWindow(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
+typedef struct tagUPDATELAYEREDWINDOWINFO
+{
+    DWORD                cbSize;
+    HDC                  hdcDst;
+    POINT CONST*         pptDst;
+    SIZE CONST*          psize;
+    HDC                  hdcSrc;
+    POINT CONST*         pptSrc;
+    COLORREF             crKey;
+    BLENDFUNCTION CONST* pblend;
+    DWORD                dwFlags;
+    RECT CONST*          prcDirty;
+} UPDATELAYEREDWINDOWINFO, *PUPDATELAYEREDWINDOWINFO;
+BOOL WINAPI UpdateLayeredWindowIndirect(HWND,UPDATELAYEREDWINDOWINFO CONST*);
 #endif
 #endif
 #if (_WIN32_WINNT >= 0x0501)

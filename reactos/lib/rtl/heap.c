@@ -1869,4 +1869,66 @@ RtlCreateTagHeap(IN HANDLE HeapHandle,
     return 0;
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+RtlWalkHeap(IN HANDLE HeapHandle,
+            IN PVOID HeapEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+PVOID
+NTAPI
+RtlProtectHeap(IN PVOID HeapHandle,
+               IN BOOLEAN ReadOnly)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+DWORD
+NTAPI
+RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
+                      IN HEAP_INFORMATION_CLASS HeapInformationClass,
+                      IN PVOID HeapInformation,
+                      IN SIZE_T HeapInformationLength)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+RtlQueryHeapInformation(HANDLE HeapHandle,
+                        HEAP_INFORMATION_CLASS HeapInformationClass,
+                        PVOID HeapInformation OPTIONAL,
+                        SIZE_T HeapInformationLength OPTIONAL,
+                        PSIZE_T ReturnLength OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+RtlMultipleAllocateHeap(IN PVOID HeapHandle,
+                        IN DWORD Flags,
+                        IN SIZE_T Size,
+                        IN DWORD Count,
+                        OUT PVOID *Array)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+RtlMultipleFreeHeap(IN PVOID HeapHandle,
+                    IN DWORD Flags,
+                    IN DWORD Count,
+                    OUT PVOID *Array)
+{
+    UNIMPLEMENTED;
+    return 0;
+}

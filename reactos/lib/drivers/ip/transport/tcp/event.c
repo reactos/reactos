@@ -104,8 +104,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 
     IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL );
 
-    if( !NT_SUCCESS(NdisStatus) ) return OSK_EINVAL;
-    else return 0;
+    return 0;
 }
 
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
@@ -144,7 +143,9 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
 	PoolFreeBuffer( SleepingThread );
-    }
+    } else
+        return OSK_ENOBUFS;
+
     TI_DbgPrint(DEBUG_TCP,("Waiting finished: %x\n", token));
     return 0;
 }

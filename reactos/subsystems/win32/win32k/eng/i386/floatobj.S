@@ -570,7 +570,6 @@ _FLOATOBJ_LessThanLong@8:
  */
 _FLOATOBJ_Mul@8:
 .global _FLOATOBJ_Mul@8
-//jmp _FLOATOBJ_Mul2@8
 	push ebp
 	mov ebp, esp
 

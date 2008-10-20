@@ -268,8 +268,7 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
         /* Free the third level table */
         ExpFreeTablePagedPool(Process,
                               Level3,
-                              HIGH_LEVEL_ENTRIES *
-                              sizeof(PHANDLE_TABLE_ENTRY));
+                              SizeOfHandle(HIGH_LEVEL_ENTRIES));
     }
 
     /* Free the actual table and check if we need to release quota */
@@ -540,7 +539,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
         {
             /* We need a new high level table */
             High = ExpAllocateTablePagedPool(HandleTable->QuotaProcess,
-                                             HIGH_LEVEL_ENTRIES);
+                                             SizeOfHandle(HIGH_LEVEL_ENTRIES));
             if (!High) return FALSE;
 
             /* Allocate a new mid level table as well */
@@ -550,7 +549,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
                 /* We failed, free the high level table as welll */
                 ExpFreeTablePagedPool(HandleTable->QuotaProcess,
                                       High,
-                                      HIGH_LEVEL_ENTRIES);
+                                      SizeOfHandle(HIGH_LEVEL_ENTRIES));
                 return FALSE;
             }
 

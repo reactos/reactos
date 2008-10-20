@@ -21,7 +21,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
-#include "imagehlp.h"
+#include "mssip.h"
 #include "crypt32_private.h"
 #include "wine/debug.h"
 
@@ -400,7 +400,10 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
  HCERTSTORE *phCertStore, HCRYPTMSG *phMsg)
 {
     HANDLE file;
+    GUID subject;
     BOOL ret = FALSE;
+
+    TRACE("%s\n", debugstr_w((LPCWSTR)pvObject));
 
     if (dwObjectType != CERT_QUERY_OBJECT_FILE)
     {
@@ -413,28 +416,53 @@ static BOOL CRYPT_QueryEmbeddedMessageObject(DWORD dwObjectType,
      NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file != INVALID_HANDLE_VALUE)
     {
-        DWORD len;
-
-        ret = ImageGetCertificateData(file, 0, NULL, &len);
+        ret = CryptSIPRetrieveSubjectGuid((LPCWSTR)pvObject, file, &subject);
         if (ret)
         {
-            WIN_CERTIFICATE *winCert = HeapAlloc(GetProcessHeap(), 0, len);
+            SIP_DISPATCH_INFO sip;
 
-            if (winCert)
+            memset(&sip, 0, sizeof(sip));
+            sip.cbSize = sizeof(sip);
+            ret = CryptSIPLoad(&subject, 0, &sip);
+            if (ret)
             {
-                ret = ImageGetCertificateData(file, 0, winCert, &len);
+                SIP_SUBJECTINFO subjectInfo;
+                CERT_BLOB blob;
+                DWORD encodingType;
+
+                memset(&subjectInfo, 0, sizeof(subjectInfo));
+                subjectInfo.cbSize = sizeof(subjectInfo);
+                subjectInfo.pgSubjectType = &subject;
+                subjectInfo.hFile = file;
+                subjectInfo.pwsFileName = (LPCWSTR)pvObject;
+                ret = sip.pfGet(&subjectInfo, &encodingType, 0, &blob.cbData,
+                 NULL);
                 if (ret)
                 {
-                    CERT_BLOB blob = { winCert->dwLength,
-                     winCert->bCertificate };
-
-                    ret = CRYPT_QueryMessageObject(CERT_QUERY_OBJECT_BLOB,
-                     &blob, CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED,
-                     pdwMsgAndCertEncodingType, NULL, phCertStore, phMsg);
-                    if (ret && pdwContentType)
-                        *pdwContentType = CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED;
+                    blob.pbData = CryptMemAlloc(blob.cbData);
+                    if (blob.pbData)
+                    {
+                        ret = sip.pfGet(&subjectInfo, &encodingType, 0,
+                         &blob.cbData, blob.pbData);
+                        if (ret)
+                        {
+                            ret = CRYPT_QueryMessageObject(
+                             CERT_QUERY_OBJECT_BLOB, &blob,
+                             CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED,
+                             pdwMsgAndCertEncodingType, NULL, phCertStore,
+                             phMsg);
+                            if (ret && pdwContentType)
+                                *pdwContentType =
+                                 CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED;
+                        }
+                        CryptMemFree(blob.pbData);
+                    }
+                    else
+                    {
+                        SetLastError(ERROR_OUTOFMEMORY);
+                        ret = FALSE;
+                    }
                 }
-                HeapFree(GetProcessHeap(), 0, winCert);
             }
         }
         CloseHandle(file);

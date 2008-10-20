@@ -697,7 +697,7 @@ static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
     }
     if (ret)
     {
-        ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, NULL, &size);
+        ret = CRYPT_AsnEncodeCMSSignedInfo(&signedInfo, NULL, &size);
         if (ret)
         {
             if (!blob->pbData)
@@ -711,7 +711,7 @@ static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
             else
             {
                 blob->cbData = size;
-                ret = CRYPT_AsnEncodePKCSSignedInfo(&signedInfo, blob->pbData,
+                ret = CRYPT_AsnEncodeCMSSignedInfo(&signedInfo, blob->pbData,
                  &blob->cbData);
             }
         }
@@ -798,7 +798,7 @@ static BOOL CRYPT_SaveSerializedToMem(HCERTSTORE store,
  DWORD dwMsgAndCertEncodingType, void *handle)
 {
     CERT_BLOB *blob = (CERT_BLOB *)handle;
-    DWORD size;
+    DWORD size = 0;
     BOOL ret;
 
     ret = CRYPT_WriteSerializedStoreToStream(store, CRYPT_CountSerializedBytes,

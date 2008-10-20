@@ -48,7 +48,6 @@ typedef struct _MP_PARAMINFO
    WCHAR szLabel[32];
 } MP_PARAMINFO;
 
-typedef DWORD DWORD;
 const DWORD DWORD_ALLPARAMS = -1;
 typedef DWORD MP_TIMEDATA;
 

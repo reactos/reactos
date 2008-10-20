@@ -722,7 +722,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
             IsFirstThread = FALSE;
 
             /* Reference this thread and set it as first */
-            ObDereferenceObject(ThisThread);
+            ObReferenceObject(ThisThread);
             pFirstThread = ThisThread;
         }
 
@@ -1262,7 +1262,7 @@ ThreadScan:
                           PSF_NO_DEBUG_INHERIT_BIT | PSF_CREATE_REPORTED_BIT);
 
             /* Reference the debug object */
-            ObDereferenceObject(DebugObject);
+            ObReferenceObject(DebugObject);
         }
     }
 
@@ -1643,7 +1643,12 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Don't allow debugging the initial system process */
-    if (Process == PsInitialSystemProcess) return STATUS_ACCESS_DENIED;
+    if (Process == PsInitialSystemProcess)
+    {
+        /* Dereference and fail */
+        ObDereferenceObject(Process);
+        return STATUS_ACCESS_DENIED;
+    }
 
     /* Reference the debug object */
     Status = ObReferenceObjectByHandle(DebugHandle,

@@ -91,6 +91,7 @@ typedef struct _WINE_MEMSTORE
     WINECRYPT_CERTSTORE hdr;
     struct ContextList *certs;
     struct ContextList *crls;
+    struct ContextList *ctls;
 } WINE_MEMSTORE, *PWINE_MEMSTORE;
 
 void CRYPT_InitStore(WINECRYPT_CERTSTORE *store, DWORD dwFlags,
@@ -229,6 +230,47 @@ static BOOL CRYPT_MemDeleteCrl(PWINECRYPT_CERTSTORE store, void *pCrlContext)
     return TRUE;
 }
 
+static BOOL CRYPT_MemAddCtl(PWINECRYPT_CERTSTORE store, void *ctl,
+ void *toReplace, const void **ppStoreContext)
+{
+    WINE_MEMSTORE *ms = (WINE_MEMSTORE *)store;
+    PCTL_CONTEXT context;
+
+    TRACE("(%p, %p, %p, %p)\n", store, ctl, toReplace, ppStoreContext);
+
+    context = (PCTL_CONTEXT)ContextList_Add(ms->ctls, ctl, toReplace);
+    if (context)
+    {
+        context->hCertStore = store;
+        if (ppStoreContext)
+            *ppStoreContext = CertDuplicateCTLContext(context);
+    }
+    return context ? TRUE : FALSE;
+}
+
+static void *CRYPT_MemEnumCtl(PWINECRYPT_CERTSTORE store, void *pPrev)
+{
+    WINE_MEMSTORE *ms = (WINE_MEMSTORE *)store;
+    void *ret;
+
+    TRACE("(%p, %p)\n", store, pPrev);
+
+    ret = ContextList_Enum(ms->ctls, pPrev);
+    if (!ret)
+        SetLastError(CRYPT_E_NOT_FOUND);
+
+    TRACE("returning %p\n", ret);
+    return ret;
+}
+
+static BOOL CRYPT_MemDeleteCtl(PWINECRYPT_CERTSTORE store, void *pCtlContext)
+{
+    WINE_MEMSTORE *ms = (WINE_MEMSTORE *)store;
+
+    ContextList_Delete(ms->ctls, pCtlContext);
+    return TRUE;
+}
+
 static void WINAPI CRYPT_MemCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
     WINE_MEMSTORE *store = (WINE_MEMSTORE *)hCertStore;
@@ -239,6 +281,7 @@ static void WINAPI CRYPT_MemCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 
     ContextList_Free(store->certs);
     ContextList_Free(store->crls);
+    ContextList_Free(store->ctls);
     CRYPT_FreeStore((PWINECRYPT_CERTSTORE)store);
 }
 
@@ -268,11 +311,16 @@ static WINECRYPT_CERTSTORE *CRYPT_MemOpenStore(HCRYPTPROV hCryptProv,
             store->hdr.crls.addContext     = CRYPT_MemAddCrl;
             store->hdr.crls.enumContext    = CRYPT_MemEnumCrl;
             store->hdr.crls.deleteContext  = CRYPT_MemDeleteCrl;
+            store->hdr.ctls.addContext     = CRYPT_MemAddCtl;
+            store->hdr.ctls.enumContext    = CRYPT_MemEnumCtl;
+            store->hdr.ctls.deleteContext  = CRYPT_MemDeleteCtl;
             store->hdr.control             = NULL;
             store->certs = ContextList_Create(pCertInterface,
              sizeof(CERT_CONTEXT));
             store->crls = ContextList_Create(pCRLInterface,
              sizeof(CRL_CONTEXT));
+            store->ctls = ContextList_Create(pCTLInterface,
+             sizeof(CTL_CONTEXT));
             /* Mem store doesn't need crypto provider, so close it */
             if (hCryptProv && !(dwFlags & CERT_STORE_NO_CRYPT_RELEASE_FLAG))
                 CryptReleaseContext(hCryptProv, 0);
@@ -1043,58 +1091,6 @@ PCCRL_CONTEXT WINAPI CertEnumCRLsInStore(HCERTSTORE hCertStore,
     return ret;
 }
 
-PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwCertEncodingType,
-  const BYTE* pbCtlEncoded, DWORD cbCtlEncoded)
-{
-    FIXME("(%08x, %p, %08x): stub\n", dwCertEncodingType, pbCtlEncoded,
-     cbCtlEncoded);
-    return NULL;
-}
-
-BOOL WINAPI CertAddEncodedCTLToStore(HCERTSTORE hCertStore,
- DWORD dwMsgAndCertEncodingType, const BYTE *pbCtlEncoded, DWORD cbCtlEncoded,
- DWORD dwAddDisposition, PCCTL_CONTEXT *ppCtlContext)
-{
-    FIXME("(%p, %08x, %p, %d, %08x, %p): stub\n", hCertStore,
-     dwMsgAndCertEncodingType, pbCtlEncoded, cbCtlEncoded, dwAddDisposition,
-     ppCtlContext);
-    return FALSE;
-}
-
-BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
- PCCTL_CONTEXT pCtlContext, DWORD dwAddDisposition,
- PCCTL_CONTEXT* ppStoreContext)
-{
-    FIXME("(%p, %p, %08x, %p): stub\n", hCertStore, pCtlContext,
-     dwAddDisposition, ppStoreContext);
-    return TRUE;
-}
-
-PCCTL_CONTEXT WINAPI CertDuplicateCTLContext(PCCTL_CONTEXT pCtlContext)
-{
-    FIXME("(%p): stub\n", pCtlContext );
-    return pCtlContext;
-}
-
-BOOL WINAPI CertFreeCTLContext(PCCTL_CONTEXT pCtlContext)
-{
-    FIXME("(%p): stub\n", pCtlContext );
-    return TRUE;
-}
-
-BOOL WINAPI CertDeleteCTLFromStore(PCCTL_CONTEXT pCtlContext)
-{
-    FIXME("(%p): stub\n", pCtlContext);
-    return TRUE;
-}
-
-PCCTL_CONTEXT WINAPI CertEnumCTLsInStore(HCERTSTORE hCertStore,
- PCCTL_CONTEXT pPrev)
-{
-    FIXME("(%p, %p): stub\n", hCertStore, pPrev);
-    return NULL;
-}
-
 HCERTSTORE WINAPI CertDuplicateStore(HCERTSTORE hCertStore)
 {
     WINECRYPT_CERTSTORE *hcs = (WINECRYPT_CERTSTORE *)hCertStore;
@@ -1246,28 +1242,6 @@ BOOL WINAPI CertSetStoreProperty(HCERTSTORE hCertStore, DWORD dwPropId,
         }
     }
     return ret;
-}
-
-DWORD WINAPI CertEnumCTLContextProperties(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId)
-{
-    FIXME("(%p, %d): stub\n", pCTLContext, dwPropId);
-    return 0;
-}
-
-BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId, void *pvData, DWORD *pcbData)
-{
-    FIXME("(%p, %d, %p, %p): stub\n", pCTLContext, dwPropId, pvData, pcbData);
-    return FALSE;
-}
-
-BOOL WINAPI CertSetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
- DWORD dwPropId, DWORD dwFlags, const void *pvData)
-{
-    FIXME("(%p, %d, %08x, %p): stub\n", pCTLContext, dwPropId, dwFlags,
-     pvData);
-    return FALSE;
 }
 
 static LONG CRYPT_OpenParentStore(DWORD dwFlags,

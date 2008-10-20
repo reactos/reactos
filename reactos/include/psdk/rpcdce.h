@@ -139,6 +139,11 @@ typedef I_RPC_HANDLE *RPC_EP_INQ_HANDLE;
 #define RPC_C_AUTHN_MQ 100
 #define RPC_C_AUTHN_DEFAULT 0xffffffff
 
+#define RPC_C_AUTHZ_NONE 0
+#define RPC_C_AUTHZ_NAME 1
+#define RPC_C_AUTHZ_DCE  2
+#define RPC_C_AUTHZ_DEFAULT 0xffffffff
+
 /* values for RPC_SECURITY_QOS*::ImpersonationType */
 #define RPC_C_IMP_LEVEL_DEFAULT     0
 #define RPC_C_IMP_LEVEL_ANONYMOUS   1
@@ -280,10 +285,13 @@ typedef struct _RPC_SECURITY_QOS_V2_A
 #define SEC_WINNT_AUTH_IDENTITY_UNICODE 0x2
 
 /* RpcServerRegisterIfEx Flags */
-#define RPC_IF_AUTOLISTEN               0x1
-#define RPC_IF_OLE                      0x2
-#define RPC_IF_ALLOW_UNKNOWN_AUTHORITY  0x4
-#define RPC_IF_ALLOW_SECURE_ONLY        0x8
+#define RPC_IF_AUTOLISTEN                   0x01
+#define RPC_IF_OLE                          0x02
+#define RPC_IF_ALLOW_UNKNOWN_AUTHORITY      0x04
+#define RPC_IF_ALLOW_SECURE_ONLY            0x08
+#define RPC_IF_ALLOW_CALLBACKS_WITH_NO_AUTH 0x10
+#define RPC_IF_ALLOW_LOCAL_ONLY             0x20
+#define RPC_IF_SEC_NO_CACHE                 0x40
 
 RPC_STATUS RPC_ENTRY DceErrorInqTextA(RPC_STATUS e, RPC_CSTR buffer);
 RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
@@ -291,7 +299,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
 
 RPCRTAPI DECLSPEC_NORETURN void RPC_ENTRY
   RpcRaiseException( RPC_STATUS exception );
-
+        
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingCopy( RPC_BINDING_HANDLE SourceBinding, RPC_BINDING_HANDLE* DestinationBinding );
 
@@ -301,9 +309,13 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid );
 RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcBindingInqOption( RPC_BINDING_HANDLE Binding, ULONG Option, ULONG_PTR *OptionValue );
+RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingReset( RPC_BINDING_HANDLE Binding );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid );
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcBindingSetOption( RPC_BINDING_HANDLE Binding, ULONG Option, ULONG_PTR OptionValue );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid );
 
@@ -317,7 +329,7 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, RPC_CSTR *StringBinding );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, RPC_WSTR *StringBinding );
-#define RpcBindingFromStringBinding WINELIB_NAME_AW(RpcBindingFromStringBinding)
+#define RpcBindingToStringBinding WINELIB_NAME_AW(RpcBindingToStringBinding)
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector );
@@ -367,6 +379,9 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcServerListen( unsigned int MinimumCallThreads, unsigned int MaxCalls, unsigned int DontWait );
 
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcMgmtEnableIdleCleanup( void );
+
 RPCRTAPI RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG);
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
@@ -376,11 +391,20 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcMgmtStopServerListening( RPC_BINDING_HANDLE Binding );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcMgmtIsServerListening(RPC_BINDING_HANDLE Binding);
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcMgmtInqIfIds( RPC_BINDING_HANDLE Binding, RPC_IF_ID_VECTOR** IfIdVector );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcMgmtEpEltInqBegin( RPC_BINDING_HANDLE EpBinding, ULONG InquiryType, RPC_IF_ID *IfId,
                         ULONG VersOption, UUID *ObjectUuid, RPC_EP_INQ_HANDLE *InquiryContext);
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcMgmtSetComTimeout( RPC_BINDING_HANDLE Binding, unsigned int Timeout );
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcMgmtSetServerStackSize( ULONG ThreadStackSize );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcServerRegisterIf( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv );
@@ -469,12 +493,21 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
 #define RpcBindingInqAuthInfo WINELIB_NAME_AW(RpcBindingInqAuthInfo)
 
 RPCRTAPI RPC_STATUS RPC_ENTRY RpcCancelThread(void*);
+RPCRTAPI RPC_STATUS RPC_ENTRY RpcCancelThreadEx(void*,LONG);
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcImpersonateClient( RPC_BINDING_HANDLE Binding );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcNetworkIsProtseqValidA( RPC_CSTR protseq );
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcNetworkIsProtseqValidW( RPC_WSTR protseq );
 #define RpcNetworkIsProtseqValid WINELIB_NAME_AW(RpcNetworkIsProtseqValid)
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcRevertToSelf( void );
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcRevertToSelfEx( RPC_BINDING_HANDLE Binding );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcStringFreeA(RPC_CSTR* String);
@@ -508,13 +541,6 @@ RPCRTAPI unsigned short RPC_ENTRY
   UuidHash(UUID* Uuid, RPC_STATUS* Status_ );
 RPCRTAPI int RPC_ENTRY
   UuidIsNil( UUID* Uuid, RPC_STATUS* Status_ );
-
-
-RPCRTAPI RPC_STATUS RPC_ENTRY
-RpcImpersonateClient (IN RPC_BINDING_HANDLE BindingHandle OPTIONAL);
-
-RPCRTAPI RPC_STATUS RPC_ENTRY
-RpcRevertToSelf ();
 
 #ifdef __cplusplus
 }

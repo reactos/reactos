@@ -179,7 +179,7 @@ LoadConfig(HWND hwndDlg)
 		}
 	}
 
-	for(i=0;i<17;i++)
+	for(i=0;i<16;i++)
 	{
 		if (Sec[i]==pp.user.VideoTimeoutAc)
 		{

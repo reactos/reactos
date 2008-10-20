@@ -77,12 +77,19 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
     AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n",
 			    Context, FCB->FileObject));
 
+    if( Irp->Cancel ) {
+	if( FCB ) FCB->ConnectIrp.InFlightRequest = NULL;
+	return STATUS_CANCELLED;
+    }
+
     /* I was wrong about this before as we can have pending writes to a not
      * yet connected socket */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
     AFD_DbgPrint(MID_TRACE,("Irp->IoStatus.Status = %x\n",
 			    Irp->IoStatus.Status));
+
+    FCB->ConnectIrp.InFlightRequest = NULL;
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;

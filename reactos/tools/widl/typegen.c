@@ -30,7 +30,6 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
-#include <signal.h>
 #include <limits.h>
 
 #include "widl.h"
@@ -2356,6 +2355,13 @@ static size_t process_tfs(FILE *file, const ifref_list_t *ifaces, type_pred_t pr
             {
                 if (is_local(func->def->attrs)) continue;
 
+                if (!is_void(func->def->type))
+                    update_tfsoff(func->def->type,
+                                  write_typeformatstring_var(
+                                      file, 2, NULL, func->def->type,
+                                      func->def, &typeformat_offset),
+                                  file);
+
                 current_func = func;
                 if (func->args)
                     LIST_FOR_EACH_ENTRY( var, func->args, const var_t, entry )
@@ -2822,7 +2828,7 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
                 fprintf(file, ";\n");
             }
 
-            if ((phase == PHASE_FREE) || (pointer_type == RPC_FC_UP))
+            if (phase == PHASE_FREE || pass == PASS_RETURN || pointer_type == RPC_FC_UP)
                 print_phase_function(file, indent, "Pointer", phase, var,
                                      start_offset - (type->size_is ? 4 : 2));
             else

@@ -189,12 +189,12 @@ NdisMAllocateSharedMemory(
  *     - Cached is ignored; we always allocate non-cached
  */
 {
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
-  *VirtualAddress = Adapter->SystemAdapterObject->DmaOperations->AllocateCommonBuffer(
-      Adapter->SystemAdapterObject, Length, PhysicalAddress, Cached);
+  *VirtualAddress = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->AllocateCommonBuffer(
+      Adapter->NdisMiniportBlock.SystemAdapterObject, Length, PhysicalAddress, Cached);
 }
 
 
@@ -267,7 +267,7 @@ NdisMFreeSharedMemory(
  */
 {
   HANDLE ThreadHandle;
-  PNDIS_MINIPORT_BLOCK Adapter = (PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   PMINIPORT_SHARED_MEMORY Memory;
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
@@ -283,7 +283,7 @@ NdisMFreeSharedMemory(
       return;
     }
 
-  Memory->AdapterObject = Adapter->SystemAdapterObject;
+  Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
   Memory->Length = Length;
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;

@@ -1,0 +1,31 @@
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Általános"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Az IP-beállításokat automatikusan is megkaphatja, ha hálózata támogatja ezt a képességet. Eltérõ esetben keresse meg hálózati rendszergazdáját a helyes IP-beállításokért.", -1, 9, 9, 228, 27
+ CONTROL "IP-cím automatikus lekérése", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 43, 210, 12
+ GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+ CONTROL "A &következõ IP-cím használata:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "IP cím:", -1, 14, 75, 135, 8
+ CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
+ LTEXT "Alhálózati maszk:", -1, 14, 90, 135, 8
+ CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
+ LTEXT "Alapértelmezett átjáró:", -1, 14, 105, 135, 8
+ CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
+ CONTROL "A DNS-kiszolgáló címének automatikus lekérése", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
+ GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+ CONTROL "A kö&vetkezõ DNS-kiszolgálók használata", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Elsõdleges DNS-kiszolgáló:", -1, 14, 171, 135, 8
+ CONTROL "",IDC_DNS1,"SysIPAddress32",0,150,171-2,80,12
+ LTEXT "Másodlagos DNS-kiszolgáló:", -1, 14, 186, 135, 8
+ CONTROL "",IDC_DNS2,"SysIPAddress32",0,150,186-2,80,12
+ PUSHBUTTON "&Haladóknak", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+	IDS_NET_CONNECT "Network connection"
+END

@@ -82,6 +82,16 @@ XMLPUBFUN int XMLCALL
 /**
  * This is the core C14N function
  */
+/**
+ * xmlC14NIsVisibleCallback:
+ * @user_data: user data
+ * @node: the curent node
+ * @parent: the parent node
+ *
+ * Signature for a C14N callback on visible nodes
+ *
+ * Returns 1 if the node should be included
+ */
 typedef int (*xmlC14NIsVisibleCallback)	(void* user_data,
 					 xmlNodePtr node,
 					 xmlNodePtr parent);

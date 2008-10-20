@@ -45,3 +45,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Si.rc"
 #include "Sv.rc"
 #include "Tr.rc"
+#include "Zh.rc"

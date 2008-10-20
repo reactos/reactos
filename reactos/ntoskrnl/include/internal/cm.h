@@ -911,6 +911,12 @@ CmpConstructName(
     IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
+BOOLEAN
+NTAPI
+CmpReferenceKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
 VOID
 NTAPI
 CmpDereferenceKeyControlBlockWithLock(
@@ -1432,6 +1438,7 @@ CmShutdownSystem(
 //
 // Global variables accessible from all of Cm
 //
+extern ULONG CmpTraceLevel;
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;

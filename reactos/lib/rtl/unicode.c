@@ -2233,4 +2233,13 @@ RtlValidateUnicodeString(IN ULONG Flags,
   }
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+RtlFindCharInUnicodeString(IN ULONG Flags,
+                           IN PUNICODE_STRING SearchString,
+                           IN PCUNICODE_STRING MatchString,
+                           OUT PUSHORT Position)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

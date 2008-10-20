@@ -36,6 +36,7 @@
 #include "shlwapi.h"
 #include "ocidl.h"
 #include "objsafe.h"
+#include "dispex.h"
 
 #include "wine/debug.h"
 
@@ -75,6 +76,9 @@ typedef struct _domdoc
 
     /* IObjectSafety */
     DWORD safeopt;
+
+    /* IDispatchEx */
+    DispatchEx dispex;
 } domdoc;
 
 static xmlDocPtr doparse( char *ptr, int len )
@@ -289,6 +293,10 @@ static HRESULT WINAPI domdoc_QueryInterface( IXMLDOMDocument2 *iface, REFIID rii
     else if (IsEqualGUID(&IID_IObjectWithSite, riid))
     {
         *ppvObject = (IObjectWithSite*)&(This->lpvtblIObjectWithSite);
+    }
+    else if(dispex_query_interface(&This->dispex, riid, ppvObject))
+    {
+        return *ppvObject ? S_OK : E_NOINTERFACE;
     }
     else if(IsEqualGUID(&IID_IRunnableObject, riid))
     {
@@ -1475,7 +1483,7 @@ static HRESULT WINAPI domdoc_save(
             IXMLDOMDocument_Release(pDocument);
         }
 
-        TRACE("ret %d", ret);
+        TRACE("ret %d\n", ret);
 
         return ret;
     }
@@ -1967,6 +1975,20 @@ static const IObjectSafetyVtbl domdocObjectSafetyVtbl = {
     xmldoc_Safety_SetInterfaceSafetyOptions
 };
 
+
+static const tid_t domdoc_iface_tids[] = {
+    IXMLDOMNode_tid,
+    IXMLDOMDocument_tid,
+    IXMLDOMDocument2_tid,
+    0
+};
+static dispex_static_data_t domdoc_dispex = {
+    NULL,
+    IXMLDOMDocument2_tid,
+    NULL,
+    domdoc_iface_tids
+};
+
 HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **document)
 {
     domdoc *doc;
@@ -2007,6 +2029,9 @@ HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **docu
         HeapFree( GetProcessHeap(), 0, doc );
         return E_FAIL;
     }
+
+    init_dispex(&doc->dispex, (IUnknown*)&doc->lpVtbl, &domdoc_dispex);
+
     /* The ref on doc->node is actually looped back into this object, so release it */
     IXMLDOMNode_Release(doc->node);
 

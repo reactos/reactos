@@ -253,6 +253,7 @@ Signature = "$ReactOS$"
 ;dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
 ;dll\win32\dnsapi\dnsapi.dll                         1
 ;dll\win32\fmifs\fmifs.dll                           1
+;dll\win32\fusion\fusion.dll                         1
 ;dll\win32\gdi32\gdi32.dll                           1
 ;dll\win32\gdiplus\gdiplus.dll                       1
 ;dll\win32\glu32\glu32.dll                           1
@@ -265,6 +266,7 @@ Signature = "$ReactOS$"
 ;dll\win32\inetcomm\inetcomm.dll                     1
 ;dll\win32\inetmib1\inetmib1.dll                     1
 ;dll\win32\iphlpapi\iphlpapi.dll                     1
+;dll\win32\jscript\jscript.dll                       1
 ;dll\win32\kernel32\kernel32.dll                     1
 ;dll\win32\lsasrv\lsasrv.dll                         1
 ;dll\win32\lz32\lz32.dll                             1
@@ -273,11 +275,13 @@ Signature = "$ReactOS$"
 ;dll\win32\mmdrv\mmdrv.dll                           1
 ;dll\win32\modemui\modemui.dll                       1
 ;dll\win32\mpr\mpr.dll                               1
+;dll\win32\mprapi\mprapi.dll                         1
 ;dll\win32\msacm32\msacm32.dll                       1
 ;dll\win32\msafd\msafd.dll                           1
 ;dll\win32\mscoree\mscoree.dll                       1
 ;dll\win32\msgina\msgina.dll                         1
 ;dll\win32\mshtml\mshtml.dll                         1
+;dll\win32\mshtml.tlb\mshtml.tlb                     1
 ;dll\win32\msi\msi.dll                               1
 ;dll\win32\msimg32\msimg32.dll                       1
 ;dll\win32\mstask\mstask.dll                         1
@@ -335,6 +339,7 @@ Signature = "$ReactOS$"
 ;dll\win32\smdll\smdll.dll                           1
 ;dll\win32\snmpapi\snmpapi.dll                       1
 ;dll\win32\stdole2.tlb\stdole2.tlb                   1
+;dll\win32\stdole32.tlb\stdole32.tlb                 1
 ;dll\win32\sxs\sxs.dll                               1
 ;dll\win32\syssetup\syssetup.dll                     1
 ;dll\win32\tapi32\tapi32.dll                         1
@@ -422,11 +427,6 @@ Signature = "$ReactOS$"
 ;media\fonts\DejaVuSans.ttf                          3
 ;media\fonts\DejaVuSans-Bold.ttf                     3
 ;media\fonts\DejaVuSans-BoldOblique.ttf              3
-;media\fonts\DejaVuSansCondensed.ttf                 3
-;media\fonts\DejaVuSansCondensed-Bold.ttf            3
-;media\fonts\DejaVuSansCondensed-BoldOblique.ttf     3
-;media\fonts\DejaVuSansCondensed-Oblique.ttf         3
-;media\fonts\DejaVuSans-ExtraLight.ttf               3
 ;media\fonts\DejaVuSansMono.ttf                      3
 ;media\fonts\DejaVuSansMono-Bold.ttf                 3
 ;media\fonts\DejaVuSansMono-BoldOblique.ttf          3
@@ -435,11 +435,12 @@ Signature = "$ReactOS$"
 ;media\fonts\DejaVuSerif.ttf                         3
 ;media\fonts\DejaVuSerif-Bold.ttf                    3
 ;media\fonts\DejaVuSerif-BoldItalic.ttf              3
-;media\fonts\DejaVuSerifCondensed.ttf                3
-;media\fonts\DejaVuSerifCondensed-Bold.ttf           3
-;media\fonts\DejaVuSerifCondensed-BoldItalic.ttf     3
-;media\fonts\DejaVuSerifCondensed-Italic.ttf         3
 ;media\fonts\DejaVuSerif-Italic.ttf                  3
+
+;media\fonts\FreeMono.ttf                            3
+;media\fonts\FreeMonoBold.ttf                        3
+;media\fonts\FreeMonoBoldOblique.ttf                 3
+;media\fonts\FreeMonoOblique.ttf                     3
 
 ;media\fonts\LiberationMono-Bold.ttf                 3
 ;media\fonts\LiberationMono-BoldItalic.ttf           3
@@ -454,27 +455,10 @@ Signature = "$ReactOS$"
 ;media\fonts\LiberationSerif-Italic.ttf              3
 ;media\fonts\LiberationSerif-Regular.ttf             3
 
+;media\fonts\Marlett.ttf                             3
 ;media\fonts\tahoma.ttf                              3
 ;media\fonts\tahomabd.ttf                            3
 
-;media\fonts\c0419bt_.ttf                            3
-;media\fonts\c0582bt_.ttf                            3
-;media\fonts\c0583bt_.ttf                            3
-;media\fonts\c0611bt_.ttf                            3
-;media\fonts\c0632bt_.ttf                            3
-;media\fonts\c0633bt_.ttf                            3
-;media\fonts\c0648bt_.ttf                            3
-;media\fonts\c0649bt_.ttf                            3
-;media\fonts\courbi.ttf                              3
-;media\fonts\courb.ttf                               3
-;media\fonts\cour.ttf                                3
-;media\fonts\helb____.ttf                            3
-;media\fonts\Marlett.ttf                             3
-;media\fonts\timr____.ttf                            3
-;media\fonts\UTBI____.ttf                            3
-;media\fonts\UTB_____.ttf                            3
-;media\fonts\UTI_____.ttf                            3
-;media\fonts\UTRG____.ttf                            3
 ;media\nls\c_037.nls                                 1
 ;media\nls\c_500.nls                                 1
 ;media\nls\c_737.nls                                 1
@@ -690,3 +674,5 @@ tools\dbgprint\dbgprint.exe                         7   optional
 ;modules\windows\vmx_mode.dll                                               1   optional
 ;modules\windows\vmx_svga.sys                                               2   optional
 ;modules\windows\vmx_svga.inf                                               6   optional
+;modules\windows\kvmnet.sys                                                 2   optional
+;modules\windows\kvmnet.inf                                                 6   optional

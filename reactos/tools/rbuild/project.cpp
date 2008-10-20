@@ -251,69 +251,6 @@ Project::ResolveProperties ( const string& s ) const
 }
 
 void
-Project::SetConfigurationOption ( char* s,
-                                  string name,
-                                  string alternativeName )
-{
-	const Property* property = LookupProperty ( name );
-	if ( property != NULL && property->value.length () > 0 )
-	{
-		s = s + sprintf ( s,
-		                  "#define %s=%s\n",
-		                  property->name.c_str (),
-		                  property->value.c_str () );
-	}
-	else if ( property != NULL )
-	{
-		s = s + sprintf ( s,
-		                  "#define %s\n",
-		                  property->name.c_str () );
-	}
-	else if ( !alternativeName.empty()  )
-	{
-		s = s + sprintf ( s,
-		                  "#define %s\n",
-		                  alternativeName.c_str () );
-	}
-}
-
-void
-Project::SetConfigurationOption ( char* s,
-	                              string name )
-{
-	SetConfigurationOption ( s, name, "" );
-}
-
-void
-Project::WriteConfigurationFile ()
-{
-	char* buf;
-	char* s;
-
-	buf = (char*) malloc ( 10*1024 );
-	if ( buf == NULL )
-		throw OutOfMemoryException ();
-
-	s = buf;
-	s = s + sprintf ( s, "/* Automatically generated. " );
-	s = s + sprintf ( s, "Edit config.xml to change configuration */\n" );
-	s = s + sprintf ( s, "#ifndef __INCLUDE_CONFIG_H\n" );
-	s = s + sprintf ( s, "#define __INCLUDE_CONFIG_H\n" );
-
-	SetConfigurationOption ( s, "ARCH" );
-	SetConfigurationOption ( s, "OPTIMIZED" );
-	SetConfigurationOption ( s, "MP", "UP");
-	SetConfigurationOption ( s, "ACPI" );
-	SetConfigurationOption ( s, "_3GB" );
-
-	s = s + sprintf ( s, "#endif /* __INCLUDE_CONFIG_H */\n" );
-
-	FileSupportCode::WriteIfChanged ( buf, Environment::GetIntermediatePath() + sSep + "include" + sSep + "roscfg.h" );
-
-	free ( buf );
-}
-
-void
 Project::ExecuteInvocations ()
 {
 	for ( size_t i = 0; i < modules.size (); i++ )

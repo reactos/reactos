@@ -7,7 +7,6 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
-#include <roscfg.h>
 #include <ne2000.h>
 #include <debug.h>
 
@@ -63,8 +62,7 @@ DRIVER_INFORMATION      DriverInfo = {0};
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
-#if 0
-static BOOLEAN MiniportCheckForHang(
+static BOOLEAN STDCALL MiniportCheckForHang(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Examines if an adapter has hung
@@ -78,7 +76,6 @@ static BOOLEAN MiniportCheckForHang(
 
     return FALSE;
 }
-#endif
 
 
 static VOID STDCALL MiniportDisableInterrupt(
@@ -120,6 +117,8 @@ static VOID STDCALL MiniportHalt(
  */
 {
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 #ifndef NOCARD
@@ -225,6 +224,8 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     UINT i;
     NDIS_STATUS Status;
     PNIC_ADAPTER Adapter;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called (Adapter %X).\n", MiniportAdapterHandle));
 
@@ -473,6 +474,8 @@ static NDIS_STATUS STDCALL MiniportQueryInformation(
     NDIS_MEDIUM Medium   = NdisMedium802_3;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
     Status   = NDIS_STATUS_SUCCESS;
@@ -639,6 +642,8 @@ static NDIS_STATUS STDCALL MiniportReset(
  *     Status of operation
  */
 {
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     return NDIS_STATUS_FAILURE;
@@ -661,6 +666,8 @@ static NDIS_STATUS STDCALL MiniportSend(
  */
 {
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MID_TRACE, ("Queueing packet.\n"));
 
@@ -710,6 +717,8 @@ static NDIS_STATUS STDCALL MiniportSetInformation(
     ULONG GenericULONG;
     NDIS_STATUS Status   = NDIS_STATUS_SUCCESS;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -820,6 +829,8 @@ static NDIS_STATUS STDCALL MiniportTransferData(
     UINT RecvStop;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called. Packet (0x%X)  ByteOffset (0x%X)  BytesToTransfer (%d).\n",
         Packet, ByteOffset, BytesToTransfer));
 
@@ -904,7 +915,7 @@ DriverEntry(
     NdisZeroMemory(&Miniport, sizeof(Miniport));
     Miniport.MajorNdisVersion           = DRIVER_NDIS_MAJOR_VERSION;
     Miniport.MinorNdisVersion           = DRIVER_NDIS_MINOR_VERSION;
-    Miniport.CheckForHangHandler        = NULL; //MiniportCheckForHang;
+    Miniport.CheckForHangHandler        = MiniportCheckForHang;
     Miniport.DisableInterruptHandler    = MiniportDisableInterrupt;
     Miniport.EnableInterruptHandler     = MiniportEnableInterrupt;
     Miniport.HaltHandler                = MiniportHalt;
@@ -922,6 +933,11 @@ DriverEntry(
                            DriverObject,
                            RegistryPath,
                            NULL);
+
+    if (!NdisWrapperHandle) {
+        NDIS_DbgPrint(MIN_TRACE, ("NdisMInitializeWrapper() failed\n"));
+        return STATUS_UNSUCCESSFUL;
+    }
 
     DriverInfo.NdisWrapperHandle = NdisWrapperHandle;
     DriverInfo.NdisMacHandle     = NULL;

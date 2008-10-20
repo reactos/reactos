@@ -37,6 +37,7 @@ typedef struct {
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;	/* absolute pidl */
     LPCITEMIDLIST apidl;    /* currently focused font item */
+    IOleCommandTarget * lpOleCmd;
 } IGenericSFImpl, *LPIGenericSFImpl;
 
 
@@ -745,76 +746,106 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
         pinfo->u3.phpage[pinfo->nPages++] = hPage;
         return TRUE;
     }
-    return FALSE;	
+    return FALSE;
 }
+
+HRESULT
+ShowNetConnectionStatus(
+    IGenericSFImpl * This,
+    INetConnection * pNetConnect,
+    HWND hwnd)
+{
+    NETCON_PROPERTIES * pProperties;
+    HRESULT hr;
+
+    if (!This->lpOleCmd)
+        return E_FAIL;
+
+    if (INetConnection_GetProperties(pNetConnect, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    hr = IOleCommandTarget_Exec(This->lpOleCmd, &pProperties->guidId, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+
+    NcFreeNetconProperties(pProperties);
+    return hr;
+}
+
+HRESULT
+ShowNetConnectionProperties(
+    INetConnection * pNetConnect,
+    HWND hwnd)
+{
+    HRESULT hr;
+    CLSID ClassID;
+    PROPSHEETHEADERW pinfo;
+    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
+    INetConnectionPropertyUi * pNCP;
+    NETCON_PROPERTIES * pProperties;
+
+    if (INetConnection_GetProperties(pNetConnect, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    hr = INetConnection_GetUiObjectClassId(pNetConnect, &ClassID);
+    if (FAILED(hr))
+    {
+        NcFreeNetconProperties(pProperties);
+        return hr;
+    }
+
+    hr = CoCreateInstance(&ClassID, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionPropertyUi, (LPVOID)&pNCP);
+    if (FAILED(hr))
+    {
+        NcFreeNetconProperties(pProperties);
+        return hr;
+    }
+
+    hr = INetConnectionPropertyUi_SetConnection(pNCP, pNetConnect);
+    if (SUCCEEDED(hr))
+    {
+        ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
+        ZeroMemory(hppages, sizeof(hppages));
+        pinfo.dwSize = sizeof(PROPSHEETHEADERW);
+        pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
+        pinfo.u3.phpage = hppages;
+        pinfo.hwndParent = hwnd;
+
+        pinfo.pszCaption = pProperties->pszwName;
+        hr = INetConnectionPropertyUi_AddPages(pNCP, hwnd, PropSheetExCallback, (LPARAM)&pinfo);
+        if (SUCCEEDED(hr))
+        {
+            if(PropertySheetW(&pinfo) < 0)
+                hr = E_FAIL;
+        }
+    }
+    INetConnectionPropertyUi_Release(pNCP);
+    NcFreeNetconProperties(pProperties);
+    return hr;
+}
+
 
 /**************************************************************************
 * ISF_NetConnect_IContextMenu_InvokeCommand()
 */
 static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
-	IContextMenu2 *iface,
-	LPCMINVOKECOMMANDINFO lpcmi)
+    IContextMenu2 *iface,
+    LPCMINVOKECOMMANDINFO lpcmi)
 {
     IGenericSFImpl * This = impl_from_IContextMenu2(iface);
     VALUEStruct * val;
-    NETCON_PROPERTIES * pProperties;
-    HRESULT hr = S_OK;
-    PROPSHEETHEADERW pinfo;
-    CLSID ClassID;
-    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
-    INetConnectionPropertyUi * pNCP;
+
 
     val = _ILGetValueStruct(This->apidl);
     if (!val)
         return E_FAIL;
 
-    if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
-        return E_FAIL;
-
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS))
     {
-#if 0
-        if (pProperties->MediaType == NCM_LAN)
-        {
-            hr = ShowLANConnectionStatusDialog(pProperties);
-            NcFreeNetconProperties(pProperties);
-        }
-#endif
-        return hr;
+        return ShowNetConnectionStatus(This, val->pItem, lpcmi->hwnd);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES))
     {
-        hr = INetConnection_GetUiObjectClassId(val->pItem, &ClassID);
-        if (SUCCEEDED(hr))
-        {
-            /* FIXME perform version checks */
-            hr = CoCreateInstance(&ClassID, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionPropertyUi, (LPVOID)&pNCP);
-            if (SUCCEEDED(hr))
-            {
-                hr = INetConnectionPropertyUi_SetConnection(pNCP, val->pItem);
-                if (SUCCEEDED(hr))
-                {
-                    ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
-                    ZeroMemory(hppages, sizeof(hppages));
-                    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
-                    pinfo.u3.phpage = hppages;
-                    pinfo.hwndParent = lpcmi->hwnd;
-
-                    pinfo.pszCaption = pProperties->pszwName;
-                    hr = INetConnectionPropertyUi_AddPages(pNCP, lpcmi->hwnd, PropSheetExCallback, (LPARAM)&pinfo);
-                    if (SUCCEEDED(hr))
-                    {
-                        if(PropertySheetW(&pinfo) < 0)
-                            hr = E_FAIL;
-                    }
-                }
-                INetConnectionPropertyUi_Release(pNCP);
-            }
-
-        }
-        NcFreeNetconProperties(pProperties);
-        return hr;
+        /* FIXME perform version checks */
+        return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
     }
 
     return S_OK;
@@ -961,6 +992,7 @@ static const IPersistFolder2Vtbl vt_PersistFolder2 =
 HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     IGenericSFImpl *sf;
+    HRESULT hr;
 
     if (!ppv)
         return E_POINTER;
@@ -975,6 +1007,14 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
     sf->lpVtblContextMenu = &vt_ContextMenu2;
+
+    hr = CoCreateInstance(&CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (LPVOID*)&sf->lpOleCmd);
+    if (FAILED(hr))
+       sf->lpOleCmd = NULL;
+    else
+       IOleCommandTarget_Exec(sf->lpOleCmd, &CGID_ShellServiceObject, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+
+
     sf->pidlRoot = _ILCreateNetConnect();	/* my qualified pidl */
 
     if (!SUCCEEDED (IShellFolder2_QueryInterface ((IShellFolder2*)sf, riid, ppv)))

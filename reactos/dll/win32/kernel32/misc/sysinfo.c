@@ -176,7 +176,7 @@ GetSystemInfo (
 BOOL STDCALL
 IsProcessorFeaturePresent(DWORD ProcessorFeature)
 {
-  if (ProcessorFeature > PROCESSOR_FEATURE_MAX)
+  if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
     return(FALSE);
 
   return((BOOL)SharedUserData->ProcessorFeatures[ProcessorFeature]);
@@ -232,13 +232,3 @@ GetNativeSystemInfo(
     // GetNativeSystemInfo should return PROCESSOR_ARCHITECTURE_AMD64
     GetSystemInfo(lpSystemInfo);
 }
-
-DWORD
-WINAPI
-GetCurrentProcessorNumber(VOID)
-{
-    /* Forward to kernel */
-    return NtGetCurrentProcessorNumber();
-}
-
-/* EOF */

@@ -27,9 +27,7 @@
 # include <unistd.h>
 #endif
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
-#include <signal.h>
 
 #include "widl.h"
 #include "utils.h"

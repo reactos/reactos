@@ -88,6 +88,26 @@ static BOOL WINAPI CRYPT_FileDeleteCRL(HCERTSTORE hCertStore,
     return TRUE;
 }
 
+static BOOL WINAPI CRYPT_FileWriteCTL(HCERTSTORE hCertStore,
+ PCCTL_CONTEXT ctl, DWORD dwFlags)
+{
+    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+
+    TRACE("(%p, %p, %d)\n", hCertStore, ctl, dwFlags);
+    store->dirty = TRUE;
+    return TRUE;
+}
+
+static BOOL WINAPI CRYPT_FileDeleteCTL(HCERTSTORE hCertStore,
+ PCCTL_CONTEXT pCtlContext, DWORD dwFlags)
+{
+    PWINE_FILESTOREINFO store = (PWINE_FILESTOREINFO)hCertStore;
+
+    TRACE("(%p, %p, %08x)\n", hCertStore, pCtlContext, dwFlags);
+    store->dirty = TRUE;
+    return TRUE;
+}
+
 static BOOL CRYPT_ReadBlobFromFile(HANDLE file, PCERT_BLOB blob)
 {
     BOOL ret = TRUE;
@@ -187,8 +207,8 @@ static void *fileProvFuncs[] = {
     CRYPT_FileDeleteCRL,
     NULL, /* CERT_STORE_PROV_SET_CRL_PROPERTY_FUNC */
     NULL, /* CERT_STORE_PROV_READ_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_WRITE_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_DELETE_CTL_FUNC */
+    CRYPT_FileWriteCTL,
+    CRYPT_FileDeleteCTL,
     NULL, /* CERT_STORE_PROV_SET_CTL_PROPERTY_FUNC */
     CRYPT_FileControl,
 };

@@ -583,6 +583,9 @@ HRESULT WINAPI OleIsCurrentClipboard(IDataObject *pDataObject)
   if (!theOleClipboard)
     return E_OUTOFMEMORY;
 
+  if (pDataObject == NULL)
+    return S_FALSE;
+
   return (pDataObject == theOleClipboard->pIDataObjectSrc) ? S_OK : S_FALSE;
 }
 

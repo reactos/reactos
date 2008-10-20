@@ -26,7 +26,6 @@ LIST_ENTRY IopDiskFsListHead, IopNetworkFsListHead;
 LIST_ENTRY IopCdRomFsListHead, IopTapeFsListHead;
 KGUARDED_MUTEX FsChangeNotifyListLock;
 LIST_ENTRY FsChangeNotifyListHead;
-KSPIN_LOCK IoVpbLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -923,7 +922,7 @@ NTAPI
 IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
     /* Simply acquire the lock */
-    KeAcquireSpinLock(&IoVpbLock, Irql);
+    *Irql = KeAcquireQueuedSpinLock(LockQueueIoVpbLock);
 }
 
 /*
@@ -934,7 +933,7 @@ NTAPI
 IoReleaseVpbSpinLock(IN KIRQL Irql)
 {
     /* Just release the lock */
-    KeReleaseSpinLock(&IoVpbLock, Irql);
+    KeReleaseQueuedSpinLock(LockQueueIoVpbLock, Irql);
 }
 
 /*

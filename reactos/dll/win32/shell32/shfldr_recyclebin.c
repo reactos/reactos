@@ -1013,7 +1013,7 @@ static HRESULT WINAPI RecycleBin_IContextMenu2Item_QueryContextMenu(
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, szBuffer, MFS_ENABLED);
     }
 
-    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(char)))
+    if (LoadStringW(shell32_hInstance, IDS_DELETE, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED);

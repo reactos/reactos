@@ -409,6 +409,11 @@ NTSTATUS FileOpenConnection(
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
 
+  if( !NT_SUCCESS(Status) ) {
+      TCPFreeConnectionEndpoint( Connection );
+      return Status;
+  }
+
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
 

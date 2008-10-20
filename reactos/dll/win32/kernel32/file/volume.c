@@ -1060,4 +1060,117 @@ GetVolumeNameForVolumeMountPointW(
    return FALSE;
 }
 
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+BOOL
+STDCALL
+GetVolumeNameForVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    BOOL ret;
+    WCHAR volumeW[50], *pathW = NULL;
+    DWORD len = min( sizeof(volumeW) / sizeof(WCHAR), cchBufferLength );
+
+    TRACE("(%s, %p, %x)\n", debugstr_a(lpszVolumeMountPoint), lpszVolumeName, cchBufferLength);
+
+    if (!lpszVolumeMountPoint || !(pathW = FilenameA2W( lpszVolumeMountPoint, TRUE )))
+        return FALSE;
+
+    if ((ret = GetVolumeNameForVolumeMountPointW( pathW, volumeW, len )))
+        FilenameW2A_N( lpszVolumeName, len, volumeW, -1 );
+
+    RtlFreeHeap( GetProcessHeap(), 0, pathW );
+    return ret;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+HANDLE
+STDCALL
+FindFirstVolumeW(
+	LPWSTR volume,
+	DWORD len
+    )
+{
+    DWORD size = 1024;
+    HANDLE mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                              NULL, OPEN_EXISTING, 0, 0 );
+    if (mgr == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
+
+    for (;;)
+    {
+        MOUNTMGR_MOUNT_POINT input;
+        MOUNTMGR_MOUNT_POINTS *output;
+
+        if (!(output = RtlAllocateHeap( GetProcessHeap(), 0, size )))
+        {
+            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+            break;
+        }
+        memset( &input, 0, sizeof(input) );
+
+        if (!DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_POINTS, &input, sizeof(input),
+                              output, size, NULL, NULL ))
+        {
+            if (GetLastError() != ERROR_MORE_DATA) break;
+            size = output->Size;
+            RtlFreeHeap( GetProcessHeap(), 0, output );
+            continue;
+        }
+        CloseHandle( mgr );
+        /* abuse the Size field to store the current index */
+        output->Size = 0;
+        if (!FindNextVolumeW( output, volume, len ))
+        {
+            RtlFreeHeap( GetProcessHeap(), 0, output );
+            return INVALID_HANDLE_VALUE;
+        }
+        return (HANDLE)output;
+    }
+    CloseHandle( mgr );
+    return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+HANDLE
+STDCALL
+FindFirstVolumeA(
+	LPSTR volume,
+	DWORD len
+    )
+{
+    WCHAR *buffer = RtlAllocateHeap( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    HANDLE handle = FindFirstVolumeW( buffer, len );
+
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL ))
+        {
+            FindVolumeClose( handle );
+            handle = INVALID_HANDLE_VALUE;
+        }
+    }
+    RtlFreeHeap( GetProcessHeap(), 0, buffer );
+    return handle;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+BOOL
+STDCALL
+FindVolumeClose(
+    HANDLE hFindVolume
+    )
+{
+    return RtlFreeHeap(GetProcessHeap(), 0, hFindVolume);
+}
+
 /* EOF */

@@ -417,6 +417,7 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     strcpyW( control->name, name );
     list_add_head( &dialog->controls, &control->entry );
     control->handler = NULL;
+    control->update = NULL;
     control->property = NULL;
     control->value = NULL;
     control->hBitmap = NULL;

@@ -45,6 +45,7 @@
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>chkstk_asm.s</file>
 				<file>prolog.s</file>
 				<file>seh.s</file>
 				<file>unwind.c</file>
@@ -117,14 +118,34 @@
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>alldiv_asm.s</file>
+				<file>alldvrm_asm.s</file>
+				<file>allmul_asm.s</file>
+				<file>allrem_asm.s</file>
+				<file>allshl_asm.s</file>
+				<file>allshr_asm.s</file>
+				<file>atan_asm.s</file>
+				<file>aulldiv_asm.s</file>
+				<file>aulldvrm_asm.s</file>
+				<file>aullrem_asm.s</file>
+				<file>aullshr_asm.s</file>
+				<file>ceil_asm.s</file>
+				<file>cos_asm.s</file>
+				<file>fabs_asm.s</file>
+				<file>floor_asm.s</file>
+				<file>ftol_asm.s</file>
+				<file>log_asm.s</file>
+				<file>log10_asm.s</file>
+				<file>pow_asm.s</file>
+				<file>sin_asm.s</file>
+				<file>sqrt_asm.s</file>
+				<file>tan_asm.s</file>
+
 				<file>atan2.c</file>
 				<file>ci.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>ldexp.c</file>
-				<file>atan_asm.s</file>
-				<file>pow_asm.s</file>
-				<file>log10_asm.s</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="amd64">

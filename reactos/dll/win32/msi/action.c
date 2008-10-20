@@ -1486,7 +1486,7 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
     }
     else
     {
-        file->IsCompressed = package->WordCount & MSIWORDCOUNT_COMPRESSED;
+        file->IsCompressed = package->WordCount & msidbSumInfoSourceTypeCompressed;
     }
 
     if (!file->IsCompressed)

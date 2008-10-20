@@ -18,25 +18,25 @@
  * @implemented
  */
 BOOL STDCALL
-PrivilegeCheck (HANDLE ClientToken,
-		PPRIVILEGE_SET RequiredPrivileges,
-		LPBOOL pfResult)
+PrivilegeCheck(HANDLE ClientToken,
+               PPRIVILEGE_SET RequiredPrivileges,
+               LPBOOL pfResult)
 {
-  BOOLEAN Result;
-  NTSTATUS Status;
+    BOOLEAN Result;
+    NTSTATUS Status;
 
-  Status = NtPrivilegeCheck (ClientToken,
-			     RequiredPrivileges,
-			     &Result);
-  if (!NT_SUCCESS (Status))
+    Status = NtPrivilegeCheck(ClientToken,
+                              RequiredPrivileges,
+                              &Result);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  *pfResult = (BOOL) Result;
+    *pfResult = (BOOL)Result;
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

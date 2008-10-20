@@ -6,7 +6,6 @@
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */
 
-#include <roscfg.h>
 #include <winsock2.h>
 #include <dhcpcsdk.h>
 #include <time.h>

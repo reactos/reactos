@@ -62,6 +62,7 @@ typedef struct event_target_t event_target_t;
 typedef enum {
     NULL_tid,
     DispDOMChildrenCollection_tid,
+    DispHTMLBody_tid,
     DispHTMLCommentElement_tid,
     DispHTMLDocument_tid,
     DispHTMLDOMTextNode_tid,
@@ -74,7 +75,10 @@ typedef enum {
     DispHTMLStyle_tid,
     DispHTMLUnknownElement_tid,
     DispHTMLWindow2_tid,
+    IHTMLBodyElement_tid,
+    IHTMLBodyElement2_tid,
     IHTMLCommentElement_tid,
+    IHTMLControlElement_tid,
     IHTMLDocument2_tid,
     IHTMLDocument3_tid,
     IHTMLDocument4_tid,
@@ -85,6 +89,8 @@ typedef enum {
     IHTMLDOMTextNode_tid,
     IHTMLElement_tid,
     IHTMLElement2_tid,
+    IHTMLElement3_tid,
+    IHTMLElement4_tid,
     IHTMLElementCollection_tid,
     IHTMLGenericElement_tid,
     IHTMLImgElement_tid,
@@ -92,6 +98,8 @@ typedef enum {
     IHTMLOptionElement_tid,
     IHTMLSelectElement_tid,
     IHTMLStyle_tid,
+    IHTMLTextContainer_tid,
+    IHTMLUniqueName_tid,
     IHTMLWindow2_tid,
     IHTMLWindow3_tid,
     IOmNavigator_tid,
@@ -482,7 +490,7 @@ void hlink_frame_navigate(HTMLDocument*,IHlinkFrame*,LPCWSTR,nsIInputStream*,DWO
 void call_property_onchanged(ConnectionPoint*,DISPID);
 HRESULT call_set_active_object(IOleInPlaceUIWindow*,IOleInPlaceActiveObject*);
 
-void *nsalloc(size_t);
+void *nsalloc(size_t) __WINE_ALLOC_SIZE(1);
 void nsfree(void*);
 
 void nsACString_Init(nsACString*,const char*);
@@ -566,6 +574,7 @@ void doc_insert_script(HTMLDocument*,nsIDOMHTMLScriptElement*);
 IDispatch *script_parse_event(HTMLDocument*,LPCWSTR);
 
 IHTMLElementCollection *create_all_collection(HTMLDOMNode*);
+IHTMLElementCollection *create_collection_from_nodelist(HTMLDocument*,IUnknown*,nsIDOMNodeList*);
 
 /* commands */
 typedef struct {
@@ -645,17 +654,17 @@ extern LONG module_ref;
 
 /* memory allocation functions */
 
-static inline void *heap_alloc(size_t len)
+static inline void __WINE_ALLOC_SIZE(1) *heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
 }
 
-static inline void *heap_alloc_zero(size_t len)
+static inline void __WINE_ALLOC_SIZE(1) *heap_alloc_zero(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
-static inline void *heap_realloc(void *mem, size_t len)
+static inline void __WINE_ALLOC_SIZE(2) *heap_realloc(void *mem, size_t len)
 {
     return HeapReAlloc(GetProcessHeap(), 0, mem, len);
 }

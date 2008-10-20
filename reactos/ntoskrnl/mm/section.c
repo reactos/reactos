@@ -3664,8 +3664,8 @@ NTSTATUS STDCALL
 NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN HANDLE ProcessHandle,
                    IN OUT PVOID* BaseAddress  OPTIONAL,
-                   IN ULONG ZeroBits  OPTIONAL,
-                   IN ULONG CommitSize,
+                   IN ULONG_PTR ZeroBits  OPTIONAL,
+                   IN SIZE_T CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset  OPTIONAL,
                    IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
@@ -4484,8 +4484,8 @@ NTSTATUS STDCALL
 MmMapViewOfSection(IN PVOID SectionObject,
                    IN PEPROCESS Process,
                    IN OUT PVOID *BaseAddress,
-                   IN ULONG ZeroBits,
-                   IN ULONG CommitSize,
+                   IN ULONG_PTR ZeroBits,
+                   IN SIZE_T CommitSize,
                    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
                    IN OUT PSIZE_T ViewSize,
                    IN SECTION_INHERIT InheritDisposition,
@@ -4956,8 +4956,8 @@ MmCreateSection (OUT PVOID  * Section,
 NTSTATUS
 NTAPI
 NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
-                            IN OUT PULONG NumberOfPages,
-                            IN OUT PULONG UserPfnArray)
+                            IN OUT PULONG_PTR NumberOfPages,
+                            IN OUT PULONG_PTR UserPfnArray)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4966,8 +4966,8 @@ NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
 NTSTATUS
 NTAPI
 NtMapUserPhysicalPages(IN PVOID VirtualAddresses,
-                       IN ULONG NumberOfPages,
-                       IN OUT PULONG UserPfnArray)
+                       IN ULONG_PTR NumberOfPages,
+                       IN OUT PULONG_PTR UserPfnArray)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4976,8 +4976,8 @@ NtMapUserPhysicalPages(IN PVOID VirtualAddresses,
 NTSTATUS
 NTAPI
 NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
-                              IN ULONG NumberOfPages,
-                              IN OUT PULONG UserPfnArray)
+                              IN ULONG_PTR NumberOfPages,
+                              IN OUT PULONG_PTR UserPfnArray)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4986,8 +4986,8 @@ NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
 NTSTATUS
 NTAPI
 NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
-                        IN OUT PULONG NumberOfPages,
-                        IN OUT PULONG UserPfnArray)
+                        IN OUT PULONG_PTR NumberOfPages,
+                        IN OUT PULONG_PTR UserPfnArray)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

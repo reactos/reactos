@@ -676,7 +676,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(IPersistStream* iface,
     DWORD read;
     HlinkImpl *This = HlinkImpl_from_IPersistStream(iface);
 
-    r = IStream_Read(pStm, &hdr, sizeof(hdr), &read);
+    r = IStream_Read(pStm, hdr, sizeof(hdr), &read);
     if (read != sizeof(hdr) || (hdr[0] != HLINK_SAVE_MAGIC))
     {
         r = E_FAIL;
@@ -749,7 +749,7 @@ static HRESULT WINAPI IPersistStream_fnSave(IPersistStream* iface,
     if (This->TargetFrameName)
         hdr[1] |= HLINK_SAVE_TARGET_FRAME_PRESENT;
 
-    IStream_Write(pStm, &hdr, sizeof(hdr), NULL);
+    IStream_Write(pStm, hdr, sizeof(hdr), NULL);
 
     if (This->TargetFrameName)
     {

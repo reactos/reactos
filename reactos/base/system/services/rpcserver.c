@@ -164,7 +164,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     Ptr = (MANAGER_HANDLE*) HeapAlloc(GetProcessHeap(),
                     HEAP_ZERO_MEMORY,
-                    sizeof(MANAGER_HANDLE) + wcslen(lpDatabaseName) * sizeof(WCHAR));
+                    sizeof(MANAGER_HANDLE) + (wcslen(lpDatabaseName) + 1) * sizeof(WCHAR));
     if (Ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -458,8 +458,8 @@ DWORD RCloseServiceHandle(
         ASSERT(lpService->dwRefCount > 0);
 
         lpService->dwRefCount--;
-        DPRINT1("CloseServiceHandle - lpService->dwRefCount %u\n",
-                lpService->dwRefCount);
+        DPRINT("CloseServiceHandle - lpService->dwRefCount %u\n",
+               lpService->dwRefCount);
 
         if (lpService->dwRefCount == 0)
         {
@@ -489,8 +489,7 @@ DWORD RCloseServiceHandle(
                 /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
                 if (pcbBytesNeeded)
                 {
-                    DPRINT1("Deletion failed due to running dependencies.\n",
-                            lpService->lpServiceName);
+                    DPRINT1("Deletion failed due to running dependencies.\n");
                     RegCloseKey(hServicesKey);
                     return ERROR_SUCCESS;
                 }
@@ -983,6 +982,26 @@ DWORD RQueryServiceStatus(
 }
 
 
+static BOOL
+ScmIsValidServiceState(DWORD dwCurrentState)
+{
+    switch (dwCurrentState)
+    {
+        case SERVICE_STOPPED:
+        case SERVICE_START_PENDING:
+        case SERVICE_STOP_PENDING:
+        case SERVICE_RUNNING:
+        case SERVICE_CONTINUE_PENDING:
+        case SERVICE_PAUSE_PENDING:
+        case SERVICE_PAUSED:
+            return TRUE;
+
+        default:
+            return FALSE;
+    }
+}
+
+
 /* Function 7 */
 DWORD RSetServiceStatus(
     handle_t BindingHandle,
@@ -992,9 +1011,20 @@ DWORD RSetServiceStatus(
     PSERVICE lpService;
 
     DPRINT("RSetServiceStatus() called\n");
+    DPRINT("hServiceStatus = %p\n", hServiceStatus);
+    DPRINT("dwServiceType = %lu\n", lpServiceStatus->dwServiceType);
+    DPRINT("dwCurrentState = %lu\n", lpServiceStatus->dwCurrentState);
+    DPRINT("dwControlsAccepted = %lu\n", lpServiceStatus->dwControlsAccepted);
+    DPRINT("dwWin32ExitCode = %lu\n", lpServiceStatus->dwWin32ExitCode);
+    DPRINT("dwServiceSpecificExitCode = %lu\n", lpServiceStatus->dwServiceSpecificExitCode);
+    DPRINT("dwCheckPoint = %lu\n", lpServiceStatus->dwCheckPoint);
+    DPRINT("dwWaitHint = %lu\n", lpServiceStatus->dwWaitHint);
 
-    if (ScmShutdown)
-        return ERROR_SHUTDOWN_IN_PROGRESS;
+    if (hServiceStatus == 0)
+    {
+        DPRINT1("hServiceStatus == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
 
     lpService = ScmGetServiceEntryByClientHandle((ULONG)hServiceStatus);
     if (lpService == NULL)
@@ -1002,6 +1032,30 @@ DWORD RSetServiceStatus(
         DPRINT1("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
+
+    /* Check current state */
+    if (!ScmIsValidServiceState(lpServiceStatus->dwCurrentState))
+    {
+        DPRINT1("Invalid service state!\n");
+        return ERROR_INVALID_DATA;
+    }
+
+    /* Check service type */
+    if (!(lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
+         (lpServiceStatus->dwServiceType & SERVICE_DRIVER))
+    {
+        DPRINT1("Invalid service type!\n");
+        return ERROR_INVALID_DATA;
+    }
+
+    /* Check accepted controls */
+    if (lpServiceStatus->dwControlsAccepted == 0 ||
+        lpServiceStatus->dwControlsAccepted & ~0xFF)
+    {
+        DPRINT1("Invalid controls accepted!\n");
+        return ERROR_INVALID_DATA;
+    }
+
 
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
@@ -1036,7 +1090,7 @@ DWORD RNotifyBootConfigStatus(
 
 
 /* Function 10 */
-DWORD RSetServiceBitsW(
+DWORD RI_ScSetServiceBitsW(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,
@@ -1954,7 +2008,7 @@ DWORD RCreateServiceW(
         goto done;
 
     lpService->dwRefCount = 1;
-    DPRINT1("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
+    DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
 
 done:;
     if (hServiceKey != NULL)
@@ -2430,7 +2484,7 @@ DWORD ROpenServiceW(
     }
 
     lpService->dwRefCount++;
-    DPRINT1("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
+    DPRINT("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
 
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
@@ -2820,7 +2874,7 @@ DWORD RGetServiceKeyNameW(
 
 
 /* Function 22 */
-DWORD RSetServiceBitsA(
+DWORD RI_ScSetServiceBitsA(
     handle_t BindingHandle,
     SC_RPC_HANDLE hServiceStatus,
     DWORD dwServiceBits,
@@ -2927,7 +2981,7 @@ DWORD RChangeServiceConfigA(
                             lpDisplayName,
                             -1,
                             lpDisplayNameW,
-                            (wcslen(lpDisplayNameW) + 1) * sizeof(WCHAR));
+                            wcslen(lpDisplayNameW) + 1);
 
         RegSetValueExW(hServiceKey,
                        L"DisplayName",
@@ -2997,7 +3051,7 @@ DWORD RChangeServiceConfigA(
         if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
         {
             lpBinaryPathNameW=HeapAlloc(GetProcessHeap(),0, (strlen(lpBinaryPathName)+1) * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, (wcslen(lpBinaryPathNameW)+1) * sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, wcslen(lpBinaryPathNameW)+1);
             dwError = RegSetValueExW(hServiceKey,
                                      L"ImagePath",
                                      0,
@@ -3041,7 +3095,7 @@ DWORD RChangeServiceConfigA(
                             lpLoadOrderGroup,
                             -1,
                             lpLoadOrderGroupW,
-                            (wcslen(lpLoadOrderGroupW) + 1) * sizeof(WCHAR));
+                            wcslen(lpLoadOrderGroupW) + 1);
 
         dwError = RegSetValueExW(hServiceKey,
                                  L"Group",
@@ -3092,7 +3146,7 @@ DWORD RChangeServiceConfigA(
                             lpDependencies,
                             dwDependSize,
                             lpDependenciesW,
-                            (wcslen(lpDependenciesW)+1) * sizeof(WCHAR));
+                            wcslen(lpDependenciesW)+1);
 
         dwError = ScmWriteDependencies(hServiceKey,
                                        (LPWSTR)lpDependenciesW,
@@ -3830,8 +3884,11 @@ DWORD RGetServiceKeyNameA(
 
 
 /* Function 34 */
-DWORD RGetCurrentGroupStateW(
-    handle_t BindingHandle)
+DWORD RI_ScGetCurrentGroupStateW(
+    handle_t BindingHandle,
+    SC_RPC_HANDLE hSCManager,
+    LPWSTR lpLoadOrderGroup,
+    LPDWORD lpState)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;

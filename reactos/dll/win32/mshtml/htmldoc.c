@@ -252,8 +252,12 @@ static HRESULT WINAPI HTMLDocument_Invoke(IHTMLDocument2 *iface, DISPID dispIdMe
 static HRESULT WINAPI HTMLDocument_get_Script(IHTMLDocument2 *iface, IDispatch **p)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    *p = (IDispatch*)HTMLWINDOW2(This->window);
+    IDispatch_AddRef(*p);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_get_all(IHTMLDocument2 *iface, IHTMLElementCollection **p)
@@ -381,15 +385,70 @@ static HRESULT WINAPI HTMLDocument_get_anchors(IHTMLDocument2 *iface, IHTMLEleme
 static HRESULT WINAPI HTMLDocument_put_title(IHTMLDocument2 *iface, BSTR v)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsIDOMHTMLDocument *nshtmldoc;
+    nsIDOMDocument *nsdoc;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->nscontainer)
+        return E_FAIL;
+
+    nsres = nsIWebNavigation_GetDocument(This->nscontainer->navigation, &nsdoc);
+    if(NS_FAILED(nsres) || !nsdoc) {
+        ERR("GetDocument failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
+    nsIDOMDocument_Release(nsdoc);
+
+    nsAString_Init(&nsstr, v);
+    nsres = nsIDOMHTMLDocument_SetTitle(nshtmldoc, &nsstr);
+    nsIDOMHTMLDocument_Release(nshtmldoc);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres))
+        ERR("SetTitle failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_get_title(IHTMLDocument2 *iface, BSTR *p)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMHTMLDocument *nshtmldoc;
+    nsIDOMDocument *nsdoc;
+    const PRUnichar *ret;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->nscontainer)
+        return E_FAIL;
+
+    nsres = nsIWebNavigation_GetDocument(This->nscontainer->navigation, &nsdoc);
+    if(NS_FAILED(nsres) || !nsdoc) {
+        ERR("GetDocument failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
+    nsIDOMDocument_Release(nsdoc);
+
+    nsAString_Init(&nsstr, NULL);
+
+    nsres = nsIDOMHTMLDocument_GetTitle(nshtmldoc, &nsstr);
+    nsIDOMHTMLDocument_Release(nshtmldoc);
+    if (NS_FAILED(nsres))
+        ERR("GetTitle failed: %08x\n", nsres);
+
+    nsAString_GetData(&nsstr, &ret);
+    *p = SysAllocString(ret);
+    nsAString_Finish(&nsstr);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_get_scripts(IHTMLDocument2 *iface, IHTMLElementCollection **p)

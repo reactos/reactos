@@ -128,6 +128,8 @@ static BOOL queue_timer(thread_data_t *thread_data, task_timer_t *timer)
 {
     task_timer_t *iter;
 
+    list_remove(&timer->entry);
+
     if(list_empty(&thread_data->timer_list)
        || LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry)->time > timer->time) {
 
@@ -159,6 +161,7 @@ DWORD set_task_timer(HTMLDocument *doc, DWORD msec, BOOL interval, IDispatch *di
     timer->doc = doc;
     timer->time = tc + msec;
     timer->interval = interval ? msec : 0;
+    list_init(&timer->entry);
 
     IDispatch_AddRef(disp);
     timer->disp = disp;
@@ -363,6 +366,8 @@ static void process_task(task_t *task)
 static LRESULT process_timer(void)
 {
     thread_data_t *thread_data = get_thread_data(TRUE);
+    HTMLDocument *doc;
+    IDispatch *disp;
     DWORD tc;
     task_timer_t *timer;
 
@@ -377,10 +382,9 @@ static LRESULT process_timer(void)
             return 0;
         }
 
-        list_remove(&timer->entry);
-        list_init(&timer->entry);
-
-        call_disp_func(timer->doc, timer->disp);
+        doc = timer->doc;
+        disp = timer->disp;
+        IDispatch_AddRef(disp);
 
         if(timer->interval) {
             timer->time += timer->interval;
@@ -388,6 +392,10 @@ static LRESULT process_timer(void)
         }else {
             release_task_timer(thread_data->thread_hwnd, timer);
         }
+
+        call_disp_func(doc, disp);
+
+        IDispatch_Release(disp);
     }
 
     KillTimer(thread_data->thread_hwnd, TIMER_ID);

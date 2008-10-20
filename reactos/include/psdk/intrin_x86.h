@@ -104,11 +104,6 @@ static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchang
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
-{
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
-}
-
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
@@ -233,23 +228,6 @@ static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchang
 {
 	long retval = Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
-	return retval;
-}
-
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
-{
-	long long retval = Comperand;
-
-	__asm__
-	(
-		"cmpxchg8b %[Destination]" :
-		[retval] "+A" (retval) :
-			[Destination] "m" (*Destination),
-			"b" ((unsigned long)((Exchange >>  0) & 0xFFFFFFFF)),
-			"c" ((unsigned long)((Exchange >> 32) & 0xFFFFFFFF)) :
-		"memory"
-	);
-
 	return retval;
 }
 
@@ -439,6 +417,34 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 	while(y != x);
 
 	return y;
+}
+
+#endif
+
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__)
+
+static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+{
+	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+}
+
+#else
+
+static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
+{
+	long long retval = Comperand;
+
+	__asm__
+	(
+		"lock; cmpxchg8b %[Destination]" :
+		[retval] "+A" (retval) :
+			[Destination] "m" (*Destination),
+			"b" ((unsigned long)((Exchange >>  0) & 0xFFFFFFFF)),
+			"c" ((unsigned long)((Exchange >> 32) & 0xFFFFFFFF)) :
+		"memory"
+	);
+
+	return retval;
 }
 
 #endif

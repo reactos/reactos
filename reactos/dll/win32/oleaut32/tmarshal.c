@@ -508,9 +508,10 @@ static const IRpcProxyBufferVtbl tmproxyvtable = {
 };
 
 /* how much space do we use on stack in DWORD steps. */
-int
-_argsize(DWORD vt) {
-    switch (vt) {
+static int
+_argsize(TYPEDESC *tdesc, ITypeInfo *tinfo) {
+    switch (tdesc->vt) {
+    case VT_I8:
     case VT_UI8:
 	return 8/sizeof(DWORD);
     case VT_R8:
@@ -519,30 +520,53 @@ _argsize(DWORD vt) {
         return sizeof(CY)/sizeof(DWORD);
     case VT_DATE:
 	return sizeof(DATE)/sizeof(DWORD);
+    case VT_DECIMAL:
+        return (sizeof(DECIMAL)+3)/sizeof(DWORD);
     case VT_VARIANT:
 	return (sizeof(VARIANT)+3)/sizeof(DWORD);
+    case VT_USERDEFINED:
+    {
+        ITypeInfo *tinfo2;
+        TYPEATTR *tattr;
+        HRESULT hres;
+        DWORD ret;
+
+        hres = ITypeInfo_GetRefTypeInfo(tinfo,tdesc->u.hreftype,&tinfo2);
+        if (FAILED(hres))
+            return 0; /* should fail critically in serialize_param */
+        ITypeInfo_GetTypeAttr(tinfo2,&tattr);
+        ret = (tattr->cbSizeInstance+3)/sizeof(DWORD);
+        ITypeInfo_ReleaseTypeAttr(tinfo2, tattr);
+        ITypeInfo_Release(tinfo2);
+        return ret;
+    }
     default:
 	return 1;
     }
 }
 
+/* how much space do we use on the heap (in bytes) */
 static int
-_xsize(const TYPEDESC *td) {
+_xsize(const TYPEDESC *td, ITypeInfo *tinfo) {
     switch (td->vt) {
     case VT_DATE:
 	return sizeof(DATE);
+    case VT_CY:
+        return sizeof(CY);
+    /* FIXME: VT_BOOL should return 2? */
     case VT_VARIANT:
-	return sizeof(VARIANT)+3;
+	return sizeof(VARIANT)+3; /* FIXME: why the +3? */
     case VT_CARRAY: {
 	int i, arrsize = 1;
 	const ARRAYDESC *adesc = td->u.lpadesc;
 
 	for (i=0;i<adesc->cDims;i++)
 	    arrsize *= adesc->rgbounds[i].cElements;
-	return arrsize*_xsize(&adesc->tdescElem);
+	return arrsize*_xsize(&adesc->tdescElem, tinfo);
     }
     case VT_UI8:
     case VT_I8:
+    case VT_R8:
 	return 8;
     case VT_UI2:
     case VT_I2:
@@ -550,6 +574,22 @@ _xsize(const TYPEDESC *td) {
     case VT_UI1:
     case VT_I1:
 	return 1;
+    case VT_USERDEFINED:
+    {
+        ITypeInfo *tinfo2;
+        TYPEATTR *tattr;
+        HRESULT hres;
+        DWORD ret;
+
+        hres = ITypeInfo_GetRefTypeInfo(tinfo,td->u.hreftype,&tinfo2);
+        if (FAILED(hres))
+            return 0;
+        ITypeInfo_GetTypeAttr(tinfo2,&tattr);
+        ret = tattr->cbSizeInstance;
+        ITypeInfo_ReleaseTypeAttr(tinfo2, tattr);
+        ITypeInfo_Release(tinfo2);
+        return ret;
+    }
     default:
 	return 4;
     }
@@ -843,7 +883,7 @@ serialize_param(
 	if (debugout) TRACE_(olerelay)("(vt %s)",debugstr_vt(adesc->tdescElem.vt));
 	if (debugout) TRACE_(olerelay)("[");
 	for (i=0;i<arrsize;i++) {
-	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)arg+i*_xsize(&adesc->tdescElem)), buf);
+	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)arg+i*_xsize(&adesc->tdescElem, tinfo)), buf);
 	    if (hres)
 		return hres;
 	    if (debugout && (i<arrsize-1)) TRACE_(olerelay)(",");
@@ -1092,7 +1132,7 @@ deserialize_param(
 	    if (alloc) {
 		/* Allocate space for the referenced struct */
 		if (derefhere)
-		    *arg=(DWORD)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,_xsize(tdesc->u.lptdesc));
+		    *arg=(DWORD)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,_xsize(tdesc->u.lptdesc, tinfo));
 	    }
 	    if (derefhere)
 		return deserialize_param(tinfo, readit, debugout, alloc, tdesc->u.lptdesc, (LPDWORD)*arg, buf);
@@ -1141,9 +1181,6 @@ deserialize_param(
 		case TKIND_RECORD: {
 		    int i;
 
-		    if (alloc)
-			*arg = (DWORD)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,tattr->cbSizeInstance);
-
 		    if (debugout) TRACE_(olerelay)("{");
 		    for (i=0;i<tattr->cVars;i++) {
 			VARDESC *vdesc;
@@ -1161,7 +1198,7 @@ deserialize_param(
 			    debugout,
 			    alloc,
 			    &vdesc->elemdescVar.tdesc,
-			    (DWORD*)(((LPBYTE)*arg)+vdesc->u.oInst),
+			    (DWORD*)(((LPBYTE)arg)+vdesc->u.oInst),
 			    buf
 			);
                         ITypeInfo2_ReleaseVarDesc(tinfo2, vdesc);
@@ -1207,7 +1244,7 @@ deserialize_param(
 		    debugout,
 		    alloc,
 		    &adesc->tdescElem,
-		    (DWORD*)((LPBYTE)(arg)+i*_xsize(&adesc->tdescElem)),
+		    (DWORD*)((LPBYTE)(arg)+i*_xsize(&adesc->tdescElem, tinfo)),
 		    buf
 		);
 	    return S_OK;
@@ -1407,7 +1444,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	}
 	/* No need to marshal other data than FIN and any VT_PTR. */
 	if (!is_in_elem(elem) && (elem->tdesc.vt != VT_PTR)) {
-	    xargs+=_argsize(elem->tdesc.vt);
+	    xargs+=_argsize(&elem->tdesc, tinfo);
 	    if (relaydeb) TRACE_(olerelay)("[out]");
 	    continue;
 	}
@@ -1425,7 +1462,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	    ERR("Failed to serialize param, hres %x\n",hres);
 	    break;
 	}
-	xargs+=_argsize(elem->tdesc.vt);
+	xargs+=_argsize(&elem->tdesc, tinfo);
     }
     if (relaydeb) TRACE_(olerelay)(")");
 
@@ -1466,7 +1503,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	}
 	/* No need to marshal other data than FOUT and any VT_PTR */
 	if (!is_out_elem(elem) && (elem->tdesc.vt != VT_PTR)) {
-	    xargs += _argsize(elem->tdesc.vt);
+	    xargs += _argsize(&elem->tdesc, tinfo);
 	    if (relaydeb) TRACE_(olerelay)("[in]");
 	    continue;
 	}
@@ -1484,7 +1521,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	    status = hres;
 	    break;
 	}
-	xargs += _argsize(elem->tdesc.vt);
+	xargs += _argsize(&elem->tdesc, tinfo);
     }
 
     hres = xbuf_get(&buf, (LPBYTE)&remoteresult, sizeof(DWORD));
@@ -1725,7 +1762,7 @@ static HRESULT init_proxy_entry_point(TMProxyImpl *proxy, unsigned int num)
     /* some args take more than 4 byte on the stack */
     nrofargs = 0;
     for (j=0;j<fdesc->cParams;j++)
-        nrofargs += _argsize(fdesc->lprgelemdescParam[j].tdesc.vt);
+        nrofargs += _argsize(&fdesc->lprgelemdescParam[j].tdesc, proxy->tinfo);
 
 #ifdef __i386__
     if (fdesc->callconv != CC_STDCALL) {
@@ -2055,7 +2092,7 @@ TMStubImpl_Invoke(
     /*dump_FUNCDESC(fdesc);*/
     nrofargs = 0;
     for (i=0;i<fdesc->cParams;i++)
-	nrofargs += _argsize(fdesc->lprgelemdescParam[i].tdesc.vt);
+	nrofargs += _argsize(&fdesc->lprgelemdescParam[i].tdesc, tinfo);
     args = HeapAlloc(GetProcessHeap(),0,(nrofargs+1)*sizeof(DWORD));
     if (!args)
     {
@@ -2077,7 +2114,7 @@ TMStubImpl_Invoke(
 	   xargs,
 	   &buf
 	);
-	xargs += _argsize(elem->tdesc.vt);
+	xargs += _argsize(&elem->tdesc, tinfo);
 	if (hres) {
 	    ERR("Failed to deserialize param %s, hres %x\n",relaystr(names[i+1]),hres);
 	    break;
@@ -2123,7 +2160,7 @@ TMStubImpl_Invoke(
 	   xargs,
 	   &buf
 	);
-	xargs += _argsize(elem->tdesc.vt);
+	xargs += _argsize(&elem->tdesc, tinfo);
 	if (hres) {
 	    ERR("Failed to stuballoc param, hres %x\n",hres);
 	    break;

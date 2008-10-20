@@ -173,10 +173,6 @@ extern ULONG KiDPCTimeout;
     InitializeListHead(&((Header)->WaitListHead));                          \
 }
 
-#define KEBUGCHECKWITHTF(a,b,c,d,e,f) \
-    DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), \
-             KeBugCheckWithTf(a,b,c,d,e,f)
-
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
 

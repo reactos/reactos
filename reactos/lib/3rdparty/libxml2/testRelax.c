@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 		    int fd;
 		    struct stat info;
 		    const char *base;
-		    if (stat(argv[i], &info) < 0)
+		    if (stat(argv[i], &info) < 0) 
 			break;
 		    if ((fd = open(argv[i], O_RDONLY)) < 0)
 			break;

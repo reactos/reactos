@@ -63,13 +63,13 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                IN PVOID SourceAddress,
                IN PEPROCESS TargetProcess,
                OUT PVOID TargetAddress,
-               IN ULONG BufferSize,
+               IN SIZE_T BufferSize,
                IN KPROCESSOR_MODE PreviousMode,
-               OUT PULONG ReturnSize)
+               OUT PSIZE_T ReturnSize)
 {
     PFN_NUMBER MdlBuffer[(sizeof(MDL) / sizeof(PFN_NUMBER)) + MI_MAPPED_COPY_PAGES + 1];
     PMDL Mdl = (PMDL)MdlBuffer;
-    ULONG TotalSize, CurrentSize, RemainingSize;
+    SIZE_T TotalSize, CurrentSize, RemainingSize;
     volatile BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
     BOOLEAN PagesLocked;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
@@ -219,12 +219,12 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
              IN PVOID SourceAddress,
              IN PEPROCESS TargetProcess,
              OUT PVOID TargetAddress,
-             IN ULONG BufferSize,
+             IN SIZE_T BufferSize,
              IN KPROCESSOR_MODE PreviousMode,
-             OUT PULONG ReturnSize)
+             OUT PSIZE_T ReturnSize)
 {
     UCHAR StackBuffer[MI_POOL_COPY_BYTES];
-    ULONG TotalSize, CurrentSize, RemainingSize;
+    SIZE_T TotalSize, CurrentSize, RemainingSize;
     volatile BOOLEAN FailedInProbe = FALSE, FailedInMoving, HavePoolAddress = FALSE;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID PoolAddress;
@@ -365,9 +365,9 @@ MmCopyVirtualMemory(IN PEPROCESS SourceProcess,
                     IN PVOID SourceAddress,
                     IN PEPROCESS TargetProcess,
                     OUT PVOID TargetAddress,
-                    IN ULONG BufferSize,
+                    IN SIZE_T BufferSize,
                     IN KPROCESSOR_MODE PreviousMode,
-                    OUT PULONG ReturnSize)
+                    OUT PSIZE_T ReturnSize)
 {
     NTSTATUS Status;
     PEPROCESS Process = SourceProcess;
@@ -419,34 +419,29 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID Address,
                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
                      OUT PVOID VirtualMemoryInformation,
-                     IN ULONG Length,
-                     OUT PULONG ResultLength)
+                     IN SIZE_T Length,
+                     OUT PSIZE_T ResultLength)
 {
     NTSTATUS Status;
     PEPROCESS Process;
     MEMORY_AREA* MemoryArea;
     PMM_AVL_TABLE AddressSpace;
 
-    if (Address < MmSystemRangeStart)
-    {
-        Status = ObReferenceObjectByHandle(ProcessHandle,
-                                           PROCESS_QUERY_INFORMATION,
-                                           NULL,
-                                           UserMode,
-                                           (PVOID*)(&Process),
-                                           NULL);
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       NULL,
+                                       UserMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("NtQueryVirtualMemory() = %x\n",Status);
-            return(Status);
-        }
-        AddressSpace = &Process->VadRoot;
-    }
-    else
+    if (!NT_SUCCESS(Status))
     {
-        AddressSpace = MmGetKernelAddressSpace();
+        DPRINT("NtQueryVirtualMemory() = %x\n",Status);
+        return(Status);
     }
+
+    AddressSpace = &Process->VadRoot;
+
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
     switch(VirtualMemoryInformationClass)
@@ -572,11 +567,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     MmUnlockAddressSpace(AddressSpace);
-    if (Address < MmSystemRangeStart)
-    {
-        ASSERT(Process);
-        ObDereferenceObject(Process);
-    }
+    ObDereferenceObject(Process);
 
     return Status;
 }
@@ -584,7 +575,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
 NTSTATUS STDCALL
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
-                       IN OUT PULONG NumberOfBytesToProtect,
+                       IN OUT PSIZE_T NumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG OldAccessProtection  OPTIONAL)
 {
@@ -684,7 +675,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG BytesRead = 0;
+    SIZE_T BytesRead = 0;
     PAGED_CODE();    
 
     /* Check if we came from user mode */
@@ -704,7 +695,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
         _SEH_TRY
         {
             /* Probe the output value */
-            if (NumberOfBytesRead) ProbeForWriteUlong(NumberOfBytesRead);
+            if (NumberOfBytesRead) ProbeForWriteSize_t(NumberOfBytesRead);
         }
         _SEH_HANDLE
         {
@@ -735,7 +726,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                                      PreviousMode,
                                      &BytesRead);
         
-        /* Derefernece the process */
+        /* Dereference the process */
         ObDereferenceObject(Process);
     }
     
@@ -791,7 +782,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
         _SEH_TRY
         {
             /* Probe the output value */
-            if (NumberOfBytesWritten) ProbeForWriteUlong(NumberOfBytesWritten);
+            if (NumberOfBytesWritten) ProbeForWriteSize_t(NumberOfBytesWritten);
         }
         _SEH_HANDLE
         {
@@ -822,7 +813,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                                      PreviousMode,
                                      &BytesWritten);
         
-        /* Derefernece the process */
+        /* Dereference the process */
         ObDereferenceObject(Process);
     }
     
@@ -851,14 +842,14 @@ NTSTATUS
 NTAPI
 NtProtectVirtualMemory(IN HANDLE ProcessHandle,
                        IN OUT PVOID *UnsafeBaseAddress,
-                       IN OUT ULONG *UnsafeNumberOfBytesToProtect,
+                       IN OUT SIZE_T *UnsafeNumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG UnsafeOldAccessProtection)
 {
     PEPROCESS Process;
     ULONG OldAccessProtection;
     PVOID BaseAddress = NULL;
-    ULONG NumberOfBytesToProtect = 0;
+    SIZE_T NumberOfBytesToProtect = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -870,7 +861,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
         {
             /* Validate all outputs */
             ProbeForWritePointer(UnsafeBaseAddress);
-            ProbeForWriteUlong(UnsafeNumberOfBytesToProtect);
+            ProbeForWriteSize_t(UnsafeNumberOfBytesToProtect);
             ProbeForWriteUlong(UnsafeOldAccessProtection);
             
             /* Capture them */
@@ -954,7 +945,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                      OUT PSIZE_T UnsafeResultLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG ResultLength = 0;
+    SIZE_T ResultLength = 0;
     KPROCESSOR_MODE PreviousMode;
     union
     {
@@ -974,7 +965,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     {
         _SEH_TRY
         {
-            ProbeForWriteUlong(UnsafeResultLength);
+            ProbeForWriteSize_t(UnsafeResultLength);
         }
         _SEH_HANDLE
         {
@@ -1050,8 +1041,8 @@ NTSTATUS
 NTAPI
 NtLockVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID BaseAddress,
-                    IN ULONG NumberOfBytesToLock,
-                    OUT PULONG NumberOfBytesLocked OPTIONAL)
+                    IN SIZE_T NumberOfBytesToLock,
+                    OUT PSIZE_T NumberOfBytesLocked OPTIONAL)
 {
     UNIMPLEMENTED;
     if (NumberOfBytesLocked) *NumberOfBytesLocked = 0;

@@ -715,7 +715,7 @@ static HRESULT WINAPI DefaultHandler_SetExtent(
         dwDrawAspect, psizel->cx, psizel->cy);
 
   if (object_is_running(This))
-    IOleObject_SetExtent(This->pOleDelegate, dwDrawAspect, psizel);
+    return IOleObject_SetExtent(This->pOleDelegate, dwDrawAspect, psizel);
 
   return OLE_E_NOTRUNNING;
 }

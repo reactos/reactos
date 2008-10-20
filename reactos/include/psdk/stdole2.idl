@@ -35,7 +35,7 @@ library stdole
     typedef unsigned long HRESULT;
     typedef void *VARIANT;
     typedef unsigned long SCODE;
-
+    
     typedef struct GUID {
         unsigned long  Data1;
         unsigned short Data2;
@@ -251,7 +251,7 @@ library stdole
         [propput] HRESULT Charset([in] short pcharset);
 
         [propget] HRESULT hFont([out, retval] OLE_HANDLE *phfont);
-
+        
         HRESULT Clone([out] IFont **ppfont);
 
         HRESULT IsEqual([in] IFont *pfontOther);
@@ -304,7 +304,7 @@ library stdole
         [propget] HRESULT Handle([out, retval] OLE_HANDLE *phandle);
 
         [propget] HRESULT hPal([out, retval] OLE_HANDLE *phpal);
-
+        
         [propget] HRESULT Type([out, retval] short *ptype);
 
         [propget] HRESULT Width([out, retval] OLE_XSIZE_HIMETRIC *pwidth);
@@ -329,7 +329,7 @@ library stdole
         HRESULT SelectPicture([in] int hdcIn,
                               [out] int *phdcOut,
                               [out] OLE_HANDLE *phbmpOut);
-
+        
         [propget] HRESULT KeepOriginalFormat([out, retval] VARIANT_BOOL *pfkeep);
         [propput] HRESULT KeepOriginalFormat([in] VARIANT_BOOL pfkeep);
 
@@ -351,7 +351,7 @@ library stdole
     properties:
         [id(0x0), readonly] OLE_HANDLE Handle;
         [id(0x2)] OLE_HANDLE hPal;
-        [id(0x3), readonly] short Type;
+        [id(0x3), readonly] short Type; 
         [id(0x4), readonly] OLE_XSIZE_HIMETRIC Width;
         [id(0x5), readonly] OLE_XSIZE_HIMETRIC Height;
     methods:
@@ -366,7 +366,7 @@ library stdole
                               OLE_YSIZE_HIMETRIC cySrc,
                               void *prcWBounds);
     };
-
+    
     typedef [public] Picture IPictureDisp;
 
     [

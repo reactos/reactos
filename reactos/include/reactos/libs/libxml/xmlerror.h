@@ -60,7 +60,9 @@ typedef enum {
     XML_FROM_VALID,	/* The XML DTD validation with valid context */
     XML_FROM_CHECK,	/* The error checking module */
     XML_FROM_WRITER,	/* The xmlwriter module */
-    XML_FROM_MODULE	/* The dynamically loaded module module*/
+    XML_FROM_MODULE,	/* The dynamically loaded module module*/
+    XML_FROM_I18N, 	/* The module handling character conversion */
+    XML_FROM_SCHEMATRONV	/* The Schematron validator module */
 } xmlErrorDomain;
 
 /**
@@ -201,11 +203,14 @@ typedef enum {
     XML_ERR_NOTATION_PROCESSING, /* 105 */
     XML_WAR_NS_COLUMN, /* 106 */
     XML_WAR_ENTITY_REDEFINED, /* 107 */
+    XML_ERR_UNKNOWN_VERSION, /* 108 */
+    XML_ERR_VERSION_MISMATCH, /* 109 */
     XML_NS_ERR_XML_NAMESPACE = 200,
     XML_NS_ERR_UNDEFINED_NAMESPACE, /* 201 */
     XML_NS_ERR_QNAME, /* 202 */
     XML_NS_ERR_ATTRIBUTE_REDEFINED, /* 203 */
     XML_NS_ERR_EMPTY, /* 204 */
+    XML_NS_ERR_COLON, /* 205 */
     XML_DTD_ATTRIBUTE_DEFAULT = 500,
     XML_DTD_ATTRIBUTE_REDEFINED, /* 501 */
     XML_DTD_ATTRIBUTE_VALUE, /* 502 */
@@ -247,6 +252,7 @@ typedef enum {
     XML_DTD_STANDALONE_DEFAULTED, /* 538 */
     XML_DTD_XMLID_VALUE, /* 539 */
     XML_DTD_XMLID_TYPE, /* 540 */
+    XML_DTD_DUP_TOKEN, /* 541 */
     XML_HTML_STRUCURE_ERROR = 800,
     XML_HTML_UNKNOWN_TAG, /* 801 */
     XML_RNGP_ANYNAME_ATTR_ANCESTOR = 1000,
@@ -397,6 +403,7 @@ typedef enum {
     XML_TREE_INVALID_HEX = 1300,
     XML_TREE_INVALID_DEC, /* 1301 */
     XML_TREE_UNTERMINATED_ENTITY, /* 1302 */
+    XML_TREE_NOT_UTF8, /* 1303 */
     XML_SAVE_NOT_UTF8 = 1400,
     XML_SAVE_CHAR_INVALID, /* 1401 */
     XML_SAVE_NO_DOCTYPE, /* 1402 */
@@ -638,7 +645,7 @@ typedef enum {
     XML_SCHEMAV_CVC_ELT_4_3, /* 1852 */
     XML_SCHEMAV_CVC_ELT_5_1_1, /* 1853 */
     XML_SCHEMAV_CVC_ELT_5_1_2, /* 1854 */
-    XML_SCHEMAV_CVC_ELT_5_2_1, /* 1855 */
+    XML_SCHEMAV_CVC_ELT_5_2_1, /* 1855 */  
     XML_SCHEMAV_CVC_ELT_5_2_2_1, /* 1856 */
     XML_SCHEMAV_CVC_ELT_5_2_2_2_1, /* 1857 */
     XML_SCHEMAV_CVC_ELT_5_2_2_2_2, /* 1858 */
@@ -662,7 +669,8 @@ typedef enum {
     XML_SCHEMAV_CVC_TYPE_2, /* 1876 */
     XML_SCHEMAV_CVC_IDC, /* 1877 */
     XML_SCHEMAV_CVC_WILDCARD, /* 1878 */
-    XML_XPTR_UNKNOWN_SCHEME = 1900,
+    XML_SCHEMAV_MISC, /* 1879 */
+    XML_XPTR_UNKNOWN_SCHEME = 1900, 
     XML_XPTR_CHILDSEQ_START, /* 1901 */
     XML_XPTR_EVAL_FAILED, /* 1902 */
     XML_XPTR_EXTRA_OBJECTS, /* 1903 */
@@ -683,15 +691,15 @@ typedef enum {
     XML_SCHEMAP_SRC_SIMPLE_TYPE_2, /* 3001 */
     XML_SCHEMAP_SRC_SIMPLE_TYPE_3, /* 3002 */
     XML_SCHEMAP_SRC_SIMPLE_TYPE_4, /* 3003 */
-    XML_SCHEMAP_SRC_RESOLVE, /* 3004 */
+    XML_SCHEMAP_SRC_RESOLVE, /* 3004 */ 
     XML_SCHEMAP_SRC_RESTRICTION_BASE_OR_SIMPLETYPE, /* 3005 */
     XML_SCHEMAP_SRC_LIST_ITEMTYPE_OR_SIMPLETYPE, /* 3006 */
     XML_SCHEMAP_SRC_UNION_MEMBERTYPES_OR_SIMPLETYPES, /* 3007 */
     XML_SCHEMAP_ST_PROPS_CORRECT_1, /* 3008 */
     XML_SCHEMAP_ST_PROPS_CORRECT_2, /* 3009 */
-    XML_SCHEMAP_ST_PROPS_CORRECT_3, /* 3010 */
+    XML_SCHEMAP_ST_PROPS_CORRECT_3, /* 3010 */     
     XML_SCHEMAP_COS_ST_RESTRICTS_1_1, /* 3011 */
-    XML_SCHEMAP_COS_ST_RESTRICTS_1_2, /* 3012 */
+    XML_SCHEMAP_COS_ST_RESTRICTS_1_2, /* 3012 */    
     XML_SCHEMAP_COS_ST_RESTRICTS_1_3_1, /* 3013 */
     XML_SCHEMAP_COS_ST_RESTRICTS_1_3_2, /* 3014 */
     XML_SCHEMAP_COS_ST_RESTRICTS_2_1, /* 3015 */
@@ -710,7 +718,7 @@ typedef enum {
     XML_SCHEMAP_COS_ST_RESTRICTS_3_3_2_3, /* 3028 */
     XML_SCHEMAP_COS_ST_RESTRICTS_3_3_2_4, /* 3029 */
     XML_SCHEMAP_COS_ST_RESTRICTS_3_3_2_5, /* 3030 */
-    XML_SCHEMAP_COS_ST_DERIVED_OK_2_1, /* 3031 */
+    XML_SCHEMAP_COS_ST_DERIVED_OK_2_1, /* 3031 */ 
     XML_SCHEMAP_COS_ST_DERIVED_OK_2_2, /* 3032 */
     XML_SCHEMAP_S4S_ELEM_NOT_ALLOWED, /* 3033 */
     XML_SCHEMAP_S4S_ELEM_MISSING, /* 3034 */
@@ -729,14 +737,14 @@ typedef enum {
     XML_SCHEMAP_E_PROPS_CORRECT_4, /* 3047 */
     XML_SCHEMAP_E_PROPS_CORRECT_5, /* 3048 */
     XML_SCHEMAP_E_PROPS_CORRECT_6, /* 3049 */
-    XML_SCHEMAP_SRC_INCLUDE, /* 3050 */
+    XML_SCHEMAP_SRC_INCLUDE, /* 3050 */    
     XML_SCHEMAP_SRC_ATTRIBUTE_1, /* 3051 */
     XML_SCHEMAP_SRC_ATTRIBUTE_2, /* 3052 */
     XML_SCHEMAP_SRC_ATTRIBUTE_3_1, /* 3053 */
     XML_SCHEMAP_SRC_ATTRIBUTE_3_2, /* 3054 */
     XML_SCHEMAP_SRC_ATTRIBUTE_4, /* 3055 */
     XML_SCHEMAP_NO_XMLNS, /* 3056 */
-    XML_SCHEMAP_NO_XSI, /* 3057 */
+    XML_SCHEMAP_NO_XSI, /* 3057 */      
     XML_SCHEMAP_COS_VALID_DEFAULT_1, /* 3058 */
     XML_SCHEMAP_COS_VALID_DEFAULT_2_1, /* 3059 */
     XML_SCHEMAP_COS_VALID_DEFAULT_2_2_1, /* 3060 */
@@ -760,6 +768,19 @@ typedef enum {
     XML_SCHEMAP_AU_PROPS_CORRECT_2, /* 3078 */
     XML_SCHEMAP_A_PROPS_CORRECT_2, /* 3079 */
     XML_SCHEMAP_C_PROPS_CORRECT, /* 3080 */
+    XML_SCHEMAP_SRC_REDEFINE, /* 3081 */
+    XML_SCHEMAP_SRC_IMPORT, /* 3082 */
+    XML_SCHEMAP_WARN_SKIP_SCHEMA, /* 3083 */
+    XML_SCHEMAP_WARN_UNLOCATED_SCHEMA, /* 3084 */
+    XML_SCHEMAP_WARN_ATTR_REDECL_PROH, /* 3085 */
+    XML_SCHEMAP_WARN_ATTR_POINTLESS_PROH, /* 3085 */
+    XML_SCHEMAP_AG_PROPS_CORRECT, /* 3086 */
+    XML_SCHEMAP_COS_CT_EXTENDS_1_2, /* 3087 */
+    XML_SCHEMAP_AU_PROPS_CORRECT, /* 3088 */
+    XML_SCHEMAP_A_PROPS_CORRECT_3, /* 3089 */
+    XML_SCHEMAP_COS_ALL_LIMITED, /* 3090 */
+    XML_SCHEMATRONV_ASSERT = 4000, /* 4000 */
+    XML_SCHEMATRONV_REPORT,
     XML_MODULE_OPEN = 4900, /* 4900 */
     XML_MODULE_CLOSE, /* 4901 */
     XML_CHECK_FOUND_ELEMENT = 5000,
@@ -799,7 +820,12 @@ typedef enum {
     XML_CHECK_NOT_NCNAME, /* 5034 */
     XML_CHECK_OUTSIDE_DICT, /* 5035 */
     XML_CHECK_WRONG_NAME, /* 5036 */
-    XML_CHECK_NAME_NOT_NULL /* 5037 */
+    XML_CHECK_NAME_NOT_NULL, /* 5037 */
+    XML_I18N_NO_NAME = 6000,
+    XML_I18N_NO_HANDLER, /* 6001 */
+    XML_I18N_EXCESS_HANDLER, /* 6002 */
+    XML_I18N_CONV_FAILED, /* 6003 */
+    XML_I18N_NO_OUTPUT /* 6004 */
 #if 0
     XML_CHECK_, /* 5033 */
     XML_CHECK_X /* 503 */
@@ -815,7 +841,7 @@ typedef enum {
  * Signature of the function to use when there is an error and
  * no parsing or validity context available .
  */
-typedef void (*xmlGenericErrorFunc) (void *ctx,
+typedef void (XMLCDECL *xmlGenericErrorFunc) (void *ctx,
 				 const char *msg,
 	 			 ...);
 /**
@@ -826,44 +852,44 @@ typedef void (*xmlGenericErrorFunc) (void *ctx,
  * Signature of the function to use when there is an error and
  * the module handles the new error reporting mechanism.
  */
-typedef void (*xmlStructuredErrorFunc) (void *userData, xmlErrorPtr error);
+typedef void (XMLCALL *xmlStructuredErrorFunc) (void *userData, xmlErrorPtr error);
 
 /*
  * Use the following function to reset the two global variables
  * xmlGenericError and xmlGenericErrorContext.
  */
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL	
     xmlSetGenericErrorFunc	(void *ctx,
 				 xmlGenericErrorFunc handler);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL	
     initGenericErrorDefaultFunc	(xmlGenericErrorFunc *handler);
 
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL	
     xmlSetStructuredErrorFunc	(void *ctx,
 				 xmlStructuredErrorFunc handler);
 /*
  * Default message routines used by SAX and Valid context for error
  * and warning reporting.
  */
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCDECL	
     xmlParserError		(void *ctx,
 				 const char *msg,
 				 ...);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCDECL	
     xmlParserWarning		(void *ctx,
 				 const char *msg,
 				 ...);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCDECL	
     xmlParserValidityError	(void *ctx,
 				 const char *msg,
 				 ...);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCDECL	
     xmlParserValidityWarning	(void *ctx,
 				 const char *msg,
 				 ...);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL	
     xmlParserPrintFileInfo	(xmlParserInputPtr input);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL	
     xmlParserPrintFileContext	(xmlParserInputPtr input);
 
 /*
@@ -887,7 +913,7 @@ XMLPUBFUN int XMLCALL
 /*
  * Internal callback reporting routine
  */
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL 
     __xmlRaiseError		(xmlStructuredErrorFunc schannel,
     				 xmlGenericErrorFunc channel,
     				 void *data,
@@ -905,7 +931,7 @@ XMLPUBFUN void XMLCALL
 				 int col,
 				 const char *msg,
 				 ...);
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCALL 
     __xmlSimpleError		(int domain,
     				 int code,
 				 xmlNodePtr node,

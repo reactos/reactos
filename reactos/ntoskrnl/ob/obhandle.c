@@ -450,6 +450,14 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+ObpValidateAccessMask(IN PACCESS_STATE AccessState)
+{
+    /* TODO */
+    return STATUS_SUCCESS;
+}
+
 /*++
 * @name ObpDecrementHandleCount
 *
@@ -489,7 +497,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Decrementing count for: %p. HC LC %lx %lx\n",
+            "%s - Decrementing count for: %p. HC PC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -592,7 +600,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Decrease the total number of handles for this type */
     InterlockedDecrement((PLONG)&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Decremented count for: %p. HC LC %lx %lx\n",
+            "%s - Decremented count for: %p. HC PC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -645,7 +653,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx for %p. HC LC %lx %lx\n",
+            "%s - Closing handle: %lx for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -715,7 +723,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx for %p. HC LC %lx %lx\n",
+            "%s - Closed handle: %lx for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -777,7 +785,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incrementing count for: %p. Reason: %lx. HC LC %lx %lx\n",
+            "%s - Incrementing count for: %p. Reason: %lx. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -978,7 +986,7 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+            "%s - Incremented count for: %p. Reason: %lx HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -1042,7 +1050,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incrementing count for: %p. UNNAMED. HC LC %lx %lx\n",
+            "%s - Incrementing count for: %p. UNNAMED. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1198,7 +1206,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
+            "%s - Incremented count for: %p. UNNAMED HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1267,7 +1275,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
+            "%s - Creating handle for: %p. UNNAMED. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1363,7 +1371,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC LC %lx %lx\n",
+                "%s - Returning Handle: %lx HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1456,7 +1464,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Creating handle for: %p. Reason: %lx. HC LC %lx %lx\n",
+            "%s - Creating handle for: %p. Reason: %lx. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -1609,7 +1617,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC LC %lx %lx\n",
+                "%s - Returning Handle: %lx HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -2888,7 +2896,7 @@ ObInsertObject(IN PVOID Object,
     AccessState->SecurityDescriptor = ObjectCreateInfo->SecurityDescriptor;
 
     /* Validate the access mask */
-    Status = STATUS_SUCCESS;//ObpValidateAccessMask(AccessState);
+    Status = ObpValidateAccessMask(AccessState);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -3116,7 +3124,7 @@ ObInsertObject(IN PVOID Object,
 
     /* Return status code */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - returning Object with PC S/RS: %lx %lx %lx\n",
+            "%s - returning Object with PC RS/S: %lx %lx %lx\n",
             __FUNCTION__,
             OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
             RealStatus, Status);

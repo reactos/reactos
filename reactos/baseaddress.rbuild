@@ -7,6 +7,7 @@
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
   <property name="BASEADDRESS_RSAENH" value="0x35780000" />
+  <property name="BASEADDRESS_MPRAPI" value="0x4C400000" />
   <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
   <property name="BASEADDRESS_TELEPHON" value="0x58750000" />
@@ -78,6 +79,7 @@
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
+  <property name="BASEADDRESS_JSCRIPT" value="0x6fe80000" />
   <property name="BASEADDRESS_FONTEXT" value="0x6f7b0000" />
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
@@ -187,6 +189,7 @@
   <property name="BASEADDRESS_MSVCRT20" value="0x78500000" />
   <property name="BASEADDRESS_MSVCRT40" value="0x78700000" />
   <property name="BASEADDRESS_MSCOREE" value="0x79000000" />
+  <property name="BASEADDRESS_FUSION" value="0x79040000" />
   <property name="BASEADDRESS_KERNEL32" value="0x7c800000" />
   <property name="BASEADDRESS_NTDLL" value="0x7c900000" />
   <property name="BASEADDRESS_HHCTRL" value="0x7e410000" />

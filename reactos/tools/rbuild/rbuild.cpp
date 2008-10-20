@@ -329,7 +329,6 @@ main ( int argc, char** argv )
 			project,
 			configuration ) );
 
-		project.WriteConfigurationFile ();
 		project.ExecuteInvocations ();
 		project.GetBackend().Process();
 

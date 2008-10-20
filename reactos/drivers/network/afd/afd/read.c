@@ -642,6 +642,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 	Status = STATUS_CANT_WAIT;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
+	UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
     } else {
 	PollReeval( FCB->DeviceExt, FCB->FileObject );

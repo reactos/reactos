@@ -350,8 +350,6 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 
 #if 0
 
-/* see http://www.microsoft.com/msj/0199/com/com0199.aspx */
-
 RPCRTAPI HRESULT RPC_ENTRY
   CreateProxyFromTypeInfo( LPTYPEINFO pTypeInfo, LPUNKNOWN pUnkOuter, REFIID riid,
                            LPRPCPROXYBUFFER *ppProxy, LPVOID *ppv );
@@ -365,4 +363,4 @@ RPCRTAPI HRESULT RPC_ENTRY
 }
 #endif
 
-#endif /*__WINE_RPCDCE_H */
+#endif /*__WINE_RPCPROXY_H */

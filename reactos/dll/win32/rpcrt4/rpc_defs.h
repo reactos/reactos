@@ -22,8 +22,6 @@
 #ifndef __WINE_RPC_DEFS_H
 #define __WINE_RPC_DEFS_H
 
-/* info from http://www.microsoft.com/msj/0398/dcomtextfigs.htm */
-
 typedef struct
 {
   unsigned char rpc_ver;          /* RPC major version (5) */

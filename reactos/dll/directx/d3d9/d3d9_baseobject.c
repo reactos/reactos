@@ -66,7 +66,7 @@ HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9**
 {
     if (pBaseObject->pUnknown)
     {
-        return pBaseObject->pUnknown->lpVtbl->QueryInterface((IUnknown*) &pBaseObject->pUnknown->lpVtbl, &IID_IDirect3DDevice9, (void**)ppDevice);
+        return IUnknown_QueryInterface(pBaseObject->pUnknown, &IID_IDirect3DDevice9, (void**)ppDevice);
     }
 
     return E_NOINTERFACE;
@@ -74,10 +74,15 @@ HRESULT D3D9BaseObject_GetDevice(D3D9BaseObject* pBaseObject, IDirect3DDevice9**
 
 HRESULT D3D9BaseObject_GetDeviceInt(D3D9BaseObject* pBaseObject, DIRECT3DDEVICE9_INT** ppDevice)
 {
+    if (NULL == ppDevice)
+        return D3DERR_INVALIDCALL;
+
+    *ppDevice = NULL;
+
     if (pBaseObject->pUnknown)
     {
         LPDIRECT3DDEVICE9 pDevice;
-        if (FAILED(pBaseObject->pUnknown->lpVtbl->QueryInterface((IUnknown*) &pBaseObject->pUnknown->lpVtbl, &IID_IDirect3DDevice9, (void**)&pDevice)))
+        if (FAILED(IUnknown_QueryInterface(pBaseObject->pUnknown, &IID_IDirect3DDevice9, (void**)&pDevice)))
             return E_NOINTERFACE;
 
         *ppDevice = IDirect3DDevice9ToImpl(pDevice);
@@ -85,4 +90,24 @@ HRESULT D3D9BaseObject_GetDeviceInt(D3D9BaseObject* pBaseObject, DIRECT3DDEVICE9
     }
 
     return E_NOINTERFACE;
+}
+
+VOID D3D9BaseObject_LockDevice(D3D9BaseObject* pBaseObject)
+{
+    DIRECT3DDEVICE9_INT* pDevice;
+    if (FAILED(D3D9BaseObject_GetDeviceInt(pBaseObject, &pDevice)))
+        return;
+
+    if (pDevice->bLockDevice)
+        EnterCriticalSection(&pDevice->CriticalSection);
+}
+
+VOID D3D9BaseObject_UnlockDevice(D3D9BaseObject* pBaseObject)
+{
+    DIRECT3DDEVICE9_INT* pDevice;
+    if (FAILED(D3D9BaseObject_GetDeviceInt(pBaseObject, &pDevice)))
+        return;
+
+    if (pDevice->bLockDevice)
+        LeaveCriticalSection(&pDevice->CriticalSection);
 }

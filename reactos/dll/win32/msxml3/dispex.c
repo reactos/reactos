@@ -79,6 +79,7 @@ static REFIID tid_ids[] = {
     &IID_IXMLDOMAttribute,
     &IID_IXMLDOMCDATASection,
     &IID_IXMLDOMComment,
+    &IID_IXMLDOMDocument,
     &IID_IXMLDOMDocument2,
     &IID_IXMLDOMDocumentFragment,
     &IID_IXMLDOMElement,
@@ -542,42 +543,42 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
-    return S_OK;
+    TRACE("Not implemented in native msxml3 (%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x)\n", This, id);
+    TRACE("Not implemented in native msxml3 (%p)->(%x)\n", This, id);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberProperties(IDispatchEx *iface, DISPID id, DWORD grfdexFetch, DWORD *pgrfdex)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
+    TRACE("Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BSTR *pbstrName)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %p)\n", This, id, pbstrName);
+    TRACE("Not implemented in native msxml3 (%p)->(%x %p)\n", This, id, pbstrName);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%x %x %p)\n", This, grfdex, id, pid);
+    TRACE(" Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, grfdex, id, pid);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNameSpaceParent(IDispatchEx *iface, IUnknown **ppunk)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    FIXME("(%p)->(%p)\n", This, ppunk);
+    TRACE("Not implemented in native msxml3 (%p)->(%p)\n", This, ppunk);
     return E_NOTIMPL;
 }
 

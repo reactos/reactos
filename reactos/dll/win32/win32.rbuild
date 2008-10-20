@@ -85,6 +85,9 @@
 <directory name="fmifs">
 	<xi:include href="fmifs/fmifs.rbuild" />
 </directory>
+<directory name="fusion">
+	<xi:include href="fusion/fusion.rbuild" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.rbuild" />
 </directory>
@@ -121,6 +124,9 @@
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
+<directory name="jscript">
+	<xi:include href="jscript/jscript.rbuild" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
@@ -148,6 +154,9 @@
 <directory name="mpr">
 	<xi:include href="mpr/mpr.rbuild" />
 </directory>
+<directory name="mprapi">
+	<xi:include href="mprapi/mprapi.rbuild" />
+</directory>
 <directory name="msacm32">
 	<xi:include href="msacm32/msacm32.rbuild" />
 </directory>
@@ -162,6 +171,9 @@
 </directory>
 <directory name="mshtml">
 	<xi:include href="mshtml/mshtml.rbuild" />
+</directory>
+<directory name="mshtml.tlb">
+	<xi:include href="mshtml.tlb/mshtml.tlb.rbuild" />
 </directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
@@ -333,6 +345,9 @@
 </directory>
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
+</directory>
+<directory name="stdole32.tlb">
+	<xi:include href="stdole32.tlb/stdole32.rbuild" />
 </directory>
 <directory name="sxs">
 	<xi:include href="sxs/sxs.rbuild" />

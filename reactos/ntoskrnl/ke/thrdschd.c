@@ -55,7 +55,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         {
             /* Calculate the new priority based on the adjust increment */
             OldPriority = min(Thread->AdjustIncrement + 1,
-                              LOW_REALTIME_PRIORITY - 1);
+                              LOW_REALTIME_PRIORITY - 3);
 
             /* Make sure we're not decreasing outside of the priority range */
             ASSERT((Thread->PriorityDecrement >= 0) &&

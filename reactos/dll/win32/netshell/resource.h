@@ -5,10 +5,18 @@
 #define IDI_HORIZONTAL           101
 #define IDI_NETSTAT              102
 #define IDI_VERTICAL             103
+#define IDI_NET_ERROR            104
+#define IDI_NET_IDLE             105
+#define IDI_NET_OFF              106
+#define IDI_NET_REC              107
+#define IDI_NET_TRANS            108
+#define IDI_NET_TRANSREC         109
 
 /* dialogs */
 #define IDD_NETPROPERTIES             400
-#define IDD_NETSTATUS                 401
+#define IDD_LAN_NETSTATUS             401
+#define IDD_STATUS                    402
+
 
 /* dialog controls */
 #define IDC_NETCARDNAME              1000
@@ -28,6 +36,7 @@
 #define IDC_STATUS                   1104
 #define IDC_DURATION                 1105
 #define IDC_SPEED                    1106
+#define IDC_NETSTAT                  1107
 
 
 /* resource constants */
@@ -55,3 +64,11 @@
 #define IDS_NET_DELETE              10105
 #define IDS_NET_RENAME              10106
 #define IDS_NET_PROPERTIES          10107
+
+#define IDS_FORMAT_BIT              10200
+#define IDS_FORMAT_MBIT             10201
+#define IDS_FORMAT_KBIT             10202
+#define IDS_FORMAT_GBIT             10203
+#define IDS_DURATION_DAY            10204
+#define IDS_DURATION_DAYS           10205
+

@@ -30,7 +30,7 @@ FindActCtxSectionStringA(
     )
 {
     BOOL bRetVal;
-    LPWSTR lpStringToFindW;
+    LPWSTR lpStringToFindW = NULL;
 
     /* Convert lpStringToFind */
     if (lpStringToFind)
@@ -47,7 +47,8 @@ FindActCtxSectionStringA(
                                         ReturnedData);
 
     /* Clean up */
-    RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpStringToFindW);
+    if (lpStringToFindW)
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpStringToFindW);
 
     return bRetVal;
 }

@@ -7,7 +7,6 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
-#include <roscfg.h>
 #include <ne2000.h>
 #include <debug.h>
 

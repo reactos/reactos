@@ -1281,7 +1281,7 @@ void setup_nswindow(HTMLWindow *This)
 
 HTMLWindow *HTMLWindow_Create(HTMLDocument *doc)
 {
-    HTMLWindow *ret = heap_alloc(sizeof(HTMLWindow));
+    HTMLWindow *ret = heap_alloc_zero(sizeof(HTMLWindow));
 
     ret->lpHTMLWindow2Vtbl = &HTMLWindow2Vtbl;
     ret->lpHTMLWindow3Vtbl = &HTMLWindow3Vtbl;

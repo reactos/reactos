@@ -1,0 +1,32 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+IDD_TCPIP_BASIC_DLG DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generielt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 228, 27
+ CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
+ GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
+ CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ LTEXT "IP address:", -1, 14, 75, 135, 8
+ CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
+ LTEXT "Subnet maske:", -1, 14, 90, 135, 8
+ CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
+ LTEXT "Standard gateway:", -1, 14, 105, 135, 8
+ CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
+ CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
+ GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
+ CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+ LTEXT "Forvalgt DNS server:", -1, 14, 171, 135, 8
+ CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
+ LTEXT "Alternativ DNS server:", -1, 14, 186, 135, 8
+ CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
+ PUSHBUTTON "&Avansert", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
+END
+
+
+STRINGTABLE
+BEGIN
+	IDS_NET_CONNECT "Nettverk tilkobling"
+END

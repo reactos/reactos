@@ -317,7 +317,7 @@ done:
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln)
 {
   WCHAR wcBom;
-  BYTE bEoln[1];
+  BYTE bEoln[2];
   LPBYTE pbEoln = NULL;
   DWORD dwDummy, dwPos, dwNext, dwEolnSize = 0;
 

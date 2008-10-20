@@ -1,11 +1,11 @@
 @ stub AddPersonalTrustDBPages
 @ stub CatalogCompactHashDatabase
 @ stdcall CryptCATAdminAcquireContext(long ptr long)
-@ stub CryptCATAdminAddCatalog
+@ stdcall CryptCATAdminAddCatalog(long wstr wstr long)
 @ stdcall CryptCATAdminCalcHashFromFileHandle(long ptr ptr long)
 @ stdcall CryptCATAdminEnumCatalogFromHash(long ptr long long ptr)
 @ stub CryptCATAdminPauseServiceForBackup
-@ stub CryptCATAdminReleaseCatalogContext
+@ stdcall CryptCATAdminReleaseCatalogContext(long long long)
 @ stdcall CryptCATAdminReleaseContext(long long)
 @ stdcall CryptCATAdminRemoveCatalog(ptr wstr long)
 @ stub CryptCATAdminResolveCatalogPath
@@ -46,8 +46,8 @@
 @ stub DriverFinalPolicy
 @ stub DriverInitializePolicy
 @ stub FindCertsByIssuer
-@ stub GenericChainCertificateTrust
-@ stub GenericChainFinalProv
+@ stdcall GenericChainCertificateTrust(ptr)
+@ stdcall GenericChainFinalProv(ptr)
 @ stub HTTPSCertificateTrust
 @ stub HTTPSFinalProv
 @ stub IsCatalogFile
@@ -56,18 +56,18 @@
 @ stub OfficeCleanupPolicy
 @ stub OfficeInitializePolicy
 @ stub OpenPersonalTrustDBDialog
-@ stub SoftpubAuthenticode
-@ stub SoftpubCheckCert
-@ stub SoftpubCleanup
-@ stub SoftpubDefCertInit
+@ stdcall SoftpubAuthenticode(ptr)
+@ stdcall SoftpubCheckCert(ptr long long long)
+@ stdcall SoftpubCleanup(ptr)
+@ stdcall SoftpubDefCertInit(ptr)
 @ stdcall SoftpubDllRegisterServer()
 @ stdcall SoftpubDllUnregisterServer()
 @ stub SoftpubDumpStructure
 @ stub SoftpubFreeDefUsageCallData
-@ stub SoftpubInitialize
+@ stdcall SoftpubInitialize(ptr)
 @ stub SoftpubLoadDefUsageCallData
-@ stub SoftpubLoadMessage
-@ stub SoftpubLoadSignature
+@ stdcall SoftpubLoadMessage(ptr)
+@ stdcall SoftpubLoadSignature(ptr)
 @ stub TrustDecode
 @ stub TrustFindIssuerCertificate
 @ stub TrustFreeDecode
@@ -77,11 +77,11 @@
 @ stub WTHelperCertIsSelfSigned
 @ stub WTHelperCheckCertUsage
 @ stub WTHelperGetAgencyInfo
-@ stub WTHelperGetFileHandle
-@ stub WTHelperGetFileName
+@ stdcall WTHelperGetFileHandle(ptr)
+@ stdcall WTHelperGetFileName(ptr)
 @ stub WTHelperGetKnownUsages
-@ stub WTHelperGetProvCertFromChain
-@ stub WTHelperGetProvPrivateDataFromChain
+@ stdcall WTHelperGetProvCertFromChain(ptr long)
+@ stdcall WTHelperGetProvPrivateDataFromChain(ptr ptr)
 @ stdcall WTHelperGetProvSignerFromChain(ptr long long long)
 @ stub WTHelperIsInRootStore
 @ stub WTHelperOpenKnownStores
@@ -92,19 +92,19 @@
 @ stub WVTAsn1CatNameValueEncode
 @ stub WVTAsn1SpcFinancialCriteriaInfoDecode
 @ stub WVTAsn1SpcFinancialCriteriaInfoEncode
-@ stub WVTAsn1SpcIndirectDataContentDecode
-@ stub WVTAsn1SpcIndirectDataContentEncode
-@ stub WVTAsn1SpcLinkDecode
-@ stub WVTAsn1SpcLinkEncode
+@ stdcall WVTAsn1SpcIndirectDataContentDecode(long str ptr long long ptr ptr)
+@ stdcall WVTAsn1SpcIndirectDataContentEncode(long str ptr ptr ptr)
+@ stdcall WVTAsn1SpcLinkDecode(long str ptr long long ptr ptr)
+@ stdcall WVTAsn1SpcLinkEncode(long str ptr ptr ptr)
 @ stub WVTAsn1SpcMinimalCriteriaInfoDecode
 @ stub WVTAsn1SpcMinimalCriteriaInfoEncode
-@ stub WVTAsn1SpcPeImageDataDecode
-@ stub WVTAsn1SpcPeImageDataEncode
+@ stdcall WVTAsn1SpcPeImageDataDecode(long str ptr long long ptr ptr)
+@ stdcall WVTAsn1SpcPeImageDataEncode(long str ptr ptr ptr)
 @ stub WVTAsn1SpcSigInfoDecode
 @ stub WVTAsn1SpcSigInfoEncode
 @ stub WVTAsn1SpcSpAgencyInfoDecode
 @ stub WVTAsn1SpcSpAgencyInfoEncode
-@ stub WVTAsn1SpcSpOpusInfoDecode
+@ stdcall WVTAsn1SpcSpOpusInfoDecode(long str ptr long long ptr ptr)
 @ stub WVTAsn1SpcSpOpusInfoEncode
 @ stub WVTAsn1SpcStatementTypeDecode
 @ stub WVTAsn1SpcStatementTypeEncode
@@ -112,7 +112,7 @@
 @ stdcall WinVerifyTrustEx(long ptr ptr)
 @ stdcall WintrustAddActionID(ptr long ptr)
 @ stdcall WintrustAddDefaultForUsage(ptr ptr)
-@ stub WintrustCertificateTrust
+@ stdcall WintrustCertificateTrust(ptr)
 @ stub WintrustGetDefaultForUsage
 @ stdcall WintrustGetRegPolicyFlags(ptr)
 @ stdcall WintrustLoadFunctionPointers(ptr ptr)

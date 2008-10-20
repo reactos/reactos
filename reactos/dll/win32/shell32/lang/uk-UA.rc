@@ -381,18 +381,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Завдання", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

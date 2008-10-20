@@ -219,8 +219,7 @@ static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
                                     pUrlArray->rgwszUrl[pUrlArray->cUrl++] =
                                      nextUrl;
                                     nextUrl +=
-                                     (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1)
-                                     * sizeof(WCHAR);
+                                     (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1);
                                 }
                             }
                     }

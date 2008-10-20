@@ -52,6 +52,7 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
                                         FALSE,
                                         &Event,
                                         &IoStatusBlock);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Send it */
     Status = IoCallDriver(TargetDevice, Irp);

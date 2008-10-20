@@ -63,9 +63,12 @@ RtlpGetMode()
    return UserMode;
 }
 
+/*
+ * @implemented
+ */
 PPEB
 NTAPI
-RtlpCurrentPeb(VOID)
+RtlGetCurrentPeb(VOID)
 {
     return NtCurrentPeb();
 }

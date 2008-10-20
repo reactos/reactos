@@ -797,7 +797,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
             return NULL;
         }
 
-        if (package->WordCount & MSIWORDCOUNT_ADMINISTRATIVE)
+        if (package->WordCount & msidbSumInfoSourceTypeAdminImage)
             msi_load_admin_properties( package );
     }
 

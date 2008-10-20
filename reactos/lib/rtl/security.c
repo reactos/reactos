@@ -81,6 +81,29 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
    return(Status);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlAcquirePrivilege(IN PULONG Privilege,
+                    IN ULONG NumPriv,
+                    IN ULONG Flags,
+                    OUT PVOID *ReturnedState)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+RtlReleasePrivilege(IN PVOID ReturnedState)
+{
+    UNIMPLEMENTED;
+}
 
 /*
  * @implemented
@@ -224,4 +247,26 @@ RtlSetSecurityObject(IN SECURITY_INFORMATION SecurityInformation,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-/* EOF */
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlRegisterSecureMemoryCacheCallback(IN PRTL_SECURE_MEMORY_CACHE_CALLBACK Callback)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlFlushSecureMemoryCache(IN PVOID MemoryCache,
+                          IN OPTIONAL SIZE_T MemoryLength)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

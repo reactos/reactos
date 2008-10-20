@@ -87,13 +87,3 @@ void ConsumeRegValueString( PWCHAR Value ) {
 PWCHAR *QueryRegistryValueStringMulti( HANDLE RegHandle, PWCHAR ValueName ) {
   return 0; /* FIXME if needed */
 }
-
-void ConsumeRegValueStringMulti( PCHAR *Value ) {
-  PCHAR *Orig = Value;
-  if (Value) {
-    while (*Value) {
-      free(*Value);
-    }
-    free(Orig);
-  }
-}

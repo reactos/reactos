@@ -56,16 +56,14 @@ static ULONG WINAPI HTMLElement2_Release(IHTMLElement2 *iface)
 static HRESULT WINAPI HTMLElement2_GetTypeInfoCount(IHTMLElement2 *iface, UINT *pctinfo)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLElement2_GetTypeInfo(IHTMLElement2 *iface, UINT iTInfo,
                                                LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLElement2_GetIDsOfNames(IHTMLElement2 *iface, REFIID riid,
@@ -73,9 +71,7 @@ static HRESULT WINAPI HTMLElement2_GetIDsOfNames(IHTMLElement2 *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLElement2_Invoke(IHTMLElement2 *iface, DISPID dispIdMember,
@@ -83,9 +79,8 @@ static HRESULT WINAPI HTMLElement2_Invoke(IHTMLElement2 *iface, DISPID dispIdMem
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->node.dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLElement2_get_scopeName(IHTMLElement2 *iface, BSTR *p)
@@ -713,15 +708,51 @@ static HRESULT WINAPI HTMLElement2_createControlRange(IHTMLElement2 *iface, IDis
 static HRESULT WINAPI HTMLElement2_get_scrollHeight(IHTMLElement2 *iface, long *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLElement *nselem;
+    PRInt32 height = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMNSHTMLElement_GetScrollHeight(nselem, &height);
+        nsIDOMNSHTMLElement_Release(nselem);
+        if(NS_FAILED(nsres))
+            ERR("GetScrollHeight failed: %08x\n", nsres);
+    }else {
+        ERR("Could not get nsIDOMNSHTMLElement interface: %08x\n", nsres);
+    }
+
+    *p = height;
+    TRACE("*p = %ld\n", *p);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_get_scrollWidth(IHTMLElement2 *iface, long *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLElement *nselem;
+    PRInt32 width = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMNSHTMLElement_GetScrollWidth(nselem, &width);
+        nsIDOMNSHTMLElement_Release(nselem);
+        if(NS_FAILED(nsres))
+            ERR("GetScrollWidth failed: %08x\n", nsres);
+    }else {
+        ERR("Could not get nsIDOMNSHTMLElement interface: %08x\n", nsres);
+    }
+
+    *p = width;
+    TRACE("*p = %ld\n", *p);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_put_scrollTop(IHTMLElement2 *iface, long v)
@@ -751,8 +782,26 @@ static HRESULT WINAPI HTMLElement2_put_scrollTop(IHTMLElement2 *iface, long v)
 static HRESULT WINAPI HTMLElement2_get_scrollTop(IHTMLElement2 *iface, long *p)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLElement *nselem;
+    PRInt32 top = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMNSHTMLElement_GetScrollTop(nselem, &top);
+        nsIDOMNSHTMLElement_Release(nselem);
+        if(NS_FAILED(nsres))
+            ERR("GetScrollTop failed: %08x\n", nsres);
+    }else {
+        ERR("Could not get nsIDOMNSHTMLElement interface: %08x\n", nsres);
+    }
+
+    *p = top;
+    TRACE("*p = %ld\n", *p);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement2_put_scrollLeft(IHTMLElement2 *iface, long v)
@@ -917,12 +966,27 @@ static HRESULT WINAPI HTMLElement2_get_readyStateValue(IHTMLElement2 *iface, lon
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLElement2_getElementByTagName(IHTMLElement2 *iface, BSTR v,
+static HRESULT WINAPI HTMLElement2_getElementsByTagName(IHTMLElement2 *iface, BSTR v,
                                                        IHTMLElementCollection **pelColl)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
-    return E_NOTIMPL;
+    nsIDOMNodeList *nslist;
+    nsAString tag_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
+
+    nsAString_Init(&tag_str, v);
+    nsres = nsIDOMHTMLElement_GetElementsByTagName(This->nselem, &tag_str, &nslist);
+    nsAString_Finish(&tag_str);
+    if(NS_FAILED(nsres)) {
+        ERR("GetElementByTagName failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *pelColl = create_collection_from_nodelist(This->node.doc, (IUnknown*)HTMLELEM(This), nslist);
+    nsIDOMNodeList_Release(nslist);
+    return S_OK;
 }
 
 #undef HTMLELEM2_THIS
@@ -1032,7 +1096,7 @@ static const IHTMLElement2Vtbl HTMLElement2Vtbl = {
     HTMLElement2_put_onbeforeeditfocus,
     HTMLElement2_get_onbeforeeditfocus,
     HTMLElement2_get_readyStateValue,
-    HTMLElement2_getElementByTagName,
+    HTMLElement2_getElementsByTagName,
 };
 
 void HTMLElement2_Init(HTMLElement *This)

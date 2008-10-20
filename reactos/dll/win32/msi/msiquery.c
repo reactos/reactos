@@ -326,7 +326,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
                 IStream_Release(stm);
             }
             else
-                ERR("failed to get stream\n");
+                WARN("failed to get stream\n");
 
             continue;
         }

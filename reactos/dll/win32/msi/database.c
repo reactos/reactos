@@ -90,6 +90,13 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
+    if (szPersist - MSIDBOPEN_PATCHFILE >= MSIDBOPEN_READONLY &&
+        szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
+    {
+        TRACE("Database is a patch\n");
+        szPersist -= MSIDBOPEN_PATCHFILE;
+    }
+
     save_path = szDBPath;
     szMode = szPersist;
     if( HIWORD( szPersist ) )

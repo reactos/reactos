@@ -825,4 +825,12 @@ HKCR,"InternetShortcut\shell\open\command",,,"rundll32.exe shdocvw.dll,OpenURL %
 HKCR,"InternetShortcut\shell\print\command",,,"rundll32.exe mshtml.dll,PrintHTML \"%1\""
 HKCR,"InternetShortcut\shell\printto\command",,,"rundll32.exe mshtml.dll,PrintHTML \"%1\" \"%2\" \"%3\" \"%4\""
 
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\1.0,,,"OLE Automation"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\1.0\0\win16,,,"stdole.tlb"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\1.0\0\win32,,,"stdole32.tlb"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\1.0\FLAGS,,,"1"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\2.0,,,"OLE Automation"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\2.0\0\win32,,,"stdole2.tlb"
+HKCR,TypeLib\{00020430-0000-0000-C000-000000000046}\2.0\FLAGS,,,"0"
+
 ; EOF

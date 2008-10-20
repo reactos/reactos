@@ -1270,6 +1270,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     UNICODE_STRING ImageName;
     PVOID ImageBase;
+    PLDR_DATA_TABLE_ENTRY ModuleObject;
     ULONG_PTR EntryPoint;
     NTSTATUS Status;
     ULONG DirSize;
@@ -1291,7 +1292,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
                                NULL,
                                NULL,
                                0,
-                               NULL,
+                               (PVOID)&ModuleObject,
                                &ImageBase);
     if (!NT_SUCCESS(Status)) return Status;
 

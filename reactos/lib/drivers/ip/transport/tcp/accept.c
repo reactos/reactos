@@ -117,6 +117,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 	if( Bucket->AssociatedEndpoint == Connection ) {
 	    RemoveEntryList( ListEntry->Blink );
 	    ExFreePool( Bucket );
+	    break;
 	}
     }
 
@@ -141,10 +142,14 @@ NTSTATUS TCPAccept
 
    if( Status == STATUS_PENDING ) {
        Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
-       Bucket->AssociatedEndpoint = Connection;
-       Bucket->Request.RequestNotifyObject = Complete;
-       Bucket->Request.RequestContext = Context;
-       InsertHeadList( &Listener->ListenRequest, &Bucket->Entry );
+
+       if( Bucket ) {
+           Bucket->AssociatedEndpoint = Connection;
+           Bucket->Request.RequestNotifyObject = Complete;
+           Bucket->Request.RequestContext = Context;
+           InsertHeadList( &Listener->ListenRequest, &Bucket->Entry );
+       } else
+           Status = STATUS_NO_MEMORY;
    }
 
    TcpipRecursiveMutexLeave( &TCPLock );

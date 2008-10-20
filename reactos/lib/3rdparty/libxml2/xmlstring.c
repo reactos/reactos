@@ -3,7 +3,7 @@
  *
  * This module provides various utility functions for manipulating
  * the xmlChar* type. All functions named xmlStr* have been moved here
- * from the parser.c file (their original home).
+ * from the parser.c file (their original home). 
  *
  * See Copyright for the status of this software.
  *
@@ -40,7 +40,7 @@
 xmlChar *
 xmlStrndup(const xmlChar *cur, int len) {
     xmlChar *ret;
-
+    
     if ((cur == NULL) || (len < 0)) return(NULL);
     ret = (xmlChar *) xmlMallocAtomic((len + 1) * sizeof(xmlChar));
     if (ret == NULL) {
@@ -85,7 +85,7 @@ xmlChar *
 xmlCharStrndup(const char *cur, int len) {
     int i;
     xmlChar *ret;
-
+    
     if ((cur == NULL) || (len < 0)) return(NULL);
     ret = (xmlChar *) xmlMallocAtomic((len + 1) * sizeof(xmlChar));
     if (ret == NULL) {
@@ -147,8 +147,8 @@ xmlStrcmp(const xmlChar *str1, const xmlChar *str2) {
  * @str1:  the first xmlChar *
  * @str2:  the second xmlChar *
  *
- * Check if both string are equal of have same content
- * Should be a bit more readable and faster than xmlStrEqual()
+ * Check if both strings are equal of have same content.
+ * Should be a bit more readable and faster than xmlStrcmp()
  *
  * Returns 1 if they are equal, 0 if they are different
  */
@@ -170,7 +170,7 @@ xmlStrEqual(const xmlChar *str1, const xmlChar *str2) {
  * @name:  the localname of the QName
  * @str:  the second xmlChar *
  *
- * Check if a QName is Equal to a given string
+ * Check if a QName is Equal to a given string 
  *
  * Returns 1 if they are equal, 0 if they are different
  */
@@ -340,7 +340,7 @@ xmlStrchr(const xmlChar *str, xmlChar val) {
 const xmlChar *
 xmlStrstr(const xmlChar *str, const xmlChar *val) {
     int n;
-
+    
     if (str == NULL) return(NULL);
     if (val == NULL) return(NULL);
     n = xmlStrlen(val);
@@ -368,7 +368,7 @@ xmlStrstr(const xmlChar *str, const xmlChar *val) {
 const xmlChar *
 xmlStrcasestr(const xmlChar *str, xmlChar *val) {
     int n;
-
+    
     if (str == NULL) return(NULL);
     if (val == NULL) return(NULL);
     n = xmlStrlen(val);
@@ -396,7 +396,7 @@ xmlStrcasestr(const xmlChar *str, xmlChar *val) {
 xmlChar *
 xmlStrsub(const xmlChar *str, int start, int len) {
     int i;
-
+    
     if (str == NULL) return(NULL);
     if (start < 0) return(NULL);
     if (len < 0) return(NULL);
@@ -437,7 +437,8 @@ xmlStrlen(const xmlChar *str) {
  * @len:  the length of @add
  *
  * a strncat for array of xmlChar's, it will extend @cur with the len
- * first bytes of @add.
+ * first bytes of @add. Note that if @len < 0 then this is an API error
+ * and NULL will be returned.
  *
  * Returns a new xmlChar *, the original @cur is reallocated if needed
  * and should not be freed
@@ -450,6 +451,8 @@ xmlStrncat(xmlChar *cur, const xmlChar *add, int len) {
 
     if ((add == NULL) || (len == 0))
         return(cur);
+    if (len < 0)
+	return(NULL);
     if (cur == NULL)
         return(xmlStrndup(add, len));
 
@@ -468,10 +471,11 @@ xmlStrncat(xmlChar *cur, const xmlChar *add, int len) {
  * xmlStrncatNew:
  * @str1:  first xmlChar string
  * @str2:  second xmlChar string
- * @len:  the len of @str2
+ * @len:  the len of @str2 or < 0
  *
  * same as xmlStrncat, but creates a new string.  The original
- * two strings are not freed.
+ * two strings are not freed. If @len is < 0 then the length
+ * will be calculated automatically.
  *
  * Returns a new xmlChar * or NULL
  */
@@ -515,7 +519,7 @@ xmlStrcat(xmlChar *cur, const xmlChar *add) {
     const xmlChar *p = add;
 
     if (add == NULL) return(cur);
-    if (cur == NULL)
+    if (cur == NULL) 
         return(xmlStrdup(add));
 
     while (*p != 0) p++; /* non input consuming */
@@ -533,20 +537,20 @@ xmlStrcat(xmlChar *cur, const xmlChar *add) {
  *
  * Returns the number of characters written to @buf or -1 if an error occurs.
  */
-int
+int XMLCDECL 
 xmlStrPrintf(xmlChar *buf, int len, const xmlChar *msg, ...) {
     va_list args;
     int ret;
-
+    
     if((buf == NULL) || (msg == NULL)) {
         return(-1);
     }
-
+    
     va_start(args, msg);
     ret = vsnprintf((char *) buf, len, (const char *) msg, args);
     va_end(args);
     buf[len - 1] = 0; /* be safe ! */
-
+    
     return(ret);
 }
 
@@ -561,17 +565,17 @@ xmlStrPrintf(xmlChar *buf, int len, const xmlChar *msg, ...) {
  *
  * Returns the number of characters written to @buf or -1 if an error occurs.
  */
-int
+int 
 xmlStrVPrintf(xmlChar *buf, int len, const xmlChar *msg, va_list ap) {
     int ret;
-
+    
     if((buf == NULL) || (msg == NULL)) {
         return(-1);
     }
-
+    
     ret = vsnprintf((char *) buf, len, (const char *) msg, ap);
     buf[len - 1] = 0; /* be safe ! */
-
+    
     return(ret);
 }
 
@@ -854,7 +858,7 @@ xmlChar *
 xmlUTF8Strndup(const xmlChar *utf, int len) {
     xmlChar *ret;
     int i;
-
+    
     if ((utf == NULL) || (len < 0)) return(NULL);
     i = xmlUTF8Strsize(utf, len);
     ret = (xmlChar *) xmlMallocAtomic((i + 1) * sizeof(xmlChar));

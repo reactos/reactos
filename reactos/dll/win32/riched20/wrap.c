@@ -377,7 +377,7 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   }
 
   /* will current run fit? */
-  if (wc->pt.x + run->nWidth > wc->context->pt.x + wc->nAvailWidth)
+  if (wc->pt.x + run->nWidth - wc->context->pt.x > wc->nAvailWidth)
   {
     int loc = wc->context->pt.x + wc->nAvailWidth - wc->pt.x;
     /* total white run ? */

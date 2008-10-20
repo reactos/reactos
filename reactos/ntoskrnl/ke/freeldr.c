@@ -1341,11 +1341,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         LoaderBlock->MmapAddr = (ULONG_PTR)KeMemoryMap;
     }
 
-#if defined(_M_IX86)
-    /* Set up the VDM Data */
-    NtEarlyInitVdm();
-#endif
-
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(KeRosLoaderBlock, &NtLoaderBlock);
 

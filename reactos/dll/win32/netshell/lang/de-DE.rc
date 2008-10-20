@@ -19,8 +19,15 @@ BEGIN
         CHECKBOX "&Benachrichtigen, wenn diese Verbindung eingeschränkte oder\nkeine Konnektivität besitzt", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
-IDD_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200, 180
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -30,13 +37,10 @@ BEGIN
 	LTEXT "Übertragungsrate:", -1, 19, 48, 60, 8
 	GROUPBOX "Aktivität", -1, 9, 74, 182, 70, BS_GROUPBOX
 	RTEXT "Gesendet", -1, 26, 90, 60, 8
-	ICON IDI_HORIZONTAL, -1, 90, 85, 18, 20
-	ICON IDI_NETSTAT, -1, 110, 85, 18, 20
-	ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
+	ICON "", IDC_NETSTAT, 110, 85, 18, 20
 	LTEXT "Empfangen", -1, 149, 90, 37, 8
 	LTEXT "Bytes:", -1, 17, 115, 32, 8
 	RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-	ICON IDI_VERTICAL, -1, 110, 108, 18, 20
 	RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
 	PUSHBUTTON "E&igenschaften", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
 	PUSHBUTTON "&Deaktivieren", IDC_ENDISABLE, 66, 150, 50, 14
@@ -71,4 +75,11 @@ BEGIN
 	IDS_NET_DELETE              "Löschen"
 	IDS_NET_RENAME              "Umbenennen"
 	IDS_NET_PROPERTIES          "Eigenschaften"
+
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
+	IDS_DURATION_DAY            "%d Tag %s"
+	IDS_DURATION_DAYS           "%d Tage %s"
 END

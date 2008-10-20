@@ -592,7 +592,7 @@ typedef struct _MMADDRESS_NODE
 {
     union
     {
-        ULONG Balance:2;
+        LONG Balance:2;
         struct _MMADDRESS_NODE *Parent;
     } u1;
     struct _MMADDRESS_NODE *LeftChild;

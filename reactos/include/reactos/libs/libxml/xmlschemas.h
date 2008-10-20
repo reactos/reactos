@@ -85,11 +85,28 @@ typedef struct _xmlSchema xmlSchema;
 typedef xmlSchema *xmlSchemaPtr;
 
 /**
+ * xmlSchemaValidityErrorFunc:
+ * @ctx: the validation context
+ * @msg: the message
+ * @...: extra arguments
+ *
+ * Signature of an error callback from an XSD validation
+ */
+typedef void (XMLCDECL *xmlSchemaValidityErrorFunc) (void *ctx, const char *msg, ...);
+
+/**
+ * xmlSchemaValidityWarningFunc:
+ * @ctx: the validation context
+ * @msg: the message
+ * @...: extra arguments
+ *
+ * Signature of a warning callback from an XSD validation
+ */
+typedef void (XMLCDECL *xmlSchemaValidityWarningFunc) (void *ctx, const char *msg, ...);
+
+/**
  * A schemas validation context
  */
-typedef void (*xmlSchemaValidityErrorFunc) (void *ctx, const char *msg, ...);
-typedef void (*xmlSchemaValidityWarningFunc) (void *ctx, const char *msg, ...);
-
 typedef struct _xmlSchemaParserCtxt xmlSchemaParserCtxt;
 typedef xmlSchemaParserCtxt *xmlSchemaParserCtxtPtr;
 
@@ -112,6 +129,10 @@ XMLPUBFUN void XMLCALL
 	    xmlSchemaSetParserErrors	(xmlSchemaParserCtxtPtr ctxt,
 					 xmlSchemaValidityErrorFunc err,
 					 xmlSchemaValidityWarningFunc warn,
+					 void *ctx);
+XMLPUBFUN void XMLCALL
+	    xmlSchemaSetParserStructuredErrors(xmlSchemaParserCtxtPtr ctxt,
+					 xmlStructuredErrorFunc serror,
 					 void *ctx);
 XMLPUBFUN int XMLCALL
 		xmlSchemaGetParserErrors(xmlSchemaParserCtxtPtr ctxt,
@@ -137,6 +158,10 @@ XMLPUBFUN void XMLCALL
 	    xmlSchemaSetValidErrors	(xmlSchemaValidCtxtPtr ctxt,
 					 xmlSchemaValidityErrorFunc err,
 					 xmlSchemaValidityWarningFunc warn,
+					 void *ctx);
+XMLPUBFUN void XMLCALL
+	    xmlSchemaSetValidStructuredErrors(xmlSchemaValidCtxtPtr ctxt,
+					 xmlStructuredErrorFunc serror,
 					 void *ctx);
 XMLPUBFUN int XMLCALL
 	    xmlSchemaGetValidErrors	(xmlSchemaValidCtxtPtr ctxt,
@@ -170,8 +195,11 @@ XMLPUBFUN int XMLCALL
 					 const char * filename,
 					 int options);
 
+XMLPUBFUN xmlParserCtxtPtr XMLCALL
+	    xmlSchemaValidCtxtGetParserCtxt(xmlSchemaValidCtxtPtr ctxt);
+
 /*
- * Interface to insert Schemas SAX velidation in a SAX stream
+ * Interface to insert Schemas SAX validation in a SAX stream
  */
 typedef struct _xmlSchemaSAXPlug xmlSchemaSAXPlugStruct;
 typedef xmlSchemaSAXPlugStruct *xmlSchemaSAXPlugPtr;

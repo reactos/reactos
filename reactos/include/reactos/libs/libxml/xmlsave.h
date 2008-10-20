@@ -27,7 +27,10 @@ extern "C" {
  * to the xmlSaveToFd() and similar calls.
  */
 typedef enum {
-    XML_SAVE_FORMAT     = 1<<0	/* format save output */
+    XML_SAVE_FORMAT     = 1<<0,	/* format save output */
+    XML_SAVE_NO_DECL    = 1<<1,	/* drop the xml declaration */
+    XML_SAVE_NO_EMPTY	= 1<<2, /* no empty tags */
+    XML_SAVE_NO_XHTML	= 1<<3  /* disable XHTML1 specific rules */
 } xmlSaveOption;
 
 
@@ -42,14 +45,12 @@ XMLPUBFUN xmlSaveCtxtPtr XMLCALL
 		xmlSaveToFilename	(const char *filename,
 					 const char *encoding,
 					 int options);
-/******
-  Not yet implemented.
 
 XMLPUBFUN xmlSaveCtxtPtr XMLCALL
 		xmlSaveToBuffer		(xmlBufferPtr buffer,
 					 const char *encoding,
 					 int options);
- ******/
+
 XMLPUBFUN xmlSaveCtxtPtr XMLCALL
 		xmlSaveToIO		(xmlOutputWriteCallback iowrite,
 					 xmlOutputCloseCallback ioclose,

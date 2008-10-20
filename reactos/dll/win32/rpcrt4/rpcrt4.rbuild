@@ -38,6 +38,7 @@
 	<file>rpcrt4_main.c</file>
 	<file>rpcss_np_client.c</file>
 	<file>unix_func.c</file>
+	<file>ndr_es.c</file>
 	<file>rpcrt4.rc</file>
 	<file>rpcrt4.spec</file>
 </module>

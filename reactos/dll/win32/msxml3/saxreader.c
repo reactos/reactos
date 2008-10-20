@@ -1680,6 +1680,57 @@ static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int siz
     return S_OK;
 }
 
+static HRESULT internal_parseStream(saxreader *This, IStream *stream, BOOL vbInterface)
+{
+    saxlocator *locator;
+    HRESULT hr;
+    ULONG dataRead;
+    char data[1024];
+
+    hr = IStream_Read(stream, data, sizeof(data), &dataRead);
+    if(hr != S_OK)
+        return hr;
+
+    hr = SAXLocator_create(This, &locator, vbInterface);
+    if(FAILED(hr))
+        return E_FAIL;
+
+    locator->pParserCtxt = xmlCreatePushParserCtxt(
+            &locator->saxreader->sax, locator,
+            data, dataRead, NULL);
+    if(!locator->pParserCtxt)
+    {
+        ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+        return E_FAIL;
+    }
+
+    while(1)
+    {
+        hr = IStream_Read(stream, data, sizeof(data), &dataRead);
+        if(hr != S_OK)
+            break;
+
+        if(xmlParseChunk(locator->pParserCtxt, data, dataRead, 0)) hr = E_FAIL;
+        else hr = locator->ret;
+
+        if(hr != S_OK) break;
+
+        if(dataRead != sizeof(data))
+        {
+            if(xmlParseChunk(locator->pParserCtxt, data, 0, 1)) hr = E_FAIL;
+            else hr = locator->ret;
+
+            break;
+        }
+    }
+
+    locator->pParserCtxt->sax = NULL;
+    xmlFreeParserCtxt(locator->pParserCtxt);
+    locator->pParserCtxt = NULL;
+    ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+    return hr;
+}
+
 static HRESULT WINAPI internal_getEntityResolver(
         saxreader *This,
         void *pEntityResolver,
@@ -1867,47 +1918,7 @@ static HRESULT WINAPI internal_parse(
             if(stream || IUnknown_QueryInterface(V_UNKNOWN(&varInput),
                         &IID_IStream, (void**)&stream) == S_OK)
             {
-                STATSTG dataInfo;
-                ULONG dataRead;
-                char *data;
-
-                while(1)
-                {
-                    hr = IStream_Stat(stream, &dataInfo, STATFLAG_NONAME);
-                    if(hr == E_PENDING) continue;
-                    break;
-                }
-                if(hr != S_OK)
-                {
-                    IStream_Release(stream);
-                    break;
-                }
-
-                data = HeapAlloc(GetProcessHeap(), 0,
-                        dataInfo.cbSize.QuadPart);
-                if(!data)
-                {
-                    IStream_Release(stream);
-                    break;
-                }
-
-                while(1)
-                {
-                    hr = IStream_Read(stream, data,
-                            dataInfo.cbSize.QuadPart, &dataRead);
-                    if(hr == E_PENDING) continue;
-                    break;
-                }
-                if(hr != S_OK)
-                {
-                    HeapFree(GetProcessHeap(), 0, data);
-                    IStream_Release(stream);
-                    break;
-                }
-
-                hr = internal_parseBuffer(This, data,
-                        dataInfo.cbSize.QuadPart, vbInterface);
-                HeapFree(GetProcessHeap(), 0, data);
+                hr = internal_parseStream(This, stream, vbInterface);
                 IStream_Release(stream);
                 break;
             }
@@ -2161,7 +2172,7 @@ static HRESULT WINAPI saxxmlreader_putProperty(
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI saxxmlreader_getEntityResolver(
+static HRESULT WINAPI saxxmlreader_get_entityResolver(
     IVBSAXXMLReader* iface,
     IVBSAXEntityResolver **pEntityResolver)
 {
@@ -2169,7 +2180,7 @@ static HRESULT WINAPI saxxmlreader_getEntityResolver(
     return internal_getEntityResolver(This, pEntityResolver, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_putEntityResolver(
+static HRESULT WINAPI saxxmlreader_put_entityResolver(
     IVBSAXXMLReader* iface,
     IVBSAXEntityResolver *pEntityResolver)
 {
@@ -2177,7 +2188,7 @@ static HRESULT WINAPI saxxmlreader_putEntityResolver(
     return internal_putEntityResolver(This, pEntityResolver, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_getContentHandler(
+static HRESULT WINAPI saxxmlreader_get_contentHandler(
     IVBSAXXMLReader* iface,
     IVBSAXContentHandler **ppContentHandler)
 {
@@ -2185,7 +2196,7 @@ static HRESULT WINAPI saxxmlreader_getContentHandler(
     return internal_getContentHandler(This, ppContentHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_putContentHandler(
+static HRESULT WINAPI saxxmlreader_put_contentHandler(
     IVBSAXXMLReader* iface,
     IVBSAXContentHandler *contentHandler)
 {
@@ -2193,7 +2204,7 @@ static HRESULT WINAPI saxxmlreader_putContentHandler(
     return internal_putContentHandler(This, contentHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_getDTDHandler(
+static HRESULT WINAPI saxxmlreader_get_dtdHandler(
     IVBSAXXMLReader* iface,
     IVBSAXDTDHandler **pDTDHandler)
 {
@@ -2201,7 +2212,7 @@ static HRESULT WINAPI saxxmlreader_getDTDHandler(
     return internal_getDTDHandler(This, pDTDHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_putDTDHandler(
+static HRESULT WINAPI saxxmlreader_put_dtdHandler(
     IVBSAXXMLReader* iface,
     IVBSAXDTDHandler *pDTDHandler)
 {
@@ -2209,7 +2220,7 @@ static HRESULT WINAPI saxxmlreader_putDTDHandler(
     return internal_putDTDHandler(This, pDTDHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_getErrorHandler(
+static HRESULT WINAPI saxxmlreader_get_errorHandler(
     IVBSAXXMLReader* iface,
     IVBSAXErrorHandler **pErrorHandler)
 {
@@ -2217,7 +2228,7 @@ static HRESULT WINAPI saxxmlreader_getErrorHandler(
     return internal_getErrorHandler(This, pErrorHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_putErrorHandler(
+static HRESULT WINAPI saxxmlreader_put_errorHandler(
     IVBSAXXMLReader* iface,
     IVBSAXErrorHandler *errorHandler)
 {
@@ -2225,7 +2236,7 @@ static HRESULT WINAPI saxxmlreader_putErrorHandler(
     return internal_putErrorHandler(This, errorHandler, TRUE);
 }
 
-static HRESULT WINAPI saxxmlreader_getBaseURL(
+static HRESULT WINAPI saxxmlreader_get_baseURL(
     IVBSAXXMLReader* iface,
     const WCHAR **pBaseUrl)
 {
@@ -2235,7 +2246,7 @@ static HRESULT WINAPI saxxmlreader_getBaseURL(
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI saxxmlreader_putBaseURL(
+static HRESULT WINAPI saxxmlreader_put_baseURL(
     IVBSAXXMLReader* iface,
     const WCHAR *pBaseUrl)
 {
@@ -2245,7 +2256,7 @@ static HRESULT WINAPI saxxmlreader_putBaseURL(
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI saxxmlreader_getSecureBaseURL(
+static HRESULT WINAPI saxxmlreader_get_secureBaseURL(
     IVBSAXXMLReader* iface,
     const WCHAR **pSecureBaseUrl)
 {
@@ -2256,7 +2267,7 @@ static HRESULT WINAPI saxxmlreader_getSecureBaseURL(
 }
 
 
-static HRESULT WINAPI saxxmlreader_putSecureBaseURL(
+static HRESULT WINAPI saxxmlreader_put_secureBaseURL(
     IVBSAXXMLReader* iface,
     const WCHAR *secureBaseUrl)
 {
@@ -2295,18 +2306,18 @@ static const struct IVBSAXXMLReaderVtbl saxreader_vtbl =
     saxxmlreader_putFeature,
     saxxmlreader_getProperty,
     saxxmlreader_putProperty,
-    saxxmlreader_getEntityResolver,
-    saxxmlreader_putEntityResolver,
-    saxxmlreader_getContentHandler,
-    saxxmlreader_putContentHandler,
-    saxxmlreader_getDTDHandler,
-    saxxmlreader_putDTDHandler,
-    saxxmlreader_getErrorHandler,
-    saxxmlreader_putErrorHandler,
-    saxxmlreader_getBaseURL,
-    saxxmlreader_putBaseURL,
-    saxxmlreader_getSecureBaseURL,
-    saxxmlreader_putSecureBaseURL,
+    saxxmlreader_get_entityResolver,
+    saxxmlreader_put_entityResolver,
+    saxxmlreader_get_contentHandler,
+    saxxmlreader_put_contentHandler,
+    saxxmlreader_get_dtdHandler,
+    saxxmlreader_put_dtdHandler,
+    saxxmlreader_get_errorHandler,
+    saxxmlreader_put_errorHandler,
+    saxxmlreader_get_baseURL,
+    saxxmlreader_put_baseURL,
+    saxxmlreader_get_secureBaseURL,
+    saxxmlreader_put_secureBaseURL,
     saxxmlreader_parse,
     saxxmlreader_parseURL
 };
@@ -2445,7 +2456,7 @@ static HRESULT WINAPI isaxxmlreader_getBaseURL(
         const WCHAR **pBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_get_getBaseURL(
+    return IVBSAXXMLReader_get_baseURL(
             (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
             pBaseUrl);
 }
@@ -2455,7 +2466,7 @@ static HRESULT WINAPI isaxxmlreader_putBaseURL(
         const WCHAR *pBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_put_putBaseURL(
+    return IVBSAXXMLReader_put_baseURL(
             (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
             pBaseUrl);
 }
@@ -2465,7 +2476,7 @@ static HRESULT WINAPI isaxxmlreader_getSecureBaseURL(
         const WCHAR **pSecureBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_get_getSecureBaseURL(
+    return IVBSAXXMLReader_get_secureBaseURL(
             (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
             pSecureBaseUrl);
 }
@@ -2475,7 +2486,7 @@ static HRESULT WINAPI isaxxmlreader_putSecureBaseURL(
         const WCHAR *secureBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_put_putSecureBaseURL(
+    return IVBSAXXMLReader_put_secureBaseURL(
             (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
             secureBaseUrl);
 }

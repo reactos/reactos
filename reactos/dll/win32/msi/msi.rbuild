@@ -42,6 +42,7 @@
 	<file>select.c</file>
 	<file>source.c</file>
 	<file>sql.tab.c</file>
+	<file>storages.c</file>
 	<file>streams.c</file>
 	<file>string.c</file>
 	<file>suminfo.c</file>

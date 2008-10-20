@@ -110,6 +110,16 @@ Index: widltypes.h
  #include <stdarg.h>
  #include "guiddef.h"
  #include "wine/rpcfc.h"
+@@ -38,7 +38,9 @@
+ typedef GUID UUID;
+ #endif
+ 
++#ifndef TRUE
+ #define TRUE 1
++#endif
+ #define FALSE 0
+ 
+ typedef struct _attr_t attr_t;
 Index: write_msft.c
 ===================================================================
 --- write_msft.c	(revision 32187)

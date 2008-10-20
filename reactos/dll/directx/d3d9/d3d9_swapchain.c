@@ -14,10 +14,8 @@
 #include "d3d9_device.h"
 #include "d3d9_cursor.h"
 
-#define LOCK_D3DDEVICE9()   if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
-                                EnterCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
-#define UNLOCK_D3DDEVICE9() if (This->BaseObject.pUnknown && ((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->bLockDevice) \
-                                LeaveCriticalSection(&((LPDIRECT3DDEVICE9_INT)This->BaseObject.pUnknown)->CriticalSection);
+#define LOCK_D3DDEVICE9()   D3D9BaseObject_LockDevice(&This->BaseObject)
+#define UNLOCK_D3DDEVICE9() D3D9BaseObject_UnlockDevice(&This->BaseObject)
 
 /* Convert a IDirect3DSwapChain9 pointer safely to the internal implementation struct */
 static LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface)

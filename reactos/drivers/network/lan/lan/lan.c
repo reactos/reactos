@@ -349,7 +349,10 @@ NDIS_STATUS STDCALL ProtocolReceive(
     /* Get a transfer data packet */
     KeAcquireSpinLockAtDpcLevel(&Adapter->Lock);
     NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Adapter->MTU );
-    if( NdisStatus != NDIS_STATUS_SUCCESS ) return NDIS_STATUS_NOT_ACCEPTED;
+    if( NdisStatus != NDIS_STATUS_SUCCESS ) {
+        KeReleaseSpinLockFromDpcLevel(&Adapter->Lock);
+        return NDIS_STATUS_NOT_ACCEPTED;
+    }
     LA_DbgPrint(DEBUG_DATALINK, ("pretransfer LookaheadBufferSize %d packsize %d\n",LookaheadBufferSize,PacketSize));
     {
 	UINT temp;

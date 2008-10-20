@@ -99,7 +99,7 @@ KeSetDisableBoostThread(IN OUT PKTHREAD Thread,
     ASSERT_THREAD(Thread);
 
     /* Check if we're enabling or disabling */
-    if (Disable != FALSE)
+    if (Disable)
     {
         /* Set the bit */
         return InterlockedBitTestAndSet(&Thread->ThreadFlags, 1);
@@ -652,7 +652,7 @@ KeThawAllThreads(VOID)
 
                 /* Signal the suspend semaphore and wake it */
                 Current->SuspendSemaphore.Header.SignalState++;
-                KiWaitTest(&Current->SuspendSemaphore, 1);
+                KiWaitTest(&Current->SuspendSemaphore, 0);
 
                 /* Unlock the dispatcher */
                 KiReleaseDispatcherLockFromDpcLevel();
@@ -833,7 +833,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
         if (AllocatedStack)
         {
             /* Delete the stack */
-            MmDeleteKernelStack((PVOID)Thread->StackLimit, FALSE);
+            MmDeleteKernelStack((PVOID)Thread->StackBase, FALSE);
             Thread->InitialStack = NULL;
         }
     }
@@ -875,7 +875,7 @@ NTAPI
 KeUninitThread(IN PKTHREAD Thread)
 {
     /* Delete the stack */
-    MmDeleteKernelStack((PVOID)Thread->StackLimit, FALSE);
+    MmDeleteKernelStack((PVOID)Thread->StackBase, FALSE);
     Thread->InitialStack = NULL;
 }
 
@@ -1156,6 +1156,9 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     /* If priority saturation happened, use the saturated increment */
     if (Thread->Saturation) OldIncrement = (HIGH_PRIORITY + 1) / 2 *
                                             Thread->Saturation;
+
+    /* Reset the saturation value */
+    Thread->Saturation = 0;
 
     /* Now check if saturation is being used for the new value */
     if (abs(Increment) >= ((HIGH_PRIORITY + 1) / 2))

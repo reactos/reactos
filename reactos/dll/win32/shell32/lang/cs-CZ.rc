@@ -382,18 +382,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Úkoly", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Zobrazit bìžné operace ve složkách", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Použít klas&ické složky ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP
-	GROUPBOX "Procházení složek", -1, 7, 60, 249, 45, WS_TABSTOP
+	AUTORADIOBUTTON "&Zobrazit bìžné operace ve složkách", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Použít klas&ické složky ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Procházení složek", -1, 7, 60, 249, 45, WS_TABSTOP | WS_GROUP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Otevírat každou složku ve stejné&m oknì", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním oknì", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Otevírat každou složku ve stejné&m oknì", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Ote&vírat každou složku ve svém vlastním oknì", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Klikání na položky", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Jedno kliknutí k &otevøení položky (vybrat ukázáním)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeèe", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Podtrhávat názvy ikon jen &pøi ukázání na nì", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Dvojkliknutí k otevøení položky (vybrat kliknutím)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Jedno kliknutí k &otevøení položky (vybrat ukázáním)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podtrhávat názvy ikon podle &nastavení prohlížeèe", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Podtrhávat názvy ikon jen &pøi ukázání na nì", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Dvojkliknutí k otevøení položky (vybrat kliknutím)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "O&bnovit výchozí", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

@@ -38,6 +38,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	PWCHAR EnvironmentBufferW = NULL;
 	LPCWSTR lpModuleEnd = NULL;
 	UNICODE_STRING ModuleName;
+	DWORD LastError = GetLastError(); /* GetEnvironmentVariable changes LastError */
 
 	if (lpModule != NULL)
 	{
@@ -89,6 +90,7 @@ GetDllLoadPath(LPCWSTR lpModule)
 	Pos += GetEnvironmentVariableW(L"PATH", EnvironmentBufferW + Pos, Length - Pos);
 	EnvironmentBufferW[Pos] = 0;
 
+	SetLastError(LastError);
 	return EnvironmentBufferW;
 }
 
@@ -175,6 +177,7 @@ LoadLibraryExW (
 	NTSTATUS Status;
 	PWSTR SearchPath;
     ULONG DllCharacteristics;
+	BOOL FreeString = FALSE;
 
         (void)hFile;
 
@@ -197,6 +200,17 @@ LoadLibraryExW (
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
 	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+	if (DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+	{
+		RtlCreateUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+		while (DllName.Length > sizeof(WCHAR) &&
+				DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
+		{
+			DllName.Length -= sizeof(WCHAR);
+		}
+		DllName.Buffer[DllName.Length/sizeof(WCHAR)] = UNICODE_NULL;
+		FreeString = TRUE;
+	}
     if (InWindows)
     {
         /* Call the API Properly */
@@ -211,6 +225,8 @@ LoadLibraryExW (
         Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
+	if (FreeString)
+		RtlFreeUnicodeString(&DllName);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
@@ -230,22 +246,29 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
 	ANSI_STRING ProcedureName;
 	FARPROC fnExp = NULL;
+	NTSTATUS Status;
 
 	if (HIWORD(lpProcName) != 0)
 	{
 		RtlInitAnsiString (&ProcedureName,
 		                   (LPSTR)lpProcName);
-		LdrGetProcedureAddress ((PVOID)hModule,
+		Status = LdrGetProcedureAddress ((PVOID)hModule,
 		                        &ProcedureName,
 		                        0,
 		                        (PVOID*)&fnExp);
 	}
 	else
 	{
-		LdrGetProcedureAddress ((PVOID)hModule,
+		Status = LdrGetProcedureAddress ((PVOID)hModule,
 		                        NULL,
 		                        (ULONG)lpProcName,
 		                        (PVOID*)&fnExp);
+	}
+
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError( RtlNtStatusToDosError( Status ) );
+		fnExp = NULL;
 	}
 
 	return fnExp;
@@ -313,27 +336,25 @@ GetModuleFileNameA (
 		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 		if (Module->DllBase == (PVOID)hModule)
 		{
-			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
-			{
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			}
-			else
-			{
-				FileName.Length = 0;
-				FileName.MaximumLength = (USHORT)nSize * sizeof(WCHAR);
-				FileName.Buffer = lpFilename;
+			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
+			FileName.Length = 0;
+			FileName.MaximumLength = (USHORT)Length * sizeof(WCHAR);
+			FileName.Buffer = lpFilename;
 
-				/* convert unicode string to ansi (or oem) */
-				if (bIsFileApiAnsi)
-					RtlUnicodeStringToAnsiString (&FileName,
-					                              &Module->FullDllName,
-					                              FALSE);
-				else
-					RtlUnicodeStringToOemString (&FileName,
-					                             &Module->FullDllName,
-					                             FALSE);
-				Length = Module->FullDllName.Length / sizeof(WCHAR);
-			}
+			/* convert unicode string to ansi (or oem) */
+			if (bIsFileApiAnsi)
+				RtlUnicodeStringToAnsiString (&FileName,
+				                              &Module->FullDllName,
+				                              FALSE);
+			else
+				RtlUnicodeStringToOemString (&FileName,
+				                             &Module->FullDllName,
+				                             FALSE);
+				
+			if (nSize < Length)
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			else
+				lpFilename[Length] = '\0';
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
 			return Length;
@@ -381,22 +402,20 @@ GetModuleFileNameW (
 
 		if (Module->DllBase == (PVOID)hModule)
 		{
-			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
-			{
-				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
-			}
-			else
-			{
-				FileName.Length = 0;
-				FileName.MaximumLength =(USHORT)nSize * sizeof(WCHAR);
-				FileName.Buffer = lpFilename;
+			Length = min(nSize, Module->FullDllName.Length / sizeof(WCHAR));
+			FileName.Length = 0;
+			FileName.MaximumLength = (USHORT) Length * sizeof(WCHAR);
+			FileName.Buffer = lpFilename;
 
-				RtlCopyUnicodeString (&FileName,
-				                      &Module->FullDllName);
-				Length = Module->FullDllName.Length / sizeof(WCHAR);
-			}
+			RtlCopyUnicodeString (&FileName,
+			                      &Module->FullDllName);
+			if (nSize < Length)
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			else
+				lpFilename[Length] = L'\0';
 
 			RtlLeaveCriticalSection (Peb->LoaderLock);
+
 			return Length;
 		}
 

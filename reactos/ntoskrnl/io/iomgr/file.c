@@ -1283,6 +1283,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     PFILE_NAME_INFORMATION LocalFileInfo;
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     ULONG LocalReturnLength, FileLength;
+    BOOLEAN LengthMismatch = FALSE;
     NTSTATUS Status;
     PWCHAR p;
     IOTRACE(IO_FILE_DEBUG, "ObjectBody: %p\n", ObjectBody);
@@ -1303,7 +1304,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                                LocalInfo,
                                Length,
                                &LocalReturnLength);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
     {
         /* Free the buffer and fail */
         ExFreePool(LocalInfo);
@@ -1326,9 +1327,13 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Check if this already filled our buffer */
     if (LocalReturnLength > Length)
     {
-        /* Free the buffer and fail */
-        ExFreePool(LocalInfo);
-        return STATUS_BUFFER_OVERFLOW;
+        /* Set the length mismatch to true, so that we can return
+         * the proper buffer size to the caller later
+         */
+        LengthMismatch = TRUE;
+
+        /* Save the initial buffer length value */
+        *ReturnLength = LocalReturnLength;
     }
 
     /* Now get the file name buffer and check the length needed */
@@ -1340,7 +1345,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Query the File name */
     Status = IoQueryFileInformation(FileObject,
                                     FileNameInformation,
-                                    FileLength,
+                                    LengthMismatch ? Length : FileLength,
                                     LocalFileInfo,
                                     &LocalReturnLength);
     if (NT_ERROR(Status))
@@ -1351,7 +1356,23 @@ IopQueryNameFile(IN PVOID ObjectBody,
     }
 
     /* ROS HACK. VFAT SUCKS */
-    if (NT_WARNING(Status)) LocalReturnLength = FileLength;
+    if (NT_WARNING(Status))
+    {
+        DPRINT("Status 0x%08x, LRN 0x%x, FileLength 0x%x\n", Status,
+            LocalReturnLength, FileLength);
+        LocalReturnLength = FileLength;
+    }
+
+    /* If the provided buffer is too small, return the required size */
+    if (LengthMismatch)
+    {
+        /* Add the required length */
+        *ReturnLength += LocalFileInfo->FileNameLength;
+
+        /* Free the allocated buffer and return failure */
+        ExFreePool(LocalInfo);
+        return STATUS_BUFFER_OVERFLOW;
+    }
 
     /* Now calculate the new lengths left */
     FileLength = LocalReturnLength -
@@ -2079,7 +2100,7 @@ IoGetFileObjectGenericMapping(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
     /* Return the flag status */
@@ -2418,15 +2439,38 @@ IoQueryFileDosDeviceName(IN PFILE_OBJECT FileObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoSetFileOrigin(IN PFILE_OBJECT FileObject,
                 IN BOOLEAN Remote)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN FlagSet;
+
+    /* Get the flag status */
+    FlagSet = FileObject->Flags & FO_REMOTE_ORIGIN ? TRUE : FALSE;
+
+    /* Don't set the flag if it was set already, and don't remove it if it wasn't set */
+    if (Remote && !FlagSet)
+    {
+        /* Set the flag */
+        FileObject->Flags |= FO_REMOTE_ORIGIN;
+    }
+    else if (!Remote && FlagSet)
+    {
+        /* Remove the flag */
+        FileObject->Flags &= ~FO_REMOTE_ORIGIN;
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER_MIX;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*

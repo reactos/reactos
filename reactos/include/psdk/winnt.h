@@ -484,6 +484,7 @@ typedef DWORD FLONG;
 #define PROCESS_SET_INFORMATION	512
 #define PROCESS_QUERY_INFORMATION	1024
 #define PROCESS_SUSPEND_RESUME	2048
+#define PROCESS_QUERY_LIMITED_INFORMATION 0x1000
 #define PROCESS_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0xFFF)
 #endif
 #define PROCESS_DUP_HANDLE	64
@@ -1162,12 +1163,17 @@ typedef enum
 #define HEAP_PSEUDO_TAG_FLAG 0x8000
 #define HEAP_TAG_SHIFT 16
 #define HEAP_MAKE_TAG_FLAGS(b,o) ((DWORD)((b)+(o)<<16)))
+
 #define KEY_QUERY_VALUE 1
 #define KEY_SET_VALUE 2
 #define KEY_CREATE_SUB_KEY 4
 #define KEY_ENUMERATE_SUB_KEYS 8
 #define KEY_NOTIFY 16
 #define KEY_CREATE_LINK 32
+#define KEY_WOW64_64KEY         0x00000100
+#define KEY_WOW64_32KEY         0x00000200
+#define KEY_WOW64_RES           0x00000300
+
 #define KEY_WRITE 0x20006
 #define KEY_EXECUTE 0x20019
 #define KEY_READ 0x20019
@@ -1527,9 +1533,6 @@ typedef enum
 #define IMAGE_ARCHIVE_PAD "\n"
 #define IMAGE_ARCHIVE_LINKER_MEMBER "/               "
 #define IMAGE_ARCHIVE_LONGNAMES_MEMBER "//              "
-#define IMAGE_ORDINAL_FLAG 0x80000000
-#define IMAGE_SNAP_BY_ORDINAL(o) ((o&IMAGE_ORDINAL_FLAG)!=0)
-#define IMAGE_ORDINAL(o) (o&0xffff)
 #define IMAGE_RESOURCE_NAME_IS_STRING 0x80000000
 #define IMAGE_RESOURCE_DATA_IS_DIRECTORY 0x80000000
 #define IMAGE_DEBUG_TYPE_UNKNOWN 0
@@ -3168,6 +3171,49 @@ typedef union _SLIST_HEADER {
 } SLIST_HEADER,*PSLIST_HEADER;
 #endif /* !_SLIST_HEADER_ */
 
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeSListHead (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlFirstEntrySList (
+    IN const SLIST_HEADER *ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedPopEntrySList (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedPushEntrySList (
+    IN PSLIST_HEADER ListHead,
+    IN PSLIST_ENTRY ListEntry
+    );
+
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlInterlockedFlushSList (
+    IN PSLIST_HEADER ListHead
+    );
+
+NTSYSAPI
+WORD  
+NTAPI
+RtlQueryDepthSList (
+    IN PSLIST_HEADER ListHead
+    );
+
 /* FIXME: Please oh please stop including winnt.h from the DDK... */
 #ifndef __NTDDK_H
 typedef struct _RTL_CRITICAL_SECTION_DEBUG {
@@ -3600,6 +3646,63 @@ typedef union _IMAGE_AUX_SYMBOL {
 		BYTE Selection;
 	} Section;
 } IMAGE_AUX_SYMBOL,*PIMAGE_AUX_SYMBOL;
+
+#ifndef __IMAGE_COR20_HEADER_DEFINED__
+#define __IMAGE_COR20_HEADER_DEFINED__
+
+typedef enum ReplacesCorHdrNumericDefines
+{
+    COMIMAGE_FLAGS_ILONLY           = 0x00000001,
+    COMIMAGE_FLAGS_32BITREQUIRED    = 0x00000002,
+    COMIMAGE_FLAGS_IL_LIBRARY       = 0x00000004,
+    COMIMAGE_FLAGS_STRONGNAMESIGNED = 0x00000008,
+    COMIMAGE_FLAGS_TRACKDEBUGDATA   = 0x00010000,
+
+    COR_VERSION_MAJOR_V2       = 2,
+    COR_VERSION_MAJOR          = COR_VERSION_MAJOR_V2,
+    COR_VERSION_MINOR          = 0,
+    COR_DELETED_NAME_LENGTH    = 8,
+    COR_VTABLEGAP_NAME_LENGTH  = 8,
+
+    NATIVE_TYPE_MAX_CB = 1,
+    COR_ILMETHOD_SECT_SMALL_MAX_DATASIZE = 0xff,
+
+    IMAGE_COR_MIH_METHODRVA  = 0x01,
+    IMAGE_COR_MIH_EHRVA      = 0x02,
+    IMAGE_COR_MIH_BASICBLOCK = 0x08,
+
+    COR_VTABLE_32BIT             = 0x01,
+    COR_VTABLE_64BIT             = 0x02,
+    COR_VTABLE_FROM_UNMANAGED    = 0x04,
+    COR_VTABLE_CALL_MOST_DERIVED = 0x10,
+
+    IMAGE_COR_EATJ_THUNK_SIZE = 32,
+
+    MAX_CLASS_NAME   = 1024,
+    MAX_PACKAGE_NAME = 1024,
+} ReplacesCorHdrNumericDefines;
+
+typedef struct IMAGE_COR20_HEADER
+{
+    DWORD cb;
+    WORD  MajorRuntimeVersion;
+    WORD  MinorRuntimeVersion;
+
+    IMAGE_DATA_DIRECTORY MetaData;
+    DWORD Flags;
+    DWORD EntryPointToken;
+
+    IMAGE_DATA_DIRECTORY Resources;
+    IMAGE_DATA_DIRECTORY StrongNameSignature;
+    IMAGE_DATA_DIRECTORY CodeManagerTable;
+    IMAGE_DATA_DIRECTORY VTableFixups;
+    IMAGE_DATA_DIRECTORY ExportAddressTableJumps;
+    IMAGE_DATA_DIRECTORY ManagedNativeHeader;
+
+} IMAGE_COR20_HEADER, *PIMAGE_COR20_HEADER;
+
+#endif
+
 typedef struct _IMAGE_COFF_SYMBOLS_HEADER {
 	DWORD NumberOfSymbols;
 	DWORD LvaToFirstSymbol;
@@ -4288,9 +4391,6 @@ typedef enum _AUDIT_EVENT_TYPE {
 #endif
 
 #if (_WIN32_WINNT >= 0x0501)
-typedef enum _HEAP_INFORMATION_CLASS {
-	HeapCompatibilityInformation
-} HEAP_INFORMATION_CLASS;
 typedef enum _ACTIVATION_CONTEXT_INFO_CLASS {
 	ActivationContextBasicInformation = 1,
 	ActivationContextDetailedInformation,
@@ -4406,6 +4506,56 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #if (WIN32_WINNT >= 0x0500)
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
+
+typedef enum _HEAP_INFORMATION_CLASS {
+
+    HeapCompatibilityInformation
+
+} HEAP_INFORMATION_CLASS;
+
+NTSYSAPI
+DWORD
+NTAPI
+RtlSetHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    IN PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL
+    );
+
+NTSYSAPI
+DWORD
+NTAPI
+RtlQueryHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    OUT PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL,
+    OUT PSIZE_T ReturnLength OPTIONAL
+    );
+
+//
+//  Multiple alloc-free APIS
+//
+
+DWORD
+NTAPI
+RtlMultipleAllocateHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN SIZE_T Size,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
+
+DWORD
+NTAPI
+RtlMultipleFreeHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
 
 typedef enum _PROCESSOR_CACHE_TYPE {
     CacheUnified,
@@ -4701,6 +4851,15 @@ BitScanReverse(OUT ULONG *Index,
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
+#if defined(_MSC_VER)
+FORCEINLINE
+VOID
+MemoryBarrier (VOID)
+{
+    LONG Barrier;
+    __asm { xchg Barrier, eax }
+}
+#else
 FORCEINLINE
 VOID
 MemoryBarrier(VOID)
@@ -4708,6 +4867,7 @@ MemoryBarrier(VOID)
     LONG Barrier;
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
+#endif
 #elif defined (_M_AMD64)
 #define MemoryBarrier __faststorefence
 #elif defined(_M_PPC)

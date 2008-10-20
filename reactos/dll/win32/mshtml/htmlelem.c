@@ -103,16 +103,14 @@ static ULONG WINAPI HTMLElement_Release(IHTMLElement *iface)
 static HRESULT WINAPI HTMLElement_GetTypeInfoCount(IHTMLElement *iface, UINT *pctinfo)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLElement_GetTypeInfo(IHTMLElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLElement_GetIDsOfNames(IHTMLElement *iface, REFIID riid,
@@ -120,9 +118,7 @@ static HRESULT WINAPI HTMLElement_GetIDsOfNames(IHTMLElement *iface, REFIID riid
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLElement_Invoke(IHTMLElement *iface, DISPID dispIdMember,
@@ -130,9 +126,8 @@ static HRESULT WINAPI HTMLElement_Invoke(IHTMLElement *iface, DISPID dispIdMembe
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->node.dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLElement_setAttribute(IHTMLElement *iface, BSTR strAttributeName,
@@ -387,8 +382,21 @@ static HRESULT WINAPI HTMLElement_get_tagName(IHTMLElement *iface, BSTR *p)
 static HRESULT WINAPI HTMLElement_get_parentElement(IHTMLElement *iface, IHTMLElement **p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    IHTMLDOMNode *node;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    hres = IHTMLDOMNode_get_parentNode(HTMLDOMNODE(&This->node), &node);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IHTMLDOMNode_QueryInterface(node, &IID_IHTMLElement, (void**)p);
+    IHTMLDOMNode_Release(node);
+    if(FAILED(hres))
+        *p = NULL;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_get_style(IHTMLElement *iface, IHTMLStyle **p)
@@ -745,8 +753,27 @@ static HRESULT WINAPI HTMLElement_get_offsetWidth(IHTMLElement *iface, long *p)
 static HRESULT WINAPI HTMLElement_get_offsetHeight(IHTMLElement *iface, long *p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLElement *nselem;
+    PRInt32 offset = 0;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLElement_QueryInterface(This->nselem, &IID_nsIDOMNSHTMLElement, (void**)&nselem);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSHTMLElement: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMNSHTMLElement_GetOffsetHeight(nselem, &offset);
+    nsIDOMNSHTMLElement_Release(nselem);
+    if(NS_FAILED(nsres)) {
+        ERR("GetOffsetHeight failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = offset;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_get_offsetParent(IHTMLElement *iface, IHTMLElement **p)
@@ -1894,6 +1921,31 @@ IHTMLElementCollection *create_all_collection(HTMLDOMNode *node)
     elem_vector_normalize(&buf);
 
     return HTMLElementCollection_Create((IUnknown*)HTMLDOMNODE(node), buf.buf, buf.len);
+}
+
+IHTMLElementCollection *create_collection_from_nodelist(HTMLDocument *doc, IUnknown *unk, nsIDOMNodeList *nslist)
+{
+    PRUint32 length = 0, i;
+    elem_vector buf;
+
+    nsIDOMNodeList_GetLength(nslist, &length);
+
+    buf.len = buf.size = length;
+    if(buf.len) {
+        nsIDOMNode *nsnode;
+
+        buf.buf = heap_alloc(buf.size*sizeof(HTMLElement*));
+
+        for(i=0; i<length; i++) {
+            nsIDOMNodeList_Item(nslist, i, &nsnode);
+            buf.buf[i] = HTMLELEM_NODE_THIS(get_node(doc, nsnode, TRUE));
+            nsIDOMNode_Release(nsnode);
+        }
+    }else {
+        buf.buf = NULL;
+    }
+
+    return HTMLElementCollection_Create(unk, buf.buf, buf.len);
 }
 
 static IHTMLElementCollection *HTMLElementCollection_Create(IUnknown *ref_unk,

@@ -422,7 +422,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Status = IoCreateDevice(VfatGlobalData->DriverObject,
                            ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize,
                            NULL,
-                           FILE_DEVICE_FILE_SYSTEM,
+                           FILE_DEVICE_DISK_FILE_SYSTEM,
                            0,
                            FALSE,
                            &DeviceObject);

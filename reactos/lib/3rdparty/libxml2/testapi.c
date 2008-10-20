@@ -8,10 +8,20 @@
  * daniel@veillard.com
  */
 
+#ifdef HAVE_CONFIG_H
+#include "libxml.h"
+#else
 #include <stdio.h>
+#endif
+
+#include <stdlib.h> /* for putenv() */
 #include <string.h>
 #include <libxml/xmlerror.h>
 #include <libxml/relaxng.h>
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#define snprintf _snprintf
+#endif
 
 static int testlibxml2(void);
 static int test_module(const char *module);
@@ -97,7 +107,7 @@ get_api_attr(void) {
     if ((api_root == NULL) || (api_root->type != XML_ELEMENT_NODE)) {
         get_api_root();
     }
-    if (api_root == NULL)
+    if (api_root == NULL) 
         return(NULL);
     if (api_root->properties != NULL) {
         api_attr = api_root->properties;
@@ -116,6 +126,9 @@ static int quiet = 0;
 int main(int argc, char **argv) {
     int ret;
     int blocks, mem;
+
+    /* access to the proxy can slow up regression tests a lot */
+    putenv((char *) "http_proxy=");
 
     memset(chartab, 0, sizeof(chartab));
     strncpy((char *) chartab, "  chartab\n", 20);
@@ -171,6 +184,7 @@ int main(int argc, char **argv) {
 #include <libxml/pattern.h>
 #include <libxml/relaxng.h>
 #include <libxml/schemasInternals.h>
+#include <libxml/schematron.h>
 #include <libxml/tree.h>
 #include <libxml/uri.h>
 #include <libxml/valid.h>
@@ -187,7 +201,7 @@ int main(int argc, char **argv) {
 #include <libxml/xpointer.h>
 #include <libxml/debugXML.h>
 
-/*
+/* 
   We manually define xmlErrMemory because it's normal declaration
   is "hidden" by #ifdef IN_LIBXML
 */
@@ -198,7 +212,7 @@ void xmlErrMemory(xmlParserCtxtPtr ctxt, const char *extra);
  name resolution delays, so we use these
 */
 #define	REMOTE1GOOD	"http://localhost/"
-#define	REMOTE1BAD	"http://missing. example.org/"
+#define	REMOTE1BAD	"http:http://http"
 #define	REMOTE2GOOD	"ftp://localhost/foo"
 
 #define gen_nb_void_ptr 2
@@ -277,7 +291,7 @@ static void des_long(int no ATTRIBUTE_UNUSED, long val ATTRIBUTE_UNUSED, int nr 
 static xmlChar gen_xmlChar(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 0) return('a');
     if (no == 1) return(' ');
-    if (no == 2) return('ø');
+    if (no == 2) return((xmlChar) 'ø');
     return(0);
 }
 
@@ -290,7 +304,7 @@ static unsigned int gen_unsigned_int(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 0) return(0);
     if (no == 1) return(1);
     if (no == 2) return(122);
-    return(-1);
+    return((unsigned int) -1);
 }
 
 static void des_unsigned_int(int no ATTRIBUTE_UNUSED, unsigned int val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
@@ -302,7 +316,7 @@ static unsigned long gen_unsigned_long(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 0) return(0);
     if (no == 1) return(1);
     if (no == 2) return(122);
-    return(-1);
+    return((unsigned long) -1);
 }
 
 static void des_unsigned_long(int no ATTRIBUTE_UNUSED, unsigned long val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
@@ -480,10 +494,11 @@ static void des_xmlParserInputBufferPtr(int no ATTRIBUTE_UNUSED, xmlParserInputB
     xmlFreeParserInputBuffer(val);
 }
 
-#define gen_nb_xmlDocPtr 3
+#define gen_nb_xmlDocPtr 4
 static xmlDocPtr gen_xmlDocPtr(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 0) return(xmlNewDoc(BAD_CAST "1.0"));
     if (no == 1) return(xmlReadMemory("<foo/>", 6, "test", NULL, 0));
+    if (no == 2) return(xmlReadMemory("<!DOCTYPE foo []> <foo/>", 24, "test", NULL, 0));
     return(NULL);
 }
 static void des_xmlDocPtr(int no ATTRIBUTE_UNUSED, xmlDocPtr val, int nr ATTRIBUTE_UNUSED) {
@@ -528,7 +543,7 @@ static void des_xmlNodePtr(int no, xmlNodePtr val, int nr ATTRIBUTE_UNUSED) {
 
 #define gen_nb_xmlDtdPtr 3
 static xmlDtdPtr gen_xmlDtdPtr(int no, int nr ATTRIBUTE_UNUSED) {
-    if (no == 0)
+    if (no == 0) 
         return(xmlNewDtd(NULL, BAD_CAST "dtd", BAD_CAST"foo", BAD_CAST"bar"));
     if (no == 1) return(get_api_dtd());
     return(NULL);
@@ -584,9 +599,10 @@ static void des_xmlTextReaderPtr(int no ATTRIBUTE_UNUSED, xmlTextReaderPtr val, 
 #endif
 
 #define gen_nb_xmlBufferPtr 3
+static const char *static_buf_content = "a static buffer";
 static xmlBufferPtr gen_xmlBufferPtr(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 0) return(xmlBufferCreate());
-    if (no == 1) return(xmlBufferCreateStatic((void *)"a static buffer", 13));
+    if (no == 1) return(xmlBufferCreateStatic((void *)static_buf_content, 13));
     return(NULL);
 }
 static void des_xmlBufferPtr(int no ATTRIBUTE_UNUSED, xmlBufferPtr val, int nr ATTRIBUTE_UNUSED) {
@@ -688,8 +704,43 @@ static xmlCharEncoding gen_xmlCharEncoding(int no, int nr ATTRIBUTE_UNUSED) {
 static void des_xmlCharEncoding(int no ATTRIBUTE_UNUSED, xmlCharEncoding val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
 }
 
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+
+#define gen_nb_xmlExpCtxtPtr 1
+static xmlExpCtxtPtr gen_xmlExpCtxtPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlExpCtxtPtr(int no ATTRIBUTE_UNUSED, xmlExpCtxtPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+
+#define gen_nb_xmlExpNodePtr 1
+static xmlExpNodePtr gen_xmlExpNodePtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlExpNodePtr(int no ATTRIBUTE_UNUSED, xmlExpNodePtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+
+#endif
+
+#if defined(LIBXML_SCHEMAS_ENABLED)
+#define gen_nb_xmlSchemaPtr 1
+static xmlSchemaPtr gen_xmlSchemaPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlSchemaPtr(int no ATTRIBUTE_UNUSED, xmlSchemaPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+
+#define gen_nb_xmlSchemaValidCtxtPtr 1
+static xmlSchemaValidCtxtPtr gen_xmlSchemaValidCtxtPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlSchemaValidCtxtPtr(int no ATTRIBUTE_UNUSED, xmlSchemaValidCtxtPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+
+#endif /* LIBXML_SCHEMAS_ENABLED */
+
 #define gen_nb_xmlHashDeallocator 2
-static void
+static void 
 test_xmlHashDeallocator(void *payload ATTRIBUTE_UNUSED, xmlChar *name ATTRIBUTE_UNUSED) {
 }
 
@@ -978,11 +1029,12 @@ static xmlAttributeType gen_xmlAttributeType(int no, int nr ATTRIBUTE_UNUSED) {
 static void des_xmlAttributeType(int no ATTRIBUTE_UNUSED, xmlAttributeType val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
 }
 
-#define gen_nb_xmlBufferAllocationScheme 3
+#define gen_nb_xmlBufferAllocationScheme 4
 static xmlBufferAllocationScheme gen_xmlBufferAllocationScheme(int no, int nr ATTRIBUTE_UNUSED) {
     if (no == 1) return(XML_BUFFER_ALLOC_DOUBLEIT);
     if (no == 2) return(XML_BUFFER_ALLOC_EXACT);
     if (no == 3) return(XML_BUFFER_ALLOC_IMMUTABLE);
+    if (no == 4) return(XML_BUFFER_ALLOC_IO);
     return(0);
 }
 
@@ -1051,23 +1103,20 @@ static xmlElementTypeVal gen_xmlElementTypeVal(int no, int nr ATTRIBUTE_UNUSED) 
 static void des_xmlElementTypeVal(int no ATTRIBUTE_UNUSED, xmlElementTypeVal val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
 }
 
-static void desret_xmlParserErrors(xmlParserErrors val ATTRIBUTE_UNUSED) {
-}
-
-#ifdef LIBXML_PATTERN_ENABLED
-#define gen_nb_xmlPatternFlags 4
-static xmlPatternFlags gen_xmlPatternFlags(int no, int nr ATTRIBUTE_UNUSED) {
-    if (no == 1) return(XML_PATTERN_DEFAULT);
-    if (no == 2) return(XML_PATTERN_XPATH);
-    if (no == 3) return(XML_PATTERN_XSFIELD);
-    if (no == 4) return(XML_PATTERN_XSSEL);
+#define gen_nb_xmlFeature 4
+static xmlFeature gen_xmlFeature(int no, int nr ATTRIBUTE_UNUSED) {
+    if (no == 1) return(XML_WITH_AUTOMATA);
+    if (no == 2) return(XML_WITH_C14N);
+    if (no == 3) return(XML_WITH_CATALOG);
+    if (no == 4) return(XML_WITH_DEBUG);
     return(0);
 }
 
-static void des_xmlPatternFlags(int no ATTRIBUTE_UNUSED, xmlPatternFlags val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+static void des_xmlFeature(int no ATTRIBUTE_UNUSED, xmlFeature val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
 }
 
-#endif
+static void desret_xmlParserErrors(xmlParserErrors val ATTRIBUTE_UNUSED) {
+}
 
 #ifdef LIBXML_SCHEMAS_ENABLED
 #define gen_nb_xmlSchemaValType 4
@@ -1121,6 +1170,7 @@ static void des_xmlSchemaWhitespaceValueType(int no ATTRIBUTE_UNUSED, xmlSchemaW
 #include <libxml/pattern.h>
 #include <libxml/relaxng.h>
 #include <libxml/schemasInternals.h>
+#include <libxml/schematron.h>
 #include <libxml/tree.h>
 #include <libxml/uri.h>
 #include <libxml/valid.h>
@@ -1159,6 +1209,7 @@ static int test_parserInternals(void);
 static int test_pattern(void);
 static int test_relaxng(void);
 static int test_schemasInternals(void);
+static int test_schematron(void);
 static int test_tree(void);
 static int test_uri(void);
 static int test_valid(void);
@@ -1211,6 +1262,7 @@ testlibxml2(void)
     test_ret += test_pattern();
     test_ret += test_relaxng();
     test_ret += test_schemasInternals();
+    test_ret += test_schematron();
     test_ret += test_tree();
     test_ret += test_uri();
     test_ret += test_valid();
@@ -2097,6 +2149,33 @@ test_htmlIsScriptAttribute(void) {
 
 
 static int
+test_htmlNewParserCtxt(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_HTML_ENABLED)
+    int mem_base;
+    htmlParserCtxtPtr ret_val;
+
+        mem_base = xmlMemBlocks();
+
+        ret_val = htmlNewParserCtxt();
+        desret_htmlParserCtxtPtr(ret_val);
+        call_tests++;
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in htmlNewParserCtxt",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf("\n");
+        }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_htmlNodeStatus(void) {
     int test_ret = 0;
 
@@ -2695,7 +2774,7 @@ static int
 test_HTMLparser(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing HTMLparser : 31 of 37 functions ...\n");
+    if (quiet == 0) printf("Testing HTMLparser : 32 of 38 functions ...\n");
     test_ret += test_UTF8ToHtml();
     test_ret += test_htmlAttrAllowed();
     test_ret += test_htmlAutoCloseTag();
@@ -2714,6 +2793,7 @@ test_HTMLparser(void) {
     test_ret += test_htmlHandleOmittedElem();
     test_ret += test_htmlIsAutoClosed();
     test_ret += test_htmlIsScriptAttribute();
+    test_ret += test_htmlNewParserCtxt();
     test_ret += test_htmlNodeStatus();
     test_ret += test_htmlParseCharRef();
     test_ret += test_htmlParseChunk();
@@ -2917,6 +2997,59 @@ test_htmlDocDumpMemory(void) {
             printf(" %d", n_size);
             printf("\n");
         }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_htmlDocDumpMemoryFormat(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_HTML_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
+    int mem_base;
+    xmlDocPtr cur; /* the document */
+    int n_cur;
+    xmlChar ** mem; /* OUT: the memory pointer */
+    int n_mem;
+    int * size; /* OUT: the memory length */
+    int n_size;
+    int format; /* should formatting spaces been added */
+    int n_format;
+
+    for (n_cur = 0;n_cur < gen_nb_xmlDocPtr;n_cur++) {
+    for (n_mem = 0;n_mem < gen_nb_xmlChar_ptr_ptr;n_mem++) {
+    for (n_size = 0;n_size < gen_nb_int_ptr;n_size++) {
+    for (n_format = 0;n_format < gen_nb_int;n_format++) {
+        mem_base = xmlMemBlocks();
+        cur = gen_xmlDocPtr(n_cur, 0);
+        mem = gen_xmlChar_ptr_ptr(n_mem, 1);
+        size = gen_int_ptr(n_size, 2);
+        format = gen_int(n_format, 3);
+
+        htmlDocDumpMemoryFormat(cur, mem, size, format);
+        call_tests++;
+        des_xmlDocPtr(n_cur, cur, 0);
+        des_xmlChar_ptr_ptr(n_mem, mem, 1);
+        des_int_ptr(n_size, size, 2);
+        des_int(n_format, format, 3);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in htmlDocDumpMemoryFormat",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_cur);
+            printf(" %d", n_mem);
+            printf(" %d", n_size);
+            printf(" %d", n_format);
+            printf("\n");
+        }
+    }
     }
     }
     }
@@ -3534,11 +3667,12 @@ static int
 test_HTMLtree(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing HTMLtree : 17 of 17 functions ...\n");
+    if (quiet == 0) printf("Testing HTMLtree : 18 of 18 functions ...\n");
     test_ret += test_htmlDocContentDumpFormatOutput();
     test_ret += test_htmlDocContentDumpOutput();
     test_ret += test_htmlDocDump();
     test_ret += test_htmlDocDumpMemory();
+    test_ret += test_htmlDocDumpMemoryFormat();
     test_ret += test_htmlGetMetaEncoding();
     test_ret += test_htmlIsBooleanAttr();
     test_ret += test_htmlNewDoc();
@@ -3924,7 +4058,7 @@ static int
 test_xmlSAX2EndElement(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED)
+#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
 #ifdef LIBXML_SAX1_ENABLED
     int mem_base;
     void * ctx; /* the user data (XML parser context) */
@@ -4889,7 +5023,7 @@ static int
 test_xmlSAX2StartElement(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED)
+#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
 #ifdef LIBXML_SAX1_ENABLED
     int mem_base;
     void * ctx; /* the user data (XML parser context) */
@@ -6050,7 +6184,6 @@ test_xmlCatalogResolve(void) {
     int test_ret = 0;
 
 #if defined(LIBXML_CATALOG_ENABLED)
-    int mem_base;
     xmlChar * ret_val;
     xmlChar * pubID; /* the public ID string */
     int n_pubID;
@@ -6059,7 +6192,6 @@ test_xmlCatalogResolve(void) {
 
     for (n_pubID = 0;n_pubID < gen_nb_const_xmlChar_ptr;n_pubID++) {
     for (n_sysID = 0;n_sysID < gen_nb_const_xmlChar_ptr;n_sysID++) {
-        mem_base = xmlMemBlocks();
         pubID = gen_const_xmlChar_ptr(n_pubID, 0);
         sysID = gen_const_xmlChar_ptr(n_sysID, 1);
 
@@ -6069,14 +6201,6 @@ test_xmlCatalogResolve(void) {
         des_const_xmlChar_ptr(n_pubID, (const xmlChar *)pubID, 0);
         des_const_xmlChar_ptr(n_sysID, (const xmlChar *)sysID, 1);
         xmlResetLastError();
-        if (mem_base != xmlMemBlocks()) {
-            printf("Leak of %d blocks found in xmlCatalogResolve",
-	           xmlMemBlocks() - mem_base);
-	    test_ret++;
-            printf(" %d", n_pubID);
-            printf(" %d", n_sysID);
-            printf("\n");
-        }
     }
     }
     function_tests++;
@@ -6465,11 +6589,11 @@ test_catalog(void) {
     return(test_ret);
 }
 
-#define gen_nb_const_xmlChRangeGroupPtr 1
-static xmlChRangeGroupPtr gen_const_xmlChRangeGroupPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+#define gen_nb_const_xmlChRangeGroup_ptr 1
+static xmlChRangeGroup * gen_const_xmlChRangeGroup_ptr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
     return(NULL);
 }
-static void des_const_xmlChRangeGroupPtr(int no ATTRIBUTE_UNUSED, const xmlChRangeGroupPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+static void des_const_xmlChRangeGroup_ptr(int no ATTRIBUTE_UNUSED, const xmlChRangeGroup * val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
 }
 
 static int
@@ -6480,20 +6604,20 @@ test_xmlCharInRange(void) {
     int ret_val;
     unsigned int val; /* character to be validated */
     int n_val;
-    xmlChRangeGroupPtr rptr; /* pointer to range to be used to validate */
+    xmlChRangeGroup * rptr; /* pointer to range to be used to validate */
     int n_rptr;
 
     for (n_val = 0;n_val < gen_nb_unsigned_int;n_val++) {
-    for (n_rptr = 0;n_rptr < gen_nb_const_xmlChRangeGroupPtr;n_rptr++) {
+    for (n_rptr = 0;n_rptr < gen_nb_const_xmlChRangeGroup_ptr;n_rptr++) {
         mem_base = xmlMemBlocks();
         val = gen_unsigned_int(n_val, 0);
-        rptr = gen_const_xmlChRangeGroupPtr(n_rptr, 1);
+        rptr = gen_const_xmlChRangeGroup_ptr(n_rptr, 1);
 
-        ret_val = xmlCharInRange(val, (const xmlChRangeGroupPtr)rptr);
+        ret_val = xmlCharInRange(val, (const xmlChRangeGroup *)rptr);
         desret_int(ret_val);
         call_tests++;
         des_unsigned_int(n_val, val, 0);
-        des_const_xmlChRangeGroupPtr(n_rptr, (const xmlChRangeGroupPtr)rptr, 1);
+        des_const_xmlChRangeGroup_ptr(n_rptr, (const xmlChRangeGroup *)rptr, 1);
         xmlResetLastError();
         if (mem_base != xmlMemBlocks()) {
             printf("Leak of %d blocks found in xmlCharInRange",
@@ -9493,11 +9617,78 @@ test_xmlInitializePredefinedEntities(void) {
     return(test_ret);
 }
 
+
+static int
+test_xmlNewEntity(void) {
+    int test_ret = 0;
+
+    int mem_base;
+    xmlEntityPtr ret_val;
+    xmlDocPtr doc; /* the document */
+    int n_doc;
+    xmlChar * name; /* the entity name */
+    int n_name;
+    int type; /* the entity type XML_xxx_yyy_ENTITY */
+    int n_type;
+    xmlChar * ExternalID; /* the entity external ID if available */
+    int n_ExternalID;
+    xmlChar * SystemID; /* the entity system ID if available */
+    int n_SystemID;
+    xmlChar * content; /* the entity content */
+    int n_content;
+
+    for (n_doc = 0;n_doc < gen_nb_xmlDocPtr;n_doc++) {
+    for (n_name = 0;n_name < gen_nb_const_xmlChar_ptr;n_name++) {
+    for (n_type = 0;n_type < gen_nb_int;n_type++) {
+    for (n_ExternalID = 0;n_ExternalID < gen_nb_const_xmlChar_ptr;n_ExternalID++) {
+    for (n_SystemID = 0;n_SystemID < gen_nb_const_xmlChar_ptr;n_SystemID++) {
+    for (n_content = 0;n_content < gen_nb_const_xmlChar_ptr;n_content++) {
+        mem_base = xmlMemBlocks();
+        doc = gen_xmlDocPtr(n_doc, 0);
+        name = gen_const_xmlChar_ptr(n_name, 1);
+        type = gen_int(n_type, 2);
+        ExternalID = gen_const_xmlChar_ptr(n_ExternalID, 3);
+        SystemID = gen_const_xmlChar_ptr(n_SystemID, 4);
+        content = gen_const_xmlChar_ptr(n_content, 5);
+
+        ret_val = xmlNewEntity(doc, (const xmlChar *)name, type, (const xmlChar *)ExternalID, (const xmlChar *)SystemID, (const xmlChar *)content);
+        desret_xmlEntityPtr(ret_val);
+        call_tests++;
+        des_xmlDocPtr(n_doc, doc, 0);
+        des_const_xmlChar_ptr(n_name, (const xmlChar *)name, 1);
+        des_int(n_type, type, 2);
+        des_const_xmlChar_ptr(n_ExternalID, (const xmlChar *)ExternalID, 3);
+        des_const_xmlChar_ptr(n_SystemID, (const xmlChar *)SystemID, 4);
+        des_const_xmlChar_ptr(n_content, (const xmlChar *)content, 5);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlNewEntity",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_doc);
+            printf(" %d", n_name);
+            printf(" %d", n_type);
+            printf(" %d", n_ExternalID);
+            printf(" %d", n_SystemID);
+            printf(" %d", n_content);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+    function_tests++;
+
+    return(test_ret);
+}
+
 static int
 test_entities(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing entities : 12 of 16 functions ...\n");
+    if (quiet == 0) printf("Testing entities : 13 of 17 functions ...\n");
     test_ret += test_xmlAddDocEntity();
     test_ret += test_xmlAddDtdEntity();
     test_ret += test_xmlCleanupPredefinedEntities();
@@ -9512,6 +9703,7 @@ test_entities(void) {
     test_ret += test_xmlGetParameterEntity();
     test_ret += test_xmlGetPredefinedEntity();
     test_ret += test_xmlInitializePredefinedEntities();
+    test_ret += test_xmlNewEntity();
 
     if (test_ret != 0)
 	printf("Module entities: %d errors\n", test_ret);
@@ -12985,12 +13177,43 @@ test_xmlGetFeaturesList(void) {
 
 
 static int
+test_xmlHasFeature(void) {
+    int test_ret = 0;
+
+    int mem_base;
+    int ret_val;
+    xmlFeature feature; /* the feature to be examined */
+    int n_feature;
+
+    for (n_feature = 0;n_feature < gen_nb_xmlFeature;n_feature++) {
+        mem_base = xmlMemBlocks();
+        feature = gen_xmlFeature(n_feature, 0);
+
+        ret_val = xmlHasFeature(feature);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlFeature(n_feature, feature, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlHasFeature",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_feature);
+            printf("\n");
+        }
+    }
+    function_tests++;
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlIOParseDTD(void) {
     int test_ret = 0;
 
 #if defined(LIBXML_VALID_ENABLED)
 #ifdef LIBXML_VALID_ENABLED
-    int mem_base;
     xmlDtdPtr ret_val;
     xmlSAXHandlerPtr sax; /* the SAX handler block or NULL */
     int n_sax;
@@ -13002,7 +13225,6 @@ test_xmlIOParseDTD(void) {
     for (n_sax = 0;n_sax < gen_nb_xmlSAXHandlerPtr;n_sax++) {
     for (n_input = 0;n_input < gen_nb_xmlParserInputBufferPtr;n_input++) {
     for (n_enc = 0;n_enc < gen_nb_xmlCharEncoding;n_enc++) {
-        mem_base = xmlMemBlocks();
         sax = gen_xmlSAXHandlerPtr(n_sax, 0);
         input = gen_xmlParserInputBufferPtr(n_input, 1);
         enc = gen_xmlCharEncoding(n_enc, 2);
@@ -13015,15 +13237,6 @@ test_xmlIOParseDTD(void) {
         des_xmlParserInputBufferPtr(n_input, input, 1);
         des_xmlCharEncoding(n_enc, enc, 2);
         xmlResetLastError();
-        if (mem_base != xmlMemBlocks()) {
-            printf("Leak of %d blocks found in xmlIOParseDTD",
-	           xmlMemBlocks() - mem_base);
-	    test_ret++;
-            printf(" %d", n_sax);
-            printf(" %d", n_input);
-            printf(" %d", n_enc);
-            printf("\n");
-        }
     }
     }
     }
@@ -13343,7 +13556,7 @@ test_xmlParseBalancedChunkMemory(void) {
         depth = gen_int(n_depth, 3);
         string = gen_const_xmlChar_ptr(n_string, 4);
         lst = gen_xmlNodePtr_ptr(n_lst, 5);
-
+        
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -13423,7 +13636,7 @@ test_xmlParseBalancedChunkMemoryRecover(void) {
         string = gen_const_xmlChar_ptr(n_string, 4);
         lst = gen_xmlNodePtr_ptr(n_lst, 5);
         recover = gen_int(n_recover, 6);
-
+        
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -14902,7 +15115,7 @@ test_xmlSAXUserParseFile(void) {
         sax = gen_xmlSAXHandlerPtr(n_sax, 0);
         user_data = gen_userdata(n_user_data, 1);
         filename = gen_filepath(n_filename, 2);
-
+        
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -14961,7 +15174,7 @@ test_xmlSAXUserParseMemory(void) {
         user_data = gen_userdata(n_user_data, 1);
         buffer = gen_const_char_ptr(n_buffer, 2);
         size = gen_int(n_size, 3);
-
+        
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -15172,7 +15385,7 @@ static int
 test_parser(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing parser : 60 of 69 functions ...\n");
+    if (quiet == 0) printf("Testing parser : 61 of 70 functions ...\n");
     test_ret += test_xmlByteConsumed();
     test_ret += test_xmlClearNodeInfoSeq();
     test_ret += test_xmlClearParserCtxt();
@@ -15187,6 +15400,7 @@ test_parser(void) {
     test_ret += test_xmlGetExternalEntityLoader();
     test_ret += test_xmlGetFeature();
     test_ret += test_xmlGetFeaturesList();
+    test_ret += test_xmlHasFeature();
     test_ret += test_xmlIOParseDTD();
     test_ret += test_xmlInitNodeInfoSeq();
     test_ret += test_xmlInitParser();
@@ -16147,6 +16361,7 @@ test_xmlPushInput(void) {
     int test_ret = 0;
 
     int mem_base;
+    int ret_val;
     xmlParserCtxtPtr ctxt; /* an XML parser context */
     int n_ctxt;
     xmlParserInputPtr input; /* an XML parser input fragment (entity, XML fragment ...). */
@@ -16158,7 +16373,8 @@ test_xmlPushInput(void) {
         ctxt = gen_xmlParserCtxtPtr(n_ctxt, 0);
         input = gen_xmlParserInputPtr(n_input, 1);
 
-        xmlPushInput(ctxt, input);
+        ret_val = xmlPushInput(ctxt, input);
+        desret_int(ret_val);
         call_tests++;
         des_xmlParserCtxtPtr(n_ctxt, ctxt, 0);
         des_xmlParserInputPtr(n_input, input, 1);
@@ -16710,6 +16926,40 @@ test_xmlPatternMaxDepth(void) {
 
 
 static int
+test_xmlPatternMinDepth(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_PATTERN_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlPatternPtr comp; /* the precompiled pattern */
+    int n_comp;
+
+    for (n_comp = 0;n_comp < gen_nb_xmlPatternPtr;n_comp++) {
+        mem_base = xmlMemBlocks();
+        comp = gen_xmlPatternPtr(n_comp, 0);
+
+        ret_val = xmlPatternMinDepth(comp);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlPatternPtr(n_comp, comp, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlPatternMinDepth",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_comp);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlPatternStreamable(void) {
     int test_ret = 0;
 
@@ -16892,20 +17142,112 @@ test_xmlStreamPushAttr(void) {
     return(test_ret);
 }
 
+
+static int
+test_xmlStreamPushNode(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_PATTERN_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlStreamCtxtPtr stream; /* the stream context */
+    int n_stream;
+    xmlChar * name; /* the current name */
+    int n_name;
+    xmlChar * ns; /* the namespace name */
+    int n_ns;
+    int nodeType; /* the type of the node being pushed */
+    int n_nodeType;
+
+    for (n_stream = 0;n_stream < gen_nb_xmlStreamCtxtPtr;n_stream++) {
+    for (n_name = 0;n_name < gen_nb_const_xmlChar_ptr;n_name++) {
+    for (n_ns = 0;n_ns < gen_nb_const_xmlChar_ptr;n_ns++) {
+    for (n_nodeType = 0;n_nodeType < gen_nb_int;n_nodeType++) {
+        mem_base = xmlMemBlocks();
+        stream = gen_xmlStreamCtxtPtr(n_stream, 0);
+        name = gen_const_xmlChar_ptr(n_name, 1);
+        ns = gen_const_xmlChar_ptr(n_ns, 2);
+        nodeType = gen_int(n_nodeType, 3);
+
+        ret_val = xmlStreamPushNode(stream, (const xmlChar *)name, (const xmlChar *)ns, nodeType);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlStreamCtxtPtr(n_stream, stream, 0);
+        des_const_xmlChar_ptr(n_name, (const xmlChar *)name, 1);
+        des_const_xmlChar_ptr(n_ns, (const xmlChar *)ns, 2);
+        des_int(n_nodeType, nodeType, 3);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlStreamPushNode",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_stream);
+            printf(" %d", n_name);
+            printf(" %d", n_ns);
+            printf(" %d", n_nodeType);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlStreamWantsAnyNode(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_PATTERN_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlStreamCtxtPtr streamCtxt; /* the stream context */
+    int n_streamCtxt;
+
+    for (n_streamCtxt = 0;n_streamCtxt < gen_nb_xmlStreamCtxtPtr;n_streamCtxt++) {
+        mem_base = xmlMemBlocks();
+        streamCtxt = gen_xmlStreamCtxtPtr(n_streamCtxt, 0);
+
+        ret_val = xmlStreamWantsAnyNode(streamCtxt);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlStreamCtxtPtr(n_streamCtxt, streamCtxt, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlStreamWantsAnyNode",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_streamCtxt);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
 static int
 test_pattern(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing pattern : 7 of 12 functions ...\n");
+    if (quiet == 0) printf("Testing pattern : 10 of 15 functions ...\n");
     test_ret += test_xmlPatternFromRoot();
     test_ret += test_xmlPatternGetStreamCtxt();
     test_ret += test_xmlPatternMatch();
     test_ret += test_xmlPatternMaxDepth();
+    test_ret += test_xmlPatternMinDepth();
     test_ret += test_xmlPatternStreamable();
     test_ret += test_xmlPatterncompile();
     test_ret += test_xmlStreamPop();
     test_ret += test_xmlStreamPush();
     test_ret += test_xmlStreamPushAttr();
+    test_ret += test_xmlStreamPushNode();
+    test_ret += test_xmlStreamWantsAnyNode();
 
     if (test_ret != 0)
 	printf("Module pattern: %d errors\n", test_ret);
@@ -17327,7 +17669,27 @@ test_xmlRelaxNGSetParserErrors(void) {
 
 
 static int
+test_xmlRelaxNGSetParserStructuredErrors(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
 test_xmlRelaxNGSetValidErrors(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlRelaxNGSetValidStructuredErrors(void) {
     int test_ret = 0;
 
 
@@ -17613,7 +17975,7 @@ static int
 test_relaxng(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing relaxng : 14 of 22 functions ...\n");
+    if (quiet == 0) printf("Testing relaxng : 14 of 24 functions ...\n");
     test_ret += test_xmlRelaxNGDump();
     test_ret += test_xmlRelaxNGDumpTree();
     test_ret += test_xmlRelaxNGGetParserErrors();
@@ -17625,7 +17987,9 @@ test_relaxng(void) {
     test_ret += test_xmlRelaxNGNewValidCtxt();
     test_ret += test_xmlRelaxNGParse();
     test_ret += test_xmlRelaxNGSetParserErrors();
+    test_ret += test_xmlRelaxNGSetParserStructuredErrors();
     test_ret += test_xmlRelaxNGSetValidErrors();
+    test_ret += test_xmlRelaxNGSetValidStructuredErrors();
     test_ret += test_xmlRelaxNGValidateDoc();
     test_ret += test_xmlRelaxNGValidateFullElement();
     test_ret += test_xmlRelaxNGValidatePopElement();
@@ -17645,6 +18009,154 @@ test_schemasInternals(void) {
 
     if (test_ret != 0)
 	printf("Module schemasInternals: %d errors\n", test_ret);
+    return(test_ret);
+}
+
+static int
+test_xmlSchematronNewDocParserCtxt(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlSchematronNewMemParserCtxt(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlSchematronNewParserCtxt(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+#ifdef LIBXML_SCHEMATRON_ENABLED
+
+#define gen_nb_xmlSchematronPtr 1
+static xmlSchematronPtr gen_xmlSchematronPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlSchematronPtr(int no ATTRIBUTE_UNUSED, xmlSchematronPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+#endif
+
+
+static int
+test_xmlSchematronNewValidCtxt(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+#ifdef LIBXML_SCHEMATRON_ENABLED
+
+#define gen_nb_xmlSchematronParserCtxtPtr 1
+static xmlSchematronParserCtxtPtr gen_xmlSchematronParserCtxtPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlSchematronParserCtxtPtr(int no ATTRIBUTE_UNUSED, xmlSchematronParserCtxtPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+#endif
+
+
+static int
+test_xmlSchematronParse(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+#ifdef LIBXML_SCHEMATRON_ENABLED
+
+#define gen_nb_xmlSchematronValidCtxtPtr 1
+static xmlSchematronValidCtxtPtr gen_xmlSchematronValidCtxtPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+    return(NULL);
+}
+static void des_xmlSchematronValidCtxtPtr(int no ATTRIBUTE_UNUSED, xmlSchematronValidCtxtPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
+}
+#endif
+
+
+static int
+test_xmlSchematronSetValidStructuredErrors(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlSchematronValidateDoc(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_SCHEMATRON_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlSchematronValidCtxtPtr ctxt; /* the schema validation context */
+    int n_ctxt;
+    xmlDocPtr instance; /* the document instace tree */
+    int n_instance;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlSchematronValidCtxtPtr;n_ctxt++) {
+    for (n_instance = 0;n_instance < gen_nb_xmlDocPtr;n_instance++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlSchematronValidCtxtPtr(n_ctxt, 0);
+        instance = gen_xmlDocPtr(n_instance, 1);
+
+        ret_val = xmlSchematronValidateDoc(ctxt, instance);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlSchematronValidCtxtPtr(n_ctxt, ctxt, 0);
+        des_xmlDocPtr(n_instance, instance, 1);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlSchematronValidateDoc",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_instance);
+            printf("\n");
+        }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+static int
+test_schematron(void) {
+    int test_ret = 0;
+
+    if (quiet == 0) printf("Testing schematron : 1 of 10 functions ...\n");
+    test_ret += test_xmlSchematronNewDocParserCtxt();
+    test_ret += test_xmlSchematronNewMemParserCtxt();
+    test_ret += test_xmlSchematronNewParserCtxt();
+    test_ret += test_xmlSchematronNewValidCtxt();
+    test_ret += test_xmlSchematronParse();
+    test_ret += test_xmlSchematronSetValidStructuredErrors();
+    test_ret += test_xmlSchematronValidateDoc();
+
+    if (test_ret != 0)
+	printf("Module schematron: %d errors\n", test_ret);
     return(test_ret);
 }
 
@@ -18316,6 +18828,7 @@ test_xmlBufferSetAllocationScheme(void) {
         scheme = gen_xmlBufferAllocationScheme(n_scheme, 1);
 
         xmlBufferSetAllocationScheme(buf, scheme);
+        if ((buf != NULL) && (scheme == XML_BUFFER_ALLOC_IMMUTABLE) && (buf->content != NULL) && (buf->content != static_buf_content)) { xmlFree(buf->content); buf->content = NULL;}
         call_tests++;
         des_xmlBufferPtr(n_buf, buf, 0);
         des_xmlBufferAllocationScheme(n_scheme, scheme, 1);
@@ -18962,6 +19475,87 @@ test_xmlDOMWrapAdoptNode(void) {
 
 
 static int
+test_xmlDOMWrapCloneNode(void) {
+    int test_ret = 0;
+
+    int mem_base;
+    int ret_val;
+    xmlDOMWrapCtxtPtr ctxt; /* the optional context for custom processing */
+    int n_ctxt;
+    xmlDocPtr sourceDoc; /* the optional sourceDoc */
+    int n_sourceDoc;
+    xmlNodePtr node; /* the node to start with */
+    int n_node;
+    xmlNodePtr * resNode; /* the clone of the given @node */
+    int n_resNode;
+    xmlDocPtr destDoc; /* the destination doc */
+    int n_destDoc;
+    xmlNodePtr destParent; /* the optional new parent of @node in @destDoc */
+    int n_destParent;
+    int deep; /* descend into child if set */
+    int n_deep;
+    int options; /* option flags */
+    int n_options;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlDOMWrapCtxtPtr;n_ctxt++) {
+    for (n_sourceDoc = 0;n_sourceDoc < gen_nb_xmlDocPtr;n_sourceDoc++) {
+    for (n_node = 0;n_node < gen_nb_xmlNodePtr;n_node++) {
+    for (n_resNode = 0;n_resNode < gen_nb_xmlNodePtr_ptr;n_resNode++) {
+    for (n_destDoc = 0;n_destDoc < gen_nb_xmlDocPtr;n_destDoc++) {
+    for (n_destParent = 0;n_destParent < gen_nb_xmlNodePtr;n_destParent++) {
+    for (n_deep = 0;n_deep < gen_nb_int;n_deep++) {
+    for (n_options = 0;n_options < gen_nb_int;n_options++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlDOMWrapCtxtPtr(n_ctxt, 0);
+        sourceDoc = gen_xmlDocPtr(n_sourceDoc, 1);
+        node = gen_xmlNodePtr(n_node, 2);
+        resNode = gen_xmlNodePtr_ptr(n_resNode, 3);
+        destDoc = gen_xmlDocPtr(n_destDoc, 4);
+        destParent = gen_xmlNodePtr(n_destParent, 5);
+        deep = gen_int(n_deep, 6);
+        options = gen_int(n_options, 7);
+
+        ret_val = xmlDOMWrapCloneNode(ctxt, sourceDoc, node, resNode, destDoc, destParent, deep, options);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlDOMWrapCtxtPtr(n_ctxt, ctxt, 0);
+        des_xmlDocPtr(n_sourceDoc, sourceDoc, 1);
+        des_xmlNodePtr(n_node, node, 2);
+        des_xmlNodePtr_ptr(n_resNode, resNode, 3);
+        des_xmlDocPtr(n_destDoc, destDoc, 4);
+        des_xmlNodePtr(n_destParent, destParent, 5);
+        des_int(n_deep, deep, 6);
+        des_int(n_options, options, 7);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlDOMWrapCloneNode",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_sourceDoc);
+            printf(" %d", n_node);
+            printf(" %d", n_resNode);
+            printf(" %d", n_destDoc);
+            printf(" %d", n_destParent);
+            printf(" %d", n_deep);
+            printf(" %d", n_options);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    function_tests++;
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlDOMWrapNewCtxt(void) {
     int test_ret = 0;
 
@@ -19497,7 +20091,7 @@ test_xmlDocSetRootElement(void) {
     xmlNodePtr ret_val;
     xmlDocPtr doc; /* the document */
     int n_doc;
-    xmlNodePtr root; /* the new document root element */
+    xmlNodePtr root; /* the new document root element, if root is NULL no action is taken, to remove a node from a document use xmlUnlinkNode(root) instead. */
     int n_root;
 
     for (n_doc = 0;n_doc < gen_nb_xmlDocPtr;n_doc++) {
@@ -22033,7 +22627,6 @@ static int
 test_xmlRemoveProp(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_TREE_ENABLED)
     int mem_base;
     int ret_val;
     xmlAttrPtr cur; /* an attribute */
@@ -22058,7 +22651,6 @@ test_xmlRemoveProp(void) {
         }
     }
     function_tests++;
-#endif
 
     return(test_ret);
 }
@@ -22699,7 +23291,7 @@ test_xmlSetProp(void) {
     xmlAttrPtr ret_val;
     xmlNodePtr node; /* the node */
     int n_node;
-    xmlChar * name; /* the attribute name */
+    xmlChar * name; /* the attribute name (a QName) */
     int n_name;
     xmlChar * value; /* the attribute value */
     int n_value;
@@ -23082,7 +23674,7 @@ static int
 test_xmlValidateNCName(void) {
     int test_ret = 0;
 
-#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_XPATH_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_DEBUG_ENABLED) || defined (LIBXML_HTML_ENABLED)
+#if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_XPATH_ENABLED) || defined(LIBXML_SCHEMAS_ENABLED) || defined(LIBXML_DEBUG_ENABLED) || defined (LIBXML_HTML_ENABLED) || defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_DOCB_ENABLED)
 #ifdef LIBXML_TREE_ENABLED
     int mem_base;
     int ret_val;
@@ -23253,7 +23845,7 @@ static int
 test_tree(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing tree : 132 of 151 functions ...\n");
+    if (quiet == 0) printf("Testing tree : 133 of 152 functions ...\n");
     test_ret += test_xmlAddChild();
     test_ret += test_xmlAddChildList();
     test_ret += test_xmlAddNextSibling();
@@ -23288,6 +23880,7 @@ test_tree(void) {
     test_ret += test_xmlCopyPropList();
     test_ret += test_xmlCreateIntSubset();
     test_ret += test_xmlDOMWrapAdoptNode();
+    test_ret += test_xmlDOMWrapCloneNode();
     test_ret += test_xmlDOMWrapNewCtxt();
     test_ret += test_xmlDOMWrapReconcileNamespaces();
     test_ret += test_xmlDOMWrapRemoveNode();
@@ -23558,6 +24151,16 @@ test_xmlParseURI(void) {
 }
 
 
+static int
+test_xmlParseURIRaw(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
 #define gen_nb_xmlURIPtr 1
 static xmlURIPtr gen_xmlURIPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
     return(NULL);
@@ -23597,6 +24200,38 @@ test_xmlParseURIReference(void) {
             printf("\n");
         }
     }
+    }
+    function_tests++;
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlPathToURI(void) {
+    int test_ret = 0;
+
+    int mem_base;
+    xmlChar * ret_val;
+    xmlChar * path; /* the resource locator in a filesystem notation */
+    int n_path;
+
+    for (n_path = 0;n_path < gen_nb_const_xmlChar_ptr;n_path++) {
+        mem_base = xmlMemBlocks();
+        path = gen_const_xmlChar_ptr(n_path, 0);
+
+        ret_val = xmlPathToURI((const xmlChar *)path);
+        desret_xmlChar_ptr(ret_val);
+        call_tests++;
+        des_const_xmlChar_ptr(n_path, (const xmlChar *)path, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlPathToURI",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_path);
+            printf("\n");
+        }
     }
     function_tests++;
 
@@ -23757,14 +24392,16 @@ static int
 test_uri(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing uri : 9 of 13 functions ...\n");
+    if (quiet == 0) printf("Testing uri : 10 of 15 functions ...\n");
     test_ret += test_xmlBuildRelativeURI();
     test_ret += test_xmlBuildURI();
     test_ret += test_xmlCanonicPath();
     test_ret += test_xmlCreateURI();
     test_ret += test_xmlNormalizeURIPath();
     test_ret += test_xmlParseURI();
+    test_ret += test_xmlParseURIRaw();
     test_ret += test_xmlParseURIReference();
+    test_ret += test_xmlPathToURI();
     test_ret += test_xmlPrintURI();
     test_ret += test_xmlSaveUri();
     test_ret += test_xmlURIEscape();
@@ -25118,28 +25755,28 @@ test_xmlValidGetPotentialChildren(void) {
     int ret_val;
     xmlElementContent * ctree; /* an element content tree */
     int n_ctree;
-    xmlChar ** list; /* an array to store the list of child names */
-    int n_list;
+    xmlChar ** names; /* an array to store the list of child names */
+    int n_names;
     int * len; /* a pointer to the number of element in the list */
     int n_len;
     int max; /* the size of the array */
     int n_max;
 
     for (n_ctree = 0;n_ctree < gen_nb_xmlElementContent_ptr;n_ctree++) {
-    for (n_list = 0;n_list < gen_nb_const_xmlChar_ptr_ptr;n_list++) {
+    for (n_names = 0;n_names < gen_nb_const_xmlChar_ptr_ptr;n_names++) {
     for (n_len = 0;n_len < gen_nb_int_ptr;n_len++) {
     for (n_max = 0;n_max < gen_nb_int;n_max++) {
         mem_base = xmlMemBlocks();
         ctree = gen_xmlElementContent_ptr(n_ctree, 0);
-        list = gen_const_xmlChar_ptr_ptr(n_list, 1);
+        names = gen_const_xmlChar_ptr_ptr(n_names, 1);
         len = gen_int_ptr(n_len, 2);
         max = gen_int(n_max, 3);
 
-        ret_val = xmlValidGetPotentialChildren(ctree, (const xmlChar **)list, len, max);
+        ret_val = xmlValidGetPotentialChildren(ctree, (const xmlChar **)names, len, max);
         desret_int(ret_val);
         call_tests++;
         des_xmlElementContent_ptr(n_ctree, ctree, 0);
-        des_const_xmlChar_ptr_ptr(n_list, (const xmlChar **)list, 1);
+        des_const_xmlChar_ptr_ptr(n_names, (const xmlChar **)names, 1);
         des_int_ptr(n_len, len, 2);
         des_int(n_max, max, 3);
         xmlResetLastError();
@@ -25148,7 +25785,7 @@ test_xmlValidGetPotentialChildren(void) {
 	           xmlMemBlocks() - mem_base);
 	    test_ret++;
             printf(" %d", n_ctree);
-            printf(" %d", n_list);
+            printf(" %d", n_names);
             printf(" %d", n_len);
             printf(" %d", n_max);
             printf("\n");
@@ -25332,9 +25969,9 @@ test_xmlValidateAttributeValue(void) {
 #if defined(LIBXML_VALID_ENABLED)
     int mem_base;
     int ret_val;
-    xmlAttributeType type; /* an attribute type */
+    xmlAttributeType type; /*  */
     int n_type;
-    xmlChar * value; /* an attribute value */
+    xmlChar * value; /*  */
     int n_value;
 
     for (n_type = 0;n_type < gen_nb_xmlAttributeType;n_type++) {
@@ -26398,6 +27035,54 @@ test_xmlXIncludeProcessFlags(void) {
     return(test_ret);
 }
 
+
+static int
+test_xmlXIncludeProcessFlagsData(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_XINCLUDE_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlDocPtr doc; /* an XML document */
+    int n_doc;
+    int flags; /* a set of xmlParserOption used for parsing XML includes */
+    int n_flags;
+    void * data; /* application data that will be passed to the parser context in the _private field of the parser context(s) */
+    int n_data;
+
+    for (n_doc = 0;n_doc < gen_nb_xmlDocPtr;n_doc++) {
+    for (n_flags = 0;n_flags < gen_nb_int;n_flags++) {
+    for (n_data = 0;n_data < gen_nb_userdata;n_data++) {
+        mem_base = xmlMemBlocks();
+        doc = gen_xmlDocPtr(n_doc, 0);
+        flags = gen_int(n_flags, 1);
+        data = gen_userdata(n_data, 2);
+
+        ret_val = xmlXIncludeProcessFlagsData(doc, flags, data);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlDocPtr(n_doc, doc, 0);
+        des_int(n_flags, flags, 1);
+        des_userdata(n_data, data, 2);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlXIncludeProcessFlagsData",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_doc);
+            printf(" %d", n_flags);
+            printf(" %d", n_data);
+            printf("\n");
+        }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
 #ifdef LIBXML_XINCLUDE_ENABLED
 
 #define gen_nb_xmlXIncludeCtxtPtr 1
@@ -26569,10 +27254,11 @@ static int
 test_xinclude(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xinclude : 6 of 8 functions ...\n");
+    if (quiet == 0) printf("Testing xinclude : 7 of 9 functions ...\n");
     test_ret += test_xmlXIncludeNewContext();
     test_ret += test_xmlXIncludeProcess();
     test_ret += test_xmlXIncludeProcessFlags();
+    test_ret += test_xmlXIncludeProcessFlagsData();
     test_ret += test_xmlXIncludeProcessNode();
     test_ret += test_xmlXIncludeProcessTree();
     test_ret += test_xmlXIncludeProcessTreeFlags();
@@ -27289,6 +27975,47 @@ test_xmlNormalizeWindowsPath(void) {
 
 
 static int
+test_xmlOutputBufferCreateBuffer(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_OUTPUT_ENABLED)
+    int mem_base;
+    xmlOutputBufferPtr ret_val;
+    xmlBufferPtr buffer; /* a xmlBufferPtr */
+    int n_buffer;
+    xmlCharEncodingHandlerPtr encoder; /* the encoding converter or NULL */
+    int n_encoder;
+
+    for (n_buffer = 0;n_buffer < gen_nb_xmlBufferPtr;n_buffer++) {
+    for (n_encoder = 0;n_encoder < gen_nb_xmlCharEncodingHandlerPtr;n_encoder++) {
+        mem_base = xmlMemBlocks();
+        buffer = gen_xmlBufferPtr(n_buffer, 0);
+        encoder = gen_xmlCharEncodingHandlerPtr(n_encoder, 1);
+
+        ret_val = xmlOutputBufferCreateBuffer(buffer, encoder);
+        desret_xmlOutputBufferPtr(ret_val);
+        call_tests++;
+        des_xmlBufferPtr(n_buffer, buffer, 0);
+        des_xmlCharEncodingHandlerPtr(n_encoder, encoder, 1);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlOutputBufferCreateBuffer",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_buffer);
+            printf(" %d", n_encoder);
+            printf("\n");
+        }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlOutputBufferCreateFd(void) {
     int test_ret = 0;
 
@@ -27996,7 +28723,7 @@ static int
 test_xmlIO(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlIO : 38 of 47 functions ...\n");
+    if (quiet == 0) printf("Testing xmlIO : 39 of 48 functions ...\n");
     test_ret += test_xmlAllocOutputBuffer();
     test_ret += test_xmlAllocParserInputBuffer();
     test_ret += test_xmlCheckFilename();
@@ -28017,6 +28744,7 @@ test_xmlIO(void) {
     test_ret += test_xmlIOHTTPRead();
     test_ret += test_xmlNoNetExternalEntityLoader();
     test_ret += test_xmlNormalizeWindowsPath();
+    test_ret += test_xmlOutputBufferCreateBuffer();
     test_ret += test_xmlOutputBufferCreateFd();
     test_ret += test_xmlOutputBufferCreateFile();
     test_ret += test_xmlOutputBufferCreateFilename();
@@ -28226,6 +28954,16 @@ test_xmlAutomataNewEpsilon(void) {
 
 
 static int
+test_xmlAutomataNewNegTrans(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
 test_xmlAutomataNewOnceTrans(void) {
     int test_ret = 0;
 
@@ -28329,7 +29067,7 @@ static int
 test_xmlautomata(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlautomata : 3 of 18 functions ...\n");
+    if (quiet == 0) printf("Testing xmlautomata : 3 of 19 functions ...\n");
     test_ret += test_xmlAutomataCompile();
     test_ret += test_xmlAutomataGetInitState();
     test_ret += test_xmlAutomataIsDeterminist();
@@ -28340,6 +29078,7 @@ test_xmlautomata(void) {
     test_ret += test_xmlAutomataNewCounter();
     test_ret += test_xmlAutomataNewCounterTrans();
     test_ret += test_xmlAutomataNewEpsilon();
+    test_ret += test_xmlAutomataNewNegTrans();
     test_ret += test_xmlAutomataNewOnceTrans();
     test_ret += test_xmlAutomataNewOnceTrans2();
     test_ret += test_xmlAutomataNewState();
@@ -31401,6 +32140,54 @@ test_xmlTextReaderSchemaValidate(void) {
 
 
 static int
+test_xmlTextReaderSchemaValidateCtxt(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_READER_ENABLED) && defined(LIBXML_SCHEMAS_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlTextReaderPtr reader; /* the xmlTextReaderPtr used */
+    int n_reader;
+    xmlSchemaValidCtxtPtr ctxt; /* the XML Schema validation context or NULL */
+    int n_ctxt;
+    int options; /* options (not used yet) */
+    int n_options;
+
+    for (n_reader = 0;n_reader < gen_nb_xmlTextReaderPtr;n_reader++) {
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlSchemaValidCtxtPtr;n_ctxt++) {
+    for (n_options = 0;n_options < gen_nb_parseroptions;n_options++) {
+        mem_base = xmlMemBlocks();
+        reader = gen_xmlTextReaderPtr(n_reader, 0);
+        ctxt = gen_xmlSchemaValidCtxtPtr(n_ctxt, 1);
+        options = gen_parseroptions(n_options, 2);
+
+        ret_val = xmlTextReaderSchemaValidateCtxt(reader, ctxt, options);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlTextReaderPtr(n_reader, reader, 0);
+        des_xmlSchemaValidCtxtPtr(n_ctxt, ctxt, 1);
+        des_parseroptions(n_options, options, 2);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlTextReaderSchemaValidateCtxt",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_reader);
+            printf(" %d", n_ctxt);
+            printf(" %d", n_options);
+            printf("\n");
+        }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlTextReaderSetErrorHandler(void) {
     int test_ret = 0;
 
@@ -31457,16 +32244,6 @@ test_xmlTextReaderSetParserProp(void) {
     return(test_ret);
 }
 
-#ifdef LIBXML_READER_ENABLED
-
-#define gen_nb_xmlSchemaPtr 1
-static xmlSchemaPtr gen_xmlSchemaPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
-    return(NULL);
-}
-static void des_xmlSchemaPtr(int no ATTRIBUTE_UNUSED, xmlSchemaPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
-}
-#endif
-
 
 static int
 test_xmlTextReaderSetSchema(void) {
@@ -31515,6 +32292,67 @@ test_xmlTextReaderSetStructuredErrorHandler(void) {
 
 
     /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlTextReaderSetup(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_READER_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlTextReaderPtr reader; /* an XML reader */
+    int n_reader;
+    xmlParserInputBufferPtr input; /* xmlParserInputBufferPtr used to feed the reader, will be destroyed with it. */
+    int n_input;
+    const char * URL; /* the base URL to use for the document */
+    int n_URL;
+    char * encoding; /* the document encoding, or NULL */
+    int n_encoding;
+    int options; /* a combination of xmlParserOption */
+    int n_options;
+
+    for (n_reader = 0;n_reader < gen_nb_xmlTextReaderPtr;n_reader++) {
+    for (n_input = 0;n_input < gen_nb_xmlParserInputBufferPtr;n_input++) {
+    for (n_URL = 0;n_URL < gen_nb_filepath;n_URL++) {
+    for (n_encoding = 0;n_encoding < gen_nb_const_char_ptr;n_encoding++) {
+    for (n_options = 0;n_options < gen_nb_parseroptions;n_options++) {
+        mem_base = xmlMemBlocks();
+        reader = gen_xmlTextReaderPtr(n_reader, 0);
+        input = gen_xmlParserInputBufferPtr(n_input, 1);
+        URL = gen_filepath(n_URL, 2);
+        encoding = gen_const_char_ptr(n_encoding, 3);
+        options = gen_parseroptions(n_options, 4);
+
+        ret_val = xmlTextReaderSetup(reader, input, URL, (const char *)encoding, options);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlTextReaderPtr(n_reader, reader, 0);
+        des_filepath(n_URL, URL, 2);
+        des_const_char_ptr(n_encoding, (const char *)encoding, 3);
+        des_parseroptions(n_options, options, 4);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlTextReaderSetup",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_reader);
+            printf(" %d", n_input);
+            printf(" %d", n_URL);
+            printf(" %d", n_encoding);
+            printf(" %d", n_options);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
     return(test_ret);
 }
 
@@ -31624,7 +32462,7 @@ static int
 test_xmlreader(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlreader : 73 of 83 functions ...\n");
+    if (quiet == 0) printf("Testing xmlreader : 75 of 85 functions ...\n");
     test_ret += test_xmlNewTextReader();
     test_ret += test_xmlNewTextReaderFilename();
     test_ret += test_xmlReaderForDoc();
@@ -31693,10 +32531,12 @@ test_xmlreader(void) {
     test_ret += test_xmlTextReaderRelaxNGSetSchema();
     test_ret += test_xmlTextReaderRelaxNGValidate();
     test_ret += test_xmlTextReaderSchemaValidate();
+    test_ret += test_xmlTextReaderSchemaValidateCtxt();
     test_ret += test_xmlTextReaderSetErrorHandler();
     test_ret += test_xmlTextReaderSetParserProp();
     test_ret += test_xmlTextReaderSetSchema();
     test_ret += test_xmlTextReaderSetStructuredErrorHandler();
+    test_ret += test_xmlTextReaderSetup();
     test_ret += test_xmlTextReaderStandalone();
     test_ret += test_xmlTextReaderValue();
     test_ret += test_xmlTextReaderXmlLang();
@@ -31705,6 +32545,451 @@ test_xmlreader(void) {
 	printf("Module xmlreader: %d errors\n", test_ret);
     return(test_ret);
 }
+
+static int
+test_xmlExpCtxtNbCons(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpCtxtPtr ctxt; /* an expression context */
+    int n_ctxt;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlExpCtxtPtr;n_ctxt++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlExpCtxtPtr(n_ctxt, 0);
+
+        ret_val = xmlExpCtxtNbCons(ctxt);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpCtxtPtr(n_ctxt, ctxt, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpCtxtNbCons",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpCtxtNbNodes(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpCtxtPtr ctxt; /* an expression context */
+    int n_ctxt;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlExpCtxtPtr;n_ctxt++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlExpCtxtPtr(n_ctxt, 0);
+
+        ret_val = xmlExpCtxtNbNodes(ctxt);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpCtxtPtr(n_ctxt, ctxt, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpCtxtNbNodes",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpDump(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    xmlBufferPtr buf; /* a buffer to receive the output */
+    int n_buf;
+    xmlExpNodePtr expr; /* the compiled expression */
+    int n_expr;
+
+    for (n_buf = 0;n_buf < gen_nb_xmlBufferPtr;n_buf++) {
+    for (n_expr = 0;n_expr < gen_nb_xmlExpNodePtr;n_expr++) {
+        mem_base = xmlMemBlocks();
+        buf = gen_xmlBufferPtr(n_buf, 0);
+        expr = gen_xmlExpNodePtr(n_expr, 1);
+
+        xmlExpDump(buf, expr);
+        call_tests++;
+        des_xmlBufferPtr(n_buf, buf, 0);
+        des_xmlExpNodePtr(n_expr, expr, 1);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpDump",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_buf);
+            printf(" %d", n_expr);
+            printf("\n");
+        }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpExpDerive(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpGetLanguage(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpCtxtPtr ctxt; /* the expression context */
+    int n_ctxt;
+    xmlExpNodePtr exp; /* the expression */
+    int n_exp;
+    xmlChar ** langList; /* where to store the tokens */
+    int n_langList;
+    int len; /* the allocated lenght of @list */
+    int n_len;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlExpCtxtPtr;n_ctxt++) {
+    for (n_exp = 0;n_exp < gen_nb_xmlExpNodePtr;n_exp++) {
+    for (n_langList = 0;n_langList < gen_nb_const_xmlChar_ptr_ptr;n_langList++) {
+    for (n_len = 0;n_len < gen_nb_int;n_len++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlExpCtxtPtr(n_ctxt, 0);
+        exp = gen_xmlExpNodePtr(n_exp, 1);
+        langList = gen_const_xmlChar_ptr_ptr(n_langList, 2);
+        len = gen_int(n_len, 3);
+
+        ret_val = xmlExpGetLanguage(ctxt, exp, (const xmlChar **)langList, len);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpCtxtPtr(n_ctxt, ctxt, 0);
+        des_xmlExpNodePtr(n_exp, exp, 1);
+        des_const_xmlChar_ptr_ptr(n_langList, (const xmlChar **)langList, 2);
+        des_int(n_len, len, 3);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpGetLanguage",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_exp);
+            printf(" %d", n_langList);
+            printf(" %d", n_len);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpGetStart(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpCtxtPtr ctxt; /* the expression context */
+    int n_ctxt;
+    xmlExpNodePtr exp; /* the expression */
+    int n_exp;
+    xmlChar ** tokList; /* where to store the tokens */
+    int n_tokList;
+    int len; /* the allocated lenght of @list */
+    int n_len;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlExpCtxtPtr;n_ctxt++) {
+    for (n_exp = 0;n_exp < gen_nb_xmlExpNodePtr;n_exp++) {
+    for (n_tokList = 0;n_tokList < gen_nb_const_xmlChar_ptr_ptr;n_tokList++) {
+    for (n_len = 0;n_len < gen_nb_int;n_len++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlExpCtxtPtr(n_ctxt, 0);
+        exp = gen_xmlExpNodePtr(n_exp, 1);
+        tokList = gen_const_xmlChar_ptr_ptr(n_tokList, 2);
+        len = gen_int(n_len, 3);
+
+        ret_val = xmlExpGetStart(ctxt, exp, (const xmlChar **)tokList, len);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpCtxtPtr(n_ctxt, ctxt, 0);
+        des_xmlExpNodePtr(n_exp, exp, 1);
+        des_const_xmlChar_ptr_ptr(n_tokList, (const xmlChar **)tokList, 2);
+        des_int(n_len, len, 3);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpGetStart",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_exp);
+            printf(" %d", n_tokList);
+            printf(" %d", n_len);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpIsNillable(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpNodePtr exp; /* the expression */
+    int n_exp;
+
+    for (n_exp = 0;n_exp < gen_nb_xmlExpNodePtr;n_exp++) {
+        mem_base = xmlMemBlocks();
+        exp = gen_xmlExpNodePtr(n_exp, 0);
+
+        ret_val = xmlExpIsNillable(exp);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpNodePtr(n_exp, exp, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpIsNillable",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_exp);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpMaxToken(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpNodePtr expr; /* a compiled expression */
+    int n_expr;
+
+    for (n_expr = 0;n_expr < gen_nb_xmlExpNodePtr;n_expr++) {
+        mem_base = xmlMemBlocks();
+        expr = gen_xmlExpNodePtr(n_expr, 0);
+
+        ret_val = xmlExpMaxToken(expr);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpNodePtr(n_expr, expr, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpMaxToken",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_expr);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpNewAtom(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpNewCtxt(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpNewOr(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpNewRange(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpNewSeq(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpParse(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpRef(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    xmlExpNodePtr exp; /* the expression */
+    int n_exp;
+
+    for (n_exp = 0;n_exp < gen_nb_xmlExpNodePtr;n_exp++) {
+        mem_base = xmlMemBlocks();
+        exp = gen_xmlExpNodePtr(n_exp, 0);
+
+        xmlExpRef(exp);
+        call_tests++;
+        des_xmlExpNodePtr(n_exp, exp, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpRef",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_exp);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpStringDerive(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
+test_xmlExpSubsume(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_REGEXP_ENABLED) && defined(LIBXML_EXPR_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlExpCtxtPtr ctxt; /* the expressions context */
+    int n_ctxt;
+    xmlExpNodePtr exp; /* the englobing expression */
+    int n_exp;
+    xmlExpNodePtr sub; /* the subexpression */
+    int n_sub;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlExpCtxtPtr;n_ctxt++) {
+    for (n_exp = 0;n_exp < gen_nb_xmlExpNodePtr;n_exp++) {
+    for (n_sub = 0;n_sub < gen_nb_xmlExpNodePtr;n_sub++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlExpCtxtPtr(n_ctxt, 0);
+        exp = gen_xmlExpNodePtr(n_exp, 1);
+        sub = gen_xmlExpNodePtr(n_sub, 2);
+
+        ret_val = xmlExpSubsume(ctxt, exp, sub);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlExpCtxtPtr(n_ctxt, ctxt, 0);
+        des_xmlExpNodePtr(n_exp, exp, 1);
+        des_xmlExpNodePtr(n_sub, sub, 2);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlExpSubsume",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_exp);
+            printf(" %d", n_sub);
+            printf("\n");
+        }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
 #ifdef LIBXML_REGEXP_ENABLED
 
 #define gen_nb_xmlRegExecCtxtPtr 1
@@ -32097,7 +33382,24 @@ static int
 test_xmlregexp(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlregexp : 7 of 11 functions ...\n");
+    if (quiet == 0) printf("Testing xmlregexp : 16 of 30 functions ...\n");
+    test_ret += test_xmlExpCtxtNbCons();
+    test_ret += test_xmlExpCtxtNbNodes();
+    test_ret += test_xmlExpDump();
+    test_ret += test_xmlExpExpDerive();
+    test_ret += test_xmlExpGetLanguage();
+    test_ret += test_xmlExpGetStart();
+    test_ret += test_xmlExpIsNillable();
+    test_ret += test_xmlExpMaxToken();
+    test_ret += test_xmlExpNewAtom();
+    test_ret += test_xmlExpNewCtxt();
+    test_ret += test_xmlExpNewOr();
+    test_ret += test_xmlExpNewRange();
+    test_ret += test_xmlExpNewSeq();
+    test_ret += test_xmlExpParse();
+    test_ret += test_xmlExpRef();
+    test_ret += test_xmlExpStringDerive();
+    test_ret += test_xmlExpSubsume();
     test_ret += test_xmlRegExecErrInfo();
     test_ret += test_xmlRegExecNextValues();
     test_ret += test_xmlRegExecPushString();
@@ -32253,6 +33555,16 @@ test_xmlSaveSetEscape(void) {
 
 
 static int
+test_xmlSaveToBuffer(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
 test_xmlSaveToFd(void) {
     int test_ret = 0;
 
@@ -32281,7 +33593,7 @@ test_xmlSaveTree(void) {
     long ret_val;
     xmlSaveCtxtPtr ctxt; /* a document saving context */
     int n_ctxt;
-    xmlNodePtr node; /* a document */
+    xmlNodePtr node; /* the top node of the subtree to save */
     int n_node;
 
     for (n_ctxt = 0;n_ctxt < gen_nb_xmlSaveCtxtPtr;n_ctxt++) {
@@ -32316,12 +33628,13 @@ static int
 test_xmlsave(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlsave : 4 of 9 functions ...\n");
+    if (quiet == 0) printf("Testing xmlsave : 4 of 10 functions ...\n");
     test_ret += test_xmlSaveClose();
     test_ret += test_xmlSaveDoc();
     test_ret += test_xmlSaveFlush();
     test_ret += test_xmlSaveSetAttrEscape();
     test_ret += test_xmlSaveSetEscape();
+    test_ret += test_xmlSaveToBuffer();
     test_ret += test_xmlSaveToFd();
     test_ret += test_xmlSaveToFilename();
     test_ret += test_xmlSaveTree();
@@ -32453,16 +33766,6 @@ test_xmlSchemaGetParserErrors(void) {
 
     return(test_ret);
 }
-
-#ifdef LIBXML_SCHEMAS_ENABLED
-
-#define gen_nb_xmlSchemaValidCtxtPtr 1
-static xmlSchemaValidCtxtPtr gen_xmlSchemaValidCtxtPtr(int no ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
-    return(NULL);
-}
-static void des_xmlSchemaValidCtxtPtr(int no ATTRIBUTE_UNUSED, xmlSchemaValidCtxtPtr val ATTRIBUTE_UNUSED, int nr ATTRIBUTE_UNUSED) {
-}
-#endif
 
 
 static int
@@ -32758,6 +34061,16 @@ test_xmlSchemaSetParserErrors(void) {
 
 
 static int
+test_xmlSchemaSetParserStructuredErrors(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
 test_xmlSchemaSetValidErrors(void) {
     int test_ret = 0;
 
@@ -32809,6 +34122,16 @@ test_xmlSchemaSetValidOptions(void) {
 
 
 static int
+test_xmlSchemaSetValidStructuredErrors(void) {
+    int test_ret = 0;
+
+
+    /* missing type support */
+    return(test_ret);
+}
+
+
+static int
 test_xmlSchemaValidCtxtGetOptions(void) {
     int test_ret = 0;
 
@@ -32829,6 +34152,40 @@ test_xmlSchemaValidCtxtGetOptions(void) {
         xmlResetLastError();
         if (mem_base != xmlMemBlocks()) {
             printf("Leak of %d blocks found in xmlSchemaValidCtxtGetOptions",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf("\n");
+        }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlSchemaValidCtxtGetParserCtxt(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_SCHEMAS_ENABLED)
+    int mem_base;
+    xmlParserCtxtPtr ret_val;
+    xmlSchemaValidCtxtPtr ctxt; /* a schema validation context */
+    int n_ctxt;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlSchemaValidCtxtPtr;n_ctxt++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlSchemaValidCtxtPtr(n_ctxt, 0);
+
+        ret_val = xmlSchemaValidCtxtGetParserCtxt(ctxt);
+        desret_xmlParserCtxtPtr(ret_val);
+        call_tests++;
+        des_xmlSchemaValidCtxtPtr(n_ctxt, ctxt, 0);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlSchemaValidCtxtGetParserCtxt",
 	           xmlMemBlocks() - mem_base);
 	    test_ret++;
             printf(" %d", n_ctxt);
@@ -33037,7 +34394,7 @@ static int
 test_xmlschemas(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xmlschemas : 14 of 22 functions ...\n");
+    if (quiet == 0) printf("Testing xmlschemas : 15 of 25 functions ...\n");
     test_ret += test_xmlSchemaDump();
     test_ret += test_xmlSchemaGetParserErrors();
     test_ret += test_xmlSchemaGetValidErrors();
@@ -33050,9 +34407,12 @@ test_xmlschemas(void) {
     test_ret += test_xmlSchemaSAXPlug();
     test_ret += test_xmlSchemaSAXUnplug();
     test_ret += test_xmlSchemaSetParserErrors();
+    test_ret += test_xmlSchemaSetParserStructuredErrors();
     test_ret += test_xmlSchemaSetValidErrors();
     test_ret += test_xmlSchemaSetValidOptions();
+    test_ret += test_xmlSchemaSetValidStructuredErrors();
     test_ret += test_xmlSchemaValidCtxtGetOptions();
+    test_ret += test_xmlSchemaValidCtxtGetParserCtxt();
     test_ret += test_xmlSchemaValidateDoc();
     test_ret += test_xmlSchemaValidateFile();
     test_ret += test_xmlSchemaValidateOneElement();
@@ -34856,7 +36216,7 @@ test_xmlStrncatNew(void) {
     int n_str1;
     xmlChar * str2; /* second xmlChar string */
     int n_str2;
-    int len; /* the len of @str2 */
+    int len; /* the len of @str2 or < 0 */
     int n_len;
 
     for (n_str1 = 0;n_str1 < gen_nb_const_xmlChar_ptr;n_str1++) {
@@ -44471,6 +45831,102 @@ test_xmlXPathCompiledEval(void) {
 
 
 static int
+test_xmlXPathCompiledEvalToBoolean(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_XPATH_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlXPathCompExprPtr comp; /* the compiled XPath expression */
+    int n_comp;
+    xmlXPathContextPtr ctxt; /* the XPath context */
+    int n_ctxt;
+
+    for (n_comp = 0;n_comp < gen_nb_xmlXPathCompExprPtr;n_comp++) {
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlXPathContextPtr;n_ctxt++) {
+        mem_base = xmlMemBlocks();
+        comp = gen_xmlXPathCompExprPtr(n_comp, 0);
+        ctxt = gen_xmlXPathContextPtr(n_ctxt, 1);
+
+        ret_val = xmlXPathCompiledEvalToBoolean(comp, ctxt);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlXPathCompExprPtr(n_comp, comp, 0);
+        des_xmlXPathContextPtr(n_ctxt, ctxt, 1);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlXPathCompiledEvalToBoolean",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_comp);
+            printf(" %d", n_ctxt);
+            printf("\n");
+        }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
+test_xmlXPathContextSetCache(void) {
+    int test_ret = 0;
+
+#if defined(LIBXML_XPATH_ENABLED)
+    int mem_base;
+    int ret_val;
+    xmlXPathContextPtr ctxt; /* the XPath context */
+    int n_ctxt;
+    int active; /* enables/disables (creates/frees) the cache */
+    int n_active;
+    int value; /* a value with semantics dependant on @options */
+    int n_value;
+    int options; /* options (currently only the value 0 is used) */
+    int n_options;
+
+    for (n_ctxt = 0;n_ctxt < gen_nb_xmlXPathContextPtr;n_ctxt++) {
+    for (n_active = 0;n_active < gen_nb_int;n_active++) {
+    for (n_value = 0;n_value < gen_nb_int;n_value++) {
+    for (n_options = 0;n_options < gen_nb_int;n_options++) {
+        mem_base = xmlMemBlocks();
+        ctxt = gen_xmlXPathContextPtr(n_ctxt, 0);
+        active = gen_int(n_active, 1);
+        value = gen_int(n_value, 2);
+        options = gen_int(n_options, 3);
+
+        ret_val = xmlXPathContextSetCache(ctxt, active, value, options);
+        desret_int(ret_val);
+        call_tests++;
+        des_xmlXPathContextPtr(n_ctxt, ctxt, 0);
+        des_int(n_active, active, 1);
+        des_int(n_value, value, 2);
+        des_int(n_options, options, 3);
+        xmlResetLastError();
+        if (mem_base != xmlMemBlocks()) {
+            printf("Leak of %d blocks found in xmlXPathContextSetCache",
+	           xmlMemBlocks() - mem_base);
+	    test_ret++;
+            printf(" %d", n_ctxt);
+            printf(" %d", n_active);
+            printf(" %d", n_value);
+            printf(" %d", n_options);
+            printf("\n");
+        }
+    }
+    }
+    }
+    }
+    function_tests++;
+#endif
+
+    return(test_ret);
+}
+
+
+static int
 test_xmlXPathConvertBoolean(void) {
     int test_ret = 0;
 
@@ -44916,7 +46372,7 @@ static int
 test_xpath(void) {
     int test_ret = 0;
 
-    if (quiet == 0) printf("Testing xpath : 28 of 36 functions ...\n");
+    if (quiet == 0) printf("Testing xpath : 30 of 38 functions ...\n");
     test_ret += test_xmlXPathCastBooleanToNumber();
     test_ret += test_xmlXPathCastBooleanToString();
     test_ret += test_xmlXPathCastNodeSetToBoolean();
@@ -44934,6 +46390,8 @@ test_xpath(void) {
     test_ret += test_xmlXPathCmpNodes();
     test_ret += test_xmlXPathCompile();
     test_ret += test_xmlXPathCompiledEval();
+    test_ret += test_xmlXPathCompiledEvalToBoolean();
+    test_ret += test_xmlXPathContextSetCache();
     test_ret += test_xmlXPathConvertBoolean();
     test_ret += test_xmlXPathConvertNumber();
     test_ret += test_xmlXPathConvertString();
@@ -49988,6 +51446,7 @@ test_module(const char *module) {
     if (!strcmp(module, "pattern")) return(test_pattern());
     if (!strcmp(module, "relaxng")) return(test_relaxng());
     if (!strcmp(module, "schemasInternals")) return(test_schemasInternals());
+    if (!strcmp(module, "schematron")) return(test_schematron());
     if (!strcmp(module, "tree")) return(test_tree());
     if (!strcmp(module, "uri")) return(test_uri());
     if (!strcmp(module, "valid")) return(test_valid());

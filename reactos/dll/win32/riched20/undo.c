@@ -386,6 +386,7 @@ BOOL ME_Undo(ME_TextEditor *editor) {
   } while(p && p->type != diUndoEndTransaction);
   if (p)
     p->prev = NULL;
+  ME_MoveCursorFromTableRowStartParagraph(editor);
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_CheckTablesForCorruption(editor);
   editor->nUndoStackSize--;
@@ -422,6 +423,7 @@ BOOL ME_Redo(ME_TextEditor *editor) {
   } while(p && p->type != diUndoEndTransaction);
   if (p)
     p->prev = NULL;
+  ME_MoveCursorFromTableRowStartParagraph(editor);
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_CheckTablesForCorruption(editor);
   editor->nUndoMode = nMode;

@@ -424,19 +424,6 @@ CreateJobSet (
  */
 BOOL
 STDCALL
-FindVolumeClose(
-    HANDLE hFindVolume
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 FindVolumeMountPointClose(
     HANDLE hFindVolumeMountPoint
     )
@@ -746,21 +733,6 @@ SetThreadExecutionState(
  */
 BOOL
 STDCALL
-TzSpecificLocalTimeToSystemTime(
-    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
-    CONST SYSTEMTIME *lpLocalTime,
-    LPSYSTEMTIME lpUniversalTime
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 WriteFileGather(
     HANDLE hFile,
     FILE_SEGMENT_ELEMENT aSegmentArray[],
@@ -817,55 +789,6 @@ DnsHostnameToComputerNameW (
     memcpy( computername, hostname, len * sizeof(WCHAR) );
     computername[len + 1] = 0;
     return TRUE;
-}
-
-/*
- * @implemented
- */
-HANDLE
-STDCALL
-FindFirstVolumeW(
-	LPWSTR volume,
-	DWORD len
-    )
-{
-    DWORD size = 1024;
-    HANDLE mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE,
-                              NULL, OPEN_EXISTING, 0, 0 );
-    if (mgr == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
-
-    for (;;)
-    {
-        MOUNTMGR_MOUNT_POINT input;
-        MOUNTMGR_MOUNT_POINTS *output;
-
-        if (!(output = HeapAlloc( GetProcessHeap(), 0, size )))
-        {
-            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
-            break;
-        }
-        memset( &input, 0, sizeof(input) );
-
-        if (!DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_POINTS, &input, sizeof(input),
-                              output, size, NULL, NULL ))
-        {
-            if (GetLastError() != ERROR_MORE_DATA) break;
-            size = output->Size;
-            HeapFree( GetProcessHeap(), 0, output );
-            continue;
-        }
-        CloseHandle( mgr );
-        /* abuse the Size field to store the current index */
-        output->Size = 0;
-        if (!FindNextVolumeW( output, volume, len ))
-        {
-            HeapFree( GetProcessHeap(), 0, output );
-            return INVALID_HANDLE_VALUE;
-        }
-        return (HANDLE)output;
-    }
-    CloseHandle( mgr );
-    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -1060,31 +983,6 @@ DnsHostnameToComputerNameA (
 }
 
 /*
- * @implemented
- */
-HANDLE
-STDCALL
-FindFirstVolumeA(
-	LPSTR volume,
-	DWORD len
-    )
-{
-    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-    HANDLE handle = FindFirstVolumeW( buffer, len );
-
-    if (handle != INVALID_HANDLE_VALUE)
-    {
-        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL ))
-        {
-            FindVolumeClose( handle );
-            handle = INVALID_HANDLE_VALUE;
-        }
-    }
-    HeapFree( GetProcessHeap(), 0, buffer );
-    return handle;
-}
-
-/*
  * @unimplemented
  */
 HANDLE
@@ -1146,21 +1044,6 @@ GetFirmwareEnvironmentVariableA(
     LPCSTR lpGuid,
     PVOID   pBuffer,
     DWORD    nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetVolumeNameForVolumeMountPointA(
-    LPCSTR lpszVolumeMountPoint,
-    LPSTR lpszVolumeName,
-    DWORD cchBufferLength
     )
 {
     STUB;

@@ -62,7 +62,8 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
                                sizeof(LocalNameInfo),
                                &ReturnLength);
     if (((Status == STATUS_BUFFER_OVERFLOW) ||
-         (Status == STATUS_BUFFER_TOO_SMALL)) &&
+         (Status == STATUS_BUFFER_TOO_SMALL) ||
+         (Status == STATUS_INFO_LENGTH_MISMATCH)) &&
         (ReturnLength != sizeof(LocalNameInfo)))
     {
         /* Allocate required size */

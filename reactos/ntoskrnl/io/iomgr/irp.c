@@ -346,16 +346,8 @@ IopCompleteRequest(IN PKAPC Apc,
                 /* Check if this is an Asynch API */
                 if (!(Irp->Flags & IRP_SYNCHRONOUS_API))
                 {
-                  /* HACK */
-                  if (*((PULONG)(Irp->UserEvent) - 1) != 0x87878787)
-                  {
                     /* Dereference the event */
                     ObDereferenceObject(Irp->UserEvent);
-                  }
-                  else
-                  {
-                    DPRINT1("Not an executive event -- should not be dereferenced\n");
-                  }
                 }
 
                 /*
@@ -691,7 +683,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 				MmProbeAndLockPages(Irp->MdlAddress,
 									KernelMode,
 									MajorFunction == IRP_MJ_READ ?
-									IoReadAccess : IoWriteAccess);
+									IoWriteAccess : IoReadAccess);
 			}
 			_SEH_HANDLE
 			{

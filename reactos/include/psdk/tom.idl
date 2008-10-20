@@ -368,7 +368,7 @@ interface ITextFont : IDispatch
 ]
 interface ITextPara : IDispatch
 {
-    HRESULT GetDuplicate([retval, out]ITextPara *ppPara);
+    HRESULT GetDuplicate([retval, out]ITextPara **ppPara);
     HRESULT SetDuplicate([in]ITextPara *pPara);
     HRESULT CanChange([out]long *pB);
     HRESULT IsEqual([in]ITextPara *pPara, [retval, out]long *pB);

@@ -38,7 +38,9 @@
 typedef GUID UUID;
 #endif
 
+#ifndef TRUE
 #define TRUE 1
+#endif
 #define FALSE 0
 
 typedef struct _attr_t attr_t;

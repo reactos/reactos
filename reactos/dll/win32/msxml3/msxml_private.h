@@ -107,6 +107,7 @@ typedef enum tid_t {
     IXMLDOMAttribute_tid,
     IXMLDOMCDATASection_tid,
     IXMLDOMComment_tid,
+    IXMLDOMDocument_tid,
     IXMLDOMDocument2_tid,
     IXMLDOMDocumentFragment_tid,
     IXMLDOMElement_tid,

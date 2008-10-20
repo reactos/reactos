@@ -97,7 +97,7 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_CLOSE                  5
 #define MAX_FUNCTIONS                   6
 
-#define IN_FLIGHT_REQUESTS              3
+#define IN_FLIGHT_REQUESTS              4
 
 #define EXTRA_LOCK_BUFFERS              2 /* Number of extra buffers needed
 					   * for ancillary data on packet

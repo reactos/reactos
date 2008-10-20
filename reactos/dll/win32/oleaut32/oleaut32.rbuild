@@ -31,7 +31,7 @@
 	<file>oleaut32_oaidl.idl</file>
 	<include base="oleaut32" root="intermediate">.</include>
 	<file>oleaut32.spec</file>
-	<library>oleaut32_oleaut32_oaidl_proxy</library>
+	<library>oleaut32_proxy</library>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>rpcrt4</library>
@@ -45,7 +45,8 @@
 	<library>uuid</library>
 	<library>pseh</library>
 </module>
-<module name="oleaut32_oleaut32_oaidl_proxy" type="rpcproxy" allowwarnings="true">
+<module name="oleaut32_proxy" type="rpcproxy" allowwarnings="true">
 	<file>oleaut32_oaidl.idl</file>
+	<file>oleaut32_ocidl.idl</file>
 </module>
 </group>

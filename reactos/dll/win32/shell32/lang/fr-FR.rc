@@ -384,18 +384,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Tâches", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Parcourir les dossiers", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Cliquer sur les éléments de la façon suivante", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP
-	AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP
+	AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
 	PUSHBUTTON "Pa&ramètres par défaut", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 

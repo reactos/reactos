@@ -19,7 +19,6 @@
  * tcpip.sys
  */
 
-#include <roscfg.h>
 #include <stdio.h>
 
 #include "iphlpapi_private.h"

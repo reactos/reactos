@@ -115,6 +115,8 @@ UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, column_inf
 
 UINT STREAMS_CreateView( MSIDATABASE *db, MSIVIEW **view );
 
+UINT STORAGES_CreateView( MSIDATABASE *db, MSIVIEW **view );
+
 int sqliteGetToken(const WCHAR *z, int *tokenType);
 
 MSIRECORD *msi_query_merge_record( UINT fields, const column_info *vl, MSIRECORD *rec );
