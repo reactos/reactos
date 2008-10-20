@@ -216,7 +216,6 @@ jmp $
 
 .global _KiUnexpectedInterrupt
 _KiUnexpectedInterrupt:
-jmp $
     movabs rcx, offset _MsgUnexpectedInterrupt
     movabs rax, offset _FrLdrDbgPrint
     call [rax]
