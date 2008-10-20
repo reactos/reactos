@@ -214,6 +214,7 @@ typedef DWORD LFTYPE;
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
+typedef PVOID PUMDHPDEV;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
 
