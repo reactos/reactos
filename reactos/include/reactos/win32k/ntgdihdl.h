@@ -251,6 +251,8 @@ typedef struct _LDC
     ABORTPROC pAbortProc; /* AbortProc for Printing */
     DWORD CallBackTick;
     HANDLE hPrinter;      /* Local or Remote Printer driver */
+    PVOID pUMPDev;
+    PUMDHPDEV pUMdhpdev;
     DEVCAPS DevCaps;
     HBRUSH BrushColor;
     HPEN PenColor;

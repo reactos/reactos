@@ -79,6 +79,29 @@ typedef struct tagENHMETAFILE {
   INT        planes;
 } ENHMETAFILE,*PENHMETAFILE;
 
+
+#define PDEV_UMPD_ID  0xFEDCBA98
+// UMPDEV flags
+#define UMPDEV_NO_ESCAPE      0x0002
+#define UMPDEV_SUPPORT_ESCAPE 0x0004
+typedef struct _UMPDEV
+{
+  DWORD           Sig;            // Init with PDEV_UMPD_ID
+  struct _UMPDEV *pumpdNext;
+  PDRIVER_INFO_5W pdi5Info;
+  HMODULE         hModule;
+  DWORD           dwFlags;
+  DWORD           dwDriverAttributes;
+  DWORD           dwConfigVersion; // Number of times the configuration
+                                   // file for this driver has been upgraded
+                                   // or downgraded since the last spooler restart.
+  DWORD           dwDriverCount;   // After init should be 2
+  DWORD           WOW64_UMPDev;
+  DWORD           WOW64_hMod;
+  WCHAR           String[188];
+} UMPDEV, *PUMPDEV;
+
+
 /* FUNCTIONS *****************************************************************/
 
 PVOID
