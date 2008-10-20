@@ -28,6 +28,7 @@ VOID IPSendComplete
  */
 {
     PIPFRAGMENT_CONTEXT IFC = (PIPFRAGMENT_CONTEXT)Context;
+    NTSTATUS Status;
 
     TI_DbgPrint
 	(MAX_TRACE,
@@ -35,8 +36,14 @@ VOID IPSendComplete
 	  Context, NdisPacket, NdisStatus));
 
     if (NT_SUCCESS(NdisStatus) && PrepareNextFragment(IFC)) {
-	/* A fragment was prepared for transmission, so send it */
-	IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
+	    /* A fragment was prepared for transmission, so send it */
+	    Status = IPSendFragment(IFC->NdisPacket, IFC->NCE, IFC);
+        if (!NT_SUCCESS(Status))
+        {
+            FreeNdisPacket(IFC->NdisPacket);
+            IFC->Complete(IFC->Context, IFC->Datagram, Status);
+            exFreePool(IFC);
+        }
     } else {
 	TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
 
@@ -87,7 +94,7 @@ BOOLEAN PrepareNextFragment(
 
     TI_DbgPrint(MAX_TRACE, ("Called. IFC (0x%X)\n", IFC));
 
-    if (IFC->BytesLeft != 0) {
+    if (IFC->BytesLeft > 0) {
 
         TI_DbgPrint(MAX_TRACE, ("Preparing 1 fragment.\n"));
 
@@ -203,7 +210,12 @@ NTSTATUS SendFragments(
 
     /* Prepare next fragment for transmission and send it */
 
-    PrepareNextFragment(IFC);
+    if (!PrepareNextFragment(IFC)) {
+        FreeNdisPacket(IFC->NdisPacket);
+        ExFreePool(IFC);
+        return NDIS_STATUS_FAILURE;
+    }
+
     return IPSendFragment(IFC->NdisPacket, NCE, IFC);
 }
 

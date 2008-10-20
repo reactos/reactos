@@ -76,7 +76,7 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
             ASSERT_KM_POINTER(Packet->Complete);
 	    Packet->Complete( Packet->Context,
 			      Packet->Packet,
-			      NDIS_STATUS_REQUEST_ABORTED );
+			      ErrorCode );
         }
 
 	PoolFreeBuffer( Packet );

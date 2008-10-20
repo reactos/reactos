@@ -390,7 +390,7 @@ NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 
     TI_DbgPrint(DEBUG_ROUTER, ("Leaving\n"));
 
-    return Found ? STATUS_NO_SUCH_FILE : STATUS_SUCCESS;
+    return Found ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 
