@@ -44,6 +44,7 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
 
     Port = htons(Port);
     ASSERT(Port >= PortSet->StartingPort);
+    ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
     Port -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
@@ -77,6 +78,9 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
 
     AllocatedPort = htons(AllocatedPort);
 
+    ASSERT(AllocatedPort >= PortSet->StartingPort);
+    ASSERT(AllocatedPort < PortSet->StartingPort + PortSet->PortsToOversee);
+
     return AllocatedPort;
 }
 
@@ -108,6 +112,9 @@ ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ExReleaseFastMutex( &PortSet->Mutex );
 
     AllocatedPort = htons(AllocatedPort);
+
+    ASSERT(AllocatedPort >= PortSet->StartingPort);
+    ASSERT(AllocatedPort < PortSet->StartingPort + PortSet->PortsToOversee);
 
     return AllocatedPort;
 }
