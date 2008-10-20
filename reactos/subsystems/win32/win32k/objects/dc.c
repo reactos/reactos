@@ -143,6 +143,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   nDc_Attr->dwLayout        = oDc_Attr->dwLayout;
   if (oDc_Attr->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = oDc_Attr->dwLayout;
   NewDC->DcLevel.flPath     = OrigDC->DcLevel.flPath;
+  nDc_Attr->ulDirty_        = oDc_Attr->ulDirty_;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -826,6 +827,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev; // set DHPDEV for device.
   NewDC->pPDev = (PVOID)&PrimarySurface;
   NewDC->w.hBitmap = (HBITMAP)PrimarySurface.pSurface;
+  // ATM we only have one display.
+  nDc_Attr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
   NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel *
                                      ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
@@ -1555,223 +1558,6 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
     SetLastWin32Error(ERROR_INVALID_HANDLE);
 }
 
-INT FASTCALL
-IntGdiGetDeviceCaps(PDC dc, INT Index)
-{
-  INT ret = 0;
-  POINT  pt;
-
-  /* Retrieve capability */
-  switch (Index)
-  {
-    case DRIVERVERSION:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVersion;
-      break;
-
-    case TECHNOLOGY:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulTechnology;
-      break;
-
-    case HORZSIZE:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize;
-      break;
-
-    case VERTSIZE:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize;
-      break;
-
-    case HORZRES:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-      break;
-
-    case VERTRES:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-      break;
-
-    case LOGPIXELSX:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulLogPixelsX;
-      break;
-
-    case LOGPIXELSY:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulLogPixelsY;
-      break;
-
-    case BITSPIXEL:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.cBitsPixel;
-      break;
-
-    case PLANES:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.cPlanes;
-      break;
-
-    case NUMBRUSHES:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case NUMPENS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case NUMFONTS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case NUMCOLORS:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulNumColors;
-      break;
-
-    case ASPECTX:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectX;
-      break;
-
-    case ASPECTY:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectY;
-      break;
-
-    case ASPECTXY:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectXY;
-      break;
-
-    case PDEVICESIZE:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case CLIPCAPS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case SIZEPALETTE:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulNumPalReg; /* FIXME not sure */
-      break;
-
-    case NUMRESERVED:
-      ret = 0;
-      break;
-
-    case COLORRES:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case PHYSICALWIDTH:
-      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.x;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case PHYSICALHEIGHT:
-      if(IntGdiEscape(dc, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.y;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case PHYSICALOFFSETX:
-      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.x;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case PHYSICALOFFSETY:
-      if(IntGdiEscape(dc, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.y;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case VREFRESH:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case SCALINGFACTORX:
-      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.x;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case SCALINGFACTORY:
-      if(IntGdiEscape(dc, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
-      {
-        ret = pt.y;
-      }
-      else
-      {
-        ret = 0;
-      }
-      break;
-
-    case RASTERCAPS:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.flRaster;
-      break;
-
-    case CURVECAPS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case LINECAPS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case POLYGONALCAPS:
-      UNIMPLEMENTED; /* FIXME */
-      break;
-
-    case TEXTCAPS:
-      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.flTextCaps;
-      break;
-
-    default:
-      ret = 0;
-      break;
-  }
-
-  return ret;
-}
-
-INT STDCALL
-NtGdiGetDeviceCaps(HDC  hDC,
-                  INT  Index)
-{
-  PDC  dc;
-  INT  ret;
-
-  dc = DC_LockDc(hDC);
-  if (dc == NULL)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
-
-  ret = IntGdiGetDeviceCaps(dc, Index);
-
-  DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
-
-  DC_UnlockDc( dc );
-  return ret;
-}
-
 INT
 FASTCALL
 IntcFonts(PGDIDEVICE pDevObj)
@@ -1807,6 +1593,206 @@ IntGetColorManagementCaps(PGDIDEVICE pDevObj)
      ret |= CM_CMYK_COLOR;
   if (pDevObj->DevInfo.flGraphicsCaps & GCAPS_ICM)
      ret |= CM_DEVICE_ICM;
+  return ret;
+}
+
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index)
+{
+  INT ret = 0;
+  PGDIDEVICE pPDev = dc->pPDev;
+  /* Retrieve capability */
+  switch (Index)
+  {
+    case DRIVERVERSION:
+      ret = pPDev->GDIInfo.ulVersion;
+      break;
+
+    case TECHNOLOGY:
+      ret = pPDev->GDIInfo.ulTechnology;
+      break;
+
+    case HORZSIZE:
+      ret = pPDev->GDIInfo.ulHorzSize;
+      break;
+
+    case VERTSIZE:
+      ret = pPDev->GDIInfo.ulVertSize;
+      break;
+
+    case HORZRES:
+      ret = pPDev->GDIInfo.ulHorzRes;
+      break;
+
+    case VERTRES:
+      ret = pPDev->GDIInfo.ulVertRes;
+      break;
+
+    case LOGPIXELSX:
+      ret = pPDev->GDIInfo.ulLogPixelsX;
+      break;
+
+    case LOGPIXELSY:
+      ret = pPDev->GDIInfo.ulLogPixelsY;
+      break;
+
+    case CAPS1:
+      if ( pPDev->pGraphicsDev &&
+           (((PGRAPHICS_DEVICE)pPDev->pGraphicsDev)->StateFlags & 
+                                      DISPLAY_DEVICE_MIRRORING_DRIVER))
+         ret = C1_MIRRORING;
+      break;
+
+    case BITSPIXEL:
+      ret = pPDev->GDIInfo.cBitsPixel;
+      break;
+
+    case PLANES:
+      ret = pPDev->GDIInfo.cPlanes;
+      break;
+
+    case NUMBRUSHES:
+      ret = -1;
+      break;
+
+    case NUMPENS:
+      ret = pPDev->GDIInfo.ulNumColors;
+      if ( ret != -1 ) ret *= 5;
+      break;
+
+    case NUMFONTS:
+      ret = IntcFonts(pPDev);
+      break;
+
+    case NUMCOLORS:
+      ret = pPDev->GDIInfo.ulNumColors;
+      break;
+
+    case ASPECTX:
+      ret = pPDev->GDIInfo.ulAspectX;
+      break;
+
+    case ASPECTY:
+      ret = pPDev->GDIInfo.ulAspectY;
+      break;
+
+    case ASPECTXY:
+      ret = pPDev->GDIInfo.ulAspectXY;
+      break;
+
+    case CLIPCAPS:
+      ret = CP_RECTANGLE;
+      break;
+
+    case SIZEPALETTE:
+      ret = pPDev->GDIInfo.ulNumPalReg;
+      break;
+
+    case NUMRESERVED:
+      ret = 20;
+      break;
+
+    case COLORRES:
+      ret = pPDev->GDIInfo.ulDACRed +
+            pPDev->GDIInfo.ulDACGreen +
+            pPDev->GDIInfo.ulDACBlue;
+      break;
+
+    case DESKTOPVERTRES:
+      ret = pPDev->GDIInfo.ulVertRes;
+      break;
+
+    case DESKTOPHORZRES:
+      ret = pPDev->GDIInfo.ulHorzRes;
+      break;
+
+    case BLTALIGNMENT:
+      ret = pPDev->GDIInfo.ulBltAlignment;
+      break;
+
+    case SHADEBLENDCAPS:
+      ret = pPDev->GDIInfo.flShadeBlend;
+      break;
+
+    case COLORMGMTCAPS:
+      ret = IntGetColorManagementCaps(pPDev);
+      break;
+
+    case PHYSICALWIDTH:
+      ret = pPDev->GDIInfo.szlPhysSize.cx;
+      break;
+
+    case PHYSICALHEIGHT:
+      ret = pPDev->GDIInfo.szlPhysSize.cy;
+      break;
+
+    case PHYSICALOFFSETX:
+      ret = pPDev->GDIInfo.ptlPhysOffset.x;
+      break;
+
+    case PHYSICALOFFSETY:
+      ret = pPDev->GDIInfo.ptlPhysOffset.y;
+      break;
+
+    case VREFRESH:
+      ret = pPDev->GDIInfo.ulVRefresh;
+      break;
+
+    case RASTERCAPS:
+      ret = pPDev->GDIInfo.flRaster;
+      break;
+
+    case CURVECAPS:
+      ret = (CC_CIRCLES | CC_PIE | CC_CHORD | CC_ELLIPSES | CC_WIDE |
+             CC_STYLED | CC_WIDESTYLED | CC_INTERIORS | CC_ROUNDRECT);
+      break;
+
+    case LINECAPS:
+      ret = (LC_POLYLINE | LC_MARKER | LC_POLYMARKER | LC_WIDE |
+             LC_STYLED | LC_WIDESTYLED | LC_INTERIORS);
+      break;
+
+    case POLYGONALCAPS:
+      ret = (PC_POLYGON | PC_RECTANGLE | PC_WINDPOLYGON | PC_SCANLINE |
+             PC_WIDE | PC_STYLED | PC_WIDESTYLED | PC_INTERIORS);
+      break;
+
+    case TEXTCAPS:
+      ret = pPDev->GDIInfo.flTextCaps;
+      if (pPDev->GDIInfo.ulTechnology) ret |= TC_VA_ABLE;
+      ret |= (TC_SO_ABLE|TC_UA_ABLE);
+      break;
+
+    case PDEVICESIZE:
+    case SCALINGFACTORX:
+    case SCALINGFACTORY:
+    default:
+      ret = 0;
+      break;
+  }
+
+  return ret;
+}
+
+INT STDCALL
+NtGdiGetDeviceCaps(HDC  hDC,
+                  INT  Index)
+{
+  PDC  dc;
+  INT  ret;
+
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return 0;
+  }
+
+  ret = IntGdiGetDeviceCaps(dc, Index);
+
+  DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
+
+  DC_UnlockDc( dc );
   return ret;
 }
 
@@ -1856,6 +1842,10 @@ IntvGetDeviceCaps(
   pDevCaps->ulPhysicalHeight  = pGdiInfo->szlPhysSize.cy;
   pDevCaps->ulPhysicalOffsetX = pGdiInfo->ptlPhysOffset.x;
   pDevCaps->ulPhysicalOffsetY = pGdiInfo->ptlPhysOffset.y;
+  pDevCaps->ulPanningHorzRes  = pGdiInfo->ulPanningHorzRes;
+  pDevCaps->ulPanningVertRes  = pGdiInfo->ulPanningVertRes; 
+  pDevCaps->xPanningAlignment = pGdiInfo->xPanningAlignment;
+  pDevCaps->yPanningAlignment = pGdiInfo->yPanningAlignment;
 
   Tmp = 0;
   Tmp = pGdiInfo->flTextCaps | (TC_SO_ABLE|TC_UA_ABLE|TC_CP_STROKE|TC_OP_STROKE|TC_OP_CHARACTER);
@@ -1884,13 +1874,13 @@ NtGdiGetDeviceCapsAll (
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hDC);
-  if (dc == NULL)
+  if (!dc)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
 
-  pSafeDevCaps = ExAllocatePoolWithTag(PagedPool, sizeof(DEVCAPS), TAG_DC);
+  pSafeDevCaps = ExAllocatePoolWithTag(PagedPool, sizeof(DEVCAPS), TAG_TEMP);
 
   if (!pSafeDevCaps)
   {
@@ -1913,16 +1903,14 @@ NtGdiGetDeviceCapsAll (
   }
   _SEH_END;
 
-  if(!NT_SUCCESS(Status))
+  ExFreePoolWithTag(pSafeDevCaps, TAG_TEMP);
+  DC_UnlockDc(dc);
+
+  if (!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    ExFreePoolWithTag(pSafeDevCaps, TAG_DC);
-    DC_UnlockDc(dc);
     return FALSE;
   }
-
-  ExFreePoolWithTag(pSafeDevCaps, TAG_DC);
-  DC_UnlockDc( dc );
   return TRUE;
 }
 

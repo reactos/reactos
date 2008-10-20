@@ -868,6 +868,8 @@ extern "C" {
 #define TCI_SRCCODEPAGE 2
 #define TCI_SRCFONTSIG 3
 #if (_WIN32_WINNT >= 0x0500)
+#define SHADEBLENDCAPS    120   
+#define COLORMGMTCAPS     121
 /* SHADEBLENDCAPS */
 #define SB_NONE           0x00000000
 #define SB_CONST_ALPHA    0x00000001
