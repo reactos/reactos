@@ -67,7 +67,7 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     Next -= PortSet->StartingPort;
 
     ExAcquireFastMutex( &PortSet->Mutex );
-    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, 0 );
+    AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Next );
     if( AllocatedPort != (ULONG)-1 ) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
