@@ -60,9 +60,11 @@ reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msxml3          # Synced to Wine-20071230
@@ -80,6 +82,7 @@ reactos/dll/win32/olepro32        # Autosync
 reactos/dll/win32/pdh             # Autosync
 reactos/dll/win32/powrprof        # Forked at Wine-1.0rc5
 reactos/dll/win32/printui         # Autosync
+reactos/dll/win32/pstorec         # Autosync
 reactos/dll/win32/rasapi32        # Autosync
 reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync

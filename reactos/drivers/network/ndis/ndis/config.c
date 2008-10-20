@@ -521,9 +521,11 @@ NdisReadConfiguration(
 
             ExFreePool(KeyInformation);
 
-            if(*Status != STATUS_SUCCESS)
+            if(*Status != STATUS_SUCCESS) {
+                ExFreePool(*ParameterValue);
+                *ParameterValue = NULL;
                 *Status = NDIS_STATUS_FAILURE;
-            else
+            } else
                 *Status = NDIS_STATUS_SUCCESS;
 
             return;
@@ -567,6 +569,7 @@ NdisReadConfiguration(
             if(!MiniportResource)
             {
                 NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+                ExFreePool(RegData);
                 ExFreePool(KeyInformation);
                 ExFreePool(*ParameterValue);
                 *ParameterValue = NULL;

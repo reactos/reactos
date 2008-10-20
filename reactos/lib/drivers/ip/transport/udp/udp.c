@@ -302,8 +302,12 @@ NTSTATUS UDPStartup(
 #ifdef __NTDRIVER__
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
 #endif
+  
+  NTSTATUS Status;
 
-  PortsStartup( &UDPPorts, 1, 0xfffe );
+  Status = PortsStartup( &UDPPorts, 1, 0xfffe );
+
+  if( !NT_SUCCESS(Status) ) return Status;
 
   /* Register this protocol with IP layer */
   IPRegisterProtocol(IPPROTO_UDP, UDPReceive);

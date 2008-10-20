@@ -64,7 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "&Barre d'outils",        ID_TOGGLE_TOOLBAR
         MENUITEM "&Barre de format",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Ruler",          ID_TOGGLE_RULER
+        MENUITEM "&Règle",             ID_TOGGLE_RULER
         MENUITEM "&Barre d'état",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Options...",  ID_VIEWPROPERTIES
@@ -75,7 +75,7 @@ BEGIN
     END
     POPUP "Forma&t"
     BEGIN
-        MENUITEM "&Polive...",                  ID_FONTSETTINGS
+        MENUITEM "&Police...",                  ID_FONTSETTINGS
         MENUITEM "&Puces"                ID_BULLET
         MENUITEM "&Paragraphe..."              ID_PARAFORMAT
         MENUITEM "&Tabulations..."                   ID_TABSTOPS
@@ -109,10 +109,10 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Date et heure"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Available formats",0,3,2,100,15
+    LTEXT        "Formats disponibles",0,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
-    PUSHBUTTON   "&Cancel",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "&Annuler",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
@@ -132,13 +132,13 @@ Caption "Format de paragraphe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indentation", 0, 10, 10, 120, 68
-    LTEXT "Left", 0, 15, 22, 40, 13
+    LTEXT "Gauche", 0, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Right", 0, 15, 40, 40, 13
+    LTEXT "Droite", 0, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "First line", 0, 15, 58, 40, 13
+    LTEXT "Première ligne", 0, 15, 58, 40, 18
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Alignment", 0, 15, 87, 40, 13
+    LTEXT "Alignement", 0, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Annuler", IDCANCEL, 137, 33, 50, 15
@@ -163,14 +163,14 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Line wrapping", 0, 10, 10, 130, 85
-    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 18, 25, 117, 15
-    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 18, 45, 117, 15
-    GROUPBOX "Barres d'outils", 0, 150, 10, 120, 85
-    CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "Barre de &statut", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    GROUPBOX "Enveloppement de ligne", 0, 10, 10, 170, 85
+    RADIOBUTTON "Enveloppe le texte à partir de la bordure de fenêtre", IDC_PAGEFMT_WW, 18, 25, 145, 15
+    RADIOBUTTON "Enveloppe le texte à partir de la &marge", IDC_PAGEFMT_WM, 18, 45, 145, 15
+    GROUPBOX "Barres d'outils", 0, 170, 10, 120, 85
+    CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 180, 20, 80, 15
+    CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 180, 38, 80, 15
+    CHECKBOX "&Règle", IDC_PAGEFMT_RU, 180, 56, 80, 15
+    CHECKBOX "Barre de &statut", IDC_PAGEFMT_SB, 180, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
@@ -213,8 +213,8 @@ BEGIN
     STRING_PREVIEW_PRINT,            "Imprimer"
     STRING_PREVIEW_NEXTPAGE,         "Page suivante"
     STRING_PREVIEW_PREVPAGE,         "Page précédente"
-    STRING_PREVIEW_TWOPAGES,         "Two pages"
-    STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_TWOPAGES,         "Deux pages"
+    STRING_PREVIEW_ONEPAGE,          "Une page"
     STRING_PREVIEW_CLOSE,            "Fermer"
 END
 

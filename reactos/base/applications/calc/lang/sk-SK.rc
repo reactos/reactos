@@ -1,6 +1,6 @@
 /* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-01-2008
- * LAST CHANGE:  10-07-2008 
+ * LAST CHANGE:  30-08-2008 
  * ---------------------------------------
  * TODO:
  * 1. treba usporiada jednotky pod¾a abecedy
@@ -445,7 +445,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STRING_LICENSE      "Kalkulaèka systému ReactOS je vo¾nı softvér vydanı pod licenciou GNU GPL.\r\n\r\nKópiu licenie GNU GPL môete získa tu:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nRovnako môete získa preklad licencie GNU GPL tu:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "Kalkulaèka systému ReactOS je vo¾nı softvér vydanı pod licenciou GNU GPL.\r\n\r\nKópiu licencie GNU GPL môete získa tu:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nRovnako môete získa preklad licencie GNU GPL tu:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "Chyba"
     IDS_QUICKHELP           "Rıchla pomoc"
 END

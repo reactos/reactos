@@ -359,14 +359,41 @@ NtStartProfile(IN HANDLE ProfileHandle)
 
     /* Allocate a Kernel Profile Object. */
     ProfileObject = ExAllocatePoolWithTag(NonPagedPool,
-                                      sizeof(EPROFILE),
-                                      TAG_PROFILE);
+                                          sizeof(EPROFILE),
+                                          TAG_PROFILE);
+    if (!ProfileObject)
+    {
+        /* Out of memory, fail */
+        KeReleaseMutex(&ExpProfileMutex, FALSE);
+        ObDereferenceObject(Profile);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Allocate the Mdl Structure */
     Profile->Mdl = MmCreateMdl(NULL, Profile->Buffer, Profile->BufferSize);
 
-    /* Probe and Lock for Write Access */
-    MmProbeAndLockPages(Profile->Mdl, PreviousMode, IoWriteAccess);
+    /* Protect this in SEH as we might raise an exception */
+    _SEH_TRY
+    {
+        /* Probe and Lock for Write Access */
+        MmProbeAndLockPages(Profile->Mdl, PreviousMode, IoWriteAccess);
+    }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        /* Get the exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Fail if we raised an exception */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release our lock, free the buffer, dereference and return */
+        KeReleaseMutex(&ExpProfileMutex, FALSE);
+        ObDereferenceObject(Profile);
+        ExFreePool(ProfileObject);
+        return Status;
+    }
 
     /* Map the pages */
     TempLockedBufferAddress = MmMapLockedPages(Profile->Mdl, KernelMode);

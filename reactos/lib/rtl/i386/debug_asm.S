@@ -72,8 +72,7 @@ _DebugService@20:
     push ecx
     push ebx
     push edi
-    push edi
-    push ebx
+    push edx
 
     /* Call the Interrupt */
     mov eax, [ebp+8]
@@ -85,10 +84,10 @@ _DebugService@20:
     int 3
 
     /* Restore registers */
-    pop ebx
+    pop edx
     pop edi
-    pop edi
     pop ebx
+    pop ecx
 
     /* Return */
     leave

@@ -1,7 +1,7 @@
 /* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  16-08-2008
+ * LAST CHANGE:  24-08-2008
  */   
 
 /*
@@ -199,8 +199,8 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Vyberte rozšírené vlastnosti urèené pre tento odkaz.", -1, 5, 30, 210, 10
 	CHECKBOX "&Spusti s inımi povereniami", 14000, 25, 50, 150, 10
-	LTEXT "Táto monos umoòuje spusti tento odkaz ako inı pouívate¾, alebo pokraèova so svojím pouívate¾skım oprávnením, ale s ochranou poèítaèa a údajov pred neoprávnenımi aktivitami programu.", -1, 50, 60, 175, 40
-	CHECKBOX "Spusti v oddelenom pa&mäovom priestore", 14001, 25, 100, 90, 10, WS_DISABLED
+	LTEXT "Táto monos umoòuje spusti tento odkaz ako inı pouívate¾, alebo pokraèova so svojím pouívate¾skım oprávnením, ale s ochranou poèítaèa a údajov pred neoprávnenımi aktivitami programu.", -1, 50, 60, 170, 40
+	CHECKBOX "Spusti v oddelenom pa&mäovom priestore", 14001, 25, 100, 190, 10, WS_DISABLED
 	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
 	PUSHBUTTON "Preruši", 2, 120, 124, 50, 15, WS_VISIBLE
 END

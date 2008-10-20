@@ -376,9 +376,9 @@ FlushFileBuffers(HANDLE hFile)
  */
 DWORD STDCALL
 SetFilePointer(HANDLE hFile,
-	       LONG lDistanceToMove,
-	       PLONG lpDistanceToMoveHigh,
-	       DWORD dwMoveMethod)
+           LONG lDistanceToMove,
+           PLONG lpDistanceToMoveHigh,
+           DWORD dwMoveMethod)
 {
    FILE_POSITION_INFORMATION FilePosition;
    FILE_STANDARD_INFORMATION FileStandard;
@@ -387,12 +387,12 @@ SetFilePointer(HANDLE hFile,
    LARGE_INTEGER Distance;
 
    TRACE("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
-	  hFile,lDistanceToMove,dwMoveMethod);
+      hFile,lDistanceToMove,dwMoveMethod);
 
    if(IsConsoleHandle(hFile))
    {
      SetLastError(ERROR_INVALID_HANDLE);
-     return -1;
+     return INVALID_SET_FILE_POINTER;
    }
 
    if (lpDistanceToMoveHigh)
@@ -408,34 +408,48 @@ SetFilePointer(HANDLE hFile,
    switch(dwMoveMethod)
    {
      case FILE_CURRENT:
-	NtQueryInformationFile(hFile,
-			       &IoStatusBlock,
-			       &FilePosition,
-			       sizeof(FILE_POSITION_INFORMATION),
-			       FilePositionInformation);
-	FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
-	break;
+    errCode = NtQueryInformationFile(hFile,
+                   &IoStatusBlock,
+                   &FilePosition,
+                   sizeof(FILE_POSITION_INFORMATION),
+                   FilePositionInformation);
+    FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
+    if (!NT_SUCCESS(errCode))
+    {
+      if (lpDistanceToMoveHigh != NULL)
+          *lpDistanceToMoveHigh = -1;
+      SetLastErrorByStatus(errCode);
+      return INVALID_SET_FILE_POINTER;
+    }
+    break;
      case FILE_END:
-	NtQueryInformationFile(hFile,
+    errCode = NtQueryInformationFile(hFile,
                                &IoStatusBlock,
                                &FileStandard,
                                sizeof(FILE_STANDARD_INFORMATION),
                                FileStandardInformation);
-        FilePosition.CurrentByteOffset.QuadPart =
+    FilePosition.CurrentByteOffset.QuadPart =
                   FileStandard.EndOfFile.QuadPart + Distance.QuadPart;
-	break;
+    if (!NT_SUCCESS(errCode))
+    {
+      if (lpDistanceToMoveHigh != NULL)
+          *lpDistanceToMoveHigh = -1;
+      SetLastErrorByStatus(errCode);
+      return INVALID_SET_FILE_POINTER;
+    }
+    break;
      case FILE_BEGIN:
         FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
-	break;
+    break;
      default:
         SetLastError(ERROR_INVALID_PARAMETER);
-	return -1;
+    return INVALID_SET_FILE_POINTER;
    }
 
    if(FilePosition.CurrentByteOffset.QuadPart < 0)
    {
      SetLastError(ERROR_NEGATIVE_SEEK);
-     return -1;
+     return INVALID_SET_FILE_POINTER;
    }
 
    if (lpDistanceToMoveHigh == NULL && FilePosition.CurrentByteOffset.HighPart != 0)
@@ -443,21 +457,21 @@ SetFilePointer(HANDLE hFile,
      /* If we're moving the pointer outside of the 32 bit boundaries but
         the application only passed a 32 bit value we need to bail out! */
      SetLastError(ERROR_INVALID_PARAMETER);
-     return -1;
+     return INVALID_SET_FILE_POINTER;
    }
 
    errCode = NtSetInformationFile(hFile,
-				  &IoStatusBlock,
-				  &FilePosition,
-				  sizeof(FILE_POSITION_INFORMATION),
-				  FilePositionInformation);
+                  &IoStatusBlock,
+                  &FilePosition,
+                  sizeof(FILE_POSITION_INFORMATION),
+                  FilePositionInformation);
    if (!NT_SUCCESS(errCode))
      {
        if (lpDistanceToMoveHigh != NULL)
            *lpDistanceToMoveHigh = -1;
 
        SetLastErrorByStatus(errCode);
-       return -1;
+       return INVALID_SET_FILE_POINTER;
      }
 
    if (lpDistanceToMoveHigh != NULL)

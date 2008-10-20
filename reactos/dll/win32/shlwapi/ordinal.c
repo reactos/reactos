@@ -422,11 +422,11 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     pIEnumFormatEtc = NULL;
     hRet = IUnknown_QueryInterface(pIUnknown, &IID_IEnumFORMATETC,
                                    (PVOID)&pIEnumFormatEtc);
-    if (!hRet && pIEnumFormatEtc)
+    if (hRet == S_OK && pIEnumFormatEtc)
     {
       /* Clone and register the enumerator */
       hRet = IEnumFORMATETC_Clone(pIEnumFormatEtc, &pClone);
-      if (!hRet && pClone)
+      if (hRet == S_OK && pClone)
       {
         RegisterFormatEnumerator(lpBC, pClone, 0);
 
@@ -1462,7 +1462,7 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
   hRet = IUnknown_QueryInterface(lpUnknown, &IID_IServiceProvider,
                                  (LPVOID*)&pService);
 
-  if (!hRet && pService)
+  if (hRet == S_OK && pService)
   {
     TRACE("QueryInterface returned (IServiceProvider*)%p\n", pService);
 
@@ -4399,7 +4399,7 @@ PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(PSHELL_USER_PERMISSION *a
                 {
                     ret = GetTokenInformation(Token, TokenUser, (void*)tuUser, bufsize, &bufsize );
                     if (ret)
-                        cur_user = ((PTOKEN_USER)&tuUser)->User.Sid;
+                        cur_user = ((PTOKEN_USER)tuUser)->User.Sid;
                     CloseHandle(Token);
                 }
             }

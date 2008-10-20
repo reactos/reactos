@@ -711,8 +711,8 @@ DriverEntry(
   /* Setup network layer and transport layer entities */
   KeInitializeSpinLock(&EntityListLock);
   EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
-  if (!NT_SUCCESS(Status)) {
-	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+  if (!EntityList) {
+    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
@@ -760,9 +760,23 @@ DriverEntry(
   IPStartup(RegistryPath);
 
   /* Initialize transport level protocol subsystems */
-  RawIPStartup();
-  UDPStartup();
-  TCPStartup();
+  Status = RawIPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
+
+  Status = UDPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
+
+  Status = TCPStartup();
+  if( !NT_SUCCESS(Status) ) {
+	TiUnload(DriverObject);
+	return Status;
+  }
 
   /* Initialize the lan worker */
   LANStartup();

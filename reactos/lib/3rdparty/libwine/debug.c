@@ -184,6 +184,8 @@ static void debug_init(void)
 {
     char *wine_debug;
     DWORD dwLength;
+    /* GetEnvironmentVariableA will change LastError! */
+    DWORD LastError = GetLastError(); 
 
     if (nb_debug_options != -1) return;  /* already initialized */
     nb_debug_options = 0;
@@ -199,6 +201,7 @@ static void debug_init(void)
             free(wine_debug);
         }
     }
+    SetLastError(LastError);
 }
 
 /* varargs wrapper for funcs.dbg_vprintf */

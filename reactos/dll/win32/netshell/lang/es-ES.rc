@@ -1,0 +1,74 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+ LTEXT "Conectar usando:", -1, 9,9,217,8
+ EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "Con&figurar", IDC_CONFIGURE, 189, 38, 50, 14
+ LTEXT "Esta conexión utiliza los siguientes elementos:", -1, 9, 59, 217, 8
+ PUSHBUTTON "Inst&alar", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Desinstalar", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Propiedades", IDC_PROPERTIES, 174, 130, 65, 14
+ GROUPBOX "Descripción ", -1, 9, 153, 230, 46, BS_GROUPBOX
+ LTEXT "La descripción de los componentes va aquí...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+ CHECKBOX "Mostrar icono en el área de notificación al conectarse", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Notificarme cuando esta conexión tenga conectividad limitada o nula", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Conexión ", -1, 9, 8, 182, 58, BS_GROUPBOX
+ LTEXT "Estado:", -1, 19, 20, 60, 8
+ LTEXT "Duración:", -1, 19, 34, 60, 8
+ LTEXT "Velocidad:", -1, 19, 48, 60, 8
+ GROUPBOX "Actividad ", -1, 9, 74, 182, 70, BS_GROUPBOX
+ RTEXT "Enviados", -1, 26, 90, 60, 8
+ ICON IDI_HORIZONTAL, -1, 90, 85, 18, 20
+ ICON IDI_NETSTAT, -1, 110, 85, 18, 20
+ ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
+ LTEXT "Recibidos", -1, 149, 90, 37, 8
+ LTEXT "Paquetes:", -1, 17, 115, 32, 8
+ RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+ ICON IDI_VERTICAL, -1, 110, 108, 18, 20
+ RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+ PUSHBUTTON "&Propiedades", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+ PUSHBUTTON "&Deshabilitar", IDC_ENDISABLE, 66, 150, 50, 14
+ RTEXT "",IDC_STATUS,83,20,98,8
+ RTEXT "",IDC_DURATION,83,34,98,8
+ RTEXT "",IDC_SPEED,83,48,98,8
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_NETWORKCONNECTION       "Conexiones de red"
+	IDS_SHV_COLUMN_NAME         "Nombre"
+	IDS_SHV_COLUMN_TYPE         "Tipo"
+	IDS_SHV_COLUMN_STATE        "Estado"
+	IDS_SHV_COLUMN_DEVNAME      "Nombre del dispositivo"
+	IDS_SHV_COLUMN_PHONE        "Número de teléfono o dirección de host"
+	IDS_SHV_COLUMN_OWNER        "Propietario"
+	IDS_TYPE_ETHERNET           "LAN o Internet de alta velocidad"
+	IDS_STATUS_NON_OPERATIONAL  "Deshabilitado"
+	IDS_STATUS_UNREACHABLE      "No Conectado"
+	IDS_STATUS_DISCONNECTED     "Cable de red desconectado"
+	IDS_STATUS_CONNECTING       "Obteniendo dirección de red"
+	IDS_STATUS_CONNECTED        "Conectado"
+	IDS_STATUS_OPERATIONAL      "Conectado"
+
+	IDS_NET_ACTIVATE            "Habilitar"
+	IDS_NET_DEACTIVATE          "Deshabilitar"
+	IDS_NET_STATUS              "Estado"
+	IDS_NET_REPAIR              "Reparar"
+	IDS_NET_CREATELINK          "Crear acceso directo"
+	IDS_NET_DELETE              "Borrar"
+	IDS_NET_PROPERTIES          "Propiedades"
+END
+

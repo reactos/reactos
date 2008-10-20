@@ -745,7 +745,7 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
         pinfo->u3.phpage[pinfo->nPages++] = hPage;
         return TRUE;
     }
-    return FALSE;
+    return FALSE;	
 }
 
 /**************************************************************************
@@ -788,18 +788,20 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
         if (SUCCEEDED(hr))
         {
             /* FIXME perform version checks */
-            hr = CoCreateInstance(&ClassID, NULL, 0, &IID_INetConnectionPropertyUi, (LPVOID)&pNCP);
+            hr = CoCreateInstance(&ClassID, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionPropertyUi, (LPVOID)&pNCP);
             if (SUCCEEDED(hr))
             {
                 hr = INetConnectionPropertyUi_SetConnection(pNCP, val->pItem);
                 if (SUCCEEDED(hr))
                 {
-                    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
+                    ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
+                    ZeroMemory(hppages, sizeof(hppages));
                     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+                    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
                     pinfo.u3.phpage = hppages;
-                    pinfo.pszCaption = pProperties->pszwName;
+                    pinfo.hwndParent = lpcmi->hwnd;
 
+                    pinfo.pszCaption = pProperties->pszwName;
                     hr = INetConnectionPropertyUi_AddPages(pNCP, lpcmi->hwnd, PropSheetExCallback, (LPARAM)&pinfo);
                     if (SUCCEEDED(hr))
                     {
@@ -807,7 +809,9 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu2_InvokeCommand(
                             hr = E_FAIL;
                     }
                 }
+                INetConnectionPropertyUi_Release(pNCP);
             }
+
         }
         NcFreeNetconProperties(pProperties);
         return hr;

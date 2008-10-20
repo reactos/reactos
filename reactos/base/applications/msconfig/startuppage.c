@@ -124,7 +124,7 @@ GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
                                 else if (!_tcscmp(szSubValueName, _T("item")))
                                     item.iSubItem = 0;
                                 if (item.iSubItem != -1)
-								{
+                                {
                                     GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
                                     item.pszText = Data;
                                     SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);

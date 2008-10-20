@@ -650,38 +650,43 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                0,
                FullNtFileName.Buffer);
 
-  Status = NtReadFile(FileHandle,
-                      NULL,
-                      NULL,
-                      NULL,
-                      &IoStatusBlock,
-                      BlockBuffer,
-                      sizeof(BlockBuffer),
-                      NULL,
-                      NULL);
-  if (!NT_SUCCESS(Status))
+  if (!MapAsDataFile)
     {
-      DPRINT("Dll header read failed: Status = 0x%08lx\n", Status);
-      NtClose(FileHandle);
-      return Status;
-    }
-  /*
-   * Overlay DOS and NT headers structures to the
-   * buffer with DLL's header raw data.
-   */
-  DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
-  NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
-  /*
-   * Check it is a PE image file.
-   */
-  if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-      || (DosHeader->e_lfanew == 0L)
-      || (*(PULONG)(NTHeaders) != IMAGE_NT_SIGNATURE))
-    {
-      DPRINT("NTDLL format invalid\n");
-      NtClose(FileHandle);
 
-      return STATUS_UNSUCCESSFUL;
+      Status = NtReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &IoStatusBlock,
+                          BlockBuffer,
+                          sizeof(BlockBuffer),
+                          NULL,
+                          NULL);
+      if (!NT_SUCCESS(Status))
+        {
+          DPRINT("Dll header read failed: Status = 0x%08lx\n", Status);
+          NtClose(FileHandle);
+          return Status;
+        }
+
+      /*
+       * Overlay DOS and NT headers structures to the
+       * buffer with DLL's header raw data.
+       */
+      DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
+      NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
+      /*
+       * Check it is a PE image file.
+       */
+      if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+          || (DosHeader->e_lfanew == 0L)
+          || (*(PULONG)(NTHeaders) != IMAGE_NT_SIGNATURE))
+        {
+          DPRINT("NTDLL format invalid\n");
+          NtClose(FileHandle);
+
+          return STATUS_UNSUCCESSFUL;
+        }
     }
 
   /*
@@ -2058,15 +2063,18 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
           {
             *BaseAddress = ImageBase;
           }
-        /* Get and check the NT headers */
-        NtHeaders = RtlImageNtHeader(ImageBase);
-        if (NtHeaders == NULL)
+        if (!MappedAsDataFile)
           {
-            DPRINT1("RtlImageNtHeaders() failed\n");
-            NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
-            NtClose (SectionHandle);
-            RtlFreeUnicodeString(&FullDosName);
-            return STATUS_UNSUCCESSFUL;
+            /* Get and check the NT headers */
+            NtHeaders = RtlImageNtHeader(ImageBase);
+            if (NtHeaders == NULL)
+              {
+                DPRINT1("RtlImageNtHeaders() failed\n");
+                NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
+                NtClose (SectionHandle);
+                RtlFreeUnicodeString(&FullDosName);
+                return STATUS_UNSUCCESSFUL;
+              }
           }
         DPRINT("Mapped %wZ at %x\n", &FullDosName, ImageBase);
         if (MappedAsDataFile)

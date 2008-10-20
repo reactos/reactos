@@ -34,42 +34,39 @@ using std::map;
 
 typedef set<string> set_string;
 
-static const struct
-{
-	HostType DefaultHost;
-} ModuleHandlerInformations[] = {
-	{ HostTrue }, // BuildTool
-	{ HostFalse }, // StaticLibrary
-	{ HostFalse }, // ObjectLibrary
-	{ HostFalse }, // Kernel
-	{ HostFalse }, // KernelModeDLL
-	{ HostFalse }, // KernelModeDriver
-	{ HostFalse }, // NativeDLL
-	{ HostFalse }, // NativeCUI
-	{ HostFalse }, // Win32DLL
-	{ HostFalse }, // Win32OCX
-	{ HostFalse }, // Win32CUI
-	{ HostFalse }, // Win32GUI
-	{ HostFalse }, // BootLoader
-	{ HostFalse }, // BootSector
-	{ HostFalse }, // Iso
-	{ HostFalse }, // LiveIso
-	{ HostFalse }, // Test
-	{ HostFalse }, // RpcServer
-	{ HostFalse }, // RpcClient
-	{ HostFalse }, // Alias
-	{ HostFalse }, // BootProgram
-	{ HostFalse }, // Win32SCR
-	{ HostFalse }, // IdlHeader
-	{ HostFalse }, // IsoRegTest
-	{ HostFalse }, // LiveIsoRegTest
-	{ HostFalse }, // EmbeddedTypeLib
-	{ HostFalse }, // ElfExecutable
-	{ HostFalse }, // RpcProxy
-	{ HostTrue }, // HostStaticLibrary
-	{ HostFalse }, // Cabinet
-	{ HostFalse }, // KeyboardLayout
-	{ HostFalse }, // MessageHeader
+const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
+	{ HostTrue, "", "", "" }, // BuildTool
+	{ HostFalse, "", "", "" }, // StaticLibrary
+	{ HostFalse, "", "", "" }, // ObjectLibrary
+	{ HostFalse, "", "", "" }, // Kernel
+	{ HostFalse, "", "", "" }, // KernelModeDLL
+	{ HostFalse, "-D__NTDRIVER__", "", "" }, // KernelModeDriver
+	{ HostFalse, "", "", "" }, // NativeDLL
+	{ HostFalse, "-D__NTAPP__", "", "" }, // NativeCUI
+	{ HostFalse, "", "", "" }, // Win32DLL
+	{ HostFalse, "", "", "" }, // Win32OCX
+	{ HostFalse, "", "", "" }, // Win32CUI
+	{ HostFalse, "", "", "" }, // Win32GUI
+	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootLoader
+	{ HostFalse, "", "-f bin", "" }, // BootSector
+	{ HostFalse, "", "", "" }, // Iso
+	{ HostFalse, "", "", "" }, // LiveIso
+	{ HostFalse, "", "", "" }, // Test
+	{ HostFalse, "", "", "" }, // RpcServer
+	{ HostFalse, "", "", "" }, // RpcClient
+	{ HostFalse, "", "", "" }, // Alias
+	{ HostFalse, "", "", "-nostartfiles -nostdlib" }, // BootProgram
+	{ HostFalse, "", "", "" }, // Win32SCR
+	{ HostFalse, "", "", "" }, // IdlHeader
+	{ HostFalse, "", "", "" }, // IsoRegTest
+	{ HostFalse, "", "", "" }, // LiveIsoRegTest
+	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
+	{ HostFalse, "", "", "" }, // ElfExecutable
+	{ HostFalse, "", "", "" }, // RpcProxy
+	{ HostTrue, "", "", "" }, // HostStaticLibrary
+	{ HostFalse, "", "", "" }, // Cabinet
+	{ HostFalse, "", "", "" }, // KeyboardLayout
+	{ HostFalse, "", "", "" }, // MessageHeader
 };
 
 string
@@ -269,11 +266,6 @@ MingwBackend::ProcessModules ()
 		h->AddImplicitLibraries ( module );
 		if ( use_pch && CanEnablePreCompiledHeaderSupportForModule ( module ) )
 			h->EnablePreCompiledHeaderSupport ();
-		if ( module.host == HostDefault )
-		{
-			module.host = ModuleHandlerInformations[h->module.type].DefaultHost;
-			assert ( module.host != HostDefault );
-		}
 		v.push_back ( h );
 	}
 
@@ -343,7 +335,7 @@ MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 void
 MingwBackend::ProcessNormal ()
 {
-    assert(sizeof(ModuleHandlerInformations)/sizeof(ModuleHandlerInformations[0]) == TypeDontCare);
+	assert(sizeof(ModuleHandlerInformations)/sizeof(ModuleHandlerInformations[0]) == TypeDontCare);
 
 	DetectCompiler ();
 	DetectBinutils ();

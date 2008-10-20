@@ -433,92 +433,91 @@ LsaQueryForestTrustInformation(
  */
 NTSTATUS STDCALL
 LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
-			  POLICY_INFORMATION_CLASS pic,
-			  PVOID *Buffer)
+              POLICY_INFORMATION_CLASS InformationClass,
+              PVOID *Buffer)
 {
-  FIXME("(%p,0x%08x,%p) stub\n",
-          PolicyHandle, pic, Buffer);
+    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
 
-  if (!Buffer)
-    return FALSE;
+    if(!Buffer) return STATUS_INVALID_PARAMETER;
+    switch (InformationClass)
+    {
+        case PolicyAuditEventsInformation: /* 2 */
+        {
+            PPOLICY_AUDIT_EVENTS_INFO p = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+                                                    sizeof(POLICY_AUDIT_EVENTS_INFO));
+            p->AuditingMode = FALSE; /* no auditing */
+            *Buffer = p;
+        }
+        break;
+        case PolicyPrimaryDomainInformation: /* 3 */
+        case PolicyAccountDomainInformation: /* 5 */
+        {
+            struct di
+            {
+                POLICY_PRIMARY_DOMAIN_INFO ppdi;
+                SID sid;
+            };
+            SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
 
-	switch (pic)
-	{
-	  case PolicyAuditEventsInformation: /* 2 */
-	    {
-	      PPOLICY_AUDIT_EVENTS_INFO p = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(POLICY_AUDIT_EVENTS_INFO));
-	      p->AuditingMode = FALSE; /* no auditing */
-	      *Buffer = p;
-	    }
-	    break;
-	  case PolicyPrimaryDomainInformation: /* 3 */
-	  case PolicyAccountDomainInformation: /* 5 */
-	    {
-	      struct di
-	      { POLICY_PRIMARY_DOMAIN_INFO ppdi;
-		SID sid;
-	      };
-	      SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
+            struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
+            HKEY key;
+            BOOL useDefault = TRUE;
+            LONG ret;
 
-	      struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
-              HKEY key;
-              BOOL useDefault = TRUE;
-              LONG ret;
+            if ((ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                    "System\\CurrentControlSet\\Services\\VxD\\VNETSUP", 0,
+                    KEY_READ, &key)) == ERROR_SUCCESS)
+            {
+                DWORD size = 0;
+                WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
 
-              if ((ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-               "System\\CurrentControlSet\\Services\\VxD\\VNETSUP", 0,
-               KEY_READ, &key)) == ERROR_SUCCESS)
-              {
-                  DWORD size = 0;
-                  WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
+                ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
+                if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
+                {
+                    xdi->ppdi.Name.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                    HEAP_ZERO_MEMORY, size);
+                    if ((ret = RegQueryValueExW(key, wg, NULL, NULL,
+                        (LPBYTE)xdi->ppdi.Name.Buffer, &size)) == ERROR_SUCCESS)
+                    {
+                        xdi->ppdi.Name.Length = (USHORT)size;
+                        useDefault = FALSE;
+                    }
+                    else
+                    {
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, xdi->ppdi.Name.Buffer);
+                        xdi->ppdi.Name.Buffer = NULL;
+                    }
+                }
+                RegCloseKey(key);
+            }
+            if (useDefault)
+                RtlCreateUnicodeStringFromAsciiz(&(xdi->ppdi.Name), "DOMAIN");
+            TRACE("setting domain to \n");
 
-                  ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
-                  if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-                  {
-                      xdi->ppdi.Name.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                       HEAP_ZERO_MEMORY, size);
-                      if ((ret = RegQueryValueExW(key, wg, NULL, NULL,
-                       (LPBYTE)xdi->ppdi.Name.Buffer, &size)) == ERROR_SUCCESS)
-                      {
-                          xdi->ppdi.Name.Length = (USHORT)size;
-                          useDefault = FALSE;
-                      }
-                      else
-                      {
-                          RtlFreeHeap(RtlGetProcessHeap(), 0, xdi->ppdi.Name.Buffer);
-                          xdi->ppdi.Name.Buffer = NULL;
-                      }
-                  }
-                  RegCloseKey(key);
-              }
-              if (useDefault)
-                  RtlCreateUnicodeStringFromAsciiz(&(xdi->ppdi.Name), "DOMAIN");
-              TRACE("setting domain to \n");
-
-	      xdi->ppdi.Sid = &(xdi->sid);
-	      xdi->sid.Revision = SID_REVISION;
-	      xdi->sid.SubAuthorityCount = 1;
-	      xdi->sid.IdentifierAuthority = localSidAuthority;
-	      xdi->sid.SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
-	      *Buffer = xdi;
-	    }
-	    break;
-	  case PolicyAuditLogInformation:
-	  case PolicyPdAccountInformation:
-	  case PolicyLsaServerRoleInformation:
-	  case PolicyReplicaSourceInformation:
-	  case PolicyDefaultQuotaInformation:
-	  case PolicyModificationInformation:
-	  case PolicyAuditFullSetInformation:
-	  case PolicyAuditFullQueryInformation:
-	  case PolicyDnsDomainInformation:
-	  case PolicyEfsInformation:
-	    {
-	      FIXME("category not implemented\n");
-	      return FALSE;
-	    }
-	}
-	return TRUE;
+            xdi->ppdi.Sid = &(xdi->sid);
+            xdi->sid.Revision = SID_REVISION;
+            xdi->sid.SubAuthorityCount = 1;
+            xdi->sid.IdentifierAuthority = localSidAuthority;
+            xdi->sid.SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
+            *Buffer = xdi;
+        }
+        break;
+        case PolicyAuditLogInformation:
+        case PolicyPdAccountInformation:
+        case PolicyLsaServerRoleInformation:
+        case PolicyReplicaSourceInformation:
+        case PolicyDefaultQuotaInformation:
+        case PolicyModificationInformation:
+        case PolicyAuditFullSetInformation:
+        case PolicyAuditFullQueryInformation:
+        case PolicyDnsDomainInformation:
+        case PolicyEfsInformation:
+        {
+            FIXME("category not implemented\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+    return STATUS_SUCCESS;
 }
 
 /*

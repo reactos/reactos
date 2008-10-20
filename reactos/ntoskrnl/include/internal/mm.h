@@ -388,8 +388,6 @@ typedef VOID
     BOOLEAN Dirty
 );
 
-PMM_AVL_TABLE MmKernelAddressSpace;
-
 /* marea.c *******************************************************************/
 
 NTSTATUS

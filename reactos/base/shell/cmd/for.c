@@ -130,6 +130,7 @@ INT cmd_for (LPTSTR param)
 
 	bc->hBatchFile = INVALID_HANDLE_VALUE;
 	bc->ffind = NULL;
+	bc->raw_params = NULL;
 	bc->params = BatchParams (_T(""), param); /* Split out list */
 	bc->shiftlevel = 0;
 	bc->forvar = var;

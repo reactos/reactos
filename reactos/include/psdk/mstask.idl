@@ -1,0 +1,385 @@
+/*
+ * Task Scheduler Service interface
+ *
+ * Copyright (C) 2008 Google (Roy Shea)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+import "oaidl.idl";
+import "oleidl.idl";
+
+cpp_quote("#define TASK_SUNDAY 0x1")
+cpp_quote("#define TASK_MONDAY 0x2")
+cpp_quote("#define TASK_TUESDAY 0x4")
+cpp_quote("#define TASK_WEDNESDAY 0x8")
+cpp_quote("#define TASK_THURSDAY 0x10")
+cpp_quote("#define TASK_FRIDAY 0x20")
+cpp_quote("#define TASK_SATURDAY 0x40")
+
+cpp_quote("#define TASK_FIRST_WEEK 1")
+cpp_quote("#define TASK_SECOND_WEEK 2")
+cpp_quote("#define TASK_THIRD_WEEK 3")
+cpp_quote("#define TASK_FOURTH_WEEK 4")
+cpp_quote("#define TASK_LAST_WEEK 5")
+
+cpp_quote("#define TASK_JANUARY 0x1")
+cpp_quote("#define TASK_FEBRUARY 0x2")
+cpp_quote("#define TASK_MARCH 0x4")
+cpp_quote("#define TASK_APRIL 0x8")
+cpp_quote("#define TASK_MAY 0x10")
+cpp_quote("#define TASK_JUNE 0x20")
+cpp_quote("#define TASK_JULY 0x40")
+cpp_quote("#define TASK_AUGUST 0x80")
+cpp_quote("#define TASK_SEPTEMBER 0x100")
+cpp_quote("#define TASK_OCTOBER 0x200")
+cpp_quote("#define TASK_NOVEMBER 0x400")
+cpp_quote("#define TASK_DECEMBER 0x800")
+
+cpp_quote("#define TASK_TRIGGER_FLAG_HAS_END_DATE 0x1")
+cpp_quote("#define TASK_TRIGGER_FLAG_KILL_AT_DURATION_END 0x2")
+cpp_quote("#define TASK_TRIGGER_FLAG_DISABLED 0x4")
+
+[
+    local,
+    object,
+    uuid(148BD528-A2AB-11CE-B11F-00AA00530503),
+    pointer_default(unique)
+]
+interface IEnumWorkItems : IUnknown
+{
+    HRESULT Next(
+            [in]   ULONG celt,
+            [out]  LPWSTR **rgpwszNames,
+            [out]  ULONG *pceltFetched);
+
+    HRESULT Skip(
+            [in]  ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+            [out]  IEnumWorkItems **ppEnumWorkItems);
+}
+
+cpp_quote("#ifndef _HPROPSHEETPAGE_DEFINED")
+typedef struct _PSP *HPROPSHEETPAGE;
+cpp_quote("#define _HPROPSHEETPAGE_DEFINED")
+cpp_quote("#endif")
+
+[
+    local,
+    object,
+    uuid(4086658a-cbbb-11cf-b604-00c04fd8d565),
+    pointer_default(unique)
+]
+interface IProvideTaskPage : IUnknown
+{
+    typedef enum _TASKPAGE {
+        TASKPAGE_TASK       = 0,
+        TASKPAGE_SCHEDULE   = 1,
+        TASKPAGE_SETTINGS   = 2
+    } TASKPAGE;
+
+    HRESULT GetPage(
+            [in]   TASKPAGE tpType,
+            [in]   BOOL fPersistChanges,
+            [out]  HPROPSHEETPAGE *phPage);
+}
+
+[
+    local,
+    object,
+    uuid(148BD52B-A2AB-11CE-B11F-00AA00530503),
+    pointer_default(unique)
+]
+interface ITaskTrigger : IUnknown
+{
+    typedef enum _TASK_TRIGGER_TYPE {
+        TASK_TIME_TRIGGER_ONCE              = 0,
+        TASK_TIME_TRIGGER_DAILY             = 1,
+        TASK_TIME_TRIGGER_WEEKLY            = 2,
+        TASK_TIME_TRIGGER_MONTHLYDATE       = 3,
+        TASK_TIME_TRIGGER_MONTHLYDOW        = 4,
+        TASK_EVENT_TRIGGER_ON_IDLE          = 5,
+        TASK_EVENT_TRIGGER_AT_SYSTEMSTART   = 6,
+        TASK_EVENT_TRIGGER_AT_LOGON         = 7
+    } TASK_TRIGGER_TYPE, *PTASK_TRIGGER_TYPE;
+
+    typedef struct _DAILY {
+        WORD DaysInterval;
+    } DAILY;
+
+    typedef struct _WEEKLY {
+        WORD WeeksInterval;
+        WORD rgfDaysOfTheWeek;
+    } WEEKLY;
+
+    typedef struct _MONTHLYDATE {
+        DWORD rgfDays;
+        WORD rgfMonths;
+    } MONTHLYDATE;
+
+    typedef struct _MONTHLYDOW {
+        WORD wWhichWeek;
+        WORD rgfDaysOfTheWeek;
+        WORD rgfMonths;
+    } MONTHLYDOW;
+
+    typedef union _TRIGGER_TYPE_UNION {
+        DAILY Daily;
+        WEEKLY Weekly;
+        MONTHLYDATE MonthlyDate;
+        MONTHLYDOW MonthlyDOW;
+    } TRIGGER_TYPE_UNION;
+
+    typedef struct _TASK_TRIGGER {
+        WORD cbTriggerSize;
+        WORD Reserved1;
+        WORD wBeginYear;
+        WORD wBeginMonth;
+        WORD wBeginDay;
+        WORD wEndYear;
+        WORD wEndMonth;
+        WORD wEndDay;
+        WORD wStartHour;
+        WORD wStartMinute;
+        DWORD MinutesDuration;
+        DWORD MinutesInterval;
+        DWORD rgFlags;
+        TASK_TRIGGER_TYPE TriggerType;
+        TRIGGER_TYPE_UNION Type;
+        WORD Reserved2;
+        WORD wRandomMinutesInterval;
+    } TASK_TRIGGER, *PTASK_TRIGGER;
+
+    HRESULT SetTrigger(
+            [in]  const PTASK_TRIGGER pTrigger);
+
+    HRESULT GetTrigger(
+            [out]  PTASK_TRIGGER pTrigger);
+
+    HRESULT GetTriggerString(
+            [out]  LPWSTR *ppwszTrigger);
+}
+
+[
+    local,
+    object,
+    uuid(a6b952f0-a4b1-11d0-997d-00aa006887ec),
+    pointer_default(unique)
+]
+interface IScheduledWorkItem : IUnknown
+{
+    HRESULT CreateTrigger(
+            [out]  WORD *piNewTrigger,
+            [out]  ITaskTrigger **ppTrigger);
+
+    HRESULT DeleteTrigger(
+            [in]  WORD iTrigger);
+
+    HRESULT GetTriggerCount(
+            [out]  WORD *plCount);
+
+    HRESULT GetTrigger(
+            [in]   WORD iTrigger,
+            [out]  ITaskTrigger **ppTrigger);
+
+    HRESULT GetTriggerString(
+            [in]   WORD iTrigger,
+            [out]  LPWSTR *ppwszTrigger);
+
+    HRESULT GetRunTimes(
+            [in]       const LPSYSTEMTIME pstBegin,
+            [in]       const LPSYSTEMTIME pstEnd,
+            [in, out]  WORD *pCount,
+            [out]      LPSYSTEMTIME *rgstTaskTimes);
+
+    HRESULT GetNextRunTime(
+            [out]  SYSTEMTIME *pstNextRun);
+
+    HRESULT SetIdleWait(
+            [in]  WORD wIdleMinutes,
+            [in]  WORD wDeadlineMinutes);
+
+    HRESULT GetIdleWait(
+            [out]  WORD *pwIdleMinutes,
+            [out]  WORD *pwDeadlineMinutes);
+
+    HRESULT Run();
+
+    HRESULT Terminate();
+
+    HRESULT EditWorkItem(
+            [in]  HWND hParent,
+            [in]  DWORD dwReserved);
+
+    HRESULT GetMostRecentRunTime(
+            [out]  SYSTEMTIME *pstLastRun);
+
+    HRESULT GetStatus(
+            [out]  HRESULT *phrStatus);
+
+    HRESULT GetExitCode(
+            [out]  DWORD *pdwExitCode);
+
+    HRESULT SetComment(
+            [in]  LPCWSTR pwszComment);
+
+    HRESULT GetComment(
+            [out]  LPWSTR *ppwszComment);
+
+    HRESULT SetCreator(
+            LPCWSTR pwszCreator);
+
+    HRESULT GetCreator(
+            [out]  LPWSTR *ppwszCreator);
+
+    HRESULT SetWorkItemData(
+            [in]  WORD cBytes,
+            [in]  BYTE rgbData[]);
+
+    HRESULT GetWorkItemData(
+            [out]  WORD *pcBytes,
+            [out]  BYTE **ppBytes);
+
+    HRESULT SetErrorRetryCount(
+            WORD wRetryCount);
+
+    HRESULT GetErrorRetryCount(
+            [out]  WORD *pwRetryCount);
+
+    HRESULT SetErrorRetryInterval(
+            WORD wRetryInterval);
+
+    HRESULT GetErrorRetryInterval(
+            [out]  WORD *pwRetryInterval);
+
+    HRESULT SetFlags(
+            DWORD dwFlags);
+
+    HRESULT GetFlags(
+            [out]  DWORD *pdwFlags);
+
+    HRESULT SetAccountInformation(
+            [in]  LPCWSTR pwszAccountName,
+            [in]  LPCWSTR pwszPassword);
+
+    HRESULT GetAccountInformation(
+            [out]  LPWSTR *ppwszAccountName);
+}
+
+[
+    local,
+    object,
+    uuid(148BD524-A2AB-11CE-B11F-00AA00530503),
+    pointer_default(unique)
+]
+interface ITask : IScheduledWorkItem
+{
+    HRESULT SetApplicationName(
+            [in]  LPCWSTR pwszApplicationName);
+
+    HRESULT GetApplicationName(
+            [out]  LPWSTR *ppwszApplicationName);
+
+    HRESULT SetParameters(
+            [in]  LPCWSTR pwszParameters);
+
+    HRESULT GetParameters(
+            [out]  LPWSTR *ppwszParameters);
+
+    HRESULT SetWorkingDirectory(
+            [in]  LPCWSTR pwszWorkingDirectory);
+
+    HRESULT GetWorkingDirectory(
+            [in]  LPWSTR *ppwszWorkingDirectory);
+
+    HRESULT SetPriority(
+            [in]  DWORD dwPriority);
+
+    HRESULT GetPriority(
+            [out]  DWORD *pdwPriority);
+
+    HRESULT SetTaskFlags(
+            [in]  DWORD dwFlags);
+
+    HRESULT GetTaskFlags(
+            [out]  DWORD *pdwFlags);
+
+    HRESULT SetMaxRunTime(
+            [in]  DWORD dwMaxRunTime);
+
+    HRESULT GetMaxRunTime(
+            [out]  DWORD *pdwMaxRunTime);
+}
+
+[
+    local,
+    object,
+    uuid(148BD527-A2AB-11CE-B11F-00AA00530503),
+    pointer_default(unique)
+]
+interface ITaskScheduler : IUnknown
+{
+    HRESULT SetTargetComputer(
+            [in]  LPCWSTR pwszComputer);
+
+    HRESULT GetTargetComputer(
+            [out]  LPWSTR *ppwszComputer);
+
+    HRESULT Enum(
+            [out]  IEnumWorkItems **ppEnumTasks);
+
+    HRESULT Activate(
+            [in]   LPCWSTR pwszName,
+            [in]   REFIID riid,
+            [out]  IUnknown **ppunk);
+
+    HRESULT Delete(
+            [in]  LPCWSTR pwszName);
+
+    HRESULT NewWorkItem(
+            [in]   LPCWSTR pwszTaskName,
+            [in]   REFCLSID rclsid,
+            [in]   REFIID riid,
+            [out]  IUnknown **ppunk);
+
+    HRESULT AddWorkItem(
+            [in]  LPCWSTR pwszTaskName,
+            [in]  IScheduledWorkItem *pWorkItem);
+
+    HRESULT IsOfType(
+            [in]  LPCWSTR pwszName,
+            [in]  REFIID riid);
+}
+
+[
+    uuid(148BD52A-A2AB-11CE-B11F-00AA00530503)
+]
+coclass CTaskScheduler
+{
+    [default] interface ITaskScheduler;
+};
+
+
+[
+    uuid(148BD520-A2AB-11CE-B11F-00AA00530503)
+]
+coclass CTask
+{
+    [default] interface ITask;
+};

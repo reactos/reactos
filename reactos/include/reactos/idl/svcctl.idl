@@ -15,7 +15,6 @@ const unsigned short SC_MAX_COMMENT_LENGTH = 128;
 const unsigned short SC_MAX_ARGUMENT_LENGTH = 1024;
 const unsigned short SC_MAX_ARGUMENTS = 1024;
 
-typedef unsigned long SECURITY_INFORMATION;
 typedef [handle] LPSTR SVCCTL_HANDLEA;
 typedef [handle] LPWSTR SVCCTL_HANDLEW;
 typedef [context_handle] ULONG_PTR SC_RPC_HANDLE;
@@ -187,7 +186,7 @@ typedef struct _SC_RPC_CONFIG_INFOA {
         [case(4)] LPSERVICE_FAILURE_ACTIONS_FLAG psfaf;
         [case(5)] LPSERVICE_SID_INFO pssid;
         [case(6)] LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO psrp;
-        [case(7)] LPSERVICE_PRESHUTDOWN_INFO psps;;
+        [case(7)] LPSERVICE_PRESHUTDOWN_INFO psps;
     };
 } SC_RPC_CONFIG_INFOA, *LPSC_RPC_CONFIG_INFOA;
 

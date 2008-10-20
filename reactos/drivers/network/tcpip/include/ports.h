@@ -20,9 +20,9 @@ typedef struct _PORT_SET {
     FAST_MUTEX Mutex;
 } PORT_SET, *PPORT_SET;
 
-VOID PortsStartup( PPORT_SET PortSet,
-		   UINT StartingPort,
-		   UINT PortsToManage );
+NTSTATUS PortsStartup( PPORT_SET PortSet,
+		       UINT StartingPort,
+		       UINT PortsToManage );
 VOID PortsShutdown( PPORT_SET PortSet );
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port );
 BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port );

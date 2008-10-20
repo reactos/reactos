@@ -112,8 +112,13 @@ static HRESULT WINAPI xmlnodemap_GetTypeInfoCount(
     IXMLDOMNamedNodeMap *iface,
     UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnodemap_GetTypeInfo(
@@ -121,8 +126,14 @@ static HRESULT WINAPI xmlnodemap_GetTypeInfo(
     UINT iTInfo, LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMNamedNodeMap_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlnodemap_GetIDsOfNames(
@@ -130,8 +141,24 @@ static HRESULT WINAPI xmlnodemap_GetIDsOfNames(
     REFIID riid, LPOLESTR* rgszNames,
     UINT cNames, LCID lcid, DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMNamedNodeMap_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI xmlnodemap_Invoke(
@@ -140,8 +167,22 @@ static HRESULT WINAPI xmlnodemap_Invoke(
     WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult,
     EXCEPINFO* pExcepInfo, UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMNamedNodeMap_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 xmlChar *xmlChar_from_wchar( LPWSTR str )
@@ -195,8 +236,46 @@ static HRESULT WINAPI xmlnodemap_setNamedItem(
     IXMLDOMNode* newItem,
     IXMLDOMNode** namedItem)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
+    xmlnode *ThisNew = NULL;
+    xmlNodePtr nodeNew;
+    IXMLDOMNode *pAttr = NULL;
+    xmlNodePtr node;
+
+    TRACE("%p %p %p\n", This, newItem, namedItem );
+
+    if(!newItem)
+        return E_INVALIDARG;
+
+    if(namedItem) *namedItem = NULL;
+
+    node = xmlNodePtr_from_domnode( This->node, 0 );
+    if ( !node )
+        return E_FAIL;
+
+    /* Must be an Attribute */
+    IUnknown_QueryInterface(newItem, &IID_IXMLDOMNode, (LPVOID*)&pAttr);
+    if(pAttr)
+    {
+        ThisNew = impl_from_IXMLDOMNode( pAttr );
+
+        if(ThisNew->node->type != XML_ATTRIBUTE_NODE)
+        {
+            IUnknown_Release(pAttr);
+            return E_FAIL;
+        }
+
+        nodeNew = xmlAddChild(node, ThisNew->node);
+
+        if(namedItem)
+            *namedItem = create_node( nodeNew );
+
+        IUnknown_Release(pAttr);
+
+        return S_OK;
+    }
+
+    return E_INVALIDARG;
 }
 
 static HRESULT WINAPI xmlnodemap_removeNamedItem(

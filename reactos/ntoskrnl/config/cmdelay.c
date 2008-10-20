@@ -54,13 +54,134 @@ VOID
 NTAPI
 CmpDelayCloseWorker(IN PVOID Context)
 {
+    PCM_DELAYED_CLOSE_ENTRY ListEntry;
+    ULONG i, ConvKey;
     PAGED_CODE();
 
     /* Sanity check */
     ASSERT(CmpDelayCloseWorkItemActive);
 
-    /* FIXME: TODO */
-    ASSERT(FALSE);
+    /* Lock the registry */
+    CmpLockRegistry();
+
+    /* Acquire the delayed close table lock */
+    KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+
+    /* Iterate */
+    for (i = 0; i < (CmpDelayedCloseSize >> 2); i++)
+    {
+        /* Break out of the loop if there is nothing to process */
+        if (CmpDelayedCloseElements <= CmpDelayedCloseSize) break;
+
+        /* Sanity check */
+        ASSERT(!IsListEmpty(&CmpDelayedLRUListHead));
+
+        /* Get the entry */
+        ListEntry = CONTAINING_RECORD(CmpDelayedLRUListHead.Blink,
+                                      CM_DELAYED_CLOSE_ENTRY,
+                                      DelayedLRUList);
+
+        /* Save the ConvKey value of the KCB */
+        ConvKey = ListEntry->KeyControlBlock->ConvKey;
+
+        /* Release the delayed close table lock */
+        KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+
+        /* Acquire the KCB lock */
+        CmpAcquireKcbLockExclusiveByKey(ConvKey);
+
+        /* Reacquire the delayed close table lock */
+        KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+
+        /* Get the entry */
+        ListEntry = CONTAINING_RECORD(CmpDelayedLRUListHead.Blink,
+                                      CM_DELAYED_CLOSE_ENTRY,
+                                      DelayedLRUList);
+
+        /* Is the entry we have still the first one? */
+        if (CmpDelayedCloseElements <= CmpDelayedCloseSize)
+        {
+            /* No, someone already inserted an entry there */
+            CmpReleaseKcbLockByKey(ConvKey);
+            break;
+        }
+
+        /* Is it a different entry? */
+        if (ConvKey != ListEntry->KeyControlBlock->ConvKey)
+        {
+            /* Release the delayed close table lock */
+            KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+
+            /* Release the KCB lock */
+            CmpReleaseKcbLockByKey(ConvKey);
+
+            /* Reacquire the delayed close table lock */
+            KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+
+            /* Iterate again */
+            continue;
+        }
+
+        /* Remove it from the end of the list */
+        ListEntry =
+            (PCM_DELAYED_CLOSE_ENTRY)RemoveTailList(&CmpDelayedLRUListHead);
+
+        /* Get the containing entry */
+        ListEntry = CONTAINING_RECORD(ListEntry,
+                                      CM_DELAYED_CLOSE_ENTRY,
+                                      DelayedLRUList);
+
+        /* Process the entry */
+        if ((ListEntry->KeyControlBlock->RefCount) ||
+            (ListEntry->KeyControlBlock->DelayedCloseIndex))
+        {
+            /* Add it to the beginning of the list */
+            InsertHeadList(&CmpDelayedLRUListHead, &ListEntry->DelayedLRUList);
+
+            /* Release the delayed close table lock */
+            KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+        }
+        else
+        {
+            /* Release the delayed close table lock */
+            KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+
+            /* Zero out the DelayCloseEntry pointer */
+            ListEntry->KeyControlBlock->DelayCloseEntry = NULL;
+
+            /* Cleanup the KCB cache */
+            CmpCleanUpKcbCacheWithLock(ListEntry->KeyControlBlock, FALSE);
+
+            /* Free the delay item */
+            CmpFreeDelayItem(ListEntry);
+
+            /* Decrement delayed close elements count */
+            InterlockedDecrement((PLONG)&CmpDelayedCloseElements);
+        }
+
+        /* Release the KCB lock */
+        CmpReleaseKcbLockByKey(ConvKey);
+
+        /* Reacquire the delayed close table lock */
+        KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+    }
+
+    if (CmpDelayedCloseElements <= CmpDelayedCloseSize)
+    {
+        /* We're not active anymore */
+        CmpDelayCloseWorkItemActive = FALSE;
+    }
+    else
+    {
+        /* We didn't process all things, so reschedule for the next time */
+        CmpArmDelayedCloseTimer();
+    }
+
+    /* Release the delayed close table lock */
+    KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+
+    /* Unlock the registry */
+    CmpUnlockRegistry();
 }
 
 VOID

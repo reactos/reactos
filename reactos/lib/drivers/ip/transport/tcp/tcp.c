@@ -455,7 +455,11 @@ NTSTATUS TCPStartup(VOID)
 	return Status;
     }
 
-    PortsStartup( &TCPPorts, 1, 0xfffe );
+    Status = PortsStartup( &TCPPorts, 1, 0xfffe );
+    if( !NT_SUCCESS(Status) ) {
+	TCPMemShutdown();
+	return Status;
+    }
 
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();

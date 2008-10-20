@@ -783,7 +783,7 @@ NdisRegisterProtocol(
     RtlInitUnicodeString(&ValueName, L"Bind");
 
     NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, NULL, 0, &ResultLength);
-    if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL)
+    if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL && NtStatus != STATUS_SUCCESS)
       {
         NDIS_DbgPrint(MID_TRACE, ("Unable to query the Bind value for size\n"));
         ZwClose(DriverKeyHandle);
@@ -805,10 +805,11 @@ NdisRegisterProtocol(
     NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, KeyInformation,
         sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, &ResultLength);
 
+    ZwClose(DriverKeyHandle);
+
     if(!NT_SUCCESS(NtStatus))
       {
         NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value\n"));
-        ZwClose(DriverKeyHandle);
         ExFreePool(KeyInformation);
         ExFreePool(Protocol);
         *Status = NDIS_STATUS_FAILURE;
@@ -893,7 +894,8 @@ NdisRegisterProtocol(
        */
     }
 
-  *Status             = NDIS_STATUS_SUCCESS;
+  ExFreePool(KeyInformation);
+  *Status = NDIS_STATUS_SUCCESS;
 }
 
 

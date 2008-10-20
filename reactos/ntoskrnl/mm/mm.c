@@ -22,6 +22,8 @@ ULONG MmReadClusterSize;
 
 MM_STATS MmStats;
 
+PMM_AVL_TABLE MmKernelAddressSpace;
+
 /* FUNCTIONS ****************************************************************/
 
 VOID

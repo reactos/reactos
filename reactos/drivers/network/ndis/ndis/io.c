@@ -811,7 +811,7 @@ NdisMRegisterInterrupt(
       return NDIS_STATUS_RESOURCE_CONFLICT;
     }
 
-  NDIS_DbgPrint(MIN_TRACE, ("Function failed\n"));
+  NDIS_DbgPrint(MIN_TRACE, ("Function failed. Status (0x%X).\n", Status));
   return NDIS_STATUS_FAILURE;
 }
 

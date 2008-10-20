@@ -94,15 +94,26 @@ static ULONG WINAPI schema_cache_Release( IXMLDOMSchemaCollection *iface )
 
 static HRESULT WINAPI schema_cache_GetTypeInfoCount( IXMLDOMSchemaCollection *iface, UINT* pctinfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    schema_t *This = impl_from_IXMLDOMSchemaCollection( iface );
+
+    TRACE("(%p)->(%p)\n", This, pctinfo);
+
+    *pctinfo = 1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI schema_cache_GetTypeInfo( IXMLDOMSchemaCollection *iface,
                                                 UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    schema_t *This = impl_from_IXMLDOMSchemaCollection( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+
+    hr = get_typeinfo(IXMLDOMSchemaCollection_tid, ppTInfo);
+
+    return hr;
 }
 
 static HRESULT WINAPI schema_cache_GetIDsOfNames( IXMLDOMSchemaCollection *iface,
@@ -112,8 +123,24 @@ static HRESULT WINAPI schema_cache_GetIDsOfNames( IXMLDOMSchemaCollection *iface
                                                   LCID lcid,
                                                   DISPID* rgDispId )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    schema_t *This = impl_from_IXMLDOMSchemaCollection( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+          lcid, rgDispId);
+
+    if(!rgszNames || cNames == 0 || !rgDispId)
+        return E_INVALIDARG;
+
+    hr = get_typeinfo(IXMLDOMSchemaCollection_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI schema_cache_Invoke( IXMLDOMSchemaCollection *iface,
@@ -126,8 +153,22 @@ static HRESULT WINAPI schema_cache_Invoke( IXMLDOMSchemaCollection *iface,
                                            EXCEPINFO* pExcepInfo,
                                            UINT* puArgErr )
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    schema_t *This = impl_from_IXMLDOMSchemaCollection( iface );
+    ITypeInfo *typeinfo;
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    hr = get_typeinfo(IXMLDOMSchemaCollection_tid, &typeinfo);
+    if(SUCCEEDED(hr))
+    {
+        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
+                pVarResult, pExcepInfo, puArgErr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI schema_cache_add( IXMLDOMSchemaCollection *iface, BSTR uri, VARIANT var )

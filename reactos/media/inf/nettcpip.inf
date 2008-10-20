@@ -55,7 +55,7 @@ AddReg = tcpip_AddReg
 HKR,"Parameters","DataBasePath",0x00010000,"DataBasePath"
 HKR,"Parameters","Domain",0x00010000,""
 HKR,"Parameters","Hostname",0x00010000,"ROSHost"
-HKR,"Parameters","NameServer",0x00010000,"0.0.0.0"
+HKR,"Parameters","NameServer",0x00010000,""
 HKR,"Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
 HKR,"Parameters","SearchList",0x00010000,""

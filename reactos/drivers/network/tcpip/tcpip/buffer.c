@@ -319,11 +319,11 @@ NDIS_STATUS PrependPacket( PNDIS_PACKET Packet, PCHAR Data, UINT Length,
 
     if( Copy ) {
 	NewBuf = ExAllocatePool( NonPagedPool, Length );
-	if( !NewBuf ) return STATUS_NO_MEMORY;
+	if( !NewBuf ) return NDIS_STATUS_RESOURCES;
 	RtlCopyMemory( NewBuf, Data, Length );
     } else NewBuf = Data;
 
-    NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, Data, Length );
+    NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewBuf, Length );
     if( Status != NDIS_STATUS_SUCCESS ) return Status;
 
     NdisChainBufferAtFront( Packet, Buffer );
@@ -351,7 +351,7 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     PCHAR NewData;
 
     NewData = ExAllocatePool( NonPagedPool, Len );
-    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX
+    if( !NewData ) return NDIS_STATUS_RESOURCES;
     TrackWithTag(EXALLOC_TAG, NewData, File, Line);
 
     if( Data ) RtlCopyMemory(NewData, Data, Len);

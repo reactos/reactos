@@ -55,7 +55,7 @@ int _tmain(int argc, TCHAR ** argv)
 					strcpy(test, "\n\nRunning ");
 					strcat(test, cmd);
 					OutputDebugStringA(test);
-					pPipe2 = _tpopen(cmd, "r");
+					pPipe2 = _popen(cmd, "r");
 					if (pPipe2 != NULL)
 					{
 						while(fgets(psBuffer2, 128, pPipe2))

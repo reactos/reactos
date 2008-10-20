@@ -35,6 +35,8 @@
 #include <netcon.h>
 #include <docobj.h>
 #include <netcfgx.h>
+#include <netcfgn.h>
+#include <prsht.h>
 
 
 #include "wine/debug.h"

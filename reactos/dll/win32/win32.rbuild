@@ -154,6 +154,9 @@
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
 </directory>
+<directory name="mscoree">
+	<xi:include href="mscoree/mscoree.rbuild" />
+</directory>
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
 </directory>
@@ -165,6 +168,9 @@
 </directory>
 <directory name="msimg32">
 	<xi:include href="msimg32/msimg32.rbuild" />
+</directory>
+<directory name="mstask">
+	<xi:include href="mstask/mstask.rbuild" />
 </directory>
 <directory name="msvcrt">
 	<xi:include href="msvcrt/msvcrt.rbuild" />
@@ -246,6 +252,9 @@
 </directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi.rbuild" />
+</directory>
+<directory name="pstorec">
+	<xi:include href="pstorec/pstorec.rbuild" />
 </directory>
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />

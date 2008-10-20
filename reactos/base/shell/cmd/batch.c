@@ -421,6 +421,7 @@ LPTSTR ReadBatchLine ()
 				}
 			}
 
+			*dp++ = _T('\n');
 			*dp = _T('\0');
 
 			return textline;

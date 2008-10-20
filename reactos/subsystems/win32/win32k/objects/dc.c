@@ -558,8 +558,8 @@ IntPrepareDriver()
       if (PrimarySurface.pEDDgpl)
       {
           RtlZeroMemory( PrimarySurface.pEDDgpl ,sizeof(EDD_DIRECTDRAW_GLOBAL));
+          ret = TRUE;
       }
-      ret = TRUE;
       goto cleanup;
    }
 
@@ -963,6 +963,11 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
   { // This is a cheesy way to do this.
       PDC dc = DC_LockDc ( hDC );
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+      if (!defaultDCstate)
+      {
+          DC_UnlockDc( dc );
+          return NULL;
+      }
       RtlZeroMemory(defaultDCstate, sizeof(DC));
       IntGdiCopyToSaveState(dc, defaultDCstate);
       DC_UnlockDc( dc );
@@ -3410,14 +3415,14 @@ IntChangeDisplaySettings(
 
     InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
       OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
+    Status = ZwOpenKey(&DevInstRegKey, KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
       DPRINT1("Unable to open registry key %wZ (Status 0x%08lx)\n", &RegistryKey, Status);
-      ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+      ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
       return DISP_CHANGE_FAILED;
     }
-    ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+    ExFreePoolWithTag(RegistryKey.Buffer, TAG_RTLREGISTRY);
 
     /* Update needed fields */
     if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)

@@ -1341,11 +1341,11 @@ CmpInitializeHiveList(IN USHORT Flag)
             }
             
             /* Check if we had to allocate a new hive */
-			if (CmpMachineHiveList[i].Allocate)
+            if (CmpMachineHiveList[i].Allocate)
             {
                 /* Sync the new hive */
-				//HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
-			}   
+                //HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
+            }
         }
         
         /* Check if we created a new hive */

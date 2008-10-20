@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-VOID PortsStartup( PPORT_SET PortSet,
+NTSTATUS PortsStartup( PPORT_SET PortSet,
 		   UINT StartingPort,
 		   UINT PortsToManage ) {
     PortSet->StartingPort = StartingPort;
@@ -19,11 +19,13 @@ VOID PortsStartup( PPORT_SET PortSet,
                                  PortSet->PortsToOversee - 1;
     PortSet->ProtoBitBuffer =
 	PoolAllocateBuffer( (PortSet->PortsToOversee + 7) / 8 );
+    if(!PortSet->ProtoBitBuffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlInitializeBitMap( &PortSet->ProtoBitmap,
 			 PortSet->ProtoBitBuffer,
 			 PortSet->PortsToOversee );
     RtlClearAllBits( &PortSet->ProtoBitmap );
     ExInitializeFastMutex( &PortSet->Mutex );
+    return STATUS_SUCCESS;
 }
 
 VOID PortsShutdown( PPORT_SET PortSet ) {

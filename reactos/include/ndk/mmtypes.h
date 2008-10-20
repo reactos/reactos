@@ -692,7 +692,7 @@ typedef struct _MMSUPPORT_FLAGS
     ULONG TrimHard:1;
     ULONG MaximumWorkingSetHard:1;
     ULONG ForceTrim:1;
-    ULONG MinimumworkingSetHard:1;
+    ULONG MinimumWorkingSetHard:1;
     ULONG Available0:1;
     ULONG MemoryPriority:8;
     ULONG GrowWsleHash:1;

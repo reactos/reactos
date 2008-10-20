@@ -275,10 +275,12 @@ Signature = "$ReactOS$"
 ;dll\win32\mpr\mpr.dll                               1
 ;dll\win32\msacm32\msacm32.dll                       1
 ;dll\win32\msafd\msafd.dll                           1
+;dll\win32\mscoree\mscoree.dll                       1
 ;dll\win32\msgina\msgina.dll                         1
 ;dll\win32\mshtml\mshtml.dll                         1
 ;dll\win32\msi\msi.dll                               1
 ;dll\win32\msimg32\msimg32.dll                       1
+;dll\win32\mstask\mstask.dll                         1
 ;dll\win32\msvcrt\msvcrt.dll                         1
 ;dll\win32\msvcrt20\msvcrt20.dll                     1
 ;dll\win32\msvcrt40\msvcrt40.dll                     1
@@ -294,6 +296,7 @@ Signature = "$ReactOS$"
 ;dll\win32\ntdsapi\ntdsapi.dll                       1
 ;dll\win32\ntmarta\ntmarta.dll                       1
 ;dll\win32\objsel\objsel.dll                         1
+;dll\win32\odbc32\odbc32.dll                         1
 ;dll\win32\odbccp32\odbccp32.dll                     1
 ;dll\win32\ole32\ole32.dll                           1
 ;dll\win32\oleacc\oleacc.dll                         1
@@ -305,6 +308,7 @@ Signature = "$ReactOS$"
 ;dll\win32\powrprof\powrprof.dll                     1
 ;dll\win32\printui\printui.dll                       1
 ;dll\win32\psapi\psapi.dll                           1
+;dll\win32\pstorec\pstorec.dll                       1
 ;dll\win32\rasapi32\rasapi32.dll                     1
 ;dll\win32\rasdlg\rasdlg.dll                         1
 ;dll\win32\rasman\rasman.dll                         1
@@ -603,6 +607,7 @@ tools\dbgprint\dbgprint.exe                         7   optional
 ;modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
 ;modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
 ;modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
+;modules\rosapps\applications\sysutils\dosfsck\dosfsck.exe                                       1   optional
 ;modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
 ;modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
 ;modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
@@ -675,6 +680,7 @@ tools\dbgprint\dbgprint.exe                         7   optional
 ;modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
 ;modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
 ;modules\rostests\winetests\version\version_winetest.exe                    7   optional
+;modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
 ;modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
 ;modules\wallpaper\lake.bmp                                                 4   optional
 
