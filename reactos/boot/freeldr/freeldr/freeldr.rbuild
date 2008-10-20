@@ -11,7 +11,7 @@
 			<library>freeldr_main</library>
 			<library>rossym</library>
 			<library>cmlib</library>
-			<library>rtl_kmode</library>
+			<library>rtl</library>
 			<library>libcntpr</library>
 			<linkerflag>-static</linkerflag>
 			<linkerflag>-lgcc</linkerflag>
