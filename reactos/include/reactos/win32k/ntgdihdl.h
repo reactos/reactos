@@ -171,9 +171,12 @@
 /* DC_ATTR LCD Flags */
 #define LDC_LDC           0x00000001 // (init) local DC other than a normal DC
 #define LDC_EMFLDC        0x00000002 // Enhance Meta File local DC
+#define LDC_SAPCALLBACK   0x00000020
 #define LDC_INIT_DOCUMENT 0x00000040
 #define LDC_INIT_PAGE     0x00000080
+#define LDC_CLOCKWISE     0x00002000
 #define LDC_KILL_DOCUMENT 0x00010000
+#define LDC_DEVCAPS       0x02000000
 
 /* DC_ATTR Xform Flags */
 #define METAFILE_TO_WORLD_IDENTITY          0x00000001
@@ -244,10 +247,13 @@ typedef struct _LDC
     ULONG Flags;
     INT iType;
     PVOID pvEmfDC;        /* Pointer to ENHMETAFILE structure */
+    LPWSTR pwszPort;
     ABORTPROC pAbortProc; /* AbortProc for Printing */
+    DWORD CallBackTick;
     HANDLE hPrinter;      /* Local or Remote Printer driver */
-    INT iInitPage;        /* Start/Stop */
-    INT iInitDocument;
+    DEVCAPS DevCaps;
+    HBRUSH BrushColor;
+    HPEN PenColor;
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR
