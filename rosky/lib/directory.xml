@@ -1,8 +1,0 @@
-<group>
-	<directory name="libsky">
-		<xi:include href="libsky/libsky.xml" />
-	</directory>
-	<directory name="libskygi">
-		<xi:include href="libskygi/libskygi.xml" />
-	</directory>
-</group>
