@@ -43,13 +43,13 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 }
 
 
-
+/*
 static ULONG
 ProtectToPTE(ULONG flProtect)
 {
-
+    return 0;
 }
-
+*/
 NTSTATUS
 NTAPI
 Mmi386ReleaseMmInfo(PEPROCESS Process)
@@ -323,7 +323,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
         if (Index != VAtoPXI(PXE_BASE))
         {
             (void)InterlockedCompareExchangePointer((PVOID*)&Pde[Index],
-                                                    MmGlobalKernelPageDirectory[Index],
+                                                    (PVOID)MmGlobalKernelPageDirectory[Index],
                                                     0);
         }
     }
