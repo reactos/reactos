@@ -405,6 +405,9 @@ NTSTATUS DispTdiConnect(
       DispDataRequestComplete,
       Irp );
 
+  if (Status == STATUS_PENDING)
+      IoMarkIrpPending(Irp);
+
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
   return Status;
@@ -587,6 +590,9 @@ NTSTATUS DispTdiListen(
 	    DispDataRequestComplete,
 	    Irp );
   }
+
+  if (Status == STATUS_PENDING)
+      IoMarkIrpPending(Irp);
 
   TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
