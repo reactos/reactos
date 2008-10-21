@@ -1078,7 +1078,7 @@ NtUserCreateWindowEx(
   HINSTANCE hInstance,
   LPVOID lpParam,
   DWORD dwFlags,
-  BOOL InfoActive);
+  PVOID acbiBuffer);
 #endif
 
 HWINSTA
