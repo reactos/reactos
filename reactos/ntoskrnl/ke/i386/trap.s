@@ -2455,9 +2455,20 @@ CheckQuantum:
     mov edi, [ebx+KPCR_CURRENT_THREAD]
 
 #ifdef CONFIG_SMP
-    #error SMP Interrupt not handled!
+    /* Raise to synch level */
+    call _KeRaiseIrqlToSynchLevel@0
+
+    /* Set context swap busy */
+    mov byte ptr [edi+KTHREAD_SWAP_BUSY], 1
+
+    /* Acquire the PRCB Lock */
+    lock bts dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    jnb GetNext
+    lea ecx, [ebx+KPCR_PRCB_PRCB_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
 #endif
 
+GetNext:
     /* Get the next thread and clear it */
     mov esi, [ebx+KPCR_PRCB_NEXT_THREAD]
     and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
@@ -2475,6 +2486,12 @@ CheckQuantum:
     /* Set APC_LEVEL and do the swap */
     mov cl, APC_LEVEL
     call @KiSwapContextInternal@0
+
+#ifdef CONFIG_SMP
+    /* Lower IRQL back to dispatch */
+    mov cl, DISPATCH_LEVEL
+    call @KfLowerIrql@4
+#endif
 
     /* Restore registers */
     mov ebp, [esp+0]
@@ -2617,7 +2634,7 @@ SpuriousInt:
 
 #ifdef CONFIG_SMP
 IntSpin:
-    SPIN_ON_LOCK esi, GetIntLock
+    SPIN_ON_LOCK(esi, GetIntLock)
 #endif
 
 IsrTimeout:
