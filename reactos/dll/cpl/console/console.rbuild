@@ -1,5 +1,5 @@
 <module name="console" type="win32dll" baseaddress="${BASEADDRESS_CONSOLE}" installbase="system32" installname="console.dll" unicode="yes">
-	<importlibrary definition="console.spec.def" />
+	<importlibrary definition="console.spec" />
 	<include base="console">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -13,6 +13,5 @@
 	<file>layout.c</file>
 	<file>colors.c</file>
 	<file>console.rc</file>
-	<file>console.spec</file>
 	<pch>console.h</pch>
 </module>

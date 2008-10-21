@@ -3,7 +3,7 @@
 <group>
 <module name="mstask" type="win32dll" baseaddress="${BASEADDRESS_MSTASK}" installbase="system32" installname="mstask.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="mstask.spec.def" />
+	<importlibrary definition="mstask.spec" />
 	<include base="mstask">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

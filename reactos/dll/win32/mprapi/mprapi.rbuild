@@ -1,5 +1,5 @@
 <module name="mprapi" type="win32dll" baseaddress="${BASEADDRESS_MPRAPI}" installbase="system32" installname="mprapi.dll">
-	<importlibrary definition="mprapi.spec.def" />
+	<importlibrary definition="mprapi.spec" />
 	<include base="mprapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

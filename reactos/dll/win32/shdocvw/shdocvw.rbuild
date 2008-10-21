@@ -1,6 +1,6 @@
 <module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="shdocvw.spec.def" />
+	<importlibrary definition="shdocvw.spec" />
 	<include base="shdocvw">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>

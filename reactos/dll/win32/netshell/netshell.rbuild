@@ -1,6 +1,6 @@
 <module name="netshell" type="win32dll" baseaddress="${BASEADDRESS_NETSHELL}" installbase="system32" installname="netshell.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="netshell.spec.def" />
+	<importlibrary definition="netshell.spec" />
 	<include base="netshell">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>

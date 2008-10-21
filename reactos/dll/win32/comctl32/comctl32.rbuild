@@ -3,7 +3,7 @@
 <group>
 <module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}" installbase="system32" installname="comctl32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllInstall" />
-	<importlibrary definition="comctl32.spec.def" />
+	<importlibrary definition="comctl32.spec" />
 	<include base="comctl32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

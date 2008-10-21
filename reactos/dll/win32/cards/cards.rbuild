@@ -1,5 +1,5 @@
 <module name="cards" type="win32dll" baseaddress="${BASEADDRESS_CARDS}" installbase="system32" installname="cards.dll" unicode="yes">
-	<importlibrary definition="cards.spec.def" />
+	<importlibrary definition="cards.spec" />
 	<include base="cards">.</include>
 
 	<!-- Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN -->

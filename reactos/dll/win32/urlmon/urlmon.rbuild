@@ -3,7 +3,7 @@
 <group>
 <module name="urlmon" type="win32dll" baseaddress="${BASEADDRESS_URLMON}" installbase="system32" installname="urlmon.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="urlmon.spec.def" />
+	<importlibrary definition="urlmon.spec" />
 	<include base="urlmon">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

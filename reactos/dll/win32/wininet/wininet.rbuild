@@ -3,7 +3,7 @@
 <group>
 <module name="wininet" type="win32dll" baseaddress="${BASEADDRESS_WININET}" installbase="system32" installname="wininet.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllInstall" />
-	<importlibrary definition="wininet.spec.def" />
+	<importlibrary definition="wininet.spec" />
 	<include base="wininet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

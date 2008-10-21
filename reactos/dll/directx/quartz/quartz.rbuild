@@ -3,7 +3,7 @@
 <group>
 <module name="quartz" type="win32dll" baseaddress="${BASEADDRESS_QUARTZ}" installbase="system32" installname="quartz.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="quartz.spec.def" />
+	<importlibrary definition="quartz.spec" />
 	<include base="quartz">.</include>
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>

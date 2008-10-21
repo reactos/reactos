@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="devenum" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" unicode="yes">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="devenum.spec.def" />
+	<importlibrary definition="devenum.spec" />
 	<include base="devenum">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>
@@ -25,5 +25,4 @@
 	<file>factory.c</file>
 	<file>mediacatenum.c</file>
 	<file>parsedisplayname.c</file>
-	<file>devenum.spec</file>
 </module>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl" unicode="yes">
-	<importlibrary definition="mmsys.spec.def" />
+	<importlibrary definition="mmsys.spec" />
 	<include base="mmsys">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
@@ -21,5 +21,4 @@
 	<file>audio.c</file>
 	<file>voice.c</file>
 	<file>mmsys.rc</file>
-	<file>mmsys.spec</file>
 </module>

@@ -1,5 +1,5 @@
 <module name="dhcpcsvc" type="win32dll" baseaddress="${BASEADDRESS_DHCPCSVC}" installbase="system32" installname="dhcpcsvc.dll">
-	<importlibrary definition="dhcpcsvc.spec.def" />
+	<importlibrary definition="dhcpcsvc.spec" />
 	<include base="dhcpcsvc">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT=0x0500" />

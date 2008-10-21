@@ -1,6 +1,6 @@
 <module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="rpcrt4.spec.def" />
+	<importlibrary definition="rpcrt4.spec" />
 	<include base="rpcrt4">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__USE_W32API" />

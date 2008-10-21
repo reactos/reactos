@@ -4,7 +4,7 @@
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>
-	<importlibrary definition="ks.spec.def" />
+	<importlibrary definition="ks.spec" />
 	<library>ntoskrnl</library>
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />

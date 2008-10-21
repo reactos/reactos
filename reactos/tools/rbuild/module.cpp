@@ -1713,12 +1713,6 @@ ImportLibrary::ImportLibrary ( const Project& project,
 			                                       "root",
 			                                       att->value );
 	}
-	else
-	{
-		size_t index = definition->value.rfind ( ".spec.def" );
-		if ( index != string::npos )
-			directory = IntermediateDirectory;
-	}
 
 	if ( dllname )
 		this->dllname = dllname->value;

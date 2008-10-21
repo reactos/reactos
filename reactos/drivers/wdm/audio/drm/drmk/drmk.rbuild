@@ -4,7 +4,7 @@
 	<include base="drmk">.</include>
 	<include base="drmk">..</include>
 	<include base="drmk">../include</include>
-	<importlibrary definition="drmk.spec.def" />
+	<importlibrary definition="drmk.spec" />
 	<library>ntoskrnl</library>
 	<define name="BUILDING_DRMK" />
 	<file>stubs.cpp</file>

@@ -148,6 +148,8 @@ private:
 	                                 const FileLocation *file ) const;
 	void GetSpecObjectDependencies ( std::vector<FileLocation>& dependencies,
 	                                 const FileLocation *file ) const;
+	void GetSpecImplibDependencies ( std::vector<FileLocation>& dependencies,
+	                                 const FileLocation *file ) const;
 	void GetWidlObjectDependencies ( std::vector<FileLocation>& dependencies,
 	                                 const FileLocation *file ) const;
 	void GetDefaultDependencies ( string_list& dependencies ) const;

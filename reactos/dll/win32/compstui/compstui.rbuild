@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="compstui" type="win32dll" baseaddress="${BASEADDRESS_COMPSTUI}" installbase="system32" installname="compstui.dll" allowwarnings="true">
-	<importlibrary definition="compstui.spec.def" />
+	<importlibrary definition="compstui.spec" />
 	<include base="compstui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

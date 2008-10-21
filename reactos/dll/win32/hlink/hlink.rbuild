@@ -3,7 +3,7 @@
 <group>
 <module name="hlink" type="win32dll" baseaddress="${BASEADDRESS_HLINK}" installbase="system32" installname="hlink.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="hlink.spec.def" />
+	<importlibrary definition="hlink.spec" />
 	<include base="hlink">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

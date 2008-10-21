@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
-	<importlibrary definition="tcpip.spec.def" />
+	<importlibrary definition="tcpip.spec" />
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>
 	<define name="NDIS40" />

@@ -3,7 +3,7 @@
 <group>
 <module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="oleaut32.spec.def" />
+	<importlibrary definition="oleaut32.spec" />
 	<include base="oleaut32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

@@ -3,7 +3,7 @@
 <group>
 <module name="hhctrl" type="win32ocx" baseaddress="${BASEADDRESS_HHCTRL}" installbase="system32" installname="hhctrl.ocx" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="hhctrl.ocx.spec.def" />
+	<importlibrary definition="hhctrl.ocx.spec" />
 	<include base="hhctrl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS" root="intermediate">include/reactos</include>

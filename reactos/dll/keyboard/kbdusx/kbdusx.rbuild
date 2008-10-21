@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdusx" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdusx.dll" allowwarnings="true">
-	<importlibrary definition="kbdusx.spec.def" />
+	<importlibrary definition="kbdusx.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdusx.c</file>
 	<file>kbdusx.rc</file>
-	<file>kbdusx.spec</file>
 </module>

@@ -1,5 +1,5 @@
 <module name="fontext" type="win32dll" baseaddress="${BASEADDRESS_FONTEXT}" installbase="system32" installname="fontext.dll" unicode="yes">
-	<importlibrary definition="fontext.spec.def" />
+	<importlibrary definition="fontext.spec" />
 	<include base="fontext">.</include>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>

@@ -3,7 +3,7 @@
 <group>
 <module name="rsabase" type="win32dll" baseaddress="${BASEADDRESS_RSABASE}" installbase="system32" installname="rsabase.dll" allowwarnings="true" entrypoint="0">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="rsabase.spec.def" />
+	<importlibrary definition="rsabase.spec" />
 	<include base="rsabase">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

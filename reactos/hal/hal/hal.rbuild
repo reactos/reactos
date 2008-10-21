@@ -14,7 +14,7 @@
     </if>
     <if property="ARCH" value="i386">
 	<module name="hal" type="kernelmodedll">
-		<importlibrary definition="hal.spec.def" />
+		<importlibrary definition="hal.spec" />
 		<include base="ntoskrnl">include</include>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />

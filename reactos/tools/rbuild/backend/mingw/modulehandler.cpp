@@ -310,6 +310,7 @@ void
 MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
                                         const FileLocation& destination )
 {
+	fprintf ( fMakefile, "# OUTPUT COPY COMMAND\n" );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
@@ -408,7 +409,7 @@ MingwModuleHandler::GetObjectFilename (
 	else if ( extension == ".mc" || extension == ".MC" )
 		newExtension = ".rc";
 	else if ( extension == ".spec" || extension == ".SPEC" )
-		newExtension = ".stubs.o";
+		newExtension = "_" + module.name + ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( module.type == RpcServer )
@@ -460,6 +461,7 @@ MingwModuleHandler::GenerateCleanTarget () const
 	if ( module.type == Alias )
 		return;
 
+	fprintf ( fMakefile, "# CLEAN TARGET\n" );
 	fprintf ( fMakefile,
 	          ".PHONY: %s_clean\n",
 	          module.name.c_str() );
@@ -501,6 +503,7 @@ MingwModuleHandler::GenerateInstallTarget () const
 {
 	if ( !module.install )
 		return;
+	fprintf ( fMakefile, "# INSTALL TARGET\n" );
 	fprintf ( fMakefile, ".PHONY: %s_install\n", module.name.c_str() );
 	fprintf ( fMakefile,
 	          "%s_install: %s\n",
@@ -511,6 +514,7 @@ MingwModuleHandler::GenerateInstallTarget () const
 void
 MingwModuleHandler::GenerateDependsTarget () const
 {
+	fprintf ( fMakefile, "# DEPENDS TARGET\n" );
 	fprintf ( fMakefile,
 	          ".PHONY: %s_depends\n",
 	          module.name.c_str() );
@@ -783,6 +787,7 @@ MingwModuleHandler::GenerateMacros (
 	const vector<LinkerFlag*>* linkerFlags,
 	set<const Define *>& used_defs )
 {
+	fprintf ( fMakefile, "# MACROS\n" );
 	GenerateMacro ( assignmentOperation,
 	                cflagsMacro,
 	                data,
@@ -841,6 +846,7 @@ MingwModuleHandler::GenerateSourceMacros (
 {
 	size_t i;
 
+	fprintf ( fMakefile, "# SOURCE MACROS\n" );
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	vector<const FileLocation *> headers;
 	if ( compilationUnits.size () > 0 )
@@ -887,6 +893,7 @@ MingwModuleHandler::GenerateObjectMacros (
 	vector<const FileLocation *> headers;
 	vector<const FileLocation *> mcheaders;
 	vector<const FileLocation *> mcresources;
+	fprintf ( fMakefile, "# OBJECT MACROS\n" );
 	if ( compilationUnits.size () > 0 )
 	{
 		for ( i = 0; i < compilationUnits.size (); i++ )
@@ -1022,7 +1029,7 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	                          module.pch->file->name + ".gch" );
 }
 
-Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: $($(module_name)_OBJS) | $(INTERMEDIATE)$(SEP)$(source_dir)\n",
+Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: $($(module_name)_OBJS) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule arRule2 ( "\t$(ECHO_AR)\n"
@@ -1064,32 +1071,36 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildKMRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
-                       "\t$(ECHO_WINEBLD)\n"
-                       "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
-                       "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c:\n"
+Rule winebuildKMDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+						  "\t$(ECHO_WINEBLD)\n"
+						  "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
+						  "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).spec.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n\n",
+						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def",
+						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildKMRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c:\n"
                        "\t${cp} $(NUL) $@ 1>$(NUL)\n"
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                        "\t$(ECHO_CC)\n"
                        "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
+                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+						"\t$(ECHO_WINEBLD)\n"
+						"\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).spec.def --def -E $(source)\n\n",
+						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def",
+						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildRule (                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).spec.def --def -E $(source)\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
-                     "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec.def",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.c",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).stubs.o",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(source): ${$(module_name)_precondition}\n"
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
@@ -1281,6 +1292,8 @@ MingwModuleHandler::GenerateCommands (
 	size_t i;
 	Rule *customRule = NULL;
 
+	fprintf ( fMakefile, "# COMMANDS\n" );
+
 	for ( i = 0; i < sizeof ( rules ) / sizeof ( rules[0] ); i++ )
 	{
 		if ( rules[i].host != HostDontCare && rules[i].host != ModuleHandlerInformations[module.type].DefaultHost )
@@ -1314,6 +1327,8 @@ MingwModuleHandler::GenerateCommands (
 void
 MingwModuleHandler::GenerateBuildMapCode ( const FileLocation *mapTarget )
 {
+	fprintf ( fMakefile, "# BUILD MAP CODE\n" );
+
 	fprintf ( fMakefile,
 	          "ifeq ($(ROS_BUILDMAP),full)\n" );
 
@@ -1351,6 +1366,8 @@ MingwModuleHandler::GenerateBuildMapCode ( const FileLocation *mapTarget )
 void
 MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 {
+	fprintf ( fMakefile, "# BUILD NO STRIP CODE\n" );
+
 	fprintf ( fMakefile,
 	          "ifeq ($(ROS_BUILDNOSTRIP),yes)\n" );
 
@@ -1427,6 +1444,7 @@ MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 void
 MingwModuleHandler::GenerateRunRsymCode () const
 {
+	fprintf ( fMakefile, "# RUN RSYM CODE\n" );
 	fprintf ( fMakefile,
              "ifneq ($(ROS_GENERATE_RSYM),no)\n" );
 	fprintf ( fMakefile,
@@ -1440,6 +1458,7 @@ MingwModuleHandler::GenerateRunRsymCode () const
 void
 MingwModuleHandler::GenerateRunStripCode () const
 {
+	fprintf ( fMakefile, "# RUN STRIP CODE\n" );
 	fprintf ( fMakefile,
 	          "ifeq ($(ROS_LEAN_AND_MEAN),yes)\n" );
 	fprintf ( fMakefile,
@@ -1461,6 +1480,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 	string linker = "${ld}";
 	string objectsMacro = GetObjectsMacro ( module );
 	string libsMacro = GetLibsMacro ();
+
+	fprintf ( fMakefile, "# LINKER COMMAND\n" );
 
 	string target_macro ( GetTargetMacro ( module ) );
 	string target_folder ( backend->GetFullPath ( *target_file ) );
@@ -1555,6 +1576,7 @@ MingwModuleHandler::GeneratePhonyTarget() const
 	string targetMacro ( GetTargetMacro ( module ) );
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 
+	fprintf ( fMakefile, "# PHONY TARGET\n" );
 	fprintf ( fMakefile,
 	          ".PHONY: %s\n\n",
 	          targetMacro.c_str ());
@@ -1570,6 +1592,8 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 {
 	size_t i;
 	string moduleDependencies;
+
+	fprintf ( fMakefile, "# OBJECT FILE TARGETS\n" );
 
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	for ( i = 0; i < compilationUnits.size (); i++ )
@@ -1606,6 +1630,8 @@ void
 MingwModuleHandler::GenerateObjectFileTargets ()
 {
 	const FileLocation *pchFilename = GetPrecompiledHeaderFilename ();
+
+	fprintf ( fMakefile, "# OBJECT FILE TARGETS\n" );
 
 	if ( pchFilename )
 	{
@@ -1646,10 +1672,17 @@ MingwModuleHandler::GenerateArchiveTarget ()
 	const FileLocation *archiveFilename = GetModuleArchiveFilename ();
 	const FileLocation *definitionFilename = GetDefinitionFilename ();
 
-	arRule1.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
+	fprintf ( fMakefile, "# ARCHIVE TARGET\n" );
 
 	if ( IsStaticLibrary ( module ) && definitionFilename )
 	{
+		arRule1.Execute ( fMakefile,
+						  backend,
+						  module,
+						  archiveFilename,
+						  clean_files,
+						  backend->GetFullName ( *definitionFilename ).c_str () );
+
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib $@%s%s\n",
 		          module.importLibrary->dllname.c_str (),
@@ -1657,6 +1690,8 @@ MingwModuleHandler::GenerateArchiveTarget ()
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
 	}
+	else
+		arRule1.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
 
 	if ( definitionFilename )
 		delete definitionFilename;
@@ -1745,6 +1780,7 @@ MingwModuleHandler::GenerateObjectMacro ()
 void
 MingwModuleHandler::GenerateTargetMacro ()
 {
+	fprintf ( fMakefile, "# TARGET MACRO\n" );
 	fprintf ( fMakefile,
 		"%s := %s\n",
 		GetTargetMacro ( module, false ).c_str (),
@@ -1806,6 +1842,8 @@ MingwModuleHandler::GenerateOtherMacros ()
 {
 	set<const Define *> used_defs;
 
+	fprintf ( fMakefile, "# OTHER MACROS\n" );
+
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
 	windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
@@ -1829,21 +1867,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 			used_defs );
 	}
 
-	vector<FileLocation> s;
-	if ( module.importLibrary )
+	if ( IsWineModule() )
 	{
-		const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
-		for ( size_t i = 0; i < compilationUnits.size (); i++ )
-		{
-			CompilationUnit& compilationUnit = *compilationUnits[i];
-			const FileLocation& sourceFile = compilationUnit.GetFilename ();
-			string extension = GetExtension ( sourceFile );
-			if ( extension == ".spec" || extension == ".SPEC" )
-				GetSpecObjectDependencies ( s, &sourceFile );
-		}
-	}
-	if ( s.size () > 0 )
-	{
+		vector<FileLocation> s;
+		GetSpecImplibDependencies ( s, module.importLibrary->source );
+
 		fprintf (
 			fMakefile,
 			"%s +=",
@@ -1971,6 +1999,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 void
 MingwModuleHandler::GenerateRules ()
 {
+	fprintf ( fMakefile, "# RULES\n" );
 	string targetMacro = GetTargetMacro ( module );
 	//CLEAN_FILE ( targetMacro );
 	CLEAN_FILE ( FileLocation ( SourceDirectory, "", targetMacro ) );
@@ -1997,6 +2026,18 @@ MingwModuleHandler::GenerateRules ()
 		delete ar_target;
 	}
 
+	if ( IsWineModule() )
+	{
+		Rule * defRule;
+
+		if ( module.type == Kernel || module.type == KernelModeDLL || module.type == KernelModeDriver )
+			defRule = &winebuildKMDefRule;
+		else
+			defRule = &winebuildDefRule;
+
+		defRule->Execute ( fMakefile, backend, module, module.importLibrary->source, clean_files );
+	}
+
 	GenerateObjectFileTargets ();
 }
 
@@ -2020,6 +2061,8 @@ MingwModuleHandler::GenerateInvocations () const
 {
 	if ( module.invocations.size () == 0 )
 		return;
+
+	fprintf ( fMakefile, "# INVOCATIONS\n" );
 
 	size_t iend = module.invocations.size ();
 	for ( size_t i = 0; i < iend; i++ )
@@ -2117,6 +2160,7 @@ MingwModuleHandler::GetDefaultDependencies (
 void
 MingwModuleHandler::GeneratePreconditionDependencies ()
 {
+	fprintf ( fMakefile, "# PRECONDITION DEPENDENCIES\n" );
 	string preconditionDependenciesName = GetPreconditionDependenciesName ();
 	string_list dependencies;
 	GetDefaultDependencies ( dependencies );
@@ -2145,7 +2189,7 @@ MingwModuleHandler::IsWineModule () const
 	if ( module.importLibrary == NULL)
 		return false;
 
-	size_t index = module.importLibrary->source->name.rfind ( ".spec.def" );
+	size_t index = module.importLibrary->source->name.rfind ( ".spec" );
 	return ( index != string::npos );
 }
 
@@ -2156,15 +2200,18 @@ MingwModuleHandler::GetDefinitionFilename () const
 	if ( module.importLibrary == NULL )
 		return NULL;
 
-	DirectoryLocation directory;
 	if ( IsWineModule () )
-		directory = IntermediateDirectory;
+	{
+		return new FileLocation ( IntermediateDirectory,
+								  module.importLibrary->source->relative_path,
+								  GetBasename ( module.importLibrary->source->name ) + "_" + module.name + ".spec.def" );
+	}
 	else
-		directory = SourceDirectory;
-
-	return new FileLocation ( directory,
-	                          module.importLibrary->source->relative_path,
-	                          module.importLibrary->source->name );
+	{
+		return new FileLocation ( SourceDirectory,
+								  module.importLibrary->source->relative_path,
+								  module.importLibrary->source->name );
+	}
 }
 
 void
@@ -2179,7 +2226,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		vector<FileLocation> deps;
 		GetDefinitionDependencies ( deps );
 
-		fprintf ( fMakefile, "# IMPORT LIBRARY RULE:\n" );
+		fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
 
 		fprintf ( fMakefile, "%s:",
 		          backend->GetFullName ( *library_target ).c_str () );
@@ -2220,17 +2267,19 @@ MingwModuleHandler::GetSpecObjectDependencies (
 	vector<FileLocation>& dependencies,
 	const FileLocation *file ) const
 {
-	string basename = GetBasename ( file->name );
+	dependencies.push_back ( FileLocation ( IntermediateDirectory,
+											file->relative_path,
+											GetBasename ( file->name ) + "_" + module.name + ".stubs.c" ) );
+}
 
-	FileLocation defDependency ( IntermediateDirectory,
-	                             file->relative_path,
-	                             basename + ".spec.def" );
-	dependencies.push_back ( defDependency );
-
-	FileLocation stubsDependency ( IntermediateDirectory,
-	                               file->relative_path,
-	                             basename + ".stubs.c" );
-	dependencies.push_back ( stubsDependency );
+void
+MingwModuleHandler::GetSpecImplibDependencies (
+	vector<FileLocation>& dependencies,
+	const FileLocation *file ) const
+{
+	dependencies.push_back ( FileLocation ( IntermediateDirectory,
+											file->relative_path,
+											GetBasename ( file->name ) + "_" + module.name + ".spec.def" ) );
 }
 
 void
@@ -2336,6 +2385,8 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	string libsMacro = GetLibsMacro ();
 
 	GenerateRules ();
+
+	fprintf ( fMakefile, "# BUILD TOOL MODULE TARGET\n" );
 
 	string linker;
 	if ( module.cplusplus )
@@ -2844,6 +2895,8 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 
 	GenerateRules ();
 
+	fprintf ( fMakefile, "# BOOT LOADER MODULE TARGET\n" );
+
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),
@@ -2919,6 +2972,8 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	const Module *payload = module.project.LocateModule ( module.payload );
 
 	GenerateRules ();
+
+	fprintf ( fMakefile, "# BOOT PROGRAM MODULE TARGET\n" );
 
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: %s %s %s | %s\n",
@@ -3094,6 +3149,7 @@ MingwIsoModuleHandler::GetCdFiles (
 void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
+	fprintf ( fMakefile, "# ISO MODULE TARGET\n" );
 	string bootcdDirectory = "cd";
 	FileLocation bootcd ( OutputDirectory,
 	                      bootcdDirectory,
@@ -3287,6 +3343,7 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 void
 MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 {
+	fprintf ( fMakefile, "# REGISTRY COMMANDS\n" );
 	FileLocation reactosSystem32ConfigDirectory ( OutputDirectory,
 	                                              livecdDirectory + sSep + "reactos" + sSep + "system32" + sSep + "config",
 	                                              "" );
@@ -3301,6 +3358,7 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 void
 MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 {
+	fprintf ( fMakefile, "# LIVE ISO MODULE TARGET\n" );
 	string livecdDirectory = module.name;
 	FileLocation livecd ( OutputDirectory, livecdDirectory, "" );
 
@@ -3435,6 +3493,7 @@ MingwCabinetModuleHandler::Process ()
 
 	GenerateRules ();
 
+	fprintf ( fMakefile, "# CABINET MODULE TARGET\n" );
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: $(CABMAN_TARGET) | %s\n",
 	          targetMacro.c_str (),
@@ -3466,6 +3525,7 @@ MingwElfExecutableModuleHandler::Process ()
 
 	GenerateRules ();
 
+	fprintf ( fMakefile, "# ELF EXECUTABLE TARGET\n" );
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),

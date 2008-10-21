@@ -3,7 +3,7 @@
 <group>
 <module name="atl" type="win32dll" baseaddress="${BASEADDRESS_ATL}" installbase="system32" installname="atl.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="atl.spec.def" />
+	<importlibrary definition="atl.spec" />
 	<include base="atl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
