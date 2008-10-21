@@ -220,6 +220,7 @@ Author:
 #define KPCR_PRCB_DPC_LAST_COUNT                0xA80
 #define KPCR_PRCB_TIMER_REQUEST                 0xA88
 #define KPCR_PRCB_QUANTUM_END                   0xAA1
+#define KPCR_PRCB_IDLE_SCHEDULE                 0xAA3
 #define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
 #define KPCR_PRCB_POWER_STATE_IDLE_FUNCTION     0xEC0
 
