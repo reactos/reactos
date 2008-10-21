@@ -414,17 +414,29 @@ typedef struct _BROADCASTPARM
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
+typedef struct _WNDMSG
+{
+  DWORD maxMsgs;
+  DWORD abMsgs;
+} WNDMSG, *PWNDMSG;
+
 typedef struct _SHAREDINFO
 {
   PSERVERINFO psi;           // global Server Info
   PVOID       aheList;       // Handle Entry List
   PVOID       pDispInfo;     // global PDISPLAYINFO pointer
   ULONG_PTR   ulSharedDelta; // Heap delta
+  WNDMSG      awmControl[31];
+  WNDMSG      DefWindowMsgs;
+  WNDMSG      DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
 
 typedef struct _USERCONNECT
 {
-  SHAREDINFO  ShareInfo;
+  DWORD      Unknown0;
+  DWORD      Unknown1;
+  DWORD      Unknown2;
+  SHAREDINFO ShareInfo;
 } USERCONNECT, *PUSERCONNECT;
 
 //
