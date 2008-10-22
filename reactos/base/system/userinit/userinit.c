@@ -580,9 +580,9 @@ wWinMain(IN HINSTANCE hInst,
          IN LPWSTR lpszCmdLine,
          IN int nCmdShow)
 {
-    NotifyLogon();
     SetUserSettings();
     StartShell();
+    NotifyLogon();
     return 0;
 }
 
