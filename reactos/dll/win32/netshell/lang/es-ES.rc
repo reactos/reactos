@@ -62,9 +62,29 @@ BEGIN
  PUSHBUTTON "&Detalles...", IDC_DETAILS, 22, 76, 62, 14
 END
 
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Network Connection Details"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+ PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+	IDS_PHYSICAL_ADDRESS        "Physical Address"
+	IDS_IP_ADDRESS              "IP Address"
+	IDS_SUBNET_MASK             "Subnet Mask"
+	IDS_DEF_GATEWAY             "Default Gateway"
+	IDS_DHCP_SERVER             "DHCP Server"
+	IDS_LEASE_OBTAINED          "Lease Obtained"
+	IDS_LEASE_EXPIRES           "Lease Expires"
+	IDS_DNS_SERVERS             "DNS Servers"
+	IDS_WINS_SERVERS            "WINS Servers"
+	IDS_PROPERTY                "Property"
+	IDS_VALUE                   "Value"
 	IDS_NETWORKCONNECTION       "Conexiones de red"
 	IDS_SHV_COLUMN_NAME         "Nombre"
 	IDS_SHV_COLUMN_TYPE         "Tipo"

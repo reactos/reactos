@@ -289,6 +289,199 @@ InitializeLANStatusUiDlg(HWND hwndDlg, LANSTATUSUI_CONTEXT * pContext)
     NcFreeNetconProperties(pProperties);
 }
 
+VOID
+InsertColumnToListView(
+    HWND hDlgCtrl,
+    UINT ResId,
+    UINT SubItem,
+    UINT Size)
+{
+    WCHAR szBuffer[200];
+    LVCOLUMNW lc;
+
+    if (!LoadStringW(netshell_hInstance, ResId, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+        return;
+
+    memset(&lc, 0, sizeof(LV_COLUMN) );
+    lc.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
+    lc.iSubItem   = SubItem;
+    lc.fmt = LVCFMT_FIXED_WIDTH;
+    lc.cx         = Size;
+    lc.cchTextMax = wcslen(szBuffer);
+    lc.pszText    = szBuffer;
+
+    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, SubItem, (LPARAM)&lc);
+}
+
+VOID
+AddIPAddressToListView(
+    HWND hDlgCtrl, 
+    PIP_ADDR_STRING pAddr,
+    INT Index)
+{
+    LVITEMW li;
+    PIP_ADDR_STRING pCur;
+    WCHAR szBuffer[100];
+    UINT SubIndex;
+
+    ZeroMemory(&li, sizeof(LVITEMW));
+    li.mask = LVIF_TEXT;
+    li.iItem = Index;
+    pCur = pAddr;
+    SubIndex = 0;
+
+    do
+    {
+        if (SubIndex)
+        {
+            ZeroMemory(&li, sizeof(LVITEMW));
+            li.mask = LVIF_TEXT;
+            li.iItem = ListView_GetItemCount(hDlgCtrl);
+            li.iSubItem = 0;
+            li.pszText = L"";
+            li.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
+        }
+
+        if (MultiByteToWideChar(CP_ACP, 0, pCur->IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+        {
+            li.pszText = szBuffer;
+            li.iSubItem = 1;
+            li.iItem = ListView_GetItemCount(hDlgCtrl);
+            SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+        }
+        SubIndex++;
+        pCur = pCur->Next;
+    }while(pCur && pCur->IpAddress.String[0]);
+}
+
+INT
+InsertItemToListView(
+    HWND hDlgCtrl,
+    UINT ResId)
+{
+    LVITEMW li;
+    WCHAR szBuffer[100];
+
+    ZeroMemory(&li, sizeof(LVITEMW));
+    li.mask = LVIF_TEXT;
+    li.iItem = ListView_GetItemCount(hDlgCtrl);
+    if (LoadStringW(netshell_hInstance, IDS_PHYSICAL_ADDRESS, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    {
+        li.pszText = szBuffer;
+        return (INT)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
+    }
+    return -1;
+}
+
+
+INT_PTR
+CALLBACK
+LANStatusUiDetailsDlg(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    LANSTATUSUI_CONTEXT * pContext;
+    LVITEMW li;
+    WCHAR szBuffer[100];
+    PIP_ADAPTER_INFO pAdapterInfo, pCurAdapter;
+    PIP_PER_ADAPTER_INFO pPerAdapter;
+    DWORD dwSize;
+    HWND hDlgCtrl;
+
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            pContext = (LANSTATUSUI_CONTEXT*)lParam;
+
+            hDlgCtrl = GetDlgItem(hwndDlg, IDC_DETAILS);
+            InsertColumnToListView(hDlgCtrl, IDS_PROPERTY, 0, 80);
+            InsertColumnToListView(hDlgCtrl, IDS_VALUE, 0, 80);
+
+            dwSize = 0;
+            pCurAdapter = NULL;
+            pAdapterInfo = NULL;
+            if (GetAdaptersInfo(NULL, &dwSize) == ERROR_BUFFER_OVERFLOW)
+            {
+                pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+                if (pAdapterInfo)
+                {
+                    if (GetAdaptersInfo(pAdapterInfo, &dwSize) == NO_ERROR)
+                    {
+                        pCurAdapter = pAdapterInfo;
+                        while(pCurAdapter && pCurAdapter->Index != pContext->dwAdapterIndex)
+                            pCurAdapter = pCurAdapter->Next;
+
+                        if(pCurAdapter->Index != pContext->dwAdapterIndex)
+                            pCurAdapter = NULL;
+                    }
+                }
+            }
+
+            ZeroMemory(&li, sizeof(LVITEMW));
+            li.mask = LVIF_TEXT;
+            li.iSubItem = 1;
+            li.pszText = szBuffer;
+
+            if (pCurAdapter)
+            {
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_PHYSICAL_ADDRESS);
+                if (li.iItem >= 0)
+                    if (MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pCurAdapter->Address, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_IP_ADDRESS);
+                if (li.iItem >= 0)
+                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->IpAddressList.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_SUBNET_MASK);
+                if (li.iItem >= 0)
+                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->IpAddressList.IpMask.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_DEF_GATEWAY);
+                if (li.iItem >= 0)
+                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->DhcpServer.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+
+#if 0
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_OBTAINED);
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_EXPIRES);
+#endif
+            }
+
+            dwSize = 0;
+            if (GetPerAdapterInfo(pContext->dwAdapterIndex, NULL, &dwSize) == ERROR_BUFFER_OVERFLOW)
+            {
+                pPerAdapter = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+                if (pPerAdapter)
+                {
+                    if (GetPerAdapterInfo(pContext->dwAdapterIndex, pPerAdapter, &dwSize) == ERROR_SUCCESS)
+                    {
+                        li.iItem = InsertItemToListView(hDlgCtrl, IDS_DNS_SERVERS);
+                        if (li.iItem >= 0)
+                            AddIPAddressToListView(hDlgCtrl, &pPerAdapter->DnsServerList, li.iItem);
+                    }
+                    CoTaskMemFree(pPerAdapter);
+                }
+            }
+#if 0
+            if (pCurAdapter)
+            {
+                li.iItem = InsertItemToListView(hDlgCtrl, IDS_WINS_SERVERS);
+                AddIPAddressToListView(hDlgCtrl, &pCurAdapter->PrimaryWinsServer, li.iItem);
+                AddIPAddressToListView(hDlgCtrl, &pCurAdapter->SecondaryWinsServer, li.iItem+1);
+            }
+#endif
+            CoTaskMemFree(pAdapterInfo);
+            break;
+    }
+    return FALSE;
+}
+
 INT_PTR
 CALLBACK
 LANStatusUiAdvancedDlg(
@@ -334,8 +527,18 @@ LANStatusUiAdvancedDlg(
                      THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             SendDlgItemMessageW(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
-
             return TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_DETAILS)
+            {
+                pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                if (pContext)
+                {
+                    DialogBoxParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_LAN_NETSTATUSDETAILS), GetParent(hwndDlg),
+                                    LANStatusUiDetailsDlg, (LPARAM)pContext);
+                }
+            }
+            break;
         default:
             break;
     }
