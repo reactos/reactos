@@ -451,9 +451,16 @@ dhcpack(struct packet *packet)
 }
 
 void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
+    CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+    HKEY RegKey;
+
+    strcat(Buffer, Adapter->DhclientInfo.name);
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_WRITE, &RegKey ) != ERROR_SUCCESS)
+        return;
+
+
     if( new_lease->options[DHO_DOMAIN_NAME_SERVERS].len ) {
-        CHAR Buffer[200] = "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
-        HKEY RegKey;
+
         struct iaddr nameserver;
         char *nsbuf;
         int i, addrs =
@@ -462,13 +469,9 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                /* XXX I'm setting addrs to 1 until we are ready up the chain */
                addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
-        nsbuf[0] = 0;
-        strcat(Buffer, Adapter->DhclientInfo.name);
 
-        if( nsbuf && !RegOpenKeyEx
-            ( HKEY_LOCAL_MACHINE,
-              Buffer,
-              0, KEY_WRITE, &RegKey ) ) {
+        if( nsbuf) {
+            nsbuf[0] = 0;
             for( i = 0; i < addrs; i++ ) {
                 nameserver.len = sizeof(ULONG);
                 memcpy( nameserver.iabuf,
@@ -480,12 +483,17 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
 
             DH_DbgPrint(MID_TRACE,("Setting DhcpNameserver: %s\n", nsbuf));
 
-            RegSetValueEx( RegKey, "DhcpNameServer", 0, REG_SZ,
-                           (LPBYTE)nsbuf, strlen(nsbuf) + 1);
+            RegSetValueExA( RegKey, "DhcpNameServer", 0, REG_SZ,
+                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
+            free( nsbuf );
         }
-	// free(NULL) is defined to be OK too
-	free( nsbuf );
+
+    } else {
+            RegDeleteValueW( RegKey, L"DhcpNameServer" );
     }
+
+    RegCloseKey( RegKey );
+
 }
 
 void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
