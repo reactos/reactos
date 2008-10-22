@@ -3194,6 +3194,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
             if(pStr)
             {
                 RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
+                RegDeleteValueW(hKey, L"DhcpNameServer");
                 CoTaskMemFree(pStr);
             }
         }
