@@ -87,7 +87,7 @@ ShutdownThreadMain(PVOID Context)
        "Until then, there must be no regrets, no fears, no anxieties.\n"
        "Just go forward in all your beliefs, and prove to me that I am not mistaken in\n"
        "mine.\n",
-       "Lowest possible energy state reached! Switch off now to achive a Bose-Einstein\n"
+       "Lowest possible energy state reached! Switch off now to achieve a Bose-Einstein\n"
        "condensate.\n",
        "Hasta la vista, BABY!\n",
        "They live, we sleep!\n",
