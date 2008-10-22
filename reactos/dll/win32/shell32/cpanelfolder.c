@@ -595,10 +595,14 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	*ppvOut = NULL;
 
 	if (IsEqualIID(riid, &IID_IContextMenu) &&(cidl >= 1)) {
+		// TODO
+		// create a seperate item struct
+		//
 		pObj = (IUnknown*)(&This->lpVtblContextMenu);
 		This->apidl = apidl;
 		This->cidl = cidl;
 		IUnknown_AddRef(pObj);
+		hr = S_OK;
 	} else if (IsEqualIID(riid, &IID_IDataObject) &&(cidl >= 1)) {
 	    pObj = (LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
