@@ -1018,7 +1018,7 @@ NTSTATUS DispTdiSendDatagram(
 
 done:
     if (Status != STATUS_PENDING) {
-        DispDataRequestComplete(Irp, Status, 0);
+        DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
     } else
         IoMarkIrpPending(Irp);
 
