@@ -21,7 +21,7 @@ END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Properties"
+CAPTION "W³aœciwoœci"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -60,7 +60,7 @@ BEGIN
  LTEXT "Maska podsieci:", -1, 22, 48, 80, 8
  LTEXT "Domyœlna brama:", -1, 22, 62, 80, 8
 
- RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "n/d", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
@@ -97,8 +97,8 @@ BEGIN
 	IDS_FORMAT_KBIT             "%u KBit/s"
 	IDS_FORMAT_MBIT             "%u MBit/s"
 	IDS_FORMAT_GBIT             "%u GBit/s"
-	IDS_DURATION_DAY            "%d Day %s"
-	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_DURATION_DAY            "%d Dzieñ %s"
+	IDS_DURATION_DAYS           "%d Dni %s"
 	IDS_ASSIGNED_DHCP           "Przydzielony przez DHCP"
 	IDS_ASSIGNED_MANUAL         "Ustawiony rêcznie"
 END
