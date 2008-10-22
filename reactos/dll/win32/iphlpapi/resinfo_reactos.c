@@ -124,10 +124,10 @@ static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
 void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
     PWCHAR NameServerString =
-	QueryRegistryValueString(RegHandle, L"NameServer");
+	QueryRegistryValueString(RegHandle, L"DhcpNameServer");
 
     if (!NameServerString)
-		NameServerString = QueryRegistryValueString(RegHandle, L"DhcpNameServer");
+		NameServerString = QueryRegistryValueString(RegHandle, L"NameServer");
 
     if (NameServerString) {
     /* Now, count the non-empty comma separated */
