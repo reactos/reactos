@@ -1,12 +1,3 @@
-EXPORTS
-DbgBreakPoint@0
-DbgBreakPointWithStatus@4
-DbgPrint
-DbgPrompt@12
-DbgPrintEx
-RtlAssert@16
-RtlUnwind@16
-
 ;EOF
 EXPORTS
 DbgBreakPoint@0
@@ -16,5 +7,6 @@ DbgPrompt@12
 DbgPrintEx
 RtlAssert@16
 RtlUnwind@16
+vDbgPrintExWithPrefix
 
 ;EOF
