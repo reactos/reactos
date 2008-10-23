@@ -1226,7 +1226,8 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 {
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-  ULONG Count, ProtectSize, OldProtect, OldProtect2;
+  ULONG Count, OldProtect, OldProtect2;
+  SIZE_T ProtectSize;
   PVOID Page, ProtectPage, ProtectPage2;
   PUSHORT TypeOffset;
   ULONG_PTR Delta;
@@ -1413,7 +1414,7 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
    PVOID IATBase;
    ULONG OldProtect;
    ULONG Ordinal;
-   ULONG IATSize;
+   SIZE_T IATSize;
 
    if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
      {
@@ -1559,7 +1560,7 @@ LdrpAdjustImportDirectory(PLDR_DATA_TABLE_ENTRY Module,
    PVOID IATBase;
    ULONG OldProtect;
    ULONG Offset;
-   ULONG IATSize;
+   SIZE_T IATSize;
    PIMAGE_NT_HEADERS NTHeaders;
    PCHAR Name;
    ULONG Size;
@@ -2559,7 +2560,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
              {
                TRACE_LDR("Unload %wZ - Calling entry point at %x\n",
                          &Module->BaseDllName, Module->EntryPoint);
-               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
+               LdrpCallDllEntry(Module, DLL_PROCESS_DETACH, (PVOID)(INT_PTR)(Module->LoadCount == 0xFFFF ? 1 : 0));
              }
            else
              {
@@ -2644,7 +2645,7 @@ LdrpAttachProcess(VOID)
            Module->Flags |= LDRP_LOAD_IN_PROGRESS;
            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
                      &Module->BaseDllName, Module->EntryPoint);
-           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
+           Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(INT_PTR)(Module->LoadCount == 0xFFFF ? 1 : 0));
            if (!Result)
              {
                Status = STATUS_DLL_INIT_FAILED;
