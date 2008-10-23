@@ -485,18 +485,22 @@ NTSTATUS DispTdiDisconnect(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   DisReq = (PTDI_REQUEST_KERNEL_DISCONNECT)&IrpSp->Parameters;
 
+  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
   /* Get associated connection endpoint file object. Quit if none exists */
 
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_CONNECTION;
+    goto done;
   }
 
   Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
   if (!Connection) {
     TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    return STATUS_INVALID_CONNECTION;
+    Status = STATUS_INVALID_CONNECTION;
+    goto done;
   }
 
   Status = TCPDisconnect(
@@ -507,7 +511,15 @@ NTSTATUS DispTdiDisconnect(
       DispDataRequestComplete,
       Irp );
 
-  TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
+done:
+   if (Status != STATUS_PENDING) {
+       DispDataRequestComplete(Irp, Status, 0);
+   } else
+       IoMarkIrpPending(Irp);
+
+  TcpipRecursiveMutexLeave( &TCPLock );
+
+  TI_DbgPrint(MAX_TRACE, ("TCP Disconnect returned %08x\n", Status));
 
   return Status;
 }
@@ -1490,7 +1502,7 @@ NTSTATUS DispTdiSetInformationEx(
 
         TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-        return IRPFinish(Irp, STATUS_INVALID_PARAMETER);
+        return Irp->IoStatus.Status;
     }
 
     Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
