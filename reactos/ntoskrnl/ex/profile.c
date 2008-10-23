@@ -103,7 +103,8 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG Segment = 0, Log2 = 0;
+    ULONG Log2 = 0;
+    PVOID Segment = NULL;
     PAGED_CODE();
 
     /* Easy way out */
@@ -116,7 +117,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
         if (BufferSize < sizeof(ULONG)) return STATUS_INVALID_PARAMETER_7;
 
         /* This will become a segmented profile object */
-        Segment = (ULONG)RangeBase;
+        Segment = RangeBase;
         RangeBase = 0;
 
         /* Recalculate the bucket size */
