@@ -2412,10 +2412,10 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVIF_INTEGRAL         0x0080
 #define TVIF_DI_SETITEM	      0x1000
 
-#define TVI_ROOT              ((HTREEITEM)0xffff0000)     /* -65536 */
-#define TVI_FIRST             ((HTREEITEM)0xffff0001)     /* -65535 */
-#define TVI_LAST              ((HTREEITEM)0xffff0002)     /* -65534 */
-#define TVI_SORT              ((HTREEITEM)0xffff0003)     /* -65533 */
+#define TVI_ROOT              ((HTREEITEM)(ULONG_PTR)-0x10000)     /* -65536 */
+#define TVI_FIRST             ((HTREEITEM)(ULONG_PTR)-0x0FFFF)     /* -65535 */
+#define TVI_LAST              ((HTREEITEM)(ULONG_PTR)-0x0FFFE)     /* -65534 */
+#define TVI_SORT              ((HTREEITEM)(ULONG_PTR)-0x0FFFD)     /* -65533 */
 
 #define TVIS_FOCUSED          0x0001
 #define TVIS_SELECTED         0x0002

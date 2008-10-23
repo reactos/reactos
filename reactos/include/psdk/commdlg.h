@@ -216,7 +216,7 @@ extern "C" {
 #define CommDlg_OpenSave_HideControl(d,i) ((void)SNDMSG((d),CDM_HIDECONTROL,(i),0))
 #define CommDlg_OpenSave_SetDefExt(d,e) ((void)SNDMSG((d),CDM_SETDEFEXT,0,(LPARAM)(e)))
 
-typedef UINT (APIENTRY *__CDHOOKPROC)(HWND,UINT,WPARAM,LPARAM);
+typedef UINT_PTR (APIENTRY *__CDHOOKPROC)(HWND,UINT,WPARAM,LPARAM);
 typedef __CDHOOKPROC LPCCHOOKPROC;
 typedef __CDHOOKPROC LPCFHOOKPROC;
 typedef __CDHOOKPROC LPFRHOOKPROC;

@@ -910,7 +910,7 @@ typedef struct _SYSTEM_INFO {
 	DWORD dwPageSize;
 	PVOID lpMinimumApplicationAddress;
 	PVOID lpMaximumApplicationAddress;
-	DWORD dwActiveProcessorMask;
+	DWORD_PTR dwActiveProcessorMask;
 	DWORD dwNumberOfProcessors;
 	DWORD dwProcessorType;
 	DWORD dwAllocationGranularity;
@@ -1530,7 +1530,7 @@ DWORD WINAPI GetPrivateProfileStringW(LPCWSTR,LPCWSTR,LPCWSTR,LPWSTR,DWORD,LPCWS
 BOOL WINAPI GetPrivateProfileStructA(LPCSTR,LPCSTR,LPVOID,UINT,LPCSTR);
 BOOL WINAPI GetPrivateProfileStructW(LPCWSTR,LPCWSTR,LPVOID,UINT,LPCWSTR);
 FARPROC WINAPI GetProcAddress(HINSTANCE,LPCSTR);
-BOOL WINAPI GetProcessAffinityMask(HANDLE,PDWORD,PDWORD);
+BOOL WINAPI GetProcessAffinityMask(HANDLE,PDWORD_PTR,PDWORD_PTR);
 #if (_WIN32_WINNT >= 0x0502)
 BOOL WINAPI GetProcessHandleCount(HANDLE,PDWORD);
 #endif
@@ -2071,7 +2071,7 @@ BOOL WINAPI SetMailslotInfo(HANDLE,DWORD);
 BOOL WINAPI SetNamedPipeHandleState(HANDLE,PDWORD,PDWORD,PDWORD);
 BOOL WINAPI SetPriorityClass(HANDLE,DWORD);
 BOOL WINAPI SetPrivateObjectSecurity(SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,PSECURITY_DESCRIPTOR *,PGENERIC_MAPPING,HANDLE);
-BOOL WINAPI SetProcessAffinityMask(HANDLE,DWORD);
+BOOL WINAPI SetProcessAffinityMask(HANDLE,DWORD_PTR);
 BOOL WINAPI SetProcessPriorityBoost(HANDLE,BOOL);
 BOOL WINAPI SetProcessShutdownParameters(DWORD,DWORD);
 BOOL WINAPI SetProcessWorkingSetSize(HANDLE,SIZE_T,SIZE_T);
