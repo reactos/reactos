@@ -31,7 +31,8 @@ RtlpCreateUserStack(IN HANDLE hProcess,
     PIMAGE_NT_HEADERS Headers;
     ULONG_PTR Stack = 0;
     BOOLEAN UseGuard = FALSE;
-    ULONG Dummy, GuardPageSize;
+    ULONG Dummy;
+    SIZE_T GuardPageSize;
 
     /* Get some memory information */
     Status = ZwQuerySystemInformation(SystemBasicInformation,

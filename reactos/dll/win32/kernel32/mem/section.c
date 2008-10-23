@@ -158,12 +158,12 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
                 DWORD dwDesiredAccess,
                 DWORD dwFileOffsetHigh,
                 DWORD dwFileOffsetLow,
-                DWORD dwNumberOfBytesToMap,
+                SIZE_T dwNumberOfBytesToMap,
                 LPVOID lpBaseAddress)
 {
     NTSTATUS Status;
     LARGE_INTEGER SectionOffset;
-    ULONG ViewSize;
+    SIZE_T ViewSize;
     ULONG Protect;
     LPVOID ViewBase;
 
@@ -224,7 +224,7 @@ MapViewOfFile(HANDLE hFileMappingObject,
               DWORD dwDesiredAccess,
               DWORD dwFileOffsetHigh,
               DWORD dwFileOffsetLow,
-              DWORD dwNumberOfBytesToMap)
+              SIZE_T dwNumberOfBytesToMap)
 {
     /* Call the extended API */
     return MapViewOfFileEx(hFileMappingObject,
