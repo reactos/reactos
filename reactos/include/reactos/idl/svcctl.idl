@@ -17,7 +17,7 @@ const unsigned short SC_MAX_ARGUMENTS = 1024;
 
 typedef /*[handle]*/ LPSTR SVCCTL_HANDLEA;
 typedef /*[handle]*/ LPWSTR SVCCTL_HANDLEW;
-typedef /*[context_handle]*/ ULONG_PTR SC_RPC_HANDLE;
+typedef [context_handle] void* SC_RPC_HANDLE;
 typedef SC_RPC_HANDLE* LPSC_RPC_HANDLE;
 typedef /*[context_handle]*/ unsigned long SC_RPC_LOCK;
 typedef SC_RPC_LOCK* LPSC_RPC_LOCK;

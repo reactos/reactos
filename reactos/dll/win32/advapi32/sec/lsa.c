@@ -93,7 +93,7 @@ LsaClose(LSA_HANDLE ObjectHandle)
     LSAHandleBind();
 
     return LsarClose(LSABindingHandle,
-                     (unsigned long *)&ObjectHandle);
+                     &ObjectHandle);
 }
 
 
@@ -108,7 +108,7 @@ LsaDelete(LSA_HANDLE ObjectHandle)
     LSAHandleBind();
 
     return LsarDelete(LSABindingHandle,
-                      (unsigned long)ObjectHandle);
+                      ObjectHandle);
 }
 
 

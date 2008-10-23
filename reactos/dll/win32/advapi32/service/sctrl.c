@@ -457,7 +457,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
     Service = ScLookupServiceByServiceName((LPWSTR)lpServiceName);
     if (Service == NULL)
     {
-        return (SERVICE_STATUS_HANDLE)NULL;
+        return INVALID_HANDLE_VALUE;
     }
 
     Service->HandlerFunction = lpHandlerProc;
