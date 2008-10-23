@@ -254,6 +254,9 @@ NTSTATUS DGReceiveDatagram(
             {
 		ReceiveRequest->RemotePort    = 0;
             }
+
+	    IoMarkIrpPending(Irp);
+
 	    ReceiveRequest->ReturnInfo = ReturnInfo;
 	    ReceiveRequest->Buffer = BufferData;
 	    ReceiveRequest->BufferSize = ReceiveLength;

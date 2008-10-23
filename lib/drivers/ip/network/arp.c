@@ -230,7 +230,7 @@ VOID ARPReceive(
             Header->HWAddrLen, NUD_REACHABLE);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST)
+    if (Header->Opcode != ARP_OPCODE_REQUEST || !NCE)
         return;
 
     /* This is a request for our address. Swap the addresses and
