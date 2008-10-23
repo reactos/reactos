@@ -2921,7 +2921,7 @@ typedef struct _ICONINFO {
 } ICONINFO,*PICONINFO;
 typedef struct tagNMHDR {
 	HWND hwndFrom;
-	UINT idFrom;
+	UINT_PTR idFrom;
 	UINT code;
 } NMHDR,*LPNMHDR;
 typedef struct _WNDCLASSA {
