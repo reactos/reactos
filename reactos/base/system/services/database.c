@@ -117,7 +117,7 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 
 PSERVICE
-ScmGetServiceEntryByClientHandle(ULONG Handle)
+ScmGetServiceEntryByClientHandle(HANDLE Handle)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;

@@ -107,7 +107,7 @@ DWORD ScmStartService(PSERVICE Service,
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
-PSERVICE ScmGetServiceEntryByClientHandle(ULONG ThreadId);
+PSERVICE ScmGetServiceEntryByClientHandle(HANDLE Handle);
 DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
