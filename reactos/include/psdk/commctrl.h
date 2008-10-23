@@ -4270,7 +4270,7 @@ static const WCHAR WC_COMBOBOXEXW[] = { 'C','o','m','b','o',
 typedef struct tagCOMBOBOXEXITEMA
 {
     UINT mask;
-    int iItem;
+    INT_PTR iItem;
     LPSTR pszText;
     int cchTextMax;
     int iImage;
@@ -4284,7 +4284,7 @@ typedef COMBOBOXEXITEMA const *PCCOMBOEXITEMA; /* Yes, there's a BOX missing */
 typedef struct tagCOMBOBOXEXITEMW
 {
     UINT mask;
-    int iItem;
+    INT_PTR iItem;
     LPWSTR pszText;
     int cchTextMax;
     int iImage;
