@@ -76,7 +76,7 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
 {
   PVOID NewMem = NULL;
   NTSTATUS Status;
-  ULONG MemSize = sizeof(USERMEMHEADER) + cj;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + cj;
   PUSERMEMHEADER Header;
 
   Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
@@ -100,7 +100,7 @@ VOID STDCALL
 EngFreeUserMem(PVOID pv)
 {
   PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
-  ULONG MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
 
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
 }
