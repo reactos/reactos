@@ -942,8 +942,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    {
       Result = co_EVENT_CallEvents( Message->Msg.message,
                                     Message->Msg.hwnd,
-                             (LONG) Message->Msg.wParam,
-                             (LONG) Message->Msg.lParam);                                  
+                                    Message->Msg.wParam,
+                                    Message->Msg.lParam);                                  
    }
    else
    {
