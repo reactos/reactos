@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="3dtext" type="win32scr" installbase="system32" installname="3dtext.scr" unicode="yes">
-	<importlibrary definition="3dtext.spec.def" />
+	<importlibrary definition="3dtext.spec" />
 	<library>scrnsave</library>
 	<library>kernel32</library>
 	<library>user32</library>
@@ -13,7 +13,6 @@
 	<file>3dtext.c</file>
 	<file>settings.c</file>
 	<file>rsrc.rc</file>
-	<file>3dtext.spec</file>
 
 	<metadata description="3D text OpenGL screensaver" />
 </module>

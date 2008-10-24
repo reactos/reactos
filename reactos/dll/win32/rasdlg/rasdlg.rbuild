@@ -1,5 +1,5 @@
 <module name="rasdlg" type="win32dll" baseaddress="${BASEADDRESS_RASDLG}" installbase="system32" installname="rasdlg.dll">
-	<importlibrary definition="rasdlg.spec.def" />
+	<importlibrary definition="rasdlg.spec" />
 	<include base="rasdlg">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>wine</library>

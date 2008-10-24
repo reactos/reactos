@@ -124,10 +124,10 @@ static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
 void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
     PWCHAR NameServerString =
-	QueryRegistryValueString(RegHandle, L"NameServer");
+	QueryRegistryValueString(RegHandle, L"DhcpNameServer");
 
     if (!NameServerString)
-		NameServerString = QueryRegistryValueString(RegHandle, L"DhcpNameServer");
+		NameServerString = QueryRegistryValueString(RegHandle, L"NameServer");
 
     if (NameServerString) {
     /* Now, count the non-empty comma separated */
@@ -181,12 +181,18 @@ VOID CreateNameServerListEnumNamesFunc( PWCHAR Interface,
 					       PWCHAR Server,
 					       PVOID _Data ) {
     PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
-    RtlUnicodeToMultiByteN((PCHAR)&Data->AddrString[Data->CurrentName],
-			   sizeof(Data->AddrString[0]),
-			   NULL,
-			   Server,
-			   wcslen(Server));
-    Data->CurrentName++;
+
+    if (WideCharToMultiByte(CP_ACP, 0, Server, -1,
+			   Data->AddrString[Data->CurrentName].String,
+			   16, NULL, NULL))
+	{
+		Data->AddrString[Data->CurrentName].String[15] = '\0';
+		Data->CurrentName++;
+	}
+	else
+	{
+		Data->AddrString[Data->CurrentName].String[0] = '\0';
+	}
 }
 
 static void CreateNameServerListEnumIfFunc( HKEY RegHandle,
@@ -207,43 +213,19 @@ static void MakeNameServerList( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
 }
 
 PIPHLP_RES_INFO getResInfo() {
-    DWORD i, ServerCount, ExtraServer;
-    HKEY hKey;
-    LONG errCode;
-    PWCHAR Str;
-    IP_ADDR_STRING AddrString;
+    DWORD i, ServerCount;
     NAME_SERVER_LIST_PRIVATE PrivateNSEnum = { 0 };
     PIPHLP_RES_INFO ResInfo;
     struct sockaddr_in *AddrList;
 
     ServerCount = CountNameServers( &PrivateNSEnum );
 
-    errCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-			    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\"
-			    "Parameters", 0, KEY_READ, &hKey);
-    if (errCode != ERROR_SUCCESS) {
-	RegCloseKey( hKey );
-	return NULL;
-    }
-
-    Str = QueryRegistryValueString( hKey, L"NameServer" );
-
-    /* If NameServer is empty */
-    if (!Str || *Str == L'\0')
-    {
-        /* Then use DhcpNameServer */
-        Str = QueryRegistryValueString( hKey, L"DhcpNameServer" );
-    }
-
-    ExtraServer = Str ? 1 : 0;
-
-    ServerCount += ExtraServer;
-
     PrivateNSEnum.NumServers = ServerCount;
     PrivateNSEnum.AddrString =
 	(PIP_ADDRESS_STRING)
 	RtlAllocateHeap( GetProcessHeap(), 0,
 			 ServerCount * sizeof(IP_ADDRESS_STRING) );
+	PrivateNSEnum.CurrentName = 0;
 
     ResInfo =
 	(PIPHLP_RES_INFO)RtlAllocateHeap
@@ -253,7 +235,6 @@ PIPHLP_RES_INFO getResInfo() {
 
     if( !ResInfo ) {
 	RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
-	RegCloseKey( hKey );
 	return NULL;
     }
 
@@ -264,30 +245,15 @@ PIPHLP_RES_INFO getResInfo() {
 
     MakeNameServerList( &PrivateNSEnum );
 
-    if( ExtraServer ) {
-	ULONG ResultSize;
-
-	for( ResultSize = 0; Str[ResultSize]; ResultSize++ )
-	    ((PCHAR)&AddrString)[ResultSize] = Str[ResultSize];
-
-	((PCHAR)&AddrString)[ResultSize] = 0;
-	ResInfo->riAddressList[0].sin_family = AF_INET;
-	ResInfo->riAddressList[0].sin_addr.s_addr =
-	    inet_addr( (PCHAR)&AddrString );
-	ResInfo->riAddressList[0].sin_port = 0;
-	ConsumeRegValueString( Str );
-    }
-
-    for( i = ExtraServer; i < ServerCount; i++ ) {
+    for( i = 0; i < PrivateNSEnum.CurrentName; i++ ) {
 	/* Hmm seems that dns servers are always AF_INET but ... */
 	ResInfo->riAddressList[i].sin_family = AF_INET;
 	ResInfo->riAddressList[i].sin_addr.s_addr =
-	    inet_addr( (PCHAR)&PrivateNSEnum.AddrString[i - ExtraServer] );
+	    inet_addr(PrivateNSEnum.AddrString[i].String );
 	ResInfo->riAddressList[i].sin_port = 0;
     }
 
     RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
-    RegCloseKey( hKey );
 
     return ResInfo;
 }

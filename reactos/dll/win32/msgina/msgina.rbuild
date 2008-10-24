@@ -1,5 +1,5 @@
 <module name="msgina" type="win32dll" baseaddress="${BASEADDRESS_MSGINA}" installbase="system32" installname="msgina.dll">
-	<importlibrary definition="msgina.spec.def" />
+	<importlibrary definition="msgina.spec" />
 	<include base="msgina">.</include>
 	<include base="msgina">include</include>
 	<library>ntdll</library>

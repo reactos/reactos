@@ -1,6 +1,6 @@
 <module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll" unicode="yes">
 
-	<importlibrary definition="advapi32.spec.def" />
+	<importlibrary definition="advapi32.spec" />
 	<include base="advapi32">.</include>
 	<include base="scm_client">.</include>
 	<include base="lsa_client">.</include>

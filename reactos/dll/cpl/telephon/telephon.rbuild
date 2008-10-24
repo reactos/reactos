@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="telephon" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TELEPHON}"  installbase="system32" installname="telephon.cpl" unicode="yes">
-	<importlibrary definition="telephon.spec.def" />
+	<importlibrary definition="telephon.spec" />
 	<include base="telephon">.</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

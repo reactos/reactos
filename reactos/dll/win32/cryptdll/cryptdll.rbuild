@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="cryptdll" type="win32dll" baseaddress="${BASEADDRESS_CRYPTDLL}" installbase="system32" installname="cryptdll.dll" allowwarnings="true">
-	<importlibrary definition="cryptdll.spec.def" />
+	<importlibrary definition="cryptdll.spec" />
 	<include base="cryptdll">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

@@ -20,6 +20,7 @@
 @ fastcall KfRaiseIrql(long)
 @ fastcall KfReleaseSpinLock(ptr long)
 
+
 @ stdcall HalAcquireDisplayOwnership(ptr)
 @ stdcall HalAdjustResourceList(ptr)
 @ stdcall HalAllProcessorsStarted()

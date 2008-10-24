@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="d3d9" type="win32dll" entrypoint="0" installbase="system32" installname="d3d9.dll" baseaddress="0x4fdd0000">
-	<importlibrary definition="d3d9.spec.def" />
+	<importlibrary definition="d3d9.spec" />
 
 	<library>advapi32</library>
 	<library>kernel32</library>
@@ -31,5 +31,4 @@
 	<file>device.c</file>
 	<file>format.c</file>
 	<file>d3d9.rc</file>
-	<file>d3d9.spec</file>
 </module>

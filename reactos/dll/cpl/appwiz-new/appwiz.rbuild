@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="appwiz-new" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz-new.cpl" unicode="yes" allowwarnings="true">
-	<importlibrary definition="appwiz.spec.def" />
+	<importlibrary definition="appwiz.spec" />
 	<include base="appwiz-new">.</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>

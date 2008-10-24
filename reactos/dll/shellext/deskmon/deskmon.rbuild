@@ -1,5 +1,5 @@
 <module name="deskmon" type="win32dll" baseaddress="${BASEADDRESS_DESKMON}" installbase="system32" installname="deskmon.dll" unicode="yes">
-	<importlibrary definition="deskmon.spec.def" />
+	<importlibrary definition="deskmon.spec" />
 	<include base="deskmon">.</include>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>

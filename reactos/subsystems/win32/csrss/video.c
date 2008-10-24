@@ -68,8 +68,8 @@ InitializeVideoAddressSpace(VOID)
 
     if (BaseAddress != (PVOID)0xa0000)
     {
-        DPRINT1("Couldn't map physical memory at the right address "
-            "(was %x)\n", BaseAddress);
+        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
+                BaseAddress);
         return 0;
     }
 
@@ -91,8 +91,8 @@ InitializeVideoAddressSpace(VOID)
     }
     if (BaseAddress != (PVOID)0x0)
     {
-        DPRINT1("Failed to allocate virtual memory at right address "
-            "(was %x)\n", BaseAddress);
+        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
+                BaseAddress);
         return 0;
     }
 
@@ -100,7 +100,7 @@ InitializeVideoAddressSpace(VOID)
     Status = NtVdmControl(VdmInitialize, IVTAndBda);
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("NtVdmControl failed (status %x)\n", Status);
+        DPRINT1("NtVdmControl failed (status %x)\n", Status);
         return 0;
     }
 

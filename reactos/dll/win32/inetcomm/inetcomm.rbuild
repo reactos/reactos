@@ -3,7 +3,7 @@
 <group>
 <module name="inetcomm" type="win32dll" baseaddress="${BASEADDRESS_INETCOMM}" installbase="system32" installname="inetcomm.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="inetcomm.spec.def" />
+	<importlibrary definition="inetcomm.spec" />
 	<include base="inetcomm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

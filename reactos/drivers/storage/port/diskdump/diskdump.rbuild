@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="diskdump" type="kernelmodedriver" installbase="system32/drivers" installname="diskdump.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="diskdump.spec.def" />
+	<importlibrary definition="diskdump.spec" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

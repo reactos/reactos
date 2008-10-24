@@ -85,7 +85,7 @@ InitMetrics(VOID)
     gpsi->SystemMetrics[SM_CYVSCROLL] = 16;
     gpsi->SystemMetrics[SM_CXHSCROLL] = 16;
     gpsi->SystemMetrics[SM_DEBUG] = 0;
-    gpsi->SystemMetrics[SM_SWAPBUTTON] = CurInfo ? CurInfo->SwapButtons : 0xFFFFFFFF;
+    gpsi->SystemMetrics[SM_SWAPBUTTON] = CurInfo ? CurInfo->SwapButtons : 0;
     gpsi->SystemMetrics[SM_RESERVED1] = 0;
     gpsi->SystemMetrics[SM_RESERVED2] = 0;
     gpsi->SystemMetrics[SM_RESERVED3] = 0;
@@ -98,8 +98,8 @@ InitMetrics(VOID)
     gpsi->SystemMetrics[SM_CYFRAME] = 4;
     gpsi->SystemMetrics[SM_CXMINTRACK] = 112;
     gpsi->SystemMetrics[SM_CYMINTRACK] = 27;
-    gpsi->SystemMetrics[SM_CXDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 0xFFFFFFFF;
-    gpsi->SystemMetrics[SM_CYDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 0xFFFFFFFF;
+    gpsi->SystemMetrics[SM_CXDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 4;
+    gpsi->SystemMetrics[SM_CYDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 4;
     gpsi->SystemMetrics[SM_CXICONSPACING] = 64;
     gpsi->SystemMetrics[SM_CYICONSPACING] = 64;
     gpsi->SystemMetrics[SM_MENUDROPALIGNMENT] = 0;

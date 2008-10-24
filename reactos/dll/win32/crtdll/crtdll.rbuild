@@ -1,5 +1,5 @@
 <module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" mangledsymbols="true" installbase="system32" installname="crtdll.dll">
-	<importlibrary definition="crtdll.spec.def" />
+	<importlibrary definition="crtdll.spec" />
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />

@@ -1060,6 +1060,26 @@ NtUserCreateWindowEx(
   DWORD dwShowMode,
   BOOL bUnicodeWindow,
   DWORD dwUnknown);
+#if 0
+HWND
+NTAPI
+NtUserCreateWindowEx(
+  DWORD dwExStyle,
+  PLARGE_UNICODE_STRING plustrClassName,
+  PLARGE_UNICODE_STRING plustrClsVesrion,
+  PLARGE_UNICODE_STRING plustrWindowName,
+  DWORD dwStyle,
+  int x,
+  int y,
+  int nWidth,
+  int nHeight,
+  HWND hWndParent,
+  HMENU hMenu,
+  HINSTANCE hInstance,
+  LPVOID lpParam,
+  DWORD dwFlags,
+  PVOID acbiBuffer);
+#endif
 
 HWINSTA
 NTAPI

@@ -3,7 +3,7 @@
 <group>
 <module name="winhttp" type="win32dll" baseaddress="${BASEADDRESS_WINHTTP}" installbase="system32" installname="winhttp.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="winhttp.spec.def" />
+	<importlibrary definition="winhttp.spec" />
 	<include base="winhttp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

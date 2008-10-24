@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true" unicode="yes">
-	<importlibrary definition="setupapi.spec.def" />
+	<importlibrary definition="setupapi.spec" />
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>

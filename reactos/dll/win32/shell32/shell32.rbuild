@@ -1,6 +1,6 @@
 <module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="shell32.spec.def" />
+	<importlibrary definition="shell32.spec" />
 	<include base="shell32">.</include>
 	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

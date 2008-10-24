@@ -1,5 +1,5 @@
 <module name="printui" type="win32dll" baseaddress="${BASEADDRESS_PRINTUI}" installbase="system32" installname="printui.dll" allowwarnings="true" entrypoint="0">
-        <importlibrary definition="printui.spec.def" />
+        <importlibrary definition="printui.spec" />
         <include base="printui">.</include>
         <include base="ReactOS">include/reactos/wine</include>
         <define name="__WINESRC__" />

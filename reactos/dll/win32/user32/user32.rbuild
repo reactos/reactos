@@ -1,5 +1,5 @@
 <module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" unicode="yes" allowwarnings="true">
-	<importlibrary definition="user32.spec.def" />
+	<importlibrary definition="user32.spec" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>

@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dxdiagn" type="win32dll" baseaddress="${BASEADDRESS_DXDIAGN}" installbase="system32" installname="dxdiagn.dll" allowwarnings="true" unicode="yes">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="dxdiagn.spec.def" />
+	<importlibrary definition="dxdiagn.spec" />
 	<include base="dxdiagn">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>
@@ -22,5 +22,4 @@
 	<file>dxdiag_main.c</file>
 	<file>provider.c</file>
 	<file>regsvr.c</file>
-	<file>dxdiagn.spec</file>
 </module>

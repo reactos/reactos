@@ -1,7 +1,7 @@
 <group>
 <module name="jscript" type="win32dll" baseaddress="${BASEADDRESS_JSCRIPT}" installbase="system32" installname="jscript.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="jscript.spec.def" />
+	<importlibrary definition="jscript.spec" />
 	<include base="jscript">.</include>
 	<include base="jscript" root="intermediate">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

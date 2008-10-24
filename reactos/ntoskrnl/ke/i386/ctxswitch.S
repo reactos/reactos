@@ -13,6 +13,7 @@
 #include <ndk/asm.h>
 .intel_syntax noprefix
 
+#define Ready 1
 #define Running 2
 #define WrDispatchInt 0x1F
 
@@ -349,7 +350,7 @@ BadThread:
 #ifdef CONFIG_SMP
 GetSwapLock:
     /* Acquire the swap lock */
-    cmp [esi+KTHREAD_SWAP_BUSY], 0
+    cmp byte ptr [esi+KTHREAD_SWAP_BUSY], 0
     jz NotBusy
     pause
     jmp GetSwapLock
@@ -562,6 +563,16 @@ NewCr0:
     mov cr0, ecx
     jmp StackOk
 
+#ifdef CONFIG_SMP
+NpxLoaded:
+
+    /* FIXME: TODO */
+    int 3
+
+    /* Jump back */
+    jmp SetStack
+#endif
+
 WmiTrace:
 
     /* No WMI support yet */
@@ -705,8 +716,7 @@ CheckSchedule:
 
 #ifdef CONFIG_SMP
     /* There is, raise IRQL to synch level */
-    mov ecx, SYNCH_LEVEL
-    call @KfRaiseIrql@4
+    call _KeRaiseIrqlToSynchLevel@0
 #endif
     sti
 
@@ -716,7 +726,7 @@ CheckSchedule:
     mov byte ptr [edi+KTHREAD_SWAP_BUSY], 1
 
     /* Acquire the PRCB Lock */
-    lock bts [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    lock bts dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
     jnb CheckNext
     lea ecx, [ebx+KPCR_PRCB_PRCB_LOCK]
     call @KefAcquireSpinLockAtDpcLevel@4
@@ -740,7 +750,7 @@ CheckNext:
 #ifdef CONFIG_SMP
     /* Disable the idle scheduler and release the PRCB lock */
     and byte ptr [ebx+KPCR_PRCB_IDLE_SCHEDULE], 0
-    and [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    and dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
 #endif
 
 SwapContext:
@@ -773,7 +783,7 @@ NoNextThread:
     jz CpuIdle
 
     /* It is, so call the scheduler */
-    lea ecx, [ebx+KPCR_PRCBDATA]
+    lea ecx, [ebx+KPCR_PRCB_DATA]
     call @KiIdleSchedule@4
     test eax, eax
 

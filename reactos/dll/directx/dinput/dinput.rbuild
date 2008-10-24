@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dinput" type="win32dll" baseaddress="${BASEADDRESS_DINPUT}" installbase="system32" installname="dinput.dll" allowwarnings ="true" unicode="yes">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="dinput.spec.def" />
+	<importlibrary definition="dinput.spec" />
 	<include base="dinput">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>
@@ -27,5 +27,4 @@
 	<file>keyboard.c</file>
 	<file>mouse.c</file>
 	<file>regsvr.c</file>
-	<file>dinput.spec</file>
 </module>

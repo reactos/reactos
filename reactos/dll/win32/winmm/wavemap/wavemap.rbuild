@@ -1,5 +1,5 @@
 <module name="wavemap" type="win32dll" entrypoint="0" extension=".drv" baseaddress="${BASEADDRESS_WAVEMAP}" installbase="system32" installname="msacm32.drv" allowwarnings="true" unicode="yes">
-	<importlibrary definition="msacm.spec.def" />
+	<importlibrary definition="msacm.spec" />
 	<include base="wavemap">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>

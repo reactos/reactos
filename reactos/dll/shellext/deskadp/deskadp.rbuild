@@ -1,5 +1,5 @@
 <module name="deskadp" type="win32dll" baseaddress="${BASEADDRESS_DESKADP}" installbase="system32" installname="deskadp.dll" unicode="yes">
-	<importlibrary definition="deskadp.spec.def" />
+	<importlibrary definition="deskadp.spec" />
 	<include base="deskadp">.</include>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
@@ -14,6 +14,5 @@
 	<file>deskadp.c</file>
 	<file>shxiface.c</file>
 	<file>deskadp.rc</file>
-	<file>deskadp.spec</file>
 	<pch>precomp.h</pch>
 </module>

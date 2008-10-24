@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="msvcrt40" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT40}" installbase="system32" installname="msvcrt40.dll">
-	<importlibrary definition="msvcrt40.spec.def" />
+	<importlibrary definition="msvcrt40.spec" />
 	<include base="msvcrt40">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

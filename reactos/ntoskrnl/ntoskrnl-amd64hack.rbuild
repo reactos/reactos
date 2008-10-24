@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe" baseaddress="0xfffff80000800000" entrypoint="KiSystemStartup" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl_$(ARCH).def" />
+	<importlibrary definition="ntoskrnl.spec" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -483,6 +483,7 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
+	<file>ntoskrnl.spec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </module>
 

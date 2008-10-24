@@ -3,7 +3,7 @@
 <group>
 <module name="rsaenh" type="win32dll" baseaddress="${BASEADDRESS_RSAENH}" installbase="system32" installname="rsaenh.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="rsaenh.spec.def" />
+	<importlibrary definition="rsaenh.spec" />
 	<include base="rsaenh">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

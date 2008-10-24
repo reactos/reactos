@@ -1,5 +1,5 @@
 <module name="lpk" type="win32dll" baseaddress="${BASEADDRESS_LPK}" installbase="system32" installname="lpk.dll" unicode="yes">
-	<importlibrary definition="lpk.spec.def" />
+	<importlibrary definition="lpk.spec" />
 	<include base="lpk">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0600</define>

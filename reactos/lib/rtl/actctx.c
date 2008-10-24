@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -78,6 +80,22 @@ RtlQueryInformationActivationContext(DWORD dwFlags,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlQueryInformationActiveActivationContext(ULONG ulInfoClass,
+                                           PVOID pvBuffer,
+                                           SIZE_T cbBuffer OPTIONAL,
+                                           SIZE_T *pcbWrittenOrRequired OPTIONAL)
+{
+    return RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_ACTIVE,
+                                                NULL,
+                                                NULL,
+                                                ulInfoClass,
+                                                pvBuffer,
+                                                cbBuffer,
+                                                pcbWrittenOrRequired);
 }
 
 NTSTATUS

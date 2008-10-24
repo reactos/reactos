@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="ksproxy" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_KSPROXY}" installbase="system32" installname="ksproxy.ax" allowwarnings="true">
-	<importlibrary definition="ksproxy.spec.def" />
+	<importlibrary definition="ksproxy.spec" />
 	<include base="ksproxy">.</include>
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
@@ -11,6 +11,5 @@
 	<library>ntdll</library>
 	<file>ksproxy.c</file>
 	<file>ksproxy.rc</file>
-	<file>ksproxy.spec</file>
 </module>
 </group>

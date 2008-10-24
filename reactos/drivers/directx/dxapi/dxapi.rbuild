@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="dxapi" type="kernelmodedriver" 
 installbase="system32/drivers" installname="dxapi.sys">
-	<importlibrary definition="dxapi.spec.def" />
+	<importlibrary definition="dxapi.spec" />
 	<include base="dxapi">.</include>
 	<define name="__USE_W32API" />
 	<define name="_DXAPI_" />

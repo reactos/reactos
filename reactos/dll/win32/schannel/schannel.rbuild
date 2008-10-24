@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="schannel" type="win32dll" baseaddress="${BASEADDRESS_SCHANNEL}" installbase="system32" installname="schannel.dll" allowwarnings="true">
-	<importlibrary definition="schannel.spec.def" />
+	<importlibrary definition="schannel.spec" />
 	<include base="schannel">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

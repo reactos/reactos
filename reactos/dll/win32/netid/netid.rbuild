@@ -1,5 +1,5 @@
 <module name="netid" type="win32dll" baseaddress="${BASEADDRESS_NETID}" installbase="system32" installname="netid.dll" unicode="true">
-	<importlibrary definition="netid.spec.def" />
+	<importlibrary definition="netid.spec" />
 	<include base="netid">.</include>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>

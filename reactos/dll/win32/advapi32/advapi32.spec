@@ -102,12 +102,12 @@
  @ stdcall CreateServiceW (long ptr ptr long long long long ptr ptr ptr ptr ptr ptr)
  @ stub CreateTraceInstanceId
  @ stdcall CreateWellKnownSid(long ptr ptr ptr)
- @ stub CredDeleteA #(str long long)
- @ stub CredDeleteW #(wstr long long)
- @ stub CredEnumerateA #(str long ptr ptr)
- @ stub CredEnumerateW #(wstr long ptr ptr)
- @ stub CredFree #(ptr)
- @ stub CredGetSessionTypes #(long ptr)
+ @ stdcall CredDeleteA (str long long)
+ @ stdcall CredDeleteW (wstr long long)
+ @ stdcall CredEnumerateA (str long ptr ptr)
+ @ stdcall CredEnumerateW (wstr long ptr ptr)
+ @ stdcall CredFree (ptr)
+ @ stdcall CredGetSessionTypes (long ptr)
  @ stub CredGetTargetInfoA
  @ stub CredGetTargetInfoW
  @ stub CredIsMarshaledCredentialA
@@ -115,18 +115,18 @@
  @ stub CredMarshalCredentialA
  @ stub CredMarshalCredentialW
  @ stub CredProfileLoaded
- @ stub CredReadA #(str long long ptr)
+ @ stdcall CredReadA (str long long ptr)
  @ stub CredReadDomainCredentialsA
  @ stub CredReadDomainCredentialsW
- @ stub CredReadW #(wstr long long ptr)
+ @ stdcall CredReadW (wstr long long ptr)
  @ stub CredRenameA
  @ stub CredRenameW
  @ stub CredUnmarshalCredentialA
  @ stub CredUnmarshalCredentialW
- @ stub CredWriteA #(ptr long)
+ @ stdcall CredWriteA(ptr long)
  @ stub CredWriteDomainCredentialsA
  @ stub CredWriteDomainCredentialsW
- @ stub CredWriteW #(ptr long)
+ @ stdcall CredWriteW (ptr long)
  @ stub CredpConvertCredential
  @ stub CredpConvertTargetInfo
  @ stub CredpDecodeCredential

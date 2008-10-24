@@ -1,7 +1,7 @@
 <group>
 <module name="msxml3" type="win32dll" baseaddress="${BASEADDRESS_MSXML3}" installbase="system32" installname="msxml3.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="msxml3.spec.def" />
+	<importlibrary definition="msxml3.spec" />
 	<include base="msxml3">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="msxml3" root="intermediate">.</include>

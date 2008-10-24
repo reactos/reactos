@@ -3,7 +3,7 @@
 <group>
 <module name="mlang" type="win32dll" baseaddress="${BASEADDRESS_MLANG}" installbase="system32" installname="mlang.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="mlang.spec.def" />
+	<importlibrary definition="mlang.spec" />
 	<include base="mlang">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

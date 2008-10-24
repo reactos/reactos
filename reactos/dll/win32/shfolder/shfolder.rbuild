@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="shfolder" type="win32dll" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll" allowwarnings="true" entrypoint="0">
-	<importlibrary definition="shfolder.spec.def" />
+	<importlibrary definition="shfolder.spec" />
 	<include base="shfolder">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

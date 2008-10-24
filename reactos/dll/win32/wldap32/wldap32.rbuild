@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="wldap32" type="win32dll" baseaddress="${BASEADDRESS_WLDAP32}" installbase="system32" installname="wldap32.dll" allowwarnings="true">
-	<importlibrary definition="wldap32.spec.def" />
+	<importlibrary definition="wldap32.spec" />
 	<include base="wldap32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

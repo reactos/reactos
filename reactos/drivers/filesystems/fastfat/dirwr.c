@@ -478,7 +478,7 @@ FATAddEntry(
     if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
         FileOffset.QuadPart = 0;
-        CcMapData((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
+        CcPinRead((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
                   &Context, (PVOID*)&pFatEntry);
         /* clear the new directory cluster */
         RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
