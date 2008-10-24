@@ -55,6 +55,9 @@
 @ stdcall DbgPrompt(str ptr long)
 @ stdcall DbgQueryDebugFilterState(long long)
 @ stdcall DbgSetDebugFilterState(long long long)
+#ifdef __x86_64__
+@ fastcall ExAcquireFastMutex(ptr)
+#endif
 @ fastcall ExAcquireFastMutexUnsafe(ptr)
 @ stdcall ExAcquireResourceExclusiveLite(ptr long)
 @ stdcall ExAcquireResourceSharedLite(ptr long)
@@ -103,18 +106,26 @@
 @ stdcall ExInterlockedAddLargeInteger(ptr long long ptr)
 @ fastcall ExInterlockedAddLargeStatistic(ptr long)
 @ stdcall ExInterlockedAddUlong(ptr long ptr)
+#ifndef __x86_64__
 @ fastcall ExInterlockedCompareExchange64(ptr ptr ptr ptr)
 @ stdcall ExInterlockedDecrementLong(ptr ptr)
 @ stdcall ExInterlockedExchangeUlong(ptr long ptr)
+#endif
 @ stdcall ExInterlockedExtendZone(ptr ptr long ptr)
+#ifndef __x86_64__
 @ fastcall ExInterlockedFlushSList(ptr)
 @ stdcall ExInterlockedIncrementLong(ptr ptr)
+#endif
 @ stdcall ExInterlockedInsertHeadList(ptr ptr ptr)
 @ stdcall ExInterlockedInsertTailList(ptr ptr ptr)
 @ stdcall ExInterlockedPopEntryList(ptr ptr)
+#ifndef __x86_64__
 @ fastcall ExInterlockedPopEntrySList(ptr ptr)
+#endif
 @ stdcall ExInterlockedPushEntryList(ptr ptr ptr)
+#ifndef __x86_64__
 @ fastcall ExInterlockedPushEntrySList(ptr ptr ptr)
+#endif
 @ stdcall ExInterlockedRemoveHeadList(ptr ptr)
 @ stdcall ExIsProcessorFeaturePresent(long)
 @ stdcall ExIsResourceAcquiredExclusiveLite(ptr)
@@ -132,6 +143,9 @@
 @ fastcall ExReInitializeRundownProtectionCacheAware(ptr) ExfReInitializeRundownProtectionCacheAware
 @ stdcall ExRegisterCallback(ptr ptr ptr)
 @ stdcall ExReinitializeResourceLite(ptr)
+#ifdef __x86_64__
+@ fastcall ExReleaseFastMutex(ptr)
+#endif
 @ fastcall ExReleaseFastMutexUnsafe(ptr)
 @ fastcall ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(ptr)
 @ fastcall ExReleaseResourceAndLeaveCriticalRegion(ptr)
@@ -149,6 +163,9 @@
 @ stdcall ExSizeOfRundownProtectionCacheAware()
 @ stdcall ExSystemExceptionFilter()
 @ stdcall ExSystemTimeToLocalTime(ptr ptr)
+#ifdef __x86_64__
+@ fastcall ExTryToAcquireFastMutex(ptr)
+#endif
 @ stdcall ExUnregisterCallback(ptr)
 @ stdcall ExUuidCreate(ptr)
 @ stdcall ExVerifySuite(long)
@@ -157,6 +174,7 @@
 @ extern ExWindowStationObjectType
 @ fastcall ExfAcquirePushLockExclusive(ptr)
 @ fastcall ExfAcquirePushLockShared(ptr)
+#ifndef __x86_64__
 @ fastcall ExfInterlockedAddUlong(ptr long ptr)
 @ fastcall ExfInterlockedCompareExchange64(ptr ptr ptr)
 @ fastcall ExfInterlockedInsertHeadList(ptr ptr ptr)
@@ -164,11 +182,17 @@
 @ fastcall ExfInterlockedPopEntryList(ptr ptr)
 @ fastcall ExfInterlockedPushEntryList(ptr ptr ptr)
 @ fastcall ExfInterlockedRemoveHeadList(ptr ptr)
+#endif
 @ fastcall ExfReleasePushLock(ptr)
 @ fastcall ExfReleasePushLockExclusive(ptr)
 @ fastcall ExfReleasePushLockShared(ptr)
 @ fastcall ExfTryToWakePushLock(ptr)
 @ fastcall ExfUnblockPushLock(ptr ptr)
+#ifdef __x86_64__
+@ stdcall ExpInterlockedFlushSList(ptr)
+@ stdcall ExpInterlockedPopEntrySList(ptr ptr)
+@ stdcall ExpInterlockedPushEntrySList(ptr ptr)
+#endif
 #ifdef _M_IX86
 @ fastcall Exfi386InterlockedDecrementLong(ptr)
 @ fastcall Exfi386InterlockedExchangeUlong(ptr long)
@@ -177,9 +201,11 @@
 @ stdcall Exi386InterlockedExchangeUlong(ptr long long)
 @ stdcall Exi386InterlockedIncrementLong(ptr)
 #endif
+#ifdef _M_IX86
 @ fastcall ExiAcquireFastMutex(ptr) ExAcquireFastMutex
 @ fastcall ExiReleaseFastMutex(ptr) ExReleaseFastMutex
 @ fastcall ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
+#endif
 @ stdcall FsRtlAcquireFileExclusive(ptr)
 ;FsRtlAddBaseMcbEntry
 @ stdcall FsRtlAddLargeMcbEntry(ptr long long long long long long)
@@ -321,8 +347,10 @@
 @ fastcall InterlockedExchange(ptr long)
 @ fastcall InterlockedExchangeAdd(ptr long)
 @ fastcall InterlockedIncrement(ptr)
+#ifndef __x86_64__
 @ fastcall InterlockedPopEntrySList(ptr)
 @ fastcall InterlockedPushEntrySList(ptr ptr)
+#endif
 @ stdcall IoAcquireCancelSpinLock(ptr)
 @ stdcall IoAcquireRemoveLockEx(ptr ptr str long long)
 @ stdcall IoAcquireVpbSpinLock(ptr)
@@ -549,6 +577,9 @@
 @ stdcall KeAcquireInterruptSpinLock(ptr)
 @ stdcall KeAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KeAcquireSpinLockForDpc(ptr)
+#ifdef __x86_64__
+@ stdcall KeAcquireSpinLockRaiseToDpc(ptr)
+#endif
 @ stdcall KeAddSystemServiceTable(ptr ptr long ptr long)
 @ stdcall KeAreAllApcsDisabled()
 @ stdcall KeAreApcsDisabled()
@@ -599,7 +630,9 @@
 @ stdcall KeInitializeMutex(ptr long)
 @ stdcall KeInitializeQueue(ptr long)
 @ stdcall KeInitializeSemaphore(ptr long long)
+#ifndef __x86_64__
 @ stdcall KeInitializeSpinLock(ptr)
+#endif
 @ stdcall KeInitializeThreadedDpc(ptr ptr ptr)
 @ stdcall KeInitializeTimer(ptr)
 @ stdcall KeInitializeTimerEx(ptr long)
@@ -622,10 +655,14 @@
 @ stdcall KeProfileInterruptWithSource(ptr long)
 @ stdcall KePulseEvent(ptr long long)
 @ stdcall KeQueryActiveProcessors()
+#ifndef __x86_64__
 @ stdcall KeQueryInterruptTime()
+#endif
 @ stdcall KeQueryPriorityThread(ptr)
 @ stdcall KeQueryRuntimeThread(ptr ptr)
+#ifndef __x86_64__
 @ stdcall KeQuerySystemTime(ptr)
+#endif
 @ stdcall KeQueryTickCount(ptr)
 @ stdcall KeQueryTimeIncrement()
 @ stdcall KeRaiseUserException(long)
@@ -646,6 +683,9 @@
 @ stdcall KeReleaseMutant(ptr long long long)
 @ stdcall KeReleaseMutex(ptr long)
 @ stdcall KeReleaseSemaphore(ptr long long long)
+#ifdef __x86_64__
+@ stdcall KeReleaseSpinLock(ptr long)
+#endif
 @ fastcall KeReleaseSpinLockForDpc(ptr long)
 @ stdcall KeReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall KeRemoveByKeyDeviceQueue(ptr long)
@@ -1023,12 +1063,14 @@
 @ stdcall PsTerminateSystemThread(long)
 @ extern PsThreadType _PsThreadType
 ;PsWrapApcWow64Thread
+#ifndef __x86_64__
 @ stdcall READ_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall READ_REGISTER_BUFFER_ULONG(ptr ptr long)
 @ stdcall READ_REGISTER_BUFFER_USHORT(ptr ptr long)
 @ stdcall READ_REGISTER_UCHAR(ptr)
 @ stdcall READ_REGISTER_ULONG(ptr)
 @ stdcall READ_REGISTER_USHORT(ptr)
+#endif
 @ stdcall KeRosDumpStackFrames(ptr long)
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
@@ -1276,8 +1318,10 @@
 ;RtlTraceDatabaseLock
 ;RtlTraceDatabaseUnlock
 ;RtlTraceDatabaseValidate
+#ifndef __x86_64__
 @ fastcall RtlUlongByteSwap(long)
 @ fastcall RtlUlonglongByteSwap(long long)
+#endif
 @ stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
 @ stdcall RtlUnicodeStringToAnsiString(ptr ptr long)
 @ stdcall RtlUnicodeStringToCountedOemString(ptr ptr long)
@@ -1300,7 +1344,9 @@
 @ stdcall RtlUpcaseUnicodeToOemN(ptr long ptr wstr long)
 @ stdcall RtlUpperChar(long)
 @ stdcall RtlUpperString(ptr ptr)
+#ifndef __x86_64__
 @ fastcall RtlUshortByteSwap(long)
+#endif
 @ stdcall RtlValidRelativeSecurityDescriptor(ptr long long)
 @ stdcall RtlValidSecurityDescriptor(ptr)
 @ stdcall RtlValidSid(ptr)
@@ -1371,12 +1417,14 @@
 ;VfFailDriver
 ;VfFailSystemBIOS
 ;VfIsVerificationEnabled
+#ifndef __x86_64__
 @ stdcall WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall WRITE_REGISTER_BUFFER_ULONG(ptr ptr long)
 @ stdcall WRITE_REGISTER_BUFFER_USHORT(ptr ptr long)
 @ stdcall WRITE_REGISTER_UCHAR(ptr long)
 @ stdcall WRITE_REGISTER_ULONG(ptr long)
 @ stdcall WRITE_REGISTER_USHORT(ptr long)
+#endif
 ;WmiFlushTrace
 ;WmiGetClock
 ;WmiQueryTrace
@@ -1515,7 +1563,9 @@
 ;_CIcos
 ;_CIsin
 ;_CIsqrt
+#ifndef __x86_64
 @ cdecl _abnormal_termination()
+#endif
 #ifdef _M_IX86
 @ cdecl _alldiv()
 @ cdecl _alldvrm()
@@ -1529,12 +1579,16 @@
 @ cdecl _aullrem()
 @ cdecl _aullshr()
 #endif
+#ifndef __x86_64
 @ cdecl _except_handler2()
 @ cdecl _except_handler3()
 @ cdecl _global_unwind2()
+#endif
 @ cdecl _itoa()
 @ cdecl _itow()
+#ifndef __x86_64
 @ cdecl _local_unwind2()
+#endif
 @ cdecl _purecall()
 @ cdecl _snprintf()
 @ cdecl _snwprintf()
