@@ -437,6 +437,7 @@ TiDispatchInternal(
 
   case TDI_DISCONNECT:
     Status = DispTdiDisconnect(Irp);
+    Complete = FALSE;
     break;
 
   case TDI_ASSOCIATE_ADDRESS:
