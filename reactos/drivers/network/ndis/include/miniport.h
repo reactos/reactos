@@ -163,6 +163,12 @@ VOID
 NTAPI
 MiniportWorker(IN PVOID WorkItem);
 
+VOID NTAPI
+MiniSendComplete(
+    IN  NDIS_HANDLE     MiniportAdapterHandle,
+    IN  PNDIS_PACKET    Packet,
+    IN  NDIS_STATUS     Status);
+
 #endif /* __MINIPORT_H */
 
 /* EOF */

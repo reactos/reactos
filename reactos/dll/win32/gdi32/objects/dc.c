@@ -465,6 +465,179 @@ GetCurrentObject(HDC hdc,
     return  GetDCObject(hdc, uObjectType);
 }
 
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetDeviceCaps(HDC hDC,
+              int i)
+{
+  PDC_ATTR Dc_Attr;
+  PLDC pLDC;
+  PDEVCAPS pDevCaps = GdiDevCaps; // Primary display device capabilities.
+  DPRINT("Device CAPS1\n");
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+     {
+        if ( i == TECHNOLOGY) return DT_METAFILE;
+        return 0;
+     }
+     else
+     {
+        pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+           SetLastError(ERROR_INVALID_HANDLE);
+           return 0;
+        }
+        if (!(pLDC->Flags & LDC_DEVCAPS))
+        {
+           if (!NtGdiGetDeviceCapsAll(hDC, &pLDC->DevCaps))
+              SetLastError(ERROR_INVALID_PARAMETER);
+           pLDC->Flags |= LDC_DEVCAPS;
+        }
+        pDevCaps = &pLDC->DevCaps;
+     }
+  }
+  else
+  {
+     // HAX!!!!
+     // Due to winlogon process/thread mapping issues we have this hax!
+     //
+     return NtGdiGetDeviceCaps(hDC,i);
+
+     if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
+        return 0;
+     if (!(Dc_Attr->ulDirty_ & DC_PRIMARY_DISPLAY) )
+        return NtGdiGetDeviceCaps(hDC,i);
+  }
+  DPRINT("Device CAPS2\n");
+  
+  switch (i)
+  {
+    case DRIVERVERSION:
+      return pDevCaps->ulVersion;
+
+    case TECHNOLOGY:
+      return pDevCaps->ulTechnology;
+
+    case HORZSIZE:
+      return pDevCaps->ulHorzSize;
+
+    case VERTSIZE:
+      return pDevCaps->ulVertSize;
+
+    case HORZRES:
+      return pDevCaps->ulHorzRes;
+
+    case VERTRES:
+      return pDevCaps->ulVertRes;
+
+    case LOGPIXELSX:
+      return pDevCaps->ulLogPixelsX;
+
+    case LOGPIXELSY:
+      return pDevCaps->ulLogPixelsY;
+
+    case BITSPIXEL:
+      return pDevCaps->ulBitsPixel;
+
+    case PLANES:
+      return pDevCaps->ulPlanes;
+
+    case NUMBRUSHES:
+      return -1;
+
+    case NUMPENS:
+      return pDevCaps->ulNumPens;
+
+    case NUMFONTS:
+      return pDevCaps->ulNumFonts;
+
+    case NUMCOLORS:
+      return pDevCaps->ulNumColors;
+
+    case ASPECTX:
+      return pDevCaps->ulAspectX;
+
+    case ASPECTY:
+      return pDevCaps->ulAspectY;
+
+    case ASPECTXY:
+      return pDevCaps->ulAspectXY;
+
+    case CLIPCAPS:
+      return CP_RECTANGLE;
+
+    case SIZEPALETTE:
+      return pDevCaps->ulSizePalette;
+
+    case NUMRESERVED:
+      return 20;
+
+    case COLORRES:
+      return pDevCaps->ulColorRes;
+
+    case DESKTOPVERTRES:
+      return pDevCaps->ulVertRes;
+
+    case DESKTOPHORZRES:
+      return pDevCaps->ulHorzRes;
+
+    case BLTALIGNMENT:
+      return pDevCaps->ulBltAlignment;
+
+    case SHADEBLENDCAPS:
+      return pDevCaps->ulShadeBlend;
+
+    case COLORMGMTCAPS:
+      return pDevCaps->ulColorMgmtCaps;
+
+    case PHYSICALWIDTH:
+      return pDevCaps->ulPhysicalWidth;
+
+    case PHYSICALHEIGHT:
+      return pDevCaps->ulPhysicalHeight;
+
+    case PHYSICALOFFSETX:
+      return pDevCaps->ulPhysicalOffsetX;
+
+    case PHYSICALOFFSETY:
+      return pDevCaps->ulPhysicalOffsetY;
+
+    case VREFRESH:
+      return pDevCaps->ulVRefresh;
+
+    case RASTERCAPS:
+      return pDevCaps->ulRasterCaps;
+
+    case CURVECAPS:
+      return (CC_CIRCLES | CC_PIE | CC_CHORD | CC_ELLIPSES | CC_WIDE |
+             CC_STYLED | CC_WIDESTYLED | CC_INTERIORS | CC_ROUNDRECT);
+
+    case LINECAPS:
+      return (LC_POLYLINE | LC_MARKER | LC_POLYMARKER | LC_WIDE |
+             LC_STYLED | LC_WIDESTYLED | LC_INTERIORS);
+
+    case POLYGONALCAPS:
+      return (PC_POLYGON | PC_RECTANGLE | PC_WINDPOLYGON | PC_SCANLINE |
+             PC_WIDE | PC_STYLED | PC_WIDESTYLED | PC_INTERIORS);
+
+    case TEXTCAPS:
+      return pDevCaps->ulTextCaps;
+
+    case PDEVICESIZE:
+    case SCALINGFACTORX:
+    case SCALINGFACTORY:
+    default:
+      return 0;
+  }
+  return 0;
+}
 
 /*
  * @implemented

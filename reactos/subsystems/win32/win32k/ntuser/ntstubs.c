@@ -850,12 +850,12 @@ NtUserPrintWindow(
     return 0;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserProcessConnect(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HANDLE Process,
+    PUSERCONNECT pUserConnect,
+    DWORD Size)
 {
     UNIMPLEMENTED;
     return 0;

@@ -2004,20 +2004,6 @@ GdiConvertBitmapV5(
     return FALSE;
 }
 
-
-/*
- * @implemented
- *
- */
-int
-STDCALL
-GetDeviceCaps(HDC hdc,
-              int i)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiGetDeviceCaps(hdc,i);
-}
-
 /*
  * @implemented
  *

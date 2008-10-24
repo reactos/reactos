@@ -265,11 +265,29 @@ MiniResetComplete(
     IN  BOOLEAN     AddressingReset)
 {
     PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
     KIRQL OldIrql;
-    NDIS_DbgPrint(MIN_TRACE, ("FIXME: MiniResetComplete is partially implemented\n"));
+
     NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+
     KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
+
+    CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    while (CurrentEntry != &Adapter->ProtocolListHead)
+    {
+        AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+
+        (*AdapterBinding->ProtocolBinding->Chars.ResetCompleteHandler)(
+               AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
+               Status);
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
     Adapter->MiniportBusy = FALSE;
+
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
