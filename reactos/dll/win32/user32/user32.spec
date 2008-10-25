@@ -625,7 +625,7 @@
 @ stdcall SetInternalWindowPos(long long ptr ptr)
 @ stdcall SetKeyboardState(ptr)
 @ stdcall SetLastErrorEx(long long)
-@ stdcall SetLayeredWindowAttributes(ptr long long long) win32k.NtUserSetLayeredWindowAttributes
+@ stdcall SetLayeredWindowAttributes(ptr long long long) NtUserSetLayeredWindowAttributes
 @ stdcall SetLogonNotifyWindow(long long)
 @ stdcall SetMenu(long long)
 @ stdcall SetMenuContextHelpId(long long)
@@ -725,7 +725,7 @@
 @ stdcall UnregisterHotKey(long long) NtUserUnregisterHotKey
 # @ stub UnregisterMessagePumpHook
 # @ stub UnregisterUserApiHook
-@ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long)
+@ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long) NtUserUpdateLayeredWindow
 @ stdcall UpdatePerUserSystemParameters(long long)
 @ stdcall UpdateWindow(long)
 @ stdcall User32InitializeImmEntryTable(ptr)

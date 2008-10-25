@@ -227,4 +227,3 @@ BEGIN
 	IDS_DUP_IPADDR      "Die IP-Adresse ist bereits in der Liste vorhanden."
 	IDS_DUP_GW          "Der Standardgateway ist bereits in der Liste vorhanden."
 END
->>>>>>> .merge-right.r36700
