@@ -1,7 +1,0 @@
-<package>
-  <name>OpenOffice 1</name>
-  <version>1.1.5</version>
-  <description>OpenSource replacement for Microsoft Office.</description>
-  <scripts inst="openoffice.inst.rps"/>
-</package>
-

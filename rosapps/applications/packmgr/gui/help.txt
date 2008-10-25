@@ -1,8 +1,0 @@
-Welcome to ReactOS's Package Manager !
-
-WARNING: This is still pre-alfa software you can't do much with it yet.
-
-This is the online help. You can show it at any time by clicking on the the Questionmark Icon above.
-
-You can use this package manager like this: click on the 
-You can also use the Buttons [ctrl] + [0] to [4] to set the action.
