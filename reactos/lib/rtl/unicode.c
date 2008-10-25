@@ -229,56 +229,56 @@ RtlCharToInteger(
     char bMinus = 0;
 
     while (*str != '\0' && *str <= ' ') {
-	str++;
+    str++;
     } /* while */
 
     if (*str == '+') {
-	str++;
+    str++;
     } else if (*str == '-') {
-	bMinus = 1;
-	str++;
+    bMinus = 1;
+    str++;
     } /* if */
 
     if (base == 0) {
-	base = 10;
-	if (str[0] == '0') {
-	    if (str[1] == 'b') {
-		str += 2;
-		base = 2;
-	    } else if (str[1] == 'o') {
-		str += 2;
-		base = 8;
-	    } else if (str[1] == 'x') {
-		str += 2;
-		base = 16;
-	    } /* if */
-	} /* if */
+    base = 10;
+    if (str[0] == '0') {
+        if (str[1] == 'b') {
+        str += 2;
+        base = 2;
+        } else if (str[1] == 'o') {
+        str += 2;
+        base = 8;
+        } else if (str[1] == 'x') {
+        str += 2;
+        base = 16;
+        } /* if */
+    } /* if */
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     if (value == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } /* if */
 
     while (*str != '\0') {
-	chCurrent = *str;
-	if (chCurrent >= '0' && chCurrent <= '9') {
-	    digit = chCurrent - '0';
-	} else if (chCurrent >= 'A' && chCurrent <= 'Z') {
-	    digit = chCurrent - 'A' + 10;
-	} else if (chCurrent >= 'a' && chCurrent <= 'z') {
-	    digit = chCurrent - 'a' + 10;
-	} else {
-	    digit = -1;
-	} /* if */
-	if (digit < 0 || digit >= (int)base) {
-	    *value = bMinus ? -RunningTotal : RunningTotal;
-	    return STATUS_SUCCESS;
-	} /* if */
+    chCurrent = *str;
+    if (chCurrent >= '0' && chCurrent <= '9') {
+        digit = chCurrent - '0';
+    } else if (chCurrent >= 'A' && chCurrent <= 'Z') {
+        digit = chCurrent - 'A' + 10;
+    } else if (chCurrent >= 'a' && chCurrent <= 'z') {
+        digit = chCurrent - 'a' + 10;
+    } else {
+        digit = -1;
+    } /* if */
+    if (digit < 0 || digit >= (int)base) {
+        *value = bMinus ? -RunningTotal : RunningTotal;
+        return STATUS_SUCCESS;
+    } /* if */
 
-	RunningTotal = RunningTotal * base + digit;
-	str++;
+    RunningTotal = RunningTotal * base + digit;
+    str++;
     } /* while */
 
     *value = bMinus ? -RunningTotal : RunningTotal;
@@ -546,34 +546,34 @@ NTSTATUS NTAPI RtlIntegerToChar(
     ULONG len;
 
     if (base == 0) {
-	base = 10;
+    base = 10;
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     pos = &buffer[32];
     *pos = '\0';
 
     do {
-	pos--;
-	digit = value % base;
-	value = value / base;
-	if (digit < 10) {
-	    *pos = '0' + digit;
-	} else {
-	    *pos = 'A' + digit - 10;
-	} /* if */
+    pos--;
+    digit = value % base;
+    value = value / base;
+    if (digit < 10) {
+        *pos = '0' + digit;
+    } else {
+        *pos = 'A' + digit - 10;
+    } /* if */
     } while (value != 0L);
 
     len = &buffer[32] - pos;
     if (len > length) {
-	return STATUS_BUFFER_OVERFLOW;
+    return STATUS_BUFFER_OVERFLOW;
     } else if (str == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } else if (len == length) {
-	memcpy(str, pos, len);
+    memcpy(str, pos, len);
     } else {
-	memcpy(str, pos, len + 1);
+    memcpy(str, pos, len + 1);
     } /* if */
     return STATUS_SUCCESS;
 }
@@ -800,65 +800,65 @@ RtlUnicodeStringToInteger(const UNICODE_STRING *str, /* [I] Unicode string to be
     char bMinus = 0;
 
     while (CharsRemaining >= 1 && *lpwstr <= ' ') {
-	lpwstr++;
-	CharsRemaining--;
+    lpwstr++;
+    CharsRemaining--;
     } /* while */
 
     if (CharsRemaining >= 1) {
-	if (*lpwstr == '+') {
-	    lpwstr++;
-	    CharsRemaining--;
-	} else if (*lpwstr == '-') {
-	    bMinus = 1;
-	    lpwstr++;
-	    CharsRemaining--;
-	} /* if */
+    if (*lpwstr == '+') {
+        lpwstr++;
+        CharsRemaining--;
+    } else if (*lpwstr == '-') {
+        bMinus = 1;
+        lpwstr++;
+        CharsRemaining--;
+    } /* if */
     } /* if */
 
     if (base == 0) {
-	base = 10;
-	if (CharsRemaining >= 2 && lpwstr[0] == '0') {
-	    if (lpwstr[1] == 'b') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 2;
-	    } else if (lpwstr[1] == 'o') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 8;
-	    } else if (lpwstr[1] == 'x') {
-		lpwstr += 2;
-		CharsRemaining -= 2;
-		base = 16;
-	    } /* if */
-	} /* if */
+    base = 10;
+    if (CharsRemaining >= 2 && lpwstr[0] == '0') {
+        if (lpwstr[1] == 'b') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 2;
+        } else if (lpwstr[1] == 'o') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 8;
+        } else if (lpwstr[1] == 'x') {
+        lpwstr += 2;
+        CharsRemaining -= 2;
+        base = 16;
+        } /* if */
+    } /* if */
     } else if (base != 2 && base != 8 && base != 10 && base != 16) {
-	return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER;
     } /* if */
 
     if (value == NULL) {
-	return STATUS_ACCESS_VIOLATION;
+    return STATUS_ACCESS_VIOLATION;
     } /* if */
 
     while (CharsRemaining >= 1) {
-	wchCurrent = *lpwstr;
-	if (wchCurrent >= '0' && wchCurrent <= '9') {
-	    digit = wchCurrent - '0';
-	} else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
-	    digit = wchCurrent - 'A' + 10;
-	} else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
-	    digit = wchCurrent - 'a' + 10;
-	} else {
-	    digit = -1;
-	} /* if */
-	if (digit < 0 || digit >= base) {
-	    *value = bMinus ? -RunningTotal : RunningTotal;
-	    return STATUS_SUCCESS;
-	} /* if */
+    wchCurrent = *lpwstr;
+    if (wchCurrent >= '0' && wchCurrent <= '9') {
+        digit = wchCurrent - '0';
+    } else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
+        digit = wchCurrent - 'A' + 10;
+    } else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
+        digit = wchCurrent - 'a' + 10;
+    } else {
+        digit = -1;
+    } /* if */
+    if (digit < 0 || digit >= base) {
+        *value = bMinus ? -RunningTotal : RunningTotal;
+        return STATUS_SUCCESS;
+    } /* if */
 
-	RunningTotal = RunningTotal * base + digit;
-	lpwstr++;
-	CharsRemaining--;
+    RunningTotal = RunningTotal * base + digit;
+    lpwstr++;
+    CharsRemaining--;
     } /* while */
 
     *value = bMinus ? -RunningTotal : RunningTotal;
@@ -2240,6 +2240,85 @@ RtlFindCharInUnicodeString(IN ULONG Flags,
                            IN PCUNICODE_STRING MatchString,
                            OUT PUSHORT Position)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    int main_idx;
+    unsigned int search_idx;
+
+    switch (Flags)
+    {
+        case 0:
+        {
+            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            {
+                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                {
+                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    {
+                        *Position = (main_idx + 1) * sizeof(WCHAR);
+                        return STATUS_SUCCESS;
+                    }
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 1:
+        {
+            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            {
+                for (search_idx = 0; search_idx < MatchString->Length / sizeof(WCHAR); search_idx++)
+                {
+                    if (SearchString->Buffer[main_idx] == MatchString->Buffer[search_idx])
+                    {
+                        *Position = main_idx * sizeof(WCHAR);
+                        return STATUS_SUCCESS;
+                    }
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 2:
+        {
+            for (main_idx = 0; main_idx < SearchString->Length / sizeof(WCHAR); main_idx++)
+            {
+                search_idx = 0;
+                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                {
+                    search_idx++;
+                }
+                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                {
+                    *Position = (main_idx + 1) * sizeof(WCHAR);
+                    return STATUS_SUCCESS;
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+
+        case 3:
+        {
+            for (main_idx = SearchString->Length / sizeof(WCHAR) - 1; main_idx >= 0; main_idx--)
+            {
+                search_idx = 0;
+                while (search_idx < MatchString->Length / sizeof(WCHAR) &&
+                       SearchString->Buffer[main_idx] != MatchString->Buffer[search_idx])
+                {
+                    search_idx++;
+                }
+                if (search_idx >= MatchString->Length / sizeof(WCHAR))
+                {
+                    *Position = main_idx * sizeof(WCHAR);
+                    return STATUS_SUCCESS;
+                }
+            }
+            *Position = 0;
+            return STATUS_NOT_FOUND;
+        }
+    } /* switch */
+
+    return STATUS_NOT_FOUND;
 }
