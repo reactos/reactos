@@ -3,6 +3,8 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+DECLARE_HANDLE(LSAPR_HANDLE);
+
 #define NDEBUG
 #include <debug.h>
 
@@ -38,6 +40,10 @@ void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
     RtlFreeHeap(RtlGetProcessHeap(), 0, ptr);
+}
+
+void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hObject)
+{
 }
 
 
