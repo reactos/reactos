@@ -332,7 +332,7 @@ IntVideoPortFindAdapter(
 {
    WCHAR DeviceVideoBuffer[20];
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   ULONG Size;
+   SIZE_T Size;
    NTSTATUS Status;
    VIDEO_PORT_CONFIG_INFO ConfigInfo;
    SYSTEM_BASIC_INFORMATION SystemBasicInfo;
@@ -1045,12 +1045,12 @@ VideoPortSynchronizeExecution(
       case VpHighPriority:
          OldIrql = KeGetCurrentIrql();
          if (OldIrql < SYNCH_LEVEL)
-            OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+            KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
 
          Ret = (*SynchronizeRoutine)(Context);
 
          if (OldIrql < SYNCH_LEVEL)
-            KfLowerIrql(OldIrql);
+            KeLowerIrql(OldIrql);
          break;
 
       default:

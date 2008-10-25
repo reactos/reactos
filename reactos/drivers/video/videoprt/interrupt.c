@@ -111,6 +111,7 @@ IntVideoPortSetupInterrupt(
 VP_STATUS NTAPI
 VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 {
+#ifndef _M_AMD64
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    BOOLEAN Status;
 
@@ -124,6 +125,11 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
       DeviceExtension->InterruptLevel);
 
    return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_ACCESS;
+#endif
 }
 
 /*
@@ -133,6 +139,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 VP_STATUS NTAPI
 VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 {
+#ifndef _M_AMD64
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    BOOLEAN Status;
 
@@ -145,4 +152,9 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
       0);
 
    return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_ACCESS;
+#endif
 }

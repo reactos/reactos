@@ -77,7 +77,7 @@ VideoPortAcquireSpinLockAtDpcLevel(
    IN PSPIN_LOCK SpinLock)
 {
    TRACE_(VIDEOPRT, "VideoPortAcquireSpinLockAtDpcLevel\n");
-   KefAcquireSpinLockAtDpcLevel((PKSPIN_LOCK)SpinLock);
+   KeAcquireSpinLockAtDpcLevel((PKSPIN_LOCK)SpinLock);
 }
 
 /*
@@ -104,5 +104,5 @@ VideoPortReleaseSpinLockFromDpcLevel(
    IN PSPIN_LOCK SpinLock)
 {
    TRACE_(VIDEOPRT, "VideoPortReleaseSpinLockFromDpcLevel\n");
-   KefReleaseSpinLockFromDpcLevel((PKSPIN_LOCK)SpinLock);
+   KeReleaseSpinLockFromDpcLevel((PKSPIN_LOCK)SpinLock);
 }

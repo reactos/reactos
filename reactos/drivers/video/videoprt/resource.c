@@ -164,7 +164,7 @@ IntVideoPortMapMemory(
       if (Status)
          *Status = NO_ERROR;
 
-      return (PVOID)TranslatedAddress.u.LowPart;
+      return (PVOID)(ULONG_PTR)TranslatedAddress.u.LowPart;
    }
 
    /* user space */
@@ -272,7 +272,7 @@ IntVideoPortUnmapMemory(
    Status = ZwUnmapViewOfSection(NtCurrentProcess(), MappedAddress);
    if (!NT_SUCCESS(Status))
    {
-      WARN_(VIDEOPRT, "Warning: Mapping for address 0x%x not found!\n", (ULONG)MappedAddress);
+      WARN_(VIDEOPRT, "Warning: Mapping for address 0x%p not found!\n", MappedAddress);
    }
 }
 

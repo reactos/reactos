@@ -275,7 +275,7 @@ IntAgpCommitVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Release some virtual memory */
-      ULONG Size = Pages * PAGE_SIZE;
+      SIZE_T Size = Pages * PAGE_SIZE;
       ULONG OffsetInBytes = Offset * PAGE_SIZE;
       BaseAddress = (PVOID)((ULONG_PTR)VirtualMapping->MappedAddress +
                                        OffsetInBytes);
@@ -349,7 +349,7 @@ IntAgpFreeVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Unmap the section view */
-      ULONG Size = Pages * PAGE_SIZE;
+      SIZE_T Size = Pages * PAGE_SIZE;
       ULONG OffsetInBytes = Offset * PAGE_SIZE;
       BaseAddress = (PVOID)((ULONG_PTR)VirtualMapping->MappedAddress +
                                        OffsetInBytes);
@@ -400,7 +400,7 @@ IntAgpReleaseVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Release the allocated virtual memory */
-      ULONG Size = VirtualMapping->AgpMapping->NumberOfPages * PAGE_SIZE;
+      SIZE_T Size = VirtualMapping->AgpMapping->NumberOfPages * PAGE_SIZE;
       Status = ZwFreeVirtualMemory(VirtualMapping->ProcessHandle,
                                    &VirtualMapping->MappedAddress,
                                    &Size, MEM_RELEASE);
@@ -452,7 +452,7 @@ IntAgpReserveVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Reserve memory for usermode */
-      ULONG Size = AgpMapping->NumberOfPages * PAGE_SIZE;
+      SIZE_T Size = AgpMapping->NumberOfPages * PAGE_SIZE;
       MappedAddress = NULL;
       Status = ZwAllocateVirtualMemory(ProcessHandle, &MappedAddress, 0, &Size,
                                        MEM_RESERVE, PAGE_NOACCESS);
