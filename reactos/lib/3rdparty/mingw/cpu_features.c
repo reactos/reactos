@@ -60,7 +60,7 @@ unsigned int __detect_cpuid (void)
 		: "=&r" (eax), "=&r" (ebx)
 		: "i" (0x00200000));
 
-  return ((eax ^ ebx) & 0x00200000;
+  return (eax ^ ebx) & 0x00200000;
 #elif defined(_MSC_VER)
   unsigned int retval;
 
