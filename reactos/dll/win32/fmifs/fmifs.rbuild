@@ -2,7 +2,6 @@
 	<importlibrary definition="fmifs.def" />
 	<include base="fmifs">.</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0600</define>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<file>chkdsk.c</file>

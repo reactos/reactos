@@ -2,7 +2,6 @@
 	<importlibrary definition="security.def" />
 	<include base="security">.</include>
 	<define name="__SECURITY__" />
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

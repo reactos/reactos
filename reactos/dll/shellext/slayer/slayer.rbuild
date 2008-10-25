@@ -1,8 +1,6 @@
 <module name="slayer" type="win32dll" baseaddress="${BASEADDRESS_SLAYER}" installbase="system32" installname="slayer.dll" unicode="yes">
 	<importlibrary definition="slayer.def" />
 	<include base="slayer">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x601</define>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>

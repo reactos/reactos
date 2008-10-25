@@ -1,5 +1,5 @@
-#define NTDDI_VERSION   NTDDI_WIN2K
-#define _WIN32_WINNT    _WIN32_WINNT_WIN2K
+//#define NTDDI_VERSION   NTDDI_WIN2K
+//#define _WIN32_WINNT    _WIN32_WINNT_WIN2K
 
 // hacks for WDK
 #define __field_bcount_part_opt(x,y)

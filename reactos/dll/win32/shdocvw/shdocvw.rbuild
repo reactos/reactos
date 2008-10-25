@@ -3,9 +3,6 @@
 	<importlibrary definition="shdocvw.spec" />
 	<include base="shdocvw">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<define name="_SHDOCVW_" />
 	<library>wine</library>
 	<library>uuid</library>

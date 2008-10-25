@@ -7,8 +7,6 @@
 	<include base="cryptnet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>crypt32</library>
 	<library>kernel32</library>

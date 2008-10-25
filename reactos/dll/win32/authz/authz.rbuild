@@ -1,9 +1,6 @@
 <module name="authz" type="win32dll" baseaddress="${BASEADDRESS_AUTHZ}" installbase="system32" installname="authz.dll" unicode="yes">
 	<importlibrary definition="authz.def" />
 	<include base="authz">.</include>
-	<define name="_WIN32_IE">0x0500</define>
-	<define name="_WIN32_WINNT">0x0600</define>
-	<define name="WINVER">0x0600</define>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

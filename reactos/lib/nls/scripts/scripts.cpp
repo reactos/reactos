@@ -40,8 +40,6 @@
 #define WIN32_LEAN_AND_MEAN
 #define STRICT
 
-#define WINVER 0x0600
-
 #include <windows.h>
 #include <winnls.h>
 

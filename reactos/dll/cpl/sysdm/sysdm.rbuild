@@ -3,9 +3,6 @@
 <module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" unicode="yes">
 	<importlibrary definition="sysdm.def" />
 	<include base="sysdm">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>setupapi</library>

@@ -5,12 +5,8 @@
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<define name="__WINESRC__" />
 	<define name="_SETUPAPI_" />
-	<define name="_SETUPAPI_VER">0x501</define>
 	<library>pnp_client</library>
 	<library>uuid</library>
 	<library>wine</library>

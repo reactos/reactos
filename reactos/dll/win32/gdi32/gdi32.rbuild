@@ -2,8 +2,6 @@
 	<importlibrary definition="gdi32.def" />
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="LANGPACK" />
 	<library>user32</library>
 	<library>kernel32</library>

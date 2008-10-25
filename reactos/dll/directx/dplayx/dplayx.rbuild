@@ -5,9 +5,6 @@
 	<importlibrary definition="dplayx.spec" />
 	<include base="dplayx">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>

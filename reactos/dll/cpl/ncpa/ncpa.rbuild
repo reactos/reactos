@@ -3,8 +3,9 @@
 <module name="ncpa" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_NCPA}" installbase="system32" installname="ncpa.cpl" unicode="yes">
 	<importlibrary definition="ncpa.def" />
 	<include base="ncpa">.</include>
-	<define name="_WIN32_IE">0x600</define>
+
 	<define name="_WIN32_WINNT">0x600</define>
+
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>shell32</library>

@@ -3,9 +3,6 @@
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings ="true" unicode="yes">
 	<importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
-
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>

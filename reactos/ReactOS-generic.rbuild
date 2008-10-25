@@ -14,6 +14,49 @@
 		<property name="DBG_OR_KDBG" value="true" />
 	</if>
 
+	<!-- The version target valid values are: Nt4 , NT5 , NT51 -->
+	<property name="VERSION_TARGET" value="NT52" />
+
+	<if property="VERSION_TARGET" value="NT4">
+		<define name="WINVER" overridable="true">0x400</define>
+		<define name="_WIN32_IE">0x600</define>
+		<define name="_WIN32_WINNT" overridable="true">0x400</define>
+		<define name="_WIN32_WINDOWS">0x400</define>
+		<define name="_SETUPAPI_VER">0x400</define>
+	</if>
+
+	<if property="VERSION_TARGET" value="NT5">
+		<define name="WINVER" overridable="true">0x500</define>
+		<define name="_WIN32_IE">0x600</define>
+		<define name="_WIN32_WINNT" overridable="true">0x500</define>
+		<define name="_WIN32_WINDOWS">0x500</define>
+		<define name="_SETUPAPI_VER">0x500</define>
+	</if>
+
+	<if property="VERSION_TARGET" value="NT51">
+		<define name="WINVER" overridable="true">0x501</define>
+		<define name="_WIN32_IE">0x600</define>
+		<define name="_WIN32_WINNT" overridable="true">0x501</define>
+		<define name="_WIN32_WINDOWS">0x501</define>
+		<define name="_SETUPAPI_VER">0x501</define>
+	</if>
+
+	<if property="VERSION_TARGET" value="NT52">
+		<define name="WINVER" overridable="true">0x502</define>
+		<define name="_WIN32_IE">0x600</define>
+		<define name="_WIN32_WINNT" overridable="true">0x502</define>
+		<define name="_WIN32_WINDOWS">0x502</define>
+		<define name="_SETUPAPI_VER">0x502</define>
+	</if>
+
+	<if property="VERSION_TARGET" value="NT6">
+		<define name="WINVER" overridable="true">0x600</define>
+		<define name="_WIN32_IE">0x600</define>
+		<define name="_WIN32_WINNT" overridable="true">0x600</define>
+		<define name="_WIN32_WINDOWS">0x600</define>
+		<define name="_SETUPAPI_VER">0x600</define>
+	</if>
+
 	<include>.</include>
 	<include>include</include>
 	<include root="intermediate">include</include>
