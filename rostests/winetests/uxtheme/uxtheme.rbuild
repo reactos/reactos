@@ -3,8 +3,6 @@
 <group>
 <module name="uxtheme_winetest" type="win32cui" installbase="bin" installname="uxtheme_winetest.exe" allowwarnings="true">
 	<include base="uxtheme_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>system.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>
