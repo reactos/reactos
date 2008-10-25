@@ -3,7 +3,6 @@
 <group>
 <module name="gdi32_winetest" type="win32cui" installbase="bin" installname="gdi32_winetest.exe" allowwarnings="true">
     <include base="gdi32_winetest">.</include>
-    <define name="WINVER">0x0600</define>
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>gdi32</library>

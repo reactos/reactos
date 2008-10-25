@@ -2,8 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="winetest" type="win32gui" installbase="system32" allowwarnings="true">
 	<include base="winetest">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>comctl32</library>
 	<library>version</library>
 	<library>user32</library>

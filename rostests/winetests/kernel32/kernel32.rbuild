@@ -4,8 +4,6 @@
 <module name="kernel32_winetest" type="win32cui" installbase="bin" installname="kernel32_winetest.exe" allowwarnings="true">
     <include base="kernel32_winetest">.</include>
     <define name="__USE_W32API" />
-    <define name="_WIN32_WINNT">0x0600</define>
-    <define name="WINVER">0x609</define>
     <library>ntdll</library>
     <library>kernel32</library>
     <library>advapi32</library>

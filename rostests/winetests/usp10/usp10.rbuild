@@ -3,8 +3,6 @@
 <group>
 <module name="usp10_winetest" type="win32cui" installbase="bin" installname="usp10_winetest.exe" allowwarnings="true">
 	<include base="usp10_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>usp10.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>

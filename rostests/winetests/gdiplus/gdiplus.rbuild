@@ -3,8 +3,6 @@
 <group>
 <module name="gdiplus_winetest" type="win32cui" installbase="bin" installname="gdiplus_winetest.exe" allowwarnings="true">
 	<include base="gdiplus_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>brush.c</file>
 	<file>font.c</file>
 	<file>graphics.c</file>

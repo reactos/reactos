@@ -3,8 +3,6 @@
 <group>
 <module name="oleaut32_winetest" type="win32cui" installbase="bin" installname="oleaut32_winetest.exe" allowwarnings="true">
 	<include base="oleaut32_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>oleaut32</library>
 	<library>ole32</library>

@@ -3,8 +3,6 @@
 <group>
 <module name="mlang_winetest" type="win32cui" installbase="bin" installname="mlang_winetest.exe" allowwarnings="true">
 	<include base="mlang_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>mlang.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>

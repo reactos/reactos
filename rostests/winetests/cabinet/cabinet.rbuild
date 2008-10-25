@@ -3,8 +3,6 @@
 <group>
 <module name="cabinet_winetest" type="win32cui" installbase="bin" installname="cabinet_winetest.exe" allowwarnings="true">
 	<include base="cabinet_winetest">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>extract.c</file>
 	<file>fdi.c</file>
 	<file>testlist.c</file>
