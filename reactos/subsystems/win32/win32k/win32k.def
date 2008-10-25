@@ -108,6 +108,7 @@ EngMultiByteToUnicodeN@20=NTOSKRNL.RtlMultiByteToUnicodeN
 EngMultiByteToWideChar@20
 EngNineGrid@36
 EngPaint@20
+EngPlgBlt@44
 EngProbeForRead@12=NTOSKRNL.ProbeForRead
 EngProbeForReadAndWrite@12=NTOSKRNL.ProbeForWrite
 EngQueryDeviceAttribute@24
