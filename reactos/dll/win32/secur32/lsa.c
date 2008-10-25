@@ -256,8 +256,8 @@ LsaLogonUser(HANDLE LsaHandle,
 				    0,
 				  Reply->d.LogonUserReply.ProfileBufferLength);
    memcpy(*ProfileBuffer,
-	  (PVOID)((ULONG)Reply->d.LogonUserReply.Data +
-		  (ULONG)Reply->d.LogonUserReply.ProfileBuffer),
+	  (PVOID)((ULONG_PTR)Reply->d.LogonUserReply.Data +
+		  (ULONG_PTR)Reply->d.LogonUserReply.ProfileBuffer),
 	  Reply->d.LogonUserReply.ProfileBufferLength);
    *LogonId = Reply->d.LogonUserReply.LogonId;
    *Token = Reply->d.LogonUserReply.Token;
