@@ -153,7 +153,7 @@ static VOID WriteUlong(UCHAR Index, ULONG Value)
 }
 #endif
 
-static __inline VOID SetReadDataPort(ULONG Port)
+static __inline VOID SetReadDataPort(ULONG_PTR Port)
 {
   IsaPnPReadPort = (PUCHAR)Port;
 	WriteUchar(0x00, (UCHAR) (Port >> 2));
@@ -214,13 +214,13 @@ static VOID DeactivateLogicalDevice(UCHAR LogicalDevice)
 
 #define READ_DATA_PORT_STEP 32  /* Minimum is 4 */
 
-static ULONG FindNextReadPort(VOID)
+static ULONG_PTR FindNextReadPort(VOID)
 {
-	ULONG Port;
+	ULONG_PTR Port;
 
 
 
-	Port = (ULONG)IsaPnPReadPort;
+	Port = (ULONG_PTR)IsaPnPReadPort;
 
 	while (TRUE) {
 
@@ -260,7 +260,7 @@ static ULONG FindNextReadPort(VOID)
 
 static BOOLEAN IsolateReadDataPortSelect(VOID)
 {
-  ULONG Port;
+  ULONG_PTR Port;
 
 	SendWait();
 	SendKey();
@@ -333,7 +333,7 @@ static ULONG IsolatePnPCards(VOID)
 			KeStallExecutionProcessor(250);
 			iteration++;
 			SendWake(0x00);
-			SetReadDataPort((ULONG)IsaPnPReadPort);
+			SetReadDataPort((ULONG_PTR)IsaPnPReadPort);
 			KeStallExecutionProcessor(1000);
 			WriteAddress(0x01);
 			KeStallExecutionProcessor(1000);
@@ -1305,7 +1305,7 @@ static NTSTATUS BuildResourceLists(PISAPNP_LOGICAL_DEVICE LogicalDevice)
   do {
     Status = BuildResourceList(LogicalDevice, p, Priority);
     if (NT_SUCCESS(Status)) {
-      p = (PIO_RESOURCE_LIST)((ULONG)p + SingleListSize);
+      p = (PIO_RESOURCE_LIST)((ULONG_PTR)p + SingleListSize);
       Priority++;
     }
   } while (Status != STATUS_NOT_FOUND);
@@ -1477,7 +1477,7 @@ ISAPNPQueryBusRelations(
     CurrentEntry = CurrentEntry->Flink;
   }
 
-  Irp->IoStatus.Information = (ULONG)Relations;
+  Irp->IoStatus.Information = (ULONG_PTR)Relations;
 
   return Status;
 }
