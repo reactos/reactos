@@ -4201,7 +4201,7 @@ int WINAPI SetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 int WINAPI SetScrollPos(HWND,int,int,BOOL);
 BOOL WINAPI SetScrollRange(HWND,int,int,int,BOOL);
 BOOL WINAPI SetSysColors(int,const INT *,const COLORREF *);
-HANDLE WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, int);
+DWORD WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD);
 #define SetSysModalWindow(h) (NULL)
 BOOL WINAPI SetSystemCursor(HCURSOR,DWORD);
 BOOL WINAPI SetThreadDesktop(HDESK);
