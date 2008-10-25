@@ -11,10 +11,10 @@
 #include <debug.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
-ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
+ULONG_PTR ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
 
 static BOOLEAN ProbeAddressForNIC(
-    ULONG address)
+    ULONG_PTR address)
 /*
  * FUNCTION: Probes an address for a NIC
  * ARGUMENTS:
@@ -129,7 +129,7 @@ static BOOLEAN NICTestRAM(
  *     Start at 1KB and test for every 1KB up to 64KB
  */
 {
-    ULONG Base;
+    ULONG_PTR Base;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 

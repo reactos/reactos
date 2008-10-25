@@ -79,7 +79,7 @@ typedef struct _NIC_ADAPTER
     NDIS_MINIPORT_INTERRUPT Interrupt;
 
     /* I/O base address and interrupt number of adapter */
-    ULONG IoBaseAddress;
+    ULONG_PTR IoBaseAddress;
     ULONG InterruptLevel;
     ULONG InterruptVector;
     BOOLEAN InterruptShared;
@@ -221,24 +221,24 @@ VOID NICUpdateCounters(
 VOID NICReadDataAlign(
     PNIC_ADAPTER Adapter,
     PUSHORT Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length);
 
 VOID NICWriteDataAlign(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUSHORT Source,
     USHORT Length);
 
 VOID NICReadData(
     PNIC_ADAPTER Adapter,
     PUCHAR Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length);
 
 VOID NICWriteData(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUCHAR Source,
     USHORT Length);
 
