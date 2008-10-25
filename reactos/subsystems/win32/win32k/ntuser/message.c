@@ -597,7 +597,14 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
    }
 
    Parent = IntGetParent(MsgWindow);//fixme: deref retval?
-   /* fixme: abort if no parent ? */
+
+   /* If there is no parent, do not send the WM_MOUSEACTIVATE message. Fixes Bug #3111 */
+   if (!Parent)
+   {
+      co_IntMouseActivateWindow(MsgWindow);
+      return FALSE;
+   }
+
    Result = co_IntSendMessage(MsgWindow->hSelf,
                               WM_MOUSEACTIVATE,
                               (WPARAM) (Parent ? Parent->hSelf : NULL),
