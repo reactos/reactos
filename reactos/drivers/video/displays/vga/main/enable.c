@@ -562,7 +562,7 @@ DrvGetModes(IN HANDLE Driver,
                 /* next DEVMODE entry */
                 OutputModes--;
 
-                DM = (PDEVMODEW) ( ((ULONG)DM) + sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
+                DM = (PDEVMODEW) ( ((ULONG_PTR)DM) + sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
 
                 OutputSize += (sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);
             }
