@@ -88,7 +88,7 @@ FindRun (PNONRESIDENT_ATTRIBUTE NresAttr,
 
   *lcn = 0;
 
-  for (run = (PUCHAR)((ULONG)NresAttr + NresAttr->RunArrayOffset);
+  for (run = (PUCHAR)((ULONG_PTR)NresAttr + NresAttr->RunArrayOffset);
 	*run != 0; run += RunLength(run))
     {
       *lcn += RunLCN(run);
@@ -248,7 +248,7 @@ NtfsDumpAttribute (PATTRIBUTE Attribute)
     {
       Name.Length = Attribute->NameLength * sizeof(WCHAR);
       Name.MaximumLength = Name.Length;
-      Name.Buffer = (PWCHAR)((ULONG)Attribute + Attribute->NameOffset);
+      Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
 
       DbgPrint("'%wZ' ", &Name);
     }
