@@ -1194,6 +1194,7 @@ User32DefWindowProc(HWND hWnd,
             if (hDC)
             {
                 HICON hIcon;
+
                 if (GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
                     (hIcon = (HICON)GetClassLongW(hWnd, GCL_HICON)) != NULL)
                 {
@@ -1762,6 +1763,75 @@ User32DefWindowProc(HWND hWnd,
 }
 
 
+/*
+ * helpers for calling IMM32 (from Wine 10/22/2008)
+ *
+ * WM_IME_* messages are generated only by IMM32,
+ * so I assume imm32 is already LoadLibrary-ed.
+ */
+static HWND
+DefWndImmGetDefaultIMEWnd(HWND hwnd)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    HWND (WINAPI *pFunc)(HWND);
+    HWND hwndRet = 0;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return 0;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmGetDefaultIMEWnd");
+    if (pFunc != NULL)
+        hwndRet = (*pFunc)(hwnd);
+
+    return hwndRet;
+}
+
+
+static BOOL
+DefWndImmIsUIMessageA(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    BOOL (WINAPI *pFunc)(HWND,UINT,WPARAM,LPARAM);
+    BOOL fRet = FALSE;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return FALSE;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmIsUIMessageA");
+    if (pFunc != NULL)
+        fRet = (*pFunc)(hwndIME, msg, wParam, lParam);
+
+    return fRet;
+}
+
+
+static BOOL
+DefWndImmIsUIMessageW(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HINSTANCE hInstIMM = GetModuleHandleW(L"imm32\0");
+    BOOL (WINAPI *pFunc)(HWND,UINT,WPARAM,LPARAM);
+    BOOL fRet = FALSE;
+
+    if (!hInstIMM)
+    {
+        ERR("cannot get IMM32 handle\n");
+        return FALSE;
+    }
+
+    pFunc = (void*) GetProcAddress(hInstIMM, "ImmIsUIMessageW");
+    if (pFunc != NULL)
+        fRet = (*pFunc)(hwndIME, msg, wParam, lParam);
+
+    return fRet;
+}
+
+
 LRESULT STDCALL
 DefWindowProcA(HWND hWnd,
 	       UINT Msg,
@@ -1784,13 +1854,13 @@ DefWindowProcA(HWND hWnd,
 
             if(cs->lpszName)
             {
-              RtlInitAnsiString(&AnsiString, (LPSTR)cs->lpszName);
-              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-              NtUserDefSetText(hWnd, &UnicodeString);
-              RtlFreeUnicodeString(&UnicodeString);
+                RtlInitAnsiString(&AnsiString, (LPSTR)cs->lpszName);
+                RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+                NtUserDefSetText(hWnd, &UnicodeString);
+                RtlFreeUnicodeString(&UnicodeString);
             }
             else
-              NtUserDefSetText(hWnd, NULL);
+                NtUserDefSetText(hWnd, NULL);
 
             Result = 1;
             break;
@@ -1810,9 +1880,11 @@ DefWindowProcA(HWND hWnd,
                                                          buf,
                                                          Wnd->WindowName.Length)))
                 {
-                    Result = (LRESULT)len;
+                    Result = (LRESULT) len;
                 }
             }
+            else Result = 0L;
+
             break;
         }
 
@@ -1859,13 +1931,13 @@ DefWindowProcA(HWND hWnd,
 
             if(lParam)
             {
-              RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
-              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-              NtUserDefSetText(hWnd, &UnicodeString);
-              RtlFreeUnicodeString(&UnicodeString);
+                RtlInitAnsiString(&AnsiString, (LPSTR)lParam);
+                RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+                NtUserDefSetText(hWnd, &UnicodeString);
+                RtlFreeUnicodeString(&UnicodeString);
             }
             else
-              NtUserDefSetText(hWnd, NULL);
+                NtUserDefSetText(hWnd, NULL);
 
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
             {
@@ -1876,16 +1948,50 @@ DefWindowProcA(HWND hWnd,
             break;
         }
 
-/*      FIXME: Implement these. */
-        case WM_IME_CHAR:
         case WM_IME_KEYDOWN:
+        {
+            Result = PostMessageA(hWnd, WM_KEYDOWN, wParam, lParam);
+            break;
+        }
+
         case WM_IME_KEYUP:
+        {
+            Result = PostMessageA(hWnd, WM_KEYUP, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_CHAR:
+        {
+            if (HIBYTE(wParam))
+                PostMessageA(hWnd, WM_CHAR, HIBYTE(wParam), lParam);
+            PostMessageA(hWnd, WM_CHAR, LOBYTE(wParam), lParam);
+            break;
+        }
+
         case WM_IME_STARTCOMPOSITION:
         case WM_IME_COMPOSITION:
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
+        case WM_IME_NOTIFY:
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = SendMessageA(hwndIME, Msg, wParam, lParam);
+            break;
+        }
+
         case WM_IME_SETCONTEXT:
-            FIXME("FIXME: WM_IME_* conversion isn't implemented yet!");
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = DefWndImmIsUIMessageA(hwndIME, Msg, wParam, lParam);
+            break;
+        }
+
         /* fall through */
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
@@ -1916,9 +2022,9 @@ DefWindowProcW(HWND hWnd,
              * may have child window IDs instead of window name */
 
             if(cs->lpszName)
-              RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
+                RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
 
-            NtUserDefSetText( hWnd, (cs->lpszName ? &UnicodeString : NULL));
+            NtUserDefSetText(hWnd, (cs->lpszName ? &UnicodeString : NULL));
             Result = 1;
             break;
         }
@@ -1937,9 +2043,11 @@ DefWindowProcW(HWND hWnd,
                                                          buf,
                                                          Wnd->WindowName.Length)))
                 {
-                    Result = (LRESULT)len;
+                    Result = (LRESULT) (Wnd->WindowName.Length / sizeof(WCHAR));
                 }
             }
+            else Result = 0L;
+
             break;
         }
 
@@ -1978,7 +2086,7 @@ DefWindowProcW(HWND hWnd,
             UNICODE_STRING UnicodeString;
 
             if(lParam)
-              RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
+                RtlInitUnicodeString(&UnicodeString, (LPWSTR)lParam);
 
             NtUserDefSetText(hWnd, (lParam ? &UnicodeString : NULL));
 
@@ -1992,16 +2100,44 @@ DefWindowProcW(HWND hWnd,
 
         case WM_IME_CHAR:
         {
-            SendMessageW(hWnd, WM_CHAR, wParam, lParam);
+            PostMessageW(hWnd, WM_CHAR, wParam, lParam);
             Result = 0;
+            break;
+        }
+
+        case WM_IME_KEYDOWN:
+        {
+            Result = PostMessageW(hWnd, WM_KEYDOWN, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_KEYUP:
+        {
+            Result = PostMessageW(hWnd, WM_KEYUP, wParam, lParam);
+            break;
+        }
+
+        case WM_IME_STARTCOMPOSITION:
+        case WM_IME_COMPOSITION:
+        case WM_IME_ENDCOMPOSITION:
+        case WM_IME_SELECT:
+        case WM_IME_NOTIFY:
+        {
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = SendMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
         case WM_IME_SETCONTEXT:
         {
-            /* FIXME */
-            FIXME("FIXME: WM_IME_SETCONTEXT is not implemented!");
-            Result = 0;
+            HWND hwndIME;
+
+            hwndIME = DefWndImmGetDefaultIMEWnd(hWnd);
+            if (hwndIME)
+                Result = DefWndImmIsUIMessageW(hwndIME, Msg, wParam, lParam);
             break;
         }
 
