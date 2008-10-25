@@ -577,21 +577,24 @@ NTSTATUS TCPConnect
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
 
-    OskitTCPBind( Connection->SocketContext,
+    Status = TCPTranslateError
+        ( OskitTCPBind( Connection->SocketContext,
 		  Connection,
 		  &AddressToBind,
-		  sizeof(AddressToBind) );
+		  sizeof(AddressToBind) ) );
 
-    memcpy( &AddressToConnect.sin_addr,
-	    &RemoteAddress.Address.IPv4Address,
-	    sizeof(AddressToConnect.sin_addr) );
-    AddressToConnect.sin_port = RemotePort;
+    if (NT_SUCCESS(Status)) {
+        memcpy( &AddressToConnect.sin_addr,
+	        &RemoteAddress.Address.IPv4Address,
+	        sizeof(AddressToConnect.sin_addr) );
+        AddressToConnect.sin_port = RemotePort;
 
-    Status = TCPTranslateError
-	( OskitTCPConnect( Connection->SocketContext,
-			   Connection,
-			   &AddressToConnect,
-			   sizeof(AddressToConnect) ) );
+        Status = TCPTranslateError
+	    ( OskitTCPConnect( Connection->SocketContext,
+		       	       Connection,
+			       &AddressToConnect,
+			       sizeof(AddressToConnect) ) );
+    }
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
