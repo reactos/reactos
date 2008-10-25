@@ -3,6 +3,7 @@
 <group>
 <module name="advpack_winetest" type="win32cui" installbase="bin" installname="advpack_winetest.exe" allowwarnings="true">
 	<include base="advpack_winetest">.</include>
+	<file>advpack.c</file>
 	<file>files.c</file>
 	<file>install.c</file>
 	<file>testlist.c</file>
