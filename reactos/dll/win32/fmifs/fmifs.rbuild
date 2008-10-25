@@ -1,5 +1,5 @@
 <module name="fmifs" type="win32dll" entrypoint="InitializeFmIfs@12" baseaddress="${BASEADDRESS_FMIFS}" installbase="system32" installname="fmifs.dll">
-	<importlibrary definition="fmifs.spec.def" />
+	<importlibrary definition="fmifs.spec" />
 	<include base="fmifs">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT">0x0600</define>
