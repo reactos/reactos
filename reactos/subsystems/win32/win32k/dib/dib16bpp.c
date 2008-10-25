@@ -764,17 +764,17 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     /* Calc the Zoom Width of Source */
     SrcSizeX = SourceRect->right - SourceRect->left;
 
-    /* Calc the Zoom height of Destions */
+    /* Calc the Zoom height of Destinations */
     DesSizeY = DestRect->bottom - DestRect->top;
 
-    /* Calc the Zoom width of Destions */
+    /* Calc the Zoom width of Destinations */
     DesSizeX = DestRect->right - DestRect->left;
 
-    /* Calc the zoom factor of soruce height */
+    /* Calc the zoom factor of source height */
     SrcZoomYHight = SrcSizeY / DesSizeY;
     SrcZoomYLow = SrcSizeY - (SrcZoomYHight * DesSizeY);
 
-    /* Calc the zoom factor of soruce width */
+    /* Calc the zoom factor of source width */
     SrcZoomXHight = SrcSizeX / DesSizeX;
     SrcZoomXLow = SrcSizeX - (SrcZoomXHight * DesSizeX);
 
