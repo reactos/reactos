@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="butterflies" type="win32scr" installbase="system32" installname="butterflies.scr" unicode="yes">
-	<importlibrary definition="butterflies.spec" />
 	<include base="butterflies">.</include>
 	<library>scrnsave</library>
 	<library>kernel32</library>
