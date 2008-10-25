@@ -153,12 +153,12 @@ FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
     return Found;
 }
 
-static UINT
+static INT
 FindCheckItemIndexByAccessMask(IN PCHECKLISTWND infoPtr,
                                IN ACCESS_MASK AccessMask)
 {
     PCHECKITEM Item;
-    UINT Index = 0, Found = -1;
+    INT Index = 0, Found = -1;
 
     for (Item = infoPtr->CheckItemListHead;
          Item != NULL;
@@ -208,7 +208,7 @@ FindCheckItem(IN PCHECKLISTWND infoPtr,
          CurItem = CurItem->Next)
     {
         if ((CurItem->State & CIS_DISABLED) != CIS_DISABLED &&
-            !wcsnicmp(CurItem->Name,
+            !_wcsnicmp(CurItem->Name,
                       SearchText, Count))
         {
             break;
@@ -1569,7 +1569,7 @@ CheckListWndProc(IN HWND hwnd,
             {
                 PCHECKITEM PtItem;
                 UINT PtItemBox;
-                BOOL OldPushed;
+                UINT OldPushed;
 
                 PtItem = PtToCheckItemBox(infoPtr,
                                           &pt,
@@ -2137,7 +2137,7 @@ CheckListWndProc(IN HWND hwnd,
                             (infoPtr->QuickSearchHitItem == NULL ||
                              infoPtr->QuickSearchHitItem == infoPtr->FocusedCheckItem))
                         {
-                            BOOL OldPushed = infoPtr->FocusedPushed;
+                            UINT OldPushed = infoPtr->FocusedPushed;
                             infoPtr->FocusedPushed = TRUE;
 
                             if (infoPtr->FocusedPushed != OldPushed)

@@ -17,6 +17,5 @@
 	<file>misc.c</file>
 	<file>sidcache.c</file>
 	<file>aclui.rc</file>
-	<file>aclui.spec</file>
 	<pch>precomp.h</pch>
 </module>

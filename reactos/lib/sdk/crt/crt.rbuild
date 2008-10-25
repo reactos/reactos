@@ -1,6 +1,22 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="chkstk" type="staticlibrary">
+	<directory name="except">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+	</directory>
+</module>
+
 <module name="crt" type="staticlibrary">
+	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -43,7 +59,6 @@
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>chkstk_asm.s</file>
 				<file>prolog.s</file>
 				<file>seh.s</file>
 				<file>unwind.c</file>
@@ -52,7 +67,6 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>seh.s</file>
-				<file>chkstk_asm.s</file>
 			</directory>
 		</if>
 		<file>xcptfil.c</file>

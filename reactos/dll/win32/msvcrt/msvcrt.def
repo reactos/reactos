@@ -120,7 +120,7 @@ EXPORTS
   __fpecode @115
   __getmainargs @116
   __initenv @117
-;  __iob_func @118
+  __iob_func=__p__iob @118
   __isascii @119
   __iscsym @120
   __iscsymf @121
@@ -846,3 +846,5 @@ EXPORTS
   wctomb @840
   wprintf @841
   wscanf @842
+
+  _swprintf=swprintf

@@ -1,8 +1,6 @@
 #ifndef _CPU_FEATURES_H
 #define _CPU_FEATURES_H
 
-#include <stdbool.h>
-
 #define  _CRT_CMPXCHG8B		0x0001
 #define  _CRT_CMOV		0x0002
 #define  _CRT_MMX		0x0004

@@ -749,11 +749,11 @@ typedef struct _KUSER_SHARED_DATA
 
 typedef enum _IO_PAGING_PRIORITY
 {
-  IoPagingPriorityInvalid,        
-  IoPagingPriorityNormal,         
-  IoPagingPriorityHigh,           
-  IoPagingPriorityReserved1,      
-  IoPagingPriorityReserved2       
+  IoPagingPriorityInvalid,
+  IoPagingPriorityNormal,
+  IoPagingPriorityHigh,
+  IoPagingPriorityReserved1,
+  IoPagingPriorityReserved2
 } IO_PAGING_PRIORITY;
 
 typedef enum _IO_ALLOCATION_ACTION {
@@ -2362,7 +2362,7 @@ typedef struct _SCATTER_GATHER_ELEMENT {
 typedef struct _SCATTER_GATHER_LIST {
   ULONG  NumberOfElements;
   ULONG_PTR  Reserved;
-  SCATTER_GATHER_ELEMENT  Elements[0];
+  SCATTER_GATHER_ELEMENT  Elements[1];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 typedef struct _MDL {
@@ -2763,6 +2763,7 @@ typedef enum _KD_OPTION {
 } KD_OPTION;
 
 /* Function Type Defintions for Dispatch Functions */
+struct _DEVICE_CONTROL_CONTEXT;
 
 typedef VOID
 (DDKAPI *PDEVICE_CONTROL_COMPLETION)(
@@ -4441,6 +4442,8 @@ typedef struct _RTL_BITMAP_RUN {
     ULONG  NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
+struct _RTL_RANGE;
+
 typedef BOOLEAN
 (NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
     PVOID Context,
@@ -4805,6 +4808,8 @@ typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackSecondaryDumpData,
   KbCallbackDumpIo,
 } KBUGCHECK_CALLBACK_REASON;
+
+struct _KBUGCHECK_REASON_CALLBACK_RECORD;
 
 typedef VOID
 (DDKAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(

@@ -20,7 +20,7 @@
 #define SPEEDTICKS 9
 #define ACCELTICKS 9
 
-static INT nSpeedArray[SPEEDTICKS] = {10, 20, 30, 40, 60, 80, 120, 180, 360};
+static UINT nSpeedArray[SPEEDTICKS] = {10, 20, 30, 40, 60, 80, 120, 180, 360};
 
 
 INT_PTR CALLBACK

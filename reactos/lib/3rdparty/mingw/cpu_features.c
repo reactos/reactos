@@ -1,5 +1,8 @@
-#include <stdbool.h>
 #include "cpu_features.h"
+
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
 
 /* level 1 edx bits */
 #define EDX_CX8 (1 << 8) /* CMPXCHG8B */
@@ -18,28 +21,76 @@
 #define EDX_3DNOWP (1 << 30)
 #define EDX_LM (1 << 29) /*LONG MODE */
 
-#define __cpuid(level,a,b,c,d)			 		\
-  __asm__ __volatile__ ("cpuid;"				\
-			: "=a" (a), "=b" (b), "=c" (c), "=d" (d)\
-			: "0" (level))
-
 /* Combine the different cpuid flags into a single bitmap.  */
 
 unsigned int __cpu_features = 0;
 
-void  __cpu_features_init (void)
-{
 #ifdef __i386__
-  unsigned int eax, ebx, ecx, edx;
-  /* Try to change the value of CPUID bit (bit 21) in EFLAGS.
+#if defined(__GNUC__)
+#define __cpuid(level,a,b,c,d)			 		\
+  __asm__ __volatile__ ("cpuid;"				\
+			: "=a" (a), "=b" (b), "=c" (c), "=d" (d)\
+			: "0" (level))
+#elif defined(_MSC_VER)
+void ___cpuid (int level, unsigned int * a, unsigned int * b, unsigned int * c, unsigned int * d)
+{
+  int info[4];
+
+  __cpuid (info, level);
+
+  *a = info[0];
+  *b = info[1];
+  *c = info[2];
+  *d = info[3];
+}
+#define __cpuid(level,a,b,c,d) \
+  ___cpuid(level, &(a), &(b), &(c), &(d))
+#endif
+
+static
+unsigned int __detect_cpuid (void)
+{
+    /* Try to change the value of CPUID bit (bit 21) in EFLAGS.
      If the bit can be toggled, CPUID is supported.  */
+#if defined(__GNUC__)
+  unsigned int eax, ebx;
   asm volatile ("pushfl; pushfl; popl %0;"
 		"movl %0,%1; xorl %2,%0;"
 		"pushl %0; popfl; pushfl; popl %0; popfl"
 		: "=&r" (eax), "=&r" (ebx)
 		: "i" (0x00200000));
 
-  if (((eax ^ ebx) & 0x00200000) == 0)
+  return ((eax ^ ebx) & 0x00200000;
+#elif defined(_MSC_VER)
+  unsigned int retval;
+
+  __asm
+  {
+    pushf
+    pushf
+    pop eax
+    mov ebx, eax
+    xor eax, 00200000h
+    push eax
+    popf
+    pushf
+    pop eax
+    popf
+    xor eax, ebx
+    mov [retval], eax
+  }
+
+  return retval & 0x00200000;
+#endif
+}
+#endif
+
+void  __cpu_features_init (void)
+{
+#ifdef __i386__
+  unsigned int eax, ebx, ecx, edx;
+
+  if (!__detect_cpuid ())
     return;
 
   __cpuid (0, eax, ebx, ecx, edx);
