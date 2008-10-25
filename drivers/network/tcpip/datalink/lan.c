@@ -628,6 +628,11 @@ VOID LANTransmit(
 		("Called( NdisPacket %x, Offset %d, Adapter %x )\n",
 		 NdisPacket, Offset, Adapter));
 
+    if (Adapter->State != LAN_STATE_STARTED) {
+        ProtocolSendComplete(Context, NdisPacket, NDIS_STATUS_NOT_ACCEPTED);
+        return;
+    }
+
     TI_DbgPrint(DEBUG_DATALINK,
 		("Adapter Address [%02x %02x %02x %02x %02x %02x]\n",
 		 Adapter->HWAddress[0] & 0xff,
@@ -643,7 +648,6 @@ VOID LANTransmit(
 
     LanChainCompletion( Adapter, NdisPacket );
 
-    if (Adapter->State == LAN_STATE_STARTED) {
         switch (Adapter->Media) {
         case NdisMedium802_3:
             EHeader = (PETH_HEADER)Data;
@@ -713,9 +717,6 @@ VOID LANTransmit(
 	 * the situation with IRPs. */
         if (NdisStatus != NDIS_STATUS_PENDING)
             ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NdisStatus);
-    } else {
-        ProtocolSendComplete((NDIS_HANDLE)Context, NdisPacket, NDIS_STATUS_CLOSED);
-    }
 }
 
 static NTSTATUS
