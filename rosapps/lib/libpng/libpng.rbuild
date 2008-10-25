@@ -1,6 +1,4 @@
 <module name="libpng" type="staticlibrary" allowwarnings="true">
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WIN32" />
 	<define name="NDEBUG" />
 	<define name="_WINDOWS" />

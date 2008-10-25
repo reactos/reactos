@@ -1,6 +1,4 @@
 <module name="libjpeg" type="staticlibrary" allowwarnings="true">
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<define name="HAVE_CONFIG_H" />
 	<define name="WIN32" />
 	<define name="NDEBUG" />
