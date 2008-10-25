@@ -120,6 +120,8 @@
 				</directory>
 			</if>
 		</directory>
+
+		<library>normalize</library>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
 		<importlibrary definition="kernel32.def" />
@@ -133,9 +135,6 @@
 		<library>pseh</library>
 
 		<file>kernel32.rc</file>
-
-		<library>normalize</library>
-		<library>icu4ros</library>
 
 		<library>ntdll</library>
 	</module>

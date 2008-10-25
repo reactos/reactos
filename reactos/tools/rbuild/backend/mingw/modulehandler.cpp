@@ -347,6 +347,18 @@ MingwModuleHandler::GetImportLibraryDependency (
 		dep = backend->GetFullName ( *library_target );
 		delete library_target;
 	}
+
+	if ( IsStaticLibrary ( importedModule ) || importedModule.type == ObjectLibrary )
+	{
+		const std::vector<Library*>& libraries = importedModule.non_if_data.libraries;
+
+		for ( size_t i = 0; i < libraries.size (); ++ i )
+		{
+			dep += " ";
+			dep += GetImportLibraryDependency ( *libraries[i]->importedModule );
+		}
+	}
+
 	return dep;
 }
 
@@ -2891,7 +2903,6 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	CLEAN_FILE ( junk_tmp );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateRules ();
 
@@ -2968,7 +2979,6 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	CLEAN_FILE ( junk_cpy );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 	const Module *payload = module.project.LocateModule ( module.payload );
 
 	GenerateRules ();
