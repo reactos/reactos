@@ -10428,11 +10428,11 @@ MmMarkPhysicalMemoryAsGood(
  *   IN MM_PAGE_PRIORITY  Priority)
  */
 #define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
-  ((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
+  (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
     | MDL_SOURCE_IS_NONPAGED_POOL)) ? \
     (_Mdl)->MappedSystemVa : \
     (PVOID) MmMapLockedPagesSpecifyCache((_Mdl), \
-      KernelMode, MmCached, NULL, FALSE, _Priority)
+      KernelMode, MmCached, NULL, FALSE, (_Priority)))
 
 NTKERNELAPI
 PVOID
