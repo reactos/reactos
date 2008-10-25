@@ -42,7 +42,7 @@ extern int wmain (int, wchar_t **, wchar_t **);
 #define __UNKNOWN_APP    0
 #define __CONSOLE_APP    1
 #define __GUI_APP        2
-__MINGW_IMPORT void __set_app_type(int);
+_CRTIMP void __set_app_type(int);
 #endif /* __MSVCRT__ */
 
 /*  Global _fmode for this .exe, not the one in msvcrt.dll,
@@ -181,7 +181,7 @@ _gnu_exception_handler (EXCEPTION_POINTERS * exception_data)
 /*
  * The function mainCRTStartup is the entry point for all console programs.
  */
-static void  __attribute__((noreturn))
+static void  __declspec(noreturn)
 __mingw_wCRTStartup (void)
 {
   int nRet;
@@ -218,6 +218,7 @@ __mingw_wCRTStartup (void)
   _pei386_runtime_relocator ();
 #endif
 
+#if defined(__GNUC__)
 #if defined(__i386__)
   /* Align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
@@ -230,6 +231,17 @@ __mingw_wCRTStartup (void)
   asm  __volatile__  ("li 0,15\n\tandc 1,1,0" : : : "r1");
 #else
 #error Unsupported architecture
+#endif
+#endif
+
+#if defined(_MSC_VER)
+#if defined(_M_IX86)
+  /* Align the stack to 16 bytes for the sake of SSE ops in main
+     or in functions inlined into main.  */
+  __asm and esp, 0FFFFFFF0h
+#else
+#error Unsupported architecture
+#endif
 #endif
 
   /*

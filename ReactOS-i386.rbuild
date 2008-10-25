@@ -16,27 +16,41 @@
 	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
 	<if property="OPTIMIZE" value="1">
+	<!--
 		<compilerflag>-Os</compilerflag>
 		<compilerflag>-ftracer</compilerflag>
 		<compilerflag>-momit-leaf-frame-pointer</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="2">
-		<compilerflag>-Os</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="3">
+	-->
 		<compilerflag>-O1</compilerflag>
 	</if>
-	<if property="OPTIMIZE" value="4">
+	<if property="OPTIMIZE" value="2">
+		<!--<compilerflag>-Os</compilerflag>-->
 		<compilerflag>-O2</compilerflag>
 	</if>
+	<if property="OPTIMIZE" value="3">
+		<!--<compilerflag>-O1</compilerflag>-->
+		<compilerflag>-Ox</compilerflag>
+		<compilerflag>-Os</compilerflag>
+	</if>
+	<if property="OPTIMIZE" value="4">
+		<!--<compilerflag>-O2</compilerflag>-->
+		<compilerflag>-Ox</compilerflag>
+		<compilerflag>-Os</compilerflag>
+	</if>
 	<if property="OPTIMIZE" value="5">
-		<compilerflag>-O3</compilerflag>
+		<!--<compilerflag>-O3</compilerflag>-->
+		<compilerflag>-Ox</compilerflag>
+		<compilerflag>-Os</compilerflag>
 	</if>
 
+	<!--
 	<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
+	-->
+	<compilerflag>-Oy-</compilerflag>
+	<compilerflag>-GS-</compilerflag>
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 
 </project>

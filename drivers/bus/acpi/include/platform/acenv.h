@@ -111,10 +111,10 @@
 #elif _AED_EFI
 #include "acefi.h"
 
-#elif WIN32
+#elif defined(WIN32)
 #include "acwin.h"
 
-#elif __FreeBSD__
+#elif defined(__FreeBSD__)
 #include "acfreebsd.h"
 
 #else

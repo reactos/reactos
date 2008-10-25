@@ -193,11 +193,11 @@ typedef UINT64                          u64;
  */
 #ifdef _MSC_VER
 typedef ULONGLONG u64;
-typedef ULONG u32;
+//~ typedef ULONG u32;
 typedef USHORT u16;
 typedef UCHAR u8;
 typedef LONGLONG s64;
-typedef LONG s32;
+//~ typedef LONG s32;
 typedef SHORT s16;
 typedef CHAR s8;
 #endif

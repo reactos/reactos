@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <commctrl.h>
-#include <oleauto.h>
+#include <ole2.h>
 #include <objsel.h>
 #include <prsht.h>
 #include <aclui.h>

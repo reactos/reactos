@@ -178,7 +178,7 @@ OpenLSAPolicyHandle(IN LPWSTR SystemName,
     if (SystemName != NULL && SystemName[0] != L'\0')
     {
         LsaSystemName.Buffer = SystemName;
-        LsaSystemName.Length = wcslen(SystemName) * sizeof(WCHAR);
+        LsaSystemName.Length = (USHORT)(wcslen(SystemName) * sizeof(WCHAR)); /* FIXME: possible overflow */
         LsaSystemName.MaximumLength = LsaSystemName.Length + sizeof(WCHAR);
         psn = &LsaSystemName;
     }

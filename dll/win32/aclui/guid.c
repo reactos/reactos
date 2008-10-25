@@ -19,8 +19,11 @@
 
 /* DO NOT USE THE PRECOMPILED HEADER FOR THIS FILE! */
 
-#include <initguid.h>
 #include <windows.h>
+
+#include <initguid.h>
+#include <objbase.h>
+
 #include <aclui.h>
 #include <objsel.h>
 
