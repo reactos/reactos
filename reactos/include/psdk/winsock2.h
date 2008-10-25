@@ -33,7 +33,7 @@ typedef unsigned int	u_int;
 typedef unsigned long	u_long;
 #define _BSDTYPES_DEFINED
 #endif /* ! def _BSDTYPES_DEFINED  */
-typedef u_int	SOCKET;
+typedef UINT_PTR	SOCKET;
 #ifndef FD_SETSIZE
 #define FD_SETSIZE	64
 #endif

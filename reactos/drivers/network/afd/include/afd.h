@@ -112,7 +112,7 @@ typedef struct IPADDR_ENTRY {
  * We do this in order to get some storage for the locked handle table
  * Maybe I'll use some tail item in the irp instead */
 #define AFD_HANDLES(x) ((PAFD_HANDLE)(x)->Exclusive)
-#define SET_AFD_HANDLES(x,y) (((x)->Exclusive) = (ULONG)(y))
+#define SET_AFD_HANDLES(x,y) (((x)->Exclusive) = (ULONG_PTR)(y))
 
 typedef struct _AFD_MAPBUF {
     PVOID BufferAddress;
