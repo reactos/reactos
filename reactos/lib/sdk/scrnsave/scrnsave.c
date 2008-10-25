@@ -185,15 +185,15 @@ static int LaunchScreenSaver(HWND hParent)
                                  0, 0, rc.right, rc.bottom, hParent, NULL,
                                  hMainInstance, NULL);
 
-    // Display window and start pumping messages
-    if (hMainWindow)
-    {
-        ShowWindow(hMainWindow, SW_SHOW);
-        SetCursor(NULL);
+    if(!hMainWindow)
+        return 1;
 
-        while (GetMessage(&msg, NULL, 0, 0))
-            DispatchMessage(&msg);
-    }
+    // Display window and start pumping messages
+    ShowWindow(hMainWindow, SW_SHOW);
+    SetCursor(NULL);
+
+    while (GetMessage(&msg, NULL, 0, 0))
+        DispatchMessage(&msg);
 
     return msg.wParam;
 }
