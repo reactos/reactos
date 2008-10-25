@@ -109,7 +109,6 @@
 			<file>lcformat.c</file>
 			<file>profile.c</file>
 			<file>utils.c</file>
-			<file>icustubs.cpp</file>
 		</directory>
 		<directory name="thread">
 			<if property="ARCH" value="i386">
@@ -120,6 +119,12 @@
 			</if>
 		</directory>
 
+		<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+
+		<directory name="misc">
+			<file>icustubs.cpp</file>
+		</directory>
 		<library>normalize</library>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
