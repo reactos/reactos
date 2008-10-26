@@ -243,7 +243,7 @@ CSR_API(CsrCreateProcess)
 
    if (Request->Data.CreateProcessRequest.Flags & CREATE_NEW_PROCESS_GROUP)
      {
-       NewProcessData->ProcessGroup = (DWORD)NewProcessData->ProcessId;
+       NewProcessData->ProcessGroup = (DWORD)(ULONG_PTR)NewProcessData->ProcessId;
      }
    else
      {
@@ -362,14 +362,14 @@ CSR_API(CsrVerifyHandle)
 
 CSR_API(CsrDuplicateHandle)
 {
-    ULONG Index;
+    ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
 
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-    Index = (ULONG)Request->Data.DuplicateHandleRequest.Handle >> 2;
+    Index = (ULONG_PTR)Request->Data.DuplicateHandleRequest.Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (Index >= ProcessData->HandleTableSize
         || (Entry = &ProcessData->HandleTable[Index])->Object == NULL)

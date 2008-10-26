@@ -22,7 +22,7 @@ static PCSRSS_OBJECT_DEFINITION ObjectDefinitions = NULL;
 static BOOL
 CsrIsConsoleHandle(HANDLE Handle)
 {
-  return ((ULONG)Handle & 0x10000003) == 0x3;
+  return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
 }
 
 
@@ -63,7 +63,7 @@ CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions)
 
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access )
 {
-  ULONG h = (ULONG)Handle >> 2;
+  ULONG_PTR h = (ULONG_PTR)Handle >> 2;
   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -110,7 +110,7 @@ NTSTATUS STDCALL
 CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle)
 {
-  ULONG h = (ULONG)Handle >> 2;
+  ULONG_PTR h = (ULONG_PTR)Handle >> 2;
   Object_t *Object;
 
   RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -164,7 +164,7 @@ NTSTATUS STDCALL CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
    ProcessData->HandleTable[i].Object = Object;
    ProcessData->HandleTable[i].Access = Access;
    ProcessData->HandleTable[i].Inheritable = Inheritable;
-   *Handle = (HANDLE)((i << 2) | 0x3);
+   *Handle = (HANDLE)(ULONG_PTR)((i << 2) | 0x3);
    _InterlockedIncrement( &Object->ReferenceCount );
    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
    return(STATUS_SUCCESS);
@@ -208,7 +208,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
 
 NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle )
 {
-  ULONG h = (ULONG)Handle >> 2;
+  ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
   if (h >= ProcessData->HandleTableSize
       || ProcessData->HandleTable[h].Object == NULL)

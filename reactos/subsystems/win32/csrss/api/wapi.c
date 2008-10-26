@@ -272,8 +272,8 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         if (ProcessData->Terminated)
         {
-            DPRINT1("Message %d: process %d already terminated\n",
-                    Request->Type, (ULONG)Request->Header.ClientId.UniqueProcess);
+            DPRINT1("Message %d: process %p already terminated\n",
+                    Request->Type, Request->Header.ClientId.UniqueProcess);
             continue;
         }
 
