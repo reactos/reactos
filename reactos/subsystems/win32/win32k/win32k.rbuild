@@ -183,7 +183,7 @@
 	</directory>
 </module>
 <module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
-	<importlibrary definition="win32k.def" />
+	<importlibrary definition="win32k.spec" />
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
