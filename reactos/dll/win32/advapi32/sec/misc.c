@@ -1396,11 +1396,51 @@ STDCALL
 LookupPrivilegeNameA(LPCSTR lpSystemName,
                      PLUID lpLuid,
                      LPSTR lpName,
-                     LPDWORD cbName)
+                     LPDWORD cchName)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    UNICODE_STRING lpSystemNameW;
+    BOOL ret;
+    DWORD wLen = 0;
+
+    TRACE("%s %p %p %p\n", debugstr_a(lpSystemName), lpLuid, lpName, cchName);
+
+    RtlCreateUnicodeStringFromAsciiz(&lpSystemNameW, lpSystemName);
+    ret = LookupPrivilegeNameW(lpSystemNameW.Buffer, lpLuid, NULL, &wLen);
+    if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        LPWSTR lpNameW = HeapAlloc(GetProcessHeap(), 0, wLen * sizeof(WCHAR));
+
+        ret = LookupPrivilegeNameW(lpSystemNameW.Buffer, lpLuid, lpNameW,
+         &wLen);
+        if (ret)
+        {
+            /* Windows crashes if cchName is NULL, so will I */
+            unsigned int len = WideCharToMultiByte(CP_ACP, 0, lpNameW, -1, lpName,
+             *cchName, NULL, NULL);
+
+            if (len == 0)
+            {
+                /* WideCharToMultiByte failed */
+                ret = FALSE;
+            }
+            else if (len > *cchName)
+            {
+                *cchName = len;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                ret = FALSE;
+            }
+            else
+            {
+                /* WideCharToMultiByte succeeded, output length needs to be
+                 * length not including NULL terminator
+                 */
+                *cchName = len - 1;
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, lpNameW);
+    }
+    RtlFreeUnicodeString(&lpSystemNameW);
+    return ret;
 }
 
 
