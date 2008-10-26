@@ -256,8 +256,11 @@
 @ stdcall GetClassInfoW(long wstr ptr)
 @ stdcall GetClassLongA(long long)
 @ stdcall GetClassLongW(long long)
-@ stub GetClassLongPtrA
-@ stub GetClassLongPtrW
+
+; FIXME -- Only for Win64
+@ stdcall GetClassLongPtrA(ptr long)
+@ stdcall GetClassLongPtrW(ptr long)
+
 @ stdcall GetClassNameA(long ptr long)
 @ stdcall GetClassNameW(long ptr long)
 @ stdcall GetClassWord(long long)
@@ -375,8 +378,11 @@
 @ stdcall GetWindowDC(long)
 @ stdcall GetWindowInfo(long ptr)
 @ stdcall GetWindowLongA(long long)
-@ stub GetWindowLongPtrA
-@ stub GetWindowLongPtrW
+
+; FIXME -- Only for Win64
+@ stdcall GetWindowLongPtrA(ptr long)
+@ stdcall GetWindowLongPtrW(ptr long)
+
 @ stdcall GetWindowLongW(long long)
 @ stdcall GetWindowModuleFileName(long ptr long) GetWindowModuleFileNameA
 @ stdcall GetWindowModuleFileNameA(long ptr long)
@@ -603,8 +609,11 @@
 @ stdcall SetCaretBlinkTime(long)
 @ stdcall SetCaretPos(long long)
 @ stdcall SetClassLongA(long long long)
-@ stub SetClassLongPtrA #(long long long)
-@ stub SetClassLongPtrW #(long long long)
+
+; FIXME -- Only for Win64
+@ stdcall SetClassLongPtrA(ptr long ptr)
+@ stdcall SetClassLongPtrW(ptr long ptr)
+
 @ stdcall SetClassLongW(long long long)
 @ stdcall SetClassWord(long long long)
 @ stdcall SetClipboardData(long long)
@@ -665,8 +674,11 @@
 @ stdcall SetWindowContextHelpId(long long)
 @ stub SetWindowFullScreenState
 @ stdcall SetWindowLongA(long long long)
-@ stub SetWindowLongPtrA #(long long long)
-@ stub SetWindowLongPtrW #(long long long)
+
+; FIXME -- Only for Win64
+@ stdcall SetWindowLongPtrA(ptr long ptr)
+@ stdcall SetWindowLongPtrW(ptr long ptr)
+
 @ stdcall SetWindowLongW(long long long)
 @ stdcall SetWindowPlacement(long ptr)
 @ stdcall SetWindowPos(long long long long long long long)
