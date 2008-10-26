@@ -11,7 +11,7 @@
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTOSKRNL_" />
 		<define name="__NO_CTYPE_INLINES" />
-		<library>rtl_umode</library>
+		<library>rtl</library>
 		<library>ntdllsys</library>
 		<library>libcntpr</library>
 		<library>pseh</library>
