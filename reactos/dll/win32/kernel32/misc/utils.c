@@ -386,11 +386,11 @@ BasepInitializeContext(IN PCONTEXT Context,
     /* The other registers are undefined */
 
     /* Setup the Segments */
-    Context->SegFs = KGDT_R3_TEB | RPL_MASK;
-    Context->SegEs = KGDT_R3_DATA | RPL_MASK;
-    Context->SegDs = KGDT_R3_DATA | RPL_MASK;
-    Context->SegCs = KGDT_R3_CODE | RPL_MASK;
-    Context->SegSs = KGDT_R3_DATA | RPL_MASK;
+    Context->SegFs = KGDT_64_R3_TEB | RPL_MASK;
+    Context->SegEs = KGDT_64_DATA | RPL_MASK;
+    Context->SegDs = KGDT_64_DATA | RPL_MASK;
+    Context->SegCs = KGDT_64_R3_CODE | RPL_MASK;
+    Context->SegSs = KGDT_64_DATA | RPL_MASK;
     Context->SegGs = 0;
 
     /* Set the EFLAGS */
