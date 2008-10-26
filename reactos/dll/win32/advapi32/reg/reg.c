@@ -1427,7 +1427,8 @@ RegDeleteKeyValueA(IN HKEY hKey,
     return Ret;
 }
 
-
+#if 0
+// Non-recursive RegDeleteTreeW implementation by Thomas, however it needs bugfixing
 static NTSTATUS
 RegpDeleteTree(IN HKEY hKey)
 {
@@ -1704,6 +1705,100 @@ Cleanup:
 
         return RtlNtStatusToDosError(Status);
     }
+}
+#endif
+
+/************************************************************************
+ *  RegDeleteTreeW
+ *
+ * @implemented
+ */
+LSTATUS
+WINAPI
+RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
+{
+    LONG ret;
+    DWORD dwMaxSubkeyLen, dwMaxValueLen;
+    DWORD dwMaxLen, dwSize;
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    HKEY hSubKey;
+    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
+
+    TRACE("(hkey=%p,%p %s)\n", hKey, lpszSubKey, debugstr_w(lpszSubKey));
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    hSubKey = KeyHandle;
+
+    if(lpszSubKey)
+    {
+        ret = RegOpenKeyExW(KeyHandle, lpszSubKey, 0, KEY_READ, &hSubKey);
+        if (ret)
+        {
+            ClosePredefKey(KeyHandle);
+            return ret;
+        }
+    }
+
+    /* Get highest length for keys, values */
+    ret = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
+            &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
+    if (ret) goto cleanup;
+
+    dwMaxSubkeyLen++;
+    dwMaxValueLen++;
+    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
+    if (dwMaxLen > sizeof(szNameBuf)/sizeof(WCHAR))
+    {
+        /* Name too big: alloc a buffer for it */
+        if (!(lpszName = RtlAllocateHeap( RtlGetProcessHeap(), 0, dwMaxLen*sizeof(WCHAR))))
+        {
+            ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto cleanup;
+        }
+    }
+
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLen;
+        if (RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL,
+                          NULL, NULL, NULL)) break;
+
+        ret = RegDeleteTreeW(hSubKey, lpszName);
+        if (ret) goto cleanup;
+    }
+
+    if (lpszSubKey)
+        ret = RegDeleteKeyW(KeyHandle, lpszSubKey);
+    else
+        while (TRUE)
+        {
+            dwSize = dwMaxLen;
+            if (RegEnumValueW(KeyHandle, 0, lpszName, &dwSize,
+                  NULL, NULL, NULL, NULL)) break;
+
+            ret = RegDeleteValueW(KeyHandle, lpszName);
+            if (ret) goto cleanup;
+        }
+
+cleanup:
+    /* Free buffer if allocated */
+    if (lpszName != szNameBuf)
+        RtlFreeHeap( RtlGetProcessHeap(), 0, lpszName);
+    if(lpszSubKey)
+        RegCloseKey(hSubKey);
+
+    ClosePredefKey(KeyHandle);
+
+    return ret;
 }
 
 
