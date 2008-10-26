@@ -400,7 +400,6 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
 
 /* Function 0 */
 DWORD RCloseServiceHandle(
-    handle_t BindingHandle,
     LPSC_RPC_HANDLE hSCObject)
 {
     PMANAGER_HANDLE hManager;
@@ -526,7 +525,6 @@ DWORD RCloseServiceHandle(
 
 /* Function 1 */
 DWORD RControlService(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
     LPSERVICE_STATUS lpServiceStatus)
@@ -657,7 +655,6 @@ DWORD RControlService(
 
 /* Function 2 */
 DWORD RDeleteService(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService)
 {
     PSERVICE_HANDLE hSvc;
@@ -707,7 +704,6 @@ DWORD RDeleteService(
 
 /* Function 3 */
 DWORD RLockServiceDatabase(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSC_RPC_LOCK lpLock)
 {
@@ -736,7 +732,6 @@ DWORD RLockServiceDatabase(
 
 /* Function 4 */
 DWORD RQueryServiceObjectSecurity(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SECURITY_INFORMATION dwSecurityInformation,
     LPBYTE lpSecurityDescriptor,
@@ -820,7 +815,6 @@ DWORD RQueryServiceObjectSecurity(
 
 /* Function 5 */
 DWORD RSetServiceObjectSecurity(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwSecurityInformation,
     LPBYTE lpSecurityDescriptor,
@@ -940,7 +934,6 @@ Done:
 
 /* Function 6 */
 DWORD RQueryServiceStatus(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPSERVICE_STATUS lpServiceStatus)
 {
@@ -1004,7 +997,6 @@ ScmIsValidServiceState(DWORD dwCurrentState)
 
 /* Function 7 */
 DWORD RSetServiceStatus(
-//    handle_t BindingHandle,
     RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     LPSERVICE_STATUS lpServiceStatus)
 {
@@ -1070,7 +1062,6 @@ DWORD RSetServiceStatus(
 
 /* Function 8 */
 DWORD RUnlockServiceDatabase(
-    handle_t BindingHandle,
     LPSC_RPC_LOCK Lock)
 {
     UNIMPLEMENTED;
@@ -1080,7 +1071,6 @@ DWORD RUnlockServiceDatabase(
 
 /* Function 9 */
 DWORD RNotifyBootConfigStatus(
-    handle_t BindingHandle,
     SVCCTL_HANDLEW lpMachineName,
     DWORD BootAcceptable)
 {
@@ -1091,7 +1081,6 @@ DWORD RNotifyBootConfigStatus(
 
 /* Function 10 */
 DWORD RI_ScSetServiceBitsW(
-//    handle_t BindingHandle,
     RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     DWORD dwServiceBits,
     int bSetBitsOn,
@@ -1105,7 +1094,6 @@ DWORD RI_ScSetServiceBitsW(
 
 /* Function 11 */
 DWORD RChangeServiceConfigW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceType,
     DWORD dwStartType,
@@ -1715,7 +1703,6 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
 /* Function 12 */
 DWORD RCreateServiceW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
     LPWSTR lpDisplayName,
@@ -2051,7 +2038,6 @@ done:;
 
 /* Function 13 */
 DWORD REnumDependentServicesW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceState,
     LPBYTE lpServices,
@@ -2181,7 +2167,6 @@ Done:
 
 /* Function 14 */
 DWORD REnumServicesStatusW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
     DWORD dwServiceState,
@@ -2388,7 +2373,6 @@ Done:;
 
 /* Function 15 */
 DWORD ROpenSCManagerW(
-//    handle_t BindingHandle,
     LPWSTR lpMachineName,
     LPWSTR lpDatabaseName,
     DWORD dwDesiredAccess,
@@ -2439,7 +2423,6 @@ DWORD ROpenSCManagerW(
 
 /* Function 16 */
 DWORD ROpenServiceW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
     DWORD dwDesiredAccess,
@@ -2515,7 +2498,6 @@ DWORD ROpenServiceW(
 
 /* Function 17 */
 DWORD RQueryServiceConfigW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGW lpServiceConfig,
     DWORD cbBufSize,
@@ -2692,7 +2674,6 @@ Done:;
 
 /* Function 18 */
 DWORD RQueryServiceLockStatusW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
     DWORD cbBufSize,
@@ -2705,7 +2686,6 @@ DWORD RQueryServiceLockStatusW(
 
 /* Function 19 */
 DWORD RStartServiceW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD argc,
     LPSTRING_PTRSW argv)
@@ -2760,7 +2740,6 @@ DWORD RStartServiceW(
 
 /* Function 20 */
 DWORD RGetServiceDisplayNameW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpServiceName,
     LPWSTR lpDisplayName,
@@ -2832,7 +2811,6 @@ DWORD RGetServiceDisplayNameW(
 
 /* Function 21 */
 DWORD RGetServiceKeyNameW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpDisplayName,
     LPWSTR lpServiceName,
@@ -2893,7 +2871,6 @@ DWORD RGetServiceKeyNameW(
 
 /* Function 22 */
 DWORD RI_ScSetServiceBitsA(
-//    handle_t BindingHandle,
     RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     DWORD dwServiceBits,
     int bSetBitsOn,
@@ -2907,7 +2884,6 @@ DWORD RI_ScSetServiceBitsA(
 
 /* Function 23 */
 DWORD RChangeServiceConfigA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceType,
     DWORD dwStartType,
@@ -3192,7 +3168,6 @@ done:
 
 /* Function 24 */
 DWORD RCreateServiceA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
     LPSTR lpDisplayName,
@@ -3217,7 +3192,6 @@ DWORD RCreateServiceA(
 
 /* Function 25 */
 DWORD REnumDependentServicesA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwServiceState,
     LPBYTE lpServices,
@@ -3365,7 +3339,6 @@ Done:
 
 /* Function 26 */
 DWORD REnumServicesStatusA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
     DWORD dwServiceState,
@@ -3394,7 +3367,7 @@ DWORD REnumServicesStatusA(
         }
     }
 
-    dwError = REnumServicesStatusW(BindingHandle,
+    dwError = REnumServicesStatusW(//BindingHandle,
                                    hSCManager,
                                    dwServiceType,
                                    dwServiceState,
@@ -3462,7 +3435,6 @@ Done:;
 
 /* Function 27 */
 DWORD ROpenSCManagerA(
-//    handle_t BindingHandle,
     LPSTR lpMachineName,
     LPSTR lpDatabaseName,
     DWORD dwDesiredAccess,
@@ -3500,7 +3472,6 @@ DWORD ROpenSCManagerA(
 
 /* Function 28 */
 DWORD ROpenServiceA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
     DWORD dwDesiredAccess,
@@ -3515,7 +3486,7 @@ DWORD ROpenServiceA(
         RtlCreateUnicodeStringFromAsciiz(&ServiceName,
                                          lpServiceName);
 
-    dwError = ROpenServiceW(BindingHandle,
+    dwError = ROpenServiceW(//BindingHandle,
                             hSCManager,
                             lpServiceName ? ServiceName.Buffer : NULL,
                             dwDesiredAccess,
@@ -3530,7 +3501,6 @@ DWORD ROpenServiceA(
 
 /* Function 29 */
 DWORD RQueryServiceConfigA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGA lpServiceConfig,
     DWORD cbBufSize,
@@ -3739,7 +3709,6 @@ Done:;
 
 /* Function 30 */
 DWORD RQueryServiceLockStatusA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
     DWORD cbBufSize,
@@ -3752,7 +3721,6 @@ DWORD RQueryServiceLockStatusA(
 
 /* Function 31 */
 DWORD RStartServiceA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD argc,
     LPSTRING_PTRSA argv)
@@ -3806,7 +3774,6 @@ DWORD RStartServiceA(
 
 /* Function 32 */
 DWORD RGetServiceDisplayNameA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpServiceName,
     LPSTR lpDisplayName,
@@ -3908,7 +3875,6 @@ DWORD RGetServiceDisplayNameA(
 
 /* Function 33 */
 DWORD RGetServiceKeyNameA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPSTR lpDisplayName,
     LPSTR lpServiceName,
@@ -3983,7 +3949,6 @@ DWORD RGetServiceKeyNameA(
 
 /* Function 34 */
 DWORD RI_ScGetCurrentGroupStateW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     LPWSTR lpLoadOrderGroup,
     LPDWORD lpState)
@@ -3995,7 +3960,6 @@ DWORD RI_ScGetCurrentGroupStateW(
 
 /* Function 35 */
 DWORD REnumServiceGroupW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     DWORD dwServiceType,
     DWORD dwServiceState,
@@ -4013,7 +3977,6 @@ DWORD REnumServiceGroupW(
 
 /* Function 36 */
 DWORD RChangeServiceConfig2A(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOA Info)
 {
@@ -4024,7 +3987,6 @@ DWORD RChangeServiceConfig2A(
 
 /* Function 37 */
 DWORD RChangeServiceConfig2W(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_CONFIG_INFOW Info)
 {
@@ -4117,7 +4079,6 @@ done:
 
 /* Function 38 */
 DWORD RQueryServiceConfig2A(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwInfoLevel,
     LPBYTE lpBuffer,
@@ -4225,7 +4186,6 @@ done:
 
 /* Function 39 */
 DWORD RQueryServiceConfig2W(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwInfoLevel,
     LPBYTE lpBuffer,
@@ -4324,7 +4284,6 @@ done:
 
 /* Function 40 */
 DWORD RQueryServiceStatusEx(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_STATUS_TYPE InfoLevel,
     LPBYTE lpBuffer,
@@ -4385,7 +4344,6 @@ DWORD RQueryServiceStatusEx(
 
 /* Function 41 */
 DWORD REnumServicesStatusExA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     SC_ENUM_TYPE InfoLevel,
     DWORD dwServiceType,
@@ -4433,8 +4391,7 @@ DWORD REnumServicesStatusExA(
         }
     }
 
-    dwError = REnumServicesStatusExW(BindingHandle,
-                                     hSCManager,
+    dwError = REnumServicesStatusExW(hSCManager,
                                      InfoLevel,
                                      dwServiceType,
                                      dwServiceState,
@@ -4507,7 +4464,6 @@ Done:;
 
 /* Function 42 */
 DWORD REnumServicesStatusExW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hSCManager,
     SC_ENUM_TYPE InfoLevel,
     DWORD dwServiceType,
@@ -4782,7 +4738,7 @@ Done:;
 
 /* Function 43 */
 DWORD RSendTSMessage(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4839,7 +4795,7 @@ DWORD RCreateServiceWOW64W(
 
 /* Function 46 */
 DWORD RQueryServiceTagInfo(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4848,7 +4804,6 @@ DWORD RQueryServiceTagInfo(
 
 /* Function 47 */
 DWORD RNotifyServiceStatusChange(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     SC_RPC_NOTIFY_PARAMS NotifyParams,
     GUID *pClientProcessGuid,
@@ -4863,7 +4818,6 @@ DWORD RNotifyServiceStatusChange(
 
 /* Function 48 */
 DWORD RGetNotifyResults(
-    handle_t BindingHandle,
     SC_NOTIFY_RPC_HANDLE hNotify,
     PSC_RPC_NOTIFY_PARAMS_LIST *ppNotifyParams)
 {
@@ -4874,7 +4828,6 @@ DWORD RGetNotifyResults(
 
 /* Function 49 */
 DWORD RCloseNotifyHandle(
-    handle_t BindingHandle,
     LPSC_NOTIFY_RPC_HANDLE phNotify,
     PBOOL pfApcFired)
 {
@@ -4885,7 +4838,6 @@ DWORD RCloseNotifyHandle(
 
 /* Function 50 */
 DWORD RControlServiceExA(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
     DWORD dwInfoLevel)
@@ -4897,7 +4849,6 @@ DWORD RControlServiceExA(
 
 /* Function 51 */
 DWORD RControlServiceExW(
-    handle_t BindingHandle,
     SC_RPC_HANDLE hService,
     DWORD dwControl,
     DWORD dwInfoLevel)
@@ -4909,7 +4860,7 @@ DWORD RControlServiceExW(
 
 /* Function 52 */
 DWORD RSendPnPMessage(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4918,7 +4869,7 @@ DWORD RSendPnPMessage(
 
 /* Function 53 */
 DWORD RValidatePnPService(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4927,7 +4878,7 @@ DWORD RValidatePnPService(
 
 /* Function 54 */
 DWORD ROpenServiceStatusHandle(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4936,7 +4887,7 @@ DWORD ROpenServiceStatusHandle(
 
 /* Function 55 */
 DWORD RFunction55(
-    handle_t BindingHandle)
+    handle_t BindingHandle)  /* FIXME */
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -4968,6 +4919,5 @@ void __RPC_USER SC_RPC_LOCK_rundown(SC_RPC_LOCK Lock)
 void __RPC_USER SC_NOTIFY_RPC_HANDLE_rundown(SC_NOTIFY_RPC_HANDLE hNotify)
 {
 }
-
 
 /* EOF */

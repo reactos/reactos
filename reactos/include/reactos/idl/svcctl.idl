@@ -18,11 +18,11 @@ const unsigned short SC_MAX_ARGUMENTS = 1024;
 typedef [handle] LPSTR SVCCTL_HANDLEA;
 typedef [handle] LPWSTR SVCCTL_HANDLEW;
 typedef [handle] ULONG_PTR RPC_SERVICE_STATUS_HANDLE;
-typedef /*[context_handle]*/ unsigned long SC_RPC_HANDLE;
+typedef [context_handle] PVOID SC_RPC_HANDLE;
 typedef SC_RPC_HANDLE* LPSC_RPC_HANDLE;
-typedef /*[context_handle]*/ unsigned long SC_RPC_LOCK;
+typedef [context_handle] PVOID SC_RPC_LOCK;
 typedef SC_RPC_LOCK* LPSC_RPC_LOCK;
-typedef /*[context_handle]*/ unsigned long SC_NOTIFY_RPC_HANDLE;
+typedef [context_handle] PVOID SC_NOTIFY_RPC_HANDLE;
 typedef SC_NOTIFY_RPC_HANDLE* LPSC_NOTIFY_RPC_HANDLE;
 typedef [range(0, 1024 * 4)] DWORD BOUNDED_DWORD_4K;
 typedef BOUNDED_DWORD_4K* LPBOUNDED_DWORD_4K;
@@ -297,38 +297,33 @@ typedef struct _STRING_PTRSW {
   uuid(367abb81-9844-35f1-ad32-98f038001003),
   version(2.0),
   pointer_default(unique),
-//  #ifndef __midl
+  #ifndef __midl
   ,explicit_handle
-//  #endif
+  #endif
 ]
 interface svcctl
 {
     /* Function 0 */
     DWORD RCloseServiceHandle(
-        [in] handle_t BindingHandle,
         [in, out] LPSC_RPC_HANDLE hSCObject);
 
     /* Function 1 */
     DWORD RControlService(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwControl,
         [out] LPSERVICE_STATUS lpServiceStatus);
 
     /* Function 2 */
     DWORD RDeleteService(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService);
 
     /* Function 3 */
     DWORD RLockServiceDatabase(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [out] LPSC_RPC_LOCK lpLock);
 
     /* Function 4 */
     DWORD RQueryServiceObjectSecurity(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] SECURITY_INFORMATION dwSecurityInformation,
         [out, size_is(cbBufSize)] LPBYTE lpSecurityDescriptor,
@@ -337,7 +332,6 @@ interface svcctl
 
     /* Function 5 */
     DWORD RSetServiceObjectSecurity(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwSecurityInformation,
         [in, size_is(dwSecuityDescriptorSize)] LPBYTE lpSecurityDescriptor,
@@ -345,30 +339,25 @@ interface svcctl
 
     /* Function 6 */
     DWORD RQueryServiceStatus(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [out] LPSERVICE_STATUS lpServiceStatus);
 
     /* Function 7 */
     DWORD RSetServiceStatus(
-//      [in] handle_t BindingHandle,
       [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
       [in] LPSERVICE_STATUS lpServiceStatus);
 
     /* Function 8 */
     DWORD RUnlockServiceDatabase(
-        [in] handle_t BindingHandle,
         [in, out] LPSC_RPC_LOCK Lock);
 
     /* Function 9 */
     DWORD RNotifyBootConfigStatus(
-        [in] handle_t BindingHandle,
         [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] SVCCTL_HANDLEW lpMachineName,
         [in] DWORD BootAcceptable);
 
     /* Function 10 */
     DWORD RI_ScSetServiceBitsW(
-//        [in] handle_t BindingHandle,
         [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,
         [in] BOOL bSetBitsOn,
@@ -377,7 +366,6 @@ interface svcctl
 
     /* Function 11 */
     DWORD RChangeServiceConfigW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwServiceType,
         [in] DWORD dwStartType,
@@ -394,7 +382,6 @@ interface svcctl
 
     /* Function 12 */
     DWORD RCreateServiceW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpServiceName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDisplayName,
@@ -414,7 +401,6 @@ interface svcctl
 
     /* Function 13 */
     DWORD REnumDependentServicesW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwServiceState,
         [out, size_is(cbBufSize)] LPBYTE lpServices,
@@ -424,7 +410,6 @@ interface svcctl
 
     /* Function 14 */
     DWORD REnumServicesStatusW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in] DWORD dwServiceType,
         [in] DWORD dwServiceState,
@@ -436,7 +421,6 @@ interface svcctl
 
     /* Function 15 */
     DWORD ROpenSCManagerW(
-//        [in] handle_t BindingHandle,
         [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] SVCCTL_HANDLEW lpMachineName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDatabaseName,
         [in] DWORD dwDesiredAccess,
@@ -444,7 +428,6 @@ interface svcctl
 
     /* Function 16 */
     DWORD ROpenServiceW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpServiceName,
         [in] DWORD dwDesiredAccess,
@@ -452,7 +435,6 @@ interface svcctl
 
     /* Function 17 */
     DWORD RQueryServiceConfigW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [out, unique, size_is(cbBufSize)] LPBYTE lpServiceConfig,
         /* FIXME: should be [out] LPQUERY_SERVICE_CONFIGW lpServiceConfig, */
@@ -461,7 +443,6 @@ interface svcctl
 
     /* Function 18 */
     DWORD RQueryServiceLockStatusW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [out] LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
         [in, range(0, 1024*4)] DWORD cbBufSize,
@@ -469,14 +450,12 @@ interface svcctl
 
     /* Function 19 */
     DWORD RStartServiceW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in, range(0, SC_MAX_ARGUMENTS)] DWORD argc,
         [in, unique, size_is(argc)] LPSTRING_PTRSW argv);
 
     /* Function 20 */
     DWORD RGetServiceDisplayNameW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpServiceName,
         [out, string, range(1, 4*1024+1), size_is(*lpcchBuffer + 1)] LPWSTR lpDisplayName,
@@ -484,7 +463,6 @@ interface svcctl
 
     /* Function 21 */
     DWORD RGetServiceKeyNameW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDisplayName,
         [out, string, range(1, 4*1024+1), size_is(*lpcchBuffer + 1)] LPWSTR lpServiceName,
@@ -492,7 +470,6 @@ interface svcctl
 
     /* Function 22 */
     DWORD RI_ScSetServiceBitsA(
-//        [in] handle_t BindingHandle,
         [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,
         [in] BOOL bSetBitsOn,
@@ -501,7 +478,6 @@ interface svcctl
 
     /* Function 23 */
     DWORD RChangeServiceConfigA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwServiceType,
         [in] DWORD dwStartType,
@@ -518,7 +494,6 @@ interface svcctl
 
     /* Function 24 */
     DWORD RCreateServiceA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpServiceName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpDisplayName,
@@ -538,7 +513,6 @@ interface svcctl
 
     /* Function 25 */
     DWORD REnumDependentServicesA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwServiceState,
         [out, size_is(cbBufSize)] LPBYTE lpServices,
@@ -548,7 +522,6 @@ interface svcctl
 
     /* Function 26 */
     DWORD REnumServicesStatusA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in] DWORD dwServiceType,
         [in] DWORD dwServiceState,
@@ -560,7 +533,6 @@ interface svcctl
 
     /* Function 27 */
     DWORD ROpenSCManagerA(
-//        [in] handle_t BindingHandle,
         [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] SVCCTL_HANDLEA lpMachineName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpDatabaseName,
         [in] DWORD dwDesiredAccess,
@@ -568,7 +540,6 @@ interface svcctl
 
     /* Function 28 */
     DWORD ROpenServiceA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpServiceName,
         [in] DWORD dwDesiredAccess,
@@ -576,7 +547,6 @@ interface svcctl
 
     /* Function 29 */
     DWORD RQueryServiceConfigA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [out, unique, size_is(cbBufSize)] LPBYTE lpServiceConfig,
         /* FIXME: should be [out] LPQUERY_SERVICE_CONFIGA lpServiceConfig, */
@@ -585,7 +555,6 @@ interface svcctl
 
     /* Function 30 */
     DWORD RQueryServiceLockStatusA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [out] LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
         [in, range(0, 1024*4)] DWORD cbBufSize,
@@ -593,14 +562,12 @@ interface svcctl
 
     /* Function 31 */
     DWORD RStartServiceA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in, range(0, SC_MAX_ARGUMENTS)] DWORD argc,
         [in, unique, size_is(argc)] LPSTRING_PTRSA argv);
 
     /* Function 32 */
     DWORD RGetServiceDisplayNameA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpServiceName,
         [out, string, size_is(*lpcchBuffer)] LPSTR lpDisplayName,
@@ -608,7 +575,6 @@ interface svcctl
 
     /* Function 33 */
     DWORD RGetServiceKeyNameA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpDisplayName,
         [out, string, size_is(*lpcchBuffer)] LPSTR lpKeyName,
@@ -616,14 +582,12 @@ interface svcctl
 
     /* Function 34 */
     DWORD RI_ScGetCurrentGroupStateW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpLoadOrderGroup,
         [out] LPDWORD lpState);
 
     /* Function 35 */
     DWORD REnumServiceGroupW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in] DWORD dwServiceType,
         [in] DWORD dwServiceState,
@@ -636,19 +600,16 @@ interface svcctl
 
     /* Function 36 */
     DWORD RChangeServiceConfig2A(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] SC_RPC_CONFIG_INFOA Info);
 
     /* Function 37 */
     DWORD RChangeServiceConfig2W(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] SC_RPC_CONFIG_INFOW Info);
 
     /* Function 38 */
     DWORD RQueryServiceConfig2A(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwInfoLevel,
         [out, size_is(cbBufSize)] LPBYTE lpBuffer,
@@ -657,7 +618,6 @@ interface svcctl
 
     /* Function 39 */
     DWORD RQueryServiceConfig2W(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwInfoLevel,
         [out, size_is(cbBufSize)] LPBYTE lpBuffer,
@@ -666,7 +626,6 @@ interface svcctl
 
     /* Function 40 */
     DWORD RQueryServiceStatusEx(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] SC_STATUS_TYPE InfoLevel,
         [out, size_is(cbBufSize)] LPBYTE lpBuffer,
@@ -675,7 +634,6 @@ interface svcctl
 
     /* Function 41 */
     DWORD REnumServicesStatusExA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in] SC_ENUM_TYPE InfoLevel,
         [in] DWORD dwServiceType,
@@ -689,7 +647,6 @@ interface svcctl
 
     /* Function 42 */
     DWORD REnumServicesStatusExW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hSCManager,
         [in] SC_ENUM_TYPE InfoLevel,
         [in] DWORD dwServiceType,
@@ -749,7 +706,6 @@ interface svcctl
 
     /* Function 47 */
     DWORD RNotifyServiceStatusChange(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] SC_RPC_NOTIFY_PARAMS NotifyParams,
         [in] GUID* pClientProcessGuid,
@@ -759,19 +715,16 @@ interface svcctl
 
     /* Function 48 */
     DWORD RGetNotifyResults(
-        [in] handle_t BindingHandle,
         [in] SC_NOTIFY_RPC_HANDLE hNotify,
         [out] PSC_RPC_NOTIFY_PARAMS_LIST *ppNotifyParams);
 
     /* Function 49 */
     DWORD RCloseNotifyHandle(
-        [in] handle_t BindingHandle,
         [in, out] LPSC_NOTIFY_RPC_HANDLE phNotify,
         [out] PBOOL pfApcFired);
 
     /* Function 50 */
     DWORD RControlServiceExA(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwControl,
         [in] DWORD dwInfoLevel/*,
@@ -780,7 +733,6 @@ interface svcctl
 
     /* Function 51 */
     DWORD RControlServiceExW(
-        [in] handle_t BindingHandle,
         [in] SC_RPC_HANDLE hService,
         [in] DWORD dwControl,
         [in] DWORD dwInfoLevel/*,

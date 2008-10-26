@@ -20,8 +20,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* TYPES *********************************************************************/
 
-VOID HandleBind(VOID);
-
 typedef struct _ACTIVE_SERVICE
 {
     CLIENT_HANDLE hService;
@@ -42,7 +40,6 @@ typedef struct _ACTIVE_SERVICE
 
 /* GLOBALS *******************************************************************/
 
-extern handle_t BindingHandle;
 static DWORD dwActiveServiceCount = 0;
 static PACTIVE_SERVICE lpActiveServices = NULL;
 
@@ -544,13 +541,10 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-//    HandleBind();
-
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        bResult = RI_ScSetServiceBitsA(//BindingHandle,
-                                       (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+        bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
                                        bUpdateImmediately,
@@ -583,13 +577,10 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-//    HandleBind();
-
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        bResult = RI_ScSetServiceBitsW(//BindingHandle,
-                                       (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+        bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
                                        bUpdateImmediately,
@@ -639,11 +630,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
     TRACE("SetServiceStatus() called\n");
     TRACE("hServiceStatus %lu\n", hServiceStatus);
 
-//    HandleBind();
-
     /* Call to services.exe using RPC */
-    dwError = RSetServiceStatus(//BindingHandle,
-                                (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+    dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                 lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
