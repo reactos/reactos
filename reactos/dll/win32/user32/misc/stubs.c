@@ -206,7 +206,7 @@ DragObject(
 	   HWND    hwnd1,
 	   HWND    hwnd2,
 	   UINT    u1,
-	   DWORD   dw1,
+	   ULONG_PTR   dw1,
 	   HCURSOR hc1
 	   )
 {

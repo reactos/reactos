@@ -51,7 +51,7 @@ typedef struct
  */
 BOOL
 STDCALL
-WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
+WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, ULONG_PTR dwData)
 {
 	static WORD WM_WINHELP = 0;
 	HWND hDest;
@@ -137,7 +137,7 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
  */
 BOOL
 STDCALL
-WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, DWORD dwData)
+WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, ULONG_PTR dwData)
 {
     INT len;
     LPSTR file;
