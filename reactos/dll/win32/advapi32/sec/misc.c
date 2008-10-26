@@ -1256,7 +1256,7 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
     /* Check the privilege name is not NULL */
     if (lpName == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
         return FALSE;
     }
 
@@ -1334,7 +1334,7 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
 
   for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
     {
-      if (0 == wcscmp(PrivName, DefaultPrivNames[Priv]))
+      if (0 == wcsicmp(PrivName, DefaultPrivNames[Priv]))
         {
           Luid->LowPart = Priv + 1;
           Luid->HighPart = 0;
