@@ -78,12 +78,11 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
 ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ULONG AllocatedPort;
 
-
-    if (Lowest < PortSet->StartingPort)
-        Lowest = PortSet->StartingPort;
-
-    if (Highest > PortSet->StartingPort + PortSet->PortsToOversee)
-        Highest = PortSet->StartingPort + PortSet->PortsToOversee;
+    if ((Lowest < PortSet->StartingPort) ||
+        (Highest > PortSet->StartingPort + PortSet->PortsToOversee))
+    {
+        return -1;
+    }
 
     Lowest -= PortSet->StartingPort;
     Highest -= PortSet->StartingPort;
