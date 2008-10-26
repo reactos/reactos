@@ -123,9 +123,14 @@ LsarStartRpcServer(VOID)
 }
 
 
+void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
+{
+
+}
+
+
 /* Function 0 */
 NTSTATUS LsarClose(
-    handle_t hBinding,
     LSAPR_HANDLE *ObjectHandle)
 {
 #if 0
@@ -153,7 +158,6 @@ NTSTATUS LsarClose(
 
 /* Function 1 */
 NTSTATUS LsarDelete(
-    handle_t hBinding,
     LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
@@ -163,7 +167,6 @@ NTSTATUS LsarDelete(
 
 /* Function 2 */
 NTSTATUS LsarEnumeratePrivileges(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
@@ -176,7 +179,6 @@ NTSTATUS LsarEnumeratePrivileges(
 
 /* Function 3 */
 NTSTATUS LsarQuerySecurityObject(
-    handle_t hBinding,
     LSAPR_HANDLE ObjectHandle,
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
@@ -188,7 +190,6 @@ NTSTATUS LsarQuerySecurityObject(
 
 /* Function 4 */
 NTSTATUS LsarSetSecurityObject(
-    handle_t hBinding,
     LSAPR_HANDLE ObjectHandle,
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR SecurityDescriptor)
@@ -200,7 +201,7 @@ NTSTATUS LsarSetSecurityObject(
 
 /* Function 5 */
 NTSTATUS LsarChangePassword(
-    handle_t hBinding,
+    handle_t hBinding,  /* FIXME */
     PRPC_UNICODE_STRING String1,
     PRPC_UNICODE_STRING String2,
     PRPC_UNICODE_STRING String3,
@@ -214,7 +215,6 @@ NTSTATUS LsarChangePassword(
 
 /* Function 6 */
 NTSTATUS LsarOpenPolicy(
-    handle_t hBinding,
     LPWSTR SystemName,
     PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
     ACCESS_MASK DesiredAccess,
@@ -227,7 +227,6 @@ NTSTATUS LsarOpenPolicy(
 
 /* Function 7 */
 NTSTATUS LsarQueryInformationPolicy(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long PolicyInformation)
@@ -239,7 +238,6 @@ NTSTATUS LsarQueryInformationPolicy(
 
 /* Function 8 */
 NTSTATUS LsarSetInformationPolicy(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long *PolicyInformation)
@@ -251,7 +249,6 @@ NTSTATUS LsarSetInformationPolicy(
 
 /* Function 9 */
 NTSTATUS LsarClearAuditLog(
-    handle_t hBinding,
     LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
@@ -261,7 +258,7 @@ NTSTATUS LsarClearAuditLog(
 
 /* Function 10 */
 NTSTATUS LsarCreateAccount(
-    handle_t hBinding,
+    LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *AccountHandle)
@@ -273,7 +270,6 @@ NTSTATUS LsarCreateAccount(
 
 /* Function 11 */
 NTSTATUS LsarEnumerateAccounts(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer,
@@ -286,7 +282,6 @@ NTSTATUS LsarEnumerateAccounts(
 
 /* Function 12 */
 NTSTATUS LsarCreateTrustedDomain(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUST_INFORMATION TrustedDomainInformation,
     ACCESS_MASK DesiredAccess,
@@ -299,7 +294,6 @@ NTSTATUS LsarCreateTrustedDomain(
 
 /* Function 13 */
 NTSTATUS LsarEnumerateTrustedDomains(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_TRUSTED_ENUM_BUFFER EnumerationBuffer,
@@ -312,7 +306,6 @@ NTSTATUS LsarEnumerateTrustedDomains(
 
 /* Function 14 */
 NTSTATUS LsarLookupNames(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -328,7 +321,6 @@ NTSTATUS LsarLookupNames(
 
 /* Function 15 */
 NTSTATUS LsarLookupSids(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -343,7 +335,6 @@ NTSTATUS LsarLookupSids(
 
 /* Function 16 */
 NTSTATUS LsarCreateSecret(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING SecretName,
     ACCESS_MASK DesiredAccess,
@@ -356,7 +347,6 @@ NTSTATUS LsarCreateSecret(
 
 /* Function 17 */
 NTSTATUS LsarOpenAccount(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     ACCESS_MASK DesiredAccess,
@@ -369,7 +359,6 @@ NTSTATUS LsarOpenAccount(
 
 /* Function 18 */
 NTSTATUS LsarEnumeratePrivilegesAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET *Privileges)
 {
@@ -380,7 +369,6 @@ NTSTATUS LsarEnumeratePrivilegesAccount(
 
 /* Function 19 */
 NTSTATUS LsarAddPrivilegesToAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET Privileges)
 {
@@ -391,7 +379,6 @@ NTSTATUS LsarAddPrivilegesToAccount(
 
 /* Function 20 */
 NTSTATUS LsarRemovePrivilegesFromAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     BOOL AllPrivileges,
     PLSAPR_PRIVILEGE_SET Privileges)
@@ -403,7 +390,6 @@ NTSTATUS LsarRemovePrivilegesFromAccount(
 
 /* Function 21 */
 NTSTATUS LsarGetQuotasForAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
@@ -414,7 +400,6 @@ NTSTATUS LsarGetQuotasForAccount(
 
 /* Function 22 */
 NTSTATUS LsarSetQuotasForAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
@@ -425,7 +410,6 @@ NTSTATUS LsarSetQuotasForAccount(
 
 /* Function 23 */
 NTSTATUS LsarGetSystemAccessAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK *SystemAccess)
 {
@@ -436,7 +420,6 @@ NTSTATUS LsarGetSystemAccessAccount(
 
 /* Function 24 */
 NTSTATUS LsarSetSystemAccessAccount(
-    handle_t hBinding,
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK SystemAccess)
 {
@@ -447,7 +430,6 @@ NTSTATUS LsarSetSystemAccessAccount(
 
 /* Function 25 */
 NTSTATUS LsarOpenTrustedDomain(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     ACCESS_MASK DesiredAccess,
@@ -460,7 +442,6 @@ NTSTATUS LsarOpenTrustedDomain(
 
 /* Function 26 */
 NTSTATUS LsarQueryInfoTrustedDomain(
-    handle_t hBinding,
     LSAPR_HANDLE TrustedDomainHandle,
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO *TrustedDomainInformation)
@@ -472,7 +453,6 @@ NTSTATUS LsarQueryInfoTrustedDomain(
 
 /* Function 27 */
 NTSTATUS LsarSetInformationTrustedDomain(
-    handle_t hBinding,
     LSAPR_HANDLE TrustedDomainHandle,
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO TrustedDomainInformation)
@@ -484,7 +464,6 @@ NTSTATUS LsarSetInformationTrustedDomain(
 
 /* Function 28 */
 NTSTATUS LsarOpenSecret(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING SecretName,
     ACCESS_MASK DesiredAccess,
@@ -497,7 +476,6 @@ NTSTATUS LsarOpenSecret(
 
 /* Function 29 */
 NTSTATUS LsarSetSecret(
-    handle_t hBinding,
     LSAPR_HANDLE *SecretHandle,
     PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue,
     PLSAPR_CR_CIPHER_VALUE EncryptedOldValue)
@@ -509,7 +487,6 @@ NTSTATUS LsarSetSecret(
 
 /* Function 30 */
 NTSTATUS LsarQuerySecret(
-    handle_t hBinding,
     LSAPR_HANDLE SecretHandle,
     PLSAPR_CR_CIPHER_VALUE *EncryptedCurrentValue,
     PLARGE_INTEGER CurrentValueSetTime,
@@ -523,7 +500,6 @@ NTSTATUS LsarQuerySecret(
 
 /* Function 31 */
 NTSTATUS LsarLookupPrivilegeValue(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING Name,
     PLUID Value)
@@ -535,7 +511,6 @@ NTSTATUS LsarLookupPrivilegeValue(
 
 /* Function 32 */
 NTSTATUS LsarLookupPrivilegeName(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLUID Value,
     PRPC_UNICODE_STRING *Name)
@@ -547,7 +522,7 @@ NTSTATUS LsarLookupPrivilegeName(
 
 /* Function 33 */
 NTSTATUS LsarLookupPrivilegeDisplayName(
-    handle_t hBinding,
+    LSAPR_HANDLE PolicyHandle,  /* FIXME */
     USHORT *LanguageReturned)
 {
     UNIMPLEMENTED;
@@ -557,7 +532,6 @@ NTSTATUS LsarLookupPrivilegeDisplayName(
 
 /* Function 34 */
 NTSTATUS LsarDeleteObject(
-    handle_t hBinding,
     LSAPR_HANDLE *ObjectHandle)
 {
     UNIMPLEMENTED;
@@ -567,7 +541,6 @@ NTSTATUS LsarDeleteObject(
 
 /* Function 35 */
 NTSTATUS LsarEnumerateAccountsWithUserRight(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING UserRight,
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer)
@@ -579,7 +552,6 @@ NTSTATUS LsarEnumerateAccountsWithUserRight(
 
 /* Function 36 */
 NTSTATUS LsarEnmuerateAccountRights(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
@@ -591,7 +563,6 @@ NTSTATUS LsarEnmuerateAccountRights(
 
 /* Function 37 */
 NTSTATUS LsarAddAccountRights(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
@@ -603,7 +574,6 @@ NTSTATUS LsarAddAccountRights(
 
 /* Function 38 */
 NTSTATUS LsarRemoveAccountRights(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     BOOL AllRights,
@@ -616,7 +586,6 @@ NTSTATUS LsarRemoveAccountRights(
 
 /* Function 39 */
 NTSTATUS LsarQueryTrustedDomainInfo(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     TRUSTED_INFORMATION_CLASS InformationClass,
@@ -629,7 +598,6 @@ NTSTATUS LsarQueryTrustedDomainInfo(
 
 /* Function 40 */
 NTSTATUS LsarSetTrustedDomainInfo(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     TRUSTED_INFORMATION_CLASS InformationClass,
@@ -642,7 +610,6 @@ NTSTATUS LsarSetTrustedDomainInfo(
 
 /* Function 41 */
 NTSTATUS LsarDeleteTrustedDomain(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid)
 {
@@ -653,7 +620,6 @@ NTSTATUS LsarDeleteTrustedDomain(
 
 /* Function 42 */
 NTSTATUS LsarStorePrivateData(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE EncryptedData)
@@ -665,7 +631,6 @@ NTSTATUS LsarStorePrivateData(
 
 /* Function 43 */
 NTSTATUS LsarRetrievePrivateData(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE *EncryptedData)
@@ -677,7 +642,6 @@ NTSTATUS LsarRetrievePrivateData(
 
 /* Function 44 */
 NTSTATUS LsarOpenPolicy2(
-    handle_t hBinding,
     LPWSTR SystemName,
     PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
     ACCESS_MASK DesiredAccess,
@@ -690,7 +654,6 @@ NTSTATUS LsarOpenPolicy2(
 
 /* Function 45 */
 NTSTATUS LsarGetUserName(
-    handle_t hBinding,
     LPWSTR SystemName,
     PRPC_UNICODE_STRING *UserName,
     PRPC_UNICODE_STRING *DomainName)
@@ -702,7 +665,6 @@ NTSTATUS LsarGetUserName(
 
 /* Function 46 */
 NTSTATUS LsarQueryInformationPolicy2(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long *PolicyInformation)
@@ -714,7 +676,6 @@ NTSTATUS LsarQueryInformationPolicy2(
 
 /* Function 47 */
 NTSTATUS LsarSetInformationPolicy2(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long PolicyInformation)
@@ -726,7 +687,6 @@ NTSTATUS LsarSetInformationPolicy2(
 
 /* Function 48 */
 NTSTATUS LsarQueryTrustedDomainInfoByName(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
@@ -739,7 +699,6 @@ NTSTATUS LsarQueryTrustedDomainInfoByName(
 
 /* Function 49 */
 NTSTATUS LsarSetTrustedDomainInfoByName(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
@@ -752,7 +711,6 @@ NTSTATUS LsarSetTrustedDomainInfoByName(
 
 /* Function 50 */
 NTSTATUS LsarEnumerateTrustedDomainsEx(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_TRUSTED_ENUM_BUFFER_EX EnumerationBuffer,
@@ -765,7 +723,6 @@ NTSTATUS LsarEnumerateTrustedDomainsEx(
 
 /* Function 51 */
 NTSTATUS LsarCreateTrustedDomainEx(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
     PLSAPR_TRUSTED_DOMAIN_AUTH_INFORMATION AuthentificationInformation,
@@ -779,7 +736,6 @@ NTSTATUS LsarCreateTrustedDomainEx(
 
 /* Function 52 */
 NTSTATUS LsarSetPolicyReplicationHandle(
-    handle_t hBinding,
     PLSAPR_HANDLE PolicyHandle)
 {
     /* Deprecated */
@@ -789,7 +745,6 @@ NTSTATUS LsarSetPolicyReplicationHandle(
 
 /* Function 53 */
 NTSTATUS LsarQueryDomainInformationPolicy(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long *PolicyInformation)
@@ -801,7 +756,6 @@ NTSTATUS LsarQueryDomainInformationPolicy(
 
 /* Function 54 */
 NTSTATUS LsarSetDomainInformationPolicy(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long PolicyInformation)
@@ -813,7 +767,6 @@ NTSTATUS LsarSetDomainInformationPolicy(
 
 /* Function 55 */
 NTSTATUS LsarOpenTrustedDomainByName(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     ACCESS_MASK DesiredAccess,
@@ -835,7 +788,6 @@ NTSTATUS LsarTestCall(
 
 /* Function 57 */
 NTSTATUS LsarLookupSids2(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -852,7 +804,6 @@ NTSTATUS LsarLookupSids2(
 
 /* Function 58 */
 NTSTATUS LsarLookupNames2(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -870,7 +821,6 @@ NTSTATUS LsarLookupNames2(
 
 /* Function 59 */
 NTSTATUS LsarCreateTrustedDomainEx2(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
     PLSAPR_TRUSTED_DOMAIN_AUTH_INFORMATION_INTERNAL AuthentificationInformation,
@@ -956,7 +906,6 @@ NTSTATUS CredrProfileLoaded(
 
 /* Function 68 */
 NTSTATUS LsarLookupNames3(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -1010,7 +959,6 @@ NTSTATUS LsarUnregisterAuditEvent(
 
 /* Function 73 */
 NTSTATUS LsarQueryForestTrustInformation(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
     LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
@@ -1023,7 +971,6 @@ NTSTATUS LsarQueryForestTrustInformation(
 
 /* Function 74 */
 NTSTATUS LsarSetForestTrustInformation(
-    handle_t hBinding,
     LSAPR_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
     LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
@@ -1113,6 +1060,5 @@ NTSTATUS LsarAdtReportSecurityEvent(
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /* EOF */

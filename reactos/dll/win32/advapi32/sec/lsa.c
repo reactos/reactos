@@ -16,34 +16,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-static handle_t LSABindingHandle = NULL;
 
-static VOID
-LSAHandleUnbind(handle_t *Handle)
+handle_t __RPC_USER
+PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
 {
-    RPC_STATUS status;
-
-    if (*Handle == NULL)
-        return;
-
-    status = RpcBindingFree(Handle);
-    if (status)
-    {
-        TRACE("RpcBindingFree returned 0x%x\n", status);
-    }
-}
-
-static VOID
-LSAHandleBind(VOID)
-{
+    handle_t hBinding = NULL;
     LPWSTR pszStringBinding;
     RPC_STATUS status;
-    handle_t Handle;
 
-    if (LSABindingHandle != NULL)
-        return;
+    TRACE("PLSAPR_SERVER_NAME_bind() called\n");
 
-    status = RpcStringBindingComposeW(NULL,
+    status = RpcStringBindingComposeW(pszSystemName,
                                       L"ncacn_np",
                                       NULL,
                                       L"\\pipe\\lsarpc",
@@ -52,12 +35,12 @@ LSAHandleBind(VOID)
     if (status)
     {
         TRACE("RpcStringBindingCompose returned 0x%x\n", status);
-        return;
+        return NULL;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
     status = RpcBindingFromStringBindingW(pszStringBinding,
-                                          &Handle);
+                                          &hBinding);
     if (status)
     {
         TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
@@ -69,11 +52,22 @@ LSAHandleBind(VOID)
         TRACE("RpcStringFree returned 0x%x\n", status);
     }
 
-    if (InterlockedCompareExchangePointer(&LSABindingHandle,
-                                          (PVOID)Handle,
-                                          NULL) != NULL)
+    return hBinding;
+}
+
+
+void __RPC_USER
+PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
+                          handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    TRACE("PLSAPR_SERVER_NAME_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
     {
-        LSAHandleUnbind(&Handle);
+        TRACE("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
@@ -90,10 +84,7 @@ LsaClose(LSA_HANDLE ObjectHandle)
     if (ObjectHandle == (LSA_HANDLE)0xcafe)
         return STATUS_SUCCESS;
 
-    LSAHandleBind();
-
-    return LsarClose(LSABindingHandle,
-                     (unsigned long *)&ObjectHandle);
+    return LsarClose((PLSAPR_HANDLE)&ObjectHandle);
 }
 
 
@@ -105,10 +96,7 @@ LsaDelete(LSA_HANDLE ObjectHandle)
 {
     TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
 
-    LSAHandleBind();
-
-    return LsarDelete(LSABindingHandle,
-                      (unsigned long)ObjectHandle);
+    return LsarDelete((LSAPR_HANDLE)ObjectHandle);
 }
 
 
