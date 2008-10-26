@@ -591,20 +591,6 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 }
 
 string
-MingwModuleHandler::GenerateGccDefineParameters () const
-{
-	set<string> used_defs;
-	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines, used_defs );
-	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines, used_defs );
-	if ( s.length () > 0 )
-	{
-		parameters += " ";
-		parameters += s;
-	}
-	return parameters;
-}
-
-string
 MingwModuleHandler::ConcatenatePaths (
 	const string& path1,
 	const string& path2 ) const
@@ -627,19 +613,6 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		if ( parameters.length () > 0 )
 			parameters += " ";
 		parameters += "-I" + backend->GetFullPath ( *include.directory );;
-	}
-	return parameters;
-}
-
-string
-MingwModuleHandler::GenerateGccIncludeParameters () const
-{
-	string parameters = GenerateGccIncludeParametersFromVector ( module.non_if_data.includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.project.non_if_data.includes );
-	if ( s.length () > 0 )
-	{
-		parameters += " ";
-		parameters += s;
 	}
 	return parameters;
 }
@@ -1870,7 +1843,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
-	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
+	{
+		GenerateMacros("+=", module.project.host_non_if_data, NULL, used_defs);
+	}
+	else
 	{
 		GenerateMacros (
 			"+=",
@@ -1899,7 +1876,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 		globalCflags += " $(PROJECT_CFLAGS)";
 	else
-		globalCflags += " -Wall -Wpointer-arith -D__REACTOS__";
+		globalCflags += " -Wall -Wpointer-arith";
 	globalCflags += " -g";
 	if ( backend->usePipe )
 		globalCflags += " -pipe";

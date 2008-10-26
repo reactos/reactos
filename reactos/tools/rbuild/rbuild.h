@@ -236,6 +236,7 @@ public:
 	std::vector<InstallFile*> installfiles;
 	std::map<std::string, Module*> modules;
 	IfableData non_if_data;
+	IfableData host_non_if_data;
 
 	Project ( const Configuration& configuration,
 	          const std::string& filename,

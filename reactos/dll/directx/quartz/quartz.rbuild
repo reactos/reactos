@@ -5,6 +5,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="quartz.spec" />
 	<include base="quartz">.</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>uuid</library>

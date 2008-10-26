@@ -306,6 +306,7 @@ Project::ProcessXML ( const string& path )
 	}
 
 	non_if_data.ProcessXML ();
+	host_non_if_data.ProcessXML ();
 
 	non_if_data.ExtractModules( modules );
 
@@ -359,14 +360,26 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
+		const XMLAttribute* host = e.GetAttribute("host", false);
 		Include* include = new Include ( *this, &e );
-		non_if_data.includes.push_back ( include );
+
+		if(host && host->value == "true")
+			host_non_if_data.includes.push_back(include);
+		else
+			non_if_data.includes.push_back ( include );
+
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
+		const XMLAttribute* host = e.GetAttribute("host", false);
 		Define* define = new Define ( *this, e );
-		non_if_data.defines.push_back ( define );
+
+		if(host && host->value == "true")
+			host_non_if_data.defines.push_back(define);
+		else
+			non_if_data.defines.push_back ( define );
+
 		subs_invalid = true;
 	}
 	else if ( e.name == "compilerflag" )

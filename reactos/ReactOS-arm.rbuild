@@ -12,6 +12,7 @@
 	<define name="__REACTOS__" />
 	<define name="_ARM_" />
 	<define name="__arm__" />
+	<define name="TARGET_arm" host="true" />
 
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>

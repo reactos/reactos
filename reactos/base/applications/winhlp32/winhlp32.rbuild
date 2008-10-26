@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="winhlp32" type="win32gui" installbase="system32" installname="winhlp32.exe" unicode="no" allowwarnings="true">
 	<include base="winhlp32">.</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
 	<library>comdlg32</library>
 	<library>comctl32</library>

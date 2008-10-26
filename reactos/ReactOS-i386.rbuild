@@ -12,6 +12,7 @@
 	<define name="_M_IX86" />
 	<define name="_X86_" />
 	<define name="__i386__" />
+	<define name="TARGET_i386" host="true" />
 
 	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
