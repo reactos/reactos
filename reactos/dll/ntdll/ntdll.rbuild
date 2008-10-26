@@ -31,6 +31,11 @@
 					<file>dispatch.S</file>
 				</directory>
 			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>stubs.c</file>
+				</directory>
+			</if>
 			<if property="ARCH" value="arm">
 				<directory name="arm">
 					<file>stubs_asm.s</file>

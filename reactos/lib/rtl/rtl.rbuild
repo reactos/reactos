@@ -39,7 +39,10 @@
 	<if property="ARCH" value="amd64">
 		<directory name="amd64">
 			<file>debug_asm.S</file>
+			<file>stubs.c</file>
 		</directory>
+		<file>mem.c</file>
+		<file>memgen.c</file>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>
