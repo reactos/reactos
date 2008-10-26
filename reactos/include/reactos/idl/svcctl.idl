@@ -15,8 +15,9 @@ const unsigned short SC_MAX_COMMENT_LENGTH = 128;
 const unsigned short SC_MAX_ARGUMENT_LENGTH = 1024;
 const unsigned short SC_MAX_ARGUMENTS = 1024;
 
-typedef /*[handle]*/ LPSTR SVCCTL_HANDLEA;
-typedef /*[handle]*/ LPWSTR SVCCTL_HANDLEW;
+typedef [handle] LPSTR SVCCTL_HANDLEA;
+typedef [handle] LPWSTR SVCCTL_HANDLEW;
+typedef [handle] ULONG_PTR RPC_SERVICE_STATUS_HANDLE;
 typedef /*[context_handle]*/ unsigned long SC_RPC_HANDLE;
 typedef SC_RPC_HANDLE* LPSC_RPC_HANDLE;
 typedef /*[context_handle]*/ unsigned long SC_RPC_LOCK;
@@ -296,9 +297,9 @@ typedef struct _STRING_PTRSW {
   uuid(367abb81-9844-35f1-ad32-98f038001003),
   version(2.0),
   pointer_default(unique),
-  #ifndef __midl
+//  #ifndef __midl
   ,explicit_handle
-  #endif
+//  #endif
 ]
 interface svcctl
 {
@@ -350,8 +351,8 @@ interface svcctl
 
     /* Function 7 */
     DWORD RSetServiceStatus(
-      [in] handle_t BindingHandle,
-      [in] SC_RPC_HANDLE hServiceStatus,
+//      [in] handle_t BindingHandle,
+      [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
       [in] LPSERVICE_STATUS lpServiceStatus);
 
     /* Function 8 */
@@ -367,8 +368,8 @@ interface svcctl
 
     /* Function 10 */
     DWORD RI_ScSetServiceBitsW(
-        [in] handle_t BindingHandle,
-        [in] SC_RPC_HANDLE hServiceStatus,
+//        [in] handle_t BindingHandle,
+        [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,
         [in] BOOL bSetBitsOn,
         [in] BOOL bUpdateImmediately,
@@ -435,8 +436,8 @@ interface svcctl
 
     /* Function 15 */
     DWORD ROpenSCManagerW(
-        [in] handle_t BindingHandle,
-        [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] LPWSTR lpMachineName,
+//        [in] handle_t BindingHandle,
+        [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] SVCCTL_HANDLEW lpMachineName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDatabaseName,
         [in] DWORD dwDesiredAccess,
         [out] LPSC_RPC_HANDLE lpScHandle);
@@ -491,8 +492,8 @@ interface svcctl
 
     /* Function 22 */
     DWORD RI_ScSetServiceBitsA(
-        [in] handle_t BindingHandle,
-        [in] SC_RPC_HANDLE hServiceStatus,
+//        [in] handle_t BindingHandle,
+        [in] RPC_SERVICE_STATUS_HANDLE hServiceStatus,
         [in] DWORD dwServiceBits,
         [in] BOOL bSetBitsOn,
         [in] BOOL bUpdateImmediately,
@@ -559,8 +560,8 @@ interface svcctl
 
     /* Function 27 */
     DWORD ROpenSCManagerA(
-        [in] handle_t BindingHandle,
-        [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] LPSTR lpMachineName,
+//        [in] handle_t BindingHandle,
+        [in, string, unique, range(0, SC_MAX_COMPUTER_NAME_LENGTH)] SVCCTL_HANDLEA lpMachineName,
         [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpDatabaseName,
         [in] DWORD dwDesiredAccess,
         [out] LPSC_RPC_HANDLE lpScHandle);

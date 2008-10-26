@@ -536,7 +536,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
  * @implemented
  */
 BOOL STDCALL
-I_ScSetServiceBitsA(SC_RPC_HANDLE hServiceStatus,
+I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
                     DWORD dwServiceBits,
                     BOOL bSetBitsOn,
                     BOOL bUpdateImmediately,
@@ -544,13 +544,13 @@ I_ScSetServiceBitsA(SC_RPC_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    HandleBind();
+//    HandleBind();
 
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        bResult = RI_ScSetServiceBitsA(BindingHandle,
-                                       (SC_RPC_HANDLE)hServiceStatus,
+        bResult = RI_ScSetServiceBitsA(//BindingHandle,
+                                       (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
                                        bUpdateImmediately,
@@ -575,7 +575,7 @@ I_ScSetServiceBitsA(SC_RPC_HANDLE hServiceStatus,
  * @implemented
  */
 BOOL STDCALL
-I_ScSetServiceBitsW(SC_RPC_HANDLE hServiceStatus,
+I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
                     DWORD dwServiceBits,
                     BOOL bSetBitsOn,
                     BOOL bUpdateImmediately,
@@ -583,13 +583,13 @@ I_ScSetServiceBitsW(SC_RPC_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    HandleBind();
+//    HandleBind();
 
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        bResult = RI_ScSetServiceBitsW(BindingHandle,
-                                       (SC_RPC_HANDLE)hServiceStatus,
+        bResult = RI_ScSetServiceBitsW(//BindingHandle,
+                                       (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                        dwServiceBits,
                                        bSetBitsOn,
                                        bUpdateImmediately,
@@ -639,11 +639,11 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
     TRACE("SetServiceStatus() called\n");
     TRACE("hServiceStatus %lu\n", hServiceStatus);
 
-    HandleBind();
+//    HandleBind();
 
     /* Call to services.exe using RPC */
-    dwError = RSetServiceStatus(BindingHandle,
-                                (SC_RPC_HANDLE)hServiceStatus,
+    dwError = RSetServiceStatus(//BindingHandle,
+                                (RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                 lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {

@@ -77,6 +77,172 @@ HandleUnbind(VOID)
 }
 #endif
 
+handle_t __RPC_USER
+SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
+{
+    handle_t hBinding = NULL;
+    UCHAR *pszStringBinding;
+    RPC_STATUS status;
+
+    ERR("SVCCTL_HANDLEA_bind() called\n");
+
+    status = RpcStringBindingComposeA((UCHAR *)szMachineName,
+                                      (UCHAR *)"ncacn_np",
+                                      NULL,
+                                      (UCHAR *)"\\pipe\\ntsvcs",
+                                      NULL,
+                                      (UCHAR **)&pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingA(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeA(&pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
+}
+
+
+void __RPC_USER
+SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
+                      handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    ERR("SVCCTL_HANDLEA_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
+
+handle_t __RPC_USER
+SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    ERR("SVCCTL_HANDLEW_bind() called\n");
+
+
+    status = RpcStringBindingComposeW(szMachineName,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\ntsvcs",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
+}
+
+
+void __RPC_USER
+SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
+                      handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    ERR("SVCCTL_HANDLEW_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
+
+handle_t __RPC_USER
+RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    ERR("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
+
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\ntsvcs",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+        ERR("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
+}
+
+
+void __RPC_USER
+RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
+                                 handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    ERR("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+        ERR("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
 
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
@@ -1494,12 +1660,12 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
     WaitForSCManager();
 
-    HandleBind();
+//    HandleBind();
 
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        dwError = ROpenSCManagerA(BindingHandle,
+        dwError = ROpenSCManagerA(//BindingHandle,
                                   (LPSTR)lpMachineName,
                                   (LPSTR)lpDatabaseName,
                                   dwDesiredAccess,
@@ -1542,12 +1708,12 @@ OpenSCManagerW(LPCWSTR lpMachineName,
 
     WaitForSCManager();
 
-    HandleBind();
+//    HandleBind();
 
     _SEH_TRY
     {
         /* Call to services.exe using RPC */
-        dwError = ROpenSCManagerW(BindingHandle,
+        dwError = ROpenSCManagerW(//BindingHandle,
                                   (LPWSTR)lpMachineName,
                                   (LPWSTR)lpDatabaseName,
                                   dwDesiredAccess,

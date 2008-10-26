@@ -1004,8 +1004,8 @@ ScmIsValidServiceState(DWORD dwCurrentState)
 
 /* Function 7 */
 DWORD RSetServiceStatus(
-    handle_t BindingHandle,
-    SC_RPC_HANDLE hServiceStatus,
+//    handle_t BindingHandle,
+    RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE lpService;
@@ -1026,7 +1026,7 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
-    lpService = ScmGetServiceEntryByClientHandle((ULONG)hServiceStatus);
+    lpService = ScmGetServiceEntryByClientHandle(hServiceStatus);
     if (lpService == NULL)
     {
         DPRINT1("lpService == NULL!\n");
@@ -1091,8 +1091,8 @@ DWORD RNotifyBootConfigStatus(
 
 /* Function 10 */
 DWORD RI_ScSetServiceBitsW(
-    handle_t BindingHandle,
-    SC_RPC_HANDLE hServiceStatus,
+//    handle_t BindingHandle,
+    RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     DWORD dwServiceBits,
     int bSetBitsOn,
     int bUpdateImmediately,
@@ -2388,7 +2388,7 @@ Done:;
 
 /* Function 15 */
 DWORD ROpenSCManagerW(
-    handle_t BindingHandle,
+//    handle_t BindingHandle,
     LPWSTR lpMachineName,
     LPWSTR lpDatabaseName,
     DWORD dwDesiredAccess,
@@ -2893,8 +2893,8 @@ DWORD RGetServiceKeyNameW(
 
 /* Function 22 */
 DWORD RI_ScSetServiceBitsA(
-    handle_t BindingHandle,
-    SC_RPC_HANDLE hServiceStatus,
+//    handle_t BindingHandle,
+    RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     DWORD dwServiceBits,
     int bSetBitsOn,
     int bUpdateImmediately,
@@ -3462,7 +3462,7 @@ Done:;
 
 /* Function 27 */
 DWORD ROpenSCManagerA(
-    handle_t BindingHandle,
+//    handle_t BindingHandle,
     LPSTR lpMachineName,
     LPSTR lpDatabaseName,
     DWORD dwDesiredAccess,
@@ -3482,7 +3482,7 @@ DWORD ROpenSCManagerA(
         RtlCreateUnicodeStringFromAsciiz(&DatabaseName,
                                          lpDatabaseName);
 
-    dwError = ROpenSCManagerW(BindingHandle,
+    dwError = ROpenSCManagerW(//BindingHandle,
                               lpMachineName ? MachineName.Buffer : NULL,
                               lpDatabaseName ? DatabaseName.Buffer : NULL,
                               dwDesiredAccess,
