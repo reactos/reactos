@@ -96,6 +96,7 @@ EngLockDriverObj@4
 EngLockSurface@4
 EngLpkInstalled@0
 EngMapEvent@20
+EngMapFile@12
 EngMapFontFile@12
 EngMapFontFileFD@12
 EngMapModule@8
@@ -112,6 +113,7 @@ EngPlgBlt@44
 EngProbeForRead@12=NTOSKRNL.ProbeForRead
 EngProbeForReadAndWrite@12=NTOSKRNL.ProbeForWrite
 EngQueryDeviceAttribute@24
+EngQueryFileTimeStamp@4
 EngQueryLocalTime@4
 EngQueryPalette@16
 EngQueryPerformanceCounter@4
@@ -139,8 +141,8 @@ EngUnloadImage@4
 EngUnlockDirectDrawSurface@4
 EngUnlockDriverObj@4
 EngUnlockSurface@4
-EngUnmapFile@4
 EngUnmapEvent@4
+EngUnmapFile@4
 EngUnmapFontFile@4
 EngUnmapFontFileFD@4
 EngUnsecureMem@4
