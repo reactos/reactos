@@ -612,6 +612,65 @@ CopySid(DWORD nDestinationSidLength,
 
 
 /******************************************************************************
+ * ConvertSecurityDescriptorToStringSecurityDescriptorW [ADVAPI32.@]
+ * @unimplemented
+ */
+BOOL WINAPI
+ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                                     DWORD SDRevision,
+                                                     SECURITY_INFORMATION SecurityInformation,
+                                                     LPWSTR *OutputString,
+                                                     PULONG OutputLen)
+{
+    if (SDRevision != SDDL_REVISION_1)
+    {
+        ERR("Pogram requested unknown SDDL revision %d\n", SDRevision);
+        SetLastError(ERROR_UNKNOWN_REVISION);
+        return FALSE;
+    }
+
+    FIXME("%s() not implemented!\n", __FUNCTION__);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/******************************************************************************
+ * ConvertSecurityDescriptorToStringSecurityDescriptorA [ADVAPI32.@]
+ * @implemented
+ */
+BOOL WINAPI
+ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                                     DWORD SDRevision,
+                                                     SECURITY_INFORMATION Information,
+                                                     LPSTR *OutputString,
+                                                     PULONG OutputLen)
+{
+    LPWSTR wstr;
+    ULONG len;
+    if (ConvertSecurityDescriptorToStringSecurityDescriptorW(SecurityDescriptor, SDRevision, Information, &wstr, &len))
+    {
+        int lenA;
+
+        lenA = WideCharToMultiByte(CP_ACP, 0, wstr, len, NULL, 0, NULL, NULL);
+        *OutputString = HeapAlloc(GetProcessHeap(), 0, lenA);
+        WideCharToMultiByte(CP_ACP, 0, wstr, len, *OutputString, lenA, NULL, NULL);
+        LocalFree(wstr);
+
+        if (OutputLen != NULL)
+            *OutputLen = lenA;
+        return TRUE;
+    }
+    else
+    {
+        *OutputString = NULL;
+        if (OutputLen)
+            *OutputLen = 0;
+        return FALSE;
+    }
+}
+
+/******************************************************************************
  * ConvertStringSecurityDescriptorToSecurityDescriptorW [ADVAPI32.@]
  * @implemented
  */
