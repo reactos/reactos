@@ -28,7 +28,7 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
     UCHAR *pszStringBinding;
     RPC_STATUS status;
 
-    ERR("SVCCTL_HANDLEA_bind() called\n");
+    TRACE("SVCCTL_HANDLEA_bind() called\n");
 
     status = RpcStringBindingComposeA((UCHAR *)szMachineName,
                                       (UCHAR *)"ncacn_np",
@@ -66,7 +66,7 @@ SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
 {
     RPC_STATUS status;
 
-    ERR("SVCCTL_HANDLEA_unbind() called\n");
+    TRACE("SVCCTL_HANDLEA_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
     if (status)
@@ -83,8 +83,7 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
     LPWSTR pszStringBinding;
     RPC_STATUS status;
 
-    ERR("SVCCTL_HANDLEW_bind() called\n");
-
+    TRACE("SVCCTL_HANDLEW_bind() called\n");
 
     status = RpcStringBindingComposeW(szMachineName,
                                       L"ncacn_np",
@@ -122,7 +121,7 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 {
     RPC_STATUS status;
 
-    ERR("SVCCTL_HANDLEW_unbind() called\n");
+    TRACE("SVCCTL_HANDLEW_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
     if (status)
@@ -139,8 +138,7 @@ RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
     LPWSTR pszStringBinding;
     RPC_STATUS status;
 
-    ERR("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
-
+    TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
 
     status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
@@ -178,7 +176,7 @@ RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
 {
     RPC_STATUS status;
 
-    ERR("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
+    TRACE("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
     if (status)
