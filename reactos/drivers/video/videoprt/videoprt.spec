@@ -1,3 +1,4 @@
+;ScsiPortNotification // vista64
 @ stdcall VideoPortAcquireDeviceLock(ptr)
 @ stdcall VideoPortAcquireSpinLock(ptr ptr ptr)
 @ stdcall VideoPortAcquireSpinLockAtDpcLevel(ptr ptr)
@@ -7,6 +8,7 @@
 @ stdcall VideoPortAllocatePool(ptr long long long)
 ;VideoPortAssociateEventsWithDmaHandle
 @ stdcall VideoPortCheckForDeviceExistence(ptr long long long long long long)
+;VideoPortCheckForDeviceExistence  there's a second dummy export with the same name on ms videoprt
 @ stdcall VideoPortClearEvent(ptr ptr)
 @ stdcall VideoPortCompareMemory(ptr ptr long) NTOSKRNL.RtlCompareMemory
 ;VideoPortCompleteDma
@@ -14,6 +16,9 @@
 @ stdcall VideoPortCreateSecondaryDisplay(ptr ptr long)
 @ stdcall VideoPortCreateSpinLock(ptr ptr)
 @ stdcall VideoPortDDCMonitorHelper(ptr ptr ptr long)
+;VideoPortDbgReportComplete // vista64
+;VideoPortDbgReportCreate // vista64
+;VideoPortDbgReportSecondaryData // vista64
 @ cdecl VideoPortDebugPrint(long ptr)
 @ stdcall VideoPortDeleteEvent(ptr ptr)
 @ stdcall VideoPortDeleteSpinLock(ptr ptr)
@@ -48,29 +53,31 @@
 @ fastcall VideoPortInterlockedExchange(ptr long) NTOSKRNL.InterlockedExchange
 @ fastcall VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
 @ stdcall VideoPortLockBuffer(ptr ptr long long)
+;VideoPortIsNoVesa // 2003 and later
 ;VideoPortLockPages
 @ stdcall VideoPortLogError(ptr ptr long long)
 @ stdcall VideoPortMapBankedMemory(ptr long long ptr ptr ptr long long ptr ptr)
 ;VideoPortMapDmaMemory
 @ stdcall VideoPortMapMemory(ptr long long ptr ptr ptr)
 @ stdcall VideoPortMoveMemory(ptr ptr long) NTOSKRNL.RtlMoveMemory
+;VideoPortNotification
 @ stdcall VideoPortPutDmaAdapter(ptr ptr)
 @ stdcall VideoPortQueryPerformanceCounter(ptr ptr)
 @ stdcall VideoPortQueryServices(ptr long ptr)
 @ stdcall VideoPortQuerySystemTime(ptr) NTOSKRNL.KeQuerySystemTime
 @ stdcall VideoPortQueueDpc(ptr ptr ptr)
-@ stdcall VideoPortReadPortUchar(ptr) HAL.READ_PORT_UCHAR
-@ stdcall VideoPortReadPortUshort(ptr) HAL.READ_PORT_USHORT
-@ stdcall VideoPortReadPortUlong(ptr) HAL.READ_PORT_ULONG
 @ stdcall VideoPortReadPortBufferUchar(ptr ptr long) HAL.READ_PORT_BUFFER_UCHAR
-@ stdcall VideoPortReadPortBufferUshort(ptr ptr long) HAL.READ_PORT_BUFFER_USHORT
 @ stdcall VideoPortReadPortBufferUlong(ptr ptr long) HAL.READ_PORT_BUFFER_ULONG
-@ stdcall VideoPortReadRegisterUchar(ptr) NTOSKRNL.READ_REGISTER_UCHAR
-@ stdcall VideoPortReadRegisterUshort(ptr) NTOSKRNL.READ_REGISTER_USHORT
-@ stdcall VideoPortReadRegisterUlong(ptr) NTOSKRNL.READ_REGISTER_ULONG
+@ stdcall VideoPortReadPortBufferUshort(ptr ptr long) HAL.READ_PORT_BUFFER_USHORT
+@ stdcall VideoPortReadPortUchar(ptr) HAL.READ_PORT_UCHAR
+@ stdcall VideoPortReadPortUlong(ptr) HAL.READ_PORT_ULONG
+@ stdcall VideoPortReadPortUshort(ptr) HAL.READ_PORT_USHORT
 @ stdcall VideoPortReadRegisterBufferUchar(ptr ptr long) NTOSKRNL.READ_REGISTER_BUFFER_UCHAR
-@ stdcall VideoPortReadRegisterBufferUshort(ptr ptr long) NTOSKRNL.READ_REGISTER_BUFFER_USHORT
 @ stdcall VideoPortReadRegisterBufferUlong(ptr ptr long) NTOSKRNL.READ_REGISTER_BUFFER_ULONG
+@ stdcall VideoPortReadRegisterBufferUshort(ptr ptr long) NTOSKRNL.READ_REGISTER_BUFFER_USHORT
+@ stdcall VideoPortReadRegisterUchar(ptr) NTOSKRNL.READ_REGISTER_UCHAR
+@ stdcall VideoPortReadRegisterUlong(ptr) NTOSKRNL.READ_REGISTER_ULONG
+@ stdcall VideoPortReadRegisterUshort(ptr) NTOSKRNL.READ_REGISTER_USHORT
 ;VideoPortReadStateEvent
 @ stdcall VideoPortRegisterBugcheckCallback(ptr long ptr long)
 @ stdcall VideoPortReleaseBuffer(ptr ptr)
@@ -97,18 +104,18 @@
 @ stdcall VideoPortUnmapMemory(ptr ptr ptr)
 @ stdcall VideoPortVerifyAccessRanges(ptr long ptr)
 @ stdcall VideoPortWaitForSingleObject(ptr ptr ptr)
-@ stdcall VideoPortWritePortUchar(ptr long) HAL.WRITE_PORT_UCHAR
-@ stdcall VideoPortWritePortUshort(ptr long) HAL.WRITE_PORT_USHORT
-@ stdcall VideoPortWritePortUlong(ptr long) HAL.WRITE_PORT_ULONG
 @ stdcall VideoPortWritePortBufferUchar(ptr ptr long) HAL.WRITE_PORT_BUFFER_UCHAR
-@ stdcall VideoPortWritePortBufferUshort(ptr ptr long) HAL.WRITE_PORT_BUFFER_USHORT
 @ stdcall VideoPortWritePortBufferUlong(ptr ptr long) HAL.WRITE_PORT_BUFFER_ULONG
-@ stdcall VideoPortWriteRegisterUchar(ptr long) NTOSKRNL.WRITE_REGISTER_UCHAR
-@ stdcall VideoPortWriteRegisterUshort(ptr long) NTOSKRNL.WRITE_REGISTER_USHORT
-@ stdcall VideoPortWriteRegisterUlong(ptr long) NTOSKRNL.WRITE_REGISTER_ULONG
+@ stdcall VideoPortWritePortBufferUshort(ptr ptr long) HAL.WRITE_PORT_BUFFER_USHORT
+@ stdcall VideoPortWritePortUchar(ptr long) HAL.WRITE_PORT_UCHAR
+@ stdcall VideoPortWritePortUlong(ptr long) HAL.WRITE_PORT_ULONG
+@ stdcall VideoPortWritePortUshort(ptr long) HAL.WRITE_PORT_USHORT
 @ stdcall VideoPortWriteRegisterBufferUchar(ptr ptr long) NTOSKRNL.WRITE_REGISTER_BUFFER_UCHAR
-@ stdcall VideoPortWriteRegisterBufferUshort(ptr ptr long) NTOSKRNL.WRITE_REGISTER_BUFFER_USHORT
 @ stdcall VideoPortWriteRegisterBufferUlong(ptr ptr long) NTOSKRNL.WRITE_REGISTER_BUFFER_ULONG
-@ stdcall VideoPortZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
+@ stdcall VideoPortWriteRegisterBufferUshort(ptr ptr long) NTOSKRNL.WRITE_REGISTER_BUFFER_USHORT
+@ stdcall VideoPortWriteRegisterUchar(ptr long) NTOSKRNL.WRITE_REGISTER_UCHAR
+@ stdcall VideoPortWriteRegisterUlong(ptr long) NTOSKRNL.WRITE_REGISTER_ULONG
+@ stdcall VideoPortWriteRegisterUshort(ptr long) NTOSKRNL.WRITE_REGISTER_USHORT
 @ stdcall VideoPortZeroDeviceMemory(ptr long) NTOSKRNL.RtlZeroMemory
+@ stdcall VideoPortZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall VpNotifyEaData(ptr ptr)
