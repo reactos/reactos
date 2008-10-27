@@ -223,8 +223,10 @@ NTSTATUS RawIPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+        FreeNdisPacket(Packet.NdisPacket);
 	return STATUS_UNSUCCESSFUL;
+    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
