@@ -701,4 +701,125 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
   return NtGdiSetLayout( hdc, wox, dwLayout);
 }
 
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+OffsetViewportOrgEx(HDC hdc,
+                    int nXOffset,
+                    int nYOffset,
+                    LPPOINT lpPoint)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_OffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+
+  if ( lpPoint )
+  {
+     *lpPoint = (POINT)Dc_Attr->ptlViewportOrg;
+     if ( Dc_Attr->dwLayout & LAYOUT_RTL) lpPoint->x = -lpPoint->x;
+  }
+                                                                  
+  if ( nXOffset || nYOffset != nXOffset )
+  {
+     if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+     {
+        if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+        {
+           NtGdiFlush();
+           Dc_Attr->ulDirty_ &= ~DC_MODE_DIRTY;
+        }
+     }
+     Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+     if ( Dc_Attr->dwLayout & LAYOUT_RTL) nXOffset = -nXOffset;
+     Dc_Attr->ptlViewportOrg.x += nXOffset;
+     Dc_Attr->ptlViewportOrg.y += nYOffset;
+  }
+  return TRUE;
+#endif
+    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+OffsetWindowOrgEx(HDC hdc,
+                  int nXOffset,
+                  int nYOffset,
+                  LPPOINT lpPoint)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+
+  if ( lpPoint )
+  {
+     *lpPoint   = (POINT)Dc_Attr->ptlWindowOrg;
+     lpPoint->x = Dc_Attr->lWindowOrgx;
+  }
+                                                                  
+  if ( nXOffset || nYOffset != nXOffset )
+  {
+     if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+     {
+        if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+        {
+           NtGdiFlush();
+           Dc_Attr->ulDirty_ &= ~DC_MODE_DIRTY;
+        }
+     }
+     Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+     Dc_Attr->ptlWindowOrg.x += nXOffset;
+     Dc_Attr->ptlWindowOrg.y += nYOffset;
+     Dc_Attr->lWindowOrgx += nXOffset;
+  }
+  return TRUE;
+#endif
+    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+}
 
