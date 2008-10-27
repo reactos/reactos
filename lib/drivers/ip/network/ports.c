@@ -44,7 +44,7 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
     Port = htons(Port);
 
     if ((Port < PortSet->StartingPort) ||
-        (Port > PortSet->StartingPort + PortSet->PortsToOversee))
+        (Port >= PortSet->StartingPort + PortSet->PortsToOversee))
     {
        return FALSE;
     }
@@ -67,19 +67,19 @@ ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     if( AllocatedPort != (ULONG)-1 ) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
+	ExReleaseFastMutex( &PortSet->Mutex );
+	return htons(AllocatedPort);
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
-    AllocatedPort = htons(AllocatedPort);
-
-    return AllocatedPort;
+    return -1;
 }
 
 ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ULONG AllocatedPort;
 
     if ((Lowest < PortSet->StartingPort) ||
-        (Highest > PortSet->StartingPort + PortSet->PortsToOversee))
+        (Highest >= PortSet->StartingPort + PortSet->PortsToOversee))
     {
         return -1;
     }
@@ -92,10 +92,10 @@ ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     if( AllocatedPort != (ULONG)-1 && AllocatedPort <= Highest) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
+	ExReleaseFastMutex( &PortSet->Mutex );
+	return htons(AllocatedPort);
     }
     ExReleaseFastMutex( &PortSet->Mutex );
 
-    AllocatedPort = htons(AllocatedPort);
-
-    return AllocatedPort;
+    return -1;
 }

@@ -311,7 +311,7 @@ NTSTATUS UDPStartup(
   
   NTSTATUS Status;
 
-  Status = PortsStartup( &UDPPorts, 1, 0xfffe );
+  Status = PortsStartup( &UDPPorts, 1, UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 
   if( !NT_SUCCESS(Status) ) return Status;
 
