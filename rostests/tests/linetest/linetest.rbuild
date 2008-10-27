@@ -1,5 +1,4 @@
 <module name="linetest" type="win32gui" installbase="bin" installname="linetest.exe">
-	<define name="WINVER">0x0501</define>
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>
