@@ -286,8 +286,9 @@ NTSTATUS FileOpenAddress(
       AddrFile->Port =
           TCPAllocatePort(Address->Address[0].Address[0].sin_port);
 
-      if (Address->Address[0].Address[0].sin_port &&
-          AddrFile->Port != Address->Address[0].Address[0].sin_port)
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
       {
           ExFreePool(AddrFile);
           return STATUS_INVALID_PARAMETER;
@@ -301,8 +302,9 @@ NTSTATUS FileOpenAddress(
       AddrFile->Port =
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
 
-      if (Address->Address[0].Address[0].sin_port &&
-          AddrFile->Port != Address->Address[0].Address[0].sin_port)
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
       {
           ExFreePool(AddrFile);
           return STATUS_INVALID_PARAMETER;
