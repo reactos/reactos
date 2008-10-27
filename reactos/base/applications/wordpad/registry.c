@@ -78,7 +78,7 @@ static LRESULT registry_get_handle(HKEY *hKey, LPDWORD action, LPCWSTR subKey)
 
 void registry_set_options(HWND hMainWnd)
 {
-    HKEY hKey;
+    HKEY hKey = 0;
     DWORD action;
 
     if(registry_get_handle(&hKey, &action, key_options) == ERROR_SUCCESS)
@@ -101,7 +101,7 @@ void registry_set_options(HWND hMainWnd)
 
 void registry_read_winrect(RECT* rc)
 {
-    HKEY hKey;
+    HKEY hKey = 0;
     DWORD size = sizeof(RECT);
 
     if(registry_get_handle(&hKey, 0, key_options) != ERROR_SUCCESS ||
@@ -119,7 +119,7 @@ void registry_read_winrect(RECT* rc)
 
 void registry_read_maximized(DWORD *bMaximized)
 {
-    HKEY hKey;
+    HKEY hKey = 0;
     DWORD size = sizeof(DWORD);
 
     if(registry_get_handle(&hKey, 0, key_options) != ERROR_SUCCESS ||
@@ -318,8 +318,8 @@ void registry_set_filelist(LPCWSTR newFile, HWND hMainWnd)
                                (lstrlenW(pFiles[i])+1)*sizeof(WCHAR));
             }
         }
+        RegCloseKey(hKey);
     }
-    RegCloseKey(hKey);
     registry_read_filelist(hMainWnd);
 }
 
@@ -335,9 +335,10 @@ void registry_read_options(void)
     if(registry_get_handle(&hKey, 0, key_options) != ERROR_SUCCESS)
         registry_read_pagemargins(NULL);
     else
+    {
         registry_read_pagemargins(hKey);
-
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
+    }
 }
 
 static void registry_read_formatopts(int index, LPCWSTR key, DWORD barState[], DWORD wordWrap[])
