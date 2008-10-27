@@ -109,7 +109,7 @@ int _RTFGetChar(RTF_Info *info)
 		if (stream->dwSize == 0)
 			return EOF;
 	}
-	ch = stream->buffer[stream->dwUsed++];
+	ch = (unsigned char)stream->buffer[stream->dwUsed++];
 	if (!ch)
 		 return EOF;
 	return ch;
