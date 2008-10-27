@@ -64,8 +64,6 @@ Author:
 #define KGDT_64_R3_CODE         0x0030 // 33
 #define KGDT_TSS                0x0040
 #define KGDT_32_R3_TEB          0x0050 // 53
-#define KGDT_64_R3_TEB          0x0000 // FIXME
-
 
 //
 // CR4
