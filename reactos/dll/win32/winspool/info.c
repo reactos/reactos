@@ -37,6 +37,7 @@
 #include "winerror.h"
 #include "wingdi.h"
 #include "winreg.h"
+#include "shlwapi.h"
 #include "winspool.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -411,3 +412,161 @@ DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
 
    return TRUE;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
+{
+   LPWSTR szName = NULL;
+   MONITOR_INFO_2W Monitor;
+   MONITOR_INFO_2A *pMonitor;
+   BOOL bRet = FALSE;
+
+   if (Level != 2 || !Monitors)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   pMonitor = (MONITOR_INFO_2A*)Monitors;
+   if (pMonitor->pDLLName == NULL || pMonitor->pName == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   ZeroMemory(&Monitor, sizeof(Monitor));
+
+   if (Name)
+   {
+      szName = HeapAlloc(GetProcessHeap(), 0, (strlen(Name) + 1) * sizeof(WCHAR));
+      if (!szName)
+      {
+         return FALSE;
+      }
+      MultiByteToWideChar(CP_ACP, 0, Name, -1, szName, strlen(Name)+1);
+      szName[strlen(Name)] = L'\0';
+   }
+
+   Monitor.pDLLName = HeapAlloc(GetProcessHeap(), 0, (strlen(pMonitor->pDLLName)+1) * sizeof(WCHAR));
+   if (!Monitor.pDLLName)
+   {
+      goto cleanup;
+   }
+   MultiByteToWideChar(CP_ACP, 0, pMonitor->pDLLName, -1, Monitor.pDLLName, strlen(pMonitor->pDLLName)+1);
+   pMonitor->pDLLName[strlen(pMonitor->pDLLName)] = L'\0';
+
+   Monitor.pName = HeapAlloc(GetProcessHeap(), 0, (strlen(pMonitor->pName)+1) * sizeof(WCHAR));
+   if (!Monitor.pName)
+   {
+      goto cleanup;
+   }
+   MultiByteToWideChar(CP_ACP, 0, pMonitor->pName, -1, Monitor.pName, strlen(pMonitor->pName)+1);
+   pMonitor->pName[strlen(pMonitor->pName)] = L'\0';
+
+
+   if (pMonitor->pEnvironment)
+   {
+      Monitor.pEnvironment = HeapAlloc(GetProcessHeap(), 0, (strlen(pMonitor->pEnvironment)+1) * sizeof(WCHAR));
+      if (!Monitor.pEnvironment)
+      {
+         goto cleanup;
+      }
+      MultiByteToWideChar(CP_ACP, 0, pMonitor->pEnvironment, -1, Monitor.pEnvironment, strlen(pMonitor->pEnvironment)+1);
+      pMonitor->pEnvironment[strlen(pMonitor->pEnvironment)] = L'\0';
+   }
+
+   bRet = AddMonitorW(szName, Level, (LPBYTE)&Monitor);
+
+cleanup:
+
+  if (szName)
+     HeapFree(GetProcessHeap(), 0, szName);
+
+  if (Monitor.pDLLName)
+     HeapFree(GetProcessHeap(), 0, Monitor.pDLLName);
+
+  if (Monitor.pEnvironment)
+     HeapFree(GetProcessHeap(), 0, Monitor.pEnvironment);
+
+  if (Monitor.pName)
+     HeapFree(GetProcessHeap(), 0, Monitor.pName);
+
+  return bRet;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
+{
+   WCHAR szPath[MAX_PATH];
+   HMODULE hLibrary = NULL;
+   FARPROC InitProc;
+   HKEY hKey, hSubKey;
+   MONITOR_INFO_2W * pMonitor;
+
+
+   if (Level != 2 || !Monitors)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   pMonitor = (MONITOR_INFO_2W*)Monitors;
+
+   if (pMonitor->pDLLName == NULL || pMonitor->pName == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   if (wcschr(pMonitor->pDLLName, L'\\'))
+   {
+       hLibrary = LoadLibraryExW(pMonitor->pDLLName, NULL, 0);
+   }
+   else if (GetSystemDirectoryW(szPath, MAX_PATH) && PathAddBackslashW(szPath))
+   {
+      wcscat(szPath, pMonitor->pDLLName);
+      hLibrary = LoadLibraryExW(szPath, NULL, 0);
+   }
+
+   if (!hLibrary)
+   {
+      return FALSE;
+   }
+
+   InitProc = GetProcAddress(hLibrary, "InitializePrintMonitor");
+   if (!InitProc)
+   {
+      InitProc = GetProcAddress(hLibrary, "InitializePrintMonitor2");
+      if (!InitProc)
+      {
+         FreeLibrary(hLibrary);
+         SetLastError(ERROR_PROC_NOT_FOUND);
+         return FALSE;
+      }
+   }
+
+   // FIXME
+   // Initialize monitor
+   FreeLibrary(hLibrary);
+
+   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors", 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+   {
+      if (RegCreateKeyExW(hKey, pMonitor->pName, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+      {
+         RegSetValueExW(hSubKey, L"Driver", 0, REG_SZ, (LPBYTE)pMonitor->pDLLName, (wcslen(pMonitor->pDLLName)+1)*sizeof(WCHAR));
+         RegCloseKey(hSubKey);
+      }
+      RegCloseKey(hKey);
+   }
+   return TRUE;
+}
+

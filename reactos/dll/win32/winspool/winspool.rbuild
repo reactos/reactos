@@ -5,6 +5,7 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>shlwapi</library>
 	<file>info.c</file>
 	<file>stubs.c</file>
 	<file>winspool.rc</file>

@@ -94,32 +94,6 @@ AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
-{
-  OutputDebugStringW(L"winspool AddMonitorA stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
-{
-  OutputDebugStringW(L"winspool AddMonitorW stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
 
 
 /*
