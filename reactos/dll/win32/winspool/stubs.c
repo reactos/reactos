@@ -261,35 +261,6 @@ AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR Prin
   return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
-{
-  OutputDebugStringW(L"winspool AddPrintProvidorA stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
-{
-  OutputDebugStringW(L"winspool AddPrintProvidorW stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
 /*
  * @unimplemented
  */

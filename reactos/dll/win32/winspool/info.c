@@ -36,6 +36,7 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wingdi.h"
+#include "winreg.h"
 #include "winspool.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -104,3 +105,183 @@ BOOL WINAPI GetDefaultPrinterW(LPWSTR name, LPDWORD namesize)
    HeapFree (GetProcessHeap (), 0, buf);
    return ret;
 }
+
+/******************************************************************************
+ *		AddPrintProvidorA   (WINSPOOL.@)
+ */
+BOOL
+STDCALL
+AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
+{
+   if (Name || Level > 2 || Buffer == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   if (Level == 1)
+   {
+      BOOL bRet;
+      PROVIDOR_INFO_1W Provider;
+      PROVIDOR_INFO_1A  *Prov = (PROVIDOR_INFO_1A*)Buffer;
+
+      if (Prov->pName == NULL || Prov->pDLLName == NULL || Prov->pEnvironment == NULL)
+      {
+         return FALSE;
+      }
+
+      Provider.pDLLName = HeapAlloc(GetProcessHeap(), 0, (strlen(Prov->pDLLName)+1) * sizeof(WCHAR));
+      if (Provider.pDLLName)
+      {
+          MultiByteToWideChar(CP_ACP, 0, Prov->pDLLName, -1, Provider.pDLLName, strlen(Prov->pDLLName)+1);
+          Provider.pDLLName[strlen(Prov->pDLLName)] = L'\0';
+      }
+
+      Provider.pEnvironment = HeapAlloc(GetProcessHeap(), 0, (strlen(Prov->pEnvironment)+1) * sizeof(WCHAR));
+      if (Provider.pEnvironment)
+      {
+          MultiByteToWideChar(CP_ACP, 0, Prov->pEnvironment, -1, Provider.pEnvironment, strlen(Prov->pEnvironment)+1);
+          Provider.pEnvironment[strlen(Prov->pEnvironment)] = L'\0';
+      }
+
+      Provider.pName = HeapAlloc(GetProcessHeap(), 0, (strlen(Prov->pName)+1) * sizeof(WCHAR));
+      if (Provider.pName)
+      {
+          MultiByteToWideChar(CP_ACP, 0, Prov->pName, -1, Provider.pName, strlen(Prov->pName)+1);
+          Provider.pName[strlen(Prov->pName)] = L'\0';
+      }
+
+      bRet = AddPrintProvidorW(NULL, Level, (LPBYTE)&Provider);
+
+      if (Provider.pDLLName)
+          HeapFree(GetProcessHeap(), 0, Provider.pDLLName);
+
+      if (Provider.pEnvironment)
+          HeapFree(GetProcessHeap(), 0, Provider.pEnvironment);
+
+      if (Provider.pName)
+          HeapFree(GetProcessHeap(), 0, Provider.pName);
+
+      return bRet;
+   }
+   else
+   {
+      PROVIDOR_INFO_2W Provider;
+      PROVIDOR_INFO_2A  *Prov = (PROVIDOR_INFO_2A*)Buffer;
+
+      Provider.pOrder = HeapAlloc(GetProcessHeap(), 0, (strlen(Prov->pOrder)+1) * sizeof(WCHAR));
+      if (Provider.pOrder)
+      {
+          BOOL bRet;
+          MultiByteToWideChar(CP_ACP, 0, Prov->pOrder, -1, Provider.pOrder, strlen(Prov->pOrder)+1);
+          Provider.pOrder[strlen(Prov->pOrder)] = L'\0';
+
+          bRet = AddPrintProvidorW(NULL, Level, (LPBYTE)&Provider);
+          HeapFree(GetProcessHeap(), 0, Provider.pOrder);
+          return bRet;
+      }
+   }
+
+  return FALSE;
+}
+
+
+/******************************************************************************
+ *		AddPrintProvidorW   (WINSPOOL.@)
+ */
+BOOL
+STDCALL
+AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
+{
+   HKEY hKey;
+   LPWSTR pOrder;
+   DWORD dwSize, dwType;
+   BOOL bRet = FALSE;
+
+   if (Name || Level > 2 || Buffer == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+
+   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Print\\Providers", 0, KEY_READ | KEY_WRITE, &hKey) != ERROR_SUCCESS)
+   {
+      return FALSE;
+   }
+
+   if (RegQueryValueExW(hKey, L"Order", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+   pOrder = HeapAlloc(GetProcessHeap(), 0, dwSize);
+   if (!pOrder)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+   if (RegQueryValueExW(hKey, L"Order", NULL, &dwType, (LPBYTE)pOrder, &dwSize) != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+   if (Level == 1)
+   {
+      LPWSTR pBuffer;
+      BOOL bFound = FALSE;
+      PROVIDOR_INFO_1W * Prov = (PROVIDOR_INFO_1W*)Buffer;
+
+      if (Prov->pName == NULL || Prov->pDLLName == NULL || Prov->pEnvironment == NULL)
+      {
+         SetLastError(ERROR_INVALID_PARAMETER);
+         RegCloseKey(hKey);
+         return FALSE;
+      }
+
+      pBuffer = pOrder;
+
+      while(pBuffer[0])
+      {
+         if (!wcsicmp(pBuffer, Prov->pName))
+         {
+            bFound = TRUE;
+            break;
+         }
+         pBuffer += wcslen(pBuffer) + 1;
+      }
+
+      if (!bFound)
+      {
+         HKEY hSubKey;
+         DWORD dwFullSize = dwSize + (wcslen(Prov->pName)+1) * sizeof(WCHAR);
+
+         if (RegCreateKeyExW(hKey, Prov->pName, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
+         {
+            RegSetValueExW(hSubKey, L"Name", 0, REG_SZ, (LPBYTE)Prov->pDLLName, (wcslen(Prov->pDLLName)+1) * sizeof(WCHAR));
+            RegCloseKey(hSubKey);
+         }
+
+         pBuffer = HeapAlloc(GetProcessHeap(), 0, dwFullSize);
+         if (pBuffer)
+         {
+             CopyMemory(pBuffer, pOrder, dwSize);
+             wcscpy(&pBuffer[(dwSize/sizeof(WCHAR))-1], Prov->pName);
+             pBuffer[(dwSize/sizeof(WCHAR)) + wcslen(Prov->pName)] = L'\0';
+             RegSetValueExW(hKey, L"Order", 0, REG_MULTI_SZ, (LPBYTE)pBuffer, dwFullSize);
+             HeapFree(GetProcessHeap(), 0, pBuffer);
+         }
+         bRet = TRUE;
+      }
+
+   }
+
+   RegCloseKey(hKey);
+   HeapFree(GetProcessHeap(), 0, pOrder);
+
+  return bRet;
+}
+
