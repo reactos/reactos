@@ -285,3 +285,129 @@ AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
   return bRet;
 }
 
+/******************************************************************************
+ *    DeletePrintProvidorA   (WINSPOOL.@)
+ */
+BOOL
+STDCALL
+DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
+{
+   BOOL bRet;
+   LPWSTR Env, Prov;
+
+   if (Name || !Environment || !PrintProvidor)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   Env = HeapAlloc(GetProcessHeap(), 0, (strlen(Environment)+1) * sizeof(WCHAR));
+   if (!Env)
+   {
+      return FALSE;
+   }
+
+   MultiByteToWideChar(CP_ACP, 0, Environment, -1, Env, strlen(Environment)+1);
+   Env[strlen(Environment)] = L'\0';
+
+   Prov = HeapAlloc(GetProcessHeap(), 0, (strlen(PrintProvidor)+1) * sizeof(WCHAR));
+   if (!Prov)
+   {
+      HeapFree(GetProcessHeap(), 0, Env);
+      return FALSE;
+   }
+
+   MultiByteToWideChar(CP_ACP, 0, PrintProvidor, -1, Prov, strlen(PrintProvidor)+1);
+   Prov[strlen(PrintProvidor)] = L'\0';
+
+   bRet = DeletePrintProvidorW(NULL, Env, Prov);
+   HeapFree(GetProcessHeap(), 0, Env);
+   HeapFree(GetProcessHeap(), 0, Prov);
+
+  return bRet;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
+{
+   HKEY hKey;
+   BOOL bFound;
+   DWORD dwType, dwSize, dwOffset, dwLength;
+   LPWSTR pOrder, pBuffer, pNew;
+
+   if (Name || !Environment || !PrintProvidor)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Print\\Providers", 0, KEY_READ | KEY_WRITE, &hKey) != ERROR_SUCCESS)
+   {
+      return FALSE;
+   }
+
+   if (RegQueryValueExW(hKey, L"Order", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+   pOrder = HeapAlloc(GetProcessHeap(), 0, dwSize);
+   if (!pOrder)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+   if (RegQueryValueExW(hKey, L"Order", NULL, &dwType, (LPBYTE)pOrder, &dwSize) != ERROR_SUCCESS || dwType != REG_MULTI_SZ)
+   {
+      RegCloseKey(hKey);
+      return FALSE;
+   }
+
+
+   pBuffer = pOrder;
+   bFound = FALSE;
+   while(pBuffer[0])
+   {
+       if (!wcsicmp(pBuffer, PrintProvidor))
+       {
+            bFound = TRUE;
+            break;
+         }
+         pBuffer += wcslen(pBuffer) + 1;
+   }
+
+   if (!bFound)
+   {
+      RegCloseKey(hKey);
+      HeapFree(GetProcessHeap(), 0, pOrder);
+      return FALSE;
+   }
+
+   pNew = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+   if (!pNew)
+   {
+      RegCloseKey(hKey);
+      HeapFree(GetProcessHeap(), 0, pOrder);
+      return FALSE;
+   }
+
+   dwOffset = pBuffer - pOrder;
+   dwLength = (dwSize / sizeof(WCHAR)) - (dwOffset + wcslen(pBuffer) + 1);
+   CopyMemory(pNew, pOrder, dwOffset * sizeof(WCHAR));
+   CopyMemory(&pNew[dwOffset], pBuffer + wcslen(pBuffer) + 1, dwLength);
+
+   RegSetValueExW(hKey, L"Order", 0, REG_MULTI_SZ, (LPBYTE)pNew, (dwOffset + dwLength) * sizeof(WCHAR));
+   RegDeleteKey(hKey, PrintProvidor);
+
+   HeapFree(GetProcessHeap(), 0, pOrder);
+   HeapFree(GetProcessHeap(), 0, pNew);
+   RegCloseKey(hKey);
+
+   return TRUE;
+}
