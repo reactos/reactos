@@ -16,7 +16,7 @@
 
 /*++
  * @name FsRtlIsPagingFile
- * @implemented NT 4.0
+ * @implemented NT 5.2
  *
  *     The FsRtlIsPagingFile routine checks if the FileObject is a Paging File.
  *
@@ -32,8 +32,7 @@ LOGICAL
 NTAPI
 FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    return MmIsFileObjectAPagingFile(FileObject);
 }
 
 /*

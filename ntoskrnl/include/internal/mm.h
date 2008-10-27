@@ -634,6 +634,10 @@ VOID
 NTAPI
 MmInitPagingFile(VOID);
 
+BOOLEAN
+NTAPI
+MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject);
+
 NTSTATUS
 NTAPI
 MmReadFromSwapPage(
