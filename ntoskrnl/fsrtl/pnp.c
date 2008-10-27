@@ -39,10 +39,11 @@ FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
                        IN ULONG EventCode)
 {
     LPGUID Guid = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PDEVICE_OBJECT DeviceObject = NULL;
     TARGET_DEVICE_CUSTOM_NOTIFICATION Notification;
 
+    /* FIXME: We should call IoGetRelatedTargetDevice here */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
     if (DeviceObject)
     {
@@ -85,20 +86,26 @@ FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
                 Guid = (LPGUID)&GUID_IO_VOLUME_UNLOCK;
                 break;
             }
-            default:
-            {
-                Status = STATUS_INVALID_PARAMETER;
-                break;
-            }
         }
         if (Guid)
         {
             /* Copy GUID to notification structure and then report the change */
             RtlCopyMemory(&(Notification.Event), Guid, sizeof(GUID));
-            IoReportTargetDeviceChangeAsynchronous(DeviceObject,
-                                                   &Notification,
-                                                   NULL,
-                                                   NULL);
+
+            if (EventCode == FSRTL_VOLUME_MOUNT)
+            {
+                IoReportTargetDeviceChangeAsynchronous(DeviceObject,
+                                                       &Notification,
+                                                       NULL,
+                                                       NULL);
+            }
+            else
+            {
+                IoReportTargetDeviceChange(DeviceObject,
+                                           &Notification);
+            }
+
+            Status = STATUS_SUCCESS;
         }
         ObfDereferenceObject(DeviceObject);
     }
