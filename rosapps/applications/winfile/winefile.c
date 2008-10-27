@@ -1088,7 +1088,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 				memset(&entry->data, 0, sizeof(WIN32_FIND_DATA));
 				entry->bhfi_valid = FALSE;
 
-				attribs = ~SFGAO_FILESYSTEM;	/*SFGAO_HASSUBFOLDER|SFGAO_FOLDER; SFGAO_FILESYSTEM sorgt daf¸r, daﬂ "My Documents" anstatt von "Martin's Documents" angezeigt wird */
+				attribs = ~SFGAO_FILESYSTEM;	/*SFGAO_HASSUBFOLDER|SFGAO_FOLDER; SFGAO_FILESYSTEM sorgt daf√ºr, da√ü "My Documents" anstatt von "Martin's Documents" angezeigt wird */
 
 				hr = IShellFolder_GetAttributesOf(folder, 1, (LPCITEMIDLIST*)&pidls[n], &attribs);
 

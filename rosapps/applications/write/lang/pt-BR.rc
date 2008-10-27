@@ -1,5 +1,7 @@
 /*
- * Copyright 2007 Mikolaj Zalewski
+ * Portuguese language support
+ *
+ * Copyright (C) 2008 Ricardo Filipe
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,25 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-#include "resources.h"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include "lang/bg-BG.rc"
-#include "lang/de-DE.rc"
-#include "lang/en-US.rc"
-#include "lang/fr-FR.rc"
-#include "lang/ja-JP.rc"
-#include "lang/ko-KR.rc"
-#include "lang/no-NO.rc"
-#include "lang/nl-NL.rc"
-#include "lang/pl-PL.rc"
-#include "lang/pt-BR.rc"
-#include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
-#include "lang/sl-SI.rc"
-#include "lang/sk-SK.rc"
-#include "lang/uk-UA.rc"
+STRINGTABLE
+{
+    IDS_FAILED, "Falhou ao iniciar o Wordpad"
+}
