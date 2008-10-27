@@ -347,6 +347,18 @@ MingwModuleHandler::GetImportLibraryDependency (
 		dep = backend->GetFullName ( *library_target );
 		delete library_target;
 	}
+
+	if ( IsStaticLibrary ( importedModule ) || importedModule.type == ObjectLibrary )
+	{
+		const std::vector<Library*>& libraries = importedModule.non_if_data.libraries;
+
+		for ( size_t i = 0; i < libraries.size (); ++ i )
+		{
+			dep += " ";
+			dep += GetImportLibraryDependency ( *libraries[i]->importedModule );
+		}
+	}
+
 	return dep;
 }
 
@@ -579,20 +591,6 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 }
 
 string
-MingwModuleHandler::GenerateGccDefineParameters () const
-{
-	set<string> used_defs;
-	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines, used_defs );
-	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines, used_defs );
-	if ( s.length () > 0 )
-	{
-		parameters += " ";
-		parameters += s;
-	}
-	return parameters;
-}
-
-string
 MingwModuleHandler::ConcatenatePaths (
 	const string& path1,
 	const string& path2 ) const
@@ -615,19 +613,6 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		if ( parameters.length () > 0 )
 			parameters += " ";
 		parameters += "-I" + backend->GetFullPath ( *include.directory );;
-	}
-	return parameters;
-}
-
-string
-MingwModuleHandler::GenerateGccIncludeParameters () const
-{
-	string parameters = GenerateGccIncludeParametersFromVector ( module.non_if_data.includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.project.non_if_data.includes );
-	if ( s.length () > 0 )
-	{
-		parameters += " ";
-		parameters += s;
 	}
 	return parameters;
 }
@@ -1858,7 +1843,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
-	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
+	if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
+	{
+		GenerateMacros("+=", module.project.host_non_if_data, NULL, used_defs);
+	}
+	else
 	{
 		GenerateMacros (
 			"+=",
@@ -1887,7 +1876,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 		globalCflags += " $(PROJECT_CFLAGS)";
 	else
-		globalCflags += " -Wall -Wpointer-arith -D__REACTOS__";
+		globalCflags += " -Wall -Wpointer-arith";
 	globalCflags += " -g";
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
@@ -2891,7 +2880,6 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	CLEAN_FILE ( junk_tmp );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 
 	GenerateRules ();
 
@@ -2968,7 +2956,6 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	CLEAN_FILE ( junk_cpy );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
-	string libsMacro = GetLibsMacro ();
 	const Module *payload = module.project.LocateModule ( module.payload );
 
 	GenerateRules ();

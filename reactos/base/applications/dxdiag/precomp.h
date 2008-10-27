@@ -4,7 +4,6 @@
 #define DIRECTINPUT_VERSION 0x0800
 #define DIRECTSOUND_VERSION 0x0800
 #define D3D_OVERLOADS
-#define _SETUPAPI_VER _WIN32_WINNT
 
 #include <stdio.h>
 #include <windows.h>

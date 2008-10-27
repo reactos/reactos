@@ -4,7 +4,6 @@
 	<importlibrary definition="kbda1.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbda1.c</file>
 	<file>kbda1.rc</file>
 </module>

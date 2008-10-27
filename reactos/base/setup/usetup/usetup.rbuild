@@ -7,7 +7,6 @@
 	<include base="inflib">.</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0502</define>
 	<define name="__NO_CTYPE_INLINES" />
 	<library>zlib</library>
 	<library>inflib</library>

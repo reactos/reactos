@@ -597,10 +597,11 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
    }
 
    Parent = IntGetParent(MsgWindow);//fixme: deref retval?
-   /* fixme: abort if no parent ? */
+
+   /* If no parent window, pass MsgWindows HWND as wParam. Fixes bug #3111 */
    Result = co_IntSendMessage(MsgWindow->hSelf,
                               WM_MOUSEACTIVATE,
-                              (WPARAM) (Parent ? Parent->hSelf : NULL),
+                              (WPARAM) (Parent ? Parent->hSelf : MsgWindow->hSelf),
                               (LPARAM)MAKELONG(*HitTest, Msg->message)
                              );
 

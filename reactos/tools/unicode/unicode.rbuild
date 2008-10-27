@@ -2,9 +2,6 @@
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="unicode" type="hoststaticlibrary">
 	<define name="WINE_UNICODE_API">" "</define>
-	<include base="ReactOS">include/reactos/wine</include>
-	<include base="ReactOS">include/reactos</include>
-	<include base="ReactOS">include</include>
 	<file>casemap.c</file>
 	<file>compose.c</file>
 	<file>cptable.c</file>

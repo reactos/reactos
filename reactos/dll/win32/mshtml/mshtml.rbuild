@@ -7,8 +7,6 @@
 	<include base="mshtml">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>conpoint.c</file>
 	<file>dispex.c</file>
 	<file>editor.c</file>

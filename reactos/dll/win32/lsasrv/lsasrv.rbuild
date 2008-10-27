@@ -2,8 +2,6 @@
 	<importlibrary definition="lsasrv.spec" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x0600</define>
 	<library>lsa_server</library>
 	<library>wine</library>
 	<library>kernel32</library>

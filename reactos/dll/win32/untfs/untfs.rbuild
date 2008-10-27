@@ -2,7 +2,6 @@
 	<importlibrary definition="untfs.def" />
 	<include base="untfs">.</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0600</define>
 	<library>ntfslib</library>
 	<library>ntdll</library>
 	<file>untfs.c</file>

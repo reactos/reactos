@@ -96,27 +96,23 @@ BringWindowToTop(HWND hWnd)
 }
 
 
-/*
- * @unimplemented
- */
-/*
-WORD STDCALL
-CascadeWindows(HWND hwndParent,
-           UINT wHow,
-           CONST RECT *lpRect,
-           UINT cKids,
-           const HWND *lpKids)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-*/
-
 VOID STDCALL
 SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
 {
     ShowWindow(hwnd, SW_SHOW);
 }
+
+
+/*
+ * @implemented
+ */
+WORD
+STDCALL
+CascadeChildWindows ( HWND hWndParent, WORD wFlags )
+{
+  return CascadeWindows(hWndParent, wFlags, NULL, 0, NULL);
+}
+
 
 /*
  * @implemented
@@ -1003,8 +999,16 @@ GetParent(HWND hWnd)
 BOOL STDCALL
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
+    if (!pdwDefaultLayout)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     UNIMPLEMENTED;
-    return FALSE;
+
+    *pdwDefaultLayout = 0;
+    return TRUE;
 }
 
 
@@ -1502,7 +1506,7 @@ BOOL STDCALL
 LockSetForegroundWindow(UINT uLockCode)
 {
     UNIMPLEMENTED;
-    return FALSE;
+    return TRUE;
 }
 
 
@@ -1602,6 +1606,9 @@ SetParent(HWND hWndChild,
 BOOL STDCALL
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
+    if (dwDefaultLayout == 0)
+        return TRUE;
+
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -1739,23 +1746,6 @@ ShowWindowAsync(HWND hWnd,
 {
     return NtUserShowWindowAsync(hWnd, nCmdShow);
 }
-
-
-/*
- * @unimplemented
- */
-/*
-WORD STDCALL
-TileWindows(HWND hwndParent,
-        UINT wHow,
-        CONST RECT *lpRect,
-        UINT cKids,
-        const HWND *lpKids)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-*/
 
 
 /*
@@ -1998,6 +1988,16 @@ ScrollWindowEx(HWND hWnd,
                                 hrgnUpdate,
                                 prcUpdate,
                                 flags);
+}
+
+/*
+ * @implemented
+ */
+WORD
+STDCALL
+TileChildWindows(HWND hWndParent, WORD wFlags)
+{
+    return TileWindows(hWndParent, wFlags, NULL, 0, NULL);
 }
 
 /*

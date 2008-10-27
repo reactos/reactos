@@ -9,8 +9,6 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
-	<define name="_WIN32_WINNT">0x0501</define>
-	<define name="WINVER">0x600</define>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
 	<pch>w32k.h</pch>
@@ -185,7 +183,7 @@
 	</directory>
 </module>
 <module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
-	<importlibrary definition="win32k.def" />
+	<importlibrary definition="win32k.spec" />
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>

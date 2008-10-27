@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="cabman" type="buildtool">
-	<include base="ReactOS">include</include>
 	<include base="zlibhost">.</include>
 	<library>zlibhost</library>
 	<file>cabinet.cxx</file>

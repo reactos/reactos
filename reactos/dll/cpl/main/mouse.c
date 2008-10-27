@@ -28,8 +28,6 @@
 //TODO:
 //  add missing icons
 
-#define WINVER 0x0501
-
 #include <windows.h>
 #include <winuser.h>
 #include <devguid.h>

@@ -96,6 +96,7 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_Disp
       pItem->member.para.pFmt->cbSize = sizeof(PARAFORMAT2);
       pItem->member.para.pFmt->dwMask = 0;
       *pItem->member.para.pFmt = *pdi->member.para.pFmt;
+      pItem->member.para.border = pdi->member.para.border;
       pItem->member.para.nFlags = prev_para->member.para.nFlags & ~MEPF_CELL;
       pItem->member.para.pCell = NULL;
       break;
@@ -293,6 +294,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     para = ME_FindItemBack(tmp.pRun, diParagraph);
     ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
     *para->member.para.pFmt = *pItem->member.para.pFmt;
+    para->member.para.border = pItem->member.para.border;
     break;
   }
   case diUndoSetCharFormat:
@@ -343,12 +345,14 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
       new_para->member.para.nFlags |= MEPF_ROWSTART;
     assert(pItem->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
     *new_para->member.para.pFmt = *pItem->member.para.pFmt;
+    new_para->member.para.border = pItem->member.para.border;
     if (pItem->member.para.pCell)
     {
       ME_DisplayItem *pItemCell, *pCell;
       pItemCell = pItem->member.para.pCell;
       pCell = new_para->member.para.pCell;
       pCell->member.cell.nRightBoundary = pItemCell->member.cell.nRightBoundary;
+      pCell->member.cell.border = pItemCell->member.cell.border;
     }
     break;
   }

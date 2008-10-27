@@ -8,7 +8,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS" root="intermediate">include/reactos</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<dependency>wineheaders</dependency>
 	<file>chm.c</file>

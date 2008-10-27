@@ -4,7 +4,6 @@
 	<importlibrary definition="kbdes.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdes.c</file>
 	<file>kbdes.rc</file>
 </module>

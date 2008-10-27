@@ -6,8 +6,6 @@
 	<include base="comdlg32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>cdlg32.c</file>
 	<file>colordlg.c</file>
 	<file>filedlg.c</file>

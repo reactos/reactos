@@ -11,5 +11,4 @@
 	<file>acledit.c</file>
 	<file>stubs.c</file>
 	<file>acledit.rc</file>
-	<file>acledit.spec</file>
 </module>

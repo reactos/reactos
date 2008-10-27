@@ -33,15 +33,19 @@ NTSTATUS AddUDPHeaderIPv4(
  */
 {
     PUDP_HEADER UDPHeader;
+    NTSTATUS Status;
 
     TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n",
 			    IPPacket, IPPacket->NdisPacket));
 
-    AddGenericHeaderIPv4
+    Status = AddGenericHeaderIPv4
         ( RemoteAddress, RemotePort,
           LocalAddress, LocalPort,
           IPPacket, DataLength, IPPROTO_UDP,
           sizeof(UDP_HEADER), (PVOID *)&UDPHeader );
+
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Build UDP header */
     UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPPacket->Data - sizeof(UDP_HEADER));
@@ -195,8 +199,10 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) )
 	return Status;
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+        FreeNdisPacket(Packet.NdisPacket);
 	return STATUS_UNSUCCESSFUL;
+    }
 
     IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL );
 
@@ -305,7 +311,7 @@ NTSTATUS UDPStartup(
   
   NTSTATUS Status;
 
-  Status = PortsStartup( &UDPPorts, 1, 0xfffe );
+  Status = PortsStartup( &UDPPorts, 1, UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 
   if( !NT_SUCCESS(Status) ) return Status;
 

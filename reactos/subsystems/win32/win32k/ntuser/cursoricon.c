@@ -1730,7 +1730,7 @@ UserDrawIconEx(
 
         /* set icon bits */
         IntSetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-        ExFreePool(pBits);
+        ExFreePoolWithTag(pBits, TAG_BITMAP);
 
         BITMAPOBJ_UnlockBitmap(BitmapObj);
 

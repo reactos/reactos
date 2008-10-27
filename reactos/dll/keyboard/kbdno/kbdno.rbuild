@@ -4,7 +4,6 @@
 	<importlibrary definition="kbdno.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdno.c</file>
 	<file>kbdno.rc</file>
 </module>

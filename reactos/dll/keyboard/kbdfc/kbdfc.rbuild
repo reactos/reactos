@@ -4,7 +4,6 @@
 	<importlibrary definition="kbdfc.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdfc.c</file>
 	<file>kbdfc.rc</file>
 </module>

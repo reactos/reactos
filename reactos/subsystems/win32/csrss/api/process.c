@@ -130,6 +130,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   ULONG hash;
   UINT c;
   PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
+  HANDLE Process;
 
   hash = ((ULONG_PTR)Pid >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
   pPrevLink = &ProcessData[hash];
@@ -144,10 +145,7 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
-      if (pProcessData->Process)
-      {
-         NtClose(pProcessData->Process);
-      }
+      Process = pProcessData->Process;
       if (pProcessData->HandleTable)
         {
           for (c = 0; c < pProcessData->HandleTableSize; c++)
@@ -177,6 +175,10 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
 
       RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
       UNLOCK;
+      if (Process)
+        {
+          NtClose(Process);
+        }
       return STATUS_SUCCESS;
    }
 

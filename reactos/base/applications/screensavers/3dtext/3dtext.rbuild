@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="3dtext" type="win32scr" installbase="system32" installname="3dtext.scr" unicode="yes">
-	<importlibrary definition="3dtext.spec" />
 	<library>scrnsave</library>
+	<library>chkstk</library>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>

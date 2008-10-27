@@ -2,8 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="freeldr_fdebug" type="win32gui" installbase="system32" installname="fdebug.exe" unicode="yes">
 	<include base="freeldr_fdebug">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comdlg32</library>

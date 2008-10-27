@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="shutdown" type="win32cui" installbase="system32" installname="shutdown.exe">
 	<include base="shutdown">.</include>
-	<define name="WINVER">0x0501</define>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>kernel32</library>

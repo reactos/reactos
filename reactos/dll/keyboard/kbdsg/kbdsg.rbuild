@@ -4,7 +4,6 @@
 	<importlibrary definition="kbdsg.spec" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdsg.c</file>
 	<file>kbdsg.rc</file>
 </module>

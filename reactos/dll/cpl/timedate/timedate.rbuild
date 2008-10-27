@@ -3,8 +3,6 @@
 <module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl" unicode="yes">
 	<importlibrary definition="timedate.spec" />
 	<include base="timedate">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>

@@ -2193,7 +2193,11 @@ PnpEventThread(LPVOID lpParameter)
         }
         else
         {
-            DPRINT1("Unknown event\n");
+            DPRINT1("Unknown event, GUID {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
+                PnpEvent->EventGuid.Data1, PnpEvent->EventGuid.Data2, PnpEvent->EventGuid.Data3,
+                PnpEvent->EventGuid.Data4[0], PnpEvent->EventGuid.Data4[1], PnpEvent->EventGuid.Data4[2],
+                PnpEvent->EventGuid.Data4[3], PnpEvent->EventGuid.Data4[4], PnpEvent->EventGuid.Data4[5],
+                PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
         /* Dequeue the current pnp event and signal the next one */

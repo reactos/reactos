@@ -267,7 +267,12 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   if (has_ret) {
     print_proxy( "" );
     write_type_decl_left(proxy, get_func_return_type(cur));
-    print_proxy( " _RetVal;\n");
+
+    /* Initialize _RetVal properly in order to avoid compiler warnings */
+    if (is_ptr(get_func_return_type(cur)) || is_array(get_func_return_type(cur)))
+      print_proxy(" _RetVal = NULL;\n");
+    else
+      print_proxy(" _RetVal = 0;\n");
   }
   print_proxy( "RPC_MESSAGE _RpcMessage;\n" );
   print_proxy( "MIDL_STUB_MESSAGE _StubMsg;\n" );

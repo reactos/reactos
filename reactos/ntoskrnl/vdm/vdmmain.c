@@ -120,7 +120,7 @@ VdmpInitialize(PVOID ControlData)
         return Status;
     }
 
-    /* Now, copy the first physical pagee into the first virtual page */
+    /* Now, copy the first physical page into the first virtual page */
     _SEH_TRY
     {
         RtlMoveMemory(NullAddress, BaseAddress, ViewSize);

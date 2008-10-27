@@ -57,6 +57,7 @@ typedef struct ITextServicesImpl {
    ITextHost *pMyHost;
    LONG ref;
    CRITICAL_SECTION csTxtSrv;
+   char spare[256];
 } ITextServicesImpl;
 
 static const ITextServicesVtbl textservices_Vtbl;

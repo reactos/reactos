@@ -7,8 +7,6 @@
 	<include base="oleacc">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<file>main.c</file>
 	<file>oleacc.spec</file>
 	<library>wine</library>

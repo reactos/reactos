@@ -3,7 +3,6 @@
 <module name="calc" type="win32gui" installbase="system32" installname="calc.exe" allowwarnings="true" unicode="yes">
 	<include base="calc">.</include>
 	<define name="DISABLE_HTMLHELP_SUPPORT">1</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

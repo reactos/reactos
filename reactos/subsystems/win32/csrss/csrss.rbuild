@@ -6,8 +6,6 @@
 		<include base="csrss">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<include base="ReactOS">include/reactos/drivers</include>
-		<define name="_WIN32_WINNT">0x0600</define>
-		<define name="WINVER">0x0501</define>
 		<library>nt</library>
 		<library>ntdll</library>
 		<library>smdll</library>

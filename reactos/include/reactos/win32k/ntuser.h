@@ -433,10 +433,10 @@ typedef struct _SHAREDINFO
 
 typedef struct _USERCONNECT
 {
-  DWORD      Unknown0;
-  DWORD      Unknown1;
-  DWORD      Unknown2;
-  SHAREDINFO ShareInfo;
+  ULONG ulVersion;
+  ULONG ulCurrentVersion;
+  DWORD dwDispatchCount;
+  SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
 
 //

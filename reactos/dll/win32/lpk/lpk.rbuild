@@ -2,8 +2,6 @@
 	<importlibrary definition="lpk.spec" />
 	<include base="lpk">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="LANGPACK" />
 	<library>ntdll</library>
 	<library>kernel32</library>

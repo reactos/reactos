@@ -3,8 +3,6 @@
 <module name="sol" type="win32gui" installbase="system32" installname="sol.exe" unicode="no" allowwarnings="true">
 	<include base="sol">.</include>
 	<include base="sol">cardlib</include>
-	<define name="_WIN32_IE">0x0501</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>user32</library>

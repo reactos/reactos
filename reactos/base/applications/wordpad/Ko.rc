@@ -59,19 +59,19 @@ BEGIN
             MENUITEM "문자 형식(&F)",           ID_EDIT_CHARFORMAT
             MENUITEM "정의된 문자열 형식(&D)",           ID_EDIT_DEFCHARFORMAT
             MENUITEM "단락 형식(&H)",           ID_EDIT_PARAFORMAT
-            MENUITEM "텍스트 얻기(&G)",                   ID_EDIT_GETTEXT
+            MENUITEM "문자열 얻기(&G)",                   ID_EDIT_GETTEXT
         END
     END
     POPUP "보기(&V)"
     BEGIN
         MENUITEM "도구바(&T)",        ID_TOGGLE_TOOLBAR
         MENUITEM "형식바(&F)",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Ruler",          ID_TOGGLE_RULER
+        MENUITEM "눈금바(&R)",          ID_TOGGLE_RULER
         MENUITEM "상태바(&S)",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM " 옵션(&O)...",  ID_VIEWPROPERTIES
     END
-    POPUP "집어넣기(&I)"
+    POPUP "삽입(&I)"
     BEGIN
         MENUITEM "날짜와 시간(&D)...",  ID_DATETIME
     END
@@ -89,7 +89,7 @@ BEGIN
     END
     POPUP "도움말(&H)"
     BEGIN
-        MENUITEM "워드패드 정보(&A)"       ID_ABOUT
+        MENUITEM "Wine 워드패드 정보(&A)"       ID_ABOUT
     END
 END
 
@@ -237,4 +237,9 @@ BEGIN
                                  "당신은 정말로 저장하기를 원합니까?"
     STRING_INVALID_NUMBER,       "올바르지 않은 수 형식"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE 저장 문서는 지원되지 않습니다"
+    STRING_WRITE_FAILED,              "파일을 저장할 수 없습니다."
+    STRING_WRITE_ACCESS_DENIED,       "파일을 저장할 권한이 없습니다."
+    STRING_OPEN_FAILED,               "파일을 열 수 없습니다."
+    STRING_OPEN_ACCESS_DENIED,        "파일을 열 권한이 없습니다."
+    STRING_PRINTING_NOT_IMPLEMENTED, "인쇄는 지원되지 않습니다"
 END

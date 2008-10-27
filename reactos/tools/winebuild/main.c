@@ -48,16 +48,10 @@ int verbose = 0;
 int save_temps = 0;
 int link_ext_symbols = 0;
 
-#if defined(__i386__)
+#if defined(TARGET_i386)
 enum target_cpu target_cpu = CPU_x86;
-#elif defined(__x86_64__)
+#elif defined(TARGET_amd64)
 enum target_cpu target_cpu = CPU_x86_64;
-#elif defined(__sparc__)
-enum target_cpu target_cpu = CPU_SPARC;
-#elif defined(__ALPHA__)
-enum target_cpu target_cpu = CPU_ALPHA;
-#elif defined(__powerpc__)
-enum target_cpu target_cpu = CPU_POWERPC;
 #else
 #error Unsupported CPU
 #endif

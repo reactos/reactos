@@ -4,8 +4,6 @@
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

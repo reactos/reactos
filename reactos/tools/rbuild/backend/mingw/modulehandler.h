@@ -116,7 +116,6 @@ protected:
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
-	std::string GenerateGccDefineParameters () const;
 	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags, const CompilerType type ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateImportLibraryDependenciesFromVector ( const std::vector<Library*>& libraries );
@@ -132,9 +131,6 @@ private:
 	                      std::set<const Define *>& used_defs );
 	void GenerateSourceMacros ( const IfableData& data );
 	void GenerateObjectMacros ( const IfableData& data );
-	std::string GenerateGccIncludeParameters () const;
-	std::string GenerateGccParameters () const;
-	std::string GenerateNasmParameters () const;
 	const FileLocation* GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const FileLocation* sourceFile,
 	                          const Rule *rule,

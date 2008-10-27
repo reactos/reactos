@@ -29,6 +29,9 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
 
+    if(!(NCE->State & NUD_CONNECTED))
+       return;
+
     /* Send any waiting packets */
     PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
                                               &NCE->Table->Lock);

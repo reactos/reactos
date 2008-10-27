@@ -538,25 +538,11 @@ Signature = "$ReactOS$"
 ; Subsystems
 ;subsystems\win32\csrss\csrss.exe                    1
 ;subsystems\win32\csrss\win32csr\win32csr.dll        1
-;subsystems\csr\csr.exe                              1   optional
-;subsystems\csr\csrsrv\csrsrv.dll                    1   optional
-;subsystems\win\basesrv\basesrv.dll                  1   optional
-;subsystems\win\winsrv\winsrv.dll                    1   optional
 ;subsystems\ntvdm\ntvdm.exe                          1
 ;subsystems\win32\win32k\win32k.sys                  1
-
 boot\bootdata\bootcdregtest\testboot.bat            7   optional
-tools\dbgprint\dbgprint.exe                         7   optional
 
 ; Modules
-;modules\os2\server\os2srv.dll                                              1   optional
-;modules\os2\dll\win32\doscalls\doscalls.dll                                1   optional
-;modules\posix\server\psxsrv.dll                                            1   optional
-;modules\posix\dll\win32\psxdll\psxdll.dll                                  1   optional
-;modules\rosky\dll\win32\libsky\libsky.dll                                  1   optional
-;modules\rosky\dll\win32\libskygi\libskygi.dll                              1   optional
-;modules\vms\server\vmssrv.dll                                              1   optional
-;modules\vms\dll\win32\vmsdll\vmsdll.dll                                    1   optional
 ;modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
 ;modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
 ;modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
@@ -623,9 +609,7 @@ tools\dbgprint\dbgprint.exe                         7   optional
 ;modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
 ;modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
 ;modules\rosapps\drivers\green\green.sys                                    1   optional
-;modules\rosapps\lib\dflat32\dflat32.dll                                    1   optional
-;modules\rosapps\templates\dialog.exe                                       1   optional
-;modules\rosapps\templates\mdi.exe                                          1   optional
+;modules\rosapps\templates\dialog\dialog.exe                                       1   optional
 ;modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 ;modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
 ;modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
@@ -643,6 +627,7 @@ tools\dbgprint\dbgprint.exe                         7   optional
 ;modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
 ;modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
 ;modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
+;modules\rostests\winetests\mstask\mstask_winetest.exe                      7   optional
 ;modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
 ;modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
 ;modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional

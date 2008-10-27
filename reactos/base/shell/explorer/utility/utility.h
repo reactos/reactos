@@ -25,20 +25,6 @@
  // Martin Fuchs, 23.07.2003
  //
 
-#ifdef __cplusplus
-
-#ifdef _MSC_VER
-#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
-#endif
-
- // STL headers for strings and streams
-#include <string>
-#include <iostream>
-using namespace std;
-
-#endif /* __cplusplus */
-
-
  // standard windows headers
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_LEAN
@@ -63,6 +49,19 @@ using namespace std;
 #include <stdlib.h>		// for _MAX_DIR, ...
 #include <stdio.h>		// for sprintf()
 #include <time.h>
+
+#ifdef __cplusplus
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)	// disable warnings about too long debug information symbols
+#endif
+
+ // STL headers for strings and streams
+#include <string>
+#include <iostream>
+using namespace std;
+
+#endif /* __cplusplus */
 
 #ifndef _MAX_PATH
 #define _MAX_DRIVE	3

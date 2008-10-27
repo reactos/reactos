@@ -597,10 +597,18 @@ const var_t* get_explicit_handle_var(const func_t* func)
 
 const type_t* get_explicit_generic_handle_type(const var_t* var)
 {
-    const type_t *t;
-    for (t = var->type; is_ptr(t); t = t->ref)
-        if (t->type != RPC_FC_BIND_PRIMITIVE && is_attr(t->attrs, ATTR_HANDLE))
-            return t;
+    const type_t *t = var->type;
+
+    if (t->type == RPC_FC_BIND_PRIMITIVE)
+        return NULL;
+
+    if (!is_ptr(t) && is_attr(t->attrs, ATTR_HANDLE))
+        return t;
+    else
+        for (; is_ptr(t); t = t->ref)
+            if (t->type != RPC_FC_BIND_PRIMITIVE && is_attr(t->attrs, ATTR_HANDLE))
+                return t;
+
     return NULL;
 }
 

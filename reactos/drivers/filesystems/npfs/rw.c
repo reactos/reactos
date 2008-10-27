@@ -450,6 +450,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					if (NT_SUCCESS(Status))
 					{
 						Status = STATUS_PENDING;
+                        goto done;
 					}
 					ExAcquireFastMutex(&Ccb->DataListLock);
 					break;

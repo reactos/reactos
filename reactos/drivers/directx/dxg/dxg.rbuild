@@ -5,8 +5,6 @@
 	<include base="dxg">.</include>
 	<include base="dxg">include</include>
 	<include base="ReactOS">subsystems/win32/win32k/include</include>
-	<define name="_WIN32_WINNT">0x0501</define>
-	<define name="WINVER">0x600</define>
 	<library>dxgthk</library>
 	<library>ntoskrnl</library>
 	<file>main.c</file>

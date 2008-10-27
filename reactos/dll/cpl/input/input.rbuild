@@ -3,8 +3,6 @@
 <module name="input" type="win32dll" extension=".dll" baseaddress="${BASEADDRESS_INPUT}" installbase="system32" installname="input.dll" unicode="yes">
 	<importlibrary definition="input.spec" />
 	<include base="input">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>

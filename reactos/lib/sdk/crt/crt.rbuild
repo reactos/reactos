@@ -1,12 +1,26 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="chkstk" type="staticlibrary">
+	<directory name="except">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+	</directory>
+</module>
+
 <module name="crt" type="staticlibrary" allowwarnings="true">
+	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__MINGW_IMPORT">extern</define>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
@@ -45,7 +59,6 @@
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>chkstk_asm.s</file>
 				<file>prolog.s</file>
 				<file>seh.s</file>
 				<file>unwind.c</file>
@@ -54,7 +67,6 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>seh.s</file>
-				<file>chkstk_asm.s</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="amd64">

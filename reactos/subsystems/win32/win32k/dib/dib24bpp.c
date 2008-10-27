@@ -420,6 +420,9 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    LONG DesY;
    LONG color;
 
+   DPRINT("DIB_24BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
+      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
    SrcSizeY = SourceRect->bottom - SourceRect->top;
    SrcSizeX = SourceRect->right - SourceRect->left;
 
@@ -539,7 +542,7 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
       default:
-      //DPRINT1("DIB_24BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
+        DPRINT1("DIB_24BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
 

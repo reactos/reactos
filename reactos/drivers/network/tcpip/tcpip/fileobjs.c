@@ -285,6 +285,15 @@ NTSTATUS FileOpenAddress(
   case IPPROTO_TCP:
       AddrFile->Port =
           TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
+      {
+          ExFreePool(AddrFile);
+          return STATUS_INVALID_PARAMETER;
+      }
+
       AddrFile->Send = NULL; /* TCPSendData */
       break;
 
@@ -292,6 +301,15 @@ NTSTATUS FileOpenAddress(
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
       AddrFile->Port =
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
+
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
+      {
+          ExFreePool(AddrFile);
+          return STATUS_INVALID_PARAMETER;
+      }
+
       TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
                              AddrFile->Port,
                              Address->Address[0].Address[0].sin_port));

@@ -414,6 +414,7 @@ Author:
 #define TEB_STACK_BASE                          0x4
 #define TEB_STACK_LIMIT                         0x8
 #define TEB_FIBER_DATA                          0x10
+#define TEB_SELF                                0x18
 #define TEB_PEB                                 0x30
 #define TEB_EXCEPTION_CODE                      0x1A4
 #define TEB_ACTIVATION_CONTEXT_STACK_POINTER    0x1A8

@@ -8,7 +8,6 @@
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_WIN32_WINNT">0x0600</define>
 		<define name="__NO_CTYPE_INLINES" />
-		<define name="WINVER">0x609</define>
 		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
 		<pch>k32.h</pch>
@@ -110,7 +109,6 @@
 			<file>lcformat.c</file>
 			<file>profile.c</file>
 			<file>utils.c</file>
-			<file>icustubs.cpp</file>
 		</directory>
 		<directory name="thread">
 			<if property="ARCH" value="i386">
@@ -126,6 +124,14 @@
 				</directory>
 			</if>
 		</directory>
+
+		<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+
+		<directory name="misc">
+			<file>icustubs.cpp</file>
+		</directory>
+		<library>normalize</library>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
 		<importlibrary definition="kernel32.spec" />
@@ -133,15 +139,11 @@
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>
 		<define name="_DISABLE_TIDENTS" />
-		<define name="WINVER">0x0500</define>
 		<library>kernel32_base</library>
 		<library>wine</library>
 		<library>pseh</library>
 
 		<file>kernel32.rc</file>
-
-		<library>normalize</library>
-		<library>icu4ros</library>
 
 		<library>ntdll</library>
 		<file>kernel32.spec</file>

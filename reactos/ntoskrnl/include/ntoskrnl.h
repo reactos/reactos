@@ -11,8 +11,6 @@
 /* Version Data */
 #undef __MSVCRT__
 #include <psdk/ntverp.h>
-#define _WIN32_WINNT _WIN32_WINNT_WS03
-#define NTDDI_VERSION NTDDI_WS03SP1
 
 /* DDK/IFS/NDK Headers */
 #ifdef _MSC_VER

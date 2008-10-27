@@ -7,10 +7,7 @@
 	<include base="msxml3" root="intermediate">.</include>
 	<dependency>msxml3_v1</dependency>
 	<define name="__WINESRC__" />
-	<define name="__USE_W32API" />
-	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x601</define>
-	<define name="WINVER">0x501</define>
 	<define name="LIBXML_STATIC" />
 	<library>libxml2</library>
 	<library>wine</library>

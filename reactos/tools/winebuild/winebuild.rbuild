@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="winebuild" type="buildtool">
-	<include base="ReactOS">include/reactos/wine</include>
-	<include base="ReactOS">include/reactos</include>
-	<include base="ReactOS">include</include>
-	<include base="ReactOS" root="intermediate">include</include>
 	<file>import.c</file>
 	<file>main.c</file>
 	<file>parser.c</file>

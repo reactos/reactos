@@ -2,8 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="servman" type="win32gui" installbase="system32" installname="servman.exe" unicode="yes">
 	<include base="servman">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>

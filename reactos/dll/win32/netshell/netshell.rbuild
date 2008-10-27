@@ -2,9 +2,6 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="netshell.spec" />
 	<include base="netshell">.</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
-	<define name="WINVER">0x600</define>
 	<define name="_NETSHELL_" />
 	<library>shlwapi</library>
 	<library>shell32</library>

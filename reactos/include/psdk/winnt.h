@@ -567,6 +567,12 @@ typedef DWORD FLONG;
 #define SECURITY_NT_NON_UNIQUE                  0x00000015L
 #define SECURITY_BUILTIN_DOMAIN_RID             0x00000020L
 
+#define SECURITY_PACKAGE_BASE_RID               0x00000040L
+#define SECURITY_PACKAGE_NTLM_RID               0x0000000AL
+#define SECURITY_PACKAGE_SCHANNEL_RID           0x0000000EL
+#define SECURITY_PACKAGE_DIGEST_RID             0x00000015L
+#define SECURITY_OTHER_ORGANIZATION_RID         0x000003E8L
+
 #define SECURITY_LOGON_IDS_RID_COUNT 0x3
 #define SID_REVISION 1
 
@@ -4781,7 +4787,7 @@ InterlockedBitTestAndSet(IN LONG volatile *Base,
 	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"=r" (OldBit),"+m" (*Base)
 	                     :"Ir" (Bit)
 	                     : "memory");
 	return OldBit;
@@ -4799,7 +4805,7 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"=r" (OldBit),"+m" (*Base)
 	                     :"Ir" (Bit)
 	                     : "memory");
 	return OldBit;

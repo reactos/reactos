@@ -7,7 +7,6 @@
 	<include base="atl">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>atl_ax.c</file>
 	<file>atl_main.c</file>

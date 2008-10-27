@@ -215,6 +215,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_INVOKE  =@echo $(QUOTE)[INVOKE]   $<$(QUOTE)
   ECHO_PCH     =@echo $(QUOTE)[PCH]      $@$(QUOTE)
   ECHO_CC      =@echo $(QUOTE)[CC]       $<$(QUOTE)
+  ECHO_CL      =@echo $(QUOTE)[CL]       $<$(QUOTE)
   ECHO_GAS     =@echo $(QUOTE)[GAS]      $<$(QUOTE)
   ECHO_NASM    =@echo $(QUOTE)[NASM]     $<$(QUOTE)
   ECHO_AR      =@echo $(QUOTE)[AR]       $@$(QUOTE)
@@ -224,6 +225,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_BIN2RES =@echo $(QUOTE)[BIN2RES]  $<$(QUOTE)
   ECHO_DLLTOOL =@echo $(QUOTE)[DLLTOOL]  $@$(QUOTE)
   ECHO_LD      =@echo $(QUOTE)[LD]       $@$(QUOTE)
+  ECHO_LINK    =@echo $(QUOTE)[LINK]     $@$(QUOTE)
   ECHO_NM      =@echo $(QUOTE)[NM]       $@$(QUOTE)
   ECHO_OBJDUMP =@echo $(QUOTE)[OBJDUMP]  $@$(QUOTE)
   ECHO_RBUILD  =@echo $(QUOTE)[RBUILD]   $@$(QUOTE)
@@ -309,6 +311,8 @@ objcopy = $(Q)$(PREFIX_)objcopy
 dlltool = $(Q)$(PREFIX_)dlltool
 strip = $(Q)$(PREFIX_)strip
 windres = $(Q)$(PREFIX_)windres
+cl = $(Q)cl -nologo
+link = $(Q)link -nologo
 
 # Set utilities
 ifeq ($(OSTYPE),msys)

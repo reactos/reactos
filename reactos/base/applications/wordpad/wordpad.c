@@ -116,6 +116,25 @@ static void DoLoadStrings(void)
     LoadStringW(hInstance, STRING_UNITS_CM, units_cmW, MAX_STRING_LEN);
 }
 
+/* Show a message box with resource strings */
+static int MessageBoxWithResStringW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
+{
+    MSGBOXPARAMSW params;
+
+    params.cbSize             = sizeof(params);
+    params.hwndOwner          = hWnd;
+    params.hInstance          = GetModuleHandleW(0);
+    params.lpszText           = lpText;
+    params.lpszCaption        = lpCaption;
+    params.dwStyle            = uType;
+    params.lpszIcon           = NULL;
+    params.dwContextHelpId    = 0;
+    params.lpfnMsgBoxCallback = NULL;
+    params.dwLanguageId       = 0;
+    return MessageBoxIndirectW(&params);
+}
+
+
 static void AddButton(HWND hwndToolBar, int nImage, int nCommand)
 {
     TBBUTTON button;
@@ -289,7 +308,7 @@ static void on_sizelist_modified(HWND hwndSizeList, LPWSTR wszNewFontSize)
         } else
         {
             SetWindowTextW(hwndSizeList, sizeBuffer);
-            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
+            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
                         wszAppTitle, MB_OK | MB_ICONINFORMATION);
         }
     }
@@ -747,8 +766,8 @@ static void DoOpenFile(LPCWSTR szOpenFileName)
         else if (!memcmp(STG_magic, fileStart, sizeof(STG_magic)))
         {
             CloseHandle(hFile);
-            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_OLE_STORAGE_NOT_SUPPORTED), wszAppTitle,
-                        MB_OK | MB_ICONEXCLAMATION);
+            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_OLE_STORAGE_NOT_SUPPORTED),
+                    wszAppTitle, MB_OK | MB_ICONEXCLAMATION);
             return;
         }
     }
@@ -863,7 +882,7 @@ static void DialogSaveFile(void)
     {
         if(fileformat_flags(sfn.nFilterIndex-1) != SF_RTF)
         {
-            if(MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_SAVE_LOSEFORMATTING),
+            if(MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_SAVE_LOSEFORMATTING),
                            wszAppTitle, MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
             {
                 continue;
@@ -1161,7 +1180,7 @@ static void HandleCommandLine(LPWSTR cmdline)
     }
 
     if (opt_print)
-        MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_PRINTING_NOT_IMPLEMENTED), wszAppTitle, MB_OK);
+        MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_PRINTING_NOT_IMPLEMENTED), wszAppTitle, MB_OK);
 }
 
 static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
@@ -1239,7 +1258,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         if(ret == -1)
         {
             pFr->lCustData = -1;
-            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED), wszAppTitle,
+            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED), wszAppTitle,
                         MB_OK | MB_ICONASTERISK);
         } else
         {
@@ -1503,7 +1522,7 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                         if(ret != 3)
                         {
-                            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
+                            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
                                         wszAppTitle, MB_OK | MB_ICONASTERISK);
                             return FALSE;
                         } else
@@ -1615,7 +1634,7 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
 
                             if(!number_from_string(buffer, &number, TRUE))
                             {
-                                MessageBoxW(hWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
+                                MessageBoxWithResStringW(hWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
                                              wszAppTitle, MB_OK | MB_ICONINFORMATION);
                             } else
                             {
@@ -1817,7 +1836,7 @@ static LRESULT OnCreate( HWND hWnd )
     hDLL = LoadLibraryW(wszRichEditDll);
     if(!hDLL)
     {
-        MessageBoxW(hWnd, MAKEINTRESOURCEW(STRING_LOAD_RICHED_FAILED), wszAppTitle,
+        MessageBoxWithResStringW(hWnd, MAKEINTRESOURCEW(STRING_LOAD_RICHED_FAILED), wszAppTitle,
                     MB_OK | MB_ICONEXCLAMATION);
         PostQuitMessage(1);
     }

@@ -7,7 +7,6 @@
 <module name="normaliz_redist" type="win32dll" installname="normaliz_redist.dll">
 	<library>normalize</library>
 	<library>idna</library>
-	<library>icu4ros</library>
 	<library>normaliz_redist_data</library>
 	<library>libcntpr</library>
 	<library>kernel32</library>

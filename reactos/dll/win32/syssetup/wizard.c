@@ -1137,7 +1137,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
   LPTSTR Ptr;
   LPTSTR End;
   BOOL bFound = FALSE;
-  int iLanguageID;
+  unsigned long iLanguageID;
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 		   _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"),
@@ -1158,7 +1158,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
       return FALSE;
     }
 
-  iLanguageID = _ttoi(szLanguageIdString);
+  iLanguageID = _tcstoul(szLanguageIdString, NULL, 16);
   RegCloseKey(hKey);
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -1205,7 +1205,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
   while (*Ptr != 0)
     {
       Length = _tcslen(Ptr);
-      if (_ttoi(Ptr) == iLanguageID)
+      if (_tcstoul(Ptr, NULL, 16) == iLanguageID)
         bFound = TRUE;
 
       Ptr = Ptr + Length + 1;
