@@ -1,7 +1,6 @@
 <module name="rosperf" type="win32cui" installbase="system32" installname="rosperf.exe">
     <include base="rosperf">.</include>
     <define name="UNICODE" />
-    <define name="WINVER">0x0501</define>
     <library>version</library>
     <library>msimg32</library>
     <library>gdi32</library>
