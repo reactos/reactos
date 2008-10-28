@@ -3194,7 +3194,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
 
             //TODO
             // add multiple ip addresses when required
-            if (AddIPAddress(pCurrentConfig->Ip->IpAddress, pCurrentConfig->Ip->u.Subnetmask, pCurrentConfig->Index, &pCurrentConfig->Ip->NTEContext, &NTEInstance) == NO_ERROR)
+            if (AddIPAddress(htonl(pCurrentConfig->Ip->IpAddress), htonl(pCurrentConfig->Ip->u.Subnetmask), pCurrentConfig->Index, &pCurrentConfig->Ip->NTEContext, &NTEInstance) == NO_ERROR)
             {
                 pStr = CreateMultiSzString(pCurrentConfig->Ip, IPADDR, &dwSize, FALSE);
                 if(pStr)
