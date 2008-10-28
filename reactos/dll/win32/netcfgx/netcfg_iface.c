@@ -533,6 +533,56 @@ INetCfg_fnInitialize(
     return S_OK;
 }
 
+VOID
+ApplyOrCancelChanges(
+    NetCfgComponentItem *pHead,
+    const CLSID * lpClassGUID,
+    BOOL bApply)
+{
+    HKEY hKey;
+    WCHAR szName[200];
+    LPOLESTR pszGuid;
+
+    while(pHead)
+    {
+        if (pHead->bChanged)
+        {
+            if (IsEqualGUID(lpClassGUID, &GUID_DEVCLASS_NET))
+            {
+                if (bApply)
+                {
+                    if (StringFromCLSID(&pHead->InstanceId, &pszGuid) == NOERROR)
+                    {
+                        swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
+                        CoTaskMemFree(pszGuid);
+
+                        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+                        {
+                            RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)pHead->szDisplayName, (wcslen(pHead->szDisplayName)+1) * sizeof(WCHAR));
+                            RegCloseKey(hKey);
+                        }
+                    }
+                }
+            }
+            else if (pHead->pNCCC)
+            {
+                if (bApply)
+                {
+                    INetCfgComponentControl_ApplyRegistryChanges(pHead->pNCCC);
+                    //FIXME 
+                    // implement INetCfgPnpReconfigCallback and pass it to
+                    //INetCfgComponentControl_ApplyPnpChanges(pHead->pNCCC, NULL);
+                }
+                else
+                {
+                    INetCfgComponentControl_CancelChanges(pHead->pNCCC);
+                }
+            }
+        }
+        pHead = pHead->pNext;
+    }
+}
+
 HRESULT
 STDCALL
 INetCfg_fnUninitialize(
@@ -557,8 +607,12 @@ INetCfg_fnApply(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
+    ApplyOrCancelChanges(This->pNet, &GUID_DEVCLASS_NET, TRUE);
+    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, TRUE);
+    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, TRUE);
+    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, TRUE);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT
@@ -571,7 +625,11 @@ INetCfg_fnCancel(
     if (!This->bInitialized)
         return NETCFG_E_NOT_INITIALIZED;
 
-    return E_NOTIMPL;
+    ApplyOrCancelChanges(This->pClient, &GUID_DEVCLASS_NETCLIENT, FALSE);
+    ApplyOrCancelChanges(This->pService, &GUID_DEVCLASS_NETSERVICE, FALSE);
+    ApplyOrCancelChanges(This->pProtocol, &GUID_DEVCLASS_NETTRANS, FALSE);
+
+    return S_OK;
 }
 
 HRESULT

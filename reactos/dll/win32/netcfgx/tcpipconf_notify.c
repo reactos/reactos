@@ -3129,22 +3129,29 @@ INetCfgComponentControl_fnApplyRegistryChanges(
             RegSetValueExW(hKey, L"Domain", 0, REG_SZ, (LPBYTE)This->pCurrentConfig->pDNS->szDomain,
                        (wcslen(This->pCurrentConfig->pDNS->szDomain)+1) * sizeof(WCHAR));
         }
-
+#if 0
         if (This->pCurrentConfig->pFilter)
         {
-            RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ, 
+            if (This->pCurrentConfig->pFilter->szTCPAllowedPorts)
+            {
+                RegSetValueExW(hKey, L"TCPAllowedPorts", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szTCPAllowedPorts,
                         This->pCurrentConfig->pFilter->TCPSize);
-
-            RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ, 
+            }
+            if (This->pCurrentConfig->pFilter->szUDPAllowedPorts)
+            {
+                RegSetValueExW(hKey, L"UDPAllowedPorts", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szUDPAllowedPorts,
                         This->pCurrentConfig->pFilter->UDPSize);
-
-            RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ, 
+            }
+            if (This->pCurrentConfig->pFilter->szRawIPAllowedProtocols)
+            {
+                RegSetValueExW(hKey, L"RawIPAllowedProtocols", 0, REG_MULTI_SZ, 
                        (LPBYTE)This->pCurrentConfig->pFilter->szRawIPAllowedProtocols,
                         This->pCurrentConfig->pFilter->IPSize);
+            }
         }
-
+#endif
         RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->DhcpEnabled, sizeof(DWORD));
         if (This->pCurrentConfig->DhcpEnabled)
         {

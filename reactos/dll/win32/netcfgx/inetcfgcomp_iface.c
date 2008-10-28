@@ -7,7 +7,6 @@ typedef struct
     LONG  ref;
     NetCfgComponentItem * pItem;
     INetCfgComponentPropertyUi * pProperty;
-    INetCfgComponentControl * pNCCC;
     INetCfg * pNCfg;
 }INetCfgComponentImpl;
 
@@ -19,8 +18,6 @@ typedef struct
     NetCfgComponentItem * pHead;
     INetCfg * pNCfg;
 }IEnumNetCfgComponentImpl;
-
-
 
 HRESULT
 STDCALL
@@ -42,7 +39,6 @@ INetCfgComponent_fnQueryInterface(
 
     return E_NOINTERFACE;
 }
-
 
 ULONG
 STDCALL
@@ -420,7 +416,7 @@ CreateNotificationObject(
         return hr;
     }
     This->pProperty = pNCCPU;
-    This->pNCCC = pNCCC;
+    This->pItem->pNCCC = pNCCC;
 
     return S_OK;
 }
@@ -467,20 +463,14 @@ INetCfgComponent_fnRaisePropertyUi(
     pinfo.pszCaption = This->pItem->szDisplayName;
 
     iResult = PropertySheetW(&pinfo);
-
     CoTaskMemFree(hppages);
-    if (iResult < 0)
+    if (iResult > 0)
     {
-        //FIXME
-        INetCfgComponentControl_CancelChanges(This->pNCCC);
-        return E_ABORT;
-    }
-    else
-    {
-        //FIXME
-        INetCfgComponentControl_ApplyRegistryChanges(This->pNCCC);
+        /* indicate that settings should be stored */
+        This->pItem->bChanged = TRUE;
         return S_OK;
     }
+    return S_FALSE;
 }
 static const INetCfgComponentVtbl vt_NetCfgComponent =
 {
