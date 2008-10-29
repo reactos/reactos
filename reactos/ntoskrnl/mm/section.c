@@ -4642,18 +4642,21 @@ MmMapViewOfSection(IN PVOID SectionObject,
       if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
           !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
       /* check for read access */
       if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
       /* check for execute access */
       if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
           !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
       {
+         MmUnlockAddressSpace(AddressSpace);
          return STATUS_SECTION_PROTECTION;
       }
 
