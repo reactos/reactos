@@ -685,7 +685,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 #if 0
 		if ( dll )
 		{
-			if (IsWineModule( module ))
+			if (IsSpecDefinitionFile( module ))
 				fprintf ( OUT, "\t\t\t\t\t<Add before=\"%s\\tools\\winebuild\\winebuild.exe -o %s --def -E %s.spec\" />\r\n", outdir.c_str(), module.importLibrary->definition.c_str(),  module.name.c_str());
 			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"%s\\tools\\pefixup $exe_output -exports\" />\r\n", outdir.c_str() );
@@ -902,11 +902,11 @@ CBBackend::_lookup_property ( const Module& module, const std::string& name ) co
 }
 
 bool
-CBBackend::IsWineModule ( const Module& module ) const
+CBBackend::IsSpecDefinitionFile ( const Module& module ) const
 {
 	if ( module.importLibrary == NULL)
 		return false;
 
-	size_t index = module.importLibrary->source->name.rfind ( ".spec.def" );
+	size_t index = module.importLibrary->source->name.rfind ( ".spec" );
 	return ( index != string::npos );
 }

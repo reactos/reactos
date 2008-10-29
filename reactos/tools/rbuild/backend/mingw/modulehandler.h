@@ -32,6 +32,13 @@ PrefixFilename (
 	const std::string& filename,
 	const std::string& prefix );
 
+enum SpecFileType
+{
+    None,
+    Spec = 1,
+    PSpec = 2
+};
+
 class MingwModuleHandler
 {
 public:
@@ -150,7 +157,7 @@ private:
 	                                 const FileLocation *file ) const;
 	void GetDefaultDependencies ( string_list& dependencies ) const;
 	void GetInvocationDependencies ( const Module& module, string_list& dependencies );
-	bool IsWineModule () const;
+	SpecFileType IsSpecDefinitionFile () const;
 	const FileLocation* GetDefinitionFilename () const;
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );

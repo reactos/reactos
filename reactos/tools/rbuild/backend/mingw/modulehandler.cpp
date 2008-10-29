@@ -416,13 +416,13 @@ MingwModuleHandler::GetObjectFilename (
 
 	if ( module.type == BootSector )
 		return new FileLocation ( *module.output );
-	else if ( extension == ".rc" || extension == ".RC" )
+	else if (extension == ".rc")
 		newExtension = "_" + module.name + ".coff";
-	else if ( extension == ".mc" || extension == ".MC" )
+	else if (extension == ".mc")
 		newExtension = ".rc";
-	else if ( extension == ".spec" || extension == ".SPEC" )
+	else if (extension == ".spec" || extension == ".pspec")
 		newExtension = "_" + module.name + ".stubs.o";
-	else if ( extension == ".idl" || extension == ".IDL" )
+	else if (extension == ".idl")
 	{
 		if ( module.type == RpcServer )
 			newExtension = "_s.o";
@@ -1056,28 +1056,28 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildKMDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
-						  "\t$(ECHO_WINEBLD)\n"
-						  "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
-						  "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).spec.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n\n",
-						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
-						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def",
-						  "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildKMRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c:\n"
-                       "\t${cp} $(NUL) $@ 1>$(NUL)\n"
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
-                       "\t$(ECHO_CC)\n"
-                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
-                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
-						"\t$(ECHO_WINEBLD)\n"
-						"\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).spec.def --def -E $(source)\n\n",
-						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
-						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec.def",
-						"$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildPDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                         "\t$(ECHO_WINEBLD)\n"
+                         "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
+                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n\n",
+                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
+                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildPRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c:\n"
+                      "\t${cp} $(NUL) $@ 1>$(NUL)\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_CC)\n"
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule winebuildDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                        "\t$(ECHO_WINEBLD)\n"
+                        "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(source)\n\n",
+                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
+                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule winebuildRule (                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
@@ -1256,8 +1256,7 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, TypeDontCare, ".asm", &nasmRule },
 		{ HostDontCare, TypeDontCare, ".rc", &windresRule },
 		{ HostDontCare, TypeDontCare, ".mc", &wmcRule },
-		{ HostFalse, Kernel, ".spec", &winebuildKMRule },
-		{ HostFalse, KernelModeDLL, ".spec", &winebuildKMRule },
+		{ HostDontCare, TypeDontCare, ".pspec", &winebuildPRule },
 		{ HostDontCare, TypeDontCare, ".spec", &winebuildRule },
 		{ HostDontCare, RpcServer, ".idl", &widlServerRule },
 		{ HostDontCare, RpcClient, ".idl", &widlClientRule },
@@ -1856,7 +1855,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 			used_defs );
 	}
 
-	if ( IsWineModule() )
+	if ( IsSpecDefinitionFile() )
 	{
 		vector<FileLocation> s;
 		GetSpecImplibDependencies ( s, module.importLibrary->source );
@@ -1988,6 +1987,8 @@ MingwModuleHandler::GenerateOtherMacros ()
 void
 MingwModuleHandler::GenerateRules ()
 {
+    SpecFileType spec;
+
 	fprintf ( fMakefile, "# RULES\n" );
 	string targetMacro = GetTargetMacro ( module );
 	//CLEAN_FILE ( targetMacro );
@@ -2015,12 +2016,15 @@ MingwModuleHandler::GenerateRules ()
 		delete ar_target;
 	}
 
-	if ( IsWineModule() )
+
+    spec = IsSpecDefinitionFile();
+
+    if(spec)
 	{
 		Rule * defRule;
 
-		if ( module.type == Kernel || module.type == KernelModeDLL || module.type == KernelModeDriver )
-			defRule = &winebuildKMDefRule;
+		if (spec == PSpec)
+			defRule = &winebuildPDefRule;
 		else
 			defRule = &winebuildDefRule;
 
@@ -2172,14 +2176,19 @@ MingwModuleHandler::GeneratePreconditionDependencies ()
 	fprintf ( fMakefile, "\n" );
 }
 
-bool
-MingwModuleHandler::IsWineModule () const
+SpecFileType
+MingwModuleHandler::IsSpecDefinitionFile () const
 {
-	if ( module.importLibrary == NULL)
-		return false;
+    if(!module.importLibrary)
+        return None;
 
-	size_t index = module.importLibrary->source->name.rfind ( ".spec" );
-	return ( index != string::npos );
+    if(module.importLibrary->source->name.rfind(".spec") != string::npos)
+        return Spec;
+
+    if(module.importLibrary->source->name.rfind(".pspec") != string::npos)
+        return PSpec;
+
+    return None;
 }
 
 /* caller needs to delete the returned object */
@@ -2189,11 +2198,11 @@ MingwModuleHandler::GetDefinitionFilename () const
 	if ( module.importLibrary == NULL )
 		return NULL;
 
-	if ( IsWineModule () )
+	if ( IsSpecDefinitionFile () )
 	{
 		return new FileLocation ( IntermediateDirectory,
 								  module.importLibrary->source->relative_path,
-								  GetBasename ( module.importLibrary->source->name ) + "_" + module.name + ".spec.def" );
+								  GetBasename ( module.importLibrary->source->name ) + "_" + module.name + ".auto.def" );
 	}
 	else
 	{
@@ -2268,7 +2277,7 @@ MingwModuleHandler::GetSpecImplibDependencies (
 {
 	dependencies.push_back ( FileLocation ( IntermediateDirectory,
 											file->relative_path,
-											GetBasename ( file->name ) + "_" + module.name + ".spec.def" ) );
+											GetBasename ( file->name ) + "_" + module.name + ".auto.def" ) );
 }
 
 void
@@ -2316,9 +2325,11 @@ MingwModuleHandler::GetDefinitionDependencies (
 		const CompilationUnit& compilationUnit = *compilationUnits[i];
 		const FileLocation& sourceFile = compilationUnit.GetFilename ();
 		string extension = GetExtension ( sourceFile );
-		if ( extension == ".spec" || extension == ".SPEC" )
+
+		if (extension == ".spec" || extension == ".pspec")
 			GetSpecObjectDependencies ( dependencies, &sourceFile );
-		if ( extension == ".idl" || extension == ".IDL" )
+
+		if (extension == ".idl")
 		{
 			if ( ( module.type == RpcServer ) || ( module.type == RpcClient ) || ( module.type == RpcProxy ) )
 				GetWidlObjectDependencies ( dependencies, &sourceFile );
