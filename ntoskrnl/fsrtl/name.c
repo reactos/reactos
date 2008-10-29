@@ -16,24 +16,51 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-WCHAR
+BOOLEAN
 NTAPI
-FsRtlpUpcaseUnicodeChar(IN WCHAR SourceCharacter,
-                        IN BOOLEAN IgnoreCase,
-                        IN PWCHAR UpcaseTable OPTIONAL)
+FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
+                               IN PUNICODE_STRING Name,
+                               IN BOOLEAN IgnoreCase,
+                               IN PWCHAR UpcaseTable OPTIONAL)
 {
-    if (IgnoreCase)
+    ULONG i, j, k = 0;
+	
+    ASSERT(!FsRtlDoesNameContainWildCards(Name));
+
+    for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
     {
-        if (!UpcaseTable)
+        if ((Expression->Buffer[i] == (IgnoreCase ? UpcaseTable[Name->Buffer[k]] : Name->Buffer[k])) ||
+            (Expression->Buffer[i] == L'?') || (Expression->Buffer[i] == DOS_QM) ||
+            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k] == L'0')))
         {
-            return RtlUpcaseUnicodeChar(SourceCharacter);
+            k++;
+        }
+        else if (Expression->Buffer[i] == L'*')
+        {
+            k = Name->Length / sizeof(WCHAR);
+        }
+        else if (Expression->Buffer[i] == DOS_STAR)
+        {
+            for (j = k ; j < Name->Length / sizeof(WCHAR) ; j++)
+            {
+                if (Name->Buffer[j] == L'.')
+                {
+                    k = j;
+                    break;
+                }
+            }
         }
         else
         {
-            return UpcaseTable[SourceCharacter];
+            k = 0;
+        }
+        if (k >= Expression->Length / sizeof(WCHAR))
+        {
+            return TRUE;
         }
     }
-    return SourceCharacter;
+
+    return FALSE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -250,7 +277,8 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  * Check if the Name string is in the Expression string.
  *
  * @param Expression
- *        The string in which we've to find Name. It can contain wildcards
+ *        The string in which we've to find Name. It can contain wildcards.
+ *        If IgnoreCase is set to TRUE, this string MUST BE uppercase. 
  *
  * @param Name
  *        The string to find. It cannot contain wildcards
@@ -276,43 +304,31 @@ FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN BOOLEAN IgnoreCase,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
-    ULONG i, j, k = 0;
-	
-    ASSERT(!FsRtlDoesNameContainWildCards(Name));
+    BOOLEAN Result;
+    NTSTATUS Status;
+    UNICODE_STRING IntName;
 
-    for (i = 0 ; i < Expression->Length / sizeof(WCHAR) ; i++)
+    if (IgnoreCase && !UpcaseTable)
     {
-        if ((FsRtlpUpcaseUnicodeChar(Expression->Buffer[i], IgnoreCase, UpcaseTable) ==
-             FsRtlpUpcaseUnicodeChar(Name->Buffer[k], IgnoreCase, UpcaseTable)) ||
-            (Expression->Buffer[i] == L'?') || (Expression->Buffer[i] == DOS_QM) ||
-            (Expression->Buffer[i] == DOS_DOT && (Name->Buffer[k] == L'.' || Name->Buffer[k] == L'0')))
+        Status = RtlUpcaseUnicodeString(&IntName, Name, TRUE);
+        if (Status != STATUS_SUCCESS)
         {
-            k++;
+            ExRaiseStatus(Status);
         }
-        else if (Expression->Buffer[i] == L'*')
-        {
-            k = Name->Length / sizeof(WCHAR);
-        }
-        else if (Expression->Buffer[i] == DOS_STAR)
-        {
-            for (j = k ; j < Name->Length / sizeof(WCHAR) ; j++)
-            {
-                if (Name->Buffer[j] == L'.')
-                {
-                    k = j;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            k = 0;
-        }
-        if (k >= Expression->Length / sizeof(WCHAR))
-        {
-            return TRUE;
-        }
+        Name = &IntName;
+        IgnoreCase = FALSE;
+    }
+    else
+    {
+        IntName.Buffer = NULL;
     }
 
-    return FALSE;
+    Result = FsRtlIsNameInExpressionPrivate(Expression, Name, IgnoreCase, UpcaseTable);
+
+    if (IntName.Buffer != NULL)
+    {
+        RtlFreeUnicodeString(&IntName);
+    }
+
+    return Result;
 }
