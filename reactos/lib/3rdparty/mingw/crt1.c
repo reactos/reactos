@@ -220,6 +220,7 @@ __mingw_CRTStartup (void)
   _pei386_runtime_relocator ();
 #endif
 
+#if defined(__GNUC__)
 #if defined(__i386__)
   /* Align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
@@ -232,6 +233,17 @@ __mingw_CRTStartup (void)
   asm  __volatile__  ("li 0,15\n\tandc 1,1,0" : : : "r1");
 #else
 #error Unsupported architecture
+#endif
+#elif defined(_MSC_VER)
+#if defined(_M_IX86)
+  /* Align the stack to 16 bytes for the sake of SSE ops in main
+     or in functions inlined into main.  */
+  __asm and esp, 0FFFFFFF0h
+#else
+#error TODO
+#endif
+#else
+#error TODO
 #endif
 
   /*

@@ -60,7 +60,7 @@ static int is_data_file_module( PVOID BaseAddress )
  */
 int push_language( USHORT *list, ULONG pos, WORD lang )
 {
-    int i;
+    ULONG i;
     for (i = 0; i < pos; i++) if (list[i] == lang) return pos;
     list[pos++] = lang;
     return pos;

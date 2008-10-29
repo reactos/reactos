@@ -2,6 +2,7 @@
 #define _SMSS_H_INCLUDED_
 
 #include <stdio.h>
+#include <stdlib.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER

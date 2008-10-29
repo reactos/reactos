@@ -31,9 +31,7 @@
 #include <reactos/helper.h>
 #include <pseh/pseh.h>
 
-#ifndef _MSC_VER
 #include <intrin.h>
-#endif
 
 #endif /* RTL_H */
 
