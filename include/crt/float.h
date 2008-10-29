@@ -16,7 +16,11 @@
  *
  */
 
+#if defined(__GNUC__)
 #include_next<float.h>
+#elif defined(_MSC_VER)
+#include <_msc_float.h>
+#endif
 
 #ifndef _MINGW_FLOAT_H_
 #define _MINGW_FLOAT_H_

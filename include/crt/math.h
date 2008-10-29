@@ -318,6 +318,20 @@ extern const double __QNAN;
 #define FP_SUBNORMAL	(FP_NORMAL | FP_ZERO)
 /* 0x0200 is signbit mask */
 
+#if defined(__GNUC__)
+#define __mingw_fxam(sw, x) __asm__ ("fxam; fstsw %%ax;" : "=a" (sw): "t" (x))
+#elif defined(_MSC_VER)
+#define __mingw_fxam(sw, x) \
+  __asm { fld [x] } \
+  __asm { fxam } \
+  __asm { fstsw ax } \
+  __asm { fstp st(0) } \
+  __asm { mov [sw], ax }
+#else
+#error TODO
+#endif
+
+
 
 /*
   We can't inline float or double, because we want to ensure truncation
@@ -331,7 +345,7 @@ extern int __cdecl __fpclassify (double);
 
 __CRT_INLINE int __cdecl __fpclassifyl (long double x){
   unsigned short sw;
-  __asm__ ("fxam; fstsw %%ax;" : "=a" (sw): "t" (x));
+  __mingw_fxam(sw, x);
   return sw & (FP_NAN | FP_NORMAL | FP_ZERO );
 }
 
@@ -352,8 +366,7 @@ __CRT_INLINE int __cdecl __fpclassifyl (long double x){
 __CRT_INLINE int __cdecl __isnan (double _x)
 {
   unsigned short sw;
-  __asm__ ("fxam;"
-	   "fstsw %%ax": "=a" (sw) : "t" (_x));
+  __mingw_fxam(sw, _x);
   return (sw & (FP_NAN | FP_NORMAL | FP_INFINITE | FP_ZERO | FP_SUBNORMAL))
     == FP_NAN;
 }
@@ -361,8 +374,7 @@ __CRT_INLINE int __cdecl __isnan (double _x)
 __CRT_INLINE int __cdecl __isnanf (float _x)
 {
   unsigned short sw;
-  __asm__ ("fxam;"
-	    "fstsw %%ax": "=a" (sw) : "t" (_x));
+  __mingw_fxam(sw, _x);
   return (sw & (FP_NAN | FP_NORMAL | FP_INFINITE | FP_ZERO | FP_SUBNORMAL))
     == FP_NAN;
 }
@@ -370,8 +382,7 @@ __CRT_INLINE int __cdecl __isnanf (float _x)
 __CRT_INLINE int __cdecl __isnanl (long double _x)
 {
   unsigned short sw;
-  __asm__ ("fxam;"
-	    "fstsw %%ax": "=a" (sw) : "t" (_x));
+  __mingw_fxam(sw, _x);
   return (sw & (FP_NAN | FP_NORMAL | FP_INFINITE | FP_ZERO | FP_SUBNORMAL))
     == FP_NAN;
 }
@@ -387,19 +398,19 @@ __CRT_INLINE int __cdecl __isnanl (long double _x)
 /* 7.12.3.6 The signbit macro */
 __CRT_INLINE int __cdecl __signbit (double x) {
   unsigned short stw;
-  __asm__ ( "fxam; fstsw %%ax;": "=a" (stw) : "t" (x));
+  __mingw_fxam(stw, x);
   return (stw & 0x0200) != 0;
 }
 
 __CRT_INLINE int __cdecl __signbitf (float x) {
   unsigned short stw;
-  __asm__ ("fxam; fstsw %%ax;": "=a" (stw) : "t" (x));
+  __mingw_fxam(stw, x);
   return (stw & 0x0200) != 0;
 }
 
 __CRT_INLINE int __cdecl __signbitl (long double x) {
   unsigned short stw;
-  __asm__ ("fxam; fstsw %%ax;": "=a" (stw) : "t" (x));
+  __mingw_fxam(stw, x);
   return (stw & 0x0200) != 0;
 }
 
@@ -518,27 +529,39 @@ extern long double __cdecl logbl (long double);
 /* Inline versions.  GCC-4.0+ can do a better fast-math optimization
    with __builtins. */
 #if !(__MINGW_GNUC_PREREQ (4, 0) && defined __FAST_MATH__ )
+#if defined(__GNUC__)
+#define __mingw_fxtract(res, x) \
+  __asm__ ("fxtract\n\t" \
+       "fstp	%%st" : "=t" (res) : "0" (x))
+#elif defined(_MSC_VER)
+// REVIEW is this correct?
+#define __mingw_fxtract(res, x) \
+  __asm { fld [x] } \
+  __asm { fxtract } \
+  __asm { fstp st } \
+  __asm { fistp [res] }
+#else
+#error TODO
+#endif
+
 __CRT_INLINE double __cdecl logb (double x)
 {
   double res;
-  __asm__ ("fxtract\n\t"
-       "fstp	%%st" : "=t" (res) : "0" (x));
+  __mingw_fxtract(res, x);
   return res;
 }
 
 __CRT_INLINE float __cdecl logbf (float x)
 {
   float res;
-  __asm__ ("fxtract\n\t"
-       "fstp	%%st" : "=t" (res) : "0" (x));
+  __mingw_fxtract(res, x);
   return res;
 }
 
 __CRT_INLINE long double __cdecl logbl (long double x)
 {
   long double res;
-  __asm__ ("fxtract\n\t"
-       "fstp	%%st" : "=t" (res) : "0" (x));
+  __mingw_fxtract(res, x);
   return res;
 }
 #endif /* !defined __FAST_MATH__ || !__MINGW_GNUC_PREREQ (4, 0) */
@@ -632,72 +655,105 @@ extern long long __cdecl llrintl (long double);
 /* Inline versions of above.
    GCC 4.0+ can do a better fast-math job with __builtins. */
 #if !(__MINGW_GNUC_PREREQ (4, 0) && defined __FAST_MATH__ )
+
+#if defined(__GNUC__)
+#define __mingw_frndint(res, x) __asm__ ("frndint;": "=t" (res) : "0" (x))
+#elif defined(_MSC_VER)
+// REVIEW is this correct?
+#define __mingw_frndint(res, x) \
+  __asm { fld [x] } \
+  __asm { frndint } \
+  __asm { fistp [res] }
+#else
+#error TODO
+#endif
+
 __CRT_INLINE double __cdecl rint (double x)
 {
   double retval;
-  __asm__ ("frndint;": "=t" (retval) : "0" (x));
+  __mingw_frndint (retval, x);
   return retval;
 }
 
 __CRT_INLINE float __cdecl rintf (float x)
 {
   float retval;
-  __asm__ ("frndint;" : "=t" (retval) : "0" (x) );
+  __mingw_frndint (retval, x);
   return retval;
 }
 
 __CRT_INLINE long double __cdecl rintl (long double x)
 {
   long double retval;
-  __asm__ ("frndint;" : "=t" (retval) : "0" (x) );
+  __mingw_frndint (retval, x);
   return retval;
 }
+
+#if defined(__GNUC__)
+#define __mingw_fistpl(res, x) \
+  __asm__ __volatile__ \
+      ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
+#elif defined(_MSC_VER)
+// REVIEW is this correct?
+#define __mingw_fistpl(res, x) \
+  __asm { fld [x] } \
+  __asm { fistp dword ptr [res] }
+#else
+#error TODO
+#endif
 
 __CRT_INLINE long __cdecl lrint (double x)
 {
   long retval;
-  __asm__ __volatile__
-    ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpl(retval, x);
   return retval;
 }
 
 __CRT_INLINE long __cdecl lrintf (float x)
 {
   long retval;
-  __asm__ __volatile__
-    ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpl(retval, x);
   return retval;
 }
 
 __CRT_INLINE long __cdecl lrintl (long double x)
 {
   long retval;
-  __asm__ __volatile__
-    ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpl(retval, x);
   return retval;
 }
+
+#if defined(__GNUC__)
+#define __mingw_fistpll(res, x) \
+  __asm__ __volatile__ \
+      ("fistpll %0"  : "=m" (retval) : "t" (x) : "st");
+#elif defined(_MSC_VER)
+// REVIEW is this correct?
+#define __mingw_fistpll(res, x) \
+  __asm { fld [x] } \
+  __asm { fistp qword ptr [res] }
+#else
+#error TODO
+#endif
 
 __CRT_INLINE long long __cdecl llrint (double x)
 {
   long long retval;
-  __asm__ __volatile__
-    ("fistpll %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpll(retval, x);
   return retval;
 }
 
 __CRT_INLINE long long __cdecl llrintf (float x)
 {
   long long retval;
-  __asm__ __volatile__
-    ("fistpll %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpll(retval, x);
   return retval;
 }
 
 __CRT_INLINE long long __cdecl llrintl (long double x)
 {
   long long retval;
-  __asm__ __volatile__
-    ("fistpll %0"  : "=m" (retval) : "t" (x) : "st");
+  __mingw_fistpll(retval, x);
   return retval;
 }
 #endif /* !__FAST_MATH__ || !__MINGW_GNUC_PREREQ (4,0)  */
@@ -800,7 +856,7 @@ extern long double __cdecl fmal (long double, long double, long double);
  *  which always returns true: yes, (NaN != NaN) is true).
  */
 
-#if __GNUC__ >= 3
+#if __MINGW_GNUC_PREREQ(3, 0)
 
 #define isgreater(x, y) __builtin_isgreater(x, y)
 #define isgreaterequal(x, y) __builtin_isgreaterequal(x, y)
@@ -814,8 +870,19 @@ extern long double __cdecl fmal (long double, long double, long double);
 __CRT_INLINE int  __cdecl
 __fp_unordered_compare (long double x, long double y){
   unsigned short retval;
+#if defined(__GNUC__)
   __asm__ ("fucom %%st(1);"
 	   "fnstsw;": "=a" (retval) : "t" (x), "u" (y));
+#elif defined(_MSC_VER)
+  __asm
+  {
+    fld [y] // REVIEW is this the right order?
+    fld [x]
+    fucom st(1)
+    fnstsw ax
+    mov [retval], ax
+  }
+#endif
   return retval;
 }
 
