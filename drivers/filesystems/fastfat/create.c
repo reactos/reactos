@@ -191,7 +191,7 @@ FindFile (
 	PVOID Context = NULL;
 	PVOID Page;
 	PVFATFCB rcFcb;
-	BOOLEAN Found;
+	BOOLEAN Found = FALSE;
 	UNICODE_STRING PathNameU;
 	UNICODE_STRING FileToFindUpcase;
 	BOOLEAN WildCard;
@@ -283,8 +283,22 @@ FindFile (
 		}
 		if (WildCard)
 		{
-			Found = FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->LongNameU, TRUE, NULL) ||
-				FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->ShortNameU, TRUE, NULL);
+			_SEH_TRY
+			{
+				Found = FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->LongNameU, TRUE, NULL) ||
+					FsRtlIsNameInExpression(&FileToFindUpcase, &DirContext->ShortNameU, TRUE, NULL);
+			}
+			_SEH_HANDLE
+			{
+				Status = _SEH_GetExceptionCode();
+			}
+			_SEH_END;
+			if (!NT_SUCCESS(Status))
+			{
+				RtlFreeUnicodeString(&FileToFindUpcase);
+				ExFreePool(PathNameBuffer);
+				return Status;
+			}
 		}
 		else
 		{

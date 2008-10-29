@@ -454,7 +454,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   PDIR_RECORD Record;
   ULONG Offset;
   ULONG BlockOffset;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
+  BOOLEAN Found;
 
   LARGE_INTEGER StreamOffset;
   PVOID Context;
@@ -539,8 +540,22 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("ShortName '%wZ'\n", &ShortName);
 
-      if (FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
-          FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
+      _SEH_TRY
+        {
+          Found = FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
+                  FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL);
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      if (!NT_SUCCESS(Status))
+        {
+          CcUnpinData(Context);
+          return Status;
+        }
+      if (Found)
         {
           DPRINT("Match found, %S\n", Name);
           Status = CdfsMakeFCBFromDirEntry(DeviceExt,
@@ -585,7 +600,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
   CcUnpinData(Context);
 
-  return(STATUS_OBJECT_NAME_NOT_FOUND);
+  return Status;
 }
 
 

@@ -5,6 +5,7 @@
 #include <ntddk.h>
 #include <ntddcdrm.h>
 #include <ccros.h>
+#include <pseh/pseh.h>
 
 #define CDFS_BASIC_SECTOR 2048
 #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16

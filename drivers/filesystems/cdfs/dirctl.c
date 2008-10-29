@@ -172,6 +172,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   ULONG DirIndex;
   ULONG Offset = 0;
   BOOLEAN IsRoot;
+  BOOLEAN Found = FALSE;
   PVOID Context = NULL;
   ULONG DirSize;
   PDIR_RECORD Record;
@@ -306,8 +307,22 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("ShortName '%wZ'\n", &ShortName);
 
-      if (FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
-	  FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
+      _SEH_TRY
+      {
+        Found = FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
+                FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL);
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+      if (!NT_SUCCESS(Status))
+      {
+        CcUnpinData(Context);
+        return Status;
+      }
+      if (Found)
 	{
 	  if (Parent && Parent->PathName)
 	    {
