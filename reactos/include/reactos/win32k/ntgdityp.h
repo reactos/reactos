@@ -218,11 +218,11 @@ typedef PVOID PUMDHPDEV;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
 
-typedef struct _CHWIDTHINFO
+typedef struct _CHWIDTHINFO // Based on FD_DEVICEMETRICS
 {
-   LONG    lMaxNegA;
-   LONG    lMaxNegC;
-   LONG    lMinWidthD;
+   LONG    lMinA;
+   LONG    lMinC;
+   LONG    lMinD;
 } CHWIDTHINFO, *PCHWIDTHINFO;
 
 typedef struct _UNIVERSAL_FONT_ID
