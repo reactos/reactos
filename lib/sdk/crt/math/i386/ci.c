@@ -1,11 +1,19 @@
 #include <precomp.h>
 #include <math.h>
 
+#if defined(__GNUC__)
 #define FPU_DOUBLE(var) double var; \
 	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var) : )
 #define FPU_DOUBLES(var1,var2) double var1,var2; \
 	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var2) : ); \
 	__asm__ __volatile__( "fstpl %0;fwait" : "=m" (var1) : )
+#elif defined(_MSC_VER)
+#define FPU_DOUBLE(var) double var; \
+	__asm { fstp [var] }; __asm { fwait };
+#define FPU_DOUBLES(var1,var2) double var1,var2; \
+	__asm { fstp [var1] }; __asm { fwait }; \
+	__asm { fstp [var2] }; __asm { fwait };
+#endif
 
 /*
  * @implemented
