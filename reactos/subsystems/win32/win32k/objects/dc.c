@@ -2167,6 +2167,7 @@ NtGdiSelectBrush(
     if (pBrush == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
+        DC_UnlockDc(pDC);
         return NULL;
     }
 
@@ -2174,6 +2175,7 @@ NtGdiSelectBrush(
     BRUSHOBJ_UnlockBrush(pBrush);
     if(bFailed)
     {
+        DC_UnlockDc(pDC);
         return NULL;
     }
 

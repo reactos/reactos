@@ -161,6 +161,8 @@
 		<file>dibobj.c</file>
 		<file>drawing.c</file>
 		<file>fillshap.c</file>
+		<file>font.c</file>
+		<file>freetype.c</file>
 		<file>gdibatch.c</file>
 		<file>gdiobj.c</file>
 		<file>icm.c</file>
