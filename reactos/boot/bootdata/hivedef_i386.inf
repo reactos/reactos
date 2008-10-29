@@ -20,7 +20,7 @@ HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,"0"
 HKCU,"Control Panel\Desktop","HungAppTimeout",0x00000002,"5000"
 HKCU,"Control Panel\Desktop","SCRNSAVE.EXE",0x00000000,""
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",0x00000002,"20000"
-HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
+HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,"%SystemRoot%\lake.bmp"
 HKCU,"Control Panel\International",,0x00000012
 HKCU,"Control Panel\International","Locale",0x00000000,"0409"
 HKCU,"Control Panel\International\Geo","Nation",0x00000000,"1"
