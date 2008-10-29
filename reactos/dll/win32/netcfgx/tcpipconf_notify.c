@@ -2174,6 +2174,15 @@ StoreTcpipBasicSettings(
             /* store default gateway */
             This->pCurrentConfig->Gw->IpAddress = dwIpAddr;
        }
+       else
+       {
+           if (This->pCurrentConfig->Gw)
+           {
+               IP_ADDR * pNextGw = This->pCurrentConfig->Gw->Next;
+               CoTaskMemFree(This->pCurrentConfig->Gw);
+               This->pCurrentConfig->Gw = pNextGw;
+           }
+       }
     }
     else
     {
@@ -2304,7 +2313,7 @@ InitializeTcpipBasicDlgCtrls(
             /* set current hostmask */
             SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
         }
-        if (pCurSettings->Gw->IpAddress)
+        if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
         {
             /* set current gateway */
             SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
@@ -3211,38 +3220,82 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                 }
             }
 
-            pStr = CreateMultiSzString(pCurrentConfig->Gw, IPADDR, &dwSize, FALSE);
-            if(pStr)
+            if (pOldConfig->Gw)
             {
-                RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                CoTaskMemFree(pStr);
+                dwSize = 0;
+                if (GetIpForwardTable(NULL, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
+                {
+                    DWORD Index;
+                    PMIB_IPFORWARDTABLE pIpForwardTable = (PMIB_IPFORWARDTABLE)CoTaskMemAlloc(dwSize);
+                    if (pIpForwardTable)
+                    {
+                        if (GetIpForwardTable(pIpForwardTable, &dwSize, FALSE) == NO_ERROR)
+                        {
+                            for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
+                            {
+                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index)
+                                {
+                                    DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
+                                }
+                            }
+                        }
+                        CoTaskMemFree(pIpForwardTable);
+                    }
+                }
             }
 
-            pStr = CreateMultiSzString(pCurrentConfig->Gw, METRIC, &dwSize, FALSE);
-            if(pStr)
+            if (pCurrentConfig->Gw)
             {
-                RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                CoTaskMemFree(pStr);
-            }
-        }
+                MIB_IPFORWARDROW RouterMib;
+                ZeroMemory(&RouterMib, sizeof(MIB_IPFORWARDROW));
 
-        if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
-        {
-            RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
-        }
-        else
-        {
-            pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
-            if(pStr)
-            {
-                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
-                RegDeleteValueW(hKey, L"DhcpNameServer");
-                CoTaskMemFree(pStr);
+                RouterMib.dwForwardMetric1 = 1;
+                RouterMib.dwForwardIfIndex = pOldConfig->Index;
+                RouterMib.dwForwardNextHop = htonl(pCurrentConfig->Gw->IpAddress);
+
+                //TODO
+                // add multiple gw addresses when required
+
+                if (CreateIpForwardEntry(&RouterMib) == NO_ERROR)
+                {
+                    pStr = CreateMultiSzString(pCurrentConfig->Gw, IPADDR, &dwSize, FALSE);
+                    if(pStr)
+                    {
+                        RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                        CoTaskMemFree(pStr);
+                    }
+
+                    pStr = CreateMultiSzString(pCurrentConfig->Gw, METRIC, &dwSize, FALSE);
+                    if(pStr)
+                    {
+                        RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                        CoTaskMemFree(pStr);
+                    }
+                }
             }
+            else
+            {
+                RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+                RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", sizeof(WCHAR) * 2);
+            }
+
+            if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
+            {
+                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+            }
+            else
+            {
+                pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
+                if(pStr)
+                {
+                    RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
+                    RegDeleteValueW(hKey, L"DhcpNameServer");
+                    CoTaskMemFree(pStr);
+                }
+            }
+            RegCloseKey(hKey);
         }
-        RegCloseKey(hKey);
     }
-
     return S_OK;
 }
 
