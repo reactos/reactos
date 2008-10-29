@@ -50,8 +50,10 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
   wc->pRowStart = NULL;
   wc->bOverflown = FALSE;
   wc->pLastSplittableRun = NULL;
+  wc->bWordWrap = wc->context->editor->bWordWrap;
   if (para->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND)) {
     wc->nAvailWidth = 0;
+    wc->bWordWrap = FALSE;
     if (para->member.para.nFlags & MEPF_ROWEND)
     {
       ME_Cell *cell = &ME_FindItemBack(para, diCell)->member.cell;
@@ -73,11 +75,11 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
 
     wc->nAvailWidth = cell->nWidth
         - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
-  } else if (wc->context->editor->bWordWrap) {
-    wc->nAvailWidth = wc->context->rcView.right - wc->context->rcView.left
-        - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
+    wc->bWordWrap = TRUE;
   } else {
-    wc->nAvailWidth = ~0u >> 1;
+    wc->nAvailWidth = wc->context->rcView.right - wc->context->rcView.left
+        - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin
+        - wc->context->editor->selofs;
   }
   wc->pt.x = wc->context->pt.x;
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
@@ -148,9 +150,9 @@ static void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
   assert(para->member.para.pFmt->dwMask & PFM_ALIGNMENT);
   align = para->member.para.pFmt->wAlignment;
   if (align == PFA_CENTER)
-    shift = (wc->nAvailWidth-width)/2;
+    shift = max((wc->nAvailWidth-width)/2, 0);
   if (align == PFA_RIGHT)
-    shift = wc->nAvailWidth-width;
+    shift = max(wc->nAvailWidth-width, 0);
   for (p = wc->pRowStart; p!=pEnd; p = p->next)
   {
     if (p->type==diRun) { /* FIXME add more run types */
@@ -377,7 +379,8 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
   }
 
   /* will current run fit? */
-  if (wc->pt.x + run->nWidth - wc->context->pt.x > wc->nAvailWidth)
+  if (wc->bWordWrap &&
+      wc->pt.x + run->nWidth - wc->context->pt.x > wc->nAvailWidth)
   {
     int loc = wc->context->pt.x + wc->nAvailWidth - wc->pt.x;
     /* total white run ? */
@@ -416,9 +419,11 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
     {
       if (run->nFlags & MERF_STARTWHITE)
       {
-          /* we had only spaces so far, so we must be on the first line of the
-           * paragraph, since no other lines of the paragraph start with spaces. */
-          assert(!wc->nRow);
+          /* We had only spaces so far, so we must be on the first line of the
+           * paragraph (or the first line after MERF_ENDROW forced the line
+           * break within the paragraph), since no other lines of the paragraph
+           * start with spaces. */
+
           /* The lines will only contain spaces, and the rest of the run will
            * overflow onto the next line. */
           wc->bOverflown = TRUE;
@@ -730,30 +735,31 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   return bModified;
 }
 
-void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor) {
+void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
+{
   ME_Context c;
+  RECT rc;
+  int ofs;
+  ME_DisplayItem *item;
 
   ME_InitContext(&c, editor, GetDC(editor->hWnd));
-  if (editor->bRedraw)
-  {
-    RECT rc = c.rcView;
-    int ofs = ME_GetYScrollPos(editor); 
-     
-    ME_DisplayItem *item = editor->pBuffer->pFirst;
-    while(item != editor->pBuffer->pLast) {
-      if (item->member.para.nFlags & MEPF_REPAINT) { 
-        rc.top = item->member.para.pt.y - ofs;
-        rc.bottom = item->member.para.pt.y + item->member.para.nHeight - ofs;
-        InvalidateRect(editor->hWnd, &rc, TRUE);
-      }
-      item = item->member.para.next_para;
-    }
-    if (editor->nTotalLength < editor->nLastTotalLength)
-    {
-      rc.top = editor->nTotalLength - ofs;
-      rc.bottom = editor->nLastTotalLength - ofs;
+  rc = c.rcView;
+  ofs = ME_GetYScrollPos(editor);
+
+  item = editor->pBuffer->pFirst;
+  while(item != editor->pBuffer->pLast) {
+    if (item->member.para.nFlags & MEPF_REPAINT) {
+      rc.top = item->member.para.pt.y - ofs;
+      rc.bottom = item->member.para.pt.y + item->member.para.nHeight - ofs;
       InvalidateRect(editor->hWnd, &rc, TRUE);
     }
+    item = item->member.para.next_para;
+  }
+  if (editor->nTotalLength < editor->nLastTotalLength)
+  {
+    rc.top = editor->nTotalLength - ofs;
+    rc.bottom = editor->nLastTotalLength - ofs;
+    InvalidateRect(editor->hWnd, &rc, TRUE);
   }
   ME_DestroyContext(&c, editor->hWnd);
 }

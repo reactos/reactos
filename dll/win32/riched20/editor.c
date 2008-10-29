@@ -101,6 +101,7 @@
   - EM_SETIMEOPTIONS 1.0asian
   - EM_SETLANGOPTIONS 2.0
   - EM_SETLIMITTEXT
+  - EM_SETMARGINS
   + EM_SETMODIFY (not sure if implementation is correct)
   - EM_SETOLECALLBACK
   + EM_SETOPTIONS (partially implemented)
@@ -1937,6 +1938,93 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
   return -1;
 }
 
+typedef struct tagME_GlobalDestStruct
+{
+  HGLOBAL hData;
+  int nLength;
+} ME_GlobalDestStruct;
+
+static DWORD CALLBACK ME_ReadFromHGLOBALUnicode(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
+{
+  ME_GlobalDestStruct *pData = (ME_GlobalDestStruct *)dwCookie;
+  int i;
+  WORD *pSrc, *pDest;
+
+  cb = cb >> 1;
+  pDest = (WORD *)lpBuff;
+  pSrc = (WORD *)GlobalLock(pData->hData);
+  for (i = 0; i<cb && pSrc[pData->nLength+i]; i++) {
+    pDest[i] = pSrc[pData->nLength+i];
+  }
+  pData->nLength += i;
+  *pcb = 2*i;
+  GlobalUnlock(pData->hData);
+  return 0;
+}
+
+static DWORD CALLBACK ME_ReadFromHGLOBALRTF(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
+{
+  ME_GlobalDestStruct *pData = (ME_GlobalDestStruct *)dwCookie;
+  int i;
+  BYTE *pSrc, *pDest;
+
+  pDest = lpBuff;
+  pSrc = (BYTE *)GlobalLock(pData->hData);
+  for (i = 0; i<cb && pSrc[pData->nLength+i]; i++) {
+    pDest[i] = pSrc[pData->nLength+i];
+  }
+  pData->nLength += i;
+  *pcb = i;
+  GlobalUnlock(pData->hData);
+  return 0;
+}
+
+static BOOL ME_Paste(ME_TextEditor *editor)
+{
+  DWORD dwFormat = 0;
+  EDITSTREAM es;
+  ME_GlobalDestStruct gds;
+  UINT nRTFFormat = RegisterClipboardFormatA("Rich Text Format");
+  UINT cf = 0;
+
+  if (IsClipboardFormatAvailable(nRTFFormat))
+    cf = nRTFFormat, dwFormat = SF_RTF;
+  else if (IsClipboardFormatAvailable(CF_UNICODETEXT))
+    cf = CF_UNICODETEXT, dwFormat = SF_TEXT|SF_UNICODE;
+  else
+    return FALSE;
+
+  if (!OpenClipboard(editor->hWnd))
+    return FALSE;
+  gds.hData = GetClipboardData(cf);
+  gds.nLength = 0;
+  es.dwCookie = (DWORD)&gds;
+  es.pfnCallback = dwFormat == SF_RTF ? ME_ReadFromHGLOBALRTF : ME_ReadFromHGLOBALUnicode;
+  ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es, FALSE);
+
+  CloseClipboard();
+  return TRUE;
+}
+
+static BOOL ME_Copy(ME_TextEditor *editor, CHARRANGE *range)
+{
+  LPDATAOBJECT dataObj = NULL;
+  HRESULT hr = S_OK;
+
+  if (editor->cPasswordMask)
+    return FALSE; /* Copying or Cutting masked text isn't allowed */
+
+  if(editor->lpOleCallback)
+    hr = IRichEditOleCallback_GetClipboardData(editor->lpOleCallback, range, RECO_COPY, &dataObj);
+  if(FAILED(hr) || !dataObj)
+    hr = ME_GetDataObject(editor, range, &dataObj);
+  if(SUCCEEDED(hr)) {
+    hr = OleSetClipboard(dataObj);
+    IDataObject_Release(dataObj);
+  }
+  return SUCCEEDED(hr) != 0;
+}
+
 /* helper to send a msg filter notification */
 static BOOL
 ME_FilterEvent(ME_TextEditor *editor, UINT msg, WPARAM* wParam, LPARAM* lParam)
@@ -2022,6 +2110,49 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
       ME_UpdateRepaint(editor);
       ME_SendRequestResize(editor, FALSE);
       return TRUE;
+    case 'A':
+      if (ctrl_is_down)
+      {
+        ME_SetSelection(editor, 0, -1);
+        return TRUE;
+      }
+      break;
+    case 'V':
+      if (ctrl_is_down)
+        return ME_Paste(editor);
+      break;
+    case 'C':
+    case 'X':
+      if (ctrl_is_down)
+      {
+        CHARRANGE range;
+        BOOL result;
+
+        ME_GetSelection(editor, &range.cpMin, &range.cpMax);
+        result = ME_Copy(editor, &range);
+        if (result && nKey == 'X')
+        {
+          ME_InternalDeleteText(editor, range.cpMin, range.cpMax-range.cpMin, FALSE);
+          ME_CommitUndo(editor);
+          ME_UpdateRepaint(editor);
+        }
+        return result;
+      }
+      break;
+    case 'Z':
+      if (ctrl_is_down)
+      {
+        ME_Undo(editor);
+        return TRUE;
+      }
+      break;
+    case 'Y':
+      if (ctrl_is_down)
+      {
+        ME_Redo(editor);
+        return TRUE;
+      }
+      break;
 
     default:
       if (nKey != VK_SHIFT && nKey != VK_CONTROL && nKey && nKey != VK_MENU)
@@ -2103,10 +2234,29 @@ static BOOL ME_SetCursor(ME_TextEditor *editor)
   POINT pt;
   BOOL isExact;
   int offset;
+  SCROLLBARINFO sbi;
   DWORD messagePos = GetMessagePos();
   pt.x = (short)LOWORD(messagePos);
   pt.y = (short)HIWORD(messagePos);
+
+  sbi.cbSize = sizeof(sbi);
+  GetScrollBarInfo(editor->hWnd, OBJID_HSCROLL, &sbi);
+  if (!(sbi.rgstate[0] & (STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN)) &&
+      PtInRect(&sbi.rcScrollBar, pt))
+  {
+      SetCursor(LoadCursorW(NULL, (WCHAR*)IDC_ARROW));
+      return TRUE;
+  }
+  sbi.cbSize = sizeof(sbi);
+  GetScrollBarInfo(editor->hWnd, OBJID_VSCROLL, &sbi);
+  if (!(sbi.rgstate[0] & (STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN)) &&
+      PtInRect(&sbi.rcScrollBar, pt))
+  {
+      SetCursor(LoadCursorW(NULL, (WCHAR*)IDC_ARROW));
+      return TRUE;
+  }
   ScreenToClient(editor->hWnd, &pt);
+
   if ((GetWindowLongW(editor->hWnd, GWL_STYLE) & ES_SELECTIONBAR) &&
       (pt.x < editor->selofs ||
        (editor->nSelectionType == stLine && GetCapture() == editor->hWnd)))
@@ -2209,8 +2359,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->nParagraphs = 1;
   ed->nLastSelStart = ed->nLastSelEnd = 0;
   ed->pLastSelStartPara = ed->pLastSelEndPara = ME_FindItemFwd(ed->pBuffer->pFirst, diParagraph);
-  ed->bRedraw = TRUE;
-  ed->bWordWrap = (GetWindowLongW(hWnd, GWL_STYLE) & WS_HSCROLL) ? FALSE : TRUE;
+  ed->bWordWrap = (GetWindowLongW(hWnd, GWL_STYLE) & (WS_HSCROLL|ES_AUTOHSCROLL)) ? FALSE : TRUE;
   ed->bHideSelection = FALSE;
   ed->nInvalidOfs = -1;
   ed->pfnWordBreak = NULL;
@@ -2250,48 +2399,6 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
 
   return ed;
 }
-
-typedef struct tagME_GlobalDestStruct
-{
-  HGLOBAL hData;
-  int nLength;
-} ME_GlobalDestStruct;
-
-static DWORD CALLBACK ME_ReadFromHGLOBALUnicode(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
-{
-  ME_GlobalDestStruct *pData = (ME_GlobalDestStruct *)dwCookie;
-  int i;
-  WORD *pSrc, *pDest;
-  
-  cb = cb >> 1;
-  pDest = (WORD *)lpBuff;
-  pSrc = (WORD *)GlobalLock(pData->hData);
-  for (i = 0; i<cb && pSrc[pData->nLength+i]; i++) {
-    pDest[i] = pSrc[pData->nLength+i];
-  }    
-  pData->nLength += i;
-  *pcb = 2*i;
-  GlobalUnlock(pData->hData);
-  return 0;
-}
-
-static DWORD CALLBACK ME_ReadFromHGLOBALRTF(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, LONG *pcb)
-{
-  ME_GlobalDestStruct *pData = (ME_GlobalDestStruct *)dwCookie;
-  int i;
-  BYTE *pSrc, *pDest;
-  
-  pDest = lpBuff;
-  pSrc = (BYTE *)GlobalLock(pData->hData);
-  for (i = 0; i<cb && pSrc[pData->nLength+i]; i++) {
-    pDest[i] = pSrc[pData->nLength+i];
-  }    
-  pData->nLength += i;
-  *pcb = i;
-  GlobalUnlock(pData->hData);
-  return 0;
-}
-
 
 void ME_DestroyEditor(ME_TextEditor *editor)
 {
@@ -2530,6 +2637,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
   UNSUPPORTED_MSG(EM_SETEDITSTYLE)
   UNSUPPORTED_MSG(EM_SETFONTSIZE)
   UNSUPPORTED_MSG(EM_SETLANGOPTIONS)
+  UNSUPPORTED_MSG(EM_SETMARGINS)
   UNSUPPORTED_MSG(EM_SETPALETTE)
   UNSUPPORTED_MSG(EM_SETTABSTOPS)
   UNSUPPORTED_MSG(EM_SETTYPOGRAPHYOPTIONS)
@@ -2741,8 +2849,9 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       ME_GetSelection(editor, &from, &to);
       style = ME_GetSelectionInsertStyle(editor);
       ME_InternalDeleteText(editor, from, to - from, FALSE);
-      if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
-          ME_StreamInRTFString(editor, 1, (char *)lParam);
+      if (pStruct->codepage != 1200 && lParam &&
+          (!strncmp((char *)lParam, "{\\rtf", 5) || !strncmp((char *)lParam, "{\\urtf}", 6)))
+        ME_StreamInRTFString(editor, 1, (char *)lParam);
       else ME_InsertTextFromCursor(editor, 0, wszText, len, style);
       ME_ReleaseStyle(style);
 
@@ -2750,8 +2859,9 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     }
     else {
       ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor), FALSE);
-      if (pStruct->codepage != 1200 && lParam && !strncmp((char *)lParam, "{\\rtf", 5))
-          ME_StreamInRTFString(editor, 0, (char *)lParam);
+      if (pStruct->codepage != 1200 && lParam &&
+          (!strncmp((char *)lParam, "{\\rtf", 5) || !strncmp((char *)lParam, "{\\urtf}", 6)))
+        ME_StreamInRTFString(editor, 0, (char *)lParam);
       else ME_InsertTextFromCursor(editor, 0, wszText, len, editor->pBuffer->pDefaultStyle);
       len = 1;
 
@@ -2785,11 +2895,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       editor->rgbBackColor = lParam;
       editor->hbrBackground = CreateSolidBrush(editor->rgbBackColor);
     }
-    if (editor->bRedraw)
-    {
-      InvalidateRect(hWnd, NULL, TRUE);
-      UpdateWindow(hWnd);
-    }
+    InvalidateRect(hWnd, NULL, TRUE);
+    UpdateWindow(hWnd);
     return lColor;
   }
   case EM_GETMODIFY:
@@ -3047,51 +3154,15 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return FALSE;
   }
   case WM_PASTE:
-  {    
-    DWORD dwFormat = 0;
-    EDITSTREAM es;
-    ME_GlobalDestStruct gds;
-    UINT nRTFFormat = RegisterClipboardFormatA("Rich Text Format");
-    UINT cf = 0;
-
-    if (IsClipboardFormatAvailable(nRTFFormat))
-      cf = nRTFFormat, dwFormat = SF_RTF;
-    else if (IsClipboardFormatAvailable(CF_UNICODETEXT))
-      cf = CF_UNICODETEXT, dwFormat = SF_TEXT|SF_UNICODE;
-    else
-      return 0;
-
-    if (!OpenClipboard(hWnd))
-      return 0;
-    gds.hData = GetClipboardData(cf);
-    gds.nLength = 0;
-    es.dwCookie = (DWORD)&gds;
-    es.pfnCallback = dwFormat == SF_RTF ? ME_ReadFromHGLOBALRTF : ME_ReadFromHGLOBALUnicode;
-    ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es, FALSE);
-
-    CloseClipboard();
+    ME_Paste(editor);
     return 0;
-  }
   case WM_CUT:
   case WM_COPY:
   {
-    LPDATAOBJECT dataObj = NULL;
     CHARRANGE range;
-    HRESULT hr = S_OK;
-
-    if (editor->cPasswordMask)
-      return 0; /* Copying or Cutting masked text isn't allowed */
-
     ME_GetSelection(editor, &range.cpMin, &range.cpMax);
-    if(editor->lpOleCallback)
-        hr = IRichEditOleCallback_GetClipboardData(editor->lpOleCallback, &range, RECO_COPY, &dataObj);
-    if(FAILED(hr) || !dataObj)
-        hr = ME_GetDataObject(editor, &range, &dataObj);
-    if(SUCCEEDED(hr)) {
-        hr = OleSetClipboard(dataObj);
-        IDataObject_Release(dataObj);
-    }
-    if (SUCCEEDED(hr) && msg == WM_CUT)
+
+    if (ME_Copy(editor, &range) && msg == WM_CUT)
     {
       ME_InternalDeleteText(editor, range.cpMin, range.cpMax-range.cpMin, FALSE);
       ME_CommitUndo(editor);
@@ -3472,18 +3543,15 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     if (wParam >= 0x40000)
         nCharOfs = lParam;
     nLength = ME_GetTextLength(editor);
-    
-    if (nCharOfs < nLength) { 
-        ME_RunOfsFromCharOfs(editor, nCharOfs, &pRun, &nOffset);
-        assert(pRun->type == diRun);
-        pt.y = pRun->member.run.pt.y;
-        pt.x = pRun->member.run.pt.x + ME_PointFromChar(editor, &pRun->member.run, nOffset);
-        pt.y += ME_GetParagraph(pRun)->member.para.pt.y;
-    } else {
-        pt.x = 0;
-        pt.y = editor->pBuffer->pLast->member.para.pt.y;
-    }
+    nCharOfs = min(nCharOfs, nLength);
+
+    ME_RunOfsFromCharOfs(editor, nCharOfs, &pRun, &nOffset);
+    assert(pRun->type == diRun);
+    pt.y = pRun->member.run.pt.y;
+    pt.x = pRun->member.run.pt.x + ME_PointFromChar(editor, &pRun->member.run, nOffset);
+    pt.y += ME_GetParagraph(pRun)->member.para.pt.y;
     pt.x += editor->selofs;
+    pt.x++; /* for some reason native offsets x by one */
 
     si.cbSize = sizeof(si);
     si.fMask = SIF_POS;
@@ -3581,7 +3649,6 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       goto do_default;
     break;
   case WM_PAINT:
-    if (editor->bRedraw)
     {
       HDC hDC;
       PAINTSTRUCT ps;
@@ -3604,14 +3671,11 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     return 0;
   case WM_ERASEBKGND:
   {
-    if (editor->bRedraw)
+    HDC hDC = (HDC)wParam;
+    RECT rc;
+    if (GetUpdateRect(hWnd,&rc,TRUE))
     {
-      HDC hDC = (HDC)wParam;
-      RECT rc;
-      if (GetUpdateRect(hWnd,&rc,TRUE))
-      {
-        FillRect(hDC, &rc, editor->hbrBackground);
-      }
+      FillRect(hDC, &rc, editor->hbrBackground);
     }
     return 1;
   }
@@ -3642,36 +3706,11 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
         MultiByteToWideChar(CP_ACP, 0, &charA, 1, &wstr, 1);
     }
 
-    switch (wstr)
-    {
-    case 1: /* Ctrl-A */
-      ME_SetSelection(editor, 0, -1);
-      return 0;
-    case 3: /* Ctrl-C */
-      SendMessageW(editor->hWnd, WM_COPY, 0, 0);
-      return 0;
-    }
-    
     if (GetWindowLongW(editor->hWnd, GWL_STYLE) & ES_READONLY) {
       MessageBeep(MB_ICONERROR);
       return 0; /* FIXME really 0 ? */
     }
 
-    switch (wstr)
-    {
-    case 22: /* Ctrl-V */
-      SendMessageW(editor->hWnd, WM_PASTE, 0, 0);
-      return 0;
-    case 24: /* Ctrl-X */
-      SendMessageW(editor->hWnd, WM_CUT, 0, 0);
-      return 0;
-    case 25: /* Ctrl-Y */
-      SendMessageW(editor->hWnd, EM_REDO, 0, 0);
-      return 0;
-    case 26: /* Ctrl-Z */
-      SendMessageW(editor->hWnd, EM_UNDO, 0, 0);
-      return 0;
-    }
     if (((unsigned)wstr)>=' '
         || (wstr=='\r' && (GetWindowLongW(hWnd, GWL_STYLE) & ES_MULTILINE))
         || wstr=='\t') {
@@ -3930,9 +3969,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
     ME_SendRequestResize(editor, TRUE);
     return 0;
   case WM_SETREDRAW:
-    if ((editor->bRedraw = wParam))
-      ME_RewrapRepaint(editor);
-    return 0;
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
   case WM_SIZE:
   {
     GetClientRect(hWnd, &editor->rcFormat);

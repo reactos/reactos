@@ -475,8 +475,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    LONG sy = 0;
    LONG DesX;
    LONG DesY;
-   PULONG DestBits;
-   LONG DifflDelta;
 
    LONG SrcZoomXHight;
    LONG SrcZoomXLow;
@@ -488,6 +486,8 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
    LONG sx_dec = 0;
    LONG sx_max;
+
+   ULONG color;
 
   DPRINT("DIB_8BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -517,11 +517,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     sy_max = DesSizeY;
     sy = SourceRect->top;
 
-    DestBits = (PULONG)((PBYTE)DestSurf->pvScan0 + (DestRect->left) +
-                               DestRect->top * DestSurf->lDelta);
-
-    DifflDelta = DestSurf->lDelta - DesSizeX ;
-
     switch(SourceSurf->iBitmapFormat)
     {
       case BMF_1BPP:
@@ -533,10 +528,10 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             sx_dec = 0;
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
-                                            DIB_1BPP_GetPixel(SourceSurf, sx, sy));
+                color = XLATEOBJ_iXlate(ColorTranslation,
+                                        DIB_1BPP_GetPixel(SourceSurf, sx, sy));
 
-                DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+                DIB_8BPP_PutPixel(DestSurf, DesX, DesY, color);
 
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
@@ -546,8 +541,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     sx_dec -= sx_max;
                 }
             }
-
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
             sy_dec += SrcZoomYLow;
@@ -568,10 +561,10 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             sx_dec = 0;
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
-                                            DIB_4BPP_GetPixel(SourceSurf, sx, sy));
+                color = XLATEOBJ_iXlate(ColorTranslation,
+                                        DIB_4BPP_GetPixel(SourceSurf, sx, sy));
 
-                DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+                DIB_8BPP_PutPixel(DestSurf, DesX, DesY, color);
 
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
@@ -581,8 +574,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     sx_dec -= sx_max;
                 }
             }
-
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
             sy_dec += SrcZoomYLow;
@@ -608,10 +599,10 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             sx_dec = 0;
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
-                                            DIB_16BPP_GetPixel(SourceSurf, sx, sy));
+                color = XLATEOBJ_iXlate(ColorTranslation,
+                                        DIB_16BPP_GetPixel(SourceSurf, sx, sy));
 
-                DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+                DIB_8BPP_PutPixel(DestSurf, DesX, DesY, color);
 
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
@@ -621,8 +612,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     sx_dec -= sx_max;
                 }
             }
-
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
             sy_dec += SrcZoomYLow;
@@ -641,10 +630,10 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             sx_dec = 0;
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
-                                            DIB_24BPP_GetPixel(SourceSurf, sx, sy));
+                color = XLATEOBJ_iXlate(ColorTranslation,
+                                        DIB_24BPP_GetPixel(SourceSurf, sx, sy));
 
-                DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+                DIB_8BPP_PutPixel(DestSurf, DesX, DesY, color);
 
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
@@ -654,8 +643,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     sx_dec -= sx_max;
                 }
             }
-
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
             sy_dec += SrcZoomYLow;
@@ -676,10 +663,10 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             sx_dec = 0;
             for (DesX=0; DesX<DesSizeX; DesX++)
             {
-                *DestBits = XLATEOBJ_iXlate(ColorTranslation,
+                color = XLATEOBJ_iXlate(ColorTranslation,
                                             DIB_32BPP_GetPixel(SourceSurf, sx, sy));
 
-                DestBits = (PULONG)((ULONG_PTR)DestBits + 1);
+                DIB_8BPP_PutPixel(DestSurf, DesX, DesY, color);
 
                 sx += SrcZoomXHight;
                 sx_dec += SrcZoomXLow;
@@ -689,8 +676,6 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                     sx_dec -= sx_max;
                 }
             }
-
-            DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
 
             sy += SrcZoomYHight;
             sy_dec += SrcZoomYLow;

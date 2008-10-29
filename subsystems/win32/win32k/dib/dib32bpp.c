@@ -726,7 +726,7 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
       default:
-      //DPRINT1("DIB_32BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
+        DPRINT1("DIB_32BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
 

@@ -94,32 +94,6 @@ AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
-{
-  OutputDebugStringW(L"winspool AddMonitorA stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
-{
-  OutputDebugStringW(L"winspool AddMonitorW stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
 
 
 /*
@@ -260,35 +234,6 @@ AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR Prin
 
   return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
-{
-  OutputDebugStringW(L"winspool AddPrintProvidorA stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
-{
-  OutputDebugStringW(L"winspool AddPrintProvidorW stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
 
 /*
  * @unimplemented
@@ -582,35 +527,6 @@ DeletePrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProcessor)
 
   return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
-{
-  OutputDebugStringW(L"winspool DeletePrintProvidorA stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
-{
-  OutputDebugStringW(L"winspool DeletePrintProvidorW stub called\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
 
 /*
  * @unimplemented

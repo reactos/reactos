@@ -287,6 +287,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   {
     ME_AddUndoItem(editor, diUndoSetParagraphFormat, tp);
     *tp->member.para.pFmt = *pNext->member.para.pFmt;
+    tp->member.para.border = pNext->member.para.border;
   }
 
   if (!editor->bEmulateVersion10) { /* v4.1 */

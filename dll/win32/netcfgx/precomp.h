@@ -34,6 +34,7 @@ typedef struct tagNetCfgComponentItem
     ULONG Status;               //Y
     BOOL bChanged;              //Y
     struct tagNetCfgComponentItem * pNext;
+    INetCfgComponentControl * pNCCC;
 }NetCfgComponentItem;
 
 /* netcfg_iface.c */

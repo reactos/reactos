@@ -4782,7 +4782,7 @@ InterlockedBitTestAndSet(IN LONG volatile *Base,
 	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"=r" (OldBit),"+m" (*Base)
 	                     :"Ir" (Bit)
 	                     : "memory");
 	return OldBit;
@@ -4800,7 +4800,7 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"=r" (OldBit),"+m" (*Base)
 	                     :"Ir" (Bit)
 	                     : "memory");
 	return OldBit;

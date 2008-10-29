@@ -293,7 +293,7 @@ NtGdiExtCreatePen(
    DWORD* pSafeStyle = NULL;
    HPEN hPen;
 
-   if (dwStyleCount < 0)  return 0;
+   if ((int)dwStyleCount < 0) return 0;
    if (dwStyleCount > 16)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

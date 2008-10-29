@@ -392,9 +392,10 @@ ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
   assert(table_row);
   assert(table_row->type == diParagraph);
   if (!editor->bEmulateVersion10) { /* v4.1 */
-    ME_DisplayItem *insertedCell, *para, *cell;
+    ME_DisplayItem *insertedCell, *para, *cell, *prevTableEnd;
     cell = ME_FindItemFwd(ME_GetTableRowStart(table_row), diCell);
-    run = ME_GetTableRowEnd(table_row)->member.para.next_para;
+    prevTableEnd = ME_GetTableRowEnd(table_row);
+    run = prevTableEnd->member.para.next_para;
     run = ME_FindItemFwd(run, diRun);
     editor->pCursors[0].pRun = run;
     editor->pCursors[0].nOffset = 0;
@@ -412,7 +413,8 @@ ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor,
       insertedCell->member.cell.nRightBoundary = cell->member.cell.nRightBoundary;
       insertedCell->member.cell.border = cell->member.cell.border;
     };
-    ME_InsertTableRowEndFromCursor(editor);
+    para = ME_InsertTableRowEndFromCursor(editor);
+    *para->member.para.pFmt = *prevTableEnd->member.para.pFmt;
     /* return the table row start for the inserted paragraph */
     return ME_FindItemFwd(cell, diParagraph)->member.para.next_para;
   } else { /* v1.0 - 3.0 */

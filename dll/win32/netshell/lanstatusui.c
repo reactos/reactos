@@ -336,7 +336,7 @@ AddIPAddressToListView(
         {
             ZeroMemory(&li, sizeof(LVITEMW));
             li.mask = LVIF_TEXT;
-            li.iItem = ListView_GetItemCount(hDlgCtrl);
+            li.iItem = Index;
             li.iSubItem = 0;
             li.pszText = L"";
             li.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
@@ -346,7 +346,7 @@ AddIPAddressToListView(
         {
             li.pszText = szBuffer;
             li.iSubItem = 1;
-            li.iItem = ListView_GetItemCount(hDlgCtrl);
+            li.iItem = Index++;
             SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
         }
         SubIndex++;
@@ -365,7 +365,7 @@ InsertItemToListView(
     ZeroMemory(&li, sizeof(LVITEMW));
     li.mask = LVIF_TEXT;
     li.iItem = ListView_GetItemCount(hDlgCtrl);
-    if (LoadStringW(netshell_hInstance, IDS_PHYSICAL_ADDRESS, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+    if (LoadStringW(netshell_hInstance, ResId, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
     {
         li.pszText = szBuffer;
         return (INT)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
@@ -443,10 +443,11 @@ LANStatusUiDetailsDlg(
                         SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
 
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_DEF_GATEWAY);
-                if (li.iItem >= 0)
-                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->DhcpServer.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
+                if (li.iItem >= 0 && pCurAdapter->GatewayList.IpAddress.String[0] != '0')
+                {
+                    if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->GatewayList.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
                         SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
-
+                }
 #if 0
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_OBTAINED);
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_LEASE_EXPIRES);
@@ -478,6 +479,12 @@ LANStatusUiDetailsDlg(
 #endif
             CoTaskMemFree(pAdapterInfo);
             break;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_CLOSE)
+            {
+                EndDialog(hwndDlg, FALSE);
+                break;
+            }
     }
     return FALSE;
 }
@@ -523,10 +530,12 @@ LANStatusUiAdvancedDlg(
             SendDlgItemMessageW(hwndDlg, IDC_DETAILSSUBNET, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
             dwIpAddr = ntohl(pContext->Gateway);
-            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
-                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
-            SendDlgItemMessageW(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)szBuffer);
-
+            if (dwIpAddr)
+            {
+                swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                         THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+                SendDlgItemMessageW(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)szBuffer);
+            }
             return TRUE;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_DETAILS)

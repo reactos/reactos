@@ -4,6 +4,8 @@
 	<xi:include href="baseaddress.rbuild" />
 
 	<define name="__REACTOS__" />
+	<define name="__REACTOS__" host="true" />
+
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>
 		<define name="_SEH_ENABLE_TRACE" />
@@ -73,6 +75,11 @@
 	<include root="intermediate">include/reactos</include>
 	<include root="intermediate">include/reactos/mc</include>
 	<include>include/reactos/libs</include>
+
+	<include host="true">include</include>
+	<include host="true" root="intermediate">include</include>
+	<include host="true">include/reactos</include>
+	<include host="true">include/reactos/wine</include>
 
 	<directory name="base">
 		<xi:include href="base/base.rbuild" />

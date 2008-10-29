@@ -1,8 +1,6 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
-#include "config.h"
-
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>

@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/surface/createsurface.c
- * PURPOSE:              IDirectDrawSurface7 Creation
+ * PURPOSE:              IDirectDrawSurface Creation
  * PROGRAMMER:           Magnus Olsen
  *
  */
@@ -14,10 +14,9 @@
 
 
 /*
- * all param have been checked if they are vaild before they are call to
- * Internal_CreateSurface, if not please fix the code in the functions
- * call to Internal_CreateSurface, ppSurf,pDDSD,pDDraw  are being vaildate in
- * Internal_CreateSurface
+* All parameters must have been checked if they are valid before they are passed to Internal_CreateSurface.
+* If not please fix the code in the functions which call Internal_CreateSurface.
+* ppSurf,pDDSD,pDDraw are being validated in Internal_CreateSurface.
  */
 
 HRESULT
@@ -29,15 +28,16 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     LPDDRAWI_DDRAWSURFACE_INT ThisSurfInt;
     LPDDRAWI_DDRAWSURFACE_LCL ThisSurfLcl;
-    LPDDRAWI_DDRAWSURFACE_GBL ThisSurfaceGbl;
-    LPDDRAWI_DDRAWSURFACE_MORE  ThisSurfaceMore;
+    LPDDRAWI_DDRAWSURFACE_GBL ThisSurfGbl;
+    LPDDRAWI_DDRAWSURFACE_MORE ThisSurfMore;
 
-    LPDDRAWI_DDRAWSURFACE_INT * slist_int;
-    LPDDRAWI_DDRAWSURFACE_LCL * slist_lcl;
-    LPDDRAWI_DDRAWSURFACE_GBL * slist_gbl;
-    LPDDRAWI_DDRAWSURFACE_MORE * slist_more;
+    LPDDRAWI_DDRAWSURFACE_INT * slist_int = NULL;
+    LPDDRAWI_DDRAWSURFACE_LCL * slist_lcl = NULL;
+    LPDDRAWI_DDRAWSURFACE_GBL * slist_gbl = NULL;
+    LPDDRAWI_DDRAWSURFACE_MORE * slist_more = NULL;
     DWORD num_of_surf=1;
     DWORD count;
+    HRESULT ret;
 
     if(pDDraw->lpLcl->dwLocalFlags != DDRAWILCL_SETCOOPCALLED)
     {
@@ -87,22 +87,23 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         pDDSD->dwFlags = pDDSD->dwFlags | DDSD_LPSURFACE;
     }
 
-    /* FIXME count our how many surface we need */
+    /* FIXME count how many surfaces we need */
 
     DxHeapMemAlloc(slist_int, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_INT ) );
     if( slist_int == NULL)
     {
-        return DDERR_OUTOFMEMORY;
+        ret = DDERR_OUTOFMEMORY;
+        goto cleanup;
     }
 
     DxHeapMemAlloc(slist_lcl, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_LCL ) );
     if( slist_lcl == NULL )
     {
-        DxHeapMemFree(slist_int);
-        return DDERR_OUTOFMEMORY;
+        ret = DDERR_OUTOFMEMORY;
+        goto cleanup;
     }
 
-    /* for more easy to free the memory if something goes wrong */
+    /* keep pointers to all gbl surfs to be able to free them on error */
     DxHeapMemAlloc(slist_gbl, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_GBL ) );
     if( slist_gbl == NULL )
     {
@@ -110,7 +111,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_OUTOFMEMORY;
     }
 
-    /* for more easy to free the memory if something goes wrong */
+    /* keep pointers to all more surfs to be able to free them on error */
     DxHeapMemAlloc(slist_more, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_MORE ) );
     if( slist_more == NULL )
     {
@@ -120,79 +121,79 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     for( count=0; count < num_of_surf; count++ )
     {
-        /* Alloc the surface interface and need members */
+        /* Allocate the surface interface and needed members */
         DxHeapMemAlloc(ThisSurfInt,  sizeof( DDRAWI_DDRAWSURFACE_INT ) );
         if( ThisSurfInt == NULL )
         {
-            /* Fixme free the memory */
-            return DDERR_OUTOFMEMORY;
+            ret = DDERR_OUTOFMEMORY;
+            goto cleanup;
         }
 
         DxHeapMemAlloc(ThisSurfLcl,  sizeof( DDRAWI_DDRAWSURFACE_LCL ) );
         if( ThisSurfLcl == NULL )
         {
-            /* Fixme free the memory */
-            return DDERR_OUTOFMEMORY;
+            ret = DDERR_OUTOFMEMORY;
+            goto cleanup;
         }
 
-        DxHeapMemAlloc(ThisSurfaceGbl,  sizeof( DDRAWI_DDRAWSURFACE_GBL ) );
-        if( ThisSurfaceGbl == NULL )
+        DxHeapMemAlloc(ThisSurfGbl,  sizeof( DDRAWI_DDRAWSURFACE_GBL ) );
+        if( ThisSurfGbl == NULL )
         {
-            /* Fixme free the memory */
-            return DDERR_OUTOFMEMORY;
+            ret = DDERR_OUTOFMEMORY;
+            goto cleanup;
         }
 
-        DxHeapMemAlloc(ThisSurfaceMore, sizeof( DDRAWI_DDRAWSURFACE_MORE ) );
-        if( ThisSurfaceMore == NULL )
+        DxHeapMemAlloc(ThisSurfMore, sizeof( DDRAWI_DDRAWSURFACE_MORE ) );
+        if( ThisSurfMore == NULL )
         {
-            /* Fixme free the memory */
-            return DDERR_OUTOFMEMORY;
+            ret = DDERR_OUTOFMEMORY;
+            goto cleanup;
         }
 
-        /* setup a list only one we really need is  slist_lcl
-          rest of slist shall be release before a return */
+        /* setup lists, really needed are slist_lcl, slist_int
+          other slists should be released on return */
 
         slist_int[count] = ThisSurfInt;
         slist_lcl[count] = ThisSurfLcl;
-        slist_gbl[count] = ThisSurfaceGbl;
-        slist_more[count] = ThisSurfaceMore;
+        slist_gbl[count] = ThisSurfGbl;
+        slist_more[count] = ThisSurfMore;
 
         /* Start now fill in the member as they shall look like before call to createsurface */
 
         ThisSurfInt->lpLcl = ThisSurfLcl;
-        ThisSurfLcl->lpGbl = ThisSurfaceGbl;
+        ThisSurfLcl->lpGbl = ThisSurfGbl;
 
         ThisSurfLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
-        ThisSurfaceGbl->lpDD = pDDraw->lpLcl->lpGbl;
-        ThisSurfaceGbl->lpDDHandle = pDDraw->lpLcl->lpGbl;
+        ThisSurfGbl->lpDD = pDDraw->lpLcl->lpGbl;
+        ThisSurfGbl->lpDDHandle = pDDraw->lpLcl->lpGbl;
 
         /* FIXME ? */
-        ThisSurfaceGbl->dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+        ThisSurfGbl->dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
 
         if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
         {
-            ThisSurfaceGbl->wWidth  = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayWidth;
-            ThisSurfaceGbl->wHeight = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayHeight;
-            ThisSurfaceGbl->lPitch  = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
-            ThisSurfaceGbl->dwLinearSize = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
+            ThisSurfGbl->wWidth  = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+            ThisSurfGbl->wHeight = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+            ThisSurfGbl->lPitch  = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
+            ThisSurfGbl->dwLinearSize = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
 
 
-            ThisSurfaceMore->dmiDDrawReserved7.wWidth = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayWidth;
-            ThisSurfaceMore->dmiDDrawReserved7.wHeight = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayHeight;
-            ThisSurfaceMore->dmiDDrawReserved7.wBPP    = pDDraw->lpLcl->lpGbl->dwMonitorFrequency;
+            ThisSurfMore->dmiDDrawReserved7.wWidth = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+            ThisSurfMore->dmiDDrawReserved7.wHeight = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+            ThisSurfMore->dmiDDrawReserved7.wBPP    = pDDraw->lpLcl->lpGbl->dwMonitorFrequency;
 
             /* FIXME  ThisSurfaceMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop */
-            ThisSurfaceMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop = 1;
+            ThisSurfMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop = 1;
             pDDraw->lpLcl->lpPrimary = ThisSurfInt;
             Main_DirectDraw_AddRef(pDDraw);
         }
         else
         {
-            ThisSurfaceGbl->wWidth  = (WORD)pDDSD->dwWidth;
-            ThisSurfaceGbl->wHeight = (WORD)pDDSD->dwHeight;
-            ThisSurfaceGbl->lPitch  = pDDSD->lPitch;
-            ThisSurfaceGbl->dwLinearSize = pDDSD->lPitch;
+            ThisSurfGbl->wWidth  = (WORD)pDDSD->dwWidth;
+            ThisSurfGbl->wHeight = (WORD)pDDSD->dwHeight;
+            ThisSurfGbl->lPitch  = pDDSD->lPitch;
+            ThisSurfGbl->dwLinearSize = pDDSD->lPitch;
         }
 
         if(pDDraw->lpVtbl == &DirectDraw7_Vtable)
@@ -213,14 +214,15 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         }
         else
         {
-            return DDERR_NOTINITIALIZED;
+            ret =  DDERR_NOTINITIALIZED;
+            goto cleanup;
         }
 
-        ThisSurfLcl->lpSurfMore = ThisSurfaceMore;
-        ThisSurfaceMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-        ThisSurfaceMore->lpDD_int = pDDraw;
-        ThisSurfaceMore->lpDD_lcl = pDDraw->lpLcl;
-        ThisSurfaceMore->slist = slist_lcl;
+        ThisSurfLcl->lpSurfMore = ThisSurfMore;
+        ThisSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+        ThisSurfMore->lpDD_int = pDDraw;
+        ThisSurfMore->lpDD_lcl = pDDraw->lpLcl;
+        ThisSurfMore->slist = slist_lcl;
 
         ThisSurfLcl->dwProcessId = GetCurrentProcessId();
 
@@ -241,37 +243,73 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
     mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
 
-    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED)
+    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
     {
-        DX_STUB_str("mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED fail");
-        return DDERR_NOTINITIALIZED;
+        DX_STUB_str("mDdCanCreateSurface failed with DDHAL_DRIVER_NOTHANDLED.");
+        ret = DDERR_NOTINITIALIZED;
+        goto cleanup;
     }
 
     if (mDdCanCreateSurface.ddRVal != DD_OK)
     {
-        DX_STUB_str("mDdCanCreateSurface fail");
-        return DDERR_NOTINITIALIZED;
+        DX_STUB_str("mDdCanCreateSurface failed.");
+        ret = mDdCanCreateSurface.ddRVal;
+        goto cleanup;
     }
 
     mDdCreateSurface.lpDD = pDDraw->lpLcl->lpGbl;
     mDdCreateSurface.CreateSurface = pDDraw->lpLcl->lpGbl->lpDDCBtmp->HALDD.CreateSurface;
-    mDdCreateSurface.ddRVal =  DDERR_GENERIC;
+    mDdCreateSurface.ddRVal = DDERR_GENERIC;
     mDdCreateSurface.dwSCnt = num_of_surf;
     mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
     mDdCreateSurface.lplpSList = slist_lcl;
 
     if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
     {
-        return DDERR_NOTINITIALIZED;
+        DX_STUB_str("mDdCreateSurface failed with DDHAL_DRIVER_NOTHANDLED.");
+        ret = DDERR_NOTINITIALIZED;
+        goto cleanup;
     }
 
     if (mDdCreateSurface.ddRVal != DD_OK)
     {
-        return mDdCreateSurface.ddRVal;
+        DX_STUB_str("mDdCreateSurface failed.");
+        ret = mDdCreateSurface.ddRVal;
+        goto cleanup;
     }
 
+    /* free unneeded slists */
+    if (slist_more != NULL)
+        DxHeapMemFree(slist_more);
+    if (slist_gbl != NULL)
+        DxHeapMemFree(slist_gbl);
+
     *ppSurf = (LPDDRAWI_DDRAWSURFACE_INT) &slist_int[0]->lpVtbl;
+        
     return DD_OK;
+
+cleanup:
+    for(count = 0; count < num_of_surf; count++)
+    {
+        if (slist_more[count] != NULL) 
+            DxHeapMemFree(slist_more[count]);
+        if (slist_gbl[count] != NULL) 
+            DxHeapMemFree(slist_gbl[count]);
+        if (slist_lcl[count] != NULL) 
+            DxHeapMemFree(slist_lcl[count]);
+        if (slist_int[count] != NULL) 
+            DxHeapMemFree(slist_int[count]);
+    }
+    if (slist_more != NULL) 
+        DxHeapMemFree(slist_more);
+    if (slist_gbl != NULL) 
+        DxHeapMemFree(slist_gbl);
+    if (slist_lcl != NULL) 
+        DxHeapMemFree(slist_lcl);
+    if (slist_int != NULL) 
+        DxHeapMemFree(slist_int);
+
+    return ret;
 }
 
 

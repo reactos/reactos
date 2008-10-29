@@ -147,6 +147,8 @@ void ME_Repaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
     FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
+  if (!IsWindowVisible(editor->hWnd))
+    return;
   if (!editor->bEmulateVersion10 || (editor->nEventMask & ENM_UPDATE))
     ME_SendOldNotify(editor, EN_UPDATE);
   UpdateWindow(editor->hWnd);
@@ -159,7 +161,6 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   BOOL wrappedParagraphs;
 
   wrappedParagraphs = ME_WrapMarkedParagraphs(editor);
-  if (!editor->bRedraw) return;
   if (wrappedParagraphs)
     ME_UpdateScrollBar(editor);
   
@@ -185,12 +186,9 @@ ME_RewrapRepaint(ME_TextEditor *editor)
    * looks, but not content. Like resizing. */
   
   ME_MarkAllForWrapping(editor);
-  if (editor->bRedraw)
-  {
-    ME_WrapMarkedParagraphs(editor);
-    ME_UpdateScrollBar(editor);
-    ME_Repaint(editor);
-  }
+  ME_WrapMarkedParagraphs(editor);
+  ME_UpdateScrollBar(editor);
+  ME_Repaint(editor);
 }
 
 int ME_twips2pointsX(ME_Context *c, int x)
@@ -1074,17 +1072,14 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
       si.nPos = 0;
   }
   
-  nNewPos = SetScrollInfo(editor->hWnd, SB_VERT, &si, editor->bRedraw);
+  nNewPos = SetScrollInfo(editor->hWnd, SB_VERT, &si, TRUE);
   editor->vert_si.nPos = nNewPos;
   nActualScroll = nOrigPos - nNewPos;
-  if (editor->bRedraw)
-  {
-    if (abs(nActualScroll) > editor->sizeWindow.cy)
-      InvalidateRect(editor->hWnd, NULL, TRUE);
-    else
-      ScrollWindowEx(editor->hWnd, 0, nActualScroll, NULL, NULL, NULL, NULL, SW_INVALIDATE);
-    ME_Repaint(editor);
-  }
+  if (abs(nActualScroll) > editor->sizeWindow.cy)
+    InvalidateRect(editor->hWnd, NULL, TRUE);
+  else
+    ScrollWindowEx(editor->hWnd, 0, nActualScroll, NULL, NULL, NULL, NULL, SW_INVALIDATE);
+  ME_Repaint(editor);
   
   hWnd = editor->hWnd;
   winStyle = GetWindowLongW(hWnd, GWL_STYLE);
@@ -1099,7 +1094,7 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
 }
 
  
- void ME_UpdateScrollBar(ME_TextEditor *editor)
+void ME_UpdateScrollBar(ME_TextEditor *editor)
 { 
   /* Note that this is the only function that should ever call SetScrolLInfo
    * with SIF_PAGE or SIF_RANGE. SetScrollPos and SetScrollRange should never

@@ -221,10 +221,6 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->LocalAddress );
     if( FCB->RemoteAddress )
 	ExFreePool( FCB->RemoteAddress );
-    if( FCB->ListenIrp.ConnectionReturnInfo )
-	ExFreePool( FCB->ListenIrp.ConnectionReturnInfo );
-    if( FCB->ListenIrp.ConnectionCallInfo )
-	ExFreePool( FCB->ListenIrp.ConnectionCallInfo );
     if( FCB->TdiDeviceName.Buffer )
 	ExFreePool(FCB->TdiDeviceName.Buffer);
 

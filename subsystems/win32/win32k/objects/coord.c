@@ -404,6 +404,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
                           1);
             UnsafePoint->x = Dc_Attr->ptlViewportOrg.x;
             UnsafePoint->y = Dc_Attr->ptlViewportOrg.y;
+            if ( Dc_Attr->dwLayout & LAYOUT_RTL ) UnsafePoint->x = -UnsafePoint->x;
         }
         _SEH_HANDLE
         {
@@ -419,6 +420,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 	  }
     }
 
+  if ( Dc_Attr->dwLayout & LAYOUT_RTL ) XOffset = -XOffset;
   Dc_Attr->ptlViewportOrg.x += XOffset;
   Dc_Attr->ptlViewportOrg.y += YOffset;
   DC_UpdateXforms(dc);

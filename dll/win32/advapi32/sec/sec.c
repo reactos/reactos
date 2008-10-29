@@ -607,36 +607,4 @@ EncryptFileA(LPCSTR lpFileName)
     return ret;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR pSecurityDescriptor,
-                                                     DWORD dword,
-                                                     SECURITY_INFORMATION SecurityInformation,
-                                                     LPWSTR *lpwstr,
-                                                     PULONG pulong)
-{
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR pSecurityDescriptor,
-                                                     DWORD dword,
-                                                     SECURITY_INFORMATION SecurityInformation,
-                                                     LPSTR *lpstr,
-                                                     PULONG pulong)
-{
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
 /* EOF */

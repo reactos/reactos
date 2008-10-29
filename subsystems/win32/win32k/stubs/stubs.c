@@ -905,6 +905,19 @@ EngQueryDeviceAttribute(
 /*
  * @unimplemented
  */
+LARGE_INTEGER
+APIENTRY
+EngQueryFileTimeStamp(IN LPWSTR FileName)
+{
+   LARGE_INTEGER FileTime;
+   FileTime.QuadPart = 0;
+   UNIMPLEMENTED;
+   return FileTime;
+}
+
+/*
+ * @unimplemented
+ */
 LONG APIENTRY
 EngReadStateEvent(
    IN PEVENT Event)
