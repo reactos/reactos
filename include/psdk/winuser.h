@@ -1544,12 +1544,6 @@ extern "C" {
 #define UIS_CLEAR 2
 #define UIS_INITIALIZE 3
 
-#define UISF_HIDEFOCUS 0x1
-#define UISF_HIDEACCEL 0x2
-#if (WINVER >= 0x0501)
-#define UISF_ACTIVE 0x4
-#endif
-
 #endif
 
 #define PBT_APMQUERYSUSPEND 0x0000

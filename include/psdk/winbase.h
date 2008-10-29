@@ -4,6 +4,8 @@
 #pragma GCC system_header
 #endif
 
+#include <intrin.h>
+
 #if !defined(_KERNEL32_)
 #define WINBASEAPI DECLSPEC_IMPORT
 #else
