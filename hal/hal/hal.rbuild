@@ -9,7 +9,6 @@
 		<define name="_NTHAL_" />
 		<file>hal.c</file>
 		<file>hal.rc</file>
-		<file>hal.spec</file>
 	</module>
     </if>
     <if property="ARCH" value="i386">
@@ -20,7 +19,6 @@
 		<define name="_NTHAL_" />
 		<file>hal.c</file>
 		<file>hal.rc</file>
-		<file>hal.spec</file>
 	</module>
     </if>
 	<if property="ARCH" value="i386">
