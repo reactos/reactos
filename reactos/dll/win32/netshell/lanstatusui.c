@@ -429,9 +429,11 @@ LANStatusUiDetailsDlg(
             {
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_PHYSICAL_ADDRESS);
                 if (li.iItem >= 0)
-                    if (MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pCurAdapter->Address, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
-                        SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
-
+                {
+                    swprintf(szBuffer, L"%02x-%02x-%02x-%02x-%02x-%02x",pCurAdapter->Address[0], pCurAdapter->Address[1],
+                             pCurAdapter->Address[2], pCurAdapter->Address[3], pCurAdapter->Address[4], pCurAdapter->Address[5]);
+                    SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
+                }
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_IP_ADDRESS);
                 if (li.iItem >= 0)
                     if (MultiByteToWideChar(CP_ACP, 0, pCurAdapter->IpAddressList.IpAddress.String, -1, szBuffer, sizeof(szBuffer)/sizeof(WCHAR)))
