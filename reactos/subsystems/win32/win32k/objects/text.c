@@ -13,23 +13,29 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL
-FASTCALL
-ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs);
-
-BOOL
-FASTCALL
-TextIntGetTextExtentPoint(PDC dc,
-                          PTEXTOBJ TextObj,
-                          LPCWSTR String,
-                          int Count,
-                          int MaxExtent,
-                          LPINT Fit,
-                          LPINT Dx,
-                          LPSIZE Size);
-
-
 /** Functions ******************************************************************/
+
+DWORD
+APIENTRY
+NtGdiGetCharSet(HDC hDC)
+{
+  PDC Dc;
+  PDC_ATTR Dc_Attr;
+  DWORD cscp = IntGdiGetCharSet(hDC);
+  // If here, update everything!
+  Dc = DC_LockDc(hDC);
+  if (!Dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+  Dc_Attr = Dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+  Dc_Attr->iCS_CP = cscp;
+  Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
+  DC_UnlockDc( Dc );
+  return cscp;
+}
 
 BOOL
 APIENTRY
@@ -66,6 +72,55 @@ NtGdiGetRasterizerCaps(
      }
   }
   return FALSE;
+}
+
+INT
+APIENTRY
+NtGdiGetTextCharsetInfo(
+    IN HDC hdc,
+    OUT OPTIONAL LPFONTSIGNATURE lpSig,
+    IN DWORD dwFlags)
+{
+  PDC Dc;
+  INT Ret;
+  FONTSIGNATURE fsSafe;
+  PFONTSIGNATURE pfsSafe = &fsSafe;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  Dc = DC_LockDc(hdc);
+  if (!Dc)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return DEFAULT_CHARSET;
+  }
+
+  if (!lpSig) pfsSafe = NULL;
+
+  Ret = ftGdiGetTextCharsetInfo( Dc, pfsSafe, dwFlags);
+
+  if (lpSig)
+  {
+     _SEH_TRY
+     {
+         ProbeForWrite( lpSig,
+                        sizeof(FONTSIGNATURE),
+                        1);
+         RtlCopyMemory(lpSig, pfsSafe, sizeof(FONTSIGNATURE));
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         return DEFAULT_CHARSET;
+      }
+  }
+  DC_UnlockDc(Dc);
+  return Ret;
 }
 
 W32KAPI
@@ -296,6 +351,44 @@ NtGdiGetTextFaceW(
    }
 
    return Count;
+}
+
+W32KAPI
+BOOL
+APIENTRY
+NtGdiGetTextMetricsW(
+    IN HDC hDC,
+    OUT TMW_INTERNAL * pUnsafeTmwi,
+    IN ULONG cj
+)
+{
+  TMW_INTERNAL Tmwi;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if ( cj <= sizeof(TMW_INTERNAL) )
+  {
+     if (ftGdiGetTextMetricsW(hDC,&Tmwi))
+     {
+        _SEH_TRY
+        {
+           ProbeForWrite(pUnsafeTmwi, cj, 1);
+           RtlCopyMemory(pUnsafeTmwi,&Tmwi,cj);
+        }
+       _SEH_HANDLE
+        {
+           Status = _SEH_GetExceptionCode();
+        }
+       _SEH_END
+
+        if (!NT_SUCCESS(Status))
+        {
+           SetLastNtError(Status);
+           return FALSE;
+        }
+        return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /* EOF */

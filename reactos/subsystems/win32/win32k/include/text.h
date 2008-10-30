@@ -84,6 +84,14 @@ VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
+ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);
+INT FASTCALL IntGetOutlineTextMetrics(PFONTGDI,UINT,OUTLINETEXTMETRICW *);
+BOOL FASTCALL ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS);
+BOOL FASTCALL TextIntGetTextExtentPoint(PDC,PTEXTOBJ,LPCWSTR,int,int,LPINT,LPINT,LPSIZE);
+DWORD FASTCALL IntGdiGetCharSet(HDC);
+BOOL FASTCALL ftGdiGetTextMetricsW(HDC,PTMW_INTERNAL);
+DWORD FASTCALL ftGetFontLanguageInfo(PDC);
+INT FASTCALL ftGdiGetTextCharsetInfo(PDC,PFONTSIGNATURE,DWORD);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

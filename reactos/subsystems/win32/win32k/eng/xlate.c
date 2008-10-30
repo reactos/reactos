@@ -518,6 +518,8 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 
    XlateGDI = ObjToGDI(XlateObj, XLATE);
 
+   if (!XlateGDI) return;
+
    if ((XlateObj->flXlate & XO_TABLE) &&
        XlateObj->pulXlate != NULL)
    {

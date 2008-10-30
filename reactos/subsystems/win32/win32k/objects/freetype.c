@@ -22,7 +22,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 FT_Library  library;
 
 typedef struct _FONT_ENTRY {
@@ -43,8 +42,6 @@ static BOOL RenderingEnabled = TRUE;
 #define MAX_FONT_CACHE 256
 UINT Hits;
 UINT Misses;
-
-SHORT ftLanguageID = 0;
 
 typedef struct _FONT_CACHE_ENTRY {
   LIST_ENTRY ListEntry;
@@ -243,6 +240,7 @@ IntLoadSystemFonts(VOID)
       ZwClose(hDirectory);
    }
 }
+
 
 /*
  * IntGdiAddFontResource
@@ -446,52 +444,6 @@ IntGetFontRenderMode(LOGFONTW *logfont)
   return FT_RENDER_MODE_NORMAL;
 }
 
-INT
-APIENTRY
-NtGdiAddFontResourceW(
-    IN WCHAR *pwszFiles,
-    IN ULONG cwc,
-    IN ULONG cFiles,
-    IN FLONG fl,
-    IN DWORD dwPidTid,
-    IN OPTIONAL DESIGNVECTOR *pdv)
-{
-  UNICODE_STRING SafeFileName;
-  PWSTR src;
-  NTSTATUS Status;
-  int Ret;
-
-  /* FIXME - Protect with SEH? */
-  RtlInitUnicodeString(&SafeFileName, pwszFiles);
-
-  /* Reserve for prepending '\??\' */
-  SafeFileName.Length += 4 * sizeof(WCHAR);
-  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
-
-  src = SafeFileName.Buffer;
-  SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
-  if(!SafeFileName.Buffer)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-
-  /* Prepend '\??\' */
-  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
-
-  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
-  if(!NT_SUCCESS(Status))
-  {
-    ExFreePool(SafeFileName.Buffer);
-    SetLastNtError(Status);
-    return 0;
-  }
-
-  Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
-
-  ExFreePool(SafeFileName.Buffer);
-  return Ret;
-}
 
 NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
@@ -515,63 +467,6 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
   TEXTOBJ_UnlockText(TextObj);
 
   return STATUS_SUCCESS;
-}
-
-HFONT
-STDCALL
-NtGdiHfontCreate(
-  IN PENUMLOGFONTEXDVW pelfw,
-  IN ULONG cjElfw,
-  IN LFTYPE lft,
-  IN FLONG  fl,
-  IN PVOID pvCliData )
-{
-  ENUMLOGFONTEXDVW SafeLogfont;
-  HFONT hNewFont;
-  PTEXTOBJ TextObj;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  if (!pelfw)
-  {
-      return NULL;
-  }
-
-  _SEH_TRY
-  {
-      ProbeForRead(pelfw, sizeof(ENUMLOGFONTEXDVW), 1);
-      RtlCopyMemory(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
-  }
-  _SEH_HANDLE
-  {
-      Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END
-
-  if (!NT_SUCCESS(Status))
-  {
-      return NULL;
-  }
-
-  TextObj = TEXTOBJ_AllocTextWithHandle();
-  if (!TextObj)
-  {
-      return NULL;
-  }
-  hNewFont = TextObj->BaseObject.hHmgr;
-
-  RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
-
-  if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
-      SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
-  {
-    /* this should really depend on whether GM_ADVANCED is set */
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-  }
-  TEXTOBJ_UnlockText(TextObj);
-
-  return hNewFont;
-
 }
 
 /*************************************************************************
@@ -1329,7 +1224,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
   {
      lprs->nSize = sizeof(RASTERIZER_STATUS);
      lprs->wFlags = TT_AVAILABLE | TT_ENABLED;
-     lprs->nLanguageID = ftLanguageID;
+     lprs->nLanguageID = gusLanguageID;
      return TRUE;
   }
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1413,7 +1308,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
 }
 
 FT_Glyph STDCALL
-NtGdiGlyphCacheGet(
+ftGdiGlyphCacheGet(
    FT_Face Face,
    INT GlyphIndex,
    INT Height)
@@ -1462,7 +1357,7 @@ NtGdiGlyphCacheGet(
 }
 
 FT_Glyph STDCALL
-NtGdiGlyphCacheSet(
+ftGdiGlyphCacheSet(
    FT_Face Face,
    INT GlyphIndex,
    INT Height,
@@ -1842,7 +1737,7 @@ NtGdiExtTextOutW(
          else
            glyph_index = FT_Get_Char_Index(face, *TempText);
 
-         if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
+         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
          TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
          {
              error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -1852,7 +1747,7 @@ NtGdiExtTextOutW(
              }
 
              glyph = face->glyph;
-             realglyph = NtGdiGlyphCacheSet(face, glyph_index,
+             realglyph = ftGdiGlyphCacheSet(face, glyph_index,
                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
              if (!realglyph)
              {
@@ -1903,7 +1798,7 @@ NtGdiExtTextOutW(
       else
         glyph_index = FT_Get_Char_Index(face, *String);
 
-      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
+      if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
       {
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -1914,7 +1809,7 @@ NtGdiExtTextOutW(
            goto fail;
         }
         glyph = face->glyph;
-        realglyph = NtGdiGlyphCacheSet(face,
+        realglyph = ftGdiGlyphCacheSet(face,
                                        glyph_index,
                                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
                                        glyph,
@@ -2591,14 +2486,14 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 ULONG
 FASTCALL
 ftGdiGetGlyphOutline(
-    IN PDC dc,
-    IN WCHAR wch,
-    IN UINT iFormat,
-    OUT LPGLYPHMETRICS pgm,
-    IN ULONG cjBuf,
-    OUT OPTIONAL PVOID UnsafeBuf,
-    IN LPMAT2 pmat2,
-    IN BOOL bIgnoreRotation)
+    PDC dc,
+    WCHAR wch,
+    UINT iFormat,
+    LPGLYPHMETRICS pgm,
+    ULONG cjBuf,
+    OPTIONAL PVOID UnsafeBuf,
+    LPMAT2 pmat2,
+    BOOL bIgnoreRotation)
 {
   static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
   PDC_ATTR Dc_Attr;
@@ -3313,7 +3208,7 @@ TextIntGetTextExtentPoint(PDC dc,
   for (i = 0; i < Count; i++)
     {
       glyph_index = FT_Get_Char_Index(face, *String);
-      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
+      if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
           TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
         {
           error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -3324,7 +3219,7 @@ TextIntGetTextExtentPoint(PDC dc,
             }
 
           glyph = face->glyph;
-          realglyph = NtGdiGlyphCacheSet(face, glyph_index,
+          realglyph = ftGdiGlyphCacheSet(face, glyph_index,
              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
           if (!realglyph)
             {
@@ -3364,7 +3259,6 @@ TextIntGetTextExtentPoint(PDC dc,
   return TRUE;
 }
 
-
 DWORD
 FASTCALL
 IntGdiGetCharSet(HDC  hDC)
@@ -3393,38 +3287,13 @@ IntGdiGetCharSet(HDC  hDC)
   return (MAKELONG(cp, charset));
 }
 
-
-DWORD
-APIENTRY
-NtGdiGetCharSet(HDC hDC)
-{
-  PDC Dc;
-  PDC_ATTR Dc_Attr;
-  DWORD cscp = IntGdiGetCharSet(hDC);
-  // If here, update everything!
-  Dc = DC_LockDc(hDC);
-  if (!Dc)
-  {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return 0;
-  }
-  Dc_Attr = Dc->pDc_Attr;
-  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-  Dc_Attr->iCS_CP = cscp;
-  Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
-  DC_UnlockDc( Dc );
-  return cscp;
-}
-
-
 INT
-APIENTRY
-NtGdiGetTextCharsetInfo(
-    IN HDC hdc,
-    OUT OPTIONAL LPFONTSIGNATURE lpSig,
-    IN DWORD dwFlags)
+FASTCALL
+ftGdiGetTextCharsetInfo(
+    PDC Dc,
+    LPFONTSIGNATURE lpSig,
+    DWORD dwFlags)
 {
-  PDC Dc;
   PDC_ATTR Dc_Attr;
   UINT Ret = DEFAULT_CHARSET, i = 0, fs_fsCsb0 = 0;
   HFONT hFont;
@@ -3433,19 +3302,12 @@ NtGdiGetTextCharsetInfo(
   FONTSIGNATURE fs;
   TT_OS2 *pOS2;
   FT_Face Face;
-  NTSTATUS Status;
 
-  Dc = DC_LockDc(hdc);
-  if (!Dc)
-    {
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return Ret;
-    }
   Dc_Attr = Dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
-  DC_UnlockDc( Dc );
+
   if ( TextObj == NULL)
     {
          SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -3479,14 +3341,9 @@ NtGdiGetTextCharsetInfo(
     }
   DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
   if (lpSig)
-    {
-      Status = MmCopyToCaller(lpSig, &fs,  sizeof(FONTSIGNATURE));
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return Ret;
-        }
-    }
+  {
+     RtlCopyMemory(lpSig, &fs, sizeof(FONTSIGNATURE));
+  }
   if (0 == fs_fsCsb0)
     { /* let's see if we can find any interesting cmaps */
        for (i = 0; i < Face->num_charmaps; i++)
@@ -3514,33 +3371,80 @@ NtGdiGetTextCharsetInfo(
   return Ret;
 }
 
-W32KAPI
+DWORD
+FASTCALL
+ftGetFontLanguageInfo(PDC Dc)
+{
+  PDC_ATTR Dc_Attr;
+  FONTSIGNATURE fontsig;
+  static const DWORD GCP_DBCS_MASK=0x003F0000,
+		GCP_DIACRITIC_MASK=0x00000000,
+		FLI_GLYPHS_MASK=0x00000000,
+		GCP_GLYPHSHAPE_MASK=0x00000040,
+		GCP_KASHIDA_MASK=0x00000000,
+		GCP_LIGATE_MASK=0x00000000,
+		GCP_USEKERNING_MASK=0x00000000,
+		GCP_REORDER_MASK=0x00000060;
+
+  DWORD result=0;
+
+  ftGdiGetTextCharsetInfo( Dc, &fontsig, 0 );
+
+ /* We detect each flag we return using a bitmask on the Codepage Bitfields */
+  if( (fontsig.fsCsb[0]&GCP_DBCS_MASK)!=0 )
+		result|=GCP_DBCS;
+
+  if( (fontsig.fsCsb[0]&GCP_DIACRITIC_MASK)!=0 )
+		result|=GCP_DIACRITIC;
+
+  if( (fontsig.fsCsb[0]&FLI_GLYPHS_MASK)!=0 )
+		result|=FLI_GLYPHS;
+
+  if( (fontsig.fsCsb[0]&GCP_GLYPHSHAPE_MASK)!=0 )
+		result|=GCP_GLYPHSHAPE;
+
+  if( (fontsig.fsCsb[0]&GCP_KASHIDA_MASK)!=0 )
+		result|=GCP_KASHIDA;
+
+  if( (fontsig.fsCsb[0]&GCP_LIGATE_MASK)!=0 )
+		result|=GCP_LIGATE;
+
+  if( (fontsig.fsCsb[0]&GCP_USEKERNING_MASK)!=0 )
+		result|=GCP_USEKERNING;
+
+  Dc_Attr = Dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+
+  /* this might need a test for a HEBREW- or ARABIC_CHARSET as well */
+  if ( Dc_Attr->lTextAlign & TA_RTLREADING )
+     if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
+                    result|=GCP_REORDER;
+
+  return result;
+}
+
+
 BOOL
-APIENTRY
-NtGdiGetTextMetricsW(
-    IN HDC hDC,
-    OUT TMW_INTERNAL * pUnsafeTmwi,
-    IN ULONG cj
-)
+FASTCALL
+ftGdiGetTextMetricsW(
+    HDC hDC,
+    PTMW_INTERNAL ptmwi)
 {
   PDC dc;
   PDC_ATTR Dc_Attr;
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
-  NTSTATUS Status = STATUS_SUCCESS;
-  TMW_INTERNAL tmwi;
   FT_Face Face;
   TT_OS2 *pOS2;
   TT_HoriHeader *pHori;
   ULONG Error;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-  if (NULL == pUnsafeTmwi)
+  if (!ptmwi)
   {
     SetLastWin32Error(STATUS_INVALID_PARAMETER);
     return FALSE;
   }
-
-  /* FIXME: check cj ? */
 
   if(!(dc = DC_LockDc(hDC)))
   {
@@ -3570,9 +3474,9 @@ NtGdiGetTextMetricsW(
 	}
       else
 	{
-          memcpy(&tmwi.TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+          memcpy(&ptmwi->TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
           /* FIXME: Fill Diff member */
-          RtlZeroMemory(&tmwi.Diff, sizeof(tmwi.Diff));
+          RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
 
           Status = STATUS_SUCCESS;
           IntLockFreeType;
@@ -3594,38 +3498,22 @@ NtGdiGetTextMetricsW(
 
           if (NT_SUCCESS(Status))
           {
-              FillTM(&tmwi.TextMetric, FontGDI->face, pOS2, pHori);
-
-              if (cj > sizeof(TMW_INTERNAL))
-                cj = sizeof(TMW_INTERNAL);
-
-              Status = STATUS_SUCCESS;
-              _SEH_TRY
-              {
-                  ProbeForWrite(pUnsafeTmwi, cj, 1);
-                  RtlCopyMemory(pUnsafeTmwi,&tmwi,cj);
-              }
-              _SEH_HANDLE
-              {
-                  Status = _SEH_GetExceptionCode();
-              }
-              _SEH_END
+              FillTM(&ptmwi->TextMetric, FontGDI->face, pOS2, pHori);
           }
 	}
       TEXTOBJ_UnlockText(TextObj);
     }
   else
-    {
-      Status = STATUS_INVALID_HANDLE;
-    }
+  {
+     Status = STATUS_INVALID_HANDLE;
+  }
   DC_UnlockDc(dc);
 
-  if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      return FALSE;
-    }
-
+  if (!NT_SUCCESS(Status))
+  {
+     SetLastNtError(Status);
+     return FALSE;
+  }
   return TRUE;
 }
 

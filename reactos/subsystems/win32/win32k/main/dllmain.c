@@ -42,6 +42,8 @@ PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 HSEMAPHORE hsemDriverMgmt = NULL;
 
+SHORT gusLanguageID;
+
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
@@ -420,6 +422,13 @@ DriverEntry (
 
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
 
+  GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+  if (GdiHandleTable == NULL)
+  {
+      DPRINT1("Failed to initialize the GDI handle table.\n");
+      return STATUS_UNSUCCESSFUL;
+  }
+
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -511,13 +520,6 @@ DriverEntry (
       return(Status);
     }
 
-  GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
-  if (GdiHandleTable == NULL)
-  {
-      DPRINT1("Failed to initialize the GDI handle table.\n");
-      return STATUS_UNSUCCESSFUL;
-  }
-
   Status = InitDcImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -536,6 +538,8 @@ DriverEntry (
      used by win32 applications */
   CreateStockObjects();
   CreateSysColorObjects();
+
+  gusLanguageID = IntGdiGetLanguageID();
 
   return STATUS_SUCCESS;
 }

@@ -13,32 +13,54 @@
 #define NDEBUG
 #include <debug.h>
 
-//
-// FIXME PLEASE!!!!
-// Why are these here? Well there is a problem with drivers/directx.
-// 1st: It does not belong there.
-// 2nd: Due to being placed outside Win32k build environment, it creates
-//      compiling issues.
-// Until svn mv drivers/directx subsystem/win32/win32k/drivers/directx,
-// it will not get fixed.
-//
-ULONG
-FASTCALL
-ftGdiGetGlyphOutline(
-    IN PDC pdc,
-    IN WCHAR wch,
-    IN UINT iFormat,
-    OUT LPGLYPHMETRICS pgm,
-    IN ULONG cjBuf,
-    OUT OPTIONAL PVOID UnsafeBuf,
-    IN LPMAT2 pmat2,
-    IN BOOL bIgnoreRotation);
+/** Functions ******************************************************************/
 
 INT
-FASTCALL
-IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size, OUTLINETEXTMETRICW *Otm);
+APIENTRY
+NtGdiAddFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
+    IN FLONG fl,
+    IN DWORD dwPidTid,
+    IN OPTIONAL DESIGNVECTOR *pdv)
+{
+  UNICODE_STRING SafeFileName;
+  PWSTR src;
+  NTSTATUS Status;
+  int Ret;
 
-/** Functions ******************************************************************/
+  /* FIXME - Protect with SEH? */
+  RtlInitUnicodeString(&SafeFileName, pwszFiles);
+
+  /* Reserve for prepending '\??\' */
+  SafeFileName.Length += 4 * sizeof(WCHAR);
+  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
+
+  src = SafeFileName.Buffer;
+  SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
+  if(!SafeFileName.Buffer)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+
+  /* Prepend '\??\' */
+  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+
+  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
+  if(!NT_SUCCESS(Status))
+  {
+    ExFreePool(SafeFileName.Buffer);
+    SetLastNtError(Status);
+    return 0;
+  }
+
+  Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
+
+  ExFreePool(SafeFileName.Buffer);
+  return Ret;
+}
 
 ULONG
 APIENTRY
@@ -147,5 +169,62 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   ExFreePool(potm);
   return Size;
 }
+
+HFONT
+STDCALL
+NtGdiHfontCreate(
+  IN PENUMLOGFONTEXDVW pelfw,
+  IN ULONG cjElfw,
+  IN LFTYPE lft,
+  IN FLONG  fl,
+  IN PVOID pvCliData )
+{
+  ENUMLOGFONTEXDVW SafeLogfont;
+  HFONT hNewFont;
+  PTEXTOBJ TextObj;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (!pelfw)
+  {
+      return NULL;
+  }
+
+  _SEH_TRY
+  {
+      ProbeForRead(pelfw, sizeof(ENUMLOGFONTEXDVW), 1);
+      RtlCopyMemory(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+  }
+  _SEH_HANDLE
+  {
+      Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END
+
+  if (!NT_SUCCESS(Status))
+  {
+      return NULL;
+  }
+
+  TextObj = TEXTOBJ_AllocTextWithHandle();
+  if (!TextObj)
+  {
+      return NULL;
+  }
+  hNewFont = TextObj->BaseObject.hHmgr;
+
+  RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+
+  if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
+      SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
+  {
+    /* this should really depend on whether GM_ADVANCED is set */
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+  }
+  TEXTOBJ_UnlockText(TextObj);
+
+  return hNewFont;
+}
+
 
 /* EOF */

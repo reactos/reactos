@@ -2411,6 +2411,7 @@ NtGdiGetDCDword(
     case GdiGetEMFRestorDc:
       break;
     case GdiGetFontLanguageInfo:
+          SafeResult = ftGetFontLanguageInfo(dc);
       break;
     case GdiGetIsMemDc:
           SafeResult = dc->DC_Type;
