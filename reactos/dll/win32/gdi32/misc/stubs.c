@@ -173,21 +173,6 @@ GetMetaFileBitsEx(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetFontLanguageInfo(
-	HDC 	hDc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */

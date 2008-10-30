@@ -909,6 +909,18 @@ GetCharWidthI(HDC hdc,
  */
 DWORD
 STDCALL
+GetFontLanguageInfo(
+	HDC 	hDc
+	)
+{
+  return GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
 GetGlyphIndicesA(
         HDC hdc,
         LPCSTR lpstr,
