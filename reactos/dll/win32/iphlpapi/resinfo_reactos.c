@@ -49,8 +49,7 @@
 
 typedef struct _NAME_SERVER_LIST_PRIVATE {
     UINT NumServers;
-    UINT CurrentName;
-    PIP_ADDRESS_STRING AddrString;
+    IP_ADDR_STRING * pCurrent;
 } NAME_SERVER_LIST_PRIVATE, *PNAME_SERVER_LIST_PRIVATE;
 
 NTSYSAPI
@@ -177,22 +176,23 @@ static void CreateNameServerListEnumIfFuncCount( HKEY RegHandle,
 		    CreateNameServerListEnumNamesFuncCount);
 }
 
-VOID CreateNameServerListEnumNamesFunc( PWCHAR Interface,
-					       PWCHAR Server,
-					       PVOID _Data ) {
+VOID CreateNameServerListEnumNamesFunc(
+    PWCHAR Interface,
+    PWCHAR Server,
+    PVOID _Data ) 
+{
     PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
 
-    if (WideCharToMultiByte(CP_ACP, 0, Server, -1,
-			   Data->AddrString[Data->CurrentName].String,
-			   16, NULL, NULL))
-	{
-		Data->AddrString[Data->CurrentName].String[15] = '\0';
-		Data->CurrentName++;
-	}
-	else
-	{
-		Data->AddrString[Data->CurrentName].String[0] = '\0';
-	}
+    if (WideCharToMultiByte(CP_ACP, 0, Server, -1, Data->pCurrent->IpAddress.String, 16, NULL, NULL))
+    {
+        Data->pCurrent->Next = (struct _IP_ADDR_STRING*)(char*)Data->pCurrent + sizeof(IP_ADDR_STRING);
+        Data->pCurrent = Data->pCurrent->Next;
+        Data->NumServers++;
+    }
+    else
+    {
+        Data->pCurrent->IpAddress.String[0] = '\0';
+    }
 }
 
 static void CreateNameServerListEnumIfFunc( HKEY RegHandle,
@@ -213,51 +213,37 @@ static void MakeNameServerList( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
 }
 
 PIPHLP_RES_INFO getResInfo() {
-    DWORD i, ServerCount;
-    NAME_SERVER_LIST_PRIVATE PrivateNSEnum = { 0 };
+    DWORD ServerCount;
+    NAME_SERVER_LIST_PRIVATE PrivateNSEnum;
     PIPHLP_RES_INFO ResInfo;
-    struct sockaddr_in *AddrList;
+    IP_ADDR_STRING * DnsList;
 
+    PrivateNSEnum.NumServers = 0;
     ServerCount = CountNameServers( &PrivateNSEnum );
 
     PrivateNSEnum.NumServers = ServerCount;
-    PrivateNSEnum.AddrString =
-	(PIP_ADDRESS_STRING)
-	RtlAllocateHeap( GetProcessHeap(), 0,
-			 ServerCount * sizeof(IP_ADDRESS_STRING) );
-	PrivateNSEnum.CurrentName = 0;
+    DnsList = HeapAlloc(GetProcessHeap(), 0, ServerCount * sizeof(IP_ADDR_STRING));
+    ZeroMemory(DnsList, ServerCount * sizeof(IP_ADDR_STRING));
 
-    ResInfo =
-	(PIPHLP_RES_INFO)RtlAllocateHeap
-	( GetProcessHeap(), 0,
-	  sizeof(IPHLP_RES_INFO) +
-	  (ServerCount * sizeof(struct sockaddr_in)) );
-
-    if( !ResInfo ) {
-	RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
-	return NULL;
+    ResInfo = (PIPHLP_RES_INFO)RtlAllocateHeap ( GetProcessHeap(), 0, sizeof(IPHLP_RES_INFO));
+    if( !ResInfo ) 
+    {
+        HeapFree( GetProcessHeap(), 0, DnsList );
+        return NULL;
     }
 
-    ResInfo->riCount = ServerCount;
-    AddrList = (struct sockaddr_in *)
-	(((PCHAR)ResInfo) + sizeof(IPHLP_RES_INFO));
-    ResInfo->riAddressList = AddrList;
+    PrivateNSEnum.NumServers = 0;
+    PrivateNSEnum.pCurrent = DnsList;
 
     MakeNameServerList( &PrivateNSEnum );
-
-    for( i = 0; i < PrivateNSEnum.CurrentName; i++ ) {
-	/* Hmm seems that dns servers are always AF_INET but ... */
-	ResInfo->riAddressList[i].sin_family = AF_INET;
-	ResInfo->riAddressList[i].sin_addr.s_addr =
-	    inet_addr(PrivateNSEnum.AddrString[i].String );
-	ResInfo->riAddressList[i].sin_port = 0;
-    }
-
-    RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
+    ResInfo->DnsList = DnsList;
+    ResInfo->riCount = PrivateNSEnum.NumServers;
 
     return ResInfo;
 }
 
-VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr ) {
+VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr ) 
+{
     RtlFreeHeap( GetProcessHeap(), 0, InfoPtr );
+    HeapFree(GetProcessHeap(), 0, InfoPtr->DnsList);
 }

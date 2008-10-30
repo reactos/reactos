@@ -14,7 +14,6 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>
-	<library>ole32_irot_client</library>
 	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
 	<library>kernel32</library>

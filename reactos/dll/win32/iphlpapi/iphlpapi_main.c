@@ -1367,7 +1367,7 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   if (!resInfo)
     return ERROR_OUTOFMEMORY;
 
-  size = sizeof(FIXED_INFO) + (resInfo->riCount > 0 ? (resInfo->riCount  - 1) *
+  size = sizeof(FIXED_INFO) + (resInfo->riCount > 1 ? (resInfo->riCount-1) *
    sizeof(IP_ADDR_STRING) : 0);
   if (!pFixedInfo || *pOutBufLen < size) {
     *pOutBufLen = size;
@@ -1383,25 +1383,16 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 
   TRACE("GetComputerNameExA: %s\n", pFixedInfo->DomainName);
 
-  if (resInfo->riCount > 0) {
-    PIP_ADDR_STRING ptr;
-    int i;
-
-    for (i = 0, ptr = &pFixedInfo->DnsServerList; i < resInfo->riCount && ptr;
-     i++, ptr = ptr->Next) {
-        struct sockaddr_in *addr_v4 =
-            (struct sockaddr_in *)&resInfo->riAddressList[i];
-        toIPAddressString
-            (addr_v4->sin_addr.s_addr,
-             ptr->IpAddress.String);
-      if (i == resInfo->riCount - 1)
-        ptr->Next = NULL;
-      else if (i == 0)
-        ptr->Next = (PIP_ADDR_STRING)((LPBYTE)pFixedInfo + sizeof(FIXED_INFO));
-      else
-        ptr->Next = (PIP_ADDR_STRING)((PBYTE)ptr + sizeof(IP_ADDR_STRING));
+  if (resInfo->riCount > 0) 
+  {
+    CopyMemory(&pFixedInfo->DnsServerList, resInfo->DnsList, sizeof(IP_ADDR_STRING));
+    if (resInfo->riCount > 1)
+    {
+      pFixedInfo->DnsServerList.Next = (struct _IP_ADDR_STRING*)((char*)pFixedInfo + sizeof(FIXED_INFO));
+      CopyMemory(pFixedInfo->DnsServerList.Next, resInfo->DnsList->Next, sizeof(IP_ADDR_STRING) * (resInfo->riCount-1));
     }
   }
+
   pFixedInfo->NodeType = HYBRID_NODETYPE;
   regReturn = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
    "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP", 0, KEY_READ, &hKey);
@@ -1490,7 +1481,7 @@ static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, 
      Context->uSizeRequired += sizeof(IP_ADDR_STRING);
      if (Context->uSizeAvailable >= Context->uSizeRequired)
      {
-         pNext = ((char*)Context->pLastAddr) + sizeof(IP_ADDR_STRING);
+         pNext = (IP_ADDR_STRING*)(((char*)Context->pLastAddr) + sizeof(IP_ADDR_STRING));
          WideCharToMultiByte(CP_ACP, 0, Server, -1, pNext->IpAddress.String, 16, NULL, NULL);
          pNext->IpAddress.String[15] = '\0';
          Context->pLastAddr->Next = pNext;

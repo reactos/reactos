@@ -454,7 +454,10 @@ VOID ShowInfo(BOOL bAll)
 
         _tprintf(_T("\tIP Address. . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpAddress.String);
         _tprintf(_T("\tSubnet Mask . . . . . . . . . . . : %s\n"), pAdapter->IpAddressList.IpMask.String);
-        _tprintf(_T("\tDefault Gateway . . . . . . . . . : %s\n"), pAdapter->GatewayList.IpAddress.String);
+        if (pAdapter->GatewayList.IpAddress.String[0] != '0')
+            _tprintf(_T("\tDefault Gateway . . . . . . . . . : %s\n"), pAdapter->GatewayList.IpAddress.String);
+        else
+            _tprintf(_T("\tDefault Gateway . . . . . . . . . :\n"));
 
         if (bAll)
         {

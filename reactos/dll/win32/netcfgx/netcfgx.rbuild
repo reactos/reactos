@@ -14,6 +14,7 @@
 	<library>ole32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>ws2_32</library>
 	<file>netcfgx.c</file>
 	<file>netcfgx.spec</file>
 	<file>classfactory.c</file>

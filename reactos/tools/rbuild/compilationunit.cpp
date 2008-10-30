@@ -77,7 +77,7 @@ CompilationUnit::IsGeneratedFile () const
 		return false;
 	const File* file = files[0];
 	string extension = GetExtension ( file->file );
-	return ( extension == ".spec" || extension == ".SPEC" || extension == ".mc" || extension == ".MC");
+	return ( extension == ".spec" || extension == ".pspec" || extension == ".mc");
 }
 
 bool

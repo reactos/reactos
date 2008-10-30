@@ -525,7 +525,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
               &Adapter->NteContext,
               &Adapter->NteInstance );
         if (hkey) {
-            RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)new_lease->address.iabuf, strlen(new_lease->address.iabuf)+1);
+            RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), strlen(piaddr(new_lease->address))+1);
             Buffer[0] = '\0';
             for(i = 0; i < new_lease->options[DHO_SUBNET_MASK].len; i++)
             {

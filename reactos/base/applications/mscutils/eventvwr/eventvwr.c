@@ -296,6 +296,10 @@ BOOL GetEventMessage(
 
 		// Allocate space for parameters
 		szArguments = (LPTSTR*)malloc(sizeof(LPVOID)* pevlr->NumStrings);
+		if (!szArguments)
+		{
+			return FALSE;
+		}
 
 		for (i = 0; i < pevlr->NumStrings ; i++)
 		{
@@ -371,6 +375,8 @@ BOOL GetEventMessage(
 			LoadString(hInst, IDC_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, MAX_LOADSTRING);
 			wsprintf (EventText, szStringIDNotFound , (DWORD)(pevlr->EventID & 0xFFFF) , SourceName );
 		}
+
+		free(szArguments);
 
 		// No more dlls to try , return result
 		return bDone;

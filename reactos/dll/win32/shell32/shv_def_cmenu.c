@@ -1404,10 +1404,10 @@ DoProperties(
     }
     else if (_ILIsNetHood(This->dcm.apidl[0]))
     {
-        /* FIXME
-         * implement nethood properties
-         */
-        FIXME("implement network connection shell folder\n");
+        //FIXME path!
+        ShellExecuteW(NULL, L"open", L"explorer.exe",
+                      L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", 
+                      NULL, SW_SHOWDEFAULT);
         return S_OK;
     }
     else if (_ILIsBitBucket(This->dcm.apidl[0]))

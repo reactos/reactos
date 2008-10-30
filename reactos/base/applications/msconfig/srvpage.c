@@ -145,7 +145,7 @@ GetServices ( void )
                 if (hService != INVALID_HANDLE_VALUE)
                 {
                     /* check if service is required by the system*/
-                    if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, 0, &BytesNeeded))
+                    if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)NULL, 0, &BytesNeeded))
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
@@ -156,11 +156,17 @@ GetServices ( void )
                             if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, BytesNeeded, &BytesNeeded))
                             {
                                 HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
+                                HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                                CloseServiceHandle(hService);
+                                CloseServiceHandle(ScHandle);
                                 return;
                             }
                         }
                         else /* exit on failure */
                         {
+                            HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                            CloseServiceHandle(hService);
+                            CloseServiceHandle(ScHandle);
                             return;
                         }
                     }
@@ -183,22 +189,32 @@ GetServices ( void )
 
                     /* get vendor of service binary */
                     BytesNeeded = 0;
-                    if (!QueryServiceConfig(hService, pServiceConfig, 0, &BytesNeeded))
+                    if (!QueryServiceConfig(hService, NULL, 0, &BytesNeeded))
                     {
                         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
                         {
                             pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceConfig == NULL)
+                            {
+                                HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                                CloseServiceHandle(hService);
+                                CloseServiceHandle(ScHandle);
                                 return;
-
+                            }
                             if (!QueryServiceConfig(hService, pServiceConfig, BytesNeeded, &BytesNeeded))
                             {
                                 HeapFree(GetProcessHeap(), 0, pServiceConfig);
+                                HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                                CloseServiceHandle(hService);
+                                CloseServiceHandle(ScHandle);
                                 return;
                             }
                         }
                         else /* exit on failure */
                         {
+                            HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                            CloseServiceHandle(hService);
+                            CloseServiceHandle(ScHandle);
                             return;
                         }
                     }
@@ -221,11 +237,18 @@ GetServices ( void )
                     {
                         lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
                         if (lpData == NULL)
+                        {
+                            HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                            CloseServiceHandle(hService);
+                            CloseServiceHandle(ScHandle);
                             return;
-
+                        }
                         if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData))
                         {
                             HeapFree(GetProcessHeap(), 0, lpData);
+                            HeapFree(GetProcessHeap(), 0, pServiceStatus);
+                            CloseServiceHandle(hService);
+                            CloseServiceHandle(ScHandle);
                             return;
                         }
 
