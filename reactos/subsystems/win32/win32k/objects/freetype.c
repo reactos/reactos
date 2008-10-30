@@ -3371,6 +3371,74 @@ ftGdiGetTextCharsetInfo(
   return Ret;
 }
 
+
+DWORD
+FASTCALL
+ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
+{
+    DWORD size = 0;
+    DWORD num_ranges = 0;
+    FT_Face face = Font->face;
+
+    if (face->charmap->encoding == FT_ENCODING_UNICODE)
+    {
+        FT_UInt glyph_code = 0;
+        FT_ULong char_code, char_code_prev;
+
+        char_code_prev = char_code = FT_Get_First_Char(face, &glyph_code);
+
+        DPRINT("face encoding FT_ENCODING_UNICODE, number of glyphs %ld, first glyph %u, first char %04lx\n",
+               face->num_glyphs, glyph_code, char_code);
+
+        if (!glyph_code) return 0;
+
+        if (glyphset)
+        {
+            glyphset->ranges[0].wcLow = (USHORT)char_code;
+            glyphset->ranges[0].cGlyphs = 0;
+            glyphset->cGlyphsSupported = 0;
+        }
+
+        num_ranges = 1;
+        while (glyph_code)
+        {
+            if (char_code < char_code_prev)
+            {
+                DPRINT1("expected increasing char code from FT_Get_Next_Char\n");
+                return 0;
+            }
+            if (char_code - char_code_prev > 1)
+            {
+                num_ranges++;
+                if (glyphset)
+                {
+                    glyphset->ranges[num_ranges - 1].wcLow = (USHORT)char_code;
+                    glyphset->ranges[num_ranges - 1].cGlyphs = 1;
+                    glyphset->cGlyphsSupported++;
+                }
+            }
+            else if (glyphset)
+            {
+                glyphset->ranges[num_ranges - 1].cGlyphs++;
+                glyphset->cGlyphsSupported++;
+            }
+            char_code_prev = char_code;
+            char_code = FT_Get_Next_Char(face, char_code, &glyph_code);
+        }
+    }
+    else
+        DPRINT1("encoding %u not supported\n", face->charmap->encoding);
+
+    size = sizeof(GLYPHSET) + sizeof(WCRANGE) * (num_ranges - 1);
+    if (glyphset)
+    {
+        glyphset->cbThis = size;
+        glyphset->cRanges = num_ranges;
+    }
+    return size;
+}
+
+
 DWORD
 FASTCALL
 ftGetFontLanguageInfo(PDC Dc)

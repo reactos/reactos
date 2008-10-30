@@ -62,6 +62,81 @@ NtGdiAddFontResourceW(
   return Ret;
 }
 
+ /*
+ * @implemented
+ */
+DWORD
+APIENTRY
+NtGdiGetFontUnicodeRanges(
+    IN HDC hdc,
+    OUT OPTIONAL LPGLYPHSET pgs)
+{
+  PDC pDc;
+  PDC_ATTR Dc_Attr;
+  HFONT hFont;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGdi;
+  DWORD Size = 0;
+  PGLYPHSET pgsSafe;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  pDc = DC_LockDc(hdc);
+  if (!pDc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  Dc_Attr = pDc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
+
+  hFont = Dc_Attr->hlfntNew;
+  TextObj = TEXTOBJ_LockText(hFont);
+        
+  if ( TextObj == NULL)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     goto Exit;
+  }
+  FontGdi = ObjToGDI(TextObj->Font, FONT);
+
+
+  Size = ftGetFontUnicodeRanges( FontGdi, NULL);
+  if (Size && pgs)
+  {
+     pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+     if (!pgsSafe)
+     {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        Size = 0;
+        goto Exit;
+     }
+
+     Size = ftGetFontUnicodeRanges( FontGdi, pgsSafe);
+
+     if (Size)
+     {     
+        _SEH_TRY
+        {
+            ProbeForWrite(pgsSafe, Size, 1);
+            RtlCopyMemory(pgs, pgsSafe, Size);
+        }
+        _SEH_HANDLE
+        {
+           Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END
+
+        if (!NT_SUCCESS(Status)) Size = 0;
+     }
+     ExFreePoolWithTag(pgsSafe, TAG_GDITEXT);
+  }
+Exit:
+  TEXTOBJ_UnlockText(TextObj);
+  DC_UnlockDc(pDc);
+  return Size;
+}
+
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(

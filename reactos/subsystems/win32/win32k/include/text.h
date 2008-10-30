@@ -92,6 +92,7 @@ DWORD FASTCALL IntGdiGetCharSet(HDC);
 BOOL FASTCALL ftGdiGetTextMetricsW(HDC,PTMW_INTERNAL);
 DWORD FASTCALL ftGetFontLanguageInfo(PDC);
 INT FASTCALL ftGdiGetTextCharsetInfo(PDC,PFONTSIGNATURE,DWORD);
+DWORD FASTCALL ftGetFontUnicodeRanges(PFONTGDI, PGLYPHSET);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

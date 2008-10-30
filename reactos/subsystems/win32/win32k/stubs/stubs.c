@@ -2230,19 +2230,6 @@ NtGdiQueryFontAssocInfo(
  /*
  * @unimplemented
  */
-DWORD
-APIENTRY
-NtGdiGetFontUnicodeRanges(
-    IN HDC hdc,
-    OUT OPTIONAL LPGLYPHSET pgs)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
 UINT
 APIENTRY
 NtGdiGetStringBitmapW(
