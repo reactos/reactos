@@ -947,6 +947,9 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     SIZE_T ResultLength = 0;
     KPROCESSOR_MODE PreviousMode;
+    WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
+    UNICODE_STRING ModuleFileName;
+    PMEMORY_SECTION_NAME SectionName = NULL;
     union
     {
         MEMORY_BASIC_INFORMATION BasicInfo;
@@ -985,13 +988,58 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
         return STATUS_INVALID_PARAMETER;
     }
     
-    Status = MiQueryVirtualMemory(ProcessHandle,
-                                  Address,
-                                  VirtualMemoryInformationClass,
-                                  &VirtualMemoryInfo,
-                                  Length,
-                                  &ResultLength );
-    
+    /* FIXME: Move this inside MiQueryVirtualMemory */
+    if (VirtualMemoryInformationClass == MemorySectionName)
+    {
+        RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
+        Status = MmGetFileNameForAddress(Address, &ModuleFileName);
+        
+        if (NT_SUCCESS(Status))
+        {
+            SectionName = VirtualMemoryInformation;
+            if (PreviousMode != KernelMode)
+            {
+                _SEH_TRY
+                {
+                    RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+                    SectionName->SectionFileName.MaximumLength = Length;
+                    RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+                    
+                    if (UnsafeResultLength != NULL)
+                    {
+                        *UnsafeResultLength = ModuleFileName.Length;
+                    }
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+            else
+            {
+                RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+                SectionName->SectionFileName.MaximumLength = Length;
+                RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+                
+                if (UnsafeResultLength != NULL)
+                {
+                    *UnsafeResultLength = ModuleFileName.Length;
+                }
+            }
+        }
+        return Status;
+    }
+    else
+    {
+        Status = MiQueryVirtualMemory(ProcessHandle,
+                                      Address,
+                                      VirtualMemoryInformationClass,
+                                      &VirtualMemoryInfo,
+                                      Length,
+                                      &ResultLength);
+    }
+       
     if (NT_SUCCESS(Status))
     {
         if (PreviousMode != KernelMode)

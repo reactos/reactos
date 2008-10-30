@@ -398,6 +398,10 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
 
             /* Check if we need to do an interrupt */
             if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+
+            /* Exit the dispatcher and return the old state */
+            KiExitDispatcher(OldIrql);
+            return Inserted;
         }
 
         /* Set the time as Absolute */
@@ -419,7 +423,7 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     Timer->Header.SignalState = FALSE;
     KxInsertTimer(Timer, Hand);
 
-    /* Release Dispatcher Lock */
+    /* Exit the dispatcher */
     KiExitDispatcher(OldIrql);
 
     /* Return old state */

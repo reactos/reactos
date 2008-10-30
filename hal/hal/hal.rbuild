@@ -9,16 +9,18 @@
 		<define name="_NTHAL_" />
 		<file>hal.c</file>
 		<file>hal.rc</file>
+		<file>hal.pspec</file>
 	</module>
     </if>
     <if property="ARCH" value="i386">
 	<module name="hal" type="kernelmodedll">
-		<importlibrary definition="hal.spec" />
+		<importlibrary definition="hal.pspec" />
 		<include base="ntoskrnl">include</include>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />
 		<file>hal.c</file>
 		<file>hal.rc</file>
+		<file>hal.pspec</file>
 	</module>
     </if>
 	<if property="ARCH" value="i386">
