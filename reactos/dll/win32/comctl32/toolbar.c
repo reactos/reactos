@@ -2665,7 +2665,33 @@ TOOLBAR_AddBitmapToImageList(TOOLBAR_INFO *infoPtr, HIMAGELIST himlDef, const TB
     TRACE("adding hInst=%p nID=%d nButtons=%d\n", bitmap->hInst, bitmap->nID, bitmap->nButtons);
     /* Add bitmaps to the default image list */
     if (bitmap->hInst == NULL)         /* a handle was passed */
-        hbmLoad = (HBITMAP)CopyImage(ULongToHandle(bitmap->nID), IMAGE_BITMAP, 0, 0, 0);
+    {
+        BITMAP  bmp;
+        HBITMAP hOldBitmapBitmap, hOldBitmapLoad;
+        HDC     hdcImage, hdcBitmap;
+
+        /* copy the bitmap before adding it so that the user's bitmap
+         * doesn't get modified.
+         */
+        GetObjectW ((HBITMAP)bitmap->nID, sizeof(BITMAP), (LPVOID)&bmp);
+
+        hdcImage  = CreateCompatibleDC(0);
+        hdcBitmap = CreateCompatibleDC(0);
+
+        /* create new bitmap */
+        hbmLoad = CreateBitmap (bmp.bmWidth, bmp.bmHeight, bmp.bmPlanes, bmp.bmBitsPixel, NULL);
+        hOldBitmapBitmap = SelectObject(hdcBitmap, (HBITMAP)bitmap->nID);
+        hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
+
+        /* Copy the user's image */
+        BitBlt (hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight,
+                hdcBitmap, 0, 0, SRCCOPY);
+
+        SelectObject (hdcImage, hOldBitmapLoad);
+        SelectObject (hdcBitmap, hOldBitmapBitmap);
+        DeleteDC (hdcImage);
+        DeleteDC (hdcBitmap);
+    }
     else
         hbmLoad = CreateMappedBitmap(bitmap->hInst, bitmap->nID, 0, NULL, 0);
 
