@@ -1,0 +1,3 @@
+1. To make sure usb controller is released:
+' noop to go-hook
+before booting freeldr
