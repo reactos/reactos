@@ -97,8 +97,8 @@ BOOL HasItemWithCLSID(IEnumIDList *iface, LPITEMIDLIST pidl)
 
     while(pCur)
     {
-        REFIID curid = _ILGetGUIDPointer(pCur->pidl);
-        if (IsEqualIID(curid, refid))
+        LPGUID curid = _ILGetGUIDPointer(pCur->pidl);
+        if (curid && IsEqualGUID(curid, refid))
         {
             return TRUE;
         }
