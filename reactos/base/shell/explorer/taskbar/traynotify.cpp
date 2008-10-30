@@ -741,7 +741,7 @@ void NotifyArea::Paint()
 			AlphaBlend(canvas, x, y, NOTIFYICON_SIZE, NOTIFYICON_SIZE, mem_dc, 0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE, blend);
 		} else
 #endif
-			DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
+			DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
 
 		x += NOTIFYICON_DIST;
 	}
