@@ -231,10 +231,15 @@ typedef struct _UNIVERSAL_FONT_ID
     ULONG Index;
 } UNIVERSAL_FONT_ID, *PUNIVERSAL_FONT_ID;
 
-typedef struct _REALIZATION_INFO // Based on LOCALESIGNATURE
+#define RI_TECH_BITMAP   1
+#define RI_TECH_FIXED    2
+#define RI_TECH_SCALABLE 3
+
+typedef struct _REALIZATION_INFO
 {
-    DWORD  dwCsbDefault[2];
-    DWORD  dwCsbSupported0;
+    DWORD  iTechnology;
+    DWORD  iUniq;
+    DWORD  dwUnknown;
 } REALIZATION_INFO, *PREALIZATION_INFO;
 
 typedef struct _WIDTHDATA
@@ -402,7 +407,10 @@ typedef struct _CFONT
     USHORT          sWidth[256];        // Widths in pels.
     ULONG           ulAveWidth;         // bogus average used by USER
     TMW_INTERNAL    tmw;                // cached metrics
-    LOCALESIGNATURE lsLocSig;           // font signature information
+    DWORD           iTechnology;
+    DWORD           iUniq;
+    DWORD           dwUnknown;
+    DWORD           dwCFCount;
 } CFONT, *PCFONT;
 
 //

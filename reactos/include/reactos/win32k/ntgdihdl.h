@@ -230,7 +230,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
     FLONG           flDeviceUniq;              // Device settings uniqueness.
     PVOID           pvLangPack;                // Lanuage Pack.
     CFONT           cfPublic[GDI_CFONT_MAX];   // Public Fonts.
-    DWORD           dwCsbSupported1;           // OEM code-page bitfield.
+    DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
 typedef struct _RGN_ATTR
