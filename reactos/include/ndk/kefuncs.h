@@ -133,11 +133,6 @@ KeAcquireInStackQueuedSpinLockRaiseToSynch(
     IN PKLOCK_QUEUE_HANDLE LockHandle
 );
 
-KIRQL
-FASTCALL
-KeAcquireSpinLockRaiseToSynch(
-    IN OUT PKSPIN_LOCK SpinLock
-);
 
 //
 // Interrupt Functions

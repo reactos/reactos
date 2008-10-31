@@ -1759,8 +1759,25 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     struct {
       ULONG Level;
       ULONG Vector;
-      ULONG Affinity;
+      KAFFINITY Affinity;
     } Interrupt;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      union {
+        struct {
+          USHORT Reserved;
+          USHORT MessageCount;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Raw;
+        struct {
+          ULONG Level;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Translated;
+      };
+    } MessageInterrupt;
+#endif
     struct {
       PHYSICAL_ADDRESS Start;
       ULONG Length;
@@ -1783,6 +1800,20 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
       ULONG Reserved1;
       ULONG Reserved2;
     } DeviceSpecificData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length40;
+    } Memory40;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length48;
+    } Memory48;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length64;
+    } Memory64;
+#endif
   } u;
 } CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 
@@ -5444,6 +5475,8 @@ typedef struct _KPCR {
   ULONG HalReserved[16];            // For use by Hal
 } KPCR, *PKPCR;                 /* 54 */
 
+#define KeGetPcr()                      PCR
+
 typedef struct _KFLOATING_SAVE {
   ULONG  ControlWord;
   ULONG  StatusWord;
@@ -5661,6 +5694,8 @@ typedef struct _KPCR {
   UCHAR  Number;                /* 51 */
 } KPCR, *PKPCR;                 /* 54 */
 
+#define KeGetPcr()                      PCR
+
 static __inline
 ULONG
 DDKAPI
@@ -5694,6 +5729,8 @@ typedef struct _KPCR {
     ULONG  IRR;                   /* 28 */
     ULONG  IDR;                   /* 30 */
 } KPCR, *PKPCR;
+
+#define KeGetPcr()                      PCR
 
 typedef struct _KFLOATING_SAVE {
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
@@ -5792,6 +5829,7 @@ typedef struct _PCIBUSDATA
 } PCIBUSDATA, *PPCIBUSDATA;
 
 
+/** INTERLOCKED FUNCTIONS *****************************************************/
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -5908,11 +5946,42 @@ InterlockedExchangeAdd(
 #define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
 #define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
 #define QueryDepthSList(Head) ExQueryDepthSList(Head)
-#endif // !defined(_WINBASE_
+#endif // !defined(_WINBASE_)
 
 #endif // _M_AMD64
 
 #endif /* !__INTERLOCKED_DECLARED */
+
+
+/** SPINLOCK FUNCTIONS ********************************************************/
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+
+#if defined (_X86_)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeSpinLock(
+  IN PKSPIN_LOCK  SpinLock);
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+
+NTHALAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
 
 NTKERNELAPI
 VOID
@@ -5926,45 +5995,47 @@ FASTCALL
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
 
-#if defined(_M_AMD64)
-NTKERNELAPI
-KIRQL
-FASTCALL
-KfAcquireSpinLock(
-  IN PKSPIN_LOCK SpinLock);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KfReleaseSpinLock(
-  IN PKSPIN_LOCK SpinLock,
-  IN KIRQL NewIrql);
-#else
-NTHALAPI
-KIRQL
-FASTCALL
-KfAcquireSpinLock(
-  IN PKSPIN_LOCK SpinLock);
-
-NTHALAPI
-VOID
-FASTCALL
-KfReleaseSpinLock(
-  IN PKSPIN_LOCK SpinLock,
-  IN KIRQL NewIrql);
-#endif
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTryToAcquireSpinLockAtDpcLevel(
-    IN OUT PKSPIN_LOCK SpinLock
-);
-
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
 #define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
 #define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
+
+#else // !defined (_X86_)
+
+FORCEINLINE
+VOID
+NTAPI
+KeInitializeSpinLock(
+  PKSPIN_LOCK SpinLock)
+{
+    *SpinLock = 0;
+}
+
+NTKERNELAPI
+VOID
+KeReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+
+NTKERNELAPI
+VOID
+KeAcquireSpinLockAtDpcLevel(
+  IN PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+VOID
+KeReleaseSpinLockFromDpcLevel(
+  IN PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+KIRQL
+KeAcquireSpinLockRaiseToDpc(
+  IN PKSPIN_LOCK SpinLock);
+
+#define KeAcquireSpinLock(SpinLock, OldIrql) \
+  *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
+
+#endif // !defined (_X86_)
 
 #define RtlCopyMemoryNonTemporal RtlCopyMemory
 
@@ -6364,23 +6435,60 @@ RtlConvertLongToLargeInteger(LONG SignedInteger)
     return Result;
 }
 
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlConvertUlongToLargeInteger(
+  ULONG UnsignedInteger)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = UnsignedInteger;
+    return ret;
+}
+
 NTSYSAPI
 LUID
 NTAPI
 RtlConvertLongToLuid(
   IN LONG  Long);
 
-NTSYSAPI
-LARGE_INTEGER
-NTAPI
-RtlConvertUlongToLargeInteger(
-  IN ULONG  UnsignedInteger);
 
 NTSYSAPI
 LUID
 NTAPI
 RtlConvertUlongToLuid(
   ULONG  Ulong);
+
+#ifdef _M_AMD64
+
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlExtendedIntegerMultiply(
+  LARGE_INTEGER Multiplicand,
+  LONG Multiplier)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = Multiplicand.QuadPart * Multiplier;
+    return ret;
+}
+
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlExtendedLargeIntegerDivide(
+  LARGE_INTEGER Dividend,
+  ULONG Divisor,
+  PULONG Remainder)
+{
+    LARGE_INTEGER ret;
+    ret.QuadPart = (ULONG64)Dividend.QuadPart / Divisor;
+    if (Remainder)
+        *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+    return ret;
+}
+
+#endif
 
 /*
  * VOID
@@ -9590,12 +9698,6 @@ KeInitializeSemaphore(
 NTKERNELAPI
 VOID
 NTAPI
-KeInitializeSpinLock(
-  IN PKSPIN_LOCK  SpinLock);
-
-NTKERNELAPI
-VOID
-NTAPI
 KeInitializeTimer(
   IN PKTIMER  Timer);
 
@@ -10331,11 +10433,11 @@ MmMarkPhysicalMemoryAsGood(
  *   IN MM_PAGE_PRIORITY  Priority)
  */
 #define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
-  ((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
+  (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
     | MDL_SOURCE_IS_NONPAGED_POOL)) ? \
     (_Mdl)->MappedSystemVa : \
     (PVOID) MmMapLockedPagesSpecifyCache((_Mdl), \
-      KernelMode, MmCached, NULL, FALSE, _Priority)
+      KernelMode, MmCached, NULL, FALSE, (_Priority)))
 
 NTKERNELAPI
 PVOID
