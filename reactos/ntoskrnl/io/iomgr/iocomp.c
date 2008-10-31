@@ -424,9 +424,6 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
             ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->
                 Depth = KeReadStateQueue(Queue);
 
-            /* Dereference the queue */
-            ObDereferenceObject(Queue);
-
             /* Return Result Length if needed */
             if (ResultLength)
             {
@@ -439,6 +436,9 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
+
+        /* Dereference the queue */
+        ObDereferenceObject(Queue);
     }
 
     /* Return Status */
