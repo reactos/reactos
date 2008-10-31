@@ -556,6 +556,157 @@ LANStatusUiAdvancedDlg(
     return FALSE;
 }
 
+BOOL
+FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
+{
+    DWORD dwIndex, dwSize;
+    HKEY hSubKey;
+    WCHAR szNetCfg[50];
+    WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
+
+    dwIndex = 0;
+    do
+    {
+
+        ZeroMemory(pDevInfo, sizeof(SP_DEVINFO_DATA));
+        pDevInfo->cbSize = sizeof(SP_DEVINFO_DATA);
+
+        /* get device info */
+        if (!SetupDiEnumDeviceInfo(hInfo, dwIndex++, pDevInfo))
+            break;
+
+        /* get device software registry path */
+        if (!SetupDiGetDeviceRegistryPropertyW(hInfo, pDevInfo, SPDRP_DRIVER, NULL, (LPBYTE)&szDetail[39], sizeof(szDetail)/sizeof(WCHAR) - 40, &dwSize))
+            break;
+
+        /* open device registry key */
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szDetail, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+            break;
+
+        /* query NetCfgInstanceId for current device */
+        dwSize = sizeof(szNetCfg);
+        if (RegQueryValueExW(hSubKey, L"NetCfgInstanceId", NULL, NULL, (LPBYTE)szNetCfg, &dwSize) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hSubKey);
+            break;
+        }
+        RegCloseKey(hSubKey);
+        if (!wcsicmp(pGuid, szNetCfg))
+        {
+            return TRUE;
+        }
+    }
+    while(TRUE);
+
+    return FALSE;
+}
+
+
+
+VOID
+DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWND hwndDlg)
+{
+    HKEY hKey;
+    NETCON_PROPERTIES * pProperties;
+    LPOLESTR pDisplayName;
+    WCHAR szPath[200];
+    DWORD dwSize, dwType;
+    LPWSTR pPnp;
+    HDEVINFO hInfo;
+    SP_DEVINFO_DATA DevInfo;
+    SP_PROPCHANGE_PARAMS PropChangeParams;
+    BOOL bClose = FALSE;
+    NOTIFYICONDATAW nid;
+
+    if (FAILED(INetConnection_GetProperties(pNet, &pProperties)))
+        return;
+
+
+    hInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_NET, NULL, NULL, DIGCF_PRESENT );
+    if (!hInfo)
+    {
+        NcFreeNetconProperties(pProperties);
+        return;
+    }
+
+    if (FAILED(StringFromCLSID(&pProperties->guidId, &pDisplayName)))
+    {
+        NcFreeNetconProperties(pProperties);
+        SetupDiDestroyDeviceInfoList(hInfo);
+        return;
+    }
+    NcFreeNetconProperties(pProperties);
+
+    if (FindNetworkAdapter(hInfo, &DevInfo, pDisplayName))
+    {
+        PropChangeParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+        PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE; //;
+        PropChangeParams.StateChange = DICS_DISABLE;
+        PropChangeParams.Scope = DICS_FLAG_CONFIGSPECIFIC;
+        PropChangeParams.HwProfile = 0;
+
+        if (SetupDiSetClassInstallParams(hInfo, &DevInfo, &PropChangeParams.ClassInstallHeader, sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            if (SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hInfo, &DevInfo))
+                bClose = TRUE;
+        }
+    }
+    SetupDiDestroyDeviceInfoList(hInfo);
+
+    swprintf(szPath, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pDisplayName);
+    CoTaskMemFree(pDisplayName);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return;
+
+    dwSize = 0;
+    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ)
+    {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    pPnp = (LPWSTR)CoTaskMemAlloc(dwSize);
+    if (!pPnp)
+    {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, (LPBYTE)pPnp, &dwSize) != ERROR_SUCCESS)
+    {
+        CoTaskMemFree(pPnp);
+        RegCloseKey(hKey);
+        return;
+    }
+    RegCloseKey(hKey);
+
+    swprintf(szPath, L"System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Enum\\%s", pPnp);
+    CoTaskMemFree(pPnp);
+
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return;
+
+    dwSize = 1; /* enable = 0, disable = 1 */
+    RegSetValueExW(hKey, L"CSConfigFlags", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
+    RegCloseKey(hKey);
+
+    if (!bClose)
+       return;
+
+    PropSheet_PressButton(GetParent(hwndDlg), PSBTN_CANCEL);
+    ZeroMemory(&nid, sizeof(nid));
+    nid.cbSize = sizeof(nid);
+    nid.uID = pContext->uID;
+    nid.hWnd = pContext->hwndDlg;
+    nid.uFlags = NIF_STATE;
+    nid.dwState = NIS_HIDDEN;
+    nid.dwStateMask = NIS_HIDDEN;
+
+    Shell_NotifyIconW(NIM_MODIFY, &nid);
+}
+
+
 INT_PTR
 CALLBACK
 LANStatusUiDlg(
@@ -591,8 +742,7 @@ LANStatusUiDlg(
             }
             else if (LOWORD(wParam) == IDC_ENDISABLE)
             {
-                //FIXME
-                // disable network adapter
+                DisableNetworkAdapter(pContext->pNet, pContext, hwndDlg);
                 break;
             }
         case WM_NOTIFY:
