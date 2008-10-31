@@ -26,9 +26,9 @@ PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
 
     TRACE("PLSAPR_SERVER_NAME_bind() called\n");
 
-    status = RpcStringBindingComposeW(pszSystemName,
+    status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
-                                      NULL,
+                                      pszSystemName,
                                       L"\\pipe\\lsarpc",
                                       NULL,
                                       &pszStringBinding);
