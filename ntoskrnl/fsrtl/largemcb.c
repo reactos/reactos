@@ -13,6 +13,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+PAGED_LOOKASIDE_LIST FsRtlFirstMappingLookasideList;
+PAGED_LOOKASIDE_LIST FsRtlFastMutexLookasideList;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -94,25 +99,66 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
                        IN POOL_TYPE PoolType)
 {
-    KEBUGCHECK(0);
+    Mcb->PairCount = 0;
+
+    if (PoolType == PagedPool)
+    {
+        Mcb->Mapping = ExAllocateFromPagedLookasideList(&FsRtlFirstMappingLookasideList);
+    }
+    else
+    {
+        Mcb->Mapping = FsRtlAllocatePoolWithTag(PoolType, sizeof(INT_MAPPING) * MAXIMUM_PAIR_COUNT, TAG('F', 'S', 'B', 'C'));
+    }
+
+    Mcb->PoolType = PoolType;
+    Mcb->MaximumPairCount = MAXIMUM_PAIR_COUNT;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
-    KEBUGCHECK(0);
+    Mcb->FastMutex = ExAllocateFromPagedLookasideList(&FsRtlFastMutexLookasideList);
+    ExInitializeFastMutex(Mcb->FastMutex);
+
+    FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+FsRtlInitializeLargeMcbs(VOID)
+{
+    /* Initialize the list for the MCB */
+    ExInitializePagedLookasideList(&FsRtlFirstMappingLookasideList,
+                                   NULL,
+                                   NULL,
+                                   POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                   sizeof(INT_MAPPING) * MAXIMUM_PAIR_COUNT,
+                                   IFS_POOL_TAG,
+                                   0); /* FIXME: Should be 4 */
+
+    /* Initialize the list for the fast mutex */
+    ExInitializePagedLookasideList(&FsRtlFastMutexLookasideList,
+                                   NULL,
+                                   NULL,
+                                   POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                   sizeof(FAST_MUTEX),
+                                   IFS_POOL_TAG,
+                                   0); /* FIXME: Should be 32 */
 }
 
 /*

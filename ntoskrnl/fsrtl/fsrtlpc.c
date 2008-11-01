@@ -168,6 +168,8 @@ FsRtlInitSystem(VOID)
                                    IFS_POOL_TAG,
                                    0);
 
+    FsRtlInitializeLargeMcbs();
+
     /* Allocate the Resource Buffer */
     FsRtlPagingIoResources = FsRtlAllocatePoolWithTag(NonPagedPool,
                                                       FSRTL_MAX_RESOURCES *

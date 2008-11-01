@@ -45,8 +45,38 @@
 #define FSRTL_MAX_RESOURCES 16
 
 //
+// Number of maximum pair count per MCB
+//
+#define MAXIMUM_PAIR_COUNT  15
+
+//
+// Internal structure for NOTIFY_SYNC
+//
+typedef struct _INT_NOTIFY_SYNC
+{
+    FAST_MUTEX FastMutex;
+    ULONG_PTR OwningThread;
+    ULONG OwnerCount;
+} INT_NOTIFY_SYNC, * PINT_NOTIFY_SYNC;
+
+//
+// Internal structure for MCB Mapping pointer
+//
+typedef struct _INT_MAPPING
+{
+    VBN Vbn;
+    LBN Lbn;
+} INT_MAPPING, *PINT_MAPPING;
+
+//
 // Initialization Routines
 //
+VOID
+NTAPI
+FsRtlInitializeLargeMcbs(
+    VOID
+);
+
 BOOLEAN
 NTAPI
 FsRtlInitSystem(

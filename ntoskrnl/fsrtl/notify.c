@@ -12,13 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _INT_NOTIFY_SYNC
-{
-    FAST_MUTEX FastMutex;
-    ULONG_PTR OwningThread;
-    ULONG OwnerCount;
-} INT_NOTIFY_SYNC, * PINT_NOTIFY_SYNC;
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
