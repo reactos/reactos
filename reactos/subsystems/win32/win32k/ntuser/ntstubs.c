@@ -805,6 +805,9 @@ NtUserHardErrorControl(
     return 0;
 }
 
+/*
+    Called from win32csr.
+ */
 NTSTATUS
 NTAPI
 NtUserInitialize(
@@ -812,7 +815,31 @@ NtUserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
+    UserEnterExclusive();
     UNIMPLEMENTED;
+// Check to see we have the right version.
+// Initialize Power Request List.
+// Initialize Media Change.
+// Initialize CSRSS
+// {
+//    Startup DxGraphics.
+//    calls ** IntGdiGetLanguageID() and sets it **.
+//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+// }
+// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
+// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
+// Create Event for Diconnect Desktop.
+// Initialize Video.
+// {
+//     DrvInitConsole.
+//     DrvChangeDisplaySettings.
+//     Update Shared Device Caps.
+//     Initialize User Screen.
+// }
+// Create ThreadInfo for this Thread!
+// Set Global SERVERINFO Error flags.
+// Load Resources.
+    UserLeave();
     return STATUS_SUCCESS;
 }
 
