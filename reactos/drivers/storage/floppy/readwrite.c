@@ -705,7 +705,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
       IoMapTransfer(DriveInfo->ControllerInfo->AdapterObject, Irp->MdlAddress,
 		    DriveInfo->ControllerInfo->MapRegisterBase,
-		    (PUCHAR)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset),
+		    (PVOID)((ULONG_PTR)MmGetMdlVirtualAddress(Irp->MdlAddress) + TransferByteOffset),
 		    &CurrentTransferBytes, WriteToDevice);
 
       /*
