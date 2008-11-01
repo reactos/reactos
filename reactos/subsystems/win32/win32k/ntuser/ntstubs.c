@@ -805,15 +805,15 @@ NtUserHardErrorControl(
     return 0;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserInitialize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
 {
     UNIMPLEMENTED;
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 DWORD
