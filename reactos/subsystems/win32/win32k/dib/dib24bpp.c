@@ -559,9 +559,9 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   SourceY = SourcePoint->y;
   DestBits = (BYTE*)((PBYTE)DestSurf->pvScan0 +
-                      (DestRect->left << 2) +
+                      (DestRect->left * 3) +
                       DestRect->top * DestSurf->lDelta);
-  wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 2);
+  wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) * 3);
 
   for(Y = DestRect->top; Y < DestRect->bottom; Y++)
   {
