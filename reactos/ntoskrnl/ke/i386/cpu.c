@@ -1030,7 +1030,7 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
 
     /* Get the current processor affinity, and exclude ourselves */
     TargetAffinity = KeActiveProcessors;
-    TargetAffinity &= ~KeGetCurrentPrcb()->SetMember;
+    TargetAffinity &= ~Prcb->SetMember;
 
     /* Make sure this is MP */
     if (TargetAffinity)
