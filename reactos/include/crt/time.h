@@ -119,10 +119,10 @@ extern "C" {
 
 #define CLOCKS_PER_SEC 1000
 
-  _CRTIMP int _daylight;
-  _CRTIMP long _dstbias;
-  _CRTIMP long _timezone;
-  _CRTIMP char * _tzname[2];
+  __MINGW_IMPORT  int _daylight;
+  __MINGW_IMPORT  long _dstbias;
+  __MINGW_IMPORT  long _timezone;
+  __MINGW_IMPORT  char * _tzname[2];
 
   _CRTIMP errno_t __cdecl _get_daylight(int *_Daylight);
   _CRTIMP errno_t __cdecl _get_dstbias(long *_Daylight_savings_bias);
