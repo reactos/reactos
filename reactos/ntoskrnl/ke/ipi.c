@@ -210,7 +210,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     Affinity = KeActiveProcessors;
 
     /* Exclude ourselves */
-    Affinity &= ~KeGetCurrentPrcb()->SetMember;
+    Affinity &= ~Prcb->SetMember;
 #endif
 
     /* Acquire the IPI lock */
