@@ -2377,7 +2377,7 @@ NtGdiGetGlyphIndicesW(
   OUTLINETEXTMETRICW *potm;
   INT i;
   FT_Face face;
-  WCHAR DefChar = 0;
+  WCHAR DefChar = 0xffff;
   PWSTR Buffer = NULL;
   ULONG Size;
 
@@ -2444,8 +2444,17 @@ NtGdiGetGlyphIndicesW(
 
   for (i = 0; i < cwc; i++)
   {
-     Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
-     if (Buffer[i] == 0) Buffer[i] = DefChar;
+      Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
+      if (Buffer[i] == 0)
+      {
+         if (DefChar == 0xffff && FT_IS_SFNT(face))
+         {
+            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+            Buffer[i] = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+         }
+         else
+            Buffer[i] = DefChar;
+      }
   }
 
   IntUnLockFreeType;
@@ -2518,7 +2527,7 @@ ftGdiGetGlyphOutline(
     UINT iFormat,
     LPGLYPHMETRICS pgm,
     ULONG cjBuf,
-    OPTIONAL PVOID UnsafeBuf,
+    PVOID pvBuf,
     LPMAT2 pmat2,
     BOOL bIgnoreRotation)
 {
@@ -2527,7 +2536,6 @@ ftGdiGetGlyphOutline(
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   HFONT hFont = 0;
-  NTSTATUS Status;
   GLYPHMETRICS gm;
   ULONG Size;
   FT_Face ft_face;
@@ -2545,13 +2553,12 @@ ftGdiGetGlyphOutline(
   LONG aveWidth;
   INT adv, lsb, bbx; /* These three hold to widths of the unrotated chars */
   OUTLINETEXTMETRICW *potm;
-  PVOID pvBuf = NULL;
   int n = 0;
   FT_CharMap found = 0, charmap;
   XFORM xForm;
 
   DPRINT("%d, %08x, %p, %08lx, %p, %p\n", wch, iFormat, pgm,
-              cjBuf, UnsafeBuf, pmat2);
+              cjBuf, pvBuf, pmat2);
 
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
@@ -2561,7 +2568,7 @@ ftGdiGetGlyphOutline(
   
   hFont = Dc_Attr->hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
-//  DC_UnlockDc(dc);
+
   if (!TextObj)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -2590,8 +2597,6 @@ ftGdiGetGlyphOutline(
     {
       DPRINT("WARNING: No charmap selected!\n");
       DPRINT("This font face has %d charmaps\n", ft_face->num_charmaps);
-
-
 
       for (n = 0; n < ft_face->num_charmaps; n++)
       {
@@ -2643,7 +2648,7 @@ ftGdiGetGlyphOutline(
     {
          DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
 	 IntUnLockFreeType;
-	 if (potm) ExFreePool(potm);
+	 if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT);
 	 return GDI_ERROR;
     }
   IntUnLockFreeType;
@@ -2721,7 +2726,7 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
-  if (potm) ExFreePool(potm); /* It looks like we are finished with potm ATM.*/
+  if (potm) ExFreePoolWithTag(potm, TAG_GDITEXT); /* It looks like we are finished with potm ATM.*/
 
   if (!needsTransform)
     {
@@ -2784,16 +2789,7 @@ ftGdiGetGlyphOutline(
 
   IntUnLockFreeType;
 
-  if (pgm)
-    {
-      Status = MmCopyToCaller(pgm, &gm,  sizeof(GLYPHMETRICS));
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return GDI_ERROR;
-        }
-      DPRINT("Copied GLYPHMETRICS to User!\n");
-    }
+  if (pgm) RtlCopyMemory(pgm, &gm, sizeof(GLYPHMETRICS));    
 
   if (iFormat == GGO_METRICS)
     {
@@ -2806,18 +2802,6 @@ ftGdiGetGlyphOutline(
         DPRINT1("loaded a bitmap\n");
         return GDI_ERROR;
     }
-
-  if (UnsafeBuf && cjBuf)
-    {
-       pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
-       if (pvBuf == NULL)
-         {
-           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-           return GDI_ERROR;
-         }
-       RtlZeroMemory(pvBuf, cjBuf);
-    }
-
 
   switch(iFormat)
     {
@@ -2866,7 +2850,6 @@ ftGdiGetGlyphOutline(
 
           default:
             DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
-            if(pvBuf) ExFreePool(pvBuf);
             return GDI_ERROR;
         }
         break;
@@ -2885,34 +2868,60 @@ ftGdiGetGlyphOutline(
 
         if(!pvBuf || !cjBuf) break;
 
-        ft_bitmap.width = width;
-        ft_bitmap.rows = height;
-        ft_bitmap.pitch = pitch;
-        ft_bitmap.pixel_mode = ft_pixel_mode_grays;
-        ft_bitmap.buffer = pvBuf;
-
-        IntLockFreeType;
-        if(needsTransform)
+        switch(ft_face->glyph->format)
         {
-           FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
-        }
-        FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
-        RtlZeroMemory(ft_bitmap.buffer, cjBuf);
-        FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
-        IntUnLockFreeType;
+          case ft_glyph_format_bitmap:
+          {
+             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
+             INT h = ft_face->glyph->bitmap.rows;
+             INT x;
+             while(h--)
+             {
+               for(x = 0; x < pitch; x++)
+               {
+                   if(x < ft_face->glyph->bitmap.width)
+                      dst[x] = (src[x / 8] & (1 << ( (7 - (x % 8))))) ? 0xff : 0;
+                   else
+                      dst[x] = 0;
+               }
+               src += ft_face->glyph->bitmap.pitch;
+               dst += pitch;
+             }
+             return needed;
+          }
+          case ft_glyph_format_outline:
+          {
+             ft_bitmap.width = width;
+             ft_bitmap.rows = height;
+             ft_bitmap.pitch = pitch;
+             ft_bitmap.pixel_mode = ft_pixel_mode_grays;
+             ft_bitmap.buffer = pvBuf;
 
-        if(iFormat == GGO_GRAY2_BITMAP)
-            mult = 4;
-        else if(iFormat == GGO_GRAY4_BITMAP)
-            mult = 16;
-        else if(iFormat == GGO_GRAY8_BITMAP)
-            mult = 64;
-        else
-        {
-            ASSERT(0);
-            break;
-        }
+            IntLockFreeType;
+            if (needsTransform)
+            {
+               FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
+            }
+            FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
+            RtlZeroMemory(ft_bitmap.buffer, cjBuf);
+            FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
+            IntUnLockFreeType;
 
+            if (iFormat == GGO_GRAY2_BITMAP)
+                mult = 4;
+            else if (iFormat == GGO_GRAY4_BITMAP)
+                mult = 16;
+            else if (iFormat == GGO_GRAY8_BITMAP)
+                mult = 64;
+            else
+            {
+                return GDI_ERROR;
+            }
+          }
+          default:
+            DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
+            return GDI_ERROR;
+        }
         start = pvBuf;
         for(row = 0; row < height; row++)
         {
@@ -3132,24 +3141,10 @@ ftGdiGetGlyphOutline(
 
     default:
         DPRINT1("Unsupported format %d\n", iFormat);
-        if(pvBuf) ExFreePool(pvBuf);
         return GDI_ERROR;
     }
 
-  if (pvBuf)
-    {
-       Status = MmCopyToCaller(UnsafeBuf, pvBuf, cjBuf);
-       if (! NT_SUCCESS(Status))
-         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            ExFreePool(pvBuf);
-            return GDI_ERROR;
-         }
-       DPRINT("NtGdiGetGlyphOutline K -> U worked!\n");
-       ExFreePool(pvBuf);
-    }
-
-  DPRINT("NtGdiGetGlyphOutline END and needed %d\n", needed);
+  DPRINT("ftGdiGetGlyphOutline END and needed %d\n", needed);
   return needed;
 }
 

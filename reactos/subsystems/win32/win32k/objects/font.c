@@ -149,22 +149,75 @@ NtGdiGetGlyphOutline(
     IN LPMAT2 pmat2,
     IN BOOL bIgnoreRotation)
 {
-  ULONG Ret;
+  ULONG Ret = GDI_ERROR;
   PDC dc;
+  PVOID pvBuf = NULL;
+  GLYPHMETRICS gm;
+  NTSTATUS Status = STATUS_SUCCESS;
+
   dc = DC_LockDc(hdc);
   if (!dc)
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return GDI_ERROR;
   }
+
+  if (UnsafeBuf && cjBuf)
+  {
+     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
+     if (!pvBuf)
+     {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        goto Exit;
+     }
+  }
+
   Ret = ftGdiGetGlyphOutline( dc,
                              wch,
                          iFormat,
-                             pgm,
+                             pgm ? &gm : NULL,
                            cjBuf,
-                       UnsafeBuf,
+                           pvBuf,
                            pmat2,
                  bIgnoreRotation);
+
+  if (pvBuf)
+  {
+     _SEH_TRY
+     {
+         ProbeForWrite(UnsafeBuf, cjBuf, 1);
+         RtlCopyMemory(UnsafeBuf, pvBuf, cjBuf);
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END
+
+     ExFreePoolWithTag(pvBuf, TAG_GDITEXT);
+  }
+
+  if (pgm)
+  {
+     _SEH_TRY
+     {
+         ProbeForWrite(pgm, sizeof(GLYPHMETRICS), 1);
+         RtlCopyMemory(pgm, &gm, sizeof(GLYPHMETRICS));
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END
+  }
+
+  if (! NT_SUCCESS(Status))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     Ret = GDI_ERROR;
+  }
+
+Exit:
   DC_UnlockDc(dc);
   return Ret;
 }
