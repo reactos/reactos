@@ -286,6 +286,13 @@ KiInsertTimerTable(
     IN ULONG Hand
 );
 
+VOID
+FASTCALL
+KiTimerListExpire(
+    IN PLIST_ENTRY ExpiredListHead,
+    IN KIRQL OldIrql
+);
+
 BOOLEAN
 FASTCALL
 KiInsertTreeTimer(

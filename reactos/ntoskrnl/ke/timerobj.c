@@ -29,71 +29,29 @@ KiInsertTreeTimer(IN PKTIMER Timer,
     BOOLEAN Inserted = FALSE;
     ULONG Hand = 0;
     PKSPIN_LOCK_QUEUE LockQueue;
-    LONGLONG DueTime;
-    LARGE_INTEGER InterruptTime, SystemTime, DifferenceTime;
-    PKTIMER_TABLE_ENTRY TimerEntry;
-
     DPRINT("KiInsertTreeTimer(): Timer %p, Interval: %I64d\n", Timer, Interval.QuadPart);
 
-    /* Convert to relative time if needed */
-    Timer->Header.Absolute = FALSE;
-    if (Interval.HighPart >= 0)
+    /* Setup the timer's due time */
+    if (KiComputeDueTime(Timer, Interval, &Hand))
     {
-        /* Get System Time */
-        KeQuerySystemTime(&SystemTime);
+        /* Acquire the lock */
+        LockQueue = KiAcquireTimerLock(Hand);
 
-        /* Do the conversion */
-        DifferenceTime.QuadPart = SystemTime.QuadPart - Interval.QuadPart;
-
-        /* Make sure it hasn't already expired */
-        Timer->Header.Absolute = TRUE;
-        if (DifferenceTime.HighPart >= 0)
+        /* Insert the timer */
+        if (KiInsertTimerTable(Timer, Hand))
         {
-            /* Cancel everything */
-            Timer->Header.SignalState = TRUE;
-            Timer->Header.Hand = 0;
-            Timer->DueTime.QuadPart = 0;
-            return FALSE;
+            /* It was already there, remove it */
+            KiRemoveEntryTimer(Timer);
+            Timer->Header.Inserted = FALSE;
         }
-
-        /* Set the time as Absolute */
-        Interval = DifferenceTime;
-    }
-
-    /* Get the Interrupt Time */
-    InterruptTime.QuadPart = KeQueryInterruptTime();
-
-    /* Recalculate due time */
-    DueTime = InterruptTime.QuadPart - Interval.QuadPart;
-    Timer->DueTime.QuadPart = DueTime;
-
-    /* Get the handle */
-    Hand = KiComputeTimerTableIndex(DueTime);
-    Timer->Header.Hand = (UCHAR)Hand;
-    Timer->Header.Inserted = TRUE;
-
-    /* Acquire the lock */
-    LockQueue = KiAcquireTimerLock(Hand);
-
-    /* Insert the timer */
-    if (KiInsertTimerTable(Timer, Hand))
-    {
-        /* It was already there, remove it */
-        if (RemoveEntryList(&Timer->TimerListEntry))
+        else
         {
-            /* Get the entry and check if it's empty */
-            TimerEntry = &KiTimerTableListHead[Hand];
-            if (IsListEmpty(&TimerEntry->Entry))
-            {
-                /* Clear the time then */
-                TimerEntry->Time.HighPart = 0xFFFFFFFF;
-            }
+            /* Otherwise, we're now inserted */
+            Inserted = TRUE;
         }
-    }
-    else
-    {
-        /* Otherwise, we're now inserted */
-        Inserted = TRUE;
+        
+        /* Release the lock */
+        KiReleaseTimerLock(LockQueue);
     }
 
     /* Release the lock and return insert status */
@@ -110,7 +68,6 @@ KiInsertTimerTable(IN PKTIMER Timer,
     BOOLEAN Expired = FALSE;
     PLIST_ENTRY ListHead, NextEntry;
     PKTIMER CurrentTimer;
-
     DPRINT("KiInsertTimerTable(): Timer %p, Hand: %d\n", Timer, Hand);
 
     /* Check if the period is zero */
@@ -160,7 +117,6 @@ KiSignalTimer(IN PKTIMER Timer)
     PKDPC Dpc = Timer->Dpc;
     ULONG Period = Timer->Period;
     LARGE_INTEGER Interval, SystemTime;
-
     DPRINT("KiSignalTimer(): Timer %p\n", Timer);
 
     /* Set default values */
@@ -212,22 +168,11 @@ KiCompleteTimer(IN PKTIMER Timer,
                 IN PKSPIN_LOCK_QUEUE LockQueue)
 {
     LIST_ENTRY ListHead;
-    PKTIMER_TABLE_ENTRY TimerEntry;
     BOOLEAN RequestInterrupt = FALSE;
-
     DPRINT("KiCompleteTimer(): Timer %p, LockQueue: %p\n", Timer, LockQueue);
 
     /* Remove it from the timer list */
-    if (RemoveEntryList(&Timer->TimerListEntry))
-    {
-        /* Get the entry and check if it's empty */
-        TimerEntry = &KiTimerTableListHead[Timer->Header.Hand];
-        if (IsListEmpty(&TimerEntry->Entry))
-        {
-            /* Clear the time then */
-            TimerEntry->Time.HighPart = 0xFFFFFFFF;
-        }
-    }
+    KiRemoveEntryTimer(Timer);
 
     /* Link the timer list to our stack */
     ListHead.Flink = &Timer->TimerListEntry;
@@ -264,7 +209,6 @@ KeCancelTimer(IN OUT PKTIMER Timer)
     BOOLEAN Inserted;
     ASSERT_TIMER(Timer);
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
     DPRINT("KeCancelTimer(): Timer %p\n", Timer);
 
     /* Lock the Database and Raise IRQL */
@@ -301,7 +245,8 @@ KeInitializeTimerEx(OUT PKTIMER Timer,
                     IN TIMER_TYPE Type)
 {
     DPRINT("KeInitializeTimerEx(): Timer %p, Type %s\n",
-        Timer, (Type == NotificationTimer) ? "NotificationTimer" : "SynchronizationTimer");
+            Timer, (Type == NotificationTimer) ?
+           "NotificationTimer" : "SynchronizationTimer");
 
     /* Initialize the Dispatch Header */
     KeInitializeDispatcherHeader(&Timer->Header,
@@ -352,13 +297,11 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     KIRQL OldIrql;
     BOOLEAN Inserted;
     ULONG Hand = 0;
-    LARGE_INTEGER InterruptTime, SystemTime, DifferenceTime;
     BOOLEAN RequestInterrupt = FALSE;
     ASSERT_TIMER(Timer);
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
     DPRINT("KeSetTimerEx(): Timer %p, DueTime %I64d, Period %d, Dpc %p\n",
-        Timer, DueTime.QuadPart, Period, Dpc);
+           Timer, DueTime.QuadPart, Period, Dpc);
 
     /* Lock the Database and Raise IRQL */
     OldIrql = KiAcquireDispatcherLock();
@@ -370,59 +313,24 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     /* Set Default Timer Data */
     Timer->Dpc = Dpc;
     Timer->Period = Period;
-
-    /* Convert to relative time if needed */
-    Timer->Header.Absolute = FALSE;
-    if (DueTime.HighPart >= 0)
+    if (!KiComputeDueTime(Timer, DueTime, &Hand))
     {
-        /* Get System Time */
-        KeQuerySystemTime(&SystemTime);
-
-        /* Do the conversion */
-        DifferenceTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
-
-        /* Make sure it hasn't already expired */
-        Timer->Header.Absolute = TRUE;
-        if (DifferenceTime.HighPart >= 0)
-        {
-            /* Cancel everything */
-            Timer->Header.SignalState = TRUE;
-            Timer->Header.Hand = 0;
-            Timer->DueTime.QuadPart = 0;
-
-            /* Signal the timer */
-            RequestInterrupt = KiSignalTimer(Timer);
-
-            /* Release the dispatcher lock */
-            KiReleaseDispatcherLockFromDpcLevel();
-
-            /* Check if we need to do an interrupt */
-            if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-
-            /* Exit the dispatcher and return the old state */
-            KiExitDispatcher(OldIrql);
-            return Inserted;
-        }
-
-        /* Set the time as Absolute */
-        DueTime = DifferenceTime;
+        /* Signal the timer */
+        RequestInterrupt = KiSignalTimer(Timer);
+        
+        /* Release the dispatcher lock */
+        KiReleaseDispatcherLockFromDpcLevel();
+        
+        /* Check if we need to do an interrupt */
+        if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);        
     }
-
-    /* Get the Interrupt Time */
-    InterruptTime.QuadPart = KeQueryInterruptTime();
-
-    /* Recalculate due time */
-    Timer->DueTime.QuadPart = InterruptTime.QuadPart - DueTime.QuadPart;
-
-    /* Get the handle */
-    Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
-    Timer->Header.Hand = (UCHAR)Hand;
-    Timer->Header.Inserted = TRUE;
-
-    /* Insert the timer */
-    Timer->Header.SignalState = FALSE;
-    KxInsertTimer(Timer, Hand);
-
+    else
+    {
+        /* Insert the timer */
+        Timer->Header.SignalState = FALSE;
+        KxInsertTimer(Timer, Hand);        
+    }
+    
     /* Exit the dispatcher */
     KiExitDispatcher(OldIrql);
 
