@@ -156,8 +156,17 @@ BackupEventLogA(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
-    Status = ElfrBackupELFA(hEventLog,
-                            &BackupFileName);
+    _SEH_TRY
+    {
+        Status = ElfrBackupELFA(hEventLog,
+                                &BackupFileName);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -187,8 +196,17 @@ BackupEventLogW(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
-    Status = ElfrBackupELFW(hEventLog,
-                            &BackupFileName);
+    _SEH_TRY
+    {
+        Status = ElfrBackupELFW(hEventLog,
+                                &BackupFileName);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -215,8 +233,17 @@ ClearEventLogA(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
 
-    Status = ElfrClearELFA(hEventLog,
-                           &BackupFileName);
+    _SEH_TRY
+    {
+        Status = ElfrClearELFA(hEventLog,
+                               &BackupFileName);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -243,8 +270,17 @@ ClearEventLogW(IN HANDLE hEventLog,
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
 
-    Status = ElfrClearELFW(hEventLog,
-                           &BackupFileName);
+    _SEH_TRY
+    {
+        Status = ElfrClearELFW(hEventLog,
+                               &BackupFileName);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -265,7 +301,16 @@ CloseEventLog(IN HANDLE hEventLog)
 
     TRACE("%p\n", hEventLog);
 
-    Status = ElfrCloseEL(&hEventLog);
+    _SEH_TRY
+    {
+        Status = ElfrCloseEL(&hEventLog);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -292,7 +337,16 @@ DeregisterEventSource(IN HANDLE hEventLog)
 
     TRACE("%p\n", hEventLog);
 
-    Status = ElfrDeregisterEventSource(&hEventLog);
+    _SEH_TRY
+    {
+        Status = ElfrDeregisterEventSource(&hEventLog);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -319,8 +373,17 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
-    Status = ElfrNumberOfRecords(hEventLog,
-                                 &Records);
+    _SEH_TRY
+    {
+        Status = ElfrNumberOfRecords(hEventLog,
+                                     &Records);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -349,8 +412,17 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
-    Status = ElfrOldestRecord(hEventLog,
-                              &Oldest);
+    _SEH_TRY
+    {
+        Status = ElfrOldestRecord(hEventLog,
+                                  &Oldest);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -438,11 +510,20 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     FileName.Length = FileName.MaximumLength =
         lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
 
-    Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
-                          &FileName,
-                          0,
-                          0,
-                          &LogHandle);
+    _SEH_TRY
+    {
+        Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
+                              &FileName,
+                              0,
+                              0,
+                              &LogHandle);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -508,12 +589,21 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
-    Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
-                         &SourceName,
-                         &EmptyString,
-                         0,
-                         0,
-                         &LogHandle);
+    _SEH_TRY
+    {
+        Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
+                             &SourceName,
+                             &EmptyString,
+                             0,
+                             0,
+                             &LogHandle);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -543,13 +633,22 @@ ReadEventLogA(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    Status = ElfrReadELA(hEventLog,
-                         dwReadFlags,
-                         dwRecordOffset,
-                         nNumberOfBytesToRead,
-                         lpBuffer,
-                         &bytesRead,
-                         &minNumberOfBytesNeeded);
+    _SEH_TRY
+    {
+        Status = ElfrReadELA(hEventLog,
+                             dwReadFlags,
+                             dwRecordOffset,
+                             nNumberOfBytesToRead,
+                             lpBuffer,
+                             &bytesRead,
+                             &minNumberOfBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -591,13 +690,22 @@ ReadEventLogW(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    Status = ElfrReadELW(hEventLog,
-                         dwReadFlags,
-                         dwRecordOffset,
-                         nNumberOfBytesToRead,
-                         lpBuffer,
-                         &bytesRead,
-                         &minNumberOfBytesNeeded);
+    _SEH_TRY
+    {
+        Status = ElfrReadELW(hEventLog,
+                             dwReadFlags,
+                             dwRecordOffset,
+                             nNumberOfBytesToRead,
+                             lpBuffer,
+                             &bytesRead,
+                             &minNumberOfBytesNeeded);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -673,12 +781,21 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
 
-    Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
-                                      &SourceName,
-                                      &EmptyString,
-                                      0,
-                                      0,
-                                      &LogHandle);
+    _SEH_TRY
+    {
+        Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
+                                          &SourceName,
+                                          &EmptyString,
+                                          0,
+                                          0,
+                                          &LogHandle);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -792,8 +909,8 @@ ReportEventW(IN HANDLE hEventLog,
     WORD i;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
-        hEventLog, wType, wCategory, dwEventID, lpUserSid,
-        wNumStrings, dwDataSize, lpStrings, lpRawData);
+          hEventLog, wType, wCategory, dwEventID, lpUserSid,
+          wNumStrings, dwDataSize, lpStrings, lpRawData);
 
     Strings = HeapAlloc(GetProcessHeap(),
                         0,
@@ -807,20 +924,29 @@ ReportEventW(IN HANDLE hEventLog,
     for (i = 0; i < wNumStrings; i++)
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
-    Status = ElfrReportEventW(hEventLog,
-                              0, /* FIXME: Time */
-                              wType,
-                              wCategory,
-                              dwEventID,
-                              wNumStrings,
-                              dwDataSize,
-                              L"", /* FIXME: ComputerName */
-                              lpUserSid,
-                              (LPWSTR *)lpStrings, /* FIXME: should be Strings */
-                              lpRawData,
-                              0,
-                              NULL,
-                              NULL);
+    _SEH_TRY
+    {
+        Status = ElfrReportEventW(hEventLog,
+                                  0, /* FIXME: Time */
+                                  wType,
+                                  wCategory,
+                                  dwEventID,
+                                  wNumStrings,
+                                  dwDataSize,
+                                  L"", /* FIXME: ComputerName */
+                                  lpUserSid,
+                                  (LPWSTR *)lpStrings, /* FIXME: should be Strings */
+                                  lpRawData,
+                                  0,
+                                  NULL,
+                                  NULL);
+    }
+    _SEH_HANDLE
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH_END;
+
     HeapFree(GetProcessHeap(), 0, Strings);
 
     if (!NT_SUCCESS(Status))
