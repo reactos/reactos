@@ -14,10 +14,60 @@
 
 /* GLOBALS *******************************************************************/
 
-KSPIN_LOCK KiIpiLock;
+extern KSPIN_LOCK KiReverseStallIpiLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+KiIpiGenericCallTarget(IN PKIPI_CONTEXT PacketContext,
+                       IN PVOID BroadcastFunction,
+                       IN PVOID Argument,
+                       IN PVOID Count)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
+VOID
+FASTCALL
+KiIpiSend(IN KAFFINITY TargetProcessors,
+          IN ULONG IpiRequest)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
+VOID
+NTAPI
+KiIpiSendPacket(IN KAFFINITY TargetProcessors,
+                IN PKIPI_WORKER WorkerFunction,
+                IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+                IN ULONG_PTR Context,
+                IN PULONG Count)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
+VOID
+FASTCALL
+KiIpiSignalPacketDone(IN PKIPI_CONTEXT PacketContext)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
+VOID
+FASTCALL
+KiIpiSignalPacketDoneAndStall(IN PKIPI_CONTEXT PacketContext,
+                              IN volatile PULONG ReverseStall)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
+#if 0
 VOID
 NTAPI
 KiIpiSendRequest(IN KAFFINITY TargetSet,
@@ -86,6 +136,7 @@ KiIpiSendPacket(IN KAFFINITY TargetSet,
     }
 #endif
 }
+#endif
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -95,7 +146,7 @@ KiIpiSendPacket(IN KAFFINITY TargetSet,
 BOOLEAN
 NTAPI
 KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
-                    IN PVOID ExceptionFrame)
+                    IN PKEXCEPTION_FRAME ExceptionFrame)
 {
 #ifdef CONFIG_SMP
     PKPRCB Prcb;
@@ -141,32 +192,73 @@ NTAPI
 KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
                  IN ULONG_PTR Argument)
 {
-#ifdef CONFIG_SMP
-#error Not yet implemented!
-#else
     ULONG_PTR Status;
     KIRQL OldIrql, OldIrql2;
+#ifdef CONFIG_SMP
+    KAFFINITY Affinity;
+    ULONG Count;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
 
     /* Raise to DPC level if required */
     OldIrql = KeGetCurrentIrql();
     if (OldIrql < DISPATCH_LEVEL) KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
+#ifdef CONFIG_SMP
+    /* Get current processor count and affinity */
+    Count = KeNumberProcessors;
+    Affinity = KeActiveProcessors;
+
+    /* Exclude ourselves */
+    Affinity &= ~KeGetCurrentPrcb()->SetMember;
+#endif
+
     /* Acquire the IPI lock */
-    KefAcquireSpinLockAtDpcLevel(&KiIpiLock);
+    KeAcquireSpinLockAtDpcLevel(&KiReverseStallIpiLock);
+
+#ifdef CONFIG_SMP
+    /* Make sure this is MP */
+    if (Affinity)
+    {
+        /* Send an IPI */
+        KiIpiSendPacket(Affinity,
+                        KiIpiGenericCallTarget,
+                        Function,
+                        Argument,
+                        &Count);
+
+        /* Spin until the other processors are ready */
+        while ((volatile ULONG)Count != 1) YieldProcessor();
+    }
+#endif
 
     /* Raise to IPI level */
     KeRaiseIrql(IPI_LEVEL, &OldIrql2);
 
+#ifdef CONFIG_SMP
+    /* Let the other processors know it is time */
+    Count = 0;
+#endif
+
     /* Call the function */
     Status = Function(Argument);
 
+#ifdef CONFIG_SMP
+    /* If this is MP, wait for the other processors to finish */
+    if (Affinity)
+    {
+        /* Sanity check */
+        ASSERT(Prcb == (volatile PKPRCB)KeGetCurrentPrcb());
+
+        /* FIXME: TODO */
+        ASSERTMSG("Not yet implemented\n", FALSE);
+    }
+#endif
+
     /* Release the lock */
-    KefReleaseSpinLockFromDpcLevel(&KiIpiLock);
+    KeReleaseSpinLockFromDpcLevel(&KiReverseStallIpiLock);
 
     /* Lower IRQL back */
     KeLowerIrql(OldIrql);
     return Status;
-#endif
 }
-
-/* EOF */

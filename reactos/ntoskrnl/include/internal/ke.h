@@ -327,10 +327,33 @@ KeWaitForGate(
 /* ipi.c ********************************************************************/
 
 VOID
-NTAPI
-KiIpiSendRequest(
+FASTCALL
+KiIpiSend(
     KAFFINITY TargetSet,
     ULONG IpiRequest
+);
+
+VOID
+NTAPI
+KiIpiSendPacket(
+    IN KAFFINITY TargetProcessors,
+    IN PKIPI_WORKER WorkerFunction,
+    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+    IN ULONG_PTR Context,
+    IN PULONG Count
+);
+
+VOID
+FASTCALL
+KiIpiSignalPacketDone(
+    IN PKIPI_CONTEXT PacketContext
+);
+
+VOID
+FASTCALL
+KiIpiSignalPacketDoneAndStall(
+    IN PKIPI_CONTEXT PacketContext,
+    IN volatile PULONG ReverseStall
 );
 
 /* next file ***************************************************************/

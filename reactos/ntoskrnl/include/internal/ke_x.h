@@ -594,7 +594,7 @@ KiRescheduleThread(IN BOOLEAN NewThread,
     if ((NewThread) && !(KeGetPcr()->Number == Cpu))
     {
         /* Send an IPI to request delivery */
-        KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+        KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
     }
 }
 
@@ -751,7 +751,7 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
         if (KeGetPcr()->Number != Processor)
         {
             /* Send an IPI to request delivery */
-            KiIpiSendRequest(AFFINITY_MASK(Processor), IPI_APC);
+            KiIpiSend(AFFINITY_MASK(Processor), IPI_APC);
         }
         else
         {

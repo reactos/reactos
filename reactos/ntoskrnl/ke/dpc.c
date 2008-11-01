@@ -683,7 +683,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
         if (Prcb != CurrentPrcb)
         {
             /* It was, request and IPI */
-            KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+            KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
         }
         else
         {
