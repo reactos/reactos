@@ -1716,6 +1716,115 @@ __inline static UINT get_lcid_codepage( LCID lcid )
 }
 
 
+/*************************************************************************
+ *           FoldStringA    (KERNEL32.@)
+ *
+ * Map characters in a string.
+ *
+ * PARAMS
+ *  dwFlags [I] Flags controlling chars to map (MAP_ constants from "winnls.h")
+ *  src     [I] String to map
+ *  srclen  [I] Length of src, or -1 if src is NUL terminated
+ *  dst     [O] Destination for mapped string
+ *  dstlen  [I] Length of dst, or 0 to find the required length for the mapped string
+ *
+ * RETURNS
+ *  Success: The length of the string written to dst, including the terminating NUL. If
+ *           dstlen is 0, the value returned is the same, but nothing is written to dst,
+ *           and dst may be NULL.
+ *  Failure: 0. Use GetLastError() to determine the cause.
+ */
+INT WINAPI FoldStringA(DWORD dwFlags, LPCSTR src, INT srclen,
+                       LPSTR dst, INT dstlen)
+{
+    INT ret = 0, srclenW = 0;
+    WCHAR *srcW = NULL, *dstW = NULL;
+
+    if (!src || !srclen || dstlen < 0 || (dstlen && !dst) || src == dst)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    srclenW = MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                                  src, srclen, NULL, 0);
+    srcW = HeapAlloc(GetProcessHeap(), 0, srclenW * sizeof(WCHAR));
+
+    if (!srcW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto FoldStringA_exit;
+    }
+
+    MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                        src, srclen, srcW, srclenW);
+
+    dwFlags = (dwFlags & ~MAP_PRECOMPOSED) | MAP_FOLDCZONE;
+
+    ret = FoldStringW(dwFlags, srcW, srclenW, NULL, 0);
+    if (ret && dstlen)
+    {
+        dstW = HeapAlloc(GetProcessHeap(), 0, ret * sizeof(WCHAR));
+
+        if (!dstW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto FoldStringA_exit;
+        }
+
+        ret = FoldStringW(dwFlags, srcW, srclenW, dstW, ret);
+        if (!WideCharToMultiByte(CP_ACP, 0, dstW, ret, dst, dstlen, NULL, NULL))
+        {
+            ret = 0;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, dstW);
+
+FoldStringA_exit:
+    HeapFree(GetProcessHeap(), 0, srcW);
+    return ret;
+}
+
+extern int wine_fold_string( int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen );
+
+/*************************************************************************
+ *           FoldStringW    (KERNEL32.@)
+ *
+ * See FoldStringA.
+ */
+INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
+                       LPWSTR dst, INT dstlen)
+{
+    int ret;
+
+    switch (dwFlags & (MAP_COMPOSITE|MAP_PRECOMPOSED|MAP_EXPAND_LIGATURES))
+    {
+    case 0:
+        if (dwFlags)
+          break;
+        /* Fall through for dwFlags == 0 */
+    case MAP_PRECOMPOSED|MAP_COMPOSITE:
+    case MAP_PRECOMPOSED|MAP_EXPAND_LIGATURES:
+    case MAP_COMPOSITE|MAP_EXPAND_LIGATURES:
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (!src || !srclen || dstlen < 0 || (dstlen && !dst) || src == dst)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    ret = wine_fold_string(dwFlags, src, srclen, dst, dstlen);
+    if (!ret)
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return ret;
+}
+
+
 /*
  * @implemented
  */
