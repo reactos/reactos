@@ -92,6 +92,9 @@ KiTimerExpiration(IN PKDPC Dpc,
     ULONG Period;
     DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
     PKSPIN_LOCK_QUEUE LockQueue;
+#ifdef CONFIG_SMP
+    PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
 
     /* Disable interrupts */
     _disable();
@@ -182,19 +185,38 @@ KiTimerExpiration(IN PKDPC Dpc,
                 }
 
                 /* Check if we have a DPC */
-#ifndef CONFIG_SMP
                 if (TimerDpc)
                 {
-                    /* Setup the DPC Entry */
-                    DpcEntry[DpcCalls].Dpc = TimerDpc;
-                    DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
-                    DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
-                    DpcCalls++;
-                    ASSERT(DpcCalls < MAX_TIMER_DPCS);
-                }
-#else
-#error MP Case: Need to check the DPC target CPU so see if we can piggyback          
+#ifdef CONFIG_SMP
+                    /* 
+                     * If the DPC is targeted to another processor,
+                     * then insert it into that processor's DPC queue
+                     * instead of delivering it now.
+                     * If the DPC is a threaded DPC, and the current CPU
+                     * has threaded DPCs enabled (KiExecuteDpc is actively parsing DPCs),
+                     * then also insert it into the DPC queue for threaded delivery,
+                     * instead of doing it here.
+                     */
+                    if (((TimerDpc->Number >= MAXIMUM_PROCESSORS) &&
+                        ((TimerDpc->Number - MAXIMUM_PROCESSORS) != Prcb->Number)) ||
+                        ((TimerDpc->Type == ThreadedDpcObject) && (Prcb->ThreadDpcEnable)))
+                    {
+                        /* Queue it */
+                        KeInsertQueueDpc(TimerDpc,
+                                         UlongToPtr(SystemTime.LowPart),
+                                         UlongToPtr(SystemTime.HighPart));
+                    }
+                    else
 #endif
+                    {
+                        /* Setup the DPC Entry */
+                        DpcEntry[DpcCalls].Dpc = TimerDpc;
+                        DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+                        DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+                        DpcCalls++;
+                        ASSERT(DpcCalls < MAX_TIMER_DPCS);
+                    }
+                }
 
                 /* Check if we're done processing */
                 if (!(ActiveTimers) || !(Timers))
@@ -311,7 +333,10 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
     PKDPC TimerDpc;
     ULONG Period;
     DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
-    
+#ifdef CONFIG_SMP
+    PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
+
     /* Query system */
     KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
     
@@ -357,21 +382,40 @@ KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
             Interval.QuadPart = Int32x32To64(Period, -10000);
             while (!KiInsertTreeTimer(Timer, Interval));
         }
-                
+
         /* Check if we have a DPC */
-#ifndef CONFIG_SMP
         if (TimerDpc)
         {
-            /* Setup the DPC Entry */
-            DpcEntry[DpcCalls].Dpc = TimerDpc;
-            DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
-            DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
-            DpcCalls++;
-            ASSERT(DpcCalls < MAX_TIMER_DPCS);
-        }
-#else
-#error MP Case: Need to check the DPC target CPU so see if we can piggyback          
+#ifdef CONFIG_SMP
+            /* 
+             * If the DPC is targeted to another processor,
+             * then insert it into that processor's DPC queue
+             * instead of delivering it now.
+             * If the DPC is a threaded DPC, and the current CPU
+             * has threaded DPCs enabled (KiExecuteDpc is actively parsing DPCs),
+             * then also insert it into the DPC queue for threaded delivery,
+             * instead of doing it here.
+             */
+            if (((TimerDpc->Number >= MAXIMUM_PROCESSORS) &&
+                ((TimerDpc->Number - MAXIMUM_PROCESSORS) != Prcb->Number)) ||
+                ((TimerDpc->Type == ThreadedDpcObject) && (Prcb->ThreadDpcEnable)))
+            {
+                /* Queue it */
+                KeInsertQueueDpc(TimerDpc,
+                                 UlongToPtr(SystemTime.LowPart),
+                                 UlongToPtr(SystemTime.HighPart));
+            }
+            else
 #endif
+            {
+                /* Setup the DPC Entry */
+                DpcEntry[DpcCalls].Dpc = TimerDpc;
+                DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+                DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+                DpcCalls++;
+                ASSERT(DpcCalls < MAX_TIMER_DPCS);
+            }
+        }
     }
     
     /* Check if we still have DPC entries */
