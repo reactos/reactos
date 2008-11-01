@@ -26,7 +26,6 @@
 	<file>wrap.c</file>
 	<file>writer.c</file>
 	<file>version.rc</file>
-	<file>riched20.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

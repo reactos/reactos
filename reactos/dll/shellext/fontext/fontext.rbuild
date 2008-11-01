@@ -15,5 +15,4 @@
 	<file>fontext.c</file>
 	<file>regsvr.c</file>
 	<file>fontext.rc</file>
-	<file>fontext.spec</file>
 </module>

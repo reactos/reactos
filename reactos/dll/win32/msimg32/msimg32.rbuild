@@ -10,5 +10,4 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>msimg32_main.c</file>
-	<file>msimg32.spec</file>
 </module>

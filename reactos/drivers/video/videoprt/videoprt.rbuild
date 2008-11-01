@@ -22,5 +22,4 @@
 	<file>timer.c</file>
 	<file>videoprt.c</file>
 	<file>videoprt.rc</file>
-	<file>videoprt.spec</file>
 </module>

@@ -39,5 +39,4 @@
 		<file>wait.c</file>
 	</directory>
 	<file>tcpip.rc</file>
-	<file>tcpip.spec</file>
 </module>

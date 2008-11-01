@@ -10,7 +10,6 @@
 	<file>files.c</file>
 	<file>install.c</file>
 	<file>reg.c</file>
-	<file>advpack.spec</file>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>setupapi</library>

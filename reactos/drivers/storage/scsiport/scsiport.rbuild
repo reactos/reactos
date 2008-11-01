@@ -9,5 +9,4 @@
 	<library>hal</library>
 	<file>scsiport.c</file>
 	<file>scsiport.rc</file>
-	<file>scsiport.spec</file>
 </module>

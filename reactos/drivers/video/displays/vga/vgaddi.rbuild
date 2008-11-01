@@ -22,5 +22,4 @@
 		<file>vgavideo.c</file>
 	</directory>
 	<file>vgaddi.rc</file>
-	<file>vgaddi.spec</file>
 </module>

@@ -11,5 +11,4 @@
 	<file>screen.c</file>
 	<file>surface.c</file>
 	<file>framebuf.rc</file>
-	<file>framebuf.spec</file>
 </module>

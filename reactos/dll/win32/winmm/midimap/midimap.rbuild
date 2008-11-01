@@ -12,5 +12,4 @@
 	<library>msvcrt</library>
 	<file>midimap.c</file>
 	<file>midimap.rc</file>
-	<file>midimap.spec</file>
 </module>
