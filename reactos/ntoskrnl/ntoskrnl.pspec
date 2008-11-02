@@ -494,7 +494,7 @@
 @ stdcall IoSynchronousInvalidateDeviceRelations(ptr long)
 @ stdcall IoSynchronousPageWrite(ptr ptr ptr ptr ptr)
 @ stdcall IoThreadToProcess(ptr)
-;IoTranslateBusAddress
+@ stdcall IoTranslateBusAddress(long long long long ptr ptr)
 @ stdcall IoUnregisterFileSystem(ptr)
 @ stdcall IoUnregisterFsRegistrationChange(ptr ptr)
 @ stdcall IoUnregisterPlugPlayNotification(ptr)
@@ -705,6 +705,7 @@
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
+;KiCheckForSListAddress
 #ifdef _M_IX86
 @ stdcall KiCoprocessorError()
 #endif
@@ -915,17 +916,17 @@
 ;PfxInsertPrefix
 ;PfxRemovePrefix
 @ stdcall PoCallDriver(ptr ptr)
-;PoCancelDeviceNotify
+@ stdcall PoCancelDeviceNotify(ptr)
 @ stdcall PoQueueShutdownWorkItem(ptr)
 @ stdcall PoRegisterDeviceForIdleDetection(ptr long long long)
-;PoRegisterDeviceNotify
+@ stdcall PoRegisterDeviceNotify(ptr long long long ptr ptr)
 @ stdcall PoRegisterSystemState(ptr long)
 @ stdcall PoRequestPowerIrp(ptr long long ptr ptr ptr)
-;PoRequestShutdownEvent
-;PoSetHiberRange
+@ stdcall PoRequestShutdownEvent(ptr)
+@ stdcall PoSetHiberRange(ptr long ptr long long)
 @ stdcall PoSetPowerState(ptr long long)
 @ stdcall PoSetSystemState(long)
-;PoShutdownBugCheck
+@ stdcall PoShutdownBugCheck(long long ptr ptr ptr ptr)
 @ stdcall PoStartNextPowerIrp(ptr)
 @ stdcall PoUnregisterSystemState(ptr)
 @ stdcall ProbeForRead(ptr long long)

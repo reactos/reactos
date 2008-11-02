@@ -3489,3 +3489,18 @@ IoSynchronousInvalidateDeviceRelations(
             return STATUS_NOT_SUPPORTED;
     }
 }
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+IoTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
+                      IN ULONG BusNumber,
+                      IN PHYSICAL_ADDRESS BusAddress,
+                      IN OUT PULONG AddressSpace,
+                      OUT PPHYSICAL_ADDRESS TranslatedAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
