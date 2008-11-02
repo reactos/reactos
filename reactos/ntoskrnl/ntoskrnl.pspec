@@ -538,9 +538,9 @@
 @ stdcall KdSystemDebugControl(long ptr long ptr long ptr long)
 #ifdef _M_IX86
 @ stdcall Ke386CallBios(long ptr)
-;Ke386IoSetAccessProcess
-;Ke386QueryIoAccessMap
-;Ke386SetIoAccessMap
+@ stdcall Ke386IoSetAccessProcess(ptr long)
+@ stdcall Ke386QueryIoAccessMap(long ptr)
+@ stdcall Ke386SetIoAccessMap(long ptr)
 #endif
 @ fastcall KeAcquireGuardedMutex(ptr)
 @ fastcall KeAcquireGuardedMutexUnsafe(ptr)
