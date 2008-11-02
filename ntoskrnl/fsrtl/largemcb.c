@@ -427,22 +427,35 @@ FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlUninitializeBaseMcb(IN PBASE_MCB Mcb)
 {
-    KEBUGCHECK(0);
+    if ((Mcb->PoolType == PagedPool) && (Mcb->MaximumPairCount == MAXIMUM_PAIR_COUNT))
+    {
+        ExFreeToPagedLookasideList(&FsRtlFirstMappingLookasideList,
+                                   Mcb->Mapping);
+    }
+    else
+    {
+        ExFreePoolWithTag(Mcb->Mapping, TAG('F', 'S', 'B', 'C'));
+    }
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
-    KEBUGCHECK(0);
+    if (Mcb->FastMutex)
+    {
+        ExFreeToPagedLookasideList(&FsRtlFastMutexLookasideList,
+                                   Mcb->FastMutex);
+        FsRtlUninitializeBaseMcb(&(Mcb->BaseMcb));
+    }
 }
 
