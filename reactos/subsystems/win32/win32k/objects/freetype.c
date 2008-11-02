@@ -40,6 +40,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
+#include FT_TYPE1_TABLES_H
 #include <freetype/tttables.h>
 #include <freetype/fttrigon.h>
 #include <freetype/ftglyph.h>
@@ -103,7 +104,7 @@ static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits 
 };
 
 /*
- *  For NtGdiTranslateCharsetInfo
+ *  For TranslateCharsetInfo
  */
 #define FS(x) {{0,0,0,0},{0x1<<(x),0}}
 #define MAXTCIINDEX 32
@@ -784,7 +785,14 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
   Otm->otmSize = Needed;
 
-  FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+//  FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+  if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
+  {
+      FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+      FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
+  }
+
+  RtlCopyMemory(&Otm->otmTextMetrics, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
 
   Otm->otmFiller = 0;
   memcpy(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -1289,81 +1297,6 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
   return FALSE;
 }
 
-int STDCALL
-NtGdiGetFontFamilyInfo(HDC Dc,
-                       LPLOGFONTW UnsafeLogFont,
-                       PFONTFAMILYINFO UnsafeInfo,
-                       DWORD Size)
-{
-  NTSTATUS Status;
-  LOGFONTW LogFont;
-  PFONTFAMILYINFO Info;
-  DWORD Count;
-  PW32PROCESS Win32Process;
-
-  /* Make a safe copy */
-  Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return -1;
-    }
-
-  /* Allocate space for a safe copy */
-  Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), TAG_GDITEXT);
-  if (NULL == Info)
-    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return -1;
-    }
-
-  /* Enumerate font families in the global list */
-  IntLockGlobalFonts;
-  Count = 0;
-  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, &FontListHead) )
-    {
-      IntUnLockGlobalFonts;
-      ExFreePool(Info);
-      return -1;
-    }
-  IntUnLockGlobalFonts;
-
-  /* Enumerate font families in the process local list */
-  Win32Process = PsGetCurrentProcessWin32Process();
-  IntLockProcessPrivateFonts(Win32Process);
-  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size,
-                                 &Win32Process->PrivateFontListHead))
-    {
-      IntUnLockProcessPrivateFonts(Win32Process);
-      ExFreePool(Info);
-      return -1;
-    }
-  IntUnLockProcessPrivateFonts(Win32Process);
-
-  /* Enumerate font families in the registry */
-  if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
-    {
-      ExFreePool(Info);
-      return -1;
-    }
-
-  /* Return data to caller */
-  if (0 != Count)
-    {
-      Status = MmCopyToCaller(UnsafeInfo, Info,
-                              (Count < Size ? Count : Size) * sizeof(FONTFAMILYINFO));
-      if (! NT_SUCCESS(Status))
-        {
-          ExFreePool(Info);
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return -1;
-        }
-    }
-
-  ExFreePool(Info);
-
-  return Count;
-}
 
 FT_Glyph STDCALL
 ftGdiGlyphCacheGet(
@@ -1468,1048 +1401,6 @@ ftGdiGlyphCacheSet(
    return GlyphCopy;
 }
 
-BOOL
-APIENTRY
-NtGdiExtTextOutW(
-    IN HDC hDC,
-    IN INT XStart,
-    IN INT YStart,
-    IN UINT fuOptions,
-    IN OPTIONAL LPRECT lprc,
-    IN LPWSTR UnsafeString,
-    IN INT Count,
-    IN OPTIONAL LPINT UnsafeDx,
-    IN DWORD dwCodePage)
-{
-   /*
-    * FIXME:
-    * Call EngTextOut, which does the real work (calling DrvTextOut where
-    * appropriate)
-    */
-
-   DC *dc;
-   PDC_ATTR Dc_Attr;
-   SURFOBJ *SurfObj;
-   BITMAPOBJ *BitmapObj = NULL;
-   int error, glyph_index, n, i;
-   FT_Face face;
-   FT_GlyphSlot glyph;
-   FT_Glyph realglyph;
-   FT_BitmapGlyph realglyph2;
-   LONGLONG TextLeft, RealXStart;
-   ULONG TextTop, previous, BackgroundLeft;
-   FT_Bool use_kerning;
-   RECTL DestRect, MaskRect, SpecifiedDestRect;
-   POINTL SourcePoint, BrushOrigin;
-   HBRUSH hBrushFg = NULL;
-   PGDIBRUSHOBJ BrushFg = NULL;
-   GDIBRUSHINST BrushFgInst;
-   HBRUSH hBrushBg = NULL;
-   PGDIBRUSHOBJ BrushBg = NULL;
-   GDIBRUSHINST BrushBgInst;
-   HBITMAP HSourceGlyph;
-   SURFOBJ *SourceGlyphSurf;
-   SIZEL bitSize;
-   FT_CharMap found = 0, charmap;
-   INT yoff;
-   FONTOBJ *FontObj;
-   PFONTGDI FontGDI;
-   PTEXTOBJ TextObj = NULL;
-   PPALGDI PalDestGDI;
-   XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
-   ULONG Mode;
-   FT_Render_Mode RenderMode;
-   BOOLEAN Render;
-   NTSTATUS Status;
-   INT *Dx = NULL;
-   POINT Start;
-   BOOL DoBreak = FALSE;
-   LPCWSTR String, SafeString = NULL;
-   HPALETTE hDestPalette;
-
-   // TODO: Write test-cases to exactly match real Windows in different
-   // bad parameters (e.g. does Windows check the DC or the RECT first?).
-   dc = DC_LockDc(hDC);
-   if (!dc)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   if (dc->DC_Type == DC_TYPE_INFO)
-   {
-      DC_UnlockDc(dc);
-      /* Yes, Windows really returns TRUE in this case */
-      return TRUE;
-   }
-
-   Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-	/* Check if String is valid */
-   if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      goto fail;
-   }
-   if (Count > 0)
-   {
-      SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
-      if (!SafeString)
-      {
-         goto fail;
-      }
-      Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
-      if (! NT_SUCCESS(Status))
-      {
-        goto fail;
-      }
-   }
-   String = SafeString;
-
-   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-   {
-      // At least one of the two flags were specified. Copy lprc. Once.
-      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-      if (!NT_SUCCESS(Status))
-      {
-         DC_UnlockDc(dc);
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
-   }
-
-   if (NULL != UnsafeDx && Count > 0)
-   {
-      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
-      if (NULL == Dx)
-      {
-         goto fail;
-      }
-      Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-      if (! NT_SUCCESS(Status))
-      {
-         goto fail;
-      }
-   }
-
-   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   if ( !BitmapObj )
-   {
-      goto fail;
-   }
-   SurfObj = &BitmapObj->SurfObj;
-   ASSERT(SurfObj);
-
-   Start.x = XStart; Start.y = YStart;
-   IntLPtoDP(dc, &Start, 1);
-
-   RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
-   YStart = Start.y + dc->ptlDCOrig.y;
-
-   /* Create the brushes */
-   hDestPalette = BitmapObj->hDIBPalette;
-   if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
-   PalDestGDI = PALETTE_LockPalette(hDestPalette);
-   if ( !PalDestGDI )
-      Mode = PAL_RGB;
-   else
-   {
-      Mode = PalDestGDI->Mode;
-      PALETTE_UnlockPalette(PalDestGDI);
-   }
-   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
-   if ( !XlateObj )
-   {
-      goto fail;
-   }
-   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crForegroundClr), 0);
-   if ( !hBrushFg )
-   {
-      goto fail;
-   }
-   BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
-   if ( !BrushFg )
-   {
-      goto fail;
-   }
-   IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
-   if ((fuOptions & ETO_OPAQUE) || Dc_Attr->jBkMode == OPAQUE)
-   {
-      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crBackgroundClr), 0);
-      if ( !hBrushBg )
-      {
-         goto fail;
-      }
-      BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
-      if ( !BrushBg )
-      {
-         goto fail;
-      }
-      IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
-   }
-   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
-   if ( !XlateObj2 )
-   {
-      goto fail;
-   }
-
-   SourcePoint.x = 0;
-   SourcePoint.y = 0;
-   MaskRect.left = 0;
-   MaskRect.top = 0;
-   BrushOrigin.x = 0;
-   BrushOrigin.y = 0;
-
-   if ((fuOptions & ETO_OPAQUE) && lprc)
-   {
-      DestRect.left   = SpecifiedDestRect.left   + dc->ptlDCOrig.x;
-      DestRect.top    = SpecifiedDestRect.top    + dc->ptlDCOrig.y;
-      DestRect.right  = SpecifiedDestRect.right  + dc->ptlDCOrig.x;
-      DestRect.bottom = SpecifiedDestRect.bottom + dc->ptlDCOrig.y;
-      IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
-      IntEngBitBlt(
-         &BitmapObj->SurfObj,
-         NULL,
-         NULL,
-         dc->CombinedClip,
-         NULL,
-         &DestRect,
-         &SourcePoint,
-         &SourcePoint,
-         &BrushBgInst.BrushObject,
-         &BrushOrigin,
-         ROP3_TO_ROP4(PATCOPY));
-      fuOptions &= ~ETO_OPAQUE;
-   }
-   else
-   {
-      if (Dc_Attr->jBkMode == OPAQUE)
-      {
-         fuOptions |= ETO_OPAQUE;
-      }
-   }
-
-   TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
-   if(TextObj == NULL)
-   {
-      goto fail;
-   }
-
-   FontObj = TextObj->Font;
-   ASSERT(FontObj);
-   FontGDI = ObjToGDI(FontObj, FONT);
-   ASSERT(FontGDI);
-
-   IntLockFreeType;
-   face = FontGDI->face;
-   if (face->charmap == NULL)
-   {
-      DPRINT("WARNING: No charmap selected!\n");
-      DPRINT("This font face has %d charmaps\n", face->num_charmaps);
-
-      for (n = 0; n < face->num_charmaps; n++)
-      {
-         charmap = face->charmaps[n];
-         DPRINT("found charmap encoding: %u\n", charmap->encoding);
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-      if (!found)
-      {
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-      }
-      error = FT_Set_Charmap(face, found);
-         if (error)
-      {
-         DPRINT1("WARNING: Could not set the charmap!\n");
-      }
-   }
-
-   Render = IntIsFontRenderingEnabled();
-   if (Render)
-      RenderMode = IntGetFontRenderMode(&TextObj->logfont.elfEnumLogfontEx.elfLogFont);
-   else
-      RenderMode = FT_RENDER_MODE_MONO;
-
-   error = FT_Set_Pixel_Sizes(
-      face,
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-      /* FIXME should set character height if neg */
-      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-      - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-   if (error)
-   {
-      DPRINT1("Error in setting pixel sizes: %u\n", error);
-      IntUnLockFreeType;
-      goto fail;
-   }
-
-   /*
-    * Process the vertical alignment and determine the yoff.
-    */
-
-   if (Dc_Attr->lTextAlign & TA_BASELINE)
-      yoff = 0;
-   else if (Dc_Attr->lTextAlign & TA_BOTTOM)
-      yoff = -face->size->metrics.descender >> 6;
-   else /* TA_TOP */
-      yoff = face->size->metrics.ascender >> 6;
-
-   use_kerning = FT_HAS_KERNING(face);
-   previous = 0;
-
-   /*
-    * Process the horizontal alignment and modify XStart accordingly.
-    */
-
-   if (Dc_Attr->lTextAlign & (TA_RIGHT | TA_CENTER))
-   {
-      ULONGLONG TextWidth = 0;
-      LPCWSTR TempText = String;
-      int Start;
-
-      /*
-       * Calculate width of the text.
-       */
-
-      if (NULL != Dx)
-      {
-         Start = Count < 2 ? 0 : Count - 2;
-         TextWidth = Count < 2 ? 0 : (Dx[Count - 2] << 6);
-      }
-      else
-      {
-         Start = 0;
-      }
-      TempText = String + Start;
-
-      for (i = Start; i < Count; i++)
-      {
-         if (fuOptions & ETO_GLYPH_INDEX)
-           glyph_index = *TempText;
-         else
-           glyph_index = FT_Get_Char_Index(face, *TempText);
-
-         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
-         {
-             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-             if (error)
-             {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-             }
-
-             glyph = face->glyph;
-             realglyph = ftGdiGlyphCacheSet(face, glyph_index,
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
-             if (!realglyph)
-             {
-                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
-                 IntUnLockFreeType;
-                 goto fail;
-             }
-
-         }
-         /* retrieve kerning distance */
-         if (use_kerning && previous && glyph_index)
-         {
-            FT_Vector delta;
-            FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextWidth += delta.x;
-         }
-
-         TextWidth += realglyph->advance.x >> 10;
-
-         previous = glyph_index;
-         TempText++;
-      }
-
-      previous = 0;
-
-      if (Dc_Attr->lTextAlign & TA_RIGHT)
-      {
-         RealXStart -= TextWidth;
-      }
-      else
-      {
-         RealXStart -= TextWidth / 2;
-      }
-   }
-
-   TextLeft = RealXStart;
-   TextTop = YStart;
-   BackgroundLeft = (RealXStart + 32) >> 6;
-
-   /*
-    * The main rendering loop.
-    */
-
-   for (i = 0; i < Count; i++)
-   {
-      if (fuOptions & ETO_GLYPH_INDEX)
-        glyph_index = *String;
-      else
-        glyph_index = FT_Get_Char_Index(face, *String);
-
-      if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
-      {
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-        if (error)
-        {
-           DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
-           IntUnLockFreeType;
-           goto fail;
-        }
-        glyph = face->glyph;
-        realglyph = ftGdiGlyphCacheSet(face,
-                                       glyph_index,
-                                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
-                                       glyph,
-                                       RenderMode);
-        if (!realglyph)
-        {
-            DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
-            IntUnLockFreeType;
-            goto fail;
-        }
-      }
-//      DbgPrint("realglyph: %x\n", realglyph);
-//      DbgPrint("TextLeft: %d\n", TextLeft);
-
-      /* retrieve kerning distance and move pen position */
-      if (use_kerning && previous && glyph_index && NULL == Dx)
-      {
-         FT_Vector delta;
-         FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-         TextLeft += delta.x;
-      }
-//      DPRINT1("TextLeft: %d\n", TextLeft);
-//      DPRINT1("TextTop: %d\n", TextTop);
-
-      if (realglyph->format == ft_glyph_format_outline)
-      {
-         DbgPrint("Should already be done\n");
-//         error = FT_Render_Glyph(glyph, RenderMode);
-         error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
-         if (error)
-         {
-            DPRINT1("WARNING: Failed to render glyph!\n");
-            goto fail;
-         }
-      }
-      realglyph2 = (FT_BitmapGlyph)realglyph;
-
-//      DPRINT1("Pitch: %d\n", pitch);
-//      DPRINT1("Advance: %d\n", realglyph->advance.x);
-
-      if (fuOptions & ETO_OPAQUE)
-      {
-         DestRect.left = BackgroundLeft;
-         DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
-         DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
-         DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
-         IntEngBitBlt(
-            &BitmapObj->SurfObj,
-            NULL,
-            NULL,
-            dc->CombinedClip,
-            NULL,
-            &DestRect,
-            &SourcePoint,
-            &SourcePoint,
-            &BrushBgInst.BrushObject,
-            &BrushOrigin,
-            ROP3_TO_ROP4(PATCOPY));
-         BackgroundLeft = DestRect.right;
-      }
-
-      DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
-      DestRect.right = DestRect.left + realglyph2->bitmap.width;
-      DestRect.top = TextTop + yoff - realglyph2->top;
-      DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
-
-      bitSize.cx = realglyph2->bitmap.width;
-      bitSize.cy = realglyph2->bitmap.rows;
-      MaskRect.right = realglyph2->bitmap.width;
-      MaskRect.bottom = realglyph2->bitmap.rows;
-
-      /*
-       * We should create the bitmap out of the loop at the biggest possible
-       * glyph size. Then use memset with 0 to clear it and sourcerect to
-       * limit the work of the transbitblt.
-       *
-       * FIXME: DIB bitmaps should have an lDelta which is a multiple of 4.
-       * Here we pass in the pitch from the FreeType bitmap, which is not
-       * guaranteed to be a multiple of 4. If it's not, we should expand
-       * the FreeType bitmap to a temporary bitmap.
-       */
-
-      HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
-                                     (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
-                                     BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
-                                     realglyph2->bitmap.buffer);
-      if ( !HSourceGlyph )
-      {
-        DPRINT1("WARNING: EngLockSurface() failed!\n");
-        // FT_Done_Glyph(realglyph);
-        IntUnLockFreeType;
-        goto fail;
-      }
-      SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-      if ( !SourceGlyphSurf )
-      {
-        EngDeleteSurface((HSURF)HSourceGlyph);
-        DPRINT1("WARNING: EngLockSurface() failed!\n");
-        IntUnLockFreeType;
-        goto fail;
-      }
-
-      /*
-       * Use the font data as a mask to paint onto the DCs surface using a
-       * brush.
-       */
-
-      if (lprc &&
-          (fuOptions & ETO_CLIPPED) &&
-          DestRect.right >= SpecifiedDestRect.right + dc->ptlDCOrig.x)
-      {
-         // We do the check '>=' instead of '>' to possibly save an iteration
-         // through this loop, since it's breaking after the drawing is done,
-         // and x is always incremented.
-         DestRect.right = SpecifiedDestRect.right + dc->ptlDCOrig.x;
-         DoBreak = TRUE;
-      }
-
-      IntEngMaskBlt(
-         SurfObj,
-         SourceGlyphSurf,
-         dc->CombinedClip,
-         XlateObj,
-         XlateObj2,
-         &DestRect,
-         &SourcePoint,
-         (PPOINTL)&MaskRect,
-         &BrushFgInst.BrushObject,
-         &BrushOrigin);
-
-      EngUnlockSurface(SourceGlyphSurf);
-      EngDeleteSurface((HSURF)HSourceGlyph);
-
-      if (DoBreak)
-      {
-         break;
-      }
-
-      if (NULL == Dx)
-      {
-         TextLeft += realglyph->advance.x >> 10;
-//         DbgPrint("new TextLeft: %d\n", TextLeft);
-      }
-      else
-      {
-         TextLeft += Dx[i] << 6;
-//         DbgPrint("new TextLeft2: %d\n", TextLeft);
-      }
-      previous = glyph_index;
-
-      String++;
-   }
-
-   IntUnLockFreeType;
-
-   EngDeleteXlate(XlateObj);
-   EngDeleteXlate(XlateObj2);
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
-   if(TextObj != NULL)
-     TEXTOBJ_UnlockText(TextObj);
-   if (hBrushBg != NULL)
-   {
-      BRUSHOBJ_UnlockBrush(BrushBg);
-      NtGdiDeleteObject(hBrushBg);
-   }
-   BRUSHOBJ_UnlockBrush(BrushFg);
-   NtGdiDeleteObject(hBrushFg);
-   if (NULL != SafeString)
-   {
-      ExFreePool((void*)SafeString);
-   }
-   if (NULL != Dx)
-   {
-      ExFreePool(Dx);
-   }
-   DC_UnlockDc( dc );
-
-   return TRUE;
-
-fail:
-   if ( XlateObj2 != NULL )
-      EngDeleteXlate(XlateObj2);
-   if ( XlateObj != NULL )
-      EngDeleteXlate(XlateObj);
-   if(TextObj != NULL)
-     TEXTOBJ_UnlockText(TextObj);
-   if (BitmapObj != NULL)
-     BITMAPOBJ_UnlockBitmap(BitmapObj);
-   if (hBrushBg != NULL)
-   {
-      BRUSHOBJ_UnlockBrush(BrushBg);
-      NtGdiDeleteObject(hBrushBg);
-   }
-   if (hBrushFg != NULL)
-   {
-      BRUSHOBJ_UnlockBrush(BrushFg);
-      NtGdiDeleteObject(hBrushFg);
-   }
-   if (NULL != SafeString)
-   {
-      ExFreePool((void*)SafeString);
-   }
-   if (NULL != Dx)
-   {
-      ExFreePool(Dx);
-   }
-   DC_UnlockDc(dc);
-
-   return FALSE;
-}
-
- /*
- * @implemented
- */
-BOOL
-STDCALL
-NtGdiGetCharABCWidthsW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN ULONG Count,
-    IN OPTIONAL PWCHAR pwch,
-    IN FLONG fl,
-    OUT PVOID Buffer)
-{
-   LPABC SafeBuff;
-   LPABCFLOAT SafeBuffF = NULL;
-   PDC dc;
-   PDC_ATTR Dc_Attr;
-   PTEXTOBJ TextObj;
-   PFONTGDI FontGDI;
-   FT_Face face;
-   FT_CharMap charmap, found = NULL;
-   UINT i, glyph_index, BufferSize;
-   HFONT hFont = 0;
-   NTSTATUS Status = STATUS_SUCCESS;
-
-   if(pwch)
-   {
-     _SEH_TRY
-     {
-       ProbeForRead(pwch,
-            sizeof(PWSTR),
-                       1);
-     }
-     _SEH_HANDLE
-     {
-      Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-   }
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastWin32Error(Status);
-      return FALSE;
-   }
-
-   BufferSize = Count * sizeof(ABC); // Same size!
-   SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
-   if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
-   if (SafeBuff == NULL)
-   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-   }
-
-   dc = DC_LockDc(hDC);
-   if (dc == NULL)
-   {
-      ExFreePool(SafeBuff);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-   hFont = Dc_Attr->hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(dc);
-
-   if (TextObj == NULL)
-   {
-      ExFreePool(SafeBuff);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-
-   FontGDI = ObjToGDI(TextObj->Font, FONT);
-
-   face = FontGDI->face;
-   if (face->charmap == NULL)
-   {
-      for (i = 0; i < face->num_charmaps; i++)
-      {
-         charmap = face->charmaps[i];
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-
-      if (!found)
-      {
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-         ExFreePool(SafeBuff);
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-
-      IntLockFreeType;
-      FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
-   }
-
-   IntLockFreeType;
-   FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                      /* FIXME should set character height if neg */
-                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-
-   for (i = FirstChar; i < FirstChar+Count; i++)
-   {
-      int adv, lsb, bbx, left, right;
-
-      if (pwch)
-      {
-         if (fl & GCABCW_INDICES)
-          glyph_index = pwch[i - FirstChar];
-         else
-          glyph_index = FT_Get_Char_Index(face, pwch[i - FirstChar]);
-      }
-      else
-      {
-         if (fl & GCABCW_INDICES)
-             glyph_index = i;
-         else
-             glyph_index = FT_Get_Char_Index(face, i);
-      }
-      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-
-      left = (INT)face->glyph->metrics.horiBearingX  & -64;
-      right = (INT)((face->glyph->metrics.horiBearingX + face->glyph->metrics.width) + 63) & -64;
-      adv  = (face->glyph->advance.x + 32) >> 6;
-
-//      int test = (INT)(face->glyph->metrics.horiAdvance + 63) >> 6;
-//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same!*/
-
-      lsb = left >> 6;
-      bbx = (right - left) >> 6;
-/*
-      DPRINT1("lsb %d and bbx %d\n", lsb, bbx );
- */
-      if (!fl)
-      {
-        SafeBuffF[i - FirstChar].abcfA = (FLOAT) lsb;
-        SafeBuffF[i - FirstChar].abcfB = (FLOAT) bbx;
-        SafeBuffF[i - FirstChar].abcfC = (FLOAT) (adv - lsb - bbx);
-      }
-      else
-      {
-        SafeBuff[i - FirstChar].abcA = lsb;
-        SafeBuff[i - FirstChar].abcB = bbx;
-        SafeBuff[i - FirstChar].abcC = adv - lsb - bbx;
-      }
-   }
-   IntUnLockFreeType;
-   TEXTOBJ_UnlockText(TextObj);
-   Status = MmCopyToCaller(Buffer, SafeBuff, BufferSize);
-   if (! NT_SUCCESS(Status))
-     {
-       SetLastNtError(Status);
-       ExFreePool(SafeBuff);
-       return FALSE;
-     }
-   ExFreePool(SafeBuff);
-   DPRINT("NtGdiGetCharABCWidths Worked!\n");
-   return TRUE;
-}
-
- /*
- * @implemented
- */
-BOOL
-STDCALL
-NtGdiGetCharWidthW(
-    IN HDC hDC,
-    IN UINT FirstChar,
-    IN UINT Count,
-    IN OPTIONAL PWCHAR pwc,
-    IN FLONG fl,
-    OUT PVOID Buffer)
-{
-   NTSTATUS Status = STATUS_SUCCESS;
-   LPINT SafeBuff;
-   PFLOAT SafeBuffF = NULL;
-   PDC dc;
-   PDC_ATTR Dc_Attr;
-   PTEXTOBJ TextObj;
-   PFONTGDI FontGDI;
-   FT_Face face;
-   FT_CharMap charmap, found = NULL;
-   UINT i, glyph_index, BufferSize;
-   HFONT hFont = 0;
-
-   if(pwc)
-   {
-     _SEH_TRY
-     {
-       ProbeForRead(pwc,
-           sizeof(PWSTR),
-                      1);
-     }
-     _SEH_HANDLE
-     {
-      Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-   }
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastWin32Error(Status);
-      return FALSE;
-   }
-
-   BufferSize = Count * sizeof(INT); // Same size!
-   SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
-   if (!fl) SafeBuffF = (PFLOAT) SafeBuff;
-   if (SafeBuff == NULL)
-   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-   }
-
-   dc = DC_LockDc(hDC);
-   if (dc == NULL)
-   {
-      ExFreePool(SafeBuff);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-   hFont = Dc_Attr->hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(dc);
-
-   if (TextObj == NULL)
-   {
-      ExFreePool(SafeBuff);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-
-   FontGDI = ObjToGDI(TextObj->Font, FONT);
-
-   face = FontGDI->face;
-   if (face->charmap == NULL)
-   {
-      for (i = 0; i < face->num_charmaps; i++)
-      {
-         charmap = face->charmaps[i];
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-
-      if (!found)
-      {
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-         ExFreePool(SafeBuff);
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-
-      IntLockFreeType;
-      FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
-   }
-
-   IntLockFreeType;
-   FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                      /* FIXME should set character height if neg */
-                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                       - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-
-   for (i = FirstChar; i < FirstChar+Count; i++)
-   {
-      if (pwc)
-      {
-         if (fl & GCW_INDICES)
-          glyph_index = pwc[i - FirstChar];
-         else
-          glyph_index = FT_Get_Char_Index(face, pwc[i - FirstChar]);
-      }
-      else
-      {
-         if (fl & GCW_INDICES)
-             glyph_index = i;
-         else
-             glyph_index = FT_Get_Char_Index(face, i);
-      }
-      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      if (!fl)
-        SafeBuffF[i - FirstChar] = (FLOAT) ((face->glyph->advance.x + 32) >> 6);
-      else
-        SafeBuff[i - FirstChar] = (face->glyph->advance.x + 32) >> 6;
-   }
-   IntUnLockFreeType;
-   TEXTOBJ_UnlockText(TextObj);
-   MmCopyToCaller(Buffer, SafeBuff, BufferSize);
-   ExFreePool(SafeBuff);
-   return TRUE;
-}
-
-
- /*
- * @implemented
- */
-DWORD
-STDCALL
-NtGdiGetGlyphIndicesW(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR UnSafepwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD UnSafepgi,
-    IN DWORD iMode)
-{
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  HFONT hFont = 0;
-  NTSTATUS Status = STATUS_SUCCESS;
-  OUTLINETEXTMETRICW *potm;
-  INT i;
-  FT_Face face;
-  WCHAR DefChar = 0xffff;
-  PWSTR Buffer = NULL;
-  ULONG Size;
-
-  if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
-
-  dc = DC_LockDc(hdc);
-  if (!dc)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
-  DC_UnlockDc(dc);
-  if (!TextObj)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  TEXTOBJ_UnlockText(TextObj);
-
-  Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
-  if (!Buffer)
-  {
-     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-     return GDI_ERROR;
-  }
-
-  if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
-  else
-  {
-     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-     potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-     if (!potm)
-     {
-        Status = ERROR_NOT_ENOUGH_MEMORY;
-        goto ErrorRet;
-     }
-     IntGetOutlineTextMetrics(FontGDI, Size, potm);
-     DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
-     ExFreePool(potm);
-  }
-
-  _SEH_TRY
-  {
-    ProbeForRead(UnSafepwc,
-             sizeof(PWSTR),
-                         1);
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-  if (!NT_SUCCESS(Status)) goto ErrorRet;
-
-  IntLockFreeType;
-  face = FontGDI->face;
-
-  for (i = 0; i < cwc; i++)
-  {
-      Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
-      if (Buffer[i] == 0)
-      {
-         if (DefChar == 0xffff && FT_IS_SFNT(face))
-         {
-            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
-         }
-         Buffer[i] = DefChar;
-      }
-  }
-
-  IntUnLockFreeType;
-
-  _SEH_TRY
-  {
-    ProbeForWrite(UnSafepgi,
-               sizeof(WORD),
-                          1);
-    RtlCopyMemory(UnSafepgi,
-                     Buffer,
-            cwc*sizeof(WORD));
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-ErrorRet:
-  ExFreePoolWithTag(Buffer, TAG_GDITEXT);
-  if (NT_SUCCESS(Status)) return cwc;
-  SetLastWin32Error(Status);
-  return GDI_ERROR;
-}
 
 static
 void
@@ -3595,11 +2486,8 @@ ftGdiGetTextMetricsW(
 	}
       else
 	{
-          memcpy(&ptmwi->TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
-          /* FIXME: Fill Diff member */
-          RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
-
           Status = STATUS_SUCCESS;
+
           IntLockFreeType;
           pOS2 = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_os2);
           if (NULL == pOS2)
@@ -3621,7 +2509,15 @@ ftGdiGetTextMetricsW(
 
           if (NT_SUCCESS(Status))
           {
-              FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+              if (!(FontGDI->flRealizedType & FDM_TYPE_TEXT_METRIC))
+              {
+                 FillTM(&FontGDI->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+                 FontGDI->flRealizedType |= FDM_TYPE_TEXT_METRIC;
+              }
+
+              RtlCopyMemory(&ptmwi->TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+              /* FIXME: Fill Diff member */
+              RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
           }
 	}
       TEXTOBJ_UnlockText(TextObj);
@@ -3641,61 +2537,43 @@ ftGdiGetTextMetricsW(
 }
 
 
-DWORD STDCALL
-NtGdiGetFontData(
-   HDC hDC,
+DWORD
+FASTCALL
+ftGdiGetFontData(
+   PFONTGDI FontGdi,
    DWORD Table,
    DWORD Offset,
-   LPVOID Buffer,
+   PVOID Buffer,
    DWORD Size)
 {
-   PDC Dc;
-   PDC_ATTR Dc_Attr;
-   HFONT hFont;
-   PTEXTOBJ TextObj;
-   PFONTGDI FontGdi;
-   DWORD Result = GDI_ERROR;
+  DWORD Result = GDI_ERROR;
 
-   Dc = DC_LockDc(hDC);
-   if (Dc == NULL)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-   Dc_Attr = Dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-   hFont = Dc_Attr->hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(Dc);
+  IntLockFreeType;
 
-   if (TextObj == NULL)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-
-   FontGdi = ObjToGDI(TextObj->Font, FONT);
-
-   IntLockFreeType;
-
-   if (FT_IS_SFNT(FontGdi->face))
-   {
-       if (Table)
-          Table = Table >> 24 | Table << 24 | (Table >> 8 & 0xFF00) |
+  if (FT_IS_SFNT(FontGdi->face))
+  {
+     if (Table)
+        Table = Table >> 24 | Table << 24 | (Table >> 8 & 0xFF00) |
                   (Table << 8 & 0xFF0000);
 
-       if (Buffer == NULL)
-          Size = 0;
+     if (!Buffer) Size = 0;
 
-       if (!FT_Load_Sfnt_Table(FontGdi->face, Table, Offset, Buffer, &Size))
-          Result = Size;
-   }
+     if (Buffer && Size)
+     {
+        FT_Error Error;
+        FT_ULong Needed = 0;
 
-   IntUnLockFreeType;
+        Error = FT_Load_Sfnt_Table(FontGdi->face, Table, Offset, NULL, &Needed);
 
-   TEXTOBJ_UnlockText(TextObj);
+        if( !Error && Needed < Size) Size = Needed;
+     }
+     if (!FT_Load_Sfnt_Table(FontGdi->face, Table, Offset, Buffer, &Size))
+        Result = Size;
+  }
 
-   return Result;
+  IntUnLockFreeType;
+
+  return Result;
 }
 
 static UINT FASTCALL
@@ -3838,7 +2716,33 @@ SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
     }
 }
 
-NTSTATUS FASTCALL
+static
+VOID
+FASTCALL
+IntFontType(PFONTGDI Font)
+{
+   PS_FontInfoRec psfInfo;
+
+   if (FT_HAS_MULTIPLE_MASTERS(Font->face))
+      Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
+   if (FT_HAS_VERTICAL( Font->face ))
+      Font->FontObj.flFontType |= FO_VERT_FACE;
+   if (FT_IS_SCALABLE( Font->face ))
+      Font->FontObj.flFontType |= FO_TYPE_RASTER;
+   if (FT_IS_SFNT(Font->face))
+   {
+      Font->FontObj.flFontType |= FO_TYPE_TRUETYPE;
+      if (FT_Get_Sfnt_Table(Font->face, ft_sfnt_post))
+         Font->FontObj.flFontType |= FO_POSTSCRIPT;
+   }
+   if (!FT_Get_PS_Font_Info(Font->face, &psfInfo ))
+   {
+      Font->FontObj.flFontType |= FO_POSTSCRIPT;
+   }
+}
+
+NTSTATUS
+FASTCALL
 TextIntRealizeFont(HFONT FontHandle)
 {
   NTSTATUS Status = STATUS_SUCCESS;
@@ -3891,7 +2795,12 @@ TextIntRealizeFont(HFONT FontHandle)
   else
     {
       PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+      // Need hdev, when freetype is loaded need to create DEVOBJ for
+      // Consumer and Producer.
       TextObj->Font->iUniq = 1; // Now it can be cached.
+      IntFontType(FontGdi);
+      FontGdi->flType = TextObj->Font->flFontType;
+      FontGdi->flRealizedType = 0;
       FontGdi->Underline = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfUnderline ? 0xff : 0;
       FontGdi->StrikeOut = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfStrikeOut ? 0xff : 0;
       TextObj->Initialized = TRUE;
@@ -3906,47 +2815,10 @@ TextIntRealizeFont(HFONT FontHandle)
   return Status;
 }
 
-INT FASTCALL
-FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
-{
-  if( Buffer == NULL ) return sizeof(LOGFONTW);
 
-  switch (Count)
-  {
-
-     case sizeof(ENUMLOGFONTEXDVW):
-        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer,
-                                            &TFont->logfont,
-                                            sizeof(ENUMLOGFONTEXDVW));
-        break;
-     case sizeof(ENUMLOGFONTEXW):
-        RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer,
-                                          &TFont->logfont.elfEnumLogfontEx,
-                                          sizeof(ENUMLOGFONTEXW));
-        break;
-
-     case sizeof(EXTLOGFONTW):
-     case sizeof(ENUMLOGFONTW):
-        RtlCopyMemory((LPENUMLOGFONTW) Buffer,
-                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                       sizeof(ENUMLOGFONTW));
-        break;
-
-     case sizeof(LOGFONTW):
-        RtlCopyMemory((LPLOGFONTW) Buffer,
-                                   &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                   sizeof(LOGFONTW));
-        break;
-
-     default:
-        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
-        return 0;
-  }
-  return Count;
-}
-
-
-static BOOL FASTCALL
+static
+BOOL
+FASTCALL
 IntGetFullFileName(
     POBJECT_NAME_INFORMATION NameInfo,
     ULONG Size,
@@ -3989,12 +2861,13 @@ IntGetFullFileName(
     return TRUE;
 }
 
-static BOOL FASTCALL
+BOOL
+FASTCALL
 IntGdiGetFontResourceInfo(
-    IN  PUNICODE_STRING FileName,
-    OUT void *pBuffer,
-    OUT DWORD *pdwBytes,
-    IN  DWORD dwType)
+    PUNICODE_STRING FileName,
+    PVOID pBuffer,
+    DWORD *pdwBytes,
+    DWORD dwType)
 {
     UNICODE_STRING EntryFileName;
     POBJECT_NAME_INFORMATION NameInfo1, NameInfo2;
@@ -4102,103 +2975,1194 @@ IntGdiGetFontResourceInfo(
     return TRUE;
 }
 
-W32KAPI BOOL APIENTRY
-NtGdiGetFontResourceInfoInternalW(
-    IN LPWSTR   pwszFiles,
-    IN ULONG    cwc,
-    IN ULONG    cFiles,
-    IN UINT     cjIn,
-    OUT LPDWORD pdwBytes,
-    OUT LPVOID  pvBuf,
-    IN DWORD    dwType)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    DWORD dwBytes;
-    UNICODE_STRING SafeFileNames;
-    BOOL bRet = FALSE;
-    ULONG cbStringSize;
 
-    union
-    {
-        LOGFONTW logfontw;
-        WCHAR FullName[LF_FULLFACESIZE];
-    } Buffer;
-
-    /* FIXME: handle cFiles > 0 */
-
-    /* Check for valid dwType values
-       dwType == 4 seems to be handled by gdi32 only */
-    if (dwType == 4 || dwType > 5)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    /* Allocate a safe unicode string buffer */
-    cbStringSize = cwc * sizeof(WCHAR);
-    SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
-    SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                 cbStringSize,
-                                                 TAG('R','T','S','U'));
-    if (!SafeFileNames.Buffer)
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Check buffers and copy pwszFiles to safe unicode string */
-    _SEH_TRY
-    {
-        ProbeForRead(pwszFiles, cbStringSize, 1);
-        ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
-        ProbeForWrite(pvBuf, cjIn, 1);
-
-        RtlCopyMemory(SafeFileNames.Buffer, pwszFiles, cbStringSize);
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END
-
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        /* Free the string buffer for the safe filename */
-        ExFreePool(SafeFileNames.Buffer);
-        return FALSE;
-    }
-
-    /* Do the actual call */
-    bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
-
-    /* Check if succeeded and the buffer is big enough */
-    if (bRet && cjIn >= dwBytes)
-    {
-        /* Copy the data back to caller */
-        _SEH_TRY
-        {
-            /* Buffers are already probed */
-            RtlCopyMemory(pvBuf, &Buffer, dwBytes);
-            *pdwBytes = dwBytes;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END
-
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            bRet = FALSE;
-        }
-    }
-
-    /* Free the string for the safe filenames */
-    ExFreePool(SafeFileNames.Buffer);
-
-    return bRet;
+BOOL
+FASTCALL
+ftGdiRealizationInfo(PFONTGDI Font, PREALIZATION_INFO Info)
+{  
+  if (FT_HAS_FIXED_SIZES(Font->face))
+      Info->iTechnology = RI_TECH_BITMAP;
+  else
+  {
+     if (FT_IS_SCALABLE(Font->face))
+        Info->iTechnology = RI_TECH_SCALABLE;
+     else
+        Info->iTechnology = RI_TECH_FIXED;
+  }
+  Info->iUniq = Font->FontObj.iUniq;
+  Info->dwUnknown = -1;
+  return TRUE;
 }
+
+DWORD
+FASTCALL
+ftGdiGetKerningPairs( PFONTGDI Font,
+                      DWORD cPairs,
+                      LPKERNINGPAIR pKerningPair)
+{
+  DWORD Count = 0;
+  FT_Face face;
+
+  face = Font->face;
+
+  if (FT_HAS_KERNING(face) && face->charmap->encoding == FT_ENCODING_UNICODE)
+  {
+     FT_UInt previous_index = 0, glyph_index = 0;
+     FT_ULong char_code, char_previous;
+     FT_Vector delta;
+     int i;
+        
+     char_previous = char_code = FT_Get_First_Char(face, &glyph_index);
+
+     IntUnLockFreeType;
+
+     for (i = 0; i < face->num_glyphs; i++)
+     {
+         if (previous_index && glyph_index)
+         {
+            FT_Get_Kerning(face, previous_index, glyph_index, FT_KERNING_DEFAULT, &delta);
+        
+            if (pKerningPair && cPairs)
+            {
+               pKerningPair[i].wFirst      = char_previous;
+               pKerningPair[i].wSecond     = char_code;
+               pKerningPair[i].iKernAmount = delta.x;
+            }
+            Count++;
+         }
+         previous_index = glyph_index;
+         char_previous = char_code;
+         char_code = FT_Get_Next_Char(face, char_code, &glyph_index);
+     }
+     IntUnLockFreeType;
+  }
+  return Count;
+}
+
+
+////////////////
+//
+// Functions needing sorting.
+//
+///////////////
+int STDCALL
+NtGdiGetFontFamilyInfo(HDC Dc,
+                       LPLOGFONTW UnsafeLogFont,
+                       PFONTFAMILYINFO UnsafeInfo,
+                       DWORD Size)
+{
+  NTSTATUS Status;
+  LOGFONTW LogFont;
+  PFONTFAMILYINFO Info;
+  DWORD Count;
+  PW32PROCESS Win32Process;
+
+  /* Make a safe copy */
+  Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return -1;
+    }
+
+  /* Allocate space for a safe copy */
+  Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), TAG_GDITEXT);
+  if (NULL == Info)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return -1;
+    }
+
+  /* Enumerate font families in the global list */
+  IntLockGlobalFonts;
+  Count = 0;
+  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, &FontListHead) )
+    {
+      IntUnLockGlobalFonts;
+      ExFreePool(Info);
+      return -1;
+    }
+  IntUnLockGlobalFonts;
+
+  /* Enumerate font families in the process local list */
+  Win32Process = PsGetCurrentProcessWin32Process();
+  IntLockProcessPrivateFonts(Win32Process);
+  if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size,
+                                 &Win32Process->PrivateFontListHead))
+    {
+      IntUnLockProcessPrivateFonts(Win32Process);
+      ExFreePool(Info);
+      return -1;
+    }
+  IntUnLockProcessPrivateFonts(Win32Process);
+
+  /* Enumerate font families in the registry */
+  if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
+    {
+      ExFreePool(Info);
+      return -1;
+    }
+
+  /* Return data to caller */
+  if (0 != Count)
+    {
+      Status = MmCopyToCaller(UnsafeInfo, Info,
+                              (Count < Size ? Count : Size) * sizeof(FONTFAMILYINFO));
+      if (! NT_SUCCESS(Status))
+        {
+          ExFreePool(Info);
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return -1;
+        }
+    }
+
+  ExFreePool(Info);
+
+  return Count;
+}
+
+BOOL
+APIENTRY
+NtGdiExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL LPRECT lprc,
+    IN LPWSTR UnsafeString,
+    IN INT Count,
+    IN OPTIONAL LPINT UnsafeDx,
+    IN DWORD dwCodePage)
+{
+   /*
+    * FIXME:
+    * Call EngTextOut, which does the real work (calling DrvTextOut where
+    * appropriate)
+    */
+
+   DC *dc;
+   PDC_ATTR Dc_Attr;
+   SURFOBJ *SurfObj;
+   BITMAPOBJ *BitmapObj = NULL;
+   int error, glyph_index, n, i;
+   FT_Face face;
+   FT_GlyphSlot glyph;
+   FT_Glyph realglyph;
+   FT_BitmapGlyph realglyph2;
+   LONGLONG TextLeft, RealXStart;
+   ULONG TextTop, previous, BackgroundLeft;
+   FT_Bool use_kerning;
+   RECTL DestRect, MaskRect, SpecifiedDestRect;
+   POINTL SourcePoint, BrushOrigin;
+   HBRUSH hBrushFg = NULL;
+   PGDIBRUSHOBJ BrushFg = NULL;
+   GDIBRUSHINST BrushFgInst;
+   HBRUSH hBrushBg = NULL;
+   PGDIBRUSHOBJ BrushBg = NULL;
+   GDIBRUSHINST BrushBgInst;
+   HBITMAP HSourceGlyph;
+   SURFOBJ *SourceGlyphSurf;
+   SIZEL bitSize;
+   FT_CharMap found = 0, charmap;
+   INT yoff;
+   FONTOBJ *FontObj;
+   PFONTGDI FontGDI;
+   PTEXTOBJ TextObj = NULL;
+   PPALGDI PalDestGDI;
+   XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
+   ULONG Mode;
+   FT_Render_Mode RenderMode;
+   BOOLEAN Render;
+   NTSTATUS Status;
+   INT *Dx = NULL;
+   POINT Start;
+   BOOL DoBreak = FALSE;
+   LPCWSTR String, SafeString = NULL;
+   HPALETTE hDestPalette;
+
+   // TODO: Write test-cases to exactly match real Windows in different
+   // bad parameters (e.g. does Windows check the DC or the RECT first?).
+   dc = DC_LockDc(hDC);
+   if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   if (dc->DC_Type == DC_TYPE_INFO)
+   {
+      DC_UnlockDc(dc);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+   }
+
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+	/* Check if String is valid */
+   if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      goto fail;
+   }
+   if (Count > 0)
+   {
+      SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
+      if (!SafeString)
+      {
+         goto fail;
+      }
+      Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
+      if (! NT_SUCCESS(Status))
+      {
+        goto fail;
+      }
+   }
+   String = SafeString;
+
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      // At least one of the two flags were specified. Copy lprc. Once.
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         DC_UnlockDc(dc);
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
+   }
+
+   if (NULL != UnsafeDx && Count > 0)
+   {
+      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
+      if (NULL == Dx)
+      {
+         goto fail;
+      }
+      Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
+      if (! NT_SUCCESS(Status))
+      {
+         goto fail;
+      }
+   }
+
+   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   if ( !BitmapObj )
+   {
+      goto fail;
+   }
+   SurfObj = &BitmapObj->SurfObj;
+   ASSERT(SurfObj);
+
+   Start.x = XStart; Start.y = YStart;
+   IntLPtoDP(dc, &Start, 1);
+
+   RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
+   YStart = Start.y + dc->ptlDCOrig.y;
+
+   /* Create the brushes */
+   hDestPalette = BitmapObj->hDIBPalette;
+   if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
+   PalDestGDI = PALETTE_LockPalette(hDestPalette);
+   if ( !PalDestGDI )
+      Mode = PAL_RGB;
+   else
+   {
+      Mode = PalDestGDI->Mode;
+      PALETTE_UnlockPalette(PalDestGDI);
+   }
+   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
+   if ( !XlateObj )
+   {
+      goto fail;
+   }
+   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crForegroundClr), 0);
+   if ( !hBrushFg )
+   {
+      goto fail;
+   }
+   BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
+   if ( !BrushFg )
+   {
+      goto fail;
+   }
+   IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
+   if ((fuOptions & ETO_OPAQUE) || Dc_Attr->jBkMode == OPAQUE)
+   {
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, Dc_Attr->crBackgroundClr), 0);
+      if ( !hBrushBg )
+      {
+         goto fail;
+      }
+      BrushBg = BRUSHOBJ_LockBrush(hBrushBg);
+      if ( !BrushBg )
+      {
+         goto fail;
+      }
+      IntGdiInitBrushInstance(&BrushBgInst, BrushBg, NULL);
+   }
+   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, hDestPalette);
+   if ( !XlateObj2 )
+   {
+      goto fail;
+   }
+
+   SourcePoint.x = 0;
+   SourcePoint.y = 0;
+   MaskRect.left = 0;
+   MaskRect.top = 0;
+   BrushOrigin.x = 0;
+   BrushOrigin.y = 0;
+
+   if ((fuOptions & ETO_OPAQUE) && lprc)
+   {
+      DestRect.left   = SpecifiedDestRect.left   + dc->ptlDCOrig.x;
+      DestRect.top    = SpecifiedDestRect.top    + dc->ptlDCOrig.y;
+      DestRect.right  = SpecifiedDestRect.right  + dc->ptlDCOrig.x;
+      DestRect.bottom = SpecifiedDestRect.bottom + dc->ptlDCOrig.y;
+      IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+      IntEngBitBlt(
+         &BitmapObj->SurfObj,
+         NULL,
+         NULL,
+         dc->CombinedClip,
+         NULL,
+         &DestRect,
+         &SourcePoint,
+         &SourcePoint,
+         &BrushBgInst.BrushObject,
+         &BrushOrigin,
+         ROP3_TO_ROP4(PATCOPY));
+      fuOptions &= ~ETO_OPAQUE;
+   }
+   else
+   {
+      if (Dc_Attr->jBkMode == OPAQUE)
+      {
+         fuOptions |= ETO_OPAQUE;
+      }
+   }
+
+   TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
+   if(TextObj == NULL)
+   {
+      goto fail;
+   }
+
+   FontObj = TextObj->Font;
+   ASSERT(FontObj);
+   FontGDI = ObjToGDI(FontObj, FONT);
+   ASSERT(FontGDI);
+
+   IntLockFreeType;
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      DPRINT("WARNING: No charmap selected!\n");
+      DPRINT("This font face has %d charmaps\n", face->num_charmaps);
+
+      for (n = 0; n < face->num_charmaps; n++)
+      {
+         charmap = face->charmaps[n];
+         DPRINT("found charmap encoding: %u\n", charmap->encoding);
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+      }
+      error = FT_Set_Charmap(face, found);
+         if (error)
+      {
+         DPRINT1("WARNING: Could not set the charmap!\n");
+      }
+   }
+
+   Render = IntIsFontRenderingEnabled();
+   if (Render)
+      RenderMode = IntGetFontRenderMode(&TextObj->logfont.elfEnumLogfontEx.elfLogFont);
+   else
+      RenderMode = FT_RENDER_MODE_MONO;
+
+   error = FT_Set_Pixel_Sizes(
+      face,
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+      /* FIXME should set character height if neg */
+      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+      - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+   if (error)
+   {
+      DPRINT1("Error in setting pixel sizes: %u\n", error);
+      IntUnLockFreeType;
+      goto fail;
+   }
+
+   /*
+    * Process the vertical alignment and determine the yoff.
+    */
+
+   if (Dc_Attr->lTextAlign & TA_BASELINE)
+      yoff = 0;
+   else if (Dc_Attr->lTextAlign & TA_BOTTOM)
+      yoff = -face->size->metrics.descender >> 6;
+   else /* TA_TOP */
+      yoff = face->size->metrics.ascender >> 6;
+
+   use_kerning = FT_HAS_KERNING(face);
+   previous = 0;
+
+   /*
+    * Process the horizontal alignment and modify XStart accordingly.
+    */
+
+   if (Dc_Attr->lTextAlign & (TA_RIGHT | TA_CENTER))
+   {
+      ULONGLONG TextWidth = 0;
+      LPCWSTR TempText = String;
+      int Start;
+
+      /*
+       * Calculate width of the text.
+       */
+
+      if (NULL != Dx)
+      {
+         Start = Count < 2 ? 0 : Count - 2;
+         TextWidth = Count < 2 ? 0 : (Dx[Count - 2] << 6);
+      }
+      else
+      {
+         Start = 0;
+      }
+      TempText = String + Start;
+
+      for (i = Start; i < Count; i++)
+      {
+         if (fuOptions & ETO_GLYPH_INDEX)
+           glyph_index = *TempText;
+         else
+           glyph_index = FT_Get_Char_Index(face, *TempText);
+
+         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
+         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+         {
+             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+             if (error)
+             {
+                DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+             }
+
+             glyph = face->glyph;
+             realglyph = ftGdiGlyphCacheSet(face, glyph_index,
+                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+             if (!realglyph)
+             {
+                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+                 IntUnLockFreeType;
+                 goto fail;
+             }
+
+         }
+         /* retrieve kerning distance */
+         if (use_kerning && previous && glyph_index)
+         {
+            FT_Vector delta;
+            FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+            TextWidth += delta.x;
+         }
+
+         TextWidth += realglyph->advance.x >> 10;
+
+         previous = glyph_index;
+         TempText++;
+      }
+
+      previous = 0;
+
+      if (Dc_Attr->lTextAlign & TA_RIGHT)
+      {
+         RealXStart -= TextWidth;
+      }
+      else
+      {
+         RealXStart -= TextWidth / 2;
+      }
+   }
+
+   TextLeft = RealXStart;
+   TextTop = YStart;
+   BackgroundLeft = (RealXStart + 32) >> 6;
+
+   /*
+    * The main rendering loop.
+    */
+
+   for (i = 0; i < Count; i++)
+   {
+      if (fuOptions & ETO_GLYPH_INDEX)
+        glyph_index = *String;
+      else
+        glyph_index = FT_Get_Char_Index(face, *String);
+
+      if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
+      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+      {
+        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+        if (error)
+        {
+           DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
+           IntUnLockFreeType;
+           goto fail;
+        }
+        glyph = face->glyph;
+        realglyph = ftGdiGlyphCacheSet(face,
+                                       glyph_index,
+                                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                       glyph,
+                                       RenderMode);
+        if (!realglyph)
+        {
+            DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+            IntUnLockFreeType;
+            goto fail;
+        }
+      }
+//      DbgPrint("realglyph: %x\n", realglyph);
+//      DbgPrint("TextLeft: %d\n", TextLeft);
+
+      /* retrieve kerning distance and move pen position */
+      if (use_kerning && previous && glyph_index && NULL == Dx)
+      {
+         FT_Vector delta;
+         FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
+         TextLeft += delta.x;
+      }
+//      DPRINT1("TextLeft: %d\n", TextLeft);
+//      DPRINT1("TextTop: %d\n", TextTop);
+
+      if (realglyph->format == ft_glyph_format_outline)
+      {
+         DbgPrint("Should already be done\n");
+//         error = FT_Render_Glyph(glyph, RenderMode);
+         error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
+         if (error)
+         {
+            DPRINT1("WARNING: Failed to render glyph!\n");
+            goto fail;
+         }
+      }
+      realglyph2 = (FT_BitmapGlyph)realglyph;
+
+//      DPRINT1("Pitch: %d\n", pitch);
+//      DPRINT1("Advance: %d\n", realglyph->advance.x);
+
+      if (fuOptions & ETO_OPAQUE)
+      {
+         DestRect.left = BackgroundLeft;
+         DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
+         DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
+         DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
+         IntEngBitBlt(
+            &BitmapObj->SurfObj,
+            NULL,
+            NULL,
+            dc->CombinedClip,
+            NULL,
+            &DestRect,
+            &SourcePoint,
+            &SourcePoint,
+            &BrushBgInst.BrushObject,
+            &BrushOrigin,
+            ROP3_TO_ROP4(PATCOPY));
+         BackgroundLeft = DestRect.right;
+      }
+
+      DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
+      DestRect.right = DestRect.left + realglyph2->bitmap.width;
+      DestRect.top = TextTop + yoff - realglyph2->top;
+      DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
+
+      bitSize.cx = realglyph2->bitmap.width;
+      bitSize.cy = realglyph2->bitmap.rows;
+      MaskRect.right = realglyph2->bitmap.width;
+      MaskRect.bottom = realglyph2->bitmap.rows;
+
+      /*
+       * We should create the bitmap out of the loop at the biggest possible
+       * glyph size. Then use memset with 0 to clear it and sourcerect to
+       * limit the work of the transbitblt.
+       *
+       * FIXME: DIB bitmaps should have an lDelta which is a multiple of 4.
+       * Here we pass in the pitch from the FreeType bitmap, which is not
+       * guaranteed to be a multiple of 4. If it's not, we should expand
+       * the FreeType bitmap to a temporary bitmap.
+       */
+
+      HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
+                                     (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
+                                     BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
+                                     realglyph2->bitmap.buffer);
+      if ( !HSourceGlyph )
+      {
+        DPRINT1("WARNING: EngLockSurface() failed!\n");
+        // FT_Done_Glyph(realglyph);
+        IntUnLockFreeType;
+        goto fail;
+      }
+      SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
+      if ( !SourceGlyphSurf )
+      {
+        EngDeleteSurface((HSURF)HSourceGlyph);
+        DPRINT1("WARNING: EngLockSurface() failed!\n");
+        IntUnLockFreeType;
+        goto fail;
+      }
+
+      /*
+       * Use the font data as a mask to paint onto the DCs surface using a
+       * brush.
+       */
+
+      if (lprc &&
+          (fuOptions & ETO_CLIPPED) &&
+          DestRect.right >= SpecifiedDestRect.right + dc->ptlDCOrig.x)
+      {
+         // We do the check '>=' instead of '>' to possibly save an iteration
+         // through this loop, since it's breaking after the drawing is done,
+         // and x is always incremented.
+         DestRect.right = SpecifiedDestRect.right + dc->ptlDCOrig.x;
+         DoBreak = TRUE;
+      }
+
+      IntEngMaskBlt(
+         SurfObj,
+         SourceGlyphSurf,
+         dc->CombinedClip,
+         XlateObj,
+         XlateObj2,
+         &DestRect,
+         &SourcePoint,
+         (PPOINTL)&MaskRect,
+         &BrushFgInst.BrushObject,
+         &BrushOrigin);
+
+      EngUnlockSurface(SourceGlyphSurf);
+      EngDeleteSurface((HSURF)HSourceGlyph);
+
+      if (DoBreak)
+      {
+         break;
+      }
+
+      if (NULL == Dx)
+      {
+         TextLeft += realglyph->advance.x >> 10;
+//         DbgPrint("new TextLeft: %d\n", TextLeft);
+      }
+      else
+      {
+         TextLeft += Dx[i] << 6;
+//         DbgPrint("new TextLeft2: %d\n", TextLeft);
+      }
+      previous = glyph_index;
+
+      String++;
+   }
+
+   IntUnLockFreeType;
+
+   EngDeleteXlate(XlateObj);
+   EngDeleteXlate(XlateObj2);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   if(TextObj != NULL)
+     TEXTOBJ_UnlockText(TextObj);
+   if (hBrushBg != NULL)
+   {
+      BRUSHOBJ_UnlockBrush(BrushBg);
+      NtGdiDeleteObject(hBrushBg);
+   }
+   BRUSHOBJ_UnlockBrush(BrushFg);
+   NtGdiDeleteObject(hBrushFg);
+   if (NULL != SafeString)
+   {
+      ExFreePool((void*)SafeString);
+   }
+   if (NULL != Dx)
+   {
+      ExFreePool(Dx);
+   }
+   DC_UnlockDc( dc );
+
+   return TRUE;
+
+fail:
+   if ( XlateObj2 != NULL )
+      EngDeleteXlate(XlateObj2);
+   if ( XlateObj != NULL )
+      EngDeleteXlate(XlateObj);
+   if(TextObj != NULL)
+     TEXTOBJ_UnlockText(TextObj);
+   if (BitmapObj != NULL)
+     BITMAPOBJ_UnlockBitmap(BitmapObj);
+   if (hBrushBg != NULL)
+   {
+      BRUSHOBJ_UnlockBrush(BrushBg);
+      NtGdiDeleteObject(hBrushBg);
+   }
+   if (hBrushFg != NULL)
+   {
+      BRUSHOBJ_UnlockBrush(BrushFg);
+      NtGdiDeleteObject(hBrushFg);
+   }
+   if (NULL != SafeString)
+   {
+      ExFreePool((void*)SafeString);
+   }
+   if (NULL != Dx)
+   {
+      ExFreePool(Dx);
+   }
+   DC_UnlockDc(dc);
+
+   return FALSE;
+}
+
+ /*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharABCWidthsW(
+    IN HDC hDC,
+    IN UINT FirstChar,
+    IN ULONG Count,
+    IN OPTIONAL PWCHAR pwch,
+    IN FLONG fl,
+    OUT PVOID Buffer)
+{
+   LPABC SafeBuff;
+   LPABCFLOAT SafeBuffF = NULL;
+   PDC dc;
+   PDC_ATTR Dc_Attr;
+   PTEXTOBJ TextObj;
+   PFONTGDI FontGDI;
+   FT_Face face;
+   FT_CharMap charmap, found = NULL;
+   UINT i, glyph_index, BufferSize;
+   HFONT hFont = 0;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   if(pwch)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(pwch,
+            sizeof(PWSTR),
+                       1);
+     }
+     _SEH_HANDLE
+     {
+      Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(Status);
+      return FALSE;
+   }
+
+   BufferSize = Count * sizeof(ABC); // Same size!
+   SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+   if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
+   if (SafeBuff == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+
+   dc = DC_LockDc(hDC);
+   if (dc == NULL)
+   {
+      ExFreePool(SafeBuff);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   hFont = Dc_Attr->hlfntNew;
+   TextObj = TEXTOBJ_LockText(hFont);
+   DC_UnlockDc(dc);
+
+   if (TextObj == NULL)
+   {
+      ExFreePool(SafeBuff);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+
+   FontGDI = ObjToGDI(TextObj->Font, FONT);
+
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      for (i = 0; i < face->num_charmaps; i++)
+      {
+         charmap = face->charmaps[i];
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+         ExFreePool(SafeBuff);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+
+      IntLockFreeType;
+      FT_Set_Charmap(face, found);
+      IntUnLockFreeType;
+   }
+
+   IntLockFreeType;
+   FT_Set_Pixel_Sizes(face,
+                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+                      /* FIXME should set character height if neg */
+                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+
+   for (i = FirstChar; i < FirstChar+Count; i++)
+   {
+      int adv, lsb, bbx, left, right;
+
+      if (pwch)
+      {
+         if (fl & GCABCW_INDICES)
+          glyph_index = pwch[i - FirstChar];
+         else
+          glyph_index = FT_Get_Char_Index(face, pwch[i - FirstChar]);
+      }
+      else
+      {
+         if (fl & GCABCW_INDICES)
+             glyph_index = i;
+         else
+             glyph_index = FT_Get_Char_Index(face, i);
+      }
+      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+
+      left = (INT)face->glyph->metrics.horiBearingX  & -64;
+      right = (INT)((face->glyph->metrics.horiBearingX + face->glyph->metrics.width) + 63) & -64;
+      adv  = (face->glyph->advance.x + 32) >> 6;
+
+//      int test = (INT)(face->glyph->metrics.horiAdvance + 63) >> 6;
+//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same!*/
+
+      lsb = left >> 6;
+      bbx = (right - left) >> 6;
+/*
+      DPRINT1("lsb %d and bbx %d\n", lsb, bbx );
+ */
+      if (!fl)
+      {
+        SafeBuffF[i - FirstChar].abcfA = (FLOAT) lsb;
+        SafeBuffF[i - FirstChar].abcfB = (FLOAT) bbx;
+        SafeBuffF[i - FirstChar].abcfC = (FLOAT) (adv - lsb - bbx);
+      }
+      else
+      {
+        SafeBuff[i - FirstChar].abcA = lsb;
+        SafeBuff[i - FirstChar].abcB = bbx;
+        SafeBuff[i - FirstChar].abcC = adv - lsb - bbx;
+      }
+   }
+   IntUnLockFreeType;
+   TEXTOBJ_UnlockText(TextObj);
+   Status = MmCopyToCaller(Buffer, SafeBuff, BufferSize);
+   if (! NT_SUCCESS(Status))
+     {
+       SetLastNtError(Status);
+       ExFreePool(SafeBuff);
+       return FALSE;
+     }
+   ExFreePool(SafeBuff);
+   DPRINT("NtGdiGetCharABCWidths Worked!\n");
+   return TRUE;
+}
+
+ /*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharWidthW(
+    IN HDC hDC,
+    IN UINT FirstChar,
+    IN UINT Count,
+    IN OPTIONAL PWCHAR pwc,
+    IN FLONG fl,
+    OUT PVOID Buffer)
+{
+   NTSTATUS Status = STATUS_SUCCESS;
+   LPINT SafeBuff;
+   PFLOAT SafeBuffF = NULL;
+   PDC dc;
+   PDC_ATTR Dc_Attr;
+   PTEXTOBJ TextObj;
+   PFONTGDI FontGDI;
+   FT_Face face;
+   FT_CharMap charmap, found = NULL;
+   UINT i, glyph_index, BufferSize;
+   HFONT hFont = 0;
+
+   if(pwc)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(pwc,
+           sizeof(PWSTR),
+                      1);
+     }
+     _SEH_HANDLE
+     {
+      Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastWin32Error(Status);
+      return FALSE;
+   }
+
+   BufferSize = Count * sizeof(INT); // Same size!
+   SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+   if (!fl) SafeBuffF = (PFLOAT) SafeBuff;
+   if (SafeBuff == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+
+   dc = DC_LockDc(hDC);
+   if (dc == NULL)
+   {
+      ExFreePool(SafeBuff);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+   hFont = Dc_Attr->hlfntNew;
+   TextObj = TEXTOBJ_LockText(hFont);
+   DC_UnlockDc(dc);
+
+   if (TextObj == NULL)
+   {
+      ExFreePool(SafeBuff);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+
+   FontGDI = ObjToGDI(TextObj->Font, FONT);
+
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      for (i = 0; i < face->num_charmaps; i++)
+      {
+         charmap = face->charmaps[i];
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+         ExFreePool(SafeBuff);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+
+      IntLockFreeType;
+      FT_Set_Charmap(face, found);
+      IntUnLockFreeType;
+   }
+
+   IntLockFreeType;
+   FT_Set_Pixel_Sizes(face,
+                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+                      /* FIXME should set character height if neg */
+                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
+                       - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
+                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+
+   for (i = FirstChar; i < FirstChar+Count; i++)
+   {
+      if (pwc)
+      {
+         if (fl & GCW_INDICES)
+          glyph_index = pwc[i - FirstChar];
+         else
+          glyph_index = FT_Get_Char_Index(face, pwc[i - FirstChar]);
+      }
+      else
+      {
+         if (fl & GCW_INDICES)
+             glyph_index = i;
+         else
+             glyph_index = FT_Get_Char_Index(face, i);
+      }
+      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+      if (!fl)
+        SafeBuffF[i - FirstChar] = (FLOAT) ((face->glyph->advance.x + 32) >> 6);
+      else
+        SafeBuff[i - FirstChar] = (face->glyph->advance.x + 32) >> 6;
+   }
+   IntUnLockFreeType;
+   TEXTOBJ_UnlockText(TextObj);
+   MmCopyToCaller(Buffer, SafeBuff, BufferSize);
+   ExFreePool(SafeBuff);
+   return TRUE;
+}
+
+
+ /*
+ * @implemented
+ */
+DWORD
+STDCALL
+NtGdiGetGlyphIndicesW(
+    IN HDC hdc,
+    IN OPTIONAL LPWSTR UnSafepwc,
+    IN INT cwc,
+    OUT OPTIONAL LPWORD UnSafepgi,
+    IN DWORD iMode)
+{
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  HFONT hFont = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+  OUTLINETEXTMETRICW *potm;
+  INT i;
+  FT_Face face;
+  WCHAR DefChar = 0xffff;
+  PWSTR Buffer = NULL;
+  ULONG Size;
+
+  if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
+
+  dc = DC_LockDc(hdc);
+  if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  hFont = Dc_Attr->hlfntNew;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc(dc);
+  if (!TextObj)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+
+  Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+  if (!Buffer)
+  {
+     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+     return GDI_ERROR;
+  }
+
+  if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
+  else
+  {
+     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+     potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+     if (!potm)
+     {
+        Status = ERROR_NOT_ENOUGH_MEMORY;
+        goto ErrorRet;
+     }
+     IntGetOutlineTextMetrics(FontGDI, Size, potm);
+     DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
+     ExFreePool(potm);
+  }
+
+  _SEH_TRY
+  {
+    ProbeForRead(UnSafepwc,
+             sizeof(PWSTR),
+                         1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  if (!NT_SUCCESS(Status)) goto ErrorRet;
+
+  IntLockFreeType;
+  face = FontGDI->face;
+
+  for (i = 0; i < cwc; i++)
+  {
+      Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
+      if (Buffer[i] == 0)
+      {
+         if (DefChar == 0xffff && FT_IS_SFNT(face))
+         {
+            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+         }
+         Buffer[i] = DefChar;
+      }
+  }
+
+  IntUnLockFreeType;
+
+  _SEH_TRY
+  {
+    ProbeForWrite(UnSafepgi,
+               sizeof(WORD),
+                          1);
+    RtlCopyMemory(UnSafepgi,
+                     Buffer,
+            cwc*sizeof(WORD));
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+ErrorRet:
+  ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+  if (NT_SUCCESS(Status)) return cwc;
+  SetLastWin32Error(Status);
+  return GDI_ERROR;
+}
+
 
 /* EOF */

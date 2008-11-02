@@ -750,21 +750,34 @@ EngDitherColor(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 EngQuerySystemAttribute(
    IN ENG_SYSTEM_ATTRIBUTE CapNum,
    OUT PDWORD pCapability)
 {
+  SYSTEM_BASIC_INFORMATION sbi;
+  SYSTEM_PROCESSOR_INFORMATION spi;
+
    switch (CapNum)
    {
       case EngNumberOfProcessors:
-         *pCapability = 1;
+         NtQuerySystemInformation(
+                SystemBasicInformation,
+               &sbi,
+                sizeof(SYSTEM_BASIC_INFORMATION),
+                NULL);
+         *pCapability = sbi.NumberOfProcessors;
          return TRUE;
 
       case EngProcessorFeature:
-         *pCapability = 0;
+         NtQuerySystemInformation(
+                SystemProcessorInformation,
+               &spi,
+                sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                NULL);
+         *pCapability = spi.ProcessorFeatureBits;
          return TRUE;
 
       default:

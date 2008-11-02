@@ -13,6 +13,48 @@
 #define NDEBUG
 #include <debug.h>
 
+/** Internal ******************************************************************/
+
+INT
+FASTCALL
+FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
+{
+  if( Buffer == NULL ) return sizeof(LOGFONTW);
+
+  switch (Count)
+  {
+
+     case sizeof(ENUMLOGFONTEXDVW):
+        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer,
+                                            &TFont->logfont,
+                                            sizeof(ENUMLOGFONTEXDVW));
+        break;
+     case sizeof(ENUMLOGFONTEXW):
+        RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer,
+                                          &TFont->logfont.elfEnumLogfontEx,
+                                          sizeof(ENUMLOGFONTEXW));
+        break;
+
+     case sizeof(EXTLOGFONTW):
+     case sizeof(ENUMLOGFONTW):
+        RtlCopyMemory((LPENUMLOGFONTW) Buffer,
+                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
+                                       sizeof(ENUMLOGFONTW));
+        break;
+
+     case sizeof(LOGFONTW):
+        RtlCopyMemory((LPLOGFONTW) Buffer,
+                                   &TFont->logfont.elfEnumLogfontEx.elfLogFont,
+                                   sizeof(LOGFONTW));
+        break;
+
+     default:
+        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+        return 0;
+  }
+  return Count;
+}
+
 /** Functions ******************************************************************/
 
 INT
@@ -60,6 +102,66 @@ NtGdiAddFontResourceW(
 
   ExFreePool(SafeFileName.Buffer);
   return Ret;
+}
+
+DWORD
+STDCALL
+NtGdiGetFontData(
+   HDC hDC,
+   DWORD Table,
+   DWORD Offset,
+   LPVOID Buffer,
+   DWORD Size)
+{
+  PDC Dc;
+  PDC_ATTR Dc_Attr;
+  HFONT hFont;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGdi;
+  DWORD Result = GDI_ERROR;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (Buffer && Size)
+  {
+     _SEH_TRY
+     {
+         ProbeForRead(Buffer, Size, 1);
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END
+  }
+
+  if (!NT_SUCCESS(Status)) return Result;
+
+  Dc = DC_LockDc(hDC);
+  if (Dc == NULL)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return GDI_ERROR;
+  }
+  Dc_Attr = Dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+
+  hFont = Dc_Attr->hlfntNew;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc(Dc);
+
+  if (TextObj == NULL)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return GDI_ERROR;
+  }
+
+  FontGdi = ObjToGDI(TextObj->Font, FONT);
+
+  Result = ftGdiGetFontData(FontGdi, Table, Offset, Buffer, Size);
+
+  TEXTOBJ_UnlockText(TextObj);
+
+  return Result;
 }
 
  /*
@@ -296,6 +398,107 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
     }
   ExFreePool(potm);
   return Size;
+}
+
+W32KAPI
+BOOL
+APIENTRY
+NtGdiGetFontResourceInfoInternalW(
+    IN LPWSTR   pwszFiles,
+    IN ULONG    cwc,
+    IN ULONG    cFiles,
+    IN UINT     cjIn,
+    OUT LPDWORD pdwBytes,
+    OUT LPVOID  pvBuf,
+    IN DWORD    dwType)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    DWORD dwBytes;
+    UNICODE_STRING SafeFileNames;
+    BOOL bRet = FALSE;
+    ULONG cbStringSize;
+
+    union
+    {
+        LOGFONTW logfontw;
+        WCHAR FullName[LF_FULLFACESIZE];
+    } Buffer;
+
+    /* FIXME: handle cFiles > 0 */
+
+    /* Check for valid dwType values
+       dwType == 4 seems to be handled by gdi32 only */
+    if (dwType == 4 || dwType > 5)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Allocate a safe unicode string buffer */
+    cbStringSize = cwc * sizeof(WCHAR);
+    SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
+    SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                 cbStringSize,
+                                                 TAG('R','T','S','U'));
+    if (!SafeFileNames.Buffer)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Check buffers and copy pwszFiles to safe unicode string */
+    _SEH_TRY
+    {
+        ProbeForRead(pwszFiles, cbStringSize, 1);
+        ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
+        ProbeForWrite(pvBuf, cjIn, 1);
+
+        RtlCopyMemory(SafeFileNames.Buffer, pwszFiles, cbStringSize);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END
+
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        /* Free the string buffer for the safe filename */
+        ExFreePool(SafeFileNames.Buffer);
+        return FALSE;
+    }
+
+    /* Do the actual call */
+    bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
+
+    /* Check if succeeded and the buffer is big enough */
+    if (bRet && cjIn >= dwBytes)
+    {
+        /* Copy the data back to caller */
+        _SEH_TRY
+        {
+            /* Buffers are already probed */
+            RtlCopyMemory(pvBuf, &Buffer, dwBytes);
+            *pdwBytes = dwBytes;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END
+
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            bRet = FALSE;
+        }
+    }
+
+    /* Free the string for the safe filenames */
+    ExFreePool(SafeFileNames.Buffer);
+
+    return bRet;
 }
 
 HFONT
