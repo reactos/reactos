@@ -1,8 +1,6 @@
 #ifndef _DDRAWTEST_H
 #define _DDRAWTEST_H
 
-#define WINVER 0x501
-
 #include <stdio.h>
 #include <windows.h>
 #include <stdio.h>
