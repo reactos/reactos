@@ -113,6 +113,33 @@ ExEnumHandleTable(
     OUT PHANDLE Handle OPTIONAL
 );
 
+//
+// Resource Functions
+//
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceExclusive(
+    IN PERESOURCE Resource
+);
+
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceShared(
+    IN PERESOURCE Resource
+);
+
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(
+    IN PERESOURCE Resource
+);
+
+VOID
+FASTCALL
+ExReleaseResourceAndLeaveCriticalRegion(
+    IN PERESOURCE Resource
+);
+
 #endif
 
 //

@@ -80,8 +80,8 @@
 @ stdcall ExDisableResourceBoostLite(ptr)
 @ fastcall ExEnterCriticalRegionAndAcquireFastMutexUnsafe(ptr)
 @ stdcall ExEnterCriticalRegionAndAcquireResourceExclusive(ptr)
-;ExEnterCriticalRegionAndAcquireResourceShared
-;ExEnterCriticalRegionAndAcquireSharedWaitForExclusive
+@ stdcall ExEnterCriticalRegionAndAcquireResourceShared(ptr)
+@ stdcall ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(ptr)
 @ stdcall ExEnumHandleTable(ptr ptr ptr ptr)
 @ extern ExEventObjectType _ExEventObjectType
 @ stdcall ExExtendZone(ptr ptr long)
