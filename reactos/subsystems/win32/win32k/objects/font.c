@@ -340,6 +340,8 @@ NtGdiHfontCreate(
   }
   hNewFont = TextObj->BaseObject.hHmgr;
 
+  TextObj->lft = cjElfw;
+  TextObj->fl  = fl;
   RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
 
   if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=

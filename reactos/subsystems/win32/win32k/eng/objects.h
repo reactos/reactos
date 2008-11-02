@@ -68,11 +68,17 @@ typedef struct _FLOATGDI {
 } FLOATGDI;
 
 typedef struct _FONTGDI {
-  FONTOBJ FontObj;
+  FONTOBJ     FontObj;
 
-  LPWSTR Filename;
-  FT_Face face;
+  LONG        lMaxNegA;
+  LONG        lMaxNegC;
+  LONG        lMinWidthD;
+
   TEXTMETRICW TextMetric;
+  LPWSTR      Filename;
+  FT_Face     face;
+  BYTE        Underline;
+  BYTE        StrikeOut;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {

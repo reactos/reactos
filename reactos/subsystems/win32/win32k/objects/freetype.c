@@ -557,15 +557,41 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 
 
 static void FASTCALL
-FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
+FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT_WinFNT_HeaderRec *pWin)
 {
   FT_Fixed XScale, YScale;
   int Ascent, Descent;
+  FT_Face Face = FontGDI->face;
 
   XScale = Face->size->metrics.x_scale;
   YScale = Face->size->metrics.y_scale;
 
-  if (0 == pOS2->usWinAscent + pOS2->usWinDescent)
+  if (pWin)
+  {
+     TM->tmHeight           = pWin->pixel_height;
+     TM->tmAscent           = pWin->ascent;
+     TM->tmDescent          = TM->tmHeight - TM->tmAscent;
+     TM->tmInternalLeading  = pWin->internal_leading;
+     TM->tmExternalLeading  = pWin->external_leading;
+     TM->tmAveCharWidth     = pWin->avg_width;
+     TM->tmMaxCharWidth     = pWin->max_width;
+     TM->tmWeight           = pWin->weight;
+     TM->tmOverhang         = 0;
+     TM->tmDigitizedAspectX = pWin->horizontal_resolution;
+     TM->tmDigitizedAspectY = pWin->vertical_resolution;
+     TM->tmFirstChar        = pWin->first_char;
+     TM->tmLastChar         = pWin->last_char;
+     TM->tmDefaultChar      = pWin->default_char + pWin->first_char;
+     TM->tmBreakChar        = pWin->break_char + pWin->first_char;
+     TM->tmItalic           = pWin->italic;
+     TM->tmUnderlined       = FontGDI->Underline;
+     TM->tmStruckOut        = FontGDI->StrikeOut;
+     TM->tmPitchAndFamily   = pWin->pitch_and_family;
+     TM->tmCharSet          = pWin->charset;
+     return;
+  }
+
+  if (0  == pOS2->usWinAscent + pOS2->usWinDescent)
     {
       Ascent = pHori->Ascender;
       Descent = -pHori->Descender;
@@ -613,8 +639,8 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
   TM->tmDefaultChar = pOS2->usDefaultChar;
   TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
   TM->tmItalic = (Face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
-  TM->tmUnderlined = 0; /* entry in OS2 table */
-  TM->tmStruckOut = 0; /* entry in OS2 table */
+  TM->tmUnderlined = FontGDI->Underline;
+  TM->tmStruckOut  = FontGDI->StrikeOut;
 
   /* Yes TPMF_FIXED_PITCH is correct; braindead api */
   if (! FT_IS_FIXED_WIDTH(Face))
@@ -676,7 +702,8 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
  *
  */
 INT FASTCALL
-IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
+IntGetOutlineTextMetrics(PFONTGDI FontGDI,
+                         UINT Size,
                          OUTLINETEXTMETRICW *Otm)
 {
   unsigned Needed;
@@ -686,6 +713,8 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
   FT_Fixed XScale, YScale;
   ANSI_STRING FamilyNameA, StyleNameA;
   UNICODE_STRING FamilyNameW, StyleNameW, Regular;
+  FT_WinFNT_HeaderRec Win;
+  FT_Error Error;
   char *Cp;
 
   Needed = sizeof(OUTLINETEXTMETRICW);
@@ -751,9 +780,11 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI, UINT Size,
 
   pPost = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_post); /* we can live with this failing */
 
+  Error = FT_Get_WinFNT_Header(FontGDI->face , &Win);
+
   Otm->otmSize = Needed;
 
-  FillTM(&Otm->otmTextMetrics, FontGDI->face, pOS2, pHori);
+  FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
   Otm->otmFiller = 0;
   memcpy(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -2450,10 +2481,9 @@ NtGdiGetGlyphIndicesW(
          if (DefChar == 0xffff && FT_IS_SFNT(face))
          {
             TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-            Buffer[i] = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
          }
-         else
-            Buffer[i] = DefChar;
+         Buffer[i] = DefChar;
       }
   }
 
@@ -2475,7 +2505,7 @@ NtGdiGetGlyphIndicesW(
   _SEH_END;
 
 ErrorRet:
-  ExFreePool(Buffer);
+  ExFreePoolWithTag(Buffer, TAG_GDITEXT);
   if (NT_SUCCESS(Status)) return cwc;
   SetLastWin32Error(Status);
   return GDI_ERROR;
@@ -3527,6 +3557,7 @@ ftGdiGetTextMetricsW(
   FT_Face Face;
   TT_OS2 *pOS2;
   TT_HoriHeader *pHori;
+  FT_WinFNT_HeaderRec Win;
   ULONG Error;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -3584,11 +3615,13 @@ ftGdiGetTextMetricsW(
               Status = STATUS_INTERNAL_ERROR;
             }
 
+          Error = FT_Get_WinFNT_Header(FontGDI->face , &Win);
+
           IntUnLockFreeType;
 
           if (NT_SUCCESS(Status))
           {
-              FillTM(&ptmwi->TextMetric, FontGDI->face, pOS2, pHori);
+              FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
           }
 	}
       TEXTOBJ_UnlockText(TextObj);
@@ -3849,7 +3882,6 @@ TextIntRealizeFont(HFONT FontHandle)
                        &TextObj->logfont.elfEnumLogfontEx.elfLogFont, &FaceName,
                        &FontListHead);
   IntUnLockGlobalFonts;
-
   if (NULL == TextObj->Font)
     {
       DPRINT1("Requested font %S not found, no fonts loaded at all\n",
@@ -3858,6 +3890,10 @@ TextIntRealizeFont(HFONT FontHandle)
     }
   else
     {
+      PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+      TextObj->Font->iUniq = 1; // Now it can be cached.
+      FontGdi->Underline = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfUnderline ? 0xff : 0;
+      FontGdi->StrikeOut = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfStrikeOut ? 0xff : 0;
       TextObj->Initialized = TRUE;
       Status = STATUS_SUCCESS;
     }

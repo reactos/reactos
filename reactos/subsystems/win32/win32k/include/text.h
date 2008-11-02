@@ -60,10 +60,11 @@ typedef struct
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
    BASEOBJECT    BaseObject;
-
+   LFTYPE        lft;
+   FLONG         fl;
    ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
-   FONTOBJ    *Font;
-   BOOLEAN Initialized; /* Don't reinitialize for each DC */
+   FONTOBJ      *Font;
+   BOOLEAN       Initialized; /* Don't reinitialize for each DC */
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
