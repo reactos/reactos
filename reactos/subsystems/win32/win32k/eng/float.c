@@ -41,7 +41,7 @@ EngRestoreFloatingPointState ( IN VOID *Buffer )
 {
   NTSTATUS Status;
   Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)Buffer);
-  if (Status != STATUS_SUCCESS)
+  if (!NT_SUCCESS(Status))
     {
       return FALSE;
     }

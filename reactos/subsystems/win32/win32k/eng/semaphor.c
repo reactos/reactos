@@ -81,7 +81,7 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 
   ExDeleteResourceLite((PERESOURCE)hsem);
 
-  ExFreePool ( (PVOID)hsem );
+  ExFreePoolWithTag( (PVOID)hsem, TAG_GSEM);
 }
 
 /*

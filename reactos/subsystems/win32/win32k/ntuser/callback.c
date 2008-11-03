@@ -86,7 +86,7 @@ IntCbFreeMemory(PVOID Data)
    RemoveEntryList(&Mem->ListEntry);
 
    /* free memory */
-   ExFreePool(Mem);
+   ExFreePoolWithTag(Mem, TAG_CALLBACK);
 }
 
 VOID FASTCALL
