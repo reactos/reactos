@@ -685,52 +685,27 @@ NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
  return old;
 }
 
-/*
-   Win 2k Graphics API, Black Book. by coriolis.com
-   Page 62, Note that Steps 3, 5, and 6 are not required for Windows NT(tm)
-   and Windows 2000(tm).
-
-   Step 5. UnrealizeObject(hTrackBrush);
- */
-BOOL STDCALL
+BOOL
+STDCALL
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
-
-   POBJ pObject;
-   DWORD objectType;
    BOOL Ret = FALSE;
+   PPALGDI palGDI;
 
-   /* From Wine: UnrealizeObject does not SetLastError() on a null object */
-   if(!hgdiobj)
-     return Ret;
-
-   pObject = GDIOBJ_LockObj(hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
-   if (pObject == NULL)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+   if ( !hgdiobj ||
+        ((UINT)hgdiobj & GDI_HANDLE_STOCK_MASK) ||
+        !GDI_HANDLE_IS_TYPE(hgdiobj, GDI_OBJECT_TYPE_PALETTE) )
       return Ret;
-   }
-   objectType = GDIOBJ_GetObjectType(hgdiobj);
-   switch(objectType)
-   {
-/*
-    msdn.microsoft.com,
-    "Windows 2000/XP: If hgdiobj is a brush, UnrealizeObject does nothing,
-    and the function returns TRUE. Use SetBrushOrgEx to set the origin of
-    a brush."
- */
-         case GDI_OBJECT_TYPE_BRUSH:
-           {
-              DPRINT("GDI_OBJECT_TYPE_BRUSH\n");
-              Ret = TRUE;
-              break;
-           }
-         default:
-           DPRINT1("Magic 0x%08x not implemented\n", objectType);
-           break;
-   }
 
-   GDIOBJ_UnlockObjByPtr(pObject);
+   palGDI = PALETTE_LockPalette(hgdiobj);
+   if (!palGDI) return FALSE;
+
+   // FIXME!!
+   // Need to do something!!!
+   // Zero out Current and Old Translated pointers? 
+   //
+   Ret = TRUE;
+   PALETTE_UnlockPalette(palGDI);
    return Ret;
 }
 

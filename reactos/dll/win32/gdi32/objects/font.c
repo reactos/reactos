@@ -1355,6 +1355,8 @@ CreateFontIndirectW(
     RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
                                  sizeof(Logfont.elfEnumLogfontEx.elfScript));
 
+    Logfont.elfDesignVector.dvNumAxes = 0; // No more than MM_MAX_NUMAXES
+
     RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
 
     return CreateFontIndirectExW(&Logfont);
