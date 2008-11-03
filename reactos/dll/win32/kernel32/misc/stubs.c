@@ -532,7 +532,7 @@ IsSystemResumeAutomatic(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -541,8 +541,22 @@ IsWow64Process(
     PBOOL Wow64Process
     )
 {
-    STUB;
-    *Wow64Process = FALSE;
+    ULONG pbi;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessWow64Information,
+                                       &pbi,
+                                       sizeof(pbi),
+                                       NULL);
+
+    if (Status != STATUS_SUCCESS)
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    *Wow64Process = (pbi != 0);
     return TRUE;
 }
 
