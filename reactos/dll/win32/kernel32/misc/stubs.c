@@ -532,35 +532,6 @@ IsSystemResumeAutomatic(
 }
 
 /*
- * @implemented
- */
-BOOL
-STDCALL
-IsWow64Process(
-    HANDLE hProcess,
-    PBOOL Wow64Process
-    )
-{
-    ULONG pbi;
-    NTSTATUS Status;
-
-    Status = NtQueryInformationProcess(hProcess,
-                                       ProcessWow64Information,
-                                       &pbi,
-                                       sizeof(pbi),
-                                       NULL);
-
-    if (Status != STATUS_SUCCESS)
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    *Wow64Process = (pbi != 0);
-    return TRUE;
-}
-
-/*
  * @unimplemented
  */
 BOOL

@@ -17,6 +17,8 @@
 #include <debug.h>
 
 
+typedef INT (WINAPI *MessageBoxW_Proc) (HWND, LPCWSTR, LPCWSTR, UINT);
+
 /* GLOBALS *******************************************************************/
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
@@ -617,8 +619,8 @@ TerminateProcess (HANDLE	hProcess,
  * @unimplemented
  */
 VOID STDCALL
-FatalAppExitA (UINT	uAction,
-	       LPCSTR	lpMessageText)
+FatalAppExitA(UINT uAction,
+	          LPCSTR lpMessageText)
 {
   UNICODE_STRING MessageTextU;
   ANSI_STRING MessageText;
@@ -640,9 +642,24 @@ FatalAppExitA (UINT	uAction,
  */
 VOID STDCALL
 FatalAppExitW(UINT uAction,
-	      LPCWSTR lpMessageText)
+              LPCWSTR lpMessageText)
 {
-  return;
+    static const WCHAR szUser32[] = L"user32.dll\0";
+
+    HMODULE hModule = GetModuleHandleW(szUser32);
+    MessageBoxW_Proc pMessageBoxW = NULL;
+
+    DPRINT1("AppExit\n");
+
+    if (hModule)
+        pMessageBoxW = (MessageBoxW_Proc) GetProcAddress(hModule, "MessageBoxW");
+
+    if (pMessageBoxW)
+        pMessageBoxW(0, lpMessageText, NULL, MB_SYSTEMMODAL | MB_OK);
+    else
+        DPRINT1("%s\n", lpMessageText);
+
+    ExitProcess(0);
 }
 
 
@@ -893,6 +910,36 @@ GetProcessHandleCount(HANDLE hProcess,
 
     SetLastErrorByStatus(Status);
     return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+IsWow64Process(
+    HANDLE hProcess,
+    PBOOL Wow64Process
+    )
+{
+    ULONG pbi;
+    NTSTATUS Status;
+
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessWow64Information,
+                                       &pbi,
+                                       sizeof(pbi),
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    *Wow64Process = (pbi != 0);
+    return TRUE;
 }
 
 /* EOF */
