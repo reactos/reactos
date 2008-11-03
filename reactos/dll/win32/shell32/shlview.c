@@ -887,10 +887,12 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 					ici.lpVerb = MAKEINTRESOURCEA( def );
 					ici.hwnd = This->hWnd;
 
-					IContextMenu_InvokeCommand(cm, (LPCMINVOKECOMMANDINFO) &ici );
-					IContextMenu_Release(cm);
-					DestroyMenu( hmenu );
-					return S_OK;
+					if (IContextMenu_InvokeCommand(cm, (LPCMINVOKECOMMANDINFO) &ici ) == S_OK)
+					{
+						IContextMenu_Release(cm);
+						DestroyMenu( hmenu );
+						return S_OK;
+					}
 				}
 				
 			}
