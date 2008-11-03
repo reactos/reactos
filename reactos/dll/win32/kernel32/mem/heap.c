@@ -262,10 +262,13 @@ HeapWalk(HANDLE	hHeap,
 
     Status = RtlWalkHeap(hHeap, lpEntry);
 
-    if (Status)
+    if (!NT_SUCCESS(Status))
+    {
         SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-    return !Status;
+    return TRUE;
 }
 
 /* EOF */

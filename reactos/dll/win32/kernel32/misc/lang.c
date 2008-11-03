@@ -1267,32 +1267,89 @@ GetCPInfo (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCPInfoExW(
-    UINT          CodePage,
-    DWORD         dwFlags,
-    LPCPINFOEXW  lpCPInfoEx)
+GetCPInfoExW(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXW lpCPInfoEx)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if (!GetCPInfo(CodePage, (LPCPINFO) lpCPInfoEx))
+        return FALSE;
+
+    switch(CodePage)
+    {
+        case CP_UTF7:
+        {
+            static const WCHAR utf7[] = L"Unicode (UTF-7)\0";
+
+            lpCPInfoEx->CodePage = CP_UTF7;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            wcscpy(lpCPInfoEx->CodePageName, utf7);
+        }
+        break;
+
+        case CP_UTF8:
+        {
+            static const WCHAR utf8[] = L"Unicode (UTF-8)\0";
+            
+            lpCPInfoEx->CodePage = CP_UTF8;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            wcscpy(lpCPInfoEx->CodePageName, utf8);
+        }
+
+        default:
+        {
+            PCODEPAGE_ENTRY CodePageEntry;
+
+            CodePageEntry = IntGetCodePageEntry(CodePage);
+            if (CodePageEntry == NULL)
+            {
+                DPRINT1("Could not get CodePage Entry! CodePageEntry = 0\n");
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
+
+            lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
+            lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
+            /* FIXME: We need to get a codepage name */
+            DPRINT1("FIXME: We need to get a codepage name!\n");
+            wcscpy(lpCPInfoEx->CodePageName, L"Unknown\0");
+        }
+        break;
+    }
+
+    return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCPInfoExA(
-    UINT          CodePage,
-    DWORD         dwFlags,
-    LPCPINFOEXA  lpCPInfoEx)
+GetCPInfoExA(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXA lpCPInfoEx)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CPINFOEXW CPInfo;
+
+    if (!GetCPInfoExW(CodePage, dwFlags, &CPInfo))
+        return FALSE;
+
+    /* the layout is the same except for CodePageName */
+    memcpy(lpCPInfoEx, &CPInfo, sizeof(CPINFOEXA));
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        CPInfo.CodePageName,
+                        -1,
+                        lpCPInfoEx->CodePageName,
+                        sizeof(lpCPInfoEx->CodePageName),
+                        NULL,
+                        NULL);
+    return TRUE;
 }
 
 static int
