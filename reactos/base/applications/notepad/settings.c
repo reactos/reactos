@@ -112,7 +112,7 @@ void LoadSettings(void)
 	base_length = (GetSystemMetrics(SM_CXSCREEN) > GetSystemMetrics(SM_CYSCREEN))?
 		GetSystemMetrics(SM_CYSCREEN) : GetSystemMetrics(SM_CXSCREEN);
 
-	dx = base_length * .95;
+	dx = (INT)(base_length * .95);
 	dy = dx * 3 / 4;
 	SetRect( &Globals.main_rect, 0, 0, dx, dy );
 
