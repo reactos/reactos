@@ -64,7 +64,7 @@ FASTCALL
 GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
 {
   PDC_ATTR Dc_Attr = NULL;
-  UserEnterExclusive();
+
   if (dc)
   {
     Dc_Attr = dc->pDc_Attr;
@@ -109,7 +109,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      default:
         break;
   }
-  UserLeave();
+
   return pHdr->Size; // Return the full size of the structure.
 }
 
