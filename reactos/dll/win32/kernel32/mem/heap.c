@@ -251,16 +251,21 @@ HeapUsage(HANDLE hHeap,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-HeapWalk(HANDLE	 hHeap,
+HeapWalk(HANDLE	hHeap,
          LPPROCESS_HEAP_ENTRY lpEntry)
 {
-    /* Not implemented */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+
+    Status = RtlWalkHeap(hHeap, lpEntry);
+
+    if (Status)
+        SetLastError(RtlNtStatusToDosError(Status));
+
+    return !Status;
 }
 
 /* EOF */
