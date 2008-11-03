@@ -1259,7 +1259,7 @@ BuildWindowStationNameList(
                      FALSE, &Context, NULL))
          {
             /* Something went wrong, maybe someone added a directory entry? Just give up. */
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
             ObDereferenceObject(DirectoryHandle);
             return NT_SUCCESS(Status) ? STATUS_INTERNAL_ERROR : Status;
          }
@@ -1287,7 +1287,7 @@ BuildWindowStationNameList(
       {
          if (Buffer != InitialBuffer)
          {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
          }
          return STATUS_BUFFER_TOO_SMALL;
       }
@@ -1300,7 +1300,7 @@ BuildWindowStationNameList(
    {
       if (Buffer != InitialBuffer)
       {
-         ExFreePool(Buffer);
+         ExFreePoolWithTag(Buffer, TAG_WINSTA);
       }
       return STATUS_BUFFER_TOO_SMALL;
    }

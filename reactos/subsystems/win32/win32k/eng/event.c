@@ -56,7 +56,7 @@ EngMapEvent(IN HDEV    Dev,
 				     NULL);
   if (!NT_SUCCESS(Status))
   {
-     ExFreePool(Event);
+     ExFreePoolWithTag(Event, TAG_DFSM);
      return NULL;
   }
   else

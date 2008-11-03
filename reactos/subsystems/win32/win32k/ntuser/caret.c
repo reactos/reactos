@@ -123,7 +123,7 @@ IntQueryCaretBlinkRate(VOID)
    if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
    {
       NtClose(KeyHandle);
-      ExFreePool(KeyValuePartialInfo);
+      ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
       return 0;
    }
 
@@ -137,7 +137,7 @@ IntQueryCaretBlinkRate(VOID)
       Val = 0;
    }
 
-   ExFreePool(KeyValuePartialInfo);
+   ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
    NtClose(KeyHandle);
 
    return (UINT)Val;

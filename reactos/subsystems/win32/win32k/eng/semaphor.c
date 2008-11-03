@@ -16,7 +16,7 @@ EngCreateSemaphore ( VOID )
     return NULL;
   if ( !NT_SUCCESS(ExInitializeResourceLite ( psem )) )
   {
-    ExFreePool ( psem );
+    ExFreePoolWithTag ( psem, TAG_GSEM );
     return NULL;
   }
   return (HSEMAPHORE)psem;
