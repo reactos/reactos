@@ -307,7 +307,11 @@ LANPropertiesUIDlg(
     PNET_ITEM pItem;
     INetConnectionPropertyUiImpl * This;
     LPPSHNOTIFY lppsn;
+    DWORD dwShowIcon;
     HRESULT hr;
+    WCHAR szKey[200];
+    LPOLESTR pStr;
+    HKEY hKey;
 
     switch(uMsg)
     {
@@ -326,14 +330,31 @@ LANPropertiesUIDlg(
                 if (This->pNCfg)
                 {
                     hr = INetCfg_Apply(This->pNCfg);
-                    if (SUCCEEDED(hr))
-                        return PSNRET_NOERROR;
-                    else
+                    if (FAILED(hr))
                         return PSNRET_INVALID;
                 }
+
+                if (SendDlgItemMessageW(hwndDlg, IDC_SHOWTASKBAR, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    dwShowIcon = 1;
+                else
+                    dwShowIcon = 0;
+
+
+                if (StringFromCLSID(&This->pProperties->guidId, &pStr) == ERROR_SUCCESS)
+                {
+                    swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
+                    CoTaskMemFree(pStr);
+                    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+                    {
+                        RegSetValueExW(hKey, L"ShowIcon", 0, REG_DWORD, (LPBYTE)&dwShowIcon, sizeof(DWORD));
+                        RegCloseKey(hKey);
+                    }
+                }
+
                 return PSNRET_NOERROR;
             }
-            else if (lppsn->hdr.code == PSN_APPLY)
+#if 0
+            else if (lppsn->hdr.code == PSN_CANCEL)
             {
                 This = (INetConnectionPropertyUiImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER);
                 if (This->pNCfg)
@@ -346,6 +367,7 @@ LANPropertiesUIDlg(
                 }
                 return PSNRET_NOERROR;
             }
+#endif
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                     ZeroMemory(&li, sizeof(li));
