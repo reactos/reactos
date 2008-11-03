@@ -209,7 +209,7 @@ NtGdiGetTextExtentExW(
     }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
+  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
   if ( TextObj )
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
@@ -339,7 +339,7 @@ NtGdiGetTextFaceW(
    hFont = Dc_Attr->hlfntNew;
    DC_UnlockDc(Dc);
 
-   TextObj = TEXTOBJ_LockText(hFont);
+   TextObj = RealizeFontInit(hFont);
    ASSERT(TextObj != NULL);
    Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
    Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));

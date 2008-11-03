@@ -55,6 +55,27 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
   return Count;
 }
 
+PTEXTOBJ
+FASTCALL
+RealizeFontInit(HFONT hFont)
+{
+  NTSTATUS Status = STATUS_SUCCESS;
+  PTEXTOBJ pTextObj;
+
+  pTextObj = TEXTOBJ_LockText(hFont);
+
+  if ( pTextObj && !pTextObj->fl & TEXTOBJECT_INIT)
+  {
+     Status = TextIntRealizeFont(hFont, pTextObj);
+     if (!NT_SUCCESS(Status))
+     {
+        TEXTOBJ_UnlockText(pTextObj);
+        return NULL;
+     }
+  }
+  return pTextObj;
+}
+
 /** Functions ******************************************************************/
 
 INT
@@ -146,7 +167,7 @@ NtGdiGetFontData(
   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(Dc);
 
   if (TextObj == NULL)
@@ -193,7 +214,7 @@ NtGdiGetFontUnicodeRanges(
   if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
 
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
         
   if ( TextObj == NULL)
   {
@@ -363,7 +384,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(dc);
   if (TextObj == NULL)
     {
@@ -543,7 +564,7 @@ NtGdiHfontCreate(
   }
   hNewFont = TextObj->BaseObject.hHmgr;
 
-  TextObj->lft = cjElfw;
+  TextObj->lft = lft;
   TextObj->fl  = fl;
   RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
 

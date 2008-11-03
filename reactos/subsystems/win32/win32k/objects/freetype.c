@@ -1488,7 +1488,7 @@ ftGdiGetGlyphOutline(
   eM11 = xForm.eM11;
   
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
 
   if (!TextObj)
    {
@@ -2249,7 +2249,7 @@ ftGdiGetTextCharsetInfo(
   Dc_Attr = Dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
 
   if ( TextObj == NULL)
     {
@@ -2465,7 +2465,7 @@ ftGdiGetTextMetricsW(
   }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
+  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
   if (NULL != TextObj)
     {
       FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -2743,7 +2743,7 @@ IntFontType(PFONTGDI Font)
 
 NTSTATUS
 FASTCALL
-TextIntRealizeFont(HFONT FontHandle)
+TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
@@ -2751,21 +2751,26 @@ TextIntRealizeFont(HFONT FontHandle)
   PW32PROCESS Win32Process;
   UINT MatchScore;
 
-  TextObj = TEXTOBJ_LockText(FontHandle);
-  if (NULL == TextObj)
-    {
-      return STATUS_INVALID_HANDLE;
-    }
+  if (!pTextObj)
+  {
+     TextObj = TEXTOBJ_LockText(FontHandle);
+     if (NULL == TextObj)
+     {
+       return STATUS_INVALID_HANDLE;
+     }
 
-  if (TextObj->Initialized)
-    {
-      TEXTOBJ_UnlockText(TextObj);
-      return STATUS_SUCCESS;
-    }
+     if (TextObj->fl & TEXTOBJECT_INIT)
+     {
+       TEXTOBJ_UnlockText(TextObj);
+       return STATUS_SUCCESS;
+     }
+  }
+  else
+     TextObj = pTextObj;
 
   if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName))
     {
-      TEXTOBJ_UnlockText(TextObj);
+      if (!pTextObj) TEXTOBJ_UnlockText(TextObj);
       return STATUS_NO_MEMORY;
     }
   SubstituteFontFamily(&FaceName, 0);
@@ -2803,12 +2808,12 @@ TextIntRealizeFont(HFONT FontHandle)
       FontGdi->flRealizedType = 0;
       FontGdi->Underline = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfUnderline ? 0xff : 0;
       FontGdi->StrikeOut = TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfStrikeOut ? 0xff : 0;
-      TextObj->Initialized = TRUE;
+      TextObj->fl |= TEXTOBJECT_INIT;
       Status = STATUS_SUCCESS;
     }
 
   RtlFreeUnicodeString(&FaceName);
-  TEXTOBJ_UnlockText(TextObj);
+  if (!pTextObj) TEXTOBJ_UnlockText(TextObj);
 
   ASSERT((NT_SUCCESS(Status) ^ (NULL == TextObj->Font)) != 0);
 
@@ -3040,7 +3045,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 }
 
 
-////////////////
+//////////////////
 //
 // Functions needing sorting.
 //
@@ -3343,7 +3348,7 @@ NtGdiExtTextOutW(
       }
    }
 
-   TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
+   TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
    if(TextObj == NULL)
    {
       goto fail;
@@ -3796,7 +3801,7 @@ NtGdiGetCharABCWidthsW(
    Dc_Attr = dc->pDc_Attr;
    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    hFont = Dc_Attr->hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
+   TextObj = RealizeFontInit(hFont);
    DC_UnlockDc(dc);
 
    if (TextObj == NULL)
@@ -3964,7 +3969,7 @@ NtGdiGetCharWidthW(
    Dc_Attr = dc->pDc_Attr;
    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    hFont = Dc_Attr->hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
+   TextObj = RealizeFontInit(hFont);
    DC_UnlockDc(dc);
 
    if (TextObj == NULL)
@@ -4076,7 +4081,7 @@ NtGdiGetGlyphIndicesW(
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
+  TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(dc);
   if (!TextObj)
    {

@@ -2216,7 +2216,7 @@ NtGdiSelectFont(
     if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 
     /* FIXME: what if not successful? */
-    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont)))
+    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
     {
         hOrgFont = pDc_Attr->hlfntNew;
         pDc_Attr->hlfntNew = hFont;
@@ -2668,7 +2668,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr->hpen = NtGdiGetStockObject( BLACK_PEN );
 ////
   Dc_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
-  TextIntRealizeFont(Dc_Attr->hlfntNew);
+  TextIntRealizeFont(Dc_Attr->hlfntNew,NULL);
 
   NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
   NewDC->DcLevel.laPath.eMiterLimit = 10.0;

@@ -54,6 +54,8 @@ typedef struct _STRGDI
   ULONG     acFaceNameGlyphs[8];
 } STRGDI, *PSTRGDI;
 
+#define TEXTOBJECT_INIT 0x00010000
+
 /* GDI logical font object */
 typedef struct
 {
@@ -62,9 +64,13 @@ typedef struct
    BASEOBJECT    BaseObject;
    LFTYPE        lft;
    FLONG         fl;
-   ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
    FONTOBJ      *Font;
-   BOOLEAN       Initialized; /* Don't reinitialize for each DC */
+   WCHAR         FullName[LF_FULLFACESIZE];
+   WCHAR         Style[LF_FACESIZE];
+   WCHAR         FaceName[LF_FACESIZE];
+   DWORD         dwOffsetEndArray;
+// Fixed:
+   ENUMLOGFONTEXDVW logfont;
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
@@ -76,7 +82,8 @@ typedef struct
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
 #define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_UnlockObjByPtr ((POBJ)pBMObj)
 
-NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
+PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
+NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
