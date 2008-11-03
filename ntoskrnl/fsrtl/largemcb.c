@@ -16,7 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 PAGED_LOOKASIDE_LIST FsRtlFirstMappingLookasideList;
-PAGED_LOOKASIDE_LIST FsRtlFastMutexLookasideList;
+NPAGED_LOOKASIDE_LIST FsRtlFastMutexLookasideList;
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -129,7 +129,7 @@ NTAPI
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
-    Mcb->FastMutex = ExAllocateFromPagedLookasideList(&FsRtlFastMutexLookasideList);
+    Mcb->FastMutex = ExAllocateFromNPagedLookasideList(&FsRtlFastMutexLookasideList);
     ExInitializeFastMutex(Mcb->FastMutex);
 
     FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
@@ -152,13 +152,13 @@ FsRtlInitializeLargeMcbs(VOID)
                                    0); /* FIXME: Should be 4 */
 
     /* Initialize the list for the fast mutex */
-    ExInitializePagedLookasideList(&FsRtlFastMutexLookasideList,
-                                   NULL,
-                                   NULL,
-                                   POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                   sizeof(FAST_MUTEX),
-                                   IFS_POOL_TAG,
-                                   0); /* FIXME: Should be 32 */
+    ExInitializeNPagedLookasideList(&FsRtlFastMutexLookasideList,
+                                    NULL,
+                                    NULL,
+                                    POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                    sizeof(FAST_MUTEX),
+                                    IFS_POOL_TAG,
+                                    0); /* FIXME: Should be 32 */
 }
 
 /*
@@ -453,8 +453,8 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
     if (Mcb->FastMutex)
     {
-        ExFreeToPagedLookasideList(&FsRtlFastMutexLookasideList,
-                                   Mcb->FastMutex);
+        ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
+                                    Mcb->FastMutex);
         FsRtlUninitializeBaseMcb(&(Mcb->BaseMcb));
     }
 }
