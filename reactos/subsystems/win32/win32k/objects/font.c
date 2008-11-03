@@ -64,7 +64,7 @@ RealizeFontInit(HFONT hFont)
 
   pTextObj = TEXTOBJ_LockText(hFont);
 
-  if ( pTextObj && !pTextObj->fl & TEXTOBJECT_INIT)
+  if ( pTextObj && !(pTextObj->fl & TEXTOBJECT_INIT))
   {
      Status = TextIntRealizeFont(hFont, pTextObj);
      if (!NT_SUCCESS(Status))
