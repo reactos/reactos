@@ -9,7 +9,6 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>winmm</library>
-	<library>msvcrt</library>
 	<file>midimap.c</file>
 	<file>midimap.rc</file>
 </module>

@@ -11,7 +11,6 @@
 	<library>comdlg32</library>
 	<library>shell32</library>
 	<library>gdi32</library>
-	<library>msvcrt</library>
 	<file>keyboard.c</file>
 	<file>main.c</file>
 	<file>mouse.c</file>

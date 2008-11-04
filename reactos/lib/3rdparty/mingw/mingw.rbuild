@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true">
+<module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true" crt="dll">
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="mingw_common">include</include>
 	<file>cpu_features.c</file>
@@ -19,19 +19,19 @@
 		<file>pseudo-reloc.c</file>
 	</if>
 </module>
-<module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true">
+<module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true" crt="dll">
 	<include base="mingw_common">include</include>
 	<file>binmode.c</file>
 	<file>crt1.c</file>
 	<file>main.c</file>
 </module>
-<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true">
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true" crt="dll">
 	<include base="mingw_common">include</include>
 	<file>wbinmode.c</file>
 	<file>wcrt1.c</file>
 	<file>wmain.c</file>
 </module>
-<module name="mingw_dllmain" type="staticlibrary" isstartuplib="true">
+<module name="mingw_dllmain" type="staticlibrary" isstartuplib="true" crt="dll">
 	<include base="mingw_common">include</include>
 	<file>dllcrt1.c</file>
 </module>

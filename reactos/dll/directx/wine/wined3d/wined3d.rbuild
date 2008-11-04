@@ -14,7 +14,6 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>uuid</library>
-	<library>msvcrt</library>
 
 	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>

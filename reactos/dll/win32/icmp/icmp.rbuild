@@ -6,7 +6,6 @@
 	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>wine</library>
-	<library>msvcrt</library>
 	<file>icmp_main.c</file>
 	<file>icmp.rc</file>
 	<file>icmp.spec</file>

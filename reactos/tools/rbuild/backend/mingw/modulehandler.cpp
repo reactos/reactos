@@ -1059,7 +1059,7 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
 Rule winebuildPDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                          "\t$(ECHO_WINEBLD)\n"
                          "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).def.spec\n"
-                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).def.spec\n\n",
+                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).def.spec\n\n",
                          "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).def.spec",
                          "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
                          "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
@@ -1650,10 +1650,11 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
-		          "\t%s -o %s %s -g %s\n\n",
+		          "\t%s -o %s %s %s -g %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          cflagsMacro.c_str(),
+				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
 	}
@@ -1886,7 +1887,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	string globalCflags = "";
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
+	{
 		globalCflags += " $(PROJECT_CFLAGS)";
+		if ( module.dynamicCRT )
+			globalCflags += " -D_DLL -D__USE_CRTIMP";
+	}
 	else
 		globalCflags += " -Wall -Wpointer-arith";
 	globalCflags += " -g";
@@ -2378,6 +2383,38 @@ MingwAddDebugSupportLibraries ( Module& module, DebugSupportType type )
 	module.non_if_data.libraries.push_back(pLibrary);
 }
 
+static void
+MingwAddCRTLibrary( Module &module )
+{
+	const char * crtAttr = module.CRT.c_str ();
+	const char * crtLib = NULL;
+
+	if ( stricmp ( crtAttr, "libc" ) == 0 )
+		crtLib = "crt";
+	else if ( stricmp ( crtAttr, "msvcrt" ) == 0 )
+		crtLib = "msvcrt";
+	else if ( stricmp ( crtAttr, "libcntpr" ) == 0 )
+		crtLib = "libcntpr";
+	else if ( stricmp ( crtAttr, "ntdll" ) == 0 )
+		crtLib = "ntdll";
+
+	if ( crtLib )
+	{
+		Library* pLibrary = new Library ( module, std::string ( crtLib ) );
+
+		if ( pLibrary->importedModule == NULL)
+		{
+			throw XMLInvalidBuildFileException (
+				module.node.location,
+				"module '%s' trying to import non-existant C runtime module '%s'",
+				module.name.c_str(),
+				crtLib );
+		}
+
+		module.non_if_data.libraries.push_back ( pLibrary );
+	}
+}
+
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( const Module& module_ )
 	: MingwModuleHandler ( module_ )
 {
@@ -2479,6 +2516,7 @@ MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 void
 MingwKernelModeDLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugKernelMode );
 }
 
@@ -2527,6 +2565,7 @@ MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler (
 void
 MingwNativeDLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
@@ -2575,6 +2614,7 @@ MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler (
 void
 MingwNativeCUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
@@ -2627,23 +2667,10 @@ MingwWin32OCXModuleHandler::MingwWin32OCXModuleHandler (
 {
 }
 
-static bool
-LinksToCrt( Module &module )
-{
-	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
-	{
-		Library& library = *module.non_if_data.libraries[i];
-		if ( library.name == "libcntpr" || library.name == "crt" )
-			return true;
-	}
-	return false;
-}
-
 static void
 MingwAddImplicitLibraries( Module &module )
 {
 	Library* pLibrary;
-	bool links_to_crt;
 
 	if ( module.type != Win32DLL
 	  && module.type != Win32OCX
@@ -2651,54 +2678,28 @@ MingwAddImplicitLibraries( Module &module )
 	  && module.type != Win32GUI
 	  && module.type != Win32SCR)
 	{
-		// no implicit libraries
 		return;
 	}
 
-	links_to_crt = LinksToCrt ( module );
-
-	if ( !module.isDefaultEntryPoint )
+	if ( module.isDefaultEntryPoint )
 	{
-		if ( module.GetEntryPoint(false) == "0" )
+		if ( module.IsDLL () )
 		{
-			if ( !links_to_crt )
-			{
-				pLibrary = new Library ( module, "mingw_common" );
-				module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() , pLibrary );
-
-				pLibrary = new Library ( module, "msvcrt" );
-				module.non_if_data.libraries.push_back ( pLibrary );
-				links_to_crt = true;
-			}
+			//pLibrary = new Library ( module, "__mingw_dllmain" );
+			//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
 		}
-		pLibrary = new Library ( module, "debugsup_ntdll" );
-		module.non_if_data.libraries.push_back(pLibrary);
-		return;
-	}
-
-	if ( module.IsDLL () )
-	{
-		//pLibrary = new Library ( module, "__mingw_dllmain" );
-		//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
-	}
-	else
-	{
-		pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
-		module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+		else
+		{
+			pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
+			module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+		}
 	}
 
 	pLibrary = new Library ( module, "mingw_common" );
-	module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() + 1, pLibrary );
+	module.non_if_data.libraries.push_back ( pLibrary );
 
-	if ( !links_to_crt )
-	{
-		// always link in msvcrt to get the basic routines
-		pLibrary = new Library ( module, "msvcrt" );
-		module.non_if_data.libraries.push_back ( pLibrary );
-	}
-
-	pLibrary = new Library ( module, "debugsup_ntdll" );
-	module.non_if_data.libraries.push_back(pLibrary);
+	MingwAddCRTLibrary ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void

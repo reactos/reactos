@@ -1,4 +1,4 @@
-/* 
+/*
  * ctype.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -33,7 +33,7 @@
 #define	_CONTROL	0x0020
 /* _BLANK is set for SP and non-ASCII horizontal space chars (eg,
    "no-break space", 0xA0, in CP1250) but not for HT.  */
-#define	_BLANK		0x0040 
+#define	_BLANK		0x0040
 #define	_HEX		0x0080
 #define	_LEADBYTE	0x8000
 
@@ -79,7 +79,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW toupper(int);
 /*
  *  These are the cheap non-std versions: The return values are undefined
  *  if the argument is not ASCII char or is not of appropriate case
- */ 
+ */
 _CRTIMP int __cdecl __MINGW_NOTHROW _tolower(int);
 _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
 #endif
@@ -116,7 +116,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
 # else /* CRTDLL */
   __MINGW_IMPORT const unsigned short* _pctype_dll;
 # define  _pctype _pctype_dll
-# endif 
+# endif
 
 #else		/*  __DECLSPEC_SUPPORTED */
 # if __MSVCRT_VERSION__ <= 0x0700
@@ -134,7 +134,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
 #endif
 
 /*
- * Use inlines here rather than macros, because macros will upset 
+ * Use inlines here rather than macros, because macros will upset
  * C++ usage (eg, ::isalnum), and so usually get undefined
  *
  * According to standard for SB chars, these function are defined only
@@ -144,7 +144,7 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
  *
  * If no MB char support is needed, these can be simplified even
  * more by command line define -DMB_CUR_MAX=1.  The compiler will then
- * optimise away the constant condition.			
+ * optimise away the constant condition.
  */
 
 #if !(defined (__NO_INLINE__)  || defined (__NO_CTYPE_INLINES) \
@@ -190,20 +190,8 @@ typedef wchar_t wctype_t;
 #define _WCTYPE_T_DEFINED
 #endif
 
-_CRTIMP int __cdecl __MINGW_NOTHROW iswalnum(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswalpha(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswascii(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswcntrl(wint_t);
 _CRTIMP int __cdecl __MINGW_NOTHROW iswctype(wint_t, wctype_t);
 _CRTIMP int __cdecl __MINGW_NOTHROW is_wctype(wint_t, wctype_t);	/* Obsolete! */
-_CRTIMP int __cdecl __MINGW_NOTHROW iswdigit(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswgraph(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswlower(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswprint(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswpunct(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswspace(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswupper(wint_t);
-_CRTIMP int __cdecl __MINGW_NOTHROW iswxdigit(wint_t);
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
      || !defined __STRICT_ANSI__ || defined __cplusplus
@@ -243,6 +231,21 @@ __CRT_INLINE int __cdecl __MINGW_NOTHROW iswblank (wint_t wc)
 
 #endif /* !(defined(__NO_CTYPE_INLINES) || defined(__WCTYPE_INLINES_DEFINED)) */
 
+#ifndef __WCTYPE_INLINES_DEFINED
+_CRTIMP int __cdecl __MINGW_NOTHROW iswalnum(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswalpha(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswascii(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswcntrl(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswdigit(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswgraph(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswlower(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswprint(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswpunct(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswspace(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswupper(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW iswxdigit(wint_t);
+#endif
+
 #ifndef	__STRICT_ANSI__
 int __cdecl __MINGW_NOTHROW __isascii (int);
 int __cdecl __MINGW_NOTHROW __toascii (int);
@@ -250,14 +253,14 @@ int __cdecl __MINGW_NOTHROW __iscsymf (int);		/* Valid first character in C symb
 int __cdecl __MINGW_NOTHROW __iscsym (int);		/* Valid character in C symbol (after first) */
 
 #if !(defined (__NO_INLINE__) || defined (__NO_CTYPE_INLINES))
-__CRT_INLINE int __cdecl __MINGW_NOTHROW __isascii(int c) {return ((c & ~0x7F) == 0);} 
+__CRT_INLINE int __cdecl __MINGW_NOTHROW __isascii(int c) {return ((c & ~0x7F) == 0);}
 __CRT_INLINE int __cdecl __MINGW_NOTHROW __toascii(int c) {return (c & 0x7F);}
 __CRT_INLINE int __cdecl __MINGW_NOTHROW __iscsymf(int c) {return (isalpha(c) || (c == '_'));}
 __CRT_INLINE int __cdecl __MINGW_NOTHROW __iscsym(int c)  {return  (isalnum(c) || (c == '_'));}
 #endif /* __NO_CTYPE_INLINES */
 
 #ifndef	_NO_OLDNAMES
-/* Not _CRTIMP */ 
+/* Not _CRTIMP */
 int __cdecl __MINGW_NOTHROW isascii (int);
 int __cdecl __MINGW_NOTHROW toascii (int);
 int __cdecl __MINGW_NOTHROW iscsymf (int);

@@ -205,15 +205,27 @@ _CRTIMP int __cdecl __MINGW_NOTHROW	vprintf (const char*, __VALIST);
 _CRTIMP int __cdecl __MINGW_NOTHROW	vsprintf (char*, const char*, __VALIST);
 _CRTIMP int __cdecl __MINGW_NOTHROW	_vsnprintf (char*, size_t, const char*, __VALIST);
 
-#ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-int __cdecl __MINGW_NOTHROW snprintf(char *, size_t, const char *, ...);
-int __cdecl __MINGW_NOTHROW vsnprintf (char *, size_t, const char *, __VALIST);
+#ifndef __NO_ISOCEXT
+__CRT_INLINE int __cdecl __MINGW_NOTHROW snprintf(char * s, size_t n, const char * f, ...)
+{
+	int r;
+	__VALIST a;
+	__mingw_va_start(a, f);
+	r = _vsnprintf (s, n, f, a);
+	__mingw_va_end(a);
+	return r;
+}
 
-int __cdecl __MINGW_NOTHROW vscanf (const char * __restrict__, __VALIST);
-int __cdecl __MINGW_NOTHROW vfscanf (FILE * __restrict__, const char * __restrict__,
-		     __VALIST);
-int __cdecl __MINGW_NOTHROW vsscanf (const char * __restrict__,
-		     const char * __restrict__, __VALIST);
+__CRT_INLINE int __cdecl __MINGW_NOTHROW vsnprintf (char * s, size_t n, const char * f, __VALIST a)
+{
+	return _vsnprintf (s, n, f, a);
+}
+
+int __cdecl __MINGW_NOTHROW vscanf (const char * __restrict__ f, __VALIST a);
+int __cdecl __MINGW_NOTHROW vfscanf (FILE * __restrict__ o, const char * __restrict__ f,
+		     __VALIST a);
+int __cdecl __MINGW_NOTHROW vsscanf (const char * __restrict__ s,
+		     const char * __restrict__ f, __VALIST a);
 #endif
 
 /*

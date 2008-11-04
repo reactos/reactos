@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 
 int unimplement()
 {
-	printf("This command is not implement yet\n");
+	puts("This command is not implement yet");
 	return 1;
 }
 

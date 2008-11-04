@@ -5,7 +5,6 @@
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<library>ntdll</library>
 	<library>kernel32</library>
-	<library>msvcrt</library>
 	<library>user32</library>
 	<define name="USE_EXTERNAL_DXTN_LIB" />
 	<!-- The following is autogenrated by Makefile.ReactOS -->

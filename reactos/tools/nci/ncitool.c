@@ -4,7 +4,7 @@
  * PROJECT:               Native Call Interface Support Tool
  * PURPOSE:               Generates NCI Tables and Stubs.
  * PROGRAMMER;            Alex Ionescu (alex@relsoft.net)
- * CHANGE HISTORY:        14/01/05 - Created. Based on original code by 
+ * CHANGE HISTORY:        14/01/05 - Created. Based on original code by
  *                                   KJK::Hyperion and Emanuelle Aliberti.
  *
  */
@@ -21,32 +21,35 @@
 /* DEFINES  ****************************************************************/
 
 #define INPUT_BUFFER_SIZE 255
-#define Arguments 7
+#define Arguments 8
 
 /******* Table Indexes ************/
 #define MAIN_INDEX 0x0
 #define WIN32K_INDEX 0x1000
 
 /******* Argument List ************/
-/* First, define the Databases */
+/* Databases */
 #define NativeSystemDb 0
 #define NativeGuiDb 1
 
-/* Now the Service Tables */
+/* Service Tables */
 #define NtosServiceTable 2
 #define Win32kServiceTable 3
 
-/* And finally, the stub files. */
+/* Stub Files */
 #define NtosUserStubs 4
 #define NtosKernelStubs 5
 #define Win32kStubs 6
 
+/* Spec Files */
+#define NtSpec 7
+
 /********** Stub Code ************/
 
 /*
- * This stubs calls into KUSER_SHARED_DATA where either a 
+ * This stubs calls into KUSER_SHARED_DATA where either a
  * sysenter or interrupt is performed, depending on CPU support.
- */    
+ */
 #if defined(__GNUC__)
 #define UserModeStub_x86    "    movl $0x%x, %%eax\n" \
                             "    movl $KUSER_SHARED_SYSCALL, %%ecx\n" \
@@ -84,7 +87,7 @@
 
 /*
  * This stub calls KiSystemService directly with a fake INT2E stack.
- * Because EIP is pushed during the call, the handler will return here. 
+ * Because EIP is pushed during the call, the handler will return here.
  */
 #if defined(__GNUC__)
 #define KernelModeStub_x86  "    movl $0x%x, %%eax\n" \
@@ -119,24 +122,24 @@
 
 /***** Arch Dependent Stuff ******/
 struct ncitool_data_t {
-	const char *arch;
-	int args_to_bytes;
-	const char *km_stub;
-	const char *um_stub;
-	const char *global_header;
-	const char *declaration;
+    const char *arch;
+    int args_to_bytes;
+    const char *km_stub;
+    const char *um_stub;
+    const char *global_header;
+    const char *declaration;
 };
 
 struct ncitool_data_t ncitool_data[] = {
-	{ "i386", 4, KernelModeStub_x86, UserModeStub_x86,
-	  ".global _%s@%d\n", "_%s@%d:\n" },
-	{ "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
-	  "\t.globl %s\n", "%s:\n" },
-	{ "mips", 4, KernelModeStub_mips, UserModeStub_mips,
-	  "\t.globl %s\n", "%s:\n" },
-	{ "arm", 4, KernelModeStub_arm, UserModeStub_arm,
+    { "i386", 4, KernelModeStub_x86, UserModeStub_x86,
+      ".global _%s@%d\n", "_%s@%d:\n" },
+    { "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
+      "\t.globl %s\n", "%s:\n" },
+    { "mips", 4, KernelModeStub_mips, UserModeStub_mips,
+      "\t.globl %s\n", "%s:\n" },
+    { "arm", 4, KernelModeStub_arm, UserModeStub_arm,
     "\t.globl %s\n", "%s:\n" },
-	{ 0, }
+    { 0, }
 };
 int arch_sel = 0;
 #define ARGS_TO_BYTES(x) (x)*(ncitool_data[arch_sel].args_to_bytes)
@@ -148,7 +151,7 @@ int arch_sel = 0;
 /* FUNCTIONS ****************************************************************/
 
 /*++
- * WriteFileHeader 
+ * WriteFileHeader
  *
  *     Prints out the File Header for a Stub File.
  *
@@ -166,7 +169,7 @@ int arch_sel = 0;
  *     FileLocation is only used for printing the header.
  *
  *--*/
-void 
+void
 WriteFileHeader(FILE * StubFile,
                 char* FileDescription,
                 char* FileLocation)
@@ -185,7 +188,7 @@ WriteFileHeader(FILE * StubFile,
 }
 
 /*++
- * WriteFileHeader 
+ * WriteFileHeader
  *
  *     Prints out the File Header for a Stub File.
  *
@@ -203,21 +206,21 @@ WriteFileHeader(FILE * StubFile,
  *     FileLocation is only used for printing the header.
  *
  *--*/
-void 
-WriteStubHeader(FILE* StubFile, 
-                char* SyscallName, 
+void
+WriteStubHeader(FILE* StubFile,
+                char* SyscallName,
                 unsigned StackBytes)
 {
     /* Export the function */
     fprintf(StubFile, GlobalHeader, SyscallName, StackBytes);
-    
+
     /* Define it */
     fprintf(StubFile, Declaration, SyscallName, StackBytes);
 }
 
-    
+
 /*++
- * WriteKernelModeStub 
+ * WriteKernelModeStub
  *
  *     Prints out the Kernel Mode Stub for a System Call.
  *
@@ -237,12 +240,12 @@ WriteStubHeader(FILE* StubFile,
  *     On i386, StackBytes is the number of arguments x 4.
  *
  *--*/
-void 
-WriteKernelModeStub(FILE* StubFile, 
-                    char* SyscallName, 
+void
+WriteKernelModeStub(FILE* StubFile,
+                    char* SyscallName,
                     unsigned StackBytes,
                     unsigned int SyscallId)
-{    
+{
     /* Write the Stub Header and export the Function */
     WriteStubHeader(StubFile, SyscallName, StackBytes);
 
@@ -251,7 +254,7 @@ WriteKernelModeStub(FILE* StubFile,
 }
 
 /*++
- * WriteUserModeStub 
+ * WriteUserModeStub
  *
  *     Prints out the User Mode Stub for a System Call.
  *
@@ -271,12 +274,12 @@ WriteKernelModeStub(FILE* StubFile,
  *     On i386, StackBytes is the number of arguments x 4.
  *
  *--*/
-void 
-WriteUserModeStub(FILE* StubFile, 
-                  char* SyscallName, 
+void
+WriteUserModeStub(FILE* StubFile,
+                  char* SyscallName,
                   unsigned StackBytes,
                   unsigned int SyscallId)
-{   
+{
     /* Write the Stub Header and export the Function */
     WriteStubHeader(StubFile, SyscallName, StackBytes);
 
@@ -285,7 +288,7 @@ WriteUserModeStub(FILE* StubFile,
 }
 
 /*++
- * GetNameAndArgumentsFromDb 
+ * GetNameAndArgumentsFromDb
  *
  *     Parses an entry from a System Call Database, extracting
  *     the function's name and arguments that it takes.
@@ -305,23 +308,23 @@ WriteUserModeStub(FILE* StubFile,
  *     On i386, StackBytes is the number of arguments x 4.
  *
  *--*/
-void 
+void
 GetNameAndArgumentsFromDb(char Line[],
                           char ** NtSyscallName,
                           char ** SyscallArguments)
 {
     char *s;
     char *stmp;
-    
+
     /* Remove new line */
     if ((s = (char *) strchr(Line,'\r')) != NULL) {
         *s = '\0';
     }
-        
+
     /* Skip comments (#) and empty lines */
     s = &Line[0];
     if ((*s) != '#' && (*s) != '\0') {
-            
+
         /* Extract the NtXXX name */
         *NtSyscallName = (char *)strtok(s," \t");
 
@@ -332,9 +335,9 @@ GetNameAndArgumentsFromDb(char Line[],
         if ((stmp = strchr(*SyscallArguments, '\n')) != NULL) {
             *stmp = '\0';
         }
-        
+
     } else {
-    
+
         /* Skip this entry */
         *NtSyscallName = NULL;
         *SyscallArguments = NULL;
@@ -342,7 +345,7 @@ GetNameAndArgumentsFromDb(char Line[],
 }
 
 /*++
- * CreateStubs 
+ * CreateStubs
  *
  *     Parses a System Call Database and creates stubs for all the entries.
  *
@@ -379,28 +382,28 @@ CreateStubs(FILE * SyscallDb,
     char *SyscallArguments;
     int SyscallId;
     unsigned StackBytes;
-    
+
     /* We loop, incrementing the System Call Index, until the end of the file  */
     for (SyscallId = 0; ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL));) {
-             
+
         /* Extract the Name and Arguments */
-        GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments); 
+        GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments);
         if (SyscallArguments != NULL)
             StackBytes = ARGS_TO_BYTES(strtoul(SyscallArguments, NULL, 0));
         else
             StackBytes = 0;
- 
+
         /* Make sure we really extracted something */
         if (NtSyscallName) {
-     
+
             /* Create Usermode Stubs for Nt/Zw syscalls in each Usermode file */
             int i;
             for (i= 0; i < UserFiles; i++) {
-    
+
                 /* Write the Nt Version */
-                WriteUserModeStub(UserModeFiles[i], 
-                                  NtSyscallName, 
-                                  StackBytes, 
+                WriteUserModeStub(UserModeFiles[i],
+                                  NtSyscallName,
+                                  StackBytes,
                                   SyscallId | Index);
 
                 /* If a Zw Version is needed (was specified), write it too */
@@ -426,7 +429,7 @@ CreateStubs(FILE * SyscallDb,
                                     StackBytes,
                                     SyscallId | Index);
             }
-        
+
             /* Only increase if we actually added something */
             SyscallId++;
         }
@@ -434,7 +437,7 @@ CreateStubs(FILE * SyscallDb,
 }
 
 /*++
- * CreateSystemServiceTable 
+ * CreateSystemServiceTable
  *
  *     Parses a System Call Database and creates a System Call Service Table for it.
  *
@@ -455,7 +458,7 @@ CreateStubs(FILE * SyscallDb,
  *
  *--*/
 void
-CreateSystemServiceTable(FILE *SyscallDb, 
+CreateSystemServiceTable(FILE *SyscallDb,
                          FILE *SyscallTable,
                          char * Name,
                          char * FileLocation)
@@ -477,21 +480,21 @@ CreateSystemServiceTable(FILE *SyscallDb,
 
         /* Extract the Name and Arguments */
         GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments);
-        
+
         /* Make sure we really extracted something */
         if (NtSyscallName) {
-            
+
             /* Add a new line */
             if (SyscallId > 0) fprintf(SyscallTable,",\n");
-        
+
             /* Write the syscall name in the service table. */
             fprintf(SyscallTable,"\t\t(ULONG_PTR)%s", NtSyscallName);
-            
+
             /* Only increase if we actually added something */
             SyscallId++;
         }
     }
-    
+
     /* Close the service table (C syntax) */
     fprintf(SyscallTable,"\n};\n");
 
@@ -504,24 +507,24 @@ CreateSystemServiceTable(FILE *SyscallDb,
 
         /* Extract the Name and Arguments */
         GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments);
-        
+
         /* Make sure we really extracted something */
         if (NtSyscallName) {
-            
+
             /* Add a new line */
             if (SyscallId > 0) fprintf(SyscallTable,",\n");
-            
+
             /* Write the syscall arguments in the argument table. */
             if (SyscallArguments != NULL)
                 fprintf(SyscallTable,"\t\t%lu * sizeof(void *)",strtoul(SyscallArguments, NULL, 0));
             else
                 fprintf(SyscallTable,"\t\t0");
-                    
+
             /* Only increase if we actually added something */
             SyscallId++;
         }
     }
-    
+
     /* Close the service table (C syntax) */
     fprintf(SyscallTable,"\n};\n");
 
@@ -532,6 +535,108 @@ CreateSystemServiceTable(FILE *SyscallDb,
     fprintf(SyscallTable, "#define MAX_SYSCALL_NUMBER    %d\n", SyscallId - 1);
     fprintf(SyscallTable, "#define NUMBER_OF_SYSCALLS    %d\n", SyscallId);
     fprintf(SyscallTable, "ULONG %sNumberOfSysCalls = %d;\n", Name, SyscallId);
+}
+
+/*++
+ * WriteSpec
+ *
+ *     Prints out the Spec Entry for a System Call.
+ *
+ * Params:
+ *     SpecFile - Spec File to which to write the header.
+ *
+ *     SyscallName - Name of System Call for which to add the stub.
+ *
+ *     CountArguments - Number of arguments to the System Call.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+void
+WriteSpec(FILE* StubFile,
+          char* SyscallName,
+          unsigned CountArguments)
+{
+    unsigned i;
+
+    fprintf(StubFile, "@ stdcall %s", SyscallName);
+
+    fputc ('(', StubFile);
+
+    for (i = 0; i < CountArguments; ++ i)
+        fputs ("ptr ", StubFile);
+
+    fputc (')', StubFile);
+    fputc ('\n', StubFile);
+}
+
+/*++
+ * CreateSpec
+ *
+ *     Parses a System Call Database and creates a spec file for all the entries.
+ *
+ * Params:
+ *     SyscallDb - System Call Database to parse.
+ *
+ *     Files - Array of Spec Files to which to write.
+ *
+ *     CountFiles - Number of Spec Files to create
+ *
+ *     UseZw - Use Zw prefix?
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+void
+CreateSpec(FILE * SyscallDb,
+           FILE * Files[],
+           unsigned CountFiles,
+           unsigned UseZw)
+{
+    char Line[INPUT_BUFFER_SIZE];
+    char *NtSyscallName;
+    char *SyscallArguments;
+    unsigned CountArguments;
+
+    /* We loop until the end of the file  */
+    while ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL)) {
+
+        /* Extract the Name and Arguments */
+        GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments);
+        CountArguments = strtoul(SyscallArguments, NULL, 0);
+
+        /* Make sure we really extracted something */
+        if (NtSyscallName) {
+
+            int i;
+            for (i= 0; i < CountFiles; i++) {
+
+                if (!UseZw) {
+                    WriteSpec(Files[i],
+                              NtSyscallName,
+                              CountArguments);
+                }
+
+                if (UseZw && NtSyscallName[0] == 'N' && NtSyscallName[1] == 't') {
+
+                    NtSyscallName[0] = 'Z';
+                    NtSyscallName[1] = 'w';
+                    WriteSpec(Files[i],
+                              NtSyscallName,
+                              CountArguments);
+                }
+
+            }
+        }
+    }
 }
 
 void usage(char * argv0)
@@ -545,6 +650,7 @@ void usage(char * argv0)
            "  zw.S          NTOSKRNL Zw stubs\n"
            "  win32k.S      GDI32 stubs\n"
            "  win32k.S      USER32 stubs\n"
+           "  nt.pspec      NTDLL exports\n"
            "  -arch is optional, default is %s\n",
            argv0,
            ncitool_data[0].arch
@@ -574,14 +680,14 @@ int main(int argc, char* argv[])
         usage(argv[0]);
         return(1);
     }
-  
+
     /* Open all Output and bail out if any fail */
     for (FileNumber = 0; FileNumber < Arguments; FileNumber++) {
-    
+
         /* Open the File */
         if (FileNumber == 2) OpenType = "wb";
         Files[FileNumber] = fopen(argv[FileNumber + ArgOffset], OpenType);
-        
+
         /* Check for failure and error out if so */
         if (!Files[FileNumber]) {
             perror(argv[FileNumber + ArgOffset]);
@@ -590,56 +696,67 @@ int main(int argc, char* argv[])
     }
 
     /* Write the File Headers */
-    WriteFileHeader(Files[NtosUserStubs], 
-                    "System Call Stubs for Native API", 
+    WriteFileHeader(Files[NtosUserStubs],
+                    "System Call Stubs for Native API",
                     argv[NtosUserStubs + ArgOffset]);
-    
-    WriteFileHeader(Files[NtosKernelStubs], 
-                    "System Call Stubs for Native API", 
+
+    WriteFileHeader(Files[NtosKernelStubs],
+                    "System Call Stubs for Native API",
                     argv[NtosKernelStubs + ArgOffset]);
     fputs("#include <ndk/asm.h>\n\n", Files[NtosKernelStubs]);
 
-    WriteFileHeader(Files[Win32kStubs], 
-                    "System Call Stubs for Native API", 
+    WriteFileHeader(Files[Win32kStubs],
+                    "System Call Stubs for Native API",
                     argv[Win32kStubs + ArgOffset]);
 
     /* Create the System Stubs */
     CreateStubs(Files[NativeSystemDb],
-                &Files[NtosUserStubs], 
-                Files[NtosKernelStubs], 
-                MAIN_INDEX, 
+                &Files[NtosUserStubs],
+                Files[NtosKernelStubs],
+                MAIN_INDEX,
                 1,
                 1);
 
     /* Create the Graphics Stubs */
-    CreateStubs(Files[NativeGuiDb], 
-                &Files[Win32kStubs], 
-                NULL, 
-                WIN32K_INDEX, 
+    CreateStubs(Files[NativeGuiDb],
+                &Files[Win32kStubs],
+                NULL,
+                WIN32K_INDEX,
                 1,
                 0);
 
-    /* Rewind the databases */
-    rewind(Files[NativeSystemDb]);
-    rewind(Files[NativeGuiDb]);
-
     /* Create the Service Tables */
-    CreateSystemServiceTable(Files[NativeSystemDb], 
+    rewind(Files[NativeSystemDb]);
+    CreateSystemServiceTable(Files[NativeSystemDb],
                             Files[NtosServiceTable],
                             "Main",
                             argv[NtosServiceTable + ArgOffset]);
-    
-    CreateSystemServiceTable(Files[NativeGuiDb], 
+
+    rewind(Files[NativeGuiDb]);
+    CreateSystemServiceTable(Files[NativeGuiDb],
                             Files[Win32kServiceTable],
                             "Win32k",
                             argv[Win32kServiceTable + ArgOffset]);
 
+    /* Create the Spec Files */
+    rewind(Files[NativeSystemDb]);
+    CreateSpec(Files[NativeSystemDb],
+               &Files[NtSpec],
+               1,
+               0);
+
+    rewind(Files[NativeSystemDb]);
+    CreateSpec(Files[NativeSystemDb],
+               &Files[NtSpec],
+               1,
+               1);
+
     /* Close all files */
     for (FileNumber = 0; FileNumber < Arguments-ArgOffset; FileNumber++) {
-    
+
         /* Close the File */
         fclose(Files[FileNumber]);
-        
+
     }
 
     return(0);

@@ -127,6 +127,8 @@
 	unicode	(true|yes|false|no) "no"
 	isstartuplib	(true)	#IMPLIED
 	buildtype %Text; #FIXED "OFWLDR"
+	iscrt	(true|yes|false|no) "no"
+	crt	(libc|msvcrt|libcntpr|ntdll|static|dll|none|auto) "auto"
 >
 
 <!ELEMENT pch (#PCDATA)>

@@ -232,6 +232,28 @@ void IfableData::ProcessXML ()
 		compilationUnits[i]->ProcessXML ();
 }
 
+bool Module::GetBooleanAttribute ( const XMLElement& moduleNode, const char * name, bool default_value )
+{
+	const XMLAttribute* att = moduleNode.GetAttribute ( name, false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			return true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			return false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				name,
+				att->value );
+		}
+	}
+	else
+		return default_value;
+}
+
 Module::Module ( const Project& project,
                  const XMLElement& moduleNode,
                  const string& modulePath )
@@ -282,24 +304,7 @@ Module::Module ( const Project& project,
 	else
 		extension = GetDefaultModuleExtension ();
 
-	att = moduleNode.GetAttribute ( "unicode", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
-			isUnicode = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
-			isUnicode = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"unicode",
-				att->value );
-		}
-	}
-	else
-		isUnicode = false;
+	isUnicode = GetBooleanAttribute ( moduleNode, "unicode" );
 
 	if (isUnicode)
 	{
@@ -337,24 +342,7 @@ Module::Module ( const Project& project,
 	else
 		baseaddress = GetDefaultModuleBaseaddress ();
 
-	att = moduleNode.GetAttribute ( "mangledsymbols", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
-			mangledSymbols = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
-			mangledSymbols = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"mangledsymbols",
-				att->value );
-		}
-	}
-	else
-		mangledSymbols = false;
+	mangledSymbols = GetBooleanAttribute ( moduleNode, "mangledsymbols" );
 
 	att = moduleNode.GetAttribute ( "underscoresymbols", false );
 	if ( att != NULL )
@@ -362,24 +350,50 @@ Module::Module ( const Project& project,
 	else
 		underscoreSymbols = false;
 
-	att = moduleNode.GetAttribute ( "isstartuplib", false );
-	if ( att != NULL )
+	isStartupLib = GetBooleanAttribute ( moduleNode, "isstartuplib" );
+	isCRT = GetBooleanAttribute ( moduleNode, "iscrt", GetDefaultModuleIsCRT () );
+
+	att = moduleNode.GetAttribute ( "crt", false );
+	if ( att != NULL)
 	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
-			isStartupLib = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
-			isStartupLib = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"isstartuplib",
-				att->value );
-		}
+		CRT = att->value;
+
+		if ( stricmp ( CRT.c_str (), "auto" ) == 0 )
+			CRT = GetDefaultModuleCRT ();
 	}
 	else
-		isStartupLib = false;
+		CRT = GetDefaultModuleCRT ();
+
+	const char * crtAttr = CRT.c_str ();
+	if ( crtAttr == NULL || stricmp ( crtAttr, "none" ) == 0 )
+		dynamicCRT = false;
+	else if ( stricmp ( crtAttr, "libc" ) == 0 )
+		dynamicCRT = false;
+	else if ( stricmp ( crtAttr, "msvcrt" ) == 0 )
+		dynamicCRT = true;
+	else if ( stricmp ( crtAttr, "libcntpr" ) == 0 )
+		dynamicCRT = false;
+	else if ( stricmp ( crtAttr, "ntdll" ) == 0 )
+		dynamicCRT = true;
+	else if ( stricmp ( crtAttr, "static" ) == 0 )
+		dynamicCRT = false;
+	else if ( stricmp ( crtAttr, "dll" ) == 0 )
+		dynamicCRT = true;
+	else
+	{
+		throw InvalidAttributeValueException (
+			moduleNode.location,
+			"crt",
+			std::string ( crtAttr ) );
+	}
+
+	if ( isCRT && dynamicCRT )
+	{
+		throw XMLInvalidBuildFileException (
+			moduleNode.location,
+			"C runtime module '%s' cannot be compiled for a dynamically-linked C runtime",
+			name.c_str() );
+	}
 
 	att = moduleNode.GetAttribute ( "prefix", false );
 	if ( att != NULL )
@@ -1153,6 +1167,67 @@ Module::GetDefaultModuleBaseaddress () const
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
+}
+
+std::string
+Module::GetDefaultModuleCRT () const
+{
+	if ( isCRT )
+		return "static";
+
+	switch ( type )
+	{
+		case Kernel:
+			return "static";
+		case Win32DLL:
+		case Win32OCX:
+			return "msvcrt";
+		case NativeDLL:
+		case NativeCUI:
+			return "ntdll";
+		case Win32CUI:
+		case Win32SCR:
+		case Win32GUI:
+			return "msvcrt";
+		case Test:
+			return "msvcrt"; // BUGBUG: not sure about this
+		case KeyboardLayout:
+			return "none";
+		case KernelModeDLL:
+		case KernelModeDriver:
+			return "dll";
+		case BootLoader:
+			return "libcntpr";
+		case ElfExecutable:
+		case BuildTool:
+		case StaticLibrary:
+		case HostStaticLibrary:
+		case ObjectLibrary:
+		case BootSector:
+		case Iso:
+		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
+		case RpcServer:
+		case RpcClient:
+		case RpcProxy:
+		case Alias:
+		case BootProgram:
+		case IdlHeader:
+		case MessageHeader:
+		case EmbeddedTypeLib:
+		case Cabinet:
+		case TypeDontCare:
+			return "none";
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+bool
+Module::GetDefaultModuleIsCRT () const
+{
+	return type == Kernel;
 }
 
 bool

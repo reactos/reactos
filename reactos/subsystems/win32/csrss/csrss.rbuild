@@ -9,7 +9,6 @@
 		<library>nt</library>
 		<library>ntdll</library>
 		<library>smdll</library>
-		<library>msvcrt</library>
 		<directory name="api">
 			<file>handle.c</file>
 			<file>process.c</file>

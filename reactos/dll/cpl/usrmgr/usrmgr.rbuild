@@ -10,7 +10,6 @@
 	<library>comctl32</library>
 	<library>ntdll</library>
 	<library>netapi32</library>
-	<library>msvcrt</library>
 	<file>extra.c</file>
 	<file>groupprops.c</file>
 	<file>groups.c</file>

@@ -450,7 +450,44 @@ MingwBackend::GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
 		}
 	}
 
-	fprintf ( fMakefile, "\n" );
+	fputs ( "\n", fMakefile );
+
+	// TODO: reference these from somewhere
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCC )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
+
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CXXFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCPP )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
 }
 
 void
