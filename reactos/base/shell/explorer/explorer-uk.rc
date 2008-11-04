@@ -381,9 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Настройки робочого стола"
     IDS_DESKTOP             "Робочий Стіл"
     IDS_TASKBAR             "Панель завдань"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "Ім'я"
+    IDS_PATHCOLUMN          "Шлях"
+    IDS_MENUCOLUMN          "Шлях в меню"
 END
 
 #endif    // Ukrainian resources

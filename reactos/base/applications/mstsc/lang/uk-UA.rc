@@ -66,6 +66,6 @@ BEGIN
     IDS_PIXEL               "%lu на %lu крапок"
     IDS_FULLSCREEN          "На весь екран"
     IDS_BROWSESERVER        "<Пошук інших...>"
-    IDS_HEADERTEXT1         "Remote Desktop"
-    IDS_HEADERTEXT2         "Connection"
+    IDS_HEADERTEXT1         "Віддалене керування робочим столом"
+    IDS_HEADERTEXT2         "Підключення"
 END

@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  18-09-2008
+ * LAST CHANGE:  26-10-2008
  */   
 
 /*
@@ -421,15 +421,15 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Typy s˙borov"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+LTEXT "RegistrovanÈ &typy s˙borov:", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
+PUSHBUTTON "&Nov˝", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "O&dstr·niù", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Podrobnosti o prÌpone '%s'", 14003, 7, 130, 249, 70 //Details for '%s' extension
 LTEXT "Opens with:", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Zmeniù...", 14006, 180, 140, 50, 14, WS_TABSTOP
 LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
 PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
@@ -646,7 +646,7 @@ BEGIN
 	IDS_RESTORE                 "&Obnoviù"
 	IDS_FORMATDRIVE             "Form·tovaù..."
 	IDS_RENAME                  "Premenovaù"
-	IDS_INSERT                  "Insert"
+	IDS_INSERT                  "Vloûiù"
 
 	IDS_CREATEFOLDER_DENIED     "Nie je moûnÈ vytvoriù nov˝ prieËinok: PrÌstup zamietnut˝."
 	IDS_CREATEFOLDER_CAPTION    "Chyba poËas vytv·rania novÈho prieËinka"
@@ -725,12 +725,12 @@ BEGIN
 	IDS_OPEN_WITH_FILTER        "SpustiteænÈ s˙bory\0*.exe\0"
 	IDS_DIRECTORY               "PrieËinok"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"
-	IDS_BAT_FILE                "ReactOS Batch File"
-	IDS_CMD_FILE                "ReactOS Command Script"
+	IDS_BAT_FILE                "D·vkov˝ s˙bor systÈmu ReactOS"
+	IDS_CMD_FILE                "PrÌkazov˝ skript systÈmu ReactOS"
 	IDS_COM_FILE                "DOS aplik·cia"
 	IDS_CPL_FILE                "Poloûka ovl·dacieho panela"
 	IDS_CUR_FILE                "Kurzor"
-	IDS_DLL_FILE                "Application Extension"
+	IDS_DLL_FILE                "RozöÌrenie aplik·cie"
 	IDS_DRV_FILE                "Ovl·daË zariadenia"
 	IDS_EXE_FILE                "Aplik·cia"
 	IDS_FON_FILE                "S˙bor pÌsma"
