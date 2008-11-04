@@ -101,7 +101,7 @@ static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
  */
 static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
 {
-    UINT cp = CP_ACP; // GdiGetCodePage( hdc );
+    UINT cp = GdiGetCodePage( hdc );
     INT lenW;
     LPWSTR strW;
 
@@ -660,7 +660,7 @@ GetCharWidthA(
         str[i] = (BYTE)(iFirstChar + i);
     str[i] = '\0';
 
-    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
     {
         HeapFree(GetProcessHeap(), 0, str);
@@ -707,7 +707,7 @@ GetCharWidth32A(
         str[i] = (BYTE)(iFirstChar + i);
     str[i] = '\0';
 
-    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
     {
         HeapFree(GetProcessHeap(), 0, str);
@@ -754,7 +754,7 @@ GetCharWidthFloatA(
         str[i] = (BYTE)(iFirstChar + i);
     str[i] = '\0';
 
-    wstr = FONT_mbtowc(NULL, str, count+1, &wlen, NULL);
+    wstr = FONT_mbtowc(hdc, str, count+1, &wlen, NULL);
     if (!wstr)
     {
         HeapFree(GetProcessHeap(), 0, str);
@@ -970,7 +970,7 @@ GetGlyphOutlineA(
             len = 1;
             mbchs[0] = (uChar & 0xff);
         }
-        p = FONT_mbtowc(NULL, mbchs, len, NULL, NULL);
+        p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
 	c = p[0];
     } else
         c = uChar;

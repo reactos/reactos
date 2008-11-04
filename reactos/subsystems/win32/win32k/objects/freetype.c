@@ -106,46 +106,47 @@ static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits 
 /*
  *  For TranslateCharsetInfo
  */
-#define FS(x) {{0,0,0,0},{0x1<<(x),0}}
+#define CP_SYMBOL   42
+#define FS_VIETNAMESE           0x00000100L
 #define MAXTCIINDEX 32
-static CHARSETINFO FontTci[MAXTCIINDEX] = {
+static const CHARSETINFO FontTci[MAXTCIINDEX] = {
   /* ANSI */
-  { ANSI_CHARSET, 1252, FS(0)},
-  { EASTEUROPE_CHARSET, 1250, FS(1)},
-  { RUSSIAN_CHARSET, 1251, FS(2)},
-  { GREEK_CHARSET, 1253, FS(3)},
-  { TURKISH_CHARSET, 1254, FS(4)},
-  { HEBREW_CHARSET, 1255, FS(5)},
-  { ARABIC_CHARSET, 1256, FS(6)},
-  { BALTIC_CHARSET, 1257, FS(7)},
-  { VIETNAMESE_CHARSET, 1258, FS(8)},
+  { ANSI_CHARSET, 1252, {{0,0,0,0},{FS_LATIN1,0}} },
+  { EASTEUROPE_CHARSET, 1250, {{0,0,0,0},{FS_LATIN2,0}} },
+  { RUSSIAN_CHARSET, 1251, {{0,0,0,0},{FS_CYRILLIC,0}} },
+  { GREEK_CHARSET, 1253, {{0,0,0,0},{FS_GREEK,0}} },
+  { TURKISH_CHARSET, 1254, {{0,0,0,0},{FS_TURKISH,0}} },
+  { HEBREW_CHARSET, 1255, {{0,0,0,0},{FS_HEBREW,0}} },
+  { ARABIC_CHARSET, 1256, {{0,0,0,0},{FS_ARABIC,0}} },
+  { BALTIC_CHARSET, 1257, {{0,0,0,0},{FS_BALTIC,0}} },
+  { VIETNAMESE_CHARSET, 1258, {{0,0,0,0},{FS_VIETNAMESE,0}} },
   /* reserved by ANSI */
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
   /* ANSI and OEM */
-  { THAI_CHARSET,  874,  FS(16)},
-  { SHIFTJIS_CHARSET, 932, FS(17)},
-  { GB2312_CHARSET, 936, FS(18)},
-  { HANGEUL_CHARSET, 949, FS(19)},
-  { CHINESEBIG5_CHARSET, 950, FS(20)},
-  { JOHAB_CHARSET, 1361, FS(21)},
+  { THAI_CHARSET, 874, {{0,0,0,0},{FS_THAI,0}} },
+  { SHIFTJIS_CHARSET, 932, {{0,0,0,0},{FS_JISJAPAN,0}} },
+  { GB2312_CHARSET, 936, {{0,0,0,0},{FS_CHINESESIMP,0}} },
+  { HANGEUL_CHARSET, 949, {{0,0,0,0},{FS_WANSUNG,0}} },
+  { CHINESEBIG5_CHARSET, 950, {{0,0,0,0},{FS_CHINESETRAD,0}} },
+  { JOHAB_CHARSET, 1361, {{0,0,0,0},{FS_JOHAB,0}} },
   /* reserved for alternate ANSI and OEM */
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { DEFAULT_CHARSET, 0, FS(0)},
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
   /* reserved for system */
-  { DEFAULT_CHARSET, 0, FS(0)},
-  { SYMBOL_CHARSET, 42 /* CP_SYMBOL */, FS(31)},
+  { DEFAULT_CHARSET, 0, {{0,0,0,0},{FS_LATIN1,0}} },
+  { SYMBOL_CHARSET, CP_SYMBOL, {{0,0,0,0},{FS_SYMBOL,0}} }
 };
 
 BOOL FASTCALL
@@ -531,13 +532,13 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
           }
         break;
       case TCI_SRCCODEPAGE:
-        while ((UINT) (Src) != FontTci[Index].ciACP && Index < MAXTCIINDEX)
+        while ( *Src != FontTci[Index].ciACP && Index < MAXTCIINDEX)
           {
             Index++;
           }
         break;
       case TCI_SRCCHARSET:
-        while ((UINT) (Src) != FontTci[Index].ciCharset && Index < MAXTCIINDEX)
+        while ( *Src != FontTci[Index].ciCharset && Index < MAXTCIINDEX)
           {
             Index++;
           }
@@ -551,7 +552,7 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
       return FALSE;
     }
 
-  memcpy(Cs, &FontTci[Index], sizeof(CHARSETINFO));
+  RtlCopyMemory(Cs, &FontTci[Index], sizeof(CHARSETINFO));
 
   return TRUE;
 }
@@ -2215,6 +2216,8 @@ IntGdiGetCharSet(HDC  hDC)
   {
       switch(charset)
       {
+         case ANSI_CHARSET:
+           break;
          case OEM_CHARSET:
            cp = 1;
            break;
@@ -2238,13 +2241,16 @@ ftGdiGetTextCharsetInfo(
     DWORD dwFlags)
 {
   PDC_ATTR Dc_Attr;
-  UINT Ret = DEFAULT_CHARSET, i = 0, fs_fsCsb0 = 0;
+  UINT Ret = DEFAULT_CHARSET, i;
   HFONT hFont;
   PTEXTOBJ TextObj;
   PFONTGDI FontGdi;
   FONTSIGNATURE fs;
   TT_OS2 *pOS2;
   FT_Face Face;
+  CHARSETINFO csi;
+  DWORD charset;
+  DWORD fs0;
 
   Dc_Attr = Dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
@@ -2259,58 +2265,79 @@ ftGdiGetTextCharsetInfo(
   FontGdi = ObjToGDI(TextObj->Font, FONT);
   Face = FontGdi->face;
   TEXTOBJ_UnlockText(TextObj);
+
   IntLockFreeType;
   pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
   IntUnLockFreeType;
   memset(&fs, 0, sizeof(FONTSIGNATURE));
   if (NULL != pOS2)
-    {
+  {
       fs.fsCsb[0] = pOS2->ulCodePageRange1;
       fs.fsCsb[1] = pOS2->ulCodePageRange2;
       fs.fsUsb[0] = pOS2->ulUnicodeRange1;
       fs.fsUsb[1] = pOS2->ulUnicodeRange2;
       fs.fsUsb[2] = pOS2->ulUnicodeRange3;
       fs.fsUsb[3] = pOS2->ulUnicodeRange4;
-      fs_fsCsb0   = pOS2->ulCodePageRange1;
       if (pOS2->version == 0)
-        {
+      {
           FT_UInt dummy;
 
           if(FT_Get_First_Char( Face, &dummy ) < 0x100)
-                fs_fsCsb0 |= 1;
+                fs.fsCsb[0] |= FS_LATIN1;
           else
-                fs_fsCsb0 |= 1L << 31;
-        }
-    }
+                fs.fsCsb[0] |= FS_SYMBOL;
+      }
+  }
   DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
+  if (fs.fsCsb[0] == 0)
+  { /* let's see if we can find any interesting cmaps */
+     for (i = 0; i < Face->num_charmaps; i++)
+     {
+         switch (Face->charmaps[i]->encoding)
+         {
+            case FT_ENCODING_UNICODE:
+            case FT_ENCODING_APPLE_ROMAN:
+               fs.fsCsb[0] |= FS_LATIN1;
+               break;
+            case FT_ENCODING_MS_SYMBOL:
+               fs.fsCsb[0] |= FS_SYMBOL;
+               break;
+            default:
+               break;
+          }
+      }
+  }
   if (lpSig)
   {
      RtlCopyMemory(lpSig, &fs, sizeof(FONTSIGNATURE));
   }
-  if (0 == fs_fsCsb0)
-    { /* let's see if we can find any interesting cmaps */
-       for (i = 0; i < Face->num_charmaps; i++)
-          {
-              switch (Face->charmaps[i]->encoding)
-                {
-                  case ft_encoding_unicode:
-                  case ft_encoding_apple_roman:
-                    fs_fsCsb0 |= 1;
-                    break;
-                  case ft_encoding_symbol:
-                    fs_fsCsb0 |= 1L << 31;
-                    break;
-                  default:
-                    break;
-                }
-          }
-    }
-  while (0 == (fs_fsCsb0 >> i & 0x0001) && i < MAXTCIINDEX)
-       {
-          i++;
-       }
-  Ret = FontTci[i].ciCharset;
-  DPRINT("CharSet %d\n",Ret);
+
+  if (IntTranslateCharsetInfo(&charset, &csi, TCI_SRCCODEPAGE))
+     if (csi.fs.fsCsb[0] & fs.fsCsb[0])
+     {
+        DPRINT("Hit 1\n");
+        Ret = csi.ciCharset;
+        goto Exit;
+     }
+
+  for (i = 0; i < MAXTCIINDEX; i++)
+  {
+        fs0 = 1L << i;
+        if (fs.fsCsb[0] & fs0)
+        {
+	    if (IntTranslateCharsetInfo(&fs0, &csi, TCI_SRCFONTSIG))
+	    {
+                //*cp = csi.ciACP;
+                DPRINT("Hit 2\n");
+	        Ret = csi.ciCharset;
+	        goto Exit;
+            }
+	    else
+                DPRINT("TCI failing on %x\n", fs0);
+	}
+  }
+Exit:
+  DPRINT("CharSet %d CodePage %d\n",Ret, csi.ciACP);
   return Ret;
 }
 

@@ -224,5 +224,7 @@ VOID
 STDCALL
 GdiSetLastError( DWORD dwErrCode );
 
+DWORD STDCALL GdiGetCodePage(HDC);
+
 /* EOF */
 

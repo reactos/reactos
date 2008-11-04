@@ -144,6 +144,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   if (oDc_Attr->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = oDc_Attr->dwLayout;
   NewDC->DcLevel.flPath     = OrigDC->DcLevel.flPath;
   nDc_Attr->ulDirty_        = oDc_Attr->ulDirty_;
+  nDc_Attr->iCS_CP          = oDc_Attr->iCS_CP;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -876,6 +877,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->DC_Type = DC_TYPE_INFO;
     DC_UnlockDc( NewDC );
   }
+  nDc_Attr->iCS_CP = IntGdiGetCharSet(hNewDC);
   return hNewDC;
 }
 
