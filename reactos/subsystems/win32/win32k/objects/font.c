@@ -586,6 +586,7 @@ NtGdiGetRealizationInfo(
   PDC pDc;
   PTEXTOBJ pTextObj;
   PFONTGDI pFontGdi;
+  PDC_ATTR Dc_Attr;
   BOOL Ret = FALSE;
   INT i = 0;
   REALIZATION_INFO ri;
@@ -596,7 +597,9 @@ NtGdiGetRealizationInfo(
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
-  pTextObj = RealizeFontInit(hf);
+  Dc_Attr = pDc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
+  pTextObj = RealizeFontInit(Dc_Attr->hlfntNew);
   pFontGdi = ObjToGDI(pTextObj->Font, FONT);
   TEXTOBJ_UnlockText(pTextObj);
   DC_UnlockDc(pDc);
