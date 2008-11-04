@@ -1805,10 +1805,10 @@ NTAPI
 NtUserLockWindowStation(
   HWINSTA hWindowStation);
 
-DWORD
-NTAPI
+BOOL
+STDCALL
 NtUserLockWindowUpdate(
-  DWORD Unknown0);
+  HWND hWnd);
 
 BOOL
 NTAPI
