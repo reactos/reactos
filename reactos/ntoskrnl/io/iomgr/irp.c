@@ -419,7 +419,7 @@ IopCompleteRequest(IN PKAPC Apc,
         {
             /* We have an I/O Completion setup... create the special Overlay */
             Irp->Tail.CompletionKey = Key;
-            Irp->Tail.Overlay.PacketType = IrpCompletionPacket;
+            Irp->Tail.Overlay.PacketType = IopCompletionPacketIrp;
             KeInsertQueue(Port, &Irp->Tail.Overlay.ListEntry);
         }
         else
