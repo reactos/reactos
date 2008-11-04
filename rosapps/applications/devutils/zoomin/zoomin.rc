@@ -9,5 +9,6 @@
 #include <reactos/version.rc>
 
 #include "lang/en-US.rc"
+#include "lang/es-ES.rc"
 #include "lang/no-NO.rc"
 #include "lang/sk-SK.rc"

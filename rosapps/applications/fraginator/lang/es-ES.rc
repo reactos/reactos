@@ -1,0 +1,229 @@
+// Microsoft Visual C++ generated resource script.
+//
+
+/////////////////////////////////////////////////////////////////////////////
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOGEX 0, 0, 346, 103
+STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_METHODS_LIST,135,52,77,79,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PRIORITY_LIST,223,52,59,91,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Comenzar",IDC_STARTSTOP,294,7,45,15
+    PUSHBUTTON      "Ayuda",ID_MAIN_HELP,294,28,45,15
+    PUSHBUTTON      "Salir",IDC_QUIT,294,49,45,15
+    CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
+                    WS_BORDER,7,7,63,58
+    LTEXT           "Seleccione una unidad:",-1,78,40,50,8
+    LTEXT           "Seleccione una acción:",-1,135,40,58,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
+                    0x1,7,71,299,10
+    CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
+                    SS_SUNKEN | WS_GROUP,7,86,332,10
+    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,91,8
+    LTEXT           "100.00%",IDC_PERCENT,311,71,28,8,0,WS_EX_RIGHT
+    LTEXT           "Prioridad del proceso:",-1,223,40,51,8
+END
+
+IDD_REPORT DIALOGEX  0, 0, 391, 169
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Informe"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Bytes",IDC_BYTES,7,148,50,14
+    DEFPUSHBUTTON   "Kilobytes",IDC_KILOBYTES,61,148,50,14
+    DEFPUSHBUTTON   "Megabytes",IDC_MEGABYTES,115,148,50,14
+    DEFPUSHBUTTON   "Gigabytes",IDC_GIGABYTES,169,148,50,14
+    DEFPUSHBUTTON   "Aceptar",IDC_REPORTOK,334,148,50,14
+    RTEXT           "Volumen",-1,7,7,24,8
+    LTEXT           "Capacidad",-1,7,51,28,8
+    RTEXT           "(Letra de la unidad)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
+    RTEXT           "(Tamaño del disco, Bytes)",IDC_DISKSIZEBYTES,63,51,117,10,
+                    SS_SUNKEN
+    RTEXT           "(Tamaño del disco, Clusters)",IDC_DISKSIZECLUSTERS,63,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Clusters totales",-1,7,73,43,8
+    RTEXT           "(Tamaño del Cluster)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+                    SS_SUNKEN
+    LTEXT           "Tamaño del Cluster",-1,7,84,36,8
+    RTEXT           "(Cantidad de archivos)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
+    RTEXT           "(Tamaño de archivos, bytes)",IDC_FILESSIZEBYTES,267,29,117,10,
+                    SS_SUNKEN
+    LTEXT           "# de archivos",-1,194,18,28,8
+    LTEXT           "Tamaño total",-1,194,29,31,8
+    LTEXT           "Tamaño en disco",-1,194,40,39,8
+    RTEXT           "(Tamaño total, bytes)",IDC_FILESSIZEONDISK,267,40,117,10,
+                    SS_SUNKEN
+    RTEXT           "(Files slack bytes)",IDC_FILESSLACKBYTES,267,51,117,10,
+                    SS_SUNKEN
+    LTEXT           "Wasted slack",-1,194,51,44,8
+    RTEXT           "(Espacio libre, Bytes)",IDC_DISKFREEBYTES,63,62,117,10,
+                    SS_SUNKEN
+    LTEXT           "Espacio libre",-1,7,62,36,8
+    RTEXT           "(Archivos fragmentados, cantidad)",IDC_FILESFRAGGED,267,62,117,
+                    10,SS_SUNKEN
+    LTEXT           "Archivos fragmentados",-1,194,62,52,8
+    RTEXT           "(Cantidad de directorios)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
+    LTEXT           "# de directorios",-1,194,7,48,8
+    RTEXT           "Sistema de archivos",-1,7,40,36,8
+    RTEXT           "(Nombre del sistema de archivos)",IDC_FILESYSTEM,63,40,117,10,
+                    SS_SUNKEN
+    RTEXT           "Etiqueta del volumen",-1,7,18,44,8
+    RTEXT           "(Etiqueta del volumen)",IDC_VOLUMELABEL,63,18,117,10,SS_SUNKEN
+    RTEXT           "Serie",-1,7,29,18,8
+    RTEXT           "(Serie del volumen)",IDC_VOLUMESERIAL,63,29,117,10,
+                    SS_SUNKEN
+    RTEXT           "(Media de fragmentos por archivo)",IDC_AVERAGEFRAGS,267,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Media de fragmentos por archivo",-1,194,73,60,20
+    LTEXT           "XX.X% de los archivos de esta unidad están fragmentados. Es recomendable que realice una SSSSSSS defragmentación.",
+                    IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
+    LTEXT           "Recomendaciones:",-1,7,96,62,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 339
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 96
+    END
+
+    IDD_REPORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 384
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""windows.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,3,0,0
+ PRODUCTVERSION 1,3,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Organización", " "
+            VALUE "FileDescription", "Fraginator"
+            VALUE "Versión del archivo", "1.03"
+            VALUE "Nombre interno", "Fraginator"
+            VALUE "Copyright", "Copyright © 2000-2002 Rick Brewster"
+            VALUE "Nombre original del archivo", "Fraginator.exe"
+            VALUE "Nombre del producto", "Fraginator"
+            VALUE "Versión del producto", "1.03"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "Fraginator Motif Icon.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON                    "icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "default1.bin"
+#endif    // Spanish resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

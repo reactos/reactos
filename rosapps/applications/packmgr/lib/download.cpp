@@ -13,6 +13,7 @@
 #include "package.hpp"
 #include "expat.h"
 #include "log.h"
+#include <string>
 #include <urlmon.h>
 
 HRESULT WINAPI URLDownloadToFileA(

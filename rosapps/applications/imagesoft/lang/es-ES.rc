@@ -210,7 +210,7 @@ BEGIN
   IDS_HINT_CLOSEALL     " Cerrar todas las ventanas."
   IDS_HINT_SAVE         " Guardar el documento activo."
   IDS_HINT_SAVEAS       " Guardar el documento activo con un nuevo nombre."
-  IDS_HINT_PRINTPRE     " Previews the printed documento."
+  IDS_HINT_PRINTPRE     " Previsualizar impresión."
   IDS_HINT_PRINT        " Imprimir el documento activo."
   IDS_HINT_PROP         " Mostrar las propiedades de la imagen activa."
   IDS_HINT_EXIT         " Cerrar esta aplicación."
