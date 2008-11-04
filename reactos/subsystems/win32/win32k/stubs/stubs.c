@@ -2125,20 +2125,6 @@ NtGdiGetMonitorID(
  */
 BOOL
 APIENTRY
-NtGdiGetRealizationInfo(
-    IN HDC hdc,
-    OUT PREALIZATION_INFO pri,
-    IN HFONT hf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiDrawStream(
     IN HDC hdcDst,
     IN ULONG cjIn,

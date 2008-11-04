@@ -390,6 +390,8 @@ typedef union
   ULONG l;
 } gxf_long;
 
+#define CFONT_REALIZATION 0x0080
+
 typedef struct _CFONT
 {
     struct _CFONT   *pcfNext;

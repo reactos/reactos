@@ -21,7 +21,7 @@ NtGdiGetCharSet(HDC hDC)
 {
   PDC Dc;
   PDC_ATTR Dc_Attr;
-  DWORD cscp = IntGdiGetCharSet(hDC);
+  DWORD cscp;
   // If here, update everything!
   Dc = DC_LockDc(hDC);
   if (!Dc)
@@ -29,6 +29,7 @@ NtGdiGetCharSet(HDC hDC)
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
+  cscp = ftGdiGetTextCharsetInfo(Dc,NULL,0);
   Dc_Attr = Dc->pDc_Attr;
   if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   Dc_Attr->iCS_CP = cscp;
@@ -96,10 +97,13 @@ NtGdiGetTextCharsetInfo(
 
   if (!lpSig) pfsSafe = NULL;
 
-  Ret = ftGdiGetTextCharsetInfo( Dc, pfsSafe, dwFlags);
+  Ret = HIWORD(ftGdiGetTextCharsetInfo( Dc, pfsSafe, dwFlags));
 
   if (lpSig)
   {
+     if (Ret == DEFAULT_CHARSET)
+        RtlZeroMemory(pfsSafe, sizeof(FONTSIGNATURE));
+
      _SEH_TRY
      {
          ProbeForWrite( lpSig,

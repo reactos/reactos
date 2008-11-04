@@ -23,7 +23,6 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
 
   switch (Count)
   {
-
      case sizeof(ENUMLOGFONTEXDVW):
         RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer,
                                             &TFont->logfont,
@@ -53,6 +52,58 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
         return 0;
   }
   return Count;
+}
+
+DWORD
+FASTCALL
+IntGetFontLanguageInfo(PDC Dc)
+{
+  PDC_ATTR Dc_Attr;
+  FONTSIGNATURE fontsig;
+  static const DWORD GCP_DBCS_MASK=0x003F0000,
+		GCP_DIACRITIC_MASK=0x00000000,
+		FLI_GLYPHS_MASK=0x00000000,
+		GCP_GLYPHSHAPE_MASK=0x00000040,
+		GCP_KASHIDA_MASK=0x00000000,
+		GCP_LIGATE_MASK=0x00000000,
+		GCP_USEKERNING_MASK=0x00000000,
+		GCP_REORDER_MASK=0x00000060;
+
+  DWORD result=0;
+
+  ftGdiGetTextCharsetInfo( Dc, &fontsig, 0 );
+
+ /* We detect each flag we return using a bitmask on the Codepage Bitfields */
+  if( (fontsig.fsCsb[0]&GCP_DBCS_MASK)!=0 )
+		result|=GCP_DBCS;
+
+  if( (fontsig.fsCsb[0]&GCP_DIACRITIC_MASK)!=0 )
+		result|=GCP_DIACRITIC;
+
+  if( (fontsig.fsCsb[0]&FLI_GLYPHS_MASK)!=0 )
+		result|=FLI_GLYPHS;
+
+  if( (fontsig.fsCsb[0]&GCP_GLYPHSHAPE_MASK)!=0 )
+		result|=GCP_GLYPHSHAPE;
+
+  if( (fontsig.fsCsb[0]&GCP_KASHIDA_MASK)!=0 )
+		result|=GCP_KASHIDA;
+
+  if( (fontsig.fsCsb[0]&GCP_LIGATE_MASK)!=0 )
+		result|=GCP_LIGATE;
+
+  if( (fontsig.fsCsb[0]&GCP_USEKERNING_MASK)!=0 )
+		result|=GCP_USEKERNING;
+
+  Dc_Attr = Dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+
+  /* this might need a test for a HEBREW- or ARABIC_CHARSET as well */
+  if ( Dc_Attr->lTextAlign & TA_RTLREADING )
+     if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
+                    result|=GCP_REORDER;
+
+  return result;
 }
 
 PTEXTOBJ
@@ -114,14 +165,14 @@ NtGdiAddFontResourceW(
   Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
   if(!NT_SUCCESS(Status))
   {
-    ExFreePool(SafeFileName.Buffer);
+    ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
     SetLastNtError(Status);
     return 0;
   }
 
   Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
 
-  ExFreePool(SafeFileName.Buffer);
+  ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
   return Ret;
 }
 
@@ -223,8 +274,8 @@ NtGdiGetFontUnicodeRanges(
   }
   FontGdi = ObjToGDI(TextObj->Font, FONT);
 
-
   Size = ftGetFontUnicodeRanges( FontGdi, NULL);
+
   if (Size && pgs)
   {
      pgsSafe = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
@@ -376,48 +427,48 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   NTSTATUS Status;
 
   dc = DC_LockDc(hDC);
-  if (dc == NULL)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
-    }
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
   DC_UnlockDc(dc);
-  if (TextObj == NULL)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
-    }
+  if (!TextObj)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
   FontGDI = ObjToGDI(TextObj->Font, FONT);
   TEXTOBJ_UnlockText(TextObj);
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
   if (!otm) return Size;
   if (Size > Data)
-    {
+  {
       SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
       return 0;
-    }
+  }
   potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-  if (NULL == potm)
-    {
+  if (!potm)
+  {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
-    }
+  }
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
   if (otm)
-    {
-      Status = MmCopyToCaller(otm, potm, Size);
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          ExFreePool(potm);
-          return 0;
-        }
-    }
-  ExFreePool(potm);
+  {
+     Status = MmCopyToCaller(otm, potm, Size);
+     if (! NT_SUCCESS(Status))
+     {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        ExFreePoolWithTag(potm,TAG_GDITEXT);
+        return 0;
+     }
+  }
+  ExFreePoolWithTag(potm,TAG_GDITEXT);
   return Size;
 }
 
@@ -486,7 +537,7 @@ NtGdiGetFontResourceInfoInternalW(
     {
         SetLastNtError(Status);
         /* Free the string buffer for the safe filename */
-        ExFreePool(SafeFileNames.Buffer);
+        ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
         return FALSE;
     }
 
@@ -517,9 +568,77 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Free the string for the safe filenames */
-    ExFreePool(SafeFileNames.Buffer);
+    ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
 
     return bRet;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtGdiGetRealizationInfo(
+    IN HDC hdc,
+    OUT PREALIZATION_INFO pri,
+    IN HFONT hf)
+{
+  PDC pDc;
+  PTEXTOBJ pTextObj;
+  PFONTGDI pFontGdi;
+  BOOL Ret = FALSE;
+  INT i = 0;
+  REALIZATION_INFO ri;
+
+  pDc = DC_LockDc(hdc);
+  if (!pDc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+  pTextObj = RealizeFontInit(hf);
+  pFontGdi = ObjToGDI(pTextObj->Font, FONT);
+  TEXTOBJ_UnlockText(pTextObj);
+  DC_UnlockDc(pDc);
+
+  Ret = ftGdiRealizationInfo(pFontGdi, &ri);
+  if (Ret)
+  {
+     if (pri)
+     {
+        NTSTATUS Status = STATUS_SUCCESS;
+        _SEH_TRY
+        {
+            ProbeForWrite(pri, sizeof(REALIZATION_INFO), 1);
+            RtlCopyMemory(pri, &ri, sizeof(REALIZATION_INFO));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END
+
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            return FALSE;
+        }
+     }
+     do
+     {
+        if (GdiHandleTable->cfPublic[i].hf == hf)
+        {
+           GdiHandleTable->cfPublic[i].iTechnology = ri.iTechnology;
+           GdiHandleTable->cfPublic[i].iUniq = ri.iUniq;
+           GdiHandleTable->cfPublic[i].dwUnknown = ri.dwUnknown;
+           GdiHandleTable->cfPublic[i].dwCFCount = GdiHandleTable->dwCFCount;
+           GdiHandleTable->cfPublic[i].fl |= CFONT_REALIZATION;
+        }
+        i++;
+     }
+     while ( i < GDI_CFONT_MAX );
+  }
+  return Ret;
 }
 
 HFONT

@@ -50,6 +50,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifndef FT_MAKE_TAG      
+#define FT_MAKE_TAG( ch0, ch1, ch2, ch3 ) \
+       ( ((DWORD)(BYTE)(ch0) << 24) | ((DWORD)(BYTE)(ch1) << 16) | \
+       ((DWORD)(BYTE)(ch2) << 8) | (DWORD)(BYTE)(ch3) )
+#endif
+
 FT_Library  library;
 
 typedef struct _FONT_ENTRY {
@@ -107,7 +113,6 @@ static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits 
  *  For TranslateCharsetInfo
  */
 #define CP_SYMBOL   42
-#define FS_VIETNAMESE           0x00000100L
 #define MAXTCIINDEX 32
 static const CHARSETINFO FontTci[MAXTCIINDEX] = {
   /* ANSI */
@@ -381,7 +386,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;      
    }
-   memcpy(FontGDI->Filename, FileName->Buffer, FileName->Length);
+   RtlCopyMemory(FontGDI->Filename, FileName->Buffer, FileName->Length);
    FontGDI->Filename[FileName->Length / sizeof(WCHAR)] = L'\0';
    FontGDI->face = Face;
 
@@ -486,7 +491,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
   }
 
   *NewFont = TextObj->BaseObject.hHmgr;
-  memcpy(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
+  RtlCopyMemory(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
   if (lf->lfEscapement != lf->lfOrientation)
   {
     /* this should really depend on whether GM_ADVANCED is set */
@@ -547,10 +552,10 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
         return FALSE;
     }
 
-  if (MAXTCIINDEX <= Index || DEFAULT_CHARSET == FontTci[Index].ciCharset)
-    {
-      return FALSE;
-    }
+  if (Index >= MAXTCIINDEX || DEFAULT_CHARSET == FontTci[Index].ciCharset)
+  {
+     return FALSE;
+  }
 
   RtlCopyMemory(Cs, &FontTci[Index], sizeof(CHARSETINFO));
 
@@ -796,7 +801,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
   RtlCopyMemory(&Otm->otmTextMetrics, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
 
   Otm->otmFiller = 0;
-  memcpy(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
+  RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
   Otm->otmfsSelection = pOS2->fsSelection;
   Otm->otmfsType = pOS2->fsType;
   Otm->otmsCharSlopeRise = pHori->caret_Slope_Rise;
@@ -939,21 +944,21 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   UNICODE_STRING StyleW;
   TT_OS2 *pOS2;
   FONTSIGNATURE fs;
-  DWORD fs_fsCsb0;
   CHARSETINFO CharSetInfo;
   unsigned i, Size;
   OUTLINETEXTMETRICW *Otm;
   LOGFONTW *Lf;
   TEXTMETRICW *TM;
   NEWTEXTMETRICW *Ntm;
+  DWORD fs0;
 
   RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
   Otm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-  if (NULL == Otm)
-    {
-      return;
-    }
+  if (!Otm)
+  {
+     return;
+  }
   IntGetOutlineTextMetrics(FontGDI, Size, Otm);
 
   Lf = &Info->EnumLogFontEx.elfLogFont;
@@ -991,14 +996,10 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   Ntm->tmPitchAndFamily = TM->tmPitchAndFamily;
   Ntm->tmCharSet = TM->tmCharSet;
   Ntm->ntmFlags = TM->tmItalic ? NTM_ITALIC : 0;
-  if (550 < TM->tmWeight)
-    {
-      Ntm->ntmFlags |= NTM_BOLD;
-    }
-  if (0 == Ntm->ntmFlags)
-    {
-      Ntm->ntmFlags = NTM_REGULAR;
-    }
+
+  if (550 < TM->tmWeight) Ntm->ntmFlags |= NTM_BOLD;
+
+  if (0 == Ntm->ntmFlags) Ntm->ntmFlags = NTM_REGULAR;
 
   Ntm->ntmSizeEM = Otm->otmEMSquare;
   Ntm->ntmCellHeight = 0;
@@ -1006,10 +1007,9 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
   Info->FontType = (0 != (TM->tmPitchAndFamily & TMPF_TRUETYPE)
                     ? TRUETYPE_FONTTYPE : 0);
+
   if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
-    {
-      Info->FontType |= RASTER_FONTTYPE;
-    }
+     Info->FontType |= RASTER_FONTTYPE;
 
   ExFreePool(Otm);
 
@@ -1026,76 +1026,64 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   pOS2 = FT_Get_Sfnt_Table(FontGDI->face, ft_sfnt_os2);
   IntUnLockFreeType;
   if (NULL != pOS2)
-    {
-      Info->NewTextMetricEx.ntmFontSig.fsCsb[0] = pOS2->ulCodePageRange1;
-      Info->NewTextMetricEx.ntmFontSig.fsCsb[1] = pOS2->ulCodePageRange2;
-      Info->NewTextMetricEx.ntmFontSig.fsUsb[0] = pOS2->ulUnicodeRange1;
-      Info->NewTextMetricEx.ntmFontSig.fsUsb[1] = pOS2->ulUnicodeRange2;
-      Info->NewTextMetricEx.ntmFontSig.fsUsb[2] = pOS2->ulUnicodeRange3;
-      Info->NewTextMetricEx.ntmFontSig.fsUsb[3] = pOS2->ulUnicodeRange4;
+  {
+     fs.fsCsb[0] = pOS2->ulCodePageRange1;
+     fs.fsCsb[1] = pOS2->ulCodePageRange2;
+     fs.fsUsb[0] = pOS2->ulUnicodeRange1;
+     fs.fsUsb[1] = pOS2->ulUnicodeRange2;
+     fs.fsUsb[2] = pOS2->ulUnicodeRange3;
+     fs.fsUsb[3] = pOS2->ulUnicodeRange4;
 
-      fs_fsCsb0 = pOS2->ulCodePageRange1;
-      if (0 == pOS2->version)
+     if (0 == pOS2->version)
+     {
+        FT_UInt Dummy;
+
+        if (FT_Get_First_Char(FontGDI->face, &Dummy) < 0x100)
+           fs.fsCsb[0] |= FS_LATIN1;
+        else
+           fs.fsCsb[0] |= FS_SYMBOL;
+     }
+     if (fs.fsCsb[0] == 0)
+     { /* let's see if we can find any interesting cmaps */
+        for (i = 0; i < FontGDI->face->num_charmaps; i++)
         {
-          FT_UInt Dummy;
-
-          if (FT_Get_First_Char(FontGDI->face, &Dummy) < 0x100)
-            {
-              fs_fsCsb0 |= 1;
-            }
-          else
-            {
-              fs_fsCsb0 |= 1L << 31;
-            }
+           switch (FontGDI->face->charmaps[i]->encoding)
+           {
+               case FT_ENCODING_UNICODE:
+               case FT_ENCODING_APPLE_ROMAN:
+                  fs.fsCsb[0] |= FS_LATIN1;   
+                  break;
+               case FT_ENCODING_MS_SYMBOL:   
+                  fs.fsCsb[0] |= FS_SYMBOL;
+                  break;
+               default:
+                  break;
+           }
         }
-      if (0 == fs_fsCsb0)
-        { /* let's see if we can find any interesting cmaps */
-          for (i = 0; i < FontGDI->face->num_charmaps; i++)
-            {
-              switch (FontGDI->face->charmaps[i]->encoding)
-                {
-                  case ft_encoding_unicode:
-                  case ft_encoding_apple_roman:
-                    fs_fsCsb0 |= 1;
-                    break;
-                  case ft_encoding_symbol:
-                    fs_fsCsb0 |= 1L << 31;
-                    break;
-                  default:
-                    break;
-                }
-            }
-        }
-
-      for(i = 0; i < 32; i++)
+     }
+     for (i = 0; i < MAXTCIINDEX; i++)
+     {
+        fs0 = 1L << i;
+        if (fs.fsCsb[0] & fs0)
         {
-          if (0 != (fs_fsCsb0 & (1L << i)))
-            {
-              fs.fsCsb[0] = 1L << i;
-              fs.fsCsb[1] = 0;
-              if (! IntTranslateCharsetInfo(fs.fsCsb, &CharSetInfo, TCI_SRCFONTSIG))
-                {
-                  CharSetInfo.ciCharset = DEFAULT_CHARSET;
-                }
-              if (31 == i)
-                {
-                  CharSetInfo.ciCharset = SYMBOL_CHARSET;
-                }
-              if (DEFAULT_CHARSET != CharSetInfo.ciCharset)
-                {
-                  Info->EnumLogFontEx.elfLogFont.lfCharSet = CharSetInfo.ciCharset;
-                  if (NULL != ElfScripts[i])
-                    {
-                      wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
-                    }
-                  else
-                    {
-                      DPRINT1("Unknown elfscript for bit %d\n", i);
-                    }
-                }
-            }
+           if (!IntTranslateCharsetInfo(&fs0, &CharSetInfo, TCI_SRCFONTSIG))
+           {
+              CharSetInfo.ciCharset = DEFAULT_CHARSET;
+           }
+           if (DEFAULT_CHARSET != CharSetInfo.ciCharset)
+           {
+              Info->EnumLogFontEx.elfLogFont.lfCharSet = CharSetInfo.ciCharset;
+              if (NULL != ElfScripts[i])
+                 wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
+              else
+              {
+                 DPRINT1("Unknown elfscript for bit %d\n", i);
+              }
+           }
         }
-    }
+     }
+     Info->NewTextMetricEx.ntmFontSig = fs;
+  }
 }
 
 static int FASTCALL
@@ -2203,35 +2191,6 @@ TextIntGetTextExtentPoint(PDC dc,
   return TRUE;
 }
 
-DWORD
-FASTCALL
-IntGdiGetCharSet(HDC  hDC)
-{
-  UINT cp = 0;
-  CHARSETINFO csi;
-  DWORD charset = NtGdiGetTextCharsetInfo(hDC,NULL,0);
-  if (IntTranslateCharsetInfo(&charset, &csi, TCI_SRCCHARSET))
-      cp = csi.ciACP;
-  else
-  {
-      switch(charset)
-      {
-         case ANSI_CHARSET:
-           break;
-         case OEM_CHARSET:
-           cp = 1;
-           break;
-         case DEFAULT_CHARSET:
-           cp = 0;
-           break;
-         default:
-           DPRINT1("Can't find codepage for charset %d\n", charset);
-           break;
-       }
-  }
-  DPRINT("charset %d => cp %d\n", charset, LOWORD(cp));
-  return (MAKELONG(cp, charset));
-}
 
 INT
 FASTCALL
@@ -2249,19 +2208,20 @@ ftGdiGetTextCharsetInfo(
   TT_OS2 *pOS2;
   FT_Face Face;
   CHARSETINFO csi;
-  DWORD charset;
+  DWORD cp;
   DWORD fs0;
+  USHORT usACP, usOEM;
 
   Dc_Attr = Dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   hFont = Dc_Attr->hlfntNew;
   TextObj = RealizeFontInit(hFont);
 
-  if ( TextObj == NULL)
-    {
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return Ret;
-    }
+  if (!TextObj)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return Ret;
+  }
   FontGdi = ObjToGDI(TextObj->Font, FONT);
   Face = FontGdi->face;
   TEXTOBJ_UnlockText(TextObj);
@@ -2312,7 +2272,10 @@ ftGdiGetTextCharsetInfo(
      RtlCopyMemory(lpSig, &fs, sizeof(FONTSIGNATURE));
   }
 
-  if (IntTranslateCharsetInfo(&charset, &csi, TCI_SRCCODEPAGE))
+  RtlGetDefaultCodePage(&usACP, &usOEM);
+  cp = usACP;
+
+  if (IntTranslateCharsetInfo(&cp, &csi, TCI_SRCCODEPAGE))
      if (csi.fs.fsCsb[0] & fs.fsCsb[0])
      {
         DPRINT("Hit 1\n");
@@ -2333,12 +2296,12 @@ ftGdiGetTextCharsetInfo(
 	        goto Exit;
             }
 	    else
-                DPRINT("TCI failing on %x\n", fs0);
+                DPRINT1("TCI failing on %x\n", fs0);
 	}
   }
 Exit:
-  DPRINT("CharSet %d CodePage %d\n",Ret, csi.ciACP);
-  return Ret;
+  DPRINT("CharSet %d CodePage %d\n",csi.ciCharset, csi.ciACP);
+  return (MAKELONG(csi.ciACP, csi.ciCharset));
 }
 
 
@@ -2406,59 +2369,6 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
         glyphset->cRanges = num_ranges;
     }
     return size;
-}
-
-
-DWORD
-FASTCALL
-ftGetFontLanguageInfo(PDC Dc)
-{
-  PDC_ATTR Dc_Attr;
-  FONTSIGNATURE fontsig;
-  static const DWORD GCP_DBCS_MASK=0x003F0000,
-		GCP_DIACRITIC_MASK=0x00000000,
-		FLI_GLYPHS_MASK=0x00000000,
-		GCP_GLYPHSHAPE_MASK=0x00000040,
-		GCP_KASHIDA_MASK=0x00000000,
-		GCP_LIGATE_MASK=0x00000000,
-		GCP_USEKERNING_MASK=0x00000000,
-		GCP_REORDER_MASK=0x00000060;
-
-  DWORD result=0;
-
-  ftGdiGetTextCharsetInfo( Dc, &fontsig, 0 );
-
- /* We detect each flag we return using a bitmask on the Codepage Bitfields */
-  if( (fontsig.fsCsb[0]&GCP_DBCS_MASK)!=0 )
-		result|=GCP_DBCS;
-
-  if( (fontsig.fsCsb[0]&GCP_DIACRITIC_MASK)!=0 )
-		result|=GCP_DIACRITIC;
-
-  if( (fontsig.fsCsb[0]&FLI_GLYPHS_MASK)!=0 )
-		result|=FLI_GLYPHS;
-
-  if( (fontsig.fsCsb[0]&GCP_GLYPHSHAPE_MASK)!=0 )
-		result|=GCP_GLYPHSHAPE;
-
-  if( (fontsig.fsCsb[0]&GCP_KASHIDA_MASK)!=0 )
-		result|=GCP_KASHIDA;
-
-  if( (fontsig.fsCsb[0]&GCP_LIGATE_MASK)!=0 )
-		result|=GCP_LIGATE;
-
-  if( (fontsig.fsCsb[0]&GCP_USEKERNING_MASK)!=0 )
-		result|=GCP_USEKERNING;
-
-  Dc_Attr = Dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
-
-  /* this might need a test for a HEBREW- or ARABIC_CHARSET as well */
-  if ( Dc_Attr->lTextAlign & TA_RTLREADING )
-     if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
-                    result|=GCP_REORDER;
-
-  return result;
 }
 
 
@@ -2749,6 +2659,7 @@ FASTCALL
 IntFontType(PFONTGDI Font)
 {
    PS_FontInfoRec psfInfo;
+   FT_ULong tmp_size = 0;
 
    if (FT_HAS_MULTIPLE_MASTERS(Font->face))
       Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
@@ -2765,6 +2676,11 @@ IntFontType(PFONTGDI Font)
    if (!FT_Get_PS_Font_Info(Font->face, &psfInfo ))
    {
       Font->FontObj.flFontType |= FO_POSTSCRIPT;
+   }
+   /* check for the presence of the 'CFF ' table to check if the font is Type1 */
+   if (!FT_Load_Sfnt_Table(Font->face, FT_MAKE_TAG('C','F','F',' '), 0, NULL, &tmp_size))
+   {
+      Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
    }
 }
 
@@ -2979,14 +2895,14 @@ IntGdiGetFontResourceInfo(
         case 1: /* Copy the full font name */
             Size = wcslen(Info.EnumLogFontEx.elfFullName) + 1;
             Size = min(Size , LF_FULLFACESIZE) * sizeof(WCHAR);
-            memcpy(pBuffer, Info.EnumLogFontEx.elfFullName, Size);
+            RtlCopyMemory(pBuffer, Info.EnumLogFontEx.elfFullName, Size);
             // FIXME: Do we have to zeroterminate?
             *pdwBytes = Size;
             break;
 
         case 2: /* Copy a LOGFONTW structure */
             Info.EnumLogFontEx.elfLogFont.lfWidth = 0;
-            memcpy(pBuffer, &Info.EnumLogFontEx.elfLogFont, sizeof(LOGFONTW));
+            RtlCopyMemory(pBuffer, &Info.EnumLogFontEx.elfLogFont, sizeof(LOGFONTW));
             *pdwBytes = sizeof(LOGFONTW);
             break;
 

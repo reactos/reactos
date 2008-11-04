@@ -849,6 +849,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
     NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
+    nDc_Attr->iCS_CP = ftGdiGetTextCharsetInfo(NewDC,NULL,0);
+
     DC_UnlockDc( NewDC );
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
@@ -877,7 +879,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->DC_Type = DC_TYPE_INFO;
     DC_UnlockDc( NewDC );
   }
-  nDc_Attr->iCS_CP = IntGdiGetCharSet(hNewDC);
   return hNewDC;
 }
 
@@ -2413,7 +2414,7 @@ NtGdiGetDCDword(
     case GdiGetEMFRestorDc:
       break;
     case GdiGetFontLanguageInfo:
-          SafeResult = ftGetFontLanguageInfo(dc);
+          SafeResult = IntGetFontLanguageInfo(dc);
       break;
     case GdiGetIsMemDc:
           SafeResult = dc->DC_Type;
