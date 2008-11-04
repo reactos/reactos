@@ -130,20 +130,6 @@
 			<location>http://download.microsoft.com/download/ole/ole2v/3.5/w351/en-us/ole2v.exe</location>
 		</application>
 
-		<application name="Visual Basic 3 Runtime">
-			<regname>vb3run</regname>
-			<version>3.0</version>
-			<description>Visual Basic 3 Runtime</description>
-			<location>http://download.microsoft.com/download/vb30/utility/1/w9xnt4/en-us/vb3run.exe</location>
-		</application>
-
-		<application name="Visual Basic 4 Runtime">
-			<regname>vb4run</regname>
-			<version>4.0</version>
-			<description>Visual Basic 4 Runtime</description>
-			<location>http://download.microsoft.com/download/vb40ent/sample27/1/w9xnt4/en-us/vb4run.exe</location>
-		</application>
-
 		<application name="Visual Basic 5 Runtime">
 			<regname>vb5run</regname>
 			<version>5.0</version>
