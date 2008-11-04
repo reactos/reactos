@@ -783,7 +783,7 @@ static void CBPaintText(
 	 clipRegion=NULL;
        }
 
-       if (!IsWindowEnabled(lphc->self) & WS_DISABLED) itemState |= ODS_DISABLED;
+       if (!(IsWindowEnabled(lphc->self) & WS_DISABLED)) itemState |= ODS_DISABLED;
 
        dis.CtlType	= ODT_COMBOBOX;
        dis.CtlID	= ctlid;
