@@ -425,7 +425,6 @@ ClipobjToSpans(
                 (*Spans)[i].Width = Boundary->right - Boundary->left;
             }
         }
-
       return TRUE;
     }
 
@@ -447,7 +446,7 @@ ClipobjToSpans(
             {
                 if (NULL != *Spans)
                 {
-                    ExFreePool(*Spans);
+                    ExFreePoolWithTag(*Spans, TAG_CLIP);
                     *Spans = NULL;
                 }
                 *Count = 0;
@@ -461,7 +460,7 @@ ClipobjToSpans(
                 {
                     *dest++ = *src++;
                 }
-                ExFreePool(*Spans);
+                ExFreePoolWithTag(*Spans, TAG_CLIP);
             }
             *Spans = NewSpans;
         }

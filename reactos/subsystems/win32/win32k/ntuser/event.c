@@ -263,6 +263,11 @@ NtUserSetWinEventHook(
    if ( !GlobalEvents )
    {
       GlobalEvents = ExAllocatePoolWithTag(PagedPool, sizeof(EVENTTABLE), TAG_HOOK);
+      if (GlobalEvents == NULL)
+      {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         goto SetEventExit;
+      }
       GlobalEvents->Counts = 0;      
       InitializeListHead(&GlobalEvents->Events);
    }
@@ -348,7 +353,7 @@ NtUserSetWinEventHook(
 
          if (! NT_SUCCESS(Status))
          {
-            ExFreePool(pEH->ModuleName.Buffer);
+            ExFreePoolWithTag(pEH->ModuleName.Buffer, TAG_HOOK);
             UserDereferenceObject(pEH);
             IntRemoveEvent(pEH);
             SetLastNtError(Status);

@@ -737,7 +737,7 @@ NtUserToUnicodeEx(
                             pti ? pti->KeyboardLayout->KBTables : 0 );
 
       MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
-      ExFreePool(OutPwszBuff);
+      ExFreePoolWithTag(OutPwszBuff, TAG_STRING);
    }
    else
       ret = 0;

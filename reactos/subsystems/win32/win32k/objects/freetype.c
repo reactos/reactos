@@ -371,7 +371,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    {
       FT_Done_Face(Face);
       ObDereferenceObject(SectionObject);
-      ExFreePool(Entry);
+      ExFreePoolWithTag(Entry, TAG_FONT);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
    }
@@ -382,7 +382,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       EngFreeMem(FontGDI);
       FT_Done_Face(Face);
       ObDereferenceObject(SectionObject);
-      ExFreePool(Entry);
+      ExFreePoolWithTag(Entry, TAG_FONT);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;      
    }
@@ -1011,7 +1011,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
   if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
      Info->FontType |= RASTER_FONTTYPE;
 
-  ExFreePool(Otm);
+  ExFreePoolWithTag(Otm, TAG_GDITEXT);
 
   wcsncpy(Info->EnumLogFontEx.elfLogFont.lfFaceName, FaceName, LF_FACESIZE);
   wcsncpy(Info->EnumLogFontEx.elfFullName, FaceName, LF_FULLFACESIZE);

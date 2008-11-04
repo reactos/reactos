@@ -178,7 +178,7 @@ NtGdiGetTextExtentExW(
       Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
       if (NULL == Dx)
 	{
-	  ExFreePool(String);
+	  ExFreePoolWithTag(String, TAG_GDITEXT);
 	  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
@@ -193,9 +193,9 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
-      ExFreePool(String);
+      ExFreePoolWithTag(String, TAG_GDITEXT);
       SetLastNtError(Status);
       return FALSE;
     }
@@ -205,9 +205,9 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
-      ExFreePool(String);
+      ExFreePoolWithTag(String, TAG_GDITEXT);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
@@ -224,12 +224,12 @@ NtGdiGetTextExtentExW(
     Result = FALSE;
   DC_UnlockDc(dc);
 
-  ExFreePool(String);
+  ExFreePoolWithTag(String, TAG_GDITEXT);
   if (! Result)
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
       return FALSE;
     }
@@ -241,7 +241,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePool(Dx);
+	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -255,7 +255,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePool(Dx);
+	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -263,7 +263,7 @@ NtGdiGetTextExtentExW(
     }
   if (NULL != Dx)
     {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx,TAG_GDITEXT);
     }
 
   Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));

@@ -366,7 +366,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
       if (Status != STATUS_BUFFER_TOO_SMALL)
          break;
 
-      ExFreePool(Ret);
+      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
 
       Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
 
@@ -380,7 +380,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
    if (Status != STATUS_SUCCESS)
    {
-      ExFreePool(Ret);
+      ExFreePoolWithTag(Ret, TAG_KEYBOARD);
       return Status;
    }
 

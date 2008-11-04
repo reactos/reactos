@@ -341,7 +341,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }
@@ -388,7 +388,7 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }

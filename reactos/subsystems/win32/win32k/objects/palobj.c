@@ -170,7 +170,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   }
 
   hpalette = NtGdiCreatePaletteInternal(palPtr,NB_RESERVED_COLORS);
-  ExFreePool(palPtr);
+  ExFreePoolWithTag(palPtr, TAG_PALETTE);
 
 #ifndef NO_MAPPING
   palObj = (PALOBJ*)PALETTE_LockPalette(hpalette);

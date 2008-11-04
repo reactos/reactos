@@ -420,7 +420,7 @@ static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect)
         }
         temp = ExAllocatePoolWithTag(PagedPool, NewSize, TAG_REGION);
 
-        if (temp == 0)
+        if (temp == NULL)
         {
             return 0;
         }
@@ -431,7 +431,7 @@ static __inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect)
         reg->rdh.nRgnSize = NewSize;
         if (*firstrect != &reg->rdh.rcBound)
         {
-            ExFreePool(*firstrect);
+            ExFreePoolWithTag(*firstrect, TAG_REGION);
         }
         *firstrect = temp;
         *rect = (*firstrect)+reg->rdh.nCount;
@@ -520,7 +520,7 @@ REGION_CopyRegion(
                 return FALSE;
 
             if (dst->Buffer && dst->Buffer != &dst->rdh.rcBound)
-                ExFreePool(dst->Buffer);	//free the old buffer
+                ExFreePoolWithTag(dst->Buffer, TAG_REGION);	//free the old buffer
             dst->Buffer = temp;
             dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
         }
@@ -608,7 +608,7 @@ REGION_CropAndOffsetRegion(
         {
             xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePool(rgnDst->Buffer); //free the old buffer. will be assigned to xrect below.
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer. will be assigned to xrect below.
         }
 
         if (xrect)
@@ -676,7 +676,7 @@ REGION_CropAndOffsetRegion(
                 return FALSE;
 
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
-                ExFreePool(rgnDst->Buffer); //free the old buffer
+                ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer
             rgnDst->Buffer = temp;
             rgnDst->rdh.nCount = i;
             rgnDst->rdh.nRgnSize = i * sizeof(RECT);
@@ -1169,7 +1169,7 @@ REGION_RegionOp(
                 newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
                 COPY_RECTS(newReg->Buffer, prev_rects, newReg->rdh.nCount);
                 if (prev_rects != &newReg->rdh.rcBound)
-                    ExFreePool(prev_rects);
+                    ExFreePoolWithTag(prev_rects, TAG_REGION);
             }
         }
         else
@@ -1180,7 +1180,7 @@ REGION_RegionOp(
              */
             newReg->rdh.nRgnSize = sizeof(RECT);
             if (newReg->Buffer != &newReg->rdh.rcBound)
-                ExFreePool(newReg->Buffer);
+                ExFreePoolWithTag(newReg->Buffer, TAG_REGION);
             newReg->Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(RECT), TAG_REGION);
             ASSERT(newReg->Buffer);
         }
@@ -1188,7 +1188,7 @@ REGION_RegionOp(
     newReg->rdh.iType = RDH_RECTANGLES;
 
     if (oldRects != &newReg->rdh.rcBound)
-        ExFreePool(oldRects);
+        ExFreePoolWithTag(oldRects, TAG_REGION);
     return;
 }
 
@@ -3475,7 +3475,7 @@ REGION_PtsToRegion(
     {
         COPY_RECTS(temp, reg->Buffer, reg->rdh.nCount);
         if (reg->Buffer != &reg->rdh.rcBound)
-            ExFreePool(reg->Buffer);
+            ExFreePoolWithTag(reg->Buffer, TAG_REGION);
     }
     reg->Buffer = temp;
 
@@ -3754,7 +3754,7 @@ IntCreatePolyPolygonRgn(
                     if (!tmpPtBlock)
                     {
                         DPRINT1("Can't alloc tPB\n");
-                        ExFreePool(pETEs);
+                        ExFreePoolWithTag(pETEs, TAG_REGION);
                         return 0;
                     }
                     curPtBlock->next = tmpPtBlock;
@@ -3813,7 +3813,7 @@ IntCreatePolyPolygonRgn(
                         if (!tmpPtBlock)
                         {
                             DPRINT1("Can't alloc tPB\n");
-                            ExFreePool(pETEs);
+                            ExFreePoolWithTag(pETEs, TAG_REGION);
                             NtGdiDeleteObject(hrgn);
                             return 0;
                         }
@@ -3845,10 +3845,10 @@ IntCreatePolyPolygonRgn(
     for (curPtBlock = FirstPtBlock.next; --numFullPtBlocks >= 0;)
     {
         tmpPtBlock = curPtBlock->next;
-        ExFreePool(curPtBlock);
+        ExFreePoolWithTag(curPtBlock, TAG_REGION);
         curPtBlock = tmpPtBlock;
     }
-    ExFreePool(pETEs);
+    ExFreePoolWithTag(pETEs, TAG_REGION);
     REGION_UnlockRgn(region);
     return hrgn;
 }
