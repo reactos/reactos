@@ -59,7 +59,7 @@ HINSTANCE hInst;
 DWORD inConMode;
 DWORD outConMode;
 
-DWORD columnRightPositions[5];
+DWORD columnRightPositions[6];
 TCHAR lpSeparator[80];
 TCHAR lpHeader[80];
 TCHAR lpMemUnit[3];
