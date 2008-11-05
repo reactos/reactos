@@ -109,6 +109,9 @@ InitiateSystemShutdownA(LPSTR lpMachineName,
     INT         LastError;
     BOOL        rv;
 
+	MachineNameW.Buffer = NULL;
+	MessageW.Buffer = NULL;
+
     if (lpMachineName)
     {
         RtlInitAnsiString(&MachineNameA, lpMachineName);
@@ -126,7 +129,7 @@ InitiateSystemShutdownA(LPSTR lpMachineName,
         Status = RtlAnsiStringToUnicodeString(&MessageW, &MessageA, TRUE);
         if (STATUS_SUCCESS != Status)
         {
-            if (MachineNameW.Length)
+            if (MachineNameW.Buffer)
             {
                 RtlFreeUnicodeString(&MachineNameW);
             }

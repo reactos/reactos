@@ -872,7 +872,7 @@ ReportEventA(IN HANDLE hEventLog,
 
     HeapFree(GetProcessHeap(),
              0,
-             wideStrArray);
+             (PVOID)wideStrArray);
 
     return ret;
 }
