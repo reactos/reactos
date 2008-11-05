@@ -123,7 +123,7 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 126 "tools\\wpp_new\\ppy.y"
+#line 126 "ppy.y"
 typedef union YYSTYPE {
 	int		sint;
 	unsigned int	uint;
@@ -138,7 +138,7 @@ typedef union YYSTYPE {
 	mtext_t		*mtext;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 142 "tools\\wpp_new\\ppy.tab.h"
+#line 142 "ppy.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

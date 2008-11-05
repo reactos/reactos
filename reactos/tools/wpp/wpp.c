@@ -1,7 +1,7 @@
 /*
  * Exported functions of the Wine preprocessor
  *
- * Copyrignt 1998 Bertho A. Stultiens
+ * Copyright 1998 Bertho A. Stultiens
  * Copyright 2002 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or

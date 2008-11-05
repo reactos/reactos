@@ -158,7 +158,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 30 "tools\\wpp_new\\ppy.y"
+#line 30 "ppy.y"
 
 #include "config.h"
 #include "wine/port.h"
@@ -274,7 +274,7 @@ static int	nmacro_args;
 #endif
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 126 "tools\\wpp_new\\ppy.y"
+#line 126 "ppy.y"
 typedef union YYSTYPE {
 	int		sint;
 	unsigned int	uint;
@@ -289,7 +289,7 @@ typedef union YYSTYPE {
 	mtext_t		*mtext;
 } YYSTYPE;
 /* Line 196 of yacc.c.  */
-#line 293 "tools\\wpp_new\\ppy.tab.c"
+#line 293 "ppy.tab.c"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -301,7 +301,7 @@ typedef union YYSTYPE {
 
 
 /* Line 219 of yacc.c.  */
-#line 305 "tools\\wpp_new\\ppy.tab.c"
+#line 305 "ppy.tab.c"
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
 # define YYSIZE_T __SIZE_TYPE__
@@ -1214,7 +1214,7 @@ yyparse ()
 #endif
 #endif
 {
-
+  
   int yystate;
   int yyn;
   int yyresult;
@@ -1457,27 +1457,27 @@ yyreduce:
   switch (yyn)
     {
         case 4:
-#line 186 "tools\\wpp_new\\ppy.y"
+#line 186 "ppy.y"
     { pp_do_include((yyvsp[-1].cptr), 1); ;}
     break;
 
   case 5:
-#line 187 "tools\\wpp_new\\ppy.y"
+#line 187 "ppy.y"
     { pp_do_include((yyvsp[-1].cptr), 0); ;}
     break;
 
   case 6:
-#line 188 "tools\\wpp_new\\ppy.y"
+#line 188 "ppy.y"
     { pp_next_if_state(boolean(&(yyvsp[-1].cval))); ;}
     break;
 
   case 7:
-#line 189 "tools\\wpp_new\\ppy.y"
+#line 189 "ppy.y"
     { pp_next_if_state(pplookup((yyvsp[-1].cptr)) != NULL); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 8:
-#line 190 "tools\\wpp_new\\ppy.y"
+#line 190 "ppy.y"
     {
 		int t = pplookup((yyvsp[-1].cptr)) == NULL;
 		if(pp_incl_state.state == 0 && t && !pp_incl_state.seen_junk)
@@ -1501,7 +1501,7 @@ yyreduce:
     break;
 
   case 9:
-#line 210 "tools\\wpp_new\\ppy.y"
+#line 210 "ppy.y"
     {
 		pp_if_state_t s = pp_pop_if();
 		switch(s)
@@ -1526,7 +1526,7 @@ yyreduce:
     break;
 
   case 10:
-#line 231 "tools\\wpp_new\\ppy.y"
+#line 231 "ppy.y"
     {
 		pp_if_state_t s = pp_pop_if();
 		switch(s)
@@ -1553,7 +1553,7 @@ yyreduce:
     break;
 
   case 11:
-#line 254 "tools\\wpp_new\\ppy.y"
+#line 254 "ppy.y"
     {
 		pp_pop_if();
 		if(pp_incl_state.ifdepth == pp_get_if_depth() && pp_incl_state.state == 1)
@@ -1572,74 +1572,74 @@ yyreduce:
     break;
 
   case 12:
-#line 269 "tools\\wpp_new\\ppy.y"
+#line 269 "ppy.y"
     { pp_del_define((yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 13:
-#line 270 "tools\\wpp_new\\ppy.y"
+#line 270 "ppy.y"
     { pp_add_define((yyvsp[-2].cptr), (yyvsp[-1].cptr)); ;}
     break;
 
   case 14:
-#line 271 "tools\\wpp_new\\ppy.y"
+#line 271 "ppy.y"
     {
 		pp_add_macro((yyvsp[-5].cptr), macro_args, nmacro_args, (yyvsp[-1].mtext));
 		;}
     break;
 
   case 15:
-#line 274 "tools\\wpp_new\\ppy.y"
+#line 274 "ppy.y"
     { fprintf(ppy_out, "# %d %s\n", (yyvsp[-2].sint) , (yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 16:
-#line 275 "tools\\wpp_new\\ppy.y"
+#line 275 "ppy.y"
     { fprintf(ppy_out, "# %d %s\n", (yyvsp[-2].sint) , (yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 17:
-#line 277 "tools\\wpp_new\\ppy.y"
+#line 277 "ppy.y"
     { fprintf(ppy_out, "# %d %s %d\n", (yyvsp[-3].sint), (yyvsp[-2].cptr), (yyvsp[-1].sint)); free((yyvsp[-2].cptr)); ;}
     break;
 
   case 18:
-#line 279 "tools\\wpp_new\\ppy.y"
+#line 279 "ppy.y"
     { fprintf(ppy_out, "# %d %s %d %d\n", (yyvsp[-4].sint) ,(yyvsp[-3].cptr), (yyvsp[-2].sint), (yyvsp[-1].sint)); free((yyvsp[-3].cptr)); ;}
     break;
 
   case 19:
-#line 281 "tools\\wpp_new\\ppy.y"
+#line 281 "ppy.y"
     { fprintf(ppy_out, "# %d %s %d %d %d\n", (yyvsp[-5].sint) ,(yyvsp[-4].cptr) ,(yyvsp[-3].sint) ,(yyvsp[-2].sint), (yyvsp[-1].sint)); free((yyvsp[-4].cptr)); ;}
     break;
 
   case 20:
-#line 283 "tools\\wpp_new\\ppy.y"
+#line 283 "ppy.y"
     { fprintf(ppy_out, "# %d %s %d %d %d %d\n", (yyvsp[-6].sint) ,(yyvsp[-5].cptr) ,(yyvsp[-4].sint) ,(yyvsp[-3].sint), (yyvsp[-2].sint), (yyvsp[-1].sint)); free((yyvsp[-5].cptr)); ;}
     break;
 
   case 22:
-#line 285 "tools\\wpp_new\\ppy.y"
-    { ppy_error("#error directive: '%s'", (yyvsp[-1].cptr)); if((yyvsp[-1].cptr)) free((yyvsp[-1].cptr)); ;}
+#line 285 "ppy.y"
+    { ppy_error("#error directive: '%s'", (yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 23:
-#line 286 "tools\\wpp_new\\ppy.y"
-    { ppy_warning("#warning directive: '%s'", (yyvsp[-1].cptr)); if((yyvsp[-1].cptr)) free((yyvsp[-1].cptr)); ;}
+#line 286 "ppy.y"
+    { ppy_warning("#warning directive: '%s'", (yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 24:
-#line 287 "tools\\wpp_new\\ppy.y"
-    { fprintf(ppy_out, "#pragma %s\n", (yyvsp[-1].cptr) ? (yyvsp[-1].cptr) : ""); if ((yyvsp[-1].cptr)) free((yyvsp[-1].cptr)); ;}
+#line 287 "ppy.y"
+    { fprintf(ppy_out, "#pragma %s\n", (yyvsp[-1].cptr) ? (yyvsp[-1].cptr) : ""); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 25:
-#line 288 "tools\\wpp_new\\ppy.y"
-    { if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", (yyvsp[-1].cptr)); if((yyvsp[-1].cptr)) free((yyvsp[-1].cptr)); ;}
+#line 288 "ppy.y"
+    { if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", (yyvsp[-1].cptr)); free((yyvsp[-1].cptr)); ;}
     break;
 
   case 26:
-#line 289 "tools\\wpp_new\\ppy.y"
+#line 289 "ppy.y"
     {
                 int nl=strlen((yyvsp[0].cptr)) +3;
                 char *fn=pp_xmalloc(nl);
@@ -1650,94 +1650,94 @@ yyreduce:
     break;
 
   case 27:
-#line 296 "tools\\wpp_new\\ppy.y"
+#line 296 "ppy.y"
     {
 		pp_do_include((yyvsp[0].cptr),1);
 	;}
     break;
 
   case 28:
-#line 302 "tools\\wpp_new\\ppy.y"
+#line 302 "ppy.y"
     { (yyval.cptr) = NULL; ;}
     break;
 
   case 29:
-#line 303 "tools\\wpp_new\\ppy.y"
+#line 303 "ppy.y"
     { (yyval.cptr) = (yyvsp[0].cptr); ;}
     break;
 
   case 30:
-#line 306 "tools\\wpp_new\\ppy.y"
+#line 306 "ppy.y"
     { (yyval.cptr) = (yyvsp[0].cptr); ;}
     break;
 
   case 31:
-#line 307 "tools\\wpp_new\\ppy.y"
+#line 307 "ppy.y"
     { (yyval.cptr) = (yyvsp[0].cptr); ;}
     break;
 
   case 32:
-#line 308 "tools\\wpp_new\\ppy.y"
+#line 308 "ppy.y"
     { (yyval.cptr) = (yyvsp[0].cptr); ;}
     break;
 
   case 33:
-#line 309 "tools\\wpp_new\\ppy.y"
+#line 309 "ppy.y"
     { (yyval.cptr) = merge_text((yyvsp[-1].cptr), (yyvsp[0].cptr)); ;}
     break;
 
   case 34:
-#line 310 "tools\\wpp_new\\ppy.y"
+#line 310 "ppy.y"
     { (yyval.cptr) = merge_text((yyvsp[-1].cptr), (yyvsp[0].cptr)); ;}
     break;
 
   case 35:
-#line 311 "tools\\wpp_new\\ppy.y"
+#line 311 "ppy.y"
     { (yyval.cptr) = merge_text((yyvsp[-1].cptr), (yyvsp[0].cptr)); ;}
     break;
 
   case 36:
-#line 314 "tools\\wpp_new\\ppy.y"
+#line 314 "ppy.y"
     { macro_args = NULL; nmacro_args = 0; ;}
     break;
 
   case 37:
-#line 317 "tools\\wpp_new\\ppy.y"
+#line 317 "ppy.y"
     { (yyval.sint) = 0; macro_args = NULL; nmacro_args = 0; ;}
     break;
 
   case 38:
-#line 318 "tools\\wpp_new\\ppy.y"
+#line 318 "ppy.y"
     { (yyval.sint) = nmacro_args; ;}
     break;
 
   case 39:
-#line 321 "tools\\wpp_new\\ppy.y"
+#line 321 "ppy.y"
     { (yyval.marg) = (yyvsp[0].marg); ;}
     break;
 
   case 40:
-#line 322 "tools\\wpp_new\\ppy.y"
+#line 322 "ppy.y"
     { (yyval.marg) = add_new_marg(NULL, arg_list); nmacro_args *= -1; ;}
     break;
 
   case 41:
-#line 325 "tools\\wpp_new\\ppy.y"
+#line 325 "ppy.y"
     { (yyval.marg) = add_new_marg((yyvsp[0].cptr), arg_single); ;}
     break;
 
   case 42:
-#line 326 "tools\\wpp_new\\ppy.y"
+#line 326 "ppy.y"
     { (yyval.marg) = add_new_marg((yyvsp[0].cptr), arg_single); ;}
     break;
 
   case 43:
-#line 330 "tools\\wpp_new\\ppy.y"
+#line 330 "ppy.y"
     { (yyval.mtext) = NULL; ;}
     break;
 
   case 44:
-#line 331 "tools\\wpp_new\\ppy.y"
+#line 331 "ppy.y"
     {
 		for((yyval.mtext) = (yyvsp[0].mtext); (yyval.mtext) && (yyval.mtext)->prev; (yyval.mtext) = (yyval.mtext)->prev)
 			;
@@ -1745,37 +1745,37 @@ yyreduce:
     break;
 
   case 45:
-#line 337 "tools\\wpp_new\\ppy.y"
+#line 337 "ppy.y"
     { (yyval.mtext) = (yyvsp[0].mtext); ;}
     break;
 
   case 46:
-#line 338 "tools\\wpp_new\\ppy.y"
+#line 338 "ppy.y"
     { (yyval.mtext) = combine_mtext((yyvsp[-1].mtext), (yyvsp[0].mtext)); ;}
     break;
 
   case 47:
-#line 341 "tools\\wpp_new\\ppy.y"
+#line 341 "ppy.y"
     { (yyval.mtext) = new_mtext((yyvsp[0].cptr), 0, exp_text); ;}
     break;
 
   case 48:
-#line 342 "tools\\wpp_new\\ppy.y"
+#line 342 "ppy.y"
     { (yyval.mtext) = new_mtext((yyvsp[0].cptr), 0, exp_text); ;}
     break;
 
   case 49:
-#line 343 "tools\\wpp_new\\ppy.y"
+#line 343 "ppy.y"
     { (yyval.mtext) = new_mtext((yyvsp[0].cptr), 0, exp_text); ;}
     break;
 
   case 50:
-#line 344 "tools\\wpp_new\\ppy.y"
+#line 344 "ppy.y"
     { (yyval.mtext) = new_mtext(NULL, 0, exp_concat); ;}
     break;
 
   case 51:
-#line 345 "tools\\wpp_new\\ppy.y"
+#line 345 "ppy.y"
     {
 		int mat = marg_index((yyvsp[0].cptr));
 		if(mat < 0)
@@ -1785,7 +1785,7 @@ yyreduce:
     break;
 
   case 52:
-#line 351 "tools\\wpp_new\\ppy.y"
+#line 351 "ppy.y"
     {
 		int mat = marg_index((yyvsp[0].cptr));
 		if(mat >= 0)
@@ -1796,162 +1796,162 @@ yyreduce:
     break;
 
   case 53:
-#line 360 "tools\\wpp_new\\ppy.y"
+#line 360 "ppy.y"
     { (yyval.cval).type = cv_sint;  (yyval.cval).val.si = (yyvsp[0].sint); ;}
     break;
 
   case 54:
-#line 361 "tools\\wpp_new\\ppy.y"
+#line 361 "ppy.y"
     { (yyval.cval).type = cv_uint;  (yyval.cval).val.ui = (yyvsp[0].uint); ;}
     break;
 
   case 55:
-#line 362 "tools\\wpp_new\\ppy.y"
+#line 362 "ppy.y"
     { (yyval.cval).type = cv_slong; (yyval.cval).val.sl = (yyvsp[0].slong); ;}
     break;
 
   case 56:
-#line 363 "tools\\wpp_new\\ppy.y"
+#line 363 "ppy.y"
     { (yyval.cval).type = cv_ulong; (yyval.cval).val.ul = (yyvsp[0].ulong); ;}
     break;
 
   case 57:
-#line 364 "tools\\wpp_new\\ppy.y"
+#line 364 "ppy.y"
     { (yyval.cval).type = cv_sll;   (yyval.cval).val.sll = (yyvsp[0].sll); ;}
     break;
 
   case 58:
-#line 365 "tools\\wpp_new\\ppy.y"
+#line 365 "ppy.y"
     { (yyval.cval).type = cv_ull;   (yyval.cval).val.ull = (yyvsp[0].ull); ;}
     break;
 
   case 59:
-#line 366 "tools\\wpp_new\\ppy.y"
+#line 366 "ppy.y"
     { (yyval.cval).type = cv_sint;  (yyval.cval).val.si = pplookup((yyvsp[0].cptr)) != NULL; ;}
     break;
 
   case 60:
-#line 367 "tools\\wpp_new\\ppy.y"
+#line 367 "ppy.y"
     { (yyval.cval).type = cv_sint;  (yyval.cval).val.si = pplookup((yyvsp[-1].cptr)) != NULL; ;}
     break;
 
   case 61:
-#line 368 "tools\\wpp_new\\ppy.y"
+#line 368 "ppy.y"
     { (yyval.cval).type = cv_sint;  (yyval.cval).val.si = 0; ;}
     break;
 
   case 62:
-#line 369 "tools\\wpp_new\\ppy.y"
+#line 369 "ppy.y"
     { (yyval.cval).type = cv_sint; (yyval.cval).val.si = boolean(&(yyvsp[-2].cval)) || boolean(&(yyvsp[0].cval)); ;}
     break;
 
   case 63:
-#line 370 "tools\\wpp_new\\ppy.y"
+#line 370 "ppy.y"
     { (yyval.cval).type = cv_sint; (yyval.cval).val.si = boolean(&(yyvsp[-2].cval)) && boolean(&(yyvsp[0].cval)); ;}
     break;
 
   case 64:
-#line 371 "tools\\wpp_new\\ppy.y"
+#line 371 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), ==) ;}
     break;
 
   case 65:
-#line 372 "tools\\wpp_new\\ppy.y"
+#line 372 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), !=) ;}
     break;
 
   case 66:
-#line 373 "tools\\wpp_new\\ppy.y"
+#line 373 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  <) ;}
     break;
 
   case 67:
-#line 374 "tools\\wpp_new\\ppy.y"
+#line 374 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  >) ;}
     break;
 
   case 68:
-#line 375 "tools\\wpp_new\\ppy.y"
+#line 375 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), <=) ;}
     break;
 
   case 69:
-#line 376 "tools\\wpp_new\\ppy.y"
+#line 376 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), >=) ;}
     break;
 
   case 70:
-#line 377 "tools\\wpp_new\\ppy.y"
+#line 377 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  +) ;}
     break;
 
   case 71:
-#line 378 "tools\\wpp_new\\ppy.y"
+#line 378 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  -) ;}
     break;
 
   case 72:
-#line 379 "tools\\wpp_new\\ppy.y"
+#line 379 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  ^) ;}
     break;
 
   case 73:
-#line 380 "tools\\wpp_new\\ppy.y"
+#line 380 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  &) ;}
     break;
 
   case 74:
-#line 381 "tools\\wpp_new\\ppy.y"
+#line 381 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  |) ;}
     break;
 
   case 75:
-#line 382 "tools\\wpp_new\\ppy.y"
+#line 382 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  *) ;}
     break;
 
   case 76:
-#line 383 "tools\\wpp_new\\ppy.y"
+#line 383 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval),  /) ;}
     break;
 
   case 77:
-#line 384 "tools\\wpp_new\\ppy.y"
+#line 384 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), <<) ;}
     break;
 
   case 78:
-#line 385 "tools\\wpp_new\\ppy.y"
+#line 385 "ppy.y"
     { promote_equal_size(&(yyvsp[-2].cval), &(yyvsp[0].cval)); BIN_OP((yyval.cval), (yyvsp[-2].cval), (yyvsp[0].cval), >>) ;}
     break;
 
   case 79:
-#line 386 "tools\\wpp_new\\ppy.y"
+#line 386 "ppy.y"
     { (yyval.cval) =  (yyvsp[0].cval); ;}
     break;
 
   case 80:
-#line 387 "tools\\wpp_new\\ppy.y"
+#line 387 "ppy.y"
     { UNARY_OP((yyval.cval), (yyvsp[0].cval), -) ;}
     break;
 
   case 81:
-#line 388 "tools\\wpp_new\\ppy.y"
+#line 388 "ppy.y"
     { UNARY_OP((yyval.cval), (yyvsp[0].cval), ~) ;}
     break;
 
   case 82:
-#line 389 "tools\\wpp_new\\ppy.y"
+#line 389 "ppy.y"
     { (yyval.cval).type = cv_sint; (yyval.cval).val.si = !boolean(&(yyvsp[0].cval)); ;}
     break;
 
   case 83:
-#line 390 "tools\\wpp_new\\ppy.y"
+#line 390 "ppy.y"
     { (yyval.cval) =  (yyvsp[-1].cval); ;}
     break;
 
   case 84:
-#line 391 "tools\\wpp_new\\ppy.y"
+#line 391 "ppy.y"
     { (yyval.cval) = boolean(&(yyvsp[-4].cval)) ? (yyvsp[-2].cval) : (yyvsp[0].cval); ;}
     break;
 
@@ -1960,7 +1960,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 1964 "tools\\wpp_new\\ppy.tab.c"
+#line 1964 "ppy.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -2228,7 +2228,7 @@ yyreturn:
 }
 
 
-#line 394 "tools\\wpp_new\\ppy.y"
+#line 394 "ppy.y"
 
 
 /*

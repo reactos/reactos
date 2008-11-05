@@ -282,10 +282,10 @@ preprocessor
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tSINT tSINT tNL
 		{ fprintf(ppy_out, "# %d %s %d %d %d %d\n", $2 ,$3 ,$4 ,$5, $6, $7); free($3); }
 	| tGCCLINE tNL		/* The null-token */
-	| tERROR opt_text tNL	{ ppy_error("#error directive: '%s'", $2); if($2) free($2); }
-	| tWARNING opt_text tNL	{ ppy_warning("#warning directive: '%s'", $2); if($2) free($2); }
-	| tPRAGMA opt_text tNL	{ fprintf(ppy_out, "#pragma %s\n", $2 ? $2 : ""); if ($2) free($2); }
-	| tPPIDENT opt_text tNL	{ if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", $2); if($2) free($2); }
+	| tERROR opt_text tNL	{ ppy_error("#error directive: '%s'", $2); free($2); }
+	| tWARNING opt_text tNL	{ ppy_warning("#warning directive: '%s'", $2); free($2); }
+	| tPRAGMA opt_text tNL	{ fprintf(ppy_out, "#pragma %s\n", $2 ? $2 : ""); free($2); }
+	| tPPIDENT opt_text tNL	{ if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", $2); free($2); }
         | tRCINCLUDE tRCINCLUDEPATH {
                 int nl=strlen($2) +3;
                 char *fn=pp_xmalloc(nl);
