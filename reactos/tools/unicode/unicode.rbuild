@@ -47,6 +47,7 @@
 	<file>c_1256.c</file>
 	<file>c_1257.c</file>
 	<file>c_1258.c</file>
+	<file>c_1361.c</file>
 	<file>c_10000.c</file>
 	<file>c_10006.c</file>
 	<file>c_10007.c</file>
@@ -55,6 +56,7 @@
 	<file>c_10081.c</file>
 	<file>c_20866.c</file>
 	<file>c_20932.c</file>
+	<file>c_20127.c</file>
 	<file>c_21866.c</file>
 	<file>c_28591.c</file>
 	<file>c_28592.c</file>

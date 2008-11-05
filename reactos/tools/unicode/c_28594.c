@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28594 =
 {
     { 28594, 1, 0x003f, 0x003f, "ISO 8859-4 Latin 4 (Baltic old)" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

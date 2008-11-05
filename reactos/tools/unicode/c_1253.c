@@ -678,6 +678,7 @@ const struct sbcs_table cptable_1253 =
 {
     { 1253, 1, 0x003f, 0x003f, "ANSI Greek" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

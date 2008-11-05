@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28593 =
 {
     { 28593, 1, 0x003f, 0x003f, "ISO 8859-3 Latin 3 (South European)" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

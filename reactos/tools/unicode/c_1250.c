@@ -678,6 +678,7 @@ const struct sbcs_table cptable_1250 =
 {
     { 1250, 1, 0x003f, 0x003f, "ANSI Eastern Europe" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28600 =
 {
     { 28600, 1, 0x003f, 0x003f, "ISO 8859-10 Latin 6 (Nordic)" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

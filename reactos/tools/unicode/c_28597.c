@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28597 =
 {
     { 28597, 1, 0x003f, 0x003f, "ISO 8859-7 Greek" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

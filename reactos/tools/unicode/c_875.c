@@ -678,6 +678,7 @@ const struct sbcs_table cptable_875 =
 {
     { 875, 1, 0x003f, 0x003f, "IBM EBCDIC Greek" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

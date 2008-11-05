@@ -45,7 +45,7 @@ static inline int binary_search( WCHAR ch, int low, int high )
 }
 
 /* return the result of the composition of two Unicode chars, or 0 if none */
-static WCHAR compose( const WCHAR *str )
+WCHAR compose( const WCHAR *str )
 {
     extern const WCHAR unicode_compose_table[];
     extern const unsigned int unicode_compose_table_size;

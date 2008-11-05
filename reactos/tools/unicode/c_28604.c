@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28604 =
 {
     { 28604, 1, 0x003f, 0x003f, "ISO 8859-14 Latin 8 (Celtic)" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };
