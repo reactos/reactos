@@ -885,6 +885,9 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 bool
 MingwBackend::IsSupportedCompilerVersion ( const string& compilerVersion )
 {
+	if ( strcmp ( compilerVersion.c_str (), "3.4.2") < 0 )
+		return false;
+	else
 		return true;
 }
 
