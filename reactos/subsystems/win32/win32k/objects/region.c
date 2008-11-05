@@ -2092,7 +2092,7 @@ IntGdiReleaseRaoRgn(PDC pDC)
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
   pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
-  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
 }
 
@@ -2103,7 +2103,7 @@ IntGdiReleaseVisRgn(PDC pDC)
   INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
   PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
   pDC->DC_Flags |= DC_FLAG_DIRTY_RAO;
-  Entry->Flags |= GDI_ENTRY_FLAG_NEED_UPDATE;
+  Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   IntGdiSetEmptyRect((PRECT)&pDC->erclClip);
   REGION_Delete(pDC->prgnVis);
   pDC->prgnVis = prgnDefault;
@@ -2117,7 +2117,7 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
   PDC_ATTR pDc_Attr;
   RECTL rcl;
 
-  if (Entry->Flags & GDI_ENTRY_FLAG_NEED_UPDATE)
+  if (Entry->Flags & GDI_ENTRY_VALIDATE_VIS)
   {
      pDc_Attr = pDC->pDc_Attr;
      if ( !pDc_Attr ) pDc_Attr = &pDC->Dc_Attr; 
@@ -2141,7 +2141,7 @@ IntUpdateVisRectRgn(PDC pDC, PROSRGNDATA pRgn)
 
      pDc_Attr->VisRectRegion.Rect = rcl;
 
-     Entry->Flags &= ~GDI_ENTRY_FLAG_NEED_UPDATE;
+     Entry->Flags &= ~GDI_ENTRY_VALIDATE_VIS;
   }
 }
 

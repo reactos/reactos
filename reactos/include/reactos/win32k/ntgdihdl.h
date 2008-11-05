@@ -42,7 +42,9 @@
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
-#define GDI_ENTRY_FLAG_NEED_UPDATE 4
+#define GDI_ENTRY_UNDELETABLE  1
+#define GDI_ENTRY_DELETING     2
+#define GDI_ENTRY_VALIDATE_VIS 4
 
 /*! \defgroup GDI object types
  *
