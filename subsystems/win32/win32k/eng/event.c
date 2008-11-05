@@ -30,7 +30,7 @@ BOOL
 STDCALL
 EngDeleteEvent ( IN PEVENT Event)
 {
-  ExFreePool(Event);
+  ExFreePoolWithTag(Event, TAG_DFSM);
   return TRUE;
 }
 
@@ -56,7 +56,7 @@ EngMapEvent(IN HDEV    Dev,
 				     NULL);
   if (!NT_SUCCESS(Status))
   {
-     ExFreePool(Event);
+     ExFreePoolWithTag(Event, TAG_DFSM);
      return NULL;
   }
   else
@@ -79,7 +79,7 @@ STDCALL
 EngUnmapEvent ( IN PEVENT Event )
 {
   ObDereferenceObject((PVOID)Event);
-  ExFreePool(Event);
+  ExFreePoolWithTag(Event, TAG_DFSM);
   return TRUE;
 }
 
@@ -97,7 +97,7 @@ EngWaitForSingleObject (IN PEVENT          Event,
 				 KernelMode,
 				 FALSE,
 				 TimeOut);
-  if (Status != STATUS_SUCCESS)
+  if (!NT_SUCCESS(Status))
     {
       return FALSE;
     }

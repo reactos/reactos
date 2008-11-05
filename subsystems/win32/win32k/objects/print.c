@@ -223,7 +223,7 @@ NtGdiExtEscape(
 
       if ( !NT_SUCCESS(Status) )
       {
-         ExFreePool ( SafeInData );
+         ExFreePoolWithTag ( SafeInData, TAG_PRINT );
          DC_UnlockDc(pDC);
          SetLastNtError(Status);
          return -1;
@@ -256,7 +256,7 @@ NtGdiExtEscape(
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 freeout:
          if ( SafeInData )
-            ExFreePool ( SafeInData );
+            ExFreePoolWithTag ( SafeInData, TAG_PRINT );
          DC_UnlockDc(pDC);
          return -1;
       }
@@ -267,7 +267,7 @@ freeout:
    DC_UnlockDc(pDC);
 
    if ( SafeInData )
-      ExFreePool ( SafeInData );
+      ExFreePoolWithTag ( SafeInData ,TAG_PRINT );
 
    if ( SafeOutData )
    {
@@ -284,7 +284,7 @@ freeout:
       }
       _SEH_END;
 
-      ExFreePool ( SafeOutData );
+      ExFreePoolWithTag ( SafeOutData, TAG_PRINT );
       if ( !NT_SUCCESS(Status) )
       {
          SetLastNtError(Status);

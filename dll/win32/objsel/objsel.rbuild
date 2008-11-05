@@ -19,6 +19,5 @@
 	<file>objsel.c</file>
 	<file>regsvr.c</file>
 	<file>objsel.rc</file>
-	<file>objsel.spec</file>
 </module>
 </group>

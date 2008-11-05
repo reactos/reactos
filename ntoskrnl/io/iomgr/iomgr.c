@@ -49,7 +49,6 @@ GENERIC_MAPPING IopFileMapping = {
 extern LIST_ENTRY ShutdownListHead;
 extern LIST_ENTRY LastChanceShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
-extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
 extern POBJECT_TYPE IoAdapterObjectType;
 ERESOURCE IopDatabaseResource;
 extern ERESOURCE FileSystemListLock;
@@ -76,9 +75,10 @@ extern KSPIN_LOCK IopTimerLock;
 
 extern PDEVICE_OBJECT IopErrorLogObject;
 
-NPAGED_LOOKASIDE_LIST IoLargeIrpLookaside;
-NPAGED_LOOKASIDE_LIST IoSmallIrpLookaside;
-NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
+GENERAL_LOOKASIDE IoLargeIrpLookaside;
+GENERAL_LOOKASIDE IoSmallIrpLookaside;
+GENERAL_LOOKASIDE IopMdlLookasideList;
+extern GENERAL_LOOKASIDE IoCompletionPacketLookaside;
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitSystem)
@@ -94,143 +94,142 @@ IopInitLookasideLists(VOID)
     ULONG LargeIrpSize, SmallIrpSize, MdlSize;
     LONG i;
     PKPRCB Prcb;
-    PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
+    PGENERAL_LOOKASIDE CurrentList = NULL;
 
     /* Calculate the sizes */
     LargeIrpSize = sizeof(IRP) + (8 * sizeof(IO_STACK_LOCATION));
     SmallIrpSize = sizeof(IRP) + sizeof(IO_STACK_LOCATION);
     MdlSize = sizeof(MDL) + (23 * sizeof(PFN_NUMBER));
 
+    /* Initialize the Lookaside List for I\O Completion */
+    ExInitializeSystemLookasideList(&IoCompletionPacketLookaside,
+                                    NonPagedPool,
+                                    sizeof(IOP_MINI_COMPLETION_PACKET),
+                                    IOC_TAG1,
+                                    32,
+                                    &ExSystemLookasideListHead);
+    
     /* Initialize the Lookaside List for Large IRPs */
-    ExInitializeNPagedLookasideList(&IoLargeIrpLookaside,
-                                    NULL,
-                                    NULL,
-                                    0,
+    ExInitializeSystemLookasideList(&IoLargeIrpLookaside,
+                                    NonPagedPool,
                                     LargeIrpSize,
                                     IO_LARGEIRP,
-                                    64);
+                                    64,
+                                    &ExSystemLookasideListHead);
+
 
     /* Initialize the Lookaside List for Small IRPs */
-    ExInitializeNPagedLookasideList(&IoSmallIrpLookaside,
-                                    NULL,
-                                    NULL,
-                                    0,
+    ExInitializeSystemLookasideList(&IoSmallIrpLookaside,
+                                    NonPagedPool,
                                     SmallIrpSize,
                                     IO_SMALLIRP,
-                                    32);
-
-    /* Initialize the Lookaside List for I\O Completion */
-    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    sizeof(IO_COMPLETION_PACKET),
-                                    IOC_TAG1,
-                                    32);
+                                    32,
+                                    &ExSystemLookasideListHead);
 
     /* Initialize the Lookaside List for MDLs */
-    ExInitializeNPagedLookasideList(&IopMdlLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
+    ExInitializeSystemLookasideList(&IopMdlLookasideList,
+                                    NonPagedPool,
                                     MdlSize,
                                     TAG_MDL,
-                                    128);
+                                    128,
+                                    &ExSystemLookasideListHead);
 
-    /* Now allocate the per-processor lists */
+    /* Allocate the global lookaside list buffer */
+    CurrentList = ExAllocatePoolWithTag(NonPagedPool, 
+                                        4 * KeNumberProcessors *
+                                        sizeof(GENERAL_LOOKASIDE),
+                                        TAG_IO);
+    
+    /* Loop all processors */
     for (i = 0; i < KeNumberProcessors; i++)
     {
         /* Get the PRCB for this CPU */
         Prcb = KiProcessorBlock[i];
         DPRINT("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
 
-        /* Set the Large IRP List */
-        Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside.L;
-        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
-                                            IO_LARGEIRP_CPU);
+        /* Write IRP credit limit */
+        Prcb->LookasideIrpFloat = 512 / KeNumberProcessors;
+
+        /* Set the I/O Completion List */
+        Prcb->PPLookasideList[LookasideCompletionList].L = &IoCompletionPacketLookaside;
         if (CurrentList)
         {
-            /* Initialize the Lookaside List for Large IRPs */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
-                                            LargeIrpSize,
-                                            IO_LARGEIRP_CPU,
-                                            64);
+            /* Initialize the Lookaside List for mini-packets */
+            ExInitializeSystemLookasideList(CurrentList,
+                                            NonPagedPool,
+                                            sizeof(IOP_MINI_COMPLETION_PACKET),
+                                            IO_SMALLIRP_CPU,
+                                            32,
+                                            &ExSystemLookasideListHead);
+            Prcb->PPLookasideList[LookasideCompletionList].P = CurrentList;
+            CurrentList++;
+            
         }
         else
         {
-            CurrentList = &IoLargeIrpLookaside;
+            Prcb->PPLookasideList[LookasideCompletionList].P = &IoCompletionPacketLookaside;
         }
-        Prcb->PPLookasideList[LookasideLargeIrpList].P = &CurrentList->L;
+        
+        /* Set the Large IRP List */
+        Prcb->PPLookasideList[LookasideLargeIrpList].L = &IoLargeIrpLookaside;
+        if (CurrentList)
+        {
+            /* Initialize the Lookaside List for Large IRPs */
+            ExInitializeSystemLookasideList(CurrentList,
+                                            NonPagedPool,
+                                            LargeIrpSize,
+                                            IO_LARGEIRP_CPU,
+                                            64,
+                                            &ExSystemLookasideListHead);
+            Prcb->PPLookasideList[LookasideLargeIrpList].P = CurrentList;
+            CurrentList++;
+            
+        }
+        else
+        {
+            Prcb->PPLookasideList[LookasideLargeIrpList].P = &IoLargeIrpLookaside;
+        }
 
         /* Set the Small IRP List */
-        Prcb->PPLookasideList[LookasideSmallIrpList].L = &IoSmallIrpLookaside.L;
-        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
-                                            IO_SMALLIRP_CPU);
+        Prcb->PPLookasideList[LookasideSmallIrpList].L = &IoSmallIrpLookaside;
         if (CurrentList)
         {
             /* Initialize the Lookaside List for Small IRPs */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
+            ExInitializeSystemLookasideList(CurrentList,
+                                            NonPagedPool,
                                             SmallIrpSize,
                                             IO_SMALLIRP_CPU,
-                                            32);
+                                            32,
+                                            &ExSystemLookasideListHead);
+            Prcb->PPLookasideList[LookasideSmallIrpList].P = CurrentList;
+            CurrentList++;
+            
         }
         else
         {
-            CurrentList = &IoSmallIrpLookaside;
+            Prcb->PPLookasideList[LookasideSmallIrpList].P = &IoSmallIrpLookaside;
         }
-        Prcb->PPLookasideList[LookasideSmallIrpList].P = &CurrentList->L;
-
-        /* Set the I/O Completion List */
-        Prcb->PPLookasideList[LookasideCompletionList].L = &IoCompletionPacketLookaside.L;
-        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
-                                            IO_SMALLIRP_CPU);
-        if (CurrentList)
-        {
-            /* Initialize the Lookaside List for Large IRPs */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
-                                            sizeof(IO_COMPLETION_PACKET),
-                                            IO_SMALLIRP_CPU,
-                                            32);
-        }
-        else
-        {
-            CurrentList = &IoCompletionPacketLookaside;
-        }
-        Prcb->PPLookasideList[LookasideCompletionList].P = &CurrentList->L;
 
         /* Set the MDL Completion List */
-        Prcb->PPLookasideList[LookasideMdlList].L = &IopMdlLookasideList.L;
-        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(NPAGED_LOOKASIDE_LIST),
-                                            TAG_MDL);
+        Prcb->PPLookasideList[LookasideMdlList].L = &IopMdlLookasideList;
         if (CurrentList)
         {
             /* Initialize the Lookaside List for MDLs */
-            ExInitializeNPagedLookasideList(CurrentList,
-                                            NULL,
-                                            NULL,
-                                            0,
+            ExInitializeSystemLookasideList(CurrentList,
+                                            NonPagedPool,
                                             SmallIrpSize,
                                             TAG_MDL,
-                                            128);
+                                            128,
+                                            &ExSystemLookasideListHead);
+            
+            Prcb->PPLookasideList[LookasideMdlList].P = CurrentList;
+            CurrentList++;
+            
         }
         else
         {
-            CurrentList = &IopMdlLookasideList;
+            Prcb->PPLookasideList[LookasideMdlList].P = &IopMdlLookasideList;
         }
-        Prcb->PPLookasideList[LookasideMdlList].P = &CurrentList->L;
     }
 }
 

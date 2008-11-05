@@ -7,7 +7,6 @@
 	<library>gdi32</library>
 	<library>ole32</library>
 	<library>uuid</library>
-	<library>msvcrt</library>
 	<library>shlwapi</library>
 	<library>lz32</library>
 	<library>advapi32</library>
@@ -15,5 +14,4 @@
 	<file>fontext.c</file>
 	<file>regsvr.c</file>
 	<file>fontext.rc</file>
-	<file>fontext.spec</file>
 </module>

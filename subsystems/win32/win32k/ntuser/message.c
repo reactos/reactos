@@ -1235,7 +1235,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
          if (! NT_SUCCESS(Status))
          {
             DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-            ExFreePool(KernelMem);
+            ExFreePoolWithTag(KernelMem, TAG_MSG);
             return Status;
          }
       }

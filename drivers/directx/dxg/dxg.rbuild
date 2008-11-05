@@ -12,5 +12,4 @@
 	<file>eng.c</file>
 	<file>historic.c</file>
 	<file>dxg.rc</file>
-	<file>dxg.spec</file>
 </module>

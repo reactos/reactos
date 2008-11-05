@@ -8,7 +8,6 @@
 	<library>comctl32</library>
 	<library>ole32</library>
 	<library>uuid</library>
-	<library>msvcrt</library>
 	<file>deskadp.c</file>
 	<file>shxiface.c</file>
 	<file>deskadp.rc</file>

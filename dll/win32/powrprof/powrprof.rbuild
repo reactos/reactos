@@ -11,5 +11,4 @@
 	<library>comctl32</library>
 	<file>powrprof.c</file>
 	<file>powrprof.rc</file>
-	<file>powrprof.spec</file>
 </module>

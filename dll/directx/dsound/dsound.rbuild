@@ -14,7 +14,6 @@
 	<library>ole32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
-	<library>msvcrt</library>
 	<file>version.rc</file>
 	<file>buffer.c</file>
 	<file>capture.c</file>

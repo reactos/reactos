@@ -3882,8 +3882,8 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserLockWindowUpdate(DWORD Unknown0)
+BOOL STDCALL
+NtUserLockWindowUpdate(HWND hWnd)
 {
    UNIMPLEMENTED
 

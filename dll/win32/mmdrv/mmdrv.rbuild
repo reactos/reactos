@@ -13,5 +13,4 @@
 	<file>common.c</file>
 	<file>wave.c</file>
 	<file>wave_io.c</file>
-	<file>mmdrv.spec</file>
 </module>

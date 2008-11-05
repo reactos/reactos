@@ -6,7 +6,6 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
-	<library>msvcrt</library>
 	<file>odbccp32.c</file>
 	<file>odbccp32.rc</file>
 </module>

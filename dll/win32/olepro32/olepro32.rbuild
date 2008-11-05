@@ -12,5 +12,4 @@
 	<library>ntdll</library>
 	<file>olepro32stubs.c</file>
 	<file>version.rc</file>
-	<file>olepro32.spec</file>
 </module>

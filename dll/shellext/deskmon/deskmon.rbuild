@@ -8,10 +8,8 @@
 	<library>comctl32</library>
 	<library>ole32</library>
 	<library>uuid</library>
-	<library>msvcrt</library>
 	<file>deskmon.c</file>
 	<file>shxiface.c</file>
 	<file>deskmon.rc</file>
-	<file>deskmon.spec</file>
 	<pch>precomp.h</pch>
 </module>

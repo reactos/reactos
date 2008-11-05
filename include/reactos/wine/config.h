@@ -797,7 +797,7 @@
 #define HAVE_VA_COPY 1
 
 /* Define to 1 if you have the `vsnprintf' function. */
-//#define HAVE_VSNPRINTF 1
+#define HAVE_VSNPRINTF 1
 
 /* Define to 1 if you have the `wait4' function. */
 /* #undef HAVE_WAIT4 */

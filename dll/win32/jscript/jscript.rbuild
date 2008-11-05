@@ -27,7 +27,6 @@
 	<file>function.c</file>
 	<file>global.c</file>
 	<file>rsrc.rc</file>
-	<file>jscript.spec</file>
 </module>
 <module name="jsglobal" type="embeddedtypelib">
 	<dependency>stdole2</dependency>

@@ -54,16 +54,23 @@ typedef struct _STRGDI
   ULONG     acFaceNameGlyphs[8];
 } STRGDI, *PSTRGDI;
 
+#define TEXTOBJECT_INIT 0x00010000
+
 /* GDI logical font object */
 typedef struct
 {
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
    BASEOBJECT    BaseObject;
-
-   ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
-   FONTOBJ    *Font;
-   BOOLEAN Initialized; /* Don't reinitialize for each DC */
+   LFTYPE        lft;
+   FLONG         fl;
+   FONTOBJ      *Font;
+   WCHAR         FullName[LF_FULLFACESIZE];
+   WCHAR         Style[LF_FACESIZE];
+   WCHAR         FaceName[LF_FACESIZE];
+   DWORD         dwOffsetEndArray;
+// Fixed:
+   ENUMLOGFONTEXDVW logfont;
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
@@ -75,7 +82,8 @@ typedef struct
 #define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT))
 #define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_UnlockObjByPtr ((POBJ)pBMObj)
 
-NTSTATUS FASTCALL TextIntRealizeFont(HFONT FontHandle);
+PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
+NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
@@ -84,6 +92,18 @@ VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
+ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);
+INT FASTCALL IntGetOutlineTextMetrics(PFONTGDI,UINT,OUTLINETEXTMETRICW *);
+BOOL FASTCALL ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS);
+BOOL FASTCALL TextIntGetTextExtentPoint(PDC,PTEXTOBJ,LPCWSTR,int,int,LPINT,LPINT,LPSIZE);
+BOOL FASTCALL ftGdiGetTextMetricsW(HDC,PTMW_INTERNAL);
+DWORD FASTCALL IntGetFontLanguageInfo(PDC);
+INT FASTCALL ftGdiGetTextCharsetInfo(PDC,PFONTSIGNATURE,DWORD);
+DWORD FASTCALL ftGetFontUnicodeRanges(PFONTGDI, PGLYPHSET);
+DWORD FASTCALL ftGdiGetFontData(PFONTGDI,DWORD,DWORD,PVOID,DWORD);
+BOOL FASTCALL IntGdiGetFontResourceInfo(PUNICODE_STRING,PVOID,DWORD*,DWORD);
+BOOL FASTCALL ftGdiRealizationInfo(PFONTGDI,PREALIZATION_INFO);
+DWORD FASTCALL ftGdiGetKerningPairs(PFONTGDI,DWORD,LPKERNINGPAIR);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

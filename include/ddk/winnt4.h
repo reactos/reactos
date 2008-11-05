@@ -411,6 +411,7 @@ RtlEnlargedUnsignedMultiply(
   IN ULONG  Multiplicand,
   IN ULONG  Multiplier);
 
+#ifndef _M_AMD64
 NTSYSAPI
 LARGE_INTEGER
 NTAPI
@@ -425,6 +426,7 @@ RtlExtendedLargeIntegerDivide(
   IN LARGE_INTEGER  Dividend,
   IN ULONG  Divisor,
   IN OUT PULONG  Remainder);
+#endif
 
 NTSYSAPI
 LARGE_INTEGER

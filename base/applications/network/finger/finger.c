@@ -122,7 +122,7 @@ main(int argc, char **argv)
 static void
 userlist(int argc, char **argv)
 {
-	int *used;
+	int *used = NULL;
 	char **ap, **nargv, **np, **p;
 	WORD wVersionRequested;
 	WSADATA wsaData;
@@ -166,6 +166,8 @@ userlist(int argc, char **argv)
 
 	/* Bring down winsock */
 	WSACleanup();
+	free(nargv);
+	free(used);
 	exit(0);
 }
 

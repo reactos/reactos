@@ -31,7 +31,8 @@ typedef INT
 #define METAFILE_DISK   2
 
 /* MACRO ********************************************************************/
-#define ROP_USES_SOURCE(Rop)   ((Rop << 2) ^ Rop) & 0xCC0000
+
+#define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
 
 /* TYPES *********************************************************************/
 
@@ -223,6 +224,8 @@ GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
 VOID
 STDCALL
 GdiSetLastError( DWORD dwErrCode );
+
+DWORD STDCALL GdiGetCodePage(HDC);
 
 /* EOF */
 

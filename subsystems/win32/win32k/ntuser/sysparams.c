@@ -383,7 +383,7 @@ IntSystemParametersInfo(
                      if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
                      {
                         ZwClose(KeyHandle);
-                        ExFreePool(KeyValuePartialInfo);
+                        ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
                         return FALSE;
                      }
 
@@ -396,7 +396,7 @@ IntSystemParametersInfo(
                      {
                         TileNum = 0;
                      }
-                     ExFreePool(KeyValuePartialInfo);
+                     ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
 
                      /* start over again and look for the style*/
                      ResLength = 0;
@@ -418,7 +418,7 @@ IntSystemParametersInfo(
                      if(!NT_SUCCESS(Status) || (KeyValuePartialInfo->Type != REG_SZ))
                      {
                         ZwClose(KeyHandle);
-                        ExFreePool(KeyValuePartialInfo);
+                        ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
                         return FALSE;
                      }
 
@@ -431,7 +431,7 @@ IntSystemParametersInfo(
                      {
                         StyleNum = 0;
                      }
-                     ExFreePool(KeyValuePartialInfo);
+                     ExFreePoolWithTag(KeyValuePartialInfo, TAG_STRING);
 
                      /* Check the values we found in the registry */
                      if(TileNum && !StyleNum)

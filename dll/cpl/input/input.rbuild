@@ -7,7 +7,6 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
-	<library>msvcrt</library>
 	<library>gdi32</library>
 	<file>input.c</file>
 	<file>settings.c</file>

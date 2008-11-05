@@ -65,9 +65,9 @@ typedef char * __msc_va_list;
 #endif
 
 #if defined(_M_CEE)
-extern void __cdecl __va_start(va_list*, ...);
-extern void * __cdecl __va_arg(va_list*, ...);
-extern void __cdecl __va_end(va_list*);
+extern void __cdecl __va_start(__msc_va_list*, ...);
+extern void * __cdecl __va_arg(__msc_va_list*, ...);
+extern void __cdecl __va_end(__msc_va_list*);
 #define __msc_va_start(ap,v) (__va_start(&ap, __msc_addressof(v), __msc_slotsizeof(v), __alignof(v), __msc_addressof(v)))
 #define __msc_va_end(ap)     (__va_end(&ap))
 #define __msc_va_arg(ap,t)   (*(t *)__va_arg(&ap, __msc_slotsizeof(t), __msc_apalign(t,ap), (t *)0))
@@ -78,7 +78,7 @@ extern void __cdecl __va_end(va_list*);
 #else
 #define __msc_intsizeof(n)   ((sizeof(n) + sizeof(int) - 1) & ~(sizeof(int) - 1))
 #define __msc_va_start(ap,v) ((void)(ap = (__msc_va_list)__msc_addressof(v) + __msc_intsizeof(v)))
-#define __msc_va_end(ap)     ((void)(ap = (va_list)0))
+#define __msc_va_end(ap)     ((void)(ap = (__msc_va_list)0))
 #define __msc_va_arg(ap,t)   (*(t *)((ap += __msc_intsizeof(t)) - __msc_intsizeof(t)))
 #endif
 

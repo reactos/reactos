@@ -21,5 +21,4 @@
 	<file>topology.c</file>
 	<file>worker.c</file>
 	<file>kcom.c</file>
-	<file>ks.spec</file>
 </module>

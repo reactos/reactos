@@ -285,7 +285,7 @@ NtGdiTransformPoints( HDC hDC,
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
-     ExFreePool(Points);
+     ExFreePoolWithTag(Points, TAG_COORD);
      SetLastNtError(Status);
      return FALSE;
    }
@@ -302,7 +302,7 @@ NtGdiTransformPoints( HDC hDC,
       default:
       {
         DC_UnlockDc(dc);
-        ExFreePool(Points);
+        ExFreePoolWithTag(Points, TAG_COORD);
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
       }
@@ -324,7 +324,7 @@ NtGdiTransformPoints( HDC hDC,
    if(!NT_SUCCESS(Status))
    {
      DC_UnlockDc(dc);
-     ExFreePool(Points);
+     ExFreePoolWithTag(Points, TAG_COORD);
      SetLastNtError(Status);
      return FALSE;
    }
@@ -332,7 +332,7 @@ NtGdiTransformPoints( HDC hDC,
 // If we are getting called that means User XForms is a mess!
 //
    DC_UnlockDc(dc);
-   ExFreePool(Points);
+   ExFreePoolWithTag(Points, TAG_COORD);
    return TRUE;
 }
 

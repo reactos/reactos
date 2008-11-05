@@ -10,5 +10,4 @@
 	<library>netapi32</library>
 	<file>netid.c</file>
 	<file>netid.rc</file>
-	<file>netid.spec</file>
 </module>

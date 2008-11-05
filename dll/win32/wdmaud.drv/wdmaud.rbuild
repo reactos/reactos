@@ -9,5 +9,4 @@
 	<library>winmm</library>
 	<file>wdmaud.c</file>
 	<file>wdmaud.rc</file>
-	<file>wdmaud.spec</file>
 </module>

@@ -181,8 +181,8 @@ PATH_DestroyGdiPath ( PPATH pPath )
 {
   ASSERT(pPath!=NULL);
 
-  if (pPath->pPoints) ExFreePool(pPath->pPoints);
-  if (pPath->pFlags) ExFreePool(pPath->pFlags);
+  if (pPath->pPoints) ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
+  if (pPath->pFlags) ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
 }
 
 /* PATH_AssignGdiPath
@@ -991,7 +991,7 @@ PATH_AddFlatBezier ( PPATH pPath, POINT *pt, BOOL closed )
   for(i = 1; i < no; i++)
     PATH_AddEntry(pPath, &pts[i],  (i == no-1 && closed) ? PT_LINETO | PT_CLOSEFIGURE : PT_LINETO);
 
-  ExFreePool(pts);
+  ExFreePoolWithTag(pts, TAG_BEZIER);
   return TRUE;
 }
 
@@ -1092,7 +1092,7 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
   }
 
   /* Free memory for number-of-points-in-stroke array */
-  ExFreePool(pNumPointsInStroke);
+  ExFreePoolWithTag(pNumPointsInStroke, TAG_PATH);
 
   /* Success! */
   *pHrgn=hrgn;
@@ -1189,7 +1189,7 @@ PATH_ReserveEntries ( PPATH pPath, INT numEntries )
     pFlagsNew=(BYTE *)ExAllocatePoolWithTag(PagedPool, numEntriesToAllocate * sizeof(BYTE), TAG_PATH);
     if(!pFlagsNew)
     {
-      ExFreePool(pPointsNew);
+      ExFreePoolWithTag(pPointsNew, TAG_PATH);
       return FALSE;
     }
 
@@ -1201,8 +1201,8 @@ PATH_ReserveEntries ( PPATH pPath, INT numEntries )
       memcpy(pPointsNew, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
       memcpy(pFlagsNew, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
 
-      ExFreePool(pPath->pPoints);
-      ExFreePool(pPath->pFlags);
+      ExFreePoolWithTag(pPath->pPoints, TAG_PATH);
+      ExFreePoolWithTag(pPath->pFlags, TAG_PATH);
     }
     pPath->pPoints=pPointsNew;
     pPath->pFlags=pFlagsNew;
@@ -1424,12 +1424,12 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
                     }
 
                     memcpy(Realloc, pLinePts, nLinePts*sizeof(POINT));
-                    ExFreePool(pLinePts);
+                    ExFreePoolWithTag(pLinePts, TAG_PATH);
                     pLinePts = Realloc;
                 }
                 memcpy(&pLinePts[nLinePts], &pBzrPts[1], (nBzrPts - 1) * sizeof(POINT));
                 nLinePts += nBzrPts - 1;
-                ExFreePool(pBzrPts);
+                ExFreePoolWithTag(pBzrPts, TAG_BEZIER);
                 i += 2;
             }
             break;
@@ -1449,7 +1449,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     ret = TRUE;
 
 end:
-    if(pLinePts)ExFreePool(pLinePts);
+    if(pLinePts) ExFreePoolWithTag(pLinePts, TAG_PATH);
 
     /* Restore the old mapping mode */
     Dc_Attr->iMapMode =  mapMode;
@@ -1534,13 +1534,13 @@ PATH_WidenPath(DC *dc)
     else
     {
         SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-        ExFreePool(elp);
+        ExFreePoolWithTag(elp, TAG_PATH);
         PATH_UnlockPath( pPath );
         return FALSE;
     }
 
     penWidth = elp->elpWidth;
-    ExFreePool(elp);
+    ExFreePoolWithTag(elp, TAG_PATH);
 
     endcap = (PS_ENDCAP_MASK & penStyle);
     joint = (PS_JOIN_MASK & penStyle);
@@ -1588,7 +1588,7 @@ PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                ExFreePool(pStrokes);
+                ExFreePoolWithTag(pStrokes, TAG_PATH);
                 pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
 
@@ -1834,19 +1834,19 @@ PATH_WidenPath(DC *dc)
         }
 
         PATH_DestroyGdiPath(pStrokes[i]);
-        ExFreePool(pStrokes[i]);
+        ExFreePoolWithTag(pStrokes[i], TAG_PATH);
         PATH_DestroyGdiPath(pUpPath);
-        ExFreePool(pUpPath);
+        ExFreePoolWithTag(pUpPath, TAG_PATH);
         PATH_DestroyGdiPath(pDownPath);
-        ExFreePool(pDownPath);
+        ExFreePoolWithTag(pDownPath, TAG_PATH);
     }
-    ExFreePool(pStrokes);
+    ExFreePoolWithTag(pStrokes, TAG_PATH);
 
     pNewPath->state = PATH_Closed;
     if (!(ret = PATH_AssignGdiPath(pPath, pNewPath)))
         DPRINT1("Assign path failed\n");
     PATH_DestroyGdiPath(pNewPath);
-    ExFreePool(pNewPath);
+    ExFreePoolWithTag(pNewPath, TAG_PATH);
     return ret;
 }
 

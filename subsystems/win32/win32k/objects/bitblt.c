@@ -1143,7 +1143,7 @@ NtGdiPolyPatBlt(
 
       if (!NT_SUCCESS(Status))
       {
-         ExFreePool(rb);
+         ExFreePoolWithTag(rb, TAG_PATBLT);
          SetLastNtError(Status);
          return FALSE;
       }
@@ -1152,7 +1152,7 @@ NtGdiPolyPatBlt(
    Ret = IntGdiPolyPatBlt(hDC, dwRop, rb, cRects, Mode);
 
    if (cRects > 0)
-      ExFreePool(rb);
+      ExFreePoolWithTag(rb, TAG_PATBLT);
 
    return Ret;
 }

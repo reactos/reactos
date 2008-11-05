@@ -10,7 +10,6 @@
 	<file>install.c</file>
 	<file>resource.c</file>
 	<file>version.rc</file>
-	<file>version.spec</file>
 	<library>wine</library>
 	<library>lz32</library>
 	<library>kernel32</library>

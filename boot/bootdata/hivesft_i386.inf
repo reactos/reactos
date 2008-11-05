@@ -1003,6 +1003,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","Coun
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\63","Name",0x00000000,"Philippines"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","CountryCode",0x00010001,0x00000040
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\64","Name",0x00000000,"New Zealand"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\66","CountryCode",0x00010001,0x00000042
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\66","Name",0x00000000,"Thailand"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","CountryCode",0x00010001,0x00000007
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\7","Name",0x00000000,"Russia"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\705","CountryCode",0x00010001,0x000002C1

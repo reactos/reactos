@@ -448,7 +448,7 @@ BEGIN
     IDS_CONV_CONSUMPTION    "Расход топлива (двигатели)"
     IDS_CONV_CURRENCY       "Валюта"
     IDS_CONV_ENERGY         "Энергия"
-    IDS_CONV_LENGTH         "Длинна"
+    IDS_CONV_LENGTH         "Длина"
     IDS_CONV_POWER          "Мощность"
     IDS_CONV_PRESSURE       "Давление"
     IDS_CONV_TEMPERATURE    "Температура"

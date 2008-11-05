@@ -8,7 +8,6 @@
 	<define name="__WINESRC__" />
 	<file>richedit.c</file>
 	<file>version.rc</file>
-	<file>riched32.spec</file>
 	<library>wine</library>
 	<library>riched20</library>
 	<library>user32</library>

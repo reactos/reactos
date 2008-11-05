@@ -11,7 +11,6 @@
 	<library>ole32</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>msvcrt</library>
 	<library>pseh</library>
 
 	<file>ddraw.rc</file>

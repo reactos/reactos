@@ -20,15 +20,6 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
-typedef struct _CODEPAGE_ENTRY
-{
-   LIST_ENTRY Entry;
-   UINT CodePage;
-   HANDLE SectionHandle;
-   PBYTE SectionMapping;
-   CPTABLEINFO CodePageTable;
-} CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
-
 /* Sequence length based on the first character. */
 static const char UTF8Length[128] =
 {
@@ -185,7 +176,7 @@ IntGetLoadedCodePageEntry(UINT CodePage)
  * @return Code page entry.
  */
 
-static PCODEPAGE_ENTRY FASTCALL
+PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage)
 {
    CHAR SectionName[40];

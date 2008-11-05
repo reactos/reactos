@@ -176,5 +176,5 @@ BEGIN
   IDS_REMOVE_TEXT "Ви дійсно бажаєте видалити схему '%s' із системи?"
   IDS_OVERWRITE_TITLE "Підтвердження заміни схеми"
   IDS_OVERWRITE_TEXT "Вибрана схема вказівників уже використовується. Замінити вихідну схему?"
-  IDS_ANIMATE_CURSOR "Animated Cursor"
+  IDS_ANIMATE_CURSOR "Анімований вказівник"
 END

@@ -6,7 +6,6 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
-	<library>msvcrt</library>
 	<library>devmgr</library>
 	<library>gdi32</library>
 	<library>winmm</library>

@@ -427,7 +427,7 @@ LPTSTR ReadBatchLine ()
 			return textline;
 		}
 
-		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0])))
+		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0]) - 1))
 		{
 			TRACE ("ReadBatchLine(): Reached EOF!\n");
 			/* End of file.... */
@@ -439,6 +439,9 @@ LPTSTR ReadBatchLine ()
 			continue;
 		}
 		TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
+
+		if (textline[_tcslen(textline) - 1] != _T('\n'))
+			_tcscat(textline, _T("\n"));
 
 		first = textline;
 

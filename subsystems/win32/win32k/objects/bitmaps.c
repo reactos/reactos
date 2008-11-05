@@ -704,7 +704,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 			}
 			IntGetBitmapBits (Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			IntSetBitmapBits (resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
-			ExFreePool (buf);
+			ExFreePoolWithTag (buf,TAG_BITMAP);
 			resBitmap->flFlags = Bitmap->flFlags;
 			GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
 		}

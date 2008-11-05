@@ -699,6 +699,15 @@ ITrayWindowImpl_RegLoadSettings(IN OUT ITrayWindowImpl *This)
 
         /* FIXME: Are there more flags? */
 
+        if (This->hWnd != NULL)
+            SetWindowPos (This->hWnd,
+                          This->AlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+                          0,
+                          0,
+                          0,
+                          0,
+                          SWP_NOMOVE | SWP_NOSIZE);
+
         if (sr.Position > ABE_BOTTOM)
             This->Position = ABE_BOTTOM;
         else

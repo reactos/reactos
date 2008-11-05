@@ -13,8 +13,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>psapi</library>
-	<library>msvcrt</library>
+        <library>win32ksys</library>
 	<library>psapi</library>
 	<library>shell32</library>
 	<pch>w32csr.h</pch>

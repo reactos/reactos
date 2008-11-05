@@ -403,7 +403,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                    0,
                                    REG_SZ,
                                    (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
@@ -420,7 +420,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                    0,
                                    REG_SZ,
                                    (PVOID)szLangID,
-                                   wcslen(szLangID) * sizeof(WCHAR));
+                                   (wcslen(szLangID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
@@ -436,7 +436,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                    0,
                                    REG_SZ,
                                    (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   wcslen(MuiLayouts[uIndex].LayoutID) * sizeof(WCHAR));
+                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
@@ -513,7 +513,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)ACPage,
-                           wcslen(ACPage) * sizeof(PWCHAR));
+                           (wcslen(ACPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -528,7 +528,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)OEMCPage,
-                           wcslen(OEMCPage) * sizeof(PWCHAR));
+                           (wcslen(OEMCPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -543,7 +543,7 @@ AddCodepageToRegistry(IN LPCWSTR ACPage, IN LPCWSTR OEMCPage, IN LPCWSTR MACCPag
                            0,
                            REG_SZ,
                            (PVOID)MACCPage,
-                           wcslen(MACCPage) * sizeof(PWCHAR));
+                           (wcslen(MACCPage)+1) * sizeof(PWCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

@@ -52,11 +52,20 @@
 #undef __attribute__
 
 #if defined(_MSC_VER)
+# ifdef _DLL
 # ifndef __MINGW_IMPORT
 #  define __MINGW_IMPORT  __declspec(dllimport)
 # endif
 # ifndef _CRTIMP
 #  define _CRTIMP  __declspec(dllimport)
+# endif
+# else
+#  ifndef __MINGW_IMPORT
+#   define __MINGW_IMPORT
+#  endif
+#  ifndef _CRTIMP
+#   define _CRTIMP
+#  endif
 # endif
 # define __DECLSPEC_SUPPORTED
 # define __attribute__(x) /* nothing */
@@ -64,16 +73,24 @@
 #elif defined(__GNUC__)
 # ifdef __declspec
 #  ifndef __MINGW_IMPORT
+#   ifdef _DLL
    /* Note the extern. This is needed to work around GCC's
       limitations in handling dllimport attribute.  */
 #   define __MINGW_IMPORT  extern __attribute__ ((__dllimport__))
+#   else
+#    define __MINGW_IMPORT  extern
+#  endif
 #  endif
 #  ifndef _CRTIMP
 #   ifdef __USE_CRTIMP
+#    ifdef _DLL
 #    define _CRTIMP  __attribute__ ((dllimport))
 #   else
 #    define _CRTIMP
 #   endif
+#   else
+#    define _CRTIMP
+#  endif
 #  endif
 #  define __DECLSPEC_SUPPORTED
 # else /* __declspec */
@@ -171,6 +188,20 @@
 #else
 #define __MINGW_ATTRIB_NORETURN
 #define __MINGW_ATTRIB_CONST
+#endif
+
+#if defined(__GNUC__)
+#define __mingw_va_list __gnuc_va_list
+#define __mingw_va_start(v,l) __gnuc_va_start(v,l)
+#define __mingw_va_end(v) __gnuc_va_end(v)
+#define __mingw_va_arg(v,l)	__gnuc_va_arg(v,l)
+#define __mingw_va_copy(d,s) __gnuc_va_copy(d,s)
+#elif defined(_MSC_VER)
+#define __mingw_va_list __msc_va_list
+#define __mingw_va_start(v,l) __msc_va_start(v,l)
+#define __mingw_va_end(v) __msc_va_end(v)
+#define __mingw_va_arg(v,l)	__msc_va_arg(v,l)
+#define __mingw_va_copy(d,s) __msc_va_copy(d,s)
 #endif
 
 #if __MINGW_GNUC_PREREQ (3, 0)

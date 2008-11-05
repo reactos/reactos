@@ -31,6 +31,9 @@
 #define W32PF_CREATEDWINORDC         (0x04000000)
 
 
+extern SHORT gusLanguageID;
+
+SHORT FASTCALL IntGdiGetLanguageID();
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
 DWORD STDCALL IntGetQueueStatus(BOOL ClearChanges);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);

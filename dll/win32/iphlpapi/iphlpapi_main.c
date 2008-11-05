@@ -1388,8 +1388,32 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     CopyMemory(&pFixedInfo->DnsServerList, resInfo->DnsList, sizeof(IP_ADDR_STRING));
     if (resInfo->riCount > 1)
     {
-      pFixedInfo->DnsServerList.Next = (struct _IP_ADDR_STRING*)((char*)pFixedInfo + sizeof(FIXED_INFO));
-      CopyMemory(pFixedInfo->DnsServerList.Next, resInfo->DnsList->Next, sizeof(IP_ADDR_STRING) * (resInfo->riCount-1));
+      IP_ADDR_STRING *pSrc = resInfo->DnsList->Next;
+      IP_ADDR_STRING *pTarget = (struct _IP_ADDR_STRING*)((char*)pFixedInfo + sizeof(FIXED_INFO));
+
+      pFixedInfo->DnsServerList.Next = pTarget;
+
+      do
+      {
+        CopyMemory(pTarget, pSrc, sizeof(IP_ADDR_STRING));
+        resInfo->riCount--;
+        if (resInfo->riCount > 1)
+        {
+          pTarget->Next = (IP_ADDR_STRING*)((char*)pTarget + sizeof(IP_ADDR_STRING));
+          pTarget = pTarget->Next;
+          pSrc = pSrc->Next;
+        }
+        else
+        {
+          pTarget->Next = NULL;
+          break;
+        }
+      }
+      while(TRUE);
+    }
+    else
+    {
+      pFixedInfo->DnsServerList.Next = NULL;
     }
   }
 

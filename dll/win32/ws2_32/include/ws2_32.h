@@ -7,6 +7,8 @@
 #ifndef __WS2_32_H
 #define __WS2_32_H
 
+#include <stdlib.h>
+
 #define WIN32_NO_STATUS
 #include <winsock2.h>
 #include <ws2spi.h>
@@ -20,10 +22,6 @@
 #undef assert
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA
-
-/* Exported by ntdll.dll, but where is the prototype? */
-unsigned long strtoul(const char *nptr, char **endptr, int base);
-
 
 #define EXPORT STDCALL
 

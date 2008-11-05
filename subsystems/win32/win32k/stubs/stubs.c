@@ -750,21 +750,34 @@ EngDitherColor(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 EngQuerySystemAttribute(
    IN ENG_SYSTEM_ATTRIBUTE CapNum,
    OUT PDWORD pCapability)
 {
+  SYSTEM_BASIC_INFORMATION sbi;
+  SYSTEM_PROCESSOR_INFORMATION spi;
+
    switch (CapNum)
    {
       case EngNumberOfProcessors:
-         *pCapability = 1;
+         NtQuerySystemInformation(
+                SystemBasicInformation,
+               &sbi,
+                sizeof(SYSTEM_BASIC_INFORMATION),
+                NULL);
+         *pCapability = sbi.NumberOfProcessors;
          return TRUE;
 
       case EngProcessorFeature:
-         *pCapability = 0;
+         NtQuerySystemInformation(
+                SystemProcessorInformation,
+               &spi,
+                sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                NULL);
+         *pCapability = spi.ProcessorFeatureBits;
          return TRUE;
 
       default:
@@ -2112,20 +2125,6 @@ NtGdiGetMonitorID(
  */
 BOOL
 APIENTRY
-NtGdiGetRealizationInfo(
-    IN HDC hdc,
-    OUT PREALIZATION_INFO pri,
-    IN HFONT hf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiDrawStream(
     IN HDC hdcDst,
     IN ULONG cjIn,
@@ -2222,19 +2221,6 @@ ULONG
 APIENTRY
 NtGdiQueryFontAssocInfo(
     IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtGdiGetFontUnicodeRanges(
-    IN HDC hdc,
-    OUT OPTIONAL LPGLYPHSET pgs)
 {
     UNIMPLEMENTED;
     return 0;

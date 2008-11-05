@@ -8,5 +8,4 @@
 	<library>ws2_32</library>
 	<file>wshtcpip.c</file>
 	<file>wshtcpip.rc</file>
-	<file>wshtcpip.spec</file>
 </module>

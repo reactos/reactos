@@ -37,6 +37,13 @@ VOID
 NTAPI
 RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
 
+BOOLEAN
+NTAPI
+RtlCallVectoredExceptionHandlers(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
+);
+
 typedef struct _DISPATCHER_CONTEXT
 {
     PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;

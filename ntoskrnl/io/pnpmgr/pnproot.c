@@ -162,7 +162,7 @@ PnpRootCreateDevice(
         if (Status == STATUS_NO_SUCH_DEVICE)
             break;
     }
-    if (i > 9999)
+    if (i == 9999)
     {
         DPRINT1("Too much legacy devices reported for service '%wZ'\n", &LocalServiceName);
         Status = STATUS_INSUFFICIENT_RESOURCES;

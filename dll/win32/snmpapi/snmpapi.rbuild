@@ -6,5 +6,4 @@
 	<library>kernel32</library>
 	<file>snmpapi.c</file>
 	<file>snmpapi.rc</file>
-	<file>snmpapi.spec</file>
 </module>

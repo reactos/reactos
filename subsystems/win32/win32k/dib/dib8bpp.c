@@ -522,11 +522,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_1BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-       for (DesY=0; DesY<DesSizeY; DesY++)
+       for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
             sx_dec = 0;
-            for (DesX=0; DesX<DesSizeX; DesX++)
+            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
                                         DIB_1BPP_GetPixel(SourceSurf, sx, sy));
@@ -555,11 +555,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_4BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-       for (DesY=0; DesY<DesSizeY; DesY++)
+       for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
             sx_dec = 0;
-            for (DesX=0; DesX<DesSizeX; DesX++)
+            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
                                         DIB_4BPP_GetPixel(SourceSurf, sx, sy));
@@ -593,11 +593,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_16BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-       for (DesY=0; DesY<DesSizeY; DesY++)
+       for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
             sx_dec = 0;
-            for (DesX=0; DesX<DesSizeX; DesX++)
+            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
                                         DIB_16BPP_GetPixel(SourceSurf, sx, sy));
@@ -624,11 +624,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
        break;
 
       case BMF_24BPP:
-       for (DesY=0; DesY<DesSizeY; DesY++)
+       for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
             sx_dec = 0;
-            for (DesX=0; DesX<DesSizeX; DesX++)
+            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
                                         DIB_24BPP_GetPixel(SourceSurf, sx, sy));
@@ -657,11 +657,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_32BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-       for (DesY=0; DesY<DesSizeY; DesY++)
+       for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
             sx_dec = 0;
-            for (DesX=0; DesX<DesSizeX; DesX++)
+            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
                                             DIB_32BPP_GetPixel(SourceSurf, sx, sy));

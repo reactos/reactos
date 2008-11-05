@@ -20,7 +20,6 @@
 	<file>tmpfile.c</file>
 	<file>wavfile.c</file>
 	<file>rsrc.rc</file>
-	<file>avifil32.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>msacm32</library>

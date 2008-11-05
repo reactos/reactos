@@ -64,27 +64,27 @@ END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Detalles de la conexión de red"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ LTEXT "&Detalles de la conexión de red:", -1, 15, 9, 170, 12
  CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
- PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+ PUSHBUTTON "&Cerrar", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Physical Address"
-	IDS_IP_ADDRESS              "IP Address"
-	IDS_SUBNET_MASK             "Subnet Mask"
-	IDS_DEF_GATEWAY             "Default Gateway"
-	IDS_DHCP_SERVER             "DHCP Server"
-	IDS_LEASE_OBTAINED          "Lease Obtained"
-	IDS_LEASE_EXPIRES           "Lease Expires"
-	IDS_DNS_SERVERS             "DNS Servers"
-	IDS_WINS_SERVERS            "WINS Servers"
-	IDS_PROPERTY                "Property"
-	IDS_VALUE                   "Value"
+	IDS_PHYSICAL_ADDRESS        "Dirección física"
+	IDS_IP_ADDRESS              "Dirección IP"
+	IDS_SUBNET_MASK             "Máscara de subred"
+	IDS_DEF_GATEWAY             "Puerta de enlace predeterminada"
+	IDS_DHCP_SERVER             "Servidor DHCP"
+	IDS_LEASE_OBTAINED          "Concesión obtenida"
+	IDS_LEASE_EXPIRES           "La concesión caduca"
+	IDS_DNS_SERVERS             "Servidor DNS"
+	IDS_WINS_SERVERS            "Servidor WINS"
+	IDS_PROPERTY                "Propiedad"
+	IDS_VALUE                   "Valor"
 	IDS_NETWORKCONNECTION       "Conexiones de red"
 	IDS_SHV_COLUMN_NAME         "Nombre"
 	IDS_SHV_COLUMN_TYPE         "Tipo"

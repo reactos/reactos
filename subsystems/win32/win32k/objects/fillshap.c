@@ -425,7 +425,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(pTemp);
+        ExFreePoolWithTag(pTemp, TAG_SHAPE);
         return FALSE;
     }
 
@@ -434,7 +434,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     {
         HRGN hRgn;
         hRgn = IntCreatePolyPolygonRgn(SafePoints, SafeCounts, Count, (INT_PTR)hDC);
-        ExFreePool(pTemp);
+        ExFreePoolWithTag(pTemp, TAG_SHAPE);
         return (ULONG_PTR)hRgn;
     }
 
@@ -1001,7 +1001,7 @@ NtGdiGradientFill(
     if (!NT_SUCCESS(Status))
     {
         DC_UnlockDc(dc);
-        ExFreePool(SafeVertex);
+        ExFreePoolWithTag(SafeVertex, TAG_SHAPE);
         SetLastNtError(Status);
         return FALSE;
     }
