@@ -1,4 +1,4 @@
-#include "include/reactos/msvctarget.h"
+#include <msvctarget.h>
 
 @ stdcall CcCanIWrite(ptr long long long)
 @ stdcall CcCopyRead(ptr ptr long long ptr ptr)
