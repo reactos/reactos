@@ -425,7 +425,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 
         *TotalBytesCopied = BytesToCopy;
 
-        if (!RecvReq->TdiFlags & TDI_RECEIVE_PEEK) {
+        if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK)) {
             FCB->Recv.BytesUsed = 0;
         }
     }
