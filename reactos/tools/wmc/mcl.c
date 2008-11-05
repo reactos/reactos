@@ -33,7 +33,7 @@
 #include "mcy.tab.h"
 
 /*
- * Keywords are case insenitive. All normal input is treated as
+ * Keywords are case insensitive. All normal input is treated as
  * being in codepage iso-8859-1 for ascii input files (unicode
  * page 0) and as equivalent unicode if unicode input is selected.
  * All normal input, which is not part of a message text, is
@@ -205,7 +205,7 @@ try_again:
 		if(n < 0)
 			internal_error(__FILE__, __LINE__, "Could not translate to unicode (%d)\n", n);
 		if(n <= 1)
-			goto try_again;	/* Should not hapen */
+			goto try_again;	/* Should not happen */
 		n--;	/* Strip added conversion '\0' from input length */
 		/*
 		 * FIXME:
