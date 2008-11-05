@@ -1,5 +1,6 @@
 /*
- * Copyright 2003 Vincent Béron
+ * Copyright 2003 Vincent BÃ©ron
+ * Copyright 2007, 2008 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "dumpres.h"
 #include "utils.h"
@@ -279,6 +281,7 @@ static int compare_cursor_group(cursor_group_t *cursor_group1, cursor_group_t *c
 static int compare_control(control_t *control1, control_t *control2) {
 	int different = 0;
 	char *nameid = NULL;
+	int ignore_style;
 	if(!different &&
 		((control1 && !control2) ||
 		(!control1 && control2)))
@@ -289,13 +292,21 @@ static int compare_control(control_t *control1, control_t *control2) {
 	if(!different && strcmp(nameid, get_nameid_str(control2->ctlclass)))
 		different = 1;
 	free(nameid);
+        if (different)
+            return different;
+
+        /* allow the translators to set some styles */
+        ignore_style = 0;
+        if (control1->ctlclass->type == name_ord && control1->ctlclass->name.i_name == CT_BUTTON)
+            ignore_style = 0x2000;          /* BS_MULTILINE*/
+
 	if(!different && 
 	   (control1->id != control2->id))
 		different = 1;
 	if(!different && control1->gotstyle && control2->gotstyle) {
 		if((!control1->style || !control2->style) ||
 		   (control1->style->and_mask || control2->style->and_mask) ||
-		   (control1->style->or_mask != control2->style->or_mask))
+		   ((control1->style->or_mask & ~ignore_style) != (control2->style->or_mask & ~ignore_style)))
 			different = 1;
 	} else if(!different &&
 		  ((control1->gotstyle && !control2->gotstyle) ||
@@ -323,6 +334,7 @@ static int compare_control(control_t *control1, control_t *control2) {
 static int compare_dialog(dialog_t *dialog1, dialog_t *dialog2) {
 	int different = 0;
 	char *nameid = NULL;
+	control_t *ctrl1, *ctrl2;
 	if(!different &&
 	   ((dialog1->memopt != dialog2->memopt) ||
 	   (dialog1->lvc.version != dialog2->lvc.version) ||
@@ -354,14 +366,22 @@ static int compare_dialog(dialog_t *dialog1, dialog_t *dialog2) {
 	if(!different && strcmp(nameid, get_nameid_str(dialog2->dlgclass)))
 		different = 1;
 	free(nameid);
-	if(!different)
-		different = compare_control(dialog1->controls, dialog2->controls);
+
+        ctrl1 = dialog1->controls;
+        ctrl2 = dialog2->controls;
+        while(!different && (ctrl1 || ctrl2))
+        {
+            different = compare_control(ctrl1, ctrl2);
+            if (ctrl1) ctrl1 = ctrl1->next;
+            if (ctrl2) ctrl2 = ctrl2->next;
+        }
 	return different;
 }
 
 static int compare_dialogex(dialogex_t *dialogex1, dialogex_t *dialogex2) {
 	int different = 0;
 	char *nameid = NULL;
+	control_t *ctrl1, *ctrl2;
 	if(!different &&
 	   ((dialogex1->memopt != dialogex2->memopt) ||
 	   (dialogex1->lvc.version != dialogex2->lvc.version) ||
@@ -400,8 +420,15 @@ static int compare_dialogex(dialogex_t *dialogex1, dialogex_t *dialogex2) {
 	if(!different && strcmp(nameid, get_nameid_str(dialogex2->dlgclass)))
 		different = 1;
 	free(nameid);
-	if(!different)
-		different = compare_control(dialogex1->controls, dialogex2->controls);
+
+        ctrl1 = dialogex1->controls;
+        ctrl2 = dialogex2->controls;
+        while(!different && (ctrl1 || ctrl2))
+        {
+            different = compare_control(ctrl1, ctrl2);
+            if (ctrl1) ctrl1 = ctrl1->next;
+            if (ctrl2) ctrl2 = ctrl2->next;
+        }
 	return different;
 }
 
@@ -938,49 +965,6 @@ static int compare(resource_t *resource1, resource_t *resource2) {
 	}
 }
 
-static void dump_stringtable(resource_t *res)
-{
-    stringtable_t *stt = res->res.stt;
-    int j;
-
-    printf("DUMP ");
-    assert((stt->idbase%16) == 0);
-    assert(stt->nentries == 16);
-    for (j = 0; j < stt->nentries; j++)
-    {
-        stt_entry_t *entry = &stt->entries[j];
-        language_t *lang = stt->lvc.language;
-        string_t *newstr;
-        WCHAR *wstr;
-        int k;
-
-        if (entry->str)
-        {
-            newstr = convert_string(entry->str, str_unicode, get_language_codepage(lang->id, lang->sub));
-            printf("%02x%02x", newstr->size & 0xff, (newstr->size >> 8) & 0xff);
-            wstr = newstr->str.wstr;
-            for (k = 0; k < newstr->size; k++)
-                printf("%02x%02x", wstr[k] & 0xff, wstr[k] >> 8);
-            free_string(newstr);
-        }
-        else
-            printf("0000");
-    }
-    putchar('\n');
-}
-
-static void dump(resource_t *res)
-{
-    switch (res->type)
-    {
-        case res_stt:
-            dump_stringtable(res);
-            return;
-        default:
-            break;
-    }
-}
-
 typedef struct resource_lang_node
 {
     language_t lang;
@@ -1141,7 +1125,6 @@ void verify_translations(resource_t *top) {
             for (langnode = idnode->langs; langnode; langnode = langnode->next)
             {
                 printf("EXIST %03x:%02x\n", langnode->lang.id, langnode->lang.sub);
-                dump(langnode->res);
                 if (compare(langnode->res, mainres))
                 {
                     printf("DIFF %03x:%02x\n", langnode->lang.id, langnode->lang.sub);

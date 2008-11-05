@@ -84,7 +84,7 @@
 %x pp_code_page
 
 %option stack
-%option nounput noyy_top_state noyywrap
+%option noinput nounput noyy_top_state noyywrap
 %option 8bit never-interactive
 %option prefix="parser_"
 
@@ -96,11 +96,19 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 
 /*#define LEX_DEBUG*/
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
+#include <limits.h>
+
+#ifndef HAVE_UNISTD_H
+#define YY_NO_UNISTD_H
+#endif
 
 #include "wine/unicode.h"
 #include "wrc.h"
@@ -289,6 +297,19 @@ static struct keyword *iskeyword(char *kw)
 		return kwp;
 }
 
+/* converts an integer in string form to an unsigned long and prints an error
+ * on overflow */
+static unsigned long xstrtoul(const char *nptr, char **endptr, int base)
+{
+    unsigned long l;
+
+    errno = 0;
+    l = strtoul(nptr, endptr, base);
+    if (l == ULONG_MAX && errno == ERANGE)
+        parser_error("integer constant %s is too large\n", nptr);
+    return l;
+}
+
 %}
 
 /*
@@ -324,10 +345,10 @@ static struct keyword *iskeyword(char *kw)
 		yy_pop_state();
 		lineno = (int)strtol(yytext, &cptr, 10);
 		if(!lineno)
-			parser_error("Malformed '#...' line-directive; invalid linenumber\n");
+			parser_error("Malformed '#...' line-directive; invalid linenumber");
 		fname = strchr(cptr, '"');
 		if(!fname)
-			parser_error("Malformed '#...' line-directive; missing filename\n");
+			parser_error("Malformed '#...' line-directive; missing filename");
 		fname++;
 		cptr = strchr(fname, '"');
 		if(!cptr)
@@ -353,13 +374,13 @@ static struct keyword *iskeyword(char *kw)
         yy_pop_state();
         while (*p < '0' || *p > '9') p++;
         current_codepage = strtol( p, NULL, 10 );
-        if (current_codepage && current_codepage != CP_UTF8 && !wine_cp_get_table( current_codepage ))
+        if (current_codepage != CP_UTF8 && !wine_cp_get_table( current_codepage ))
         {
-            parser_error("Codepage %d not supported\n", current_codepage);
+            parser_error("Codepage %d not supported", current_codepage);
             current_codepage = 0;
         }
     }
-<pp_code_page>[^\n]*	yy_pop_state(); parser_error("Malformed #pragma code_page directive\n");
+<pp_code_page>[^\n]*	yy_pop_state(); parser_error("Malformed #pragma code_page directive");
 
 	/*
 	 * Strip everything until a ';' taking
@@ -372,9 +393,9 @@ static struct keyword *iskeyword(char *kw)
 \{			return tBEGIN;
 \}			return tEND;
 
-[0-9]+[lL]?		{ parser_lval.num = strtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[xX][0-9A-Fa-f]+[lL]?	{ parser_lval.num = strtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
-0[oO][0-7]+[lL]?	{ parser_lval.num = strtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+[0-9]+[lL]?		{ parser_lval.num = xstrtoul(yytext,  0, 10); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+0[xX][0-9A-Fa-f]+[lL]?	{ parser_lval.num = xstrtoul(yytext,  0, 16); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
+0[oO][0-7]+[lL]?	{ parser_lval.num = xstrtoul(yytext+2, 0, 8); return toupper(yytext[yyleng-1]) == 'L' ? tLNUMBER : tNUMBER; }
 
 	/*
 	 * The next two rules scan identifiers and filenames.
@@ -423,7 +444,7 @@ L\"			{
 				unsigned int result;
 				result = strtoul(yytext+1, 0, 8);
 				if ( result > 0xffff )
-					parser_error("Character constant out of range\n");
+					parser_error("Character constant out of range");
 				addwchar((WCHAR)result);
 			}
 <tklstr>\\x[0-9a-fA-F]{4} {  /* hex escape sequence */
@@ -431,9 +452,9 @@ L\"			{
 				result = strtoul(yytext+2, 0, 16);
 				addwchar((WCHAR)result);
 			}
-<tklstr>\\x[0-9a-fA-F]{1,3} {  parser_error("Invalid hex escape sequence '%s'\n", yytext); }
+<tklstr>\\x[0-9a-fA-F]{1,3} {  parser_error("Invalid hex escape sequence '%s'", yytext); }
 
-<tklstr>\\[0-9]+	parser_error("Bad escape sequence\n");
+<tklstr>\\[0-9]+	parser_error("Bad escape sequence");
 <tklstr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
 <tklstr>\\a		addwchar('\a');
 <tklstr>\\b		addwchar('\b');
@@ -452,7 +473,7 @@ L\"			{
 				while(*yptr)	/* FIXME: codepage translation */
 					addwchar(*yptr++ & 0xff);
 			}
-<tklstr>\n		parser_error("Unterminated string\n");
+<tklstr>\n		parser_error("Unterminated string");
 
 	/*
 	 * Normal string scanning
@@ -468,7 +489,7 @@ L\"			{
 				int result;
 				result = strtol(yytext+1, 0, 8);
 				if ( result > 0xff )
-					parser_error("Character constant out of range\n");
+					parser_error("Character constant out of range");
 				addcchar((char)result);
 			}
 <tkstr>\\x[0-9a-fA-F]{2} {  /* hex escape sequence */
@@ -476,9 +497,9 @@ L\"			{
 				result = strtol(yytext+2, 0, 16);
 				addcchar((char)result);
 			}
-<tkstr>\\x[0-9a-fA-F]	{  parser_error("Invalid hex escape sequence '%s'\n", yytext); }
+<tkstr>\\x[0-9a-fA-F]	{  parser_error("Invalid hex escape sequence '%s'", yytext); }
 
-<tkstr>\\[0-9]+		parser_error("Bad escape sequence\n");
+<tkstr>\\[0-9]+		parser_error("Bad escape sequence");
 <tkstr>\\\n{ws}*	line_number++; char_number = 1; /* backslash at EOL continues string after leading whitespace on next line */
 <tkstr>\\a		addcchar('\a');
 <tkstr>\\b		addcchar('\b');
@@ -497,7 +518,7 @@ L\"			{
 <tkstr>\"\"		addcchar('\"');		/* "bla""bla"   -> "bla\"bla" */
 <tkstr>\\\"\"		addcchar('\"');		/* "bla\""bla"  -> "bla\"bla" */
 <tkstr>\"{ws}+\"	;			/* "bla" "bla"  -> "blabla" */
-<tkstr>\n		parser_error("Unterminated string\n");
+<tkstr>\n		parser_error("Unterminated string");
 
 	/*
 	 * Raw data scanning
@@ -518,7 +539,7 @@ L\"			{
 			}
 <tkrcd>{ws}+		;	/* Ignore space */
 <tkrcd>\n		line_number++; char_number = 1;
-<tkrcd>.		parser_error("Malformed data-line\n");
+<tkrcd>.		parser_error("Malformed data-line");
 
 	/*
 	 * Comment stripping
@@ -604,7 +625,7 @@ static string_t *get_buffered_cstring(void)
 
     if (!current_codepage || current_codepage == -1 || !win32)  /* store as ANSI string */
     {
-        if (!current_codepage) parser_error("Codepage set to Unicode only, cannot use ASCII string here\n");
+        if (!current_codepage) parser_error("Codepage set to Unicode only, cannot use ASCII string here");
         return str;
     }
     else  /* convert to Unicode before storing */
@@ -612,7 +633,7 @@ static string_t *get_buffered_cstring(void)
         string_t *str_w = convert_string( str, str_unicode, current_codepage );
         if (!check_unicode_conversion( str, str_w, current_codepage ))
             parser_error("String %s does not convert identically to Unicode and back in codepage %d. "
-                    "Try using a Unicode string instead\n", str->str.cstr, current_codepage );
+                    "Try using a Unicode string instead", str->str.cstr, current_codepage );
         free_string( str );
         return str_w;
     }

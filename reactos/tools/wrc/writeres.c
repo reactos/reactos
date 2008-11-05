@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,7 +70,7 @@ void write_resfile(char *outname, resource_t *top)
 		put_word(res, 0);		/* Memory options */
 		put_word(res, 0);		/* Language */
 		put_dword(res, 0);		/* Version */
-		put_dword(res, 0);		/* Charateristics */
+		put_dword(res, 0);		/* Characteristics */
 		ret = fwrite(res->data, 1, res->size, fo);
 		if(ret != res->size)
 		{
