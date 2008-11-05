@@ -102,6 +102,11 @@ typedef struct _UMPDEV
   WCHAR           String[188];
 } UMPDEV, *PUMPDEV;
 
+#define LOCALFONT_COUNT 10
+typedef struct _LOCALFONT
+{
+  FONT_ATTR  lfa[LOCALFONT_COUNT];
+} LOCALFONT, *PLOCALFONT;
 
 /* FUNCTIONS *****************************************************************/
 

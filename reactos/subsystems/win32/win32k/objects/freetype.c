@@ -2208,8 +2208,7 @@ ftGdiGetTextCharsetInfo(
   TT_OS2 *pOS2;
   FT_Face Face;
   CHARSETINFO csi;
-  DWORD cp;
-  DWORD fs0;
+  DWORD cp, fs0;
   USHORT usACP, usOEM;
 
   Dc_Attr = Dc->pDc_Attr;
@@ -2942,6 +2941,7 @@ ftGdiRealizationInfo(PFONTGDI Font, PREALIZATION_INFO Info)
   return TRUE;
 }
 
+
 DWORD
 FASTCALL
 ftGdiGetKerningPairs( PFONTGDI Font,
@@ -2949,22 +2949,20 @@ ftGdiGetKerningPairs( PFONTGDI Font,
                       LPKERNINGPAIR pKerningPair)
 {
   DWORD Count = 0;
-  FT_Face face;
-
-  face = Font->face;
+  INT i = 0;
+  FT_Face face = Font->face;
 
   if (FT_HAS_KERNING(face) && face->charmap->encoding == FT_ENCODING_UNICODE)
   {
      FT_UInt previous_index = 0, glyph_index = 0;
      FT_ULong char_code, char_previous;
      FT_Vector delta;
-     int i;
         
      char_previous = char_code = FT_Get_First_Char(face, &glyph_index);
 
      IntUnLockFreeType;
 
-     for (i = 0; i < face->num_glyphs; i++)
+     while (glyph_index)
      {
          if (previous_index && glyph_index)
          {
@@ -2975,6 +2973,8 @@ ftGdiGetKerningPairs( PFONTGDI Font,
                pKerningPair[i].wFirst      = char_previous;
                pKerningPair[i].wSecond     = char_code;
                pKerningPair[i].iKernAmount = delta.x;
+               i++;
+               if (i == cPairs) break;
             }
             Count++;
          }
