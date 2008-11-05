@@ -698,30 +698,20 @@ static void output_import_thunk( const char *name, const char *table, int pos )
         output( "\tjmp $31,($0)\n" );
         break;
     case CPU_POWERPC:
-        output( "\taddi %s, %s, -0x4\n", ppc_reg(1), ppc_reg(1) );
-        output( "\tstw  %s, 0(%s)\n",    ppc_reg(9), ppc_reg(1) );
-        output( "\taddi %s, %s, -0x4\n", ppc_reg(1), ppc_reg(1) );
-        output( "\tstw  %s, 0(%s)\n",    ppc_reg(8), ppc_reg(1) );
-        output( "\taddi %s, %s, -0x4\n", ppc_reg(1), ppc_reg(1) );
-        output( "\tstw  %s, 0(%s)\n",    ppc_reg(7), ppc_reg(1) );
+        output( "\tmr %s, %s\n", ppc_reg(0), ppc_reg(31) );
         if (target_platform == PLATFORM_APPLE)
         {
-            output( "\tlis %s, ha16(%s+%d)\n", ppc_reg(9), table, pos );
-            output( "\tla  %s, lo16(%s+%d)(%s)\n", ppc_reg(8), table, pos, ppc_reg(9) );
+            output( "\tlis %s, ha16(%s+%d+32768)\n", ppc_reg(31), table, pos );
+            output( "\tla  %s, lo16(%s+%d)(%s)\n", ppc_reg(31), table, pos, ppc_reg(31) );
         }
         else
         {
-            output( "\tlis %s, (%s+%d)@h\n", ppc_reg(9), table, pos );
-            output( "\tla  %s, (%s+%d)@l(%s)\n", ppc_reg(8), table, pos, ppc_reg(9) );
+            output( "\tlis %s, (%s+%d+32768)@h\n", ppc_reg(31), table, pos );
+            output( "\tla  %s, (%s+%d)@l(%s)\n", ppc_reg(31), table, pos, ppc_reg(31) );
         }
-        output( "\tlwz  %s, 0(%s)\n", ppc_reg(7), ppc_reg(8) );
-        output( "\tmtctr %s\n", ppc_reg(7) );
-        output( "\tlwz  %s, 0(%s)\n",   ppc_reg(7), ppc_reg(1) );
-        output( "\taddi %s, %s, 0x4\n", ppc_reg(1), ppc_reg(1) );
-        output( "\tlwz  %s, 0(%s)\n",   ppc_reg(8), ppc_reg(1) );
-        output( "\taddi %s, %s, 0x4\n", ppc_reg(1), ppc_reg(1) );
-        output( "\tlwz  %s, 0(%s)\n",   ppc_reg(9), ppc_reg(1) );
-        output( "\taddi %s, %s, 0x4\n", ppc_reg(1), ppc_reg(1) );
+        output( "\tlwz   %s, 0(%s)\n", ppc_reg(31), ppc_reg(31) );
+        output( "\tmtctr %s\n", ppc_reg(31) );
+        output( "\tmr    %s, %s\n", ppc_reg(31), ppc_reg(0) );
         output( "\tbctr\n" );
         break;
     }

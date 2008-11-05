@@ -435,6 +435,7 @@ static int sort_func_list( ORDDEF **list, int count,
 {
     int i, j;
 
+    if (!count) return 0;
     qsort( list, count, sizeof(*list), compare );
 
     for (i = j = 0; i < count; i++)
@@ -461,7 +462,7 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
     output( "\t.align 4\n" );
     output( "\t%s\n", func_declaration(name) );
     output( "%s:\n", name );
-    output( "subl $4,%%esp\n" );
+    output( "\tsubl $4,%%esp\n" );
     if (UsePIC)
     {
         output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
@@ -485,7 +486,7 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
     output( "\t.align 4\n" );
     output( "\t%s\n", func_declaration(name) );
     output( "%s:\n", name );
-    output( "subl $8,%%esp\n" );
+    output( "\tsubl $8,%%esp\n" );
     if (UsePIC)
     {
         output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
@@ -528,6 +529,7 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
 void BuildSpec16File( DLLSPEC *spec )
 {
     ORDDEF **typelist;
+    ORDDEF *entry_point = NULL;
     int i, j, nb_funcs;
     char header_name[256];
 
@@ -535,11 +537,39 @@ void BuildSpec16File( DLLSPEC *spec )
 
     output_standard_file_header();
 
+    if (!spec->file_name)
+    {
+        char *p;
+        spec->file_name = xstrdup( output_file_name );
+        if ((p = strrchr( spec->file_name, '.' ))) *p = 0;
+    }
     if (!spec->dll_name)  /* set default name from file name */
     {
         char *p;
         spec->dll_name = xstrdup( spec->file_name );
         if ((p = strrchr( spec->dll_name, '.' ))) *p = 0;
+    }
+
+    /* store the main entry point as ordinal 0 */
+
+    if (!spec->ordinals)
+    {
+        spec->ordinals = xmalloc( sizeof(spec->ordinals[0]) );
+        spec->ordinals[0] = NULL;
+    }
+    if (spec->init_func && !(spec->characteristics & IMAGE_FILE_DLL))
+    {
+        entry_point = xmalloc( sizeof(*entry_point) );
+        entry_point->type = TYPE_PASCAL;
+        entry_point->ordinal = 0;
+        entry_point->lineno = 0;
+        entry_point->flags = FLAG_REGISTER;
+        entry_point->name = NULL;
+        entry_point->link_name = xstrdup( spec->init_func );
+        entry_point->export_name = NULL;
+        entry_point->u.func.arg_types[0] = 0;
+        assert( !spec->ordinals[0] );
+        spec->ordinals[0] = entry_point;
     }
 
     /* Build sorted list of all argument types, without duplicates */
@@ -594,12 +624,15 @@ void BuildSpec16File( DLLSPEC *spec )
              get_asm_short_keyword() );
     output( "\t.long 0\n" );                                               /* ne_crc */
     output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_flags */
-             NE_FFLAGS_SINGLEDATA | NE_FFLAGS_LIBMODULE );
+             NE_FFLAGS_SINGLEDATA |
+             ((spec->characteristics & IMAGE_FILE_DLL) ? NE_FFLAGS_LIBMODULE : 0) );
     output( "\t%s 2\n", get_asm_short_keyword() );                         /* ne_autodata */
     output( "\t%s %u\n", get_asm_short_keyword(), spec->heap_size );       /* ne_heap */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_stack */
-    output( "\t.long 0\n" );                                               /* ne_csip */
-    output( "\t.long 0\n" );                                               /* ne_sssp */
+    if (!entry_point) output( "\t.long 0\n" );                             /* ne_csip */
+    else output( "\t%s .L__wine_%s_0-.L__wine_spec_code_segment,1\n",
+                 get_asm_short_keyword(), make_c_identifier(spec->dll_name) );
+    output( "\t%s 0,2\n", get_asm_short_keyword() );                       /* ne_sssp */
     output( "\t%s 2\n", get_asm_short_keyword() );                         /* ne_cseg */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cmod */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cbnrestab */
