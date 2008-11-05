@@ -24,6 +24,8 @@
 //#	include <shlobj.h>
 #	ifdef HAVE_UNISTD_H
 #		include <unistd.h>
+#	else
+#		include <process.h>
 #	endif
 #	include <errno.h>
 #	include <stdio.h>

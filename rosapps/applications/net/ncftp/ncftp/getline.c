@@ -130,7 +130,7 @@ static int gl_tab(char *buf, int offset, int *loc, size_t bufsize);
 gl_in_hook_proc gl_in_hook = 0;
 gl_out_hook_proc gl_out_hook = 0;
 gl_tab_hook_proc gl_tab_hook = gl_tab;
-gl_strlen_proc gl_strlen = (gl_strlen_proc) strlen;
+size_t gl_strlen(const char *s) { return strlen(s); }
 gl_tab_completion_proc gl_completion_proc = 0;
 int gl_filename_quoting_desired = -1;	/* default to unspecified */
 const char *gl_filename_quote_characters = " \t*?<>|;&()[]$`";
