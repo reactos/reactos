@@ -38,7 +38,7 @@ int adns_writev(SOCKET FileDescriptor, const struct iovec * iov, int iovCount)
 	for(; i < iovCount; i++)
 		total_len += iov[i].iov_len;
 
-	p = buf = (char *)alloca( (size_t) total_len);
+	p = buf = (char *)_alloca( (size_t) total_len);
 
 	for(; i < iovCount; i++)
 	{

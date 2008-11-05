@@ -127,7 +127,7 @@ typedef long RPC_STATUS;
     #include <excpt.h>
     #include <winerror.h>
 
-    #ifndef __GNUC__
+    #if 0
         #define RpcTryExcept __try {
         #define RpcExcept(expr) } __except (expr) {
         #define RpcEndExcept }

@@ -573,7 +573,7 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   char PathBuf[MAX_PATH];
   struct in_addr addr;
   #define ADNS_PFIXED_INFO_BLEN (2048)
-  PFIXED_INFO network_info = (PFIXED_INFO)alloca(ADNS_PFIXED_INFO_BLEN);
+  PFIXED_INFO network_info = (PFIXED_INFO)_alloca(ADNS_PFIXED_INFO_BLEN);
   ULONG network_info_blen = ADNS_PFIXED_INFO_BLEN;
   DWORD network_info_result;
   PIP_ADDR_STRING pip;

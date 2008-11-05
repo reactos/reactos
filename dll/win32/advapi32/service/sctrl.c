@@ -552,7 +552,7 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
     }
     _SEH_HANDLE
     {
-        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        SetLastError(ScmRpcStatusToWinError(_SEH_GetExceptionCode()));
         bResult = FALSE;
     }
     _SEH_END;
@@ -588,7 +588,7 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
     }
     _SEH_HANDLE
     {
-        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        SetLastError(ScmRpcStatusToWinError(_SEH_GetExceptionCode()));
         bResult = FALSE;
     }
     _SEH_END;

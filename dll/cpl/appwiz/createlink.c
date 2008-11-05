@@ -129,11 +129,7 @@ WelcomeDlgProc(HWND hwndDlg,
                         LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, MAX_PATH) < MAX_PATH)
                     {
                         WCHAR szError[MAX_PATH + 100];
-#ifdef _MSC_VER
-                        _swprintf(szError, szPath, pContext->szTarget);
-#else
                         swprintf(szError, szPath, pContext->szTarget);
-#endif
                         MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                     }
                     SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);

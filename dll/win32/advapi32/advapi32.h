@@ -12,6 +12,9 @@
 
 /* C Headers */
 #include <stdio.h>
+#include <stdlib.h>
+
+#include <pseh/pseh.h>
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
