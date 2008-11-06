@@ -46,7 +46,6 @@
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<compilerflag>-Wno-uninitialized</compilerflag>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
-	<linkerflag>-s</linkerflag>
 	<linkerflag>-static</linkerflag>
 
 <!-- Here starts <xi:include href="ReactOS-generic.rbuild" /> -->
