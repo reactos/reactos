@@ -140,7 +140,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
     /* Restore the old mapping mode */
 //    IntGdiSetMapMode( dc, mapMode );
 //    Dc_Attr->szlViewportExt = ptViewportExt;
-//   Dc_Attr->ptlViewportOrg = ptViewportOrg;
+//    Dc_Attr->ptlViewportOrg = ptViewportOrg;
 //    Dc_Attr->szlWindowExt   = ptWindowExt;
 //    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
 

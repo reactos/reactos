@@ -2501,6 +2501,7 @@ NtGdiExtCreateRegion(
     NTSTATUS Status = STATUS_SUCCESS;
     MATRIX matrix;
 
+    DPRINT("NtGdiExtCreateRegion\n");
     _SEH_TRY
     {
         ProbeForRead(RgnData, Count, 1);

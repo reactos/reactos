@@ -506,20 +506,23 @@ IntRectangle(PDC dc,
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    if ( PATH_IsPathOpen(dc->DcLevel) )
-    {
-        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    }
-
     /* Do we rotate or shear? */
     if (!(dc->DcLevel.mxWorldToDevice.flAccel & MX_SCALE))
     {
+
         POINTL DestCoords[4];
+        ULONG  PolyCounts = 4;
         DestCoords[0].x = DestCoords[3].x = LeftRect;
         DestCoords[0].y = DestCoords[1].y = TopRect;
         DestCoords[1].x = DestCoords[2].x = RightRect;
         DestCoords[2].y = DestCoords[3].y = BottomRect;
-        return IntGdiPolygon(dc, DestCoords, 4);
+        // Use IntGdiPolyPolygon so to support PATH.
+        return IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
+    }
+    // Rectangle Path only.
+    if ( PATH_IsPathOpen(dc->DcLevel) )
+    {
+        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
 
     DestRect.left = LeftRect;
