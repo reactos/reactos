@@ -990,27 +990,27 @@ us_t_UserFree(ULONG *flags, us_t *pus)
 ULONG __RPC_USER
 bstr_t_UserSize(ULONG *flags, ULONG start, bstr_t *b)
 {
-  return start + FIELD_OFFSET(wire_bstr_t, data[(*b)[-1]]);
+  return start + FIELD_OFFSET(user_bstr_t, data[(*b)[-1]]);
 }
 
 unsigned char * __RPC_USER
 bstr_t_UserMarshal(ULONG *flags, unsigned char *buffer, bstr_t *b)
 {
-  wire_bstr_t *wb = (wire_bstr_t *) buffer;
+  wire_bstr_t wb = (wire_bstr_t) buffer;
   wb->n = (*b)[-1];
   memcpy(&wb->data, *b, wb->n * sizeof wb->data[0]);
-  return buffer + FIELD_OFFSET(wire_bstr_t, data[wb->n]);
+  return buffer + FIELD_OFFSET(user_bstr_t, data[wb->n]);
 }
 
 unsigned char * __RPC_USER
 bstr_t_UserUnmarshal(ULONG *flags, unsigned char *buffer, bstr_t *b)
 {
-  wire_bstr_t *wb = (wire_bstr_t *) buffer;
+  wire_bstr_t wb = (wire_bstr_t) buffer;
   short *data = HeapAlloc(GetProcessHeap(), 0, (wb->n + 1) * sizeof *data);
   data[0] = wb->n;
   memcpy(&data[1], wb->data, wb->n * sizeof data[1]);
   *b = &data[1];
-  return buffer + FIELD_OFFSET(wire_bstr_t, data[wb->n]);
+  return buffer + FIELD_OFFSET(user_bstr_t, data[wb->n]);
 }
 
 void __RPC_USER

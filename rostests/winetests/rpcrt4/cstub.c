@@ -432,6 +432,7 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
 {
     IPSFactoryBuffer *ppsf = NULL;
     const CLSID PSDispatch = {0x20420, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
+    const CLSID CLSID_Unknown = {0x45678, 0x1234, 0x6666, {0xff, 0x67, 0x45, 0x98, 0x76, 0x12, 0x34, 0x56}};
     HRESULT r;
     HMODULE hmod = LoadLibraryA("rpcrt4.dll");
     void *CStd_QueryInterface = GetProcAddress(hmod, "CStdStubBuffer_QueryInterface");
@@ -444,6 +445,11 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     void *CStd_CountRefs = GetProcAddress(hmod, "CStdStubBuffer_CountRefs");
     void *CStd_DebugServerQueryInterface = GetProcAddress(hmod, "CStdStubBuffer_DebugServerQueryInterface");
     void *CStd_DebugServerRelease = GetProcAddress(hmod, "CStdStubBuffer_DebugServerRelease");
+
+    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_Unknown, &PSFactoryBuffer);
+    ok(r == CLASS_E_CLASSNOTAVAILABLE, "NdrDllGetClassObject with unknown clsid should have returned CLASS_E_CLASSNOTAVAILABLE instead of 0x%x\n", r);
+    ok(ppsf == NULL, "NdrDllGetClassObject should have set ppsf to NULL on failure\n");
 
     r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
                          &PSDispatch, &PSFactoryBuffer);
@@ -518,6 +524,13 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
 #undef VTBL_TEST_ZERO
 
     ok(PSFactoryBuffer.RefCount == 1, "ref count %d\n", PSFactoryBuffer.RefCount);
+    IPSFactoryBuffer_Release(ppsf);
+
+    r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             NULL, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+
     return ppsf;
 }
 

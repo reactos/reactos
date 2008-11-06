@@ -299,8 +299,9 @@ cpp_quote("#endif")
   {
     short n;
     [size_is(n)] short data[];
-  } wire_bstr_t;
+  } user_bstr_t;
 
+  typedef [unique] user_bstr_t *wire_bstr_t;
   typedef [wire_marshal(wire_bstr_t)] short *bstr_t;
   unsigned hash_bstr(bstr_t s);
 

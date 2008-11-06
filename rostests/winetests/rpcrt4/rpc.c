@@ -385,7 +385,9 @@ static void test_towers(void)
     ok(ret == RPC_S_OK, "TowerConstruct failed with error %ld\n", ret);
     ret = TowerExplode(tower, NULL, NULL, NULL, NULL, &address);
     ok(ret == RPC_S_OK, "TowerExplode failed with error %ld\n", ret);
-    ok(!strcmp(address, "0.0.0.0"), "address was \"%s\" instead of \"0.0.0.0\"\n", address);
+    ok(!strcmp(address, "0.0.0.0") ||
+       broken(!strcmp(address, "255.255.255.255")),
+       "address was \"%s\" instead of \"0.0.0.0\"\n", address);
 
     I_RpcFree(address);
     I_RpcFree(tower);
@@ -666,6 +668,7 @@ static void test_I_RpcExceptionFilter(void)
             ok(retval == EXCEPTION_CONTINUE_SEARCH, "I_RpcExceptionFilter(0x%x) should have returned %d instead of %d\n",
                exception, EXCEPTION_CONTINUE_SEARCH, retval);
             break;
+        case STATUS_GUARD_PAGE_VIOLATION:
         case STATUS_IN_PAGE_ERROR:
         case STATUS_HANDLE_NOT_CLOSABLE:
             trace("I_RpcExceptionFilter(0x%x) returned %d\n", exception, retval);
@@ -759,6 +762,74 @@ static void test_RpcStringBindingFromBinding(void)
     ok(status == RPC_S_OK, "RpcBindingFree failed with error %lu\n", status);
 }
 
+static char *printGuid(char *buf, const UUID *guid)
+{
+    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+       guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1],
+       guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
+       guid->Data4[6], guid->Data4[7]);
+    return buf;
+}
+
+static void test_UuidCreate(void)
+{
+    UUID guid;
+    BYTE version;
+
+    UuidCreate(&guid);
+    version = (guid.Data3 & 0xf000) >> 12;
+    todo_wine
+    ok(version == 4 || broken(version == 1), "unexpected version %d\n",
+       version);
+    if (version == 4)
+    {
+        static UUID v4and = { 0, 0, 0x4000, { 0x80,0,0,0,0,0,0,0 } };
+        static UUID v4or = { 0xffffffff, 0xffff, 0x4fff,
+           { 0xbf,0xff,0xff,0xff,0xff,0xff,0xff,0xff } };
+        UUID and, or;
+        RPC_STATUS rslt;
+        int i;
+        char buf[39];
+
+        memcpy(&and, &guid, sizeof(guid));
+        memcpy(&or, &guid, sizeof(guid));
+        /* Generate a bunch of UUIDs and mask them.  By the end, we expect
+         * every randomly generated bit to have been zero at least once,
+         * resulting in no bits set in the and mask except those which are not
+         * randomly generated:  the version number and the topmost bits of the
+         * Data4 field (treated as big-endian.)  Similarly, we expect only
+         * the bits which are not randomly set to be cleared in the or mask.
+         */
+        for (i = 0; i < 1000; i++)
+        {
+            LPBYTE src, dst;
+
+            UuidCreate(&guid);
+            for (src = (LPBYTE)&guid, dst = (LPBYTE)&and;
+             src - (LPBYTE)&guid < sizeof(guid); src++, dst++)
+                *dst &= *src;
+            for (src = (LPBYTE)&guid, dst = (LPBYTE)&or;
+             src - (LPBYTE)&guid < sizeof(guid); src++, dst++)
+                *dst |= *src;
+        }
+        ok(UuidEqual(&and, &v4and, &rslt),
+           "unexpected bits set in V4 UUID: %s\n", printGuid(buf, &and));
+        ok(UuidEqual(&or, &v4or, &rslt),
+           "unexpected bits set in V4 UUID: %s\n", printGuid(buf, &or));
+    }
+    else
+    {
+        /* Older versions of Windows generate V1 UUIDs.  For these, there are
+         * many stable bits, including at least the MAC address if one is
+         * present.  Just check that Data4[0]'s most significant bits are
+         * set as expected.
+         */
+        todo_wine
+        ok((guid.Data4[0] & 0xc0) == 0x80,
+           "unexpected value in Data4[0]: %02x\n", guid.Data4[0] & 0xc0);
+    }
+}
+
 START_TEST( rpc )
 {
     static unsigned char ncacn_np[] = "ncacn_np";
@@ -777,4 +848,5 @@ START_TEST( rpc )
     test_endpoint_mapper(ncacn_np, np_address, np_endpoint);
     test_endpoint_mapper(ncalrpc, NULL, lrpc_endpoint);
     test_RpcStringBindingFromBinding();
+    test_UuidCreate();
 }

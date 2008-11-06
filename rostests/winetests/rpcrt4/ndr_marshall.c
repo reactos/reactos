@@ -1191,11 +1191,17 @@ static void test_client_init(void)
     TEST_ZERO(fHasExtensions, "%d");
     TEST_ZERO(fHasNewCorrDesc, "%d");
     TEST_ZERO(fIsIn, "%d");
-    TEST_ZERO(fIsOut, "%d");
+    ok(stubMsg.fIsOut == 0 ||
+       stubMsg.fIsOut == -1, /* XP-SP3 */
+       "fIsOut should have been set to 0 or -1 instead of %d\n", stubMsg.fIsOut);
     TEST_ZERO(fIsOicf, "%d");
     TEST_ZERO(fBufferValid, "%d");
-    TEST_ZERO(fHasMemoryValidateCallback, "%d");
-    TEST_ZERO(fInFree, "%d");
+    ok(stubMsg.fHasMemoryValidateCallback == 0 ||
+       stubMsg.fHasMemoryValidateCallback == -1, /* XP-SP3 */
+       "fHasMemoryValidateCallback should have been set to 0 or -1 instead of %d\n", stubMsg.fHasMemoryValidateCallback);
+    ok(stubMsg.fInFree == 0 ||
+       stubMsg.fInFree == -1, /* XP-SP3 */
+       "fInFree should have been set to 0 or -1 instead of %d\n", stubMsg.fInFree);
     TEST_ZERO(fNeedMCCP, "%d");
     ok(stubMsg.fUnused == 0 ||
        stubMsg.fUnused == -2, /* Vista */
@@ -1302,11 +1308,17 @@ todo_wine
     TEST_ZERO(fHasExtensions, "%d");
     TEST_ZERO(fHasNewCorrDesc, "%d");
     TEST_ZERO(fIsIn, "%d");
-    TEST_ZERO(fIsOut, "%d");
+    ok(stubMsg.fIsOut == 0 ||
+       stubMsg.fIsOut == -1, /* XP-SP3 */
+       "fIsOut should have been set to 0 or -1 instead of %d\n", stubMsg.fIsOut);
     TEST_ZERO(fIsOicf, "%d");
     trace("fBufferValid = %d\n", stubMsg.fBufferValid);
-    TEST_ZERO(fHasMemoryValidateCallback, "%d");
-    TEST_ZERO(fInFree, "%d");
+    ok(stubMsg.fHasMemoryValidateCallback == 0 ||
+       stubMsg.fHasMemoryValidateCallback == -1, /* XP-SP3 */
+       "fHasMemoryValidateCallback should have been set to 0 or -1 instead of %d\n", stubMsg.fHasMemoryValidateCallback);
+    ok(stubMsg.fInFree == 0 ||
+       stubMsg.fInFree == -1, /* XP-SP3 */
+       "fInFree should have been set to 0 or -1 instead of %d\n", stubMsg.fInFree);
     TEST_ZERO(fNeedMCCP, "%d");
     ok(stubMsg.fUnused == 0 ||
        stubMsg.fUnused == -2, /* Vista */
