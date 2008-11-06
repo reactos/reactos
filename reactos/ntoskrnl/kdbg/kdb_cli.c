@@ -1689,7 +1689,8 @@ KdbpCmdTss(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[])
 {
-   KeBugCheck(0xDEADDEAD);
+   /* Bugcheck the system */
+   KeBugCheck(MANUALLY_INITIATED_CRASH);
    return TRUE;
 }
 
