@@ -1490,9 +1490,9 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
-    PPATH pPath, pNewPath, *pStrokes, pUpPath, pDownPath;
+    PPATH pPath, pNewPath, *pStrokes, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
@@ -1560,6 +1560,7 @@ PATH_WidenPath(DC *dc)
         penWidthOut++;
 
     numStrokes = 0;
+    numOldStrokes = 1;
 
     pStrokes    = ExAllocatePoolWithTag(PagedPool, sizeof(PPATH), TAG_PATH);
     pStrokes[0] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
@@ -1588,8 +1589,11 @@ PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                ExFreePoolWithTag(pStrokes, TAG_PATH);
+                pOldStrokes = pStrokes; // Save old pointer.
                 pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
+                RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
+                numOldStrokes = numStrokes; // Save orig count.
+                ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
 
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
