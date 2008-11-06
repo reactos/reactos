@@ -1252,6 +1252,8 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
         RtlCreateUnicodeStringFromAsciiz(&SystemName,
                                          (LPSTR)lpSystemName);
     }
+	else
+		SystemName.Buffer = NULL;
 
     /* Check the privilege name is not NULL */
     if (lpName == NULL)
@@ -1263,14 +1265,14 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
     RtlCreateUnicodeStringFromAsciiz(&Name,
                                      (LPSTR)lpName);
 
-    Result = LookupPrivilegeValueW((lpSystemName != NULL) ? SystemName.Buffer : NULL,
+    Result = LookupPrivilegeValueW(SystemName.Buffer,
                                    Name.Buffer,
                                    lpLuid);
 
     RtlFreeUnicodeString(&Name);
 
     /* Remote system? */
-    if (lpSystemName != NULL)
+    if (SystemName.Buffer != NULL)
     {
         RtlFreeUnicodeString(&SystemName);
     }
