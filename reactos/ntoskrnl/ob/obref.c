@@ -299,11 +299,7 @@ ObfDereferenceObject(IN PVOID Object)
     if (!OldCount)
     {
         /* Sanity check */
-        if (Header->HandleCount)
-        {
-            DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
-            return Header->PointerCount;
-        }
+        ASSERT(Header->HandleCount == 0);
 
         /* Check if APCs are still active */
         if (!KeAreAllApcsDisabled())
