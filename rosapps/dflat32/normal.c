@@ -4,7 +4,7 @@
 
 #ifdef INCLUDE_MULTI_WINDOWS
 static void PaintOverLappers(DFWINDOW wnd);
-static void PaintUnderLappers(DFWINDOW wnd);
+//static void PaintUnderLappers(DFWINDOW wnd);
 #endif
 
 static BOOL InsideWindow(DFWINDOW, int, int);
@@ -915,6 +915,8 @@ static void PaintOverLappers(DFWINDOW wnd)
     HiddenWindow = wnd;
     PaintOverParents(wnd);
 }
+
+#if 0
 /* --- paint those parts of a window that are overlapped --- */
 static void PaintUnderLappers(DFWINDOW wnd)
 {
@@ -960,6 +962,7 @@ static void PaintUnderLappers(DFWINDOW wnd)
         hwnd = DfNextWindow(hwnd);
     }
 }
+#endif
 #endif /* #ifdef INCLUDE_MULTI_WINDOWS */
 
 /* --- save video area to be used by dummy window border --- */
