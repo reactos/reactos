@@ -70,6 +70,12 @@ extern "C" {
 #endif
 #endif
 
+#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
+#define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
+#else
+#define __WINE_ALLOC_SIZE(x)
+#endif
+
 #ifndef FORCEINLINE
 #if (_MSC_VER >= 1200)
 #define FORCEINLINE __forceinline

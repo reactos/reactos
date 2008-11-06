@@ -1,7 +1,7 @@
 /*
  * COM proxy implementation
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,10 +57,6 @@ typedef struct {
 static const IRpcProxyBufferVtbl StdProxy_Vtbl;
 
 #define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
-
-/* How the Windows stubless proxy thunks work is explained at
- * http://msdn.microsoft.com/library/en-us/dnmsj99/html/com0199.asp,
- * but I'll use a slightly different method, to make life easier */
 
 #if defined(__i386__)
 
@@ -389,6 +385,8 @@ void WINAPI NdrProxySendReceive(void *This,
   }
 
   pStubMsg->dwStubPhase = PROXY_SENDRECEIVE;
+  /* avoid sending uninitialised parts of the buffer on the wire */
+  pStubMsg->RpcMsg->BufferLength = pStubMsg->Buffer - (unsigned char *)pStubMsg->RpcMsg->Buffer;
   hr = IRpcChannelBuffer_SendReceive(pStubMsg->pRpcChannelBuffer,
                                     (RPCOLEMESSAGE*)pStubMsg->RpcMsg,
                                     &Status);

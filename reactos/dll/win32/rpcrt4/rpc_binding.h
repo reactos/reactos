@@ -1,7 +1,7 @@
 /*
  * RPC binding API
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #ifndef __WINE_RPC_BINDING_H
 #define __WINE_RPC_BINDING_H
 
-#include "wine/rpcss_shared.h"
 #include "rpcndr.h"
 #include "security.h"
 #include "wine/list.h"
@@ -150,9 +149,6 @@ RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding);
 RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
                               const RPC_SYNTAX_IDENTIFIER *TransferSyntax, const RPC_SYNTAX_IDENTIFIER *InterfaceId);
 RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection);
-BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPCSS_NP_REPLY reply);
-HANDLE RPCRT4_GetMasterMutex(void);
-HANDLE RPCRT4_RpcssNPConnect(void);
 
 static inline const char *rpcrt4_conn_get_name(const RpcConnection *Connection)
 {

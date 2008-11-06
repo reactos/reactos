@@ -1,7 +1,7 @@
 /*
  * COM proxy/stub factory (CStdPSFactory) implementation
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,7 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
     if(max_delegating_vtbl_size > 0)
       create_delegating_vtbl(max_delegating_vtbl_size);
   }
-  if (IsEqualGUID(rclsid, pclsid))
+  if (pclsid && IsEqualGUID(rclsid, pclsid))
     return IPSFactoryBuffer_QueryInterface((LPPSFACTORYBUFFER)pPSFactoryBuffer, iid, ppv);
   else {
     const ProxyFileInfo *info;

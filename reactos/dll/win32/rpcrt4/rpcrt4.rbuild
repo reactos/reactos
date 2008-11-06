@@ -9,6 +9,7 @@
 	<define name="MSWMSG" />
 	<library>wine</library>
 	<library>uuid</library>
+	<library>rpcrt4_epm_client</library>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
@@ -33,9 +34,16 @@
 	<file>rpc_server.c</file>
 	<file>rpc_transport.c</file>
 	<file>rpcrt4_main.c</file>
-	<file>rpcss_np_client.c</file>
 	<file>unix_func.c</file>
 	<file>ndr_es.c</file>
 	<file>rpcrt4.rc</file>
+	<file>epm.idl</file>
+	<include base="rpcrt4" root="intermediate">.</include>
 	<file>rpcrt4.spec</file>
+</module>
+<module name="rpcrt4_epm_server" type="rpcserver">
+	<file>epm.idl</file>
+</module>
+<module name="rpcrt4_epm_client" type="rpcclient">
+	<file>epm.idl</file>
 </module>

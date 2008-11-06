@@ -99,7 +99,7 @@
 @ stub MesBufferHandleReset
 @ stdcall MesDecodeBufferHandleCreate(ptr long ptr)
 @ stdcall MesDecodeIncrementalHandleCreate(ptr ptr ptr)
-@ stub MesEncodeDynBufferHandleCreate
+@ stdcall MesEncodeDynBufferHandleCreate(ptr ptr ptr)
 @ stdcall MesEncodeFixedBufferHandleCreate(ptr long ptr ptr)
 @ stdcall MesEncodeIncrementalHandleCreate(ptr ptr ptr ptr)
 @ stdcall MesHandleFree(ptr)
@@ -363,7 +363,7 @@
 @ stdcall RpcBindingVectorFree(ptr)
 @ stdcall RpcCancelAsyncCall(ptr long) RpcAsyncCancelCall
 @ stdcall RpcCancelThread(ptr)
-@ stub RpcCancelThreadEx
+@ stdcall RpcCancelThreadEx(ptr long)
 @ stub RpcCertGeneratePrincipalNameA
 @ stub RpcCertGeneratePrincipalNameW
 @ stdcall RpcCompleteAsyncCall(ptr ptr) RpcAsyncCompleteCall
@@ -399,13 +399,13 @@
 @ stdcall RpcMgmtInqIfIds(ptr ptr)
 @ stub RpcMgmtInqServerPrincNameA
 @ stub RpcMgmtInqServerPrincNameW
-@ stub RpcMgmtInqStats
+@ stdcall RpcMgmtInqStats(ptr ptr)
 @ stdcall RpcMgmtIsServerListening(ptr)
 @ stub RpcMgmtSetAuthorizationFn
 @ stdcall RpcMgmtSetCancelTimeout(long)
 @ stdcall RpcMgmtSetComTimeout(ptr long)
 @ stdcall RpcMgmtSetServerStackSize(long)
-@ stub RpcMgmtStatsVectorFree
+@ stdcall RpcMgmtStatsVectorFree(ptr)
 @ stdcall RpcMgmtStopServerListening(ptr)
 @ stdcall RpcMgmtWaitServerListen()
 @ stub RpcNetworkInqProtseqsA
