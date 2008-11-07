@@ -286,7 +286,7 @@ IopCompleteRequest(IN PKAPC Apc,
         if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
         {
             /* Deallocate it */
-            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
         }
     }
 
@@ -976,7 +976,7 @@ IoCancelIrp(IN PIRP Irp)
     Irp->Cancel = TRUE;
 
     /* Clear the cancel routine and get the old one */
-    CancelRoutine = IoSetCancelRoutine(Irp, NULL);
+    CancelRoutine = (PVOID)IoSetCancelRoutine(Irp, NULL);
     if (CancelRoutine)
     {
         /* We had a routine, make sure the IRP isn't completed */
