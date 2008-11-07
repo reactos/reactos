@@ -4,7 +4,7 @@
  * Copyright 1999 Francis Beaudet
  * Copyright 1999 Sylvain St-Germain
  * Copyright 2002 Marcus Meissner
- * Copyright 2003 Ove Kåven, TransGaming Technologies
+ * Copyright 2003 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2004 Mike Hearn, Rob Shearman, CodeWeavers Inc
  *
  * This library is free software; you can redistribute it and/or

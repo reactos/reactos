@@ -2010,8 +2010,10 @@ HRESULT CALLBACK IEnumUnknown_Next_Proxy(
     IUnknown **rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumUnknown_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumUnknown_Next_Stub(
@@ -2020,8 +2022,12 @@ HRESULT __RPC_STUB IEnumUnknown_Next_Stub(
     IUnknown **rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumUnknown_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 HRESULT CALLBACK IBindCtx_SetBindOptions_Proxy(
@@ -2062,8 +2068,10 @@ HRESULT CALLBACK IEnumMoniker_Next_Proxy(
     IMoniker **rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumMoniker_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumMoniker_Next_Stub(
@@ -2072,8 +2080,12 @@ HRESULT __RPC_STUB IEnumMoniker_Next_Stub(
     IMoniker **rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumMoniker_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 BOOL CALLBACK IRunnableObject_IsRunning_Proxy(
@@ -2142,8 +2154,10 @@ HRESULT CALLBACK IEnumString_Next_Proxy(
     LPOLESTR *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumString_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumString_Next_Stub(
@@ -2152,8 +2166,12 @@ HRESULT __RPC_STUB IEnumString_Next_Stub(
     LPOLESTR *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumString_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 HRESULT CALLBACK ISequentialStream_Read_Proxy(
@@ -2244,8 +2262,10 @@ HRESULT CALLBACK IEnumSTATSTG_Next_Proxy(
     STATSTG *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumSTATSTG_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumSTATSTG_Next_Stub(
@@ -2254,8 +2274,12 @@ HRESULT __RPC_STUB IEnumSTATSTG_Next_Stub(
     STATSTG *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumSTATSTG_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 HRESULT CALLBACK IStorage_OpenStream_Proxy(
@@ -2398,8 +2422,9 @@ HRESULT CALLBACK IEnumFORMATETC_Next_Proxy(
     FORMATETC *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumFORMATETC_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumFORMATETC_Next_Stub(
@@ -2408,8 +2433,11 @@ HRESULT __RPC_STUB IEnumFORMATETC_Next_Stub(
     FORMATETC *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    *pceltFetched = 0;
+    hr = IEnumFORMATETC_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 HRESULT CALLBACK IEnumSTATDATA_Next_Proxy(
@@ -2418,8 +2446,10 @@ HRESULT CALLBACK IEnumSTATDATA_Next_Proxy(
     STATDATA *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumSTATDATA_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumSTATDATA_Next_Stub(
@@ -2428,8 +2458,12 @@ HRESULT __RPC_STUB IEnumSTATDATA_Next_Stub(
     STATDATA *rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumSTATDATA_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 void CALLBACK IAdviseSink_OnDataChange_Proxy(
@@ -2642,8 +2676,10 @@ HRESULT CALLBACK IEnumOLEVERB_Next_Proxy(
     LPOLEVERB rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    ULONG fetched;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    if (!pceltFetched) pceltFetched = &fetched;
+    return IEnumOLEVERB_RemoteNext_Proxy(This, celt, rgelt, pceltFetched);
 }
 
 HRESULT __RPC_STUB IEnumOLEVERB_Next_Stub(
@@ -2652,8 +2688,12 @@ HRESULT __RPC_STUB IEnumOLEVERB_Next_Stub(
     LPOLEVERB rgelt,
     ULONG *pceltFetched)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p)->(%d, %p, %p)\n", This, celt, rgelt, pceltFetched);
+    *pceltFetched = 0;
+    hr = IEnumOLEVERB_Next(This, celt, rgelt, pceltFetched);
+    if (hr == S_OK) *pceltFetched = celt;
+    return hr;
 }
 
 HRESULT CALLBACK IViewObject_Draw_Proxy(

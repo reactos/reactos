@@ -2,7 +2,7 @@
  *	OLE32 proxy/stub handler
  *
  *  Copyright 2002  Marcus Meissner
- *  Copyright 2001  Ove Kåven, TransGaming Technologies
+ *  Copyright 2001  Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,7 @@
 
 #include "compobj_private.h"
 #include "moniker.h"
+#include "comcat.h"
 
 #include "wine/debug.h"
 
@@ -88,6 +89,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
         return ClassMonikerCF_Create(iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_PointerMoniker))
         return PointerMonikerCF_Create(iid, ppv);
+    if (IsEqualGUID(rclsid, &CLSID_StdComponentCategoriesMgr))
+        return ComCatCF_Create(iid, ppv);
 
     return NdrDllGetClassObject(rclsid, iid, ppv, OLE32_ProxyFileList,
                                 &CLSID_PSFactoryBuffer, &PSFactoryBuffer);
