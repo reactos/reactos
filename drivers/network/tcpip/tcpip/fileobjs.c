@@ -220,7 +220,7 @@ VOID DeleteConnectionEndpoint(
   RemoveEntryList(&Connection->ListEntry);
   TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
 
-  ExFreePool(Connection);
+  TCPFreeConnectionEndpoint(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -488,20 +488,18 @@ NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request)
 {
   PCONNECTION_ENDPOINT Connection;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   Connection = Request->Handle.ConnectionContext;
 
   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  TCPClose(Connection);
   DeleteConnectionEndpoint(Connection);
   TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
