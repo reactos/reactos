@@ -28,13 +28,20 @@ VOID NBCompleteSend( PVOID Context,
 VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
+    UINT HashValue;
 
     if(!(NCE->State & NUD_CONNECTED))
        return;
 
+    HashValue  = *(PULONG)(&NCE->Address.Address);
+    HashValue ^= HashValue >> 16;
+    HashValue ^= HashValue >> 8;
+    HashValue ^= HashValue >> 4;
+    HashValue &= NB_HASHMASK;
+
     /* Send any waiting packets */
     PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-                                              &NCE->Table->Lock);
+                                              &NeighborCache[HashValue].Lock);
     if( PacketEntry != NULL ) {
 	Packet = CONTAINING_RECORD( PacketEntry, NEIGHBOR_PACKET, Next );
 
@@ -333,15 +340,22 @@ VOID NBUpdateNeighbor(
  */
 {
     KIRQL OldIrql;
+    UINT HashValue;
 
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X)  LinkAddress (0x%X)  State (0x%X).\n", NCE, LinkAddress, State));
 
-    TcpipAcquireSpinLock(&NCE->Table->Lock, &OldIrql);
+    HashValue  = *(PULONG)(&NCE->Address.Address);
+    HashValue ^= HashValue >> 16;
+    HashValue ^= HashValue >> 8;
+    HashValue ^= HashValue >> 4;
+    HashValue &= NB_HASHMASK;
+
+    TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
     RtlCopyMemory(NCE->LinkAddress, LinkAddress, NCE->LinkAddressLength);
     NCE->State = State;
 
-    TcpipReleaseSpinLock(&NCE->Table->Lock, OldIrql);
+    TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
     if( NCE->State & NUD_CONNECTED )
 	NBSendPackets( NCE );
@@ -444,9 +458,9 @@ BOOLEAN NBQueuePacket(
  *   TRUE if the packet was successfully queued, FALSE if not
  */
 {
-  PKSPIN_LOCK Lock;
   KIRQL OldIrql;
   PNEIGHBOR_PACKET Packet;
+  UINT HashValue;
 
   TI_DbgPrint
       (DEBUG_NCACHE,
@@ -457,16 +471,20 @@ BOOLEAN NBQueuePacket(
 
   /* FIXME: Should we limit the number of queued packets? */
 
-  Lock = &NCE->Table->Lock;
+  HashValue  = *(PULONG)(&NCE->Address.Address);
+  HashValue ^= HashValue >> 16;
+  HashValue ^= HashValue >> 8;
+  HashValue ^= HashValue >> 4;
+  HashValue &= NB_HASHMASK;
 
-  TcpipAcquireSpinLock(Lock, &OldIrql);
+  TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
   Packet->Complete = PacketComplete;
   Packet->Context = PacketContext;
   Packet->Packet = NdisPacket;
   InsertTailList( &NCE->PacketQueue, &Packet->Next );
 
-  TcpipReleaseSpinLock(Lock, OldIrql);
+  TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
   if( NCE->State & NUD_CONNECTED )
       NBSendPackets( NCE );

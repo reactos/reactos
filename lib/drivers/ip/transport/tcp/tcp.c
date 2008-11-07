@@ -36,7 +36,6 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     /* Things that can happen when we try the initial connection */
     if( NewState & SEL_CONNECT ) {
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
-            Connection->State |= NewState;
             Entry = RemoveHeadList( &Connection->ConnectRequest );
             TI_DbgPrint(DEBUG_TCP, ("Connect Event\n"));
 
@@ -838,7 +837,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 
     TcpipAcquireSpinLock( &Endpoint->Lock, &OldIrql );
 
-    for( i = 0; i < sizeof( ListHead ) / sizeof( ListHead[0] ); i++ ) {
+    for( i = 0; i < 4; i++ ) {
 	for( Entry = ListHead[i]->Flink;
 	     Entry != ListHead[i];
 	     Entry = Entry->Flink ) {
