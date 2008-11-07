@@ -124,5 +124,5 @@ int wmain(int argc, LPWSTR argv [])
         {NULL,        NULL }
     };
 
-    return (int)(StartServiceCtrlDispatcherW(ServiceTable) != 0);
+    return (int)(StartServiceCtrlDispatcherW(ServiceTable) != TRUE);
 }
