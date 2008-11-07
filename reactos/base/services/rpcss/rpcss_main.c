@@ -62,7 +62,7 @@ static HANDLE exit_event;
 
 //extern HANDLE __wine_make_process_system(void);
 
-static BOOL RPCSS_Initialize(void)
+BOOL RPCSS_Initialize(void)
 {
   static unsigned short irot_protseq[] = IROT_PROTSEQ;
   static unsigned short irot_endpoint[] = IROT_ENDPOINT;
@@ -116,7 +116,7 @@ fail:
 
 /* returns false if we discover at the last moment that we
    aren't ready to terminate */
-static BOOL RPCSS_Shutdown(void)
+BOOL RPCSS_Shutdown(void)
 {
   RpcMgmtStopServerListening(NULL);
   RpcServerUnregisterIf(epm_v3_0_s_ifspec, NULL, TRUE);
@@ -127,6 +127,7 @@ static BOOL RPCSS_Shutdown(void)
   return TRUE;
 }
 
+#if 0
 int main( int argc, char **argv )
 {
   /* 
@@ -142,3 +143,4 @@ int main( int argc, char **argv )
 
   return 0;
 }
+#endif
