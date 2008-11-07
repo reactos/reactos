@@ -387,8 +387,10 @@ NTSTATUS FileCloseAddress(
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener )
-	TCPClose( AddrFile->Listener );
+    if( AddrFile->Listener ) {
+	    TCPClose( AddrFile->Listener );
+	    ExFreePool( AddrFile->Listener );
+    }
     break;
 
   case IPPROTO_UDP:
