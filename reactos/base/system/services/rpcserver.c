@@ -1041,8 +1041,7 @@ DWORD RSetServiceStatus(
     }
 
     /* Check accepted controls */
-    if (lpServiceStatus->dwControlsAccepted == 0 ||
-        lpServiceStatus->dwControlsAccepted & ~0xFF)
+    if (lpServiceStatus->dwControlsAccepted & ~0xFF)
     {
         DPRINT1("Invalid controls accepted!\n");
         return ERROR_INVALID_DATA;
