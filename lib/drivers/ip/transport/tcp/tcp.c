@@ -283,8 +283,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
 }
 
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
-    TI_DbgPrint(MAX_TRACE,("FIXME: Cancel all pending requests\n"));
-    /* XXX Cancel all pending requests */
+    TCPClose( Connection );
     ExFreePool( Connection );
 }
 
