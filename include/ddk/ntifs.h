@@ -2959,6 +2959,25 @@ FsRtlInsertPerStreamContext (
     IN PFSRTL_PER_STREAM_CONTEXT   Ptr
 );
 
+#define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterWild(C) (                                       \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -3004,10 +3023,6 @@ extern PUSHORT NlsOemLeadByteInfo;
     (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
               (NLS_MB_CODE_PAGE_TAG &&                                      \
                (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
-)
-
-#define FsRtlIsAnsiCharacterWild(C) (                                       \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
 )
 
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
