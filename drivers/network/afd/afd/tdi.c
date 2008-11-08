@@ -74,7 +74,7 @@ static NTSTATUS TdiCall(
         KeWaitForSingleObject(
           Event,
           Executive,
-          UserMode,
+          KernelMode,
           FALSE,
           NULL);
         Status = Iosb->Status;
