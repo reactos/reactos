@@ -285,12 +285,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         if (FirstPart.Length < 3 || FirstPart.Length > 12)
             return FALSE;
 
-        if (!WildCardsPermissible && FsRtlDoesDbcsContainWildCards(&FirstPart))
-            return FALSE;
-
-        /* Now, we will parse the filename to find everything bad in
-         * It mustn't contain:
-         *   0x00-0x1F, 0x22, 0x2B, 0x2C, 0x2F, 0x3A, 0x3B, 0x3D, 0x5B, 0x5D, 0x7C */
+        /* Now, we will parse the filename to find everything bad in */
         for (i = 0; i < FirstPart.Length; i++)
         {
             /* First make sure the character it's not the Lead DBCS */
@@ -300,12 +295,8 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
                     return FALSE;
                 i++;
             }
-            else if ((FirstPart.Buffer[i] < 0x1F) || (FirstPart.Buffer[i] == 0x22) ||
-                     (FirstPart.Buffer[i] == 0x2B) || (FirstPart.Buffer[i] == 0x2C) ||
-                     (FirstPart.Buffer[i] == 0x2F) || (FirstPart.Buffer[i] == 0x3A) ||
-                     (FirstPart.Buffer[i] == 0x3B) || (FirstPart.Buffer[i] == 0x3D) ||
-                     (FirstPart.Buffer[i] == 0x5B) || (FirstPart.Buffer[i] == 0x5D) ||
-                     (FirstPart.Buffer[i] == 0x7C))
+            /* Then check for bad characters */
+            else if (!FsRtlIsAnsiCharacterLegalFat(FirstPart.Buffer[i], WildCardsPermissible))
             {
                 return FALSE;
             }
@@ -427,12 +418,7 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
         if (FirstPart.Length > 255)
             return FALSE;
 
-        if (!WildCardsPermissible && FsRtlDoesDbcsContainWildCards(&FirstPart))
-            return FALSE;
-
-        /* Now, we will parse the filename to find everything bad in
-         * It mustn't contain:
-         *   0x00-0x1F, 0x22, 0x2A, 0x2F, 0x3A, 0x3C, 0x3E, 0x3F, 0x7C */
+        /* Now, we will parse the filename to find everything bad in */
         for (i = 0; i < FirstPart.Length; i++)
         {
             /* First make sure the character it's not the Lead DBCS */
@@ -442,11 +428,8 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                     return FALSE;
                 i++;
             }
-            else if ((FirstPart.Buffer[i] < 0x1F) || (FirstPart.Buffer[i] == 0x22) ||
-                     (FirstPart.Buffer[i] == 0x2A) || (FirstPart.Buffer[i] == 0x2F) ||
-                     (FirstPart.Buffer[i] == 0x3A) || (FirstPart.Buffer[i] == 0x3C) ||
-                     (FirstPart.Buffer[i] == 0x3E) || (FirstPart.Buffer[i] == 0x3F) ||
-                     (FirstPart.Buffer[i] == 0x7C))
+            /* Then check for bad characters */
+            else if (!!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
             {
                 return FALSE;
             }
