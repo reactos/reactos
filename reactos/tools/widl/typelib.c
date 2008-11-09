@@ -240,7 +240,7 @@ unsigned short get_type_vt(type_t *t)
   return 0;
 }
 
-void start_typelib(char *name, attr_list_t *attrs)
+void start_typelib(char *name, const attr_list_t *attrs)
 {
     in_typelib++;
     if (!do_typelib) return;

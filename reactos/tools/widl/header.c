@@ -737,10 +737,12 @@ static void write_cpp_method_def(const type_t *iface)
   {
     var_t *def = cur->def;
     if (!is_callas(def->attrs)) {
+      const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
+      if (!callconv) callconv = "";
       indent(header, 0);
       fprintf(header, "virtual ");
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " STDMETHODCALLTYPE ");
+      fprintf(header, " %s ", callconv);
       write_name(header, def);
       fprintf(header, "(\n");
       write_args(header, cur->args, iface->name, 2, TRUE);
@@ -763,9 +765,11 @@ static void do_write_c_method_def(const type_t *iface, const char *name)
   {
     const var_t *def = cur->def;
     if (!is_callas(def->attrs)) {
+      const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
+      if (!callconv) callconv = "";
       indent(header, 0);
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " (STDMETHODCALLTYPE *");
+      fprintf(header, " (%s *", callconv);
       write_name(header, def);
       fprintf(header, ")(\n");
       write_args(header, cur->args, name, 1, TRUE);
@@ -795,9 +799,11 @@ static void write_method_proto(const type_t *iface)
     const var_t *def = cur->def;
 
     if (!is_local(def->attrs)) {
+      const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
+      if (!callconv) callconv = "";
       /* proxy prototype */
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " CALLBACK %s_", iface->name);
+      fprintf(header, " %s %s_", callconv, iface->name);
       write_name(header, def);
       fprintf(header, "_Proxy(\n");
       write_args(header, cur->args, iface->name, 1, TRUE);
@@ -881,10 +887,12 @@ void write_locals(FILE *fp, const type_t *iface, int body)
 static void write_function_proto(const type_t *iface, const func_t *fun, const char *prefix)
 {
   var_t *def = fun->def;
+  const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
 
   /* FIXME: do we need to handle call_as? */
   write_type_decl_left(header, get_func_return_type(fun));
   fprintf(header, " ");
+  if (callconv) fprintf(header, "%s ", callconv);
   write_prefix_name(header, prefix, def);
   fprintf(header, "(\n");
   if (fun->args)

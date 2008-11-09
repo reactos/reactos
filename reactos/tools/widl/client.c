@@ -102,6 +102,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         const var_t* explicit_generic_handle_var = NULL;
         const var_t* context_handle_var = NULL;
         int has_full_pointer = is_full_pointer_function(func);
+        const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
 
         /* check for a defined binding handle */
         explicit_handle_var = get_explicit_handle_var(func);
@@ -131,6 +132,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         write_type_decl_left(client, get_func_return_type(func));
         if (needs_space_after(get_func_return_type(func)))
           fprintf(client, " ");
+        if (callconv) fprintf(client, "%s ", callconv);
         write_prefix_name(client, prefix_client, def);
         fprintf(client, "(\n");
         indent++;
@@ -183,6 +185,16 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         print_client("%d);\n", method_count);
         indent--;
         fprintf(client, "\n");
+
+        if (is_attr(def->attrs, ATTR_IDEMPOTENT) || is_attr(def->attrs, ATTR_BROADCAST))
+        {
+            print_client("_RpcMessage.RpcFlags = ( RPC_NCA_FLAGS_DEFAULT ");
+            if (is_attr(def->attrs, ATTR_IDEMPOTENT))
+                fprintf(client, "| RPC_NCA_FLAGS_IDEMPOTENT ");
+            if (is_attr(def->attrs, ATTR_BROADCAST))
+                fprintf(client, "| RPC_NCA_FLAGS_BROADCAST ");
+            fprintf(client, ");\n\n");
+        }
 
         if (implicit_handle)
         {
