@@ -1606,8 +1606,8 @@ IoFlushAdapterBuffers(
          {
             if (SlaveDma && !AdapterObject->IgnoreCount)
                Length -= HalReadDmaCounter(AdapterObject);
+         }
          HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
-      }
       }
       else
       {
