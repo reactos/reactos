@@ -196,6 +196,7 @@ NDIS_STATUS LoopRegisterAdapter(
 
   AddrInitIPv4(&Loopback->Unicast, LOOPBACK_ADDRESS_IPv4);
   AddrInitIPv4(&Loopback->Netmask, LOOPBACK_ADDRMASK_IPv4);
+  AddrInitIPv4(&Loopback->Broadcast, LOOPBACK_BCASTADDR_IPv4);
 
   IPRegisterInterface(Loopback);
 

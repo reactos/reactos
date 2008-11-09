@@ -25,7 +25,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 		       NULL );
     if( Irp->MdlAddress ) {
 	_SEH_TRY {
-	    MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
 	} _SEH_HANDLE {
 	    LockFailed = TRUE;
 	} _SEH_END;

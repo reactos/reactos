@@ -74,7 +74,7 @@ static NTSTATUS TdiCall(
         KeWaitForSingleObject(
           Event,
           Executive,
-          UserMode,
+          KernelMode,
           FALSE,
           NULL);
         Status = Iosb->Status;
@@ -853,7 +853,7 @@ NTSTATUS TdiSend
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* use IRP */
+                        *Irp);          /* Use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
@@ -862,7 +862,7 @@ NTSTATUS TdiSend
     }
 
     _SEH_TRY {
-        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
@@ -934,7 +934,7 @@ NTSTATUS TdiReceive(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Don't use IRP */
+                        *Irp);          /* Use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
@@ -944,7 +944,7 @@ NTSTATUS TdiReceive(
 
     _SEH_TRY {
         AFD_DbgPrint(MIN_TRACE, ("probe and lock\n"));
-        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
         AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
@@ -1034,7 +1034,7 @@ NTSTATUS TdiReceiveDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Don't use IRP */
+                        *Irp);          /* Use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoFreeIrp(*Irp);
@@ -1043,7 +1043,7 @@ NTSTATUS TdiReceiveDatagram(
     }
 
     _SEH_TRY {
-        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
@@ -1132,7 +1132,7 @@ NTSTATUS TdiSendDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Don't use IRP */
+                        *Irp);          /* Use IRP */
 
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -1142,7 +1142,7 @@ NTSTATUS TdiSendDatagram(
     }
 
     _SEH_TRY {
-        MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+        MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
     } _SEH_HANDLE {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
