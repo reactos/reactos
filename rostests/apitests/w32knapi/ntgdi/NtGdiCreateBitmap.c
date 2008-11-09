@@ -5,41 +5,84 @@ Test_NtGdiCreateBitmap_Params(PTESTINFO pti)
 	BITMAP bitmap;
 	BYTE BitmapData[10] = {0x11, 0x22, 0x33};
 
-	/* Test simple params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(1, 1, 1, 1, NULL)) != NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
-	DeleteObject(hBmp);
-
-	/* Test all zero */
-	SetLastError(ERROR_SUCCESS);
+    SetLastError(ERROR_SUCCESS);
 	TEST(NtGdiCreateBitmap(0, 0, 0, 0, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test cx == 0 */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(0, 1, 1, 1, NULL) == NULL);
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(0, 0, 0, 1, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test negative cx */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(-10, 1, 1, 1, NULL) == NULL);
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(0, 0, 1, 0, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test cy == 0 */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(1, 0, 1, 1, NULL) == NULL);
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(0, 1, 0, 0, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test negative cy */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(1, -2, 1, 1, NULL) == NULL);
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 0, 0, 0, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test negative cy */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(1, -2, 1, 1, BitmapData) == NULL);
-	TEST(GetLastError() == ERROR_SUCCESS);
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 0, 0, 1, NULL) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 0, 1, 0, NULL) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 1, 0, 0, NULL) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 1, 0, 1, NULL) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, 1, 1, 0, NULL) == NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST( (hBmp =NtGdiCreateBitmap(1, 1, 1, 1, NULL)) != NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);	
+
+    RtlZeroMemory(&bitmap,sizeof(BITMAP));
+    TEST(GetObject(hBmp, sizeof(BITMAP), &bitmap) == sizeof(BITMAP));
+	TEST(bitmap.bmType == 0);
+	TEST(bitmap.bmWidth == 1);
+	TEST(bitmap.bmHeight == 1);
+	TEST(bitmap.bmWidthBytes == 2);
+	TEST(bitmap.bmPlanes == 1);
+	TEST(bitmap.bmBitsPixel == 1);
+	DeleteObject(hBmp);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST( (hBmp =NtGdiCreateBitmap(1, 1, 1, -1, NULL)) != NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);	
+	DeleteObject(hBmp);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST( (hBmp =NtGdiCreateBitmap(1, 1, -1, 1, NULL)) != NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);	
+	DeleteObject(hBmp);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST( (hBmp =NtGdiCreateBitmap(1, -1, 1, 1, NULL)) != NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);	
+	DeleteObject(hBmp);
+
+    SetLastError(ERROR_SUCCESS);
+	TEST( (hBmp =NtGdiCreateBitmap(-1, 1, 1, 1, NULL)) != NULL);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);	
+	DeleteObject(hBmp);
+
+	
+	
+	
+
 
 	/* Test huge size */
 	SetLastError(ERROR_SUCCESS);
@@ -81,10 +124,6 @@ Test_NtGdiCreateBitmap_Params(PTESTINFO pti)
 	TEST(bitmap.bmBitsPixel == 1);
 	DeleteObject(hBmp);
 
-	/* Test negative cBPP */
-	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCreateBitmap(1, 1, 1, -1, NULL) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	/* Test bad cBPP */
 	SetLastError(ERROR_SUCCESS);
@@ -148,31 +187,14 @@ Test_NtGdiCreateBitmap_Params(PTESTINFO pti)
 	DeleteObject(hBmp);
 
 
-	/* Test height 0 params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(1, 0, 1, 1, NULL)) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
-
-	/* Test height -1 params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(1, -1, 1, 1, NULL)) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
-
-	/* Test witdth 0 params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(0, 1, 1, 1, NULL)) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
-
-	/* Test witdth -1 params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(-1, 0, 1, 1, NULL)) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 
-    /* Test witdth -1 params */
-	SetLastError(ERROR_SUCCESS);
-	TEST((hBmp = NtGdiCreateBitmap(0, 0, 1, 1, NULL)) == NULL);
-	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
+
+
+
+
+
 
 
 	return APISTATUS_NORMAL;
