@@ -101,6 +101,7 @@ BOOLEAN ChewCreate
 
 VOID ChewRemove( PVOID Item ) {
     PWORK_ITEM WorkItem = Item;
+    RemoveEntryList( &WorkItem->Entry );
     IoFreeWorkItem( WorkItem->WorkItem );
     ExFreePool( WorkItem );
 }
