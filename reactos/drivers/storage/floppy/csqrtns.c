@@ -175,5 +175,6 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
   TRACE_(FLOPPY, "CSQ: Inserting IRP 0x%p\n", Irp);
   InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
   KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
+  IoMarkIrpPending(Irp);
 }
 
