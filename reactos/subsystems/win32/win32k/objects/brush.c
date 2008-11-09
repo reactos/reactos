@@ -62,12 +62,12 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
    if (Count == 0) return 0;
 
    /* Set colour */
-    Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
+    Buffer->lbColor = BrushObject->BrushAttr.lbColor;
 
     /* set Hatch */
     if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
     {
-        /* FIXME : is this right value */
+        /* FIXME : this is not the right value */
         Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
     }
     else
@@ -153,7 +153,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crForegroundClr, Dc_Attr->crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(hPalette, BrushObj->BrushAttr.lbColor, Dc_Attr->crBackgroundClr);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
