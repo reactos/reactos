@@ -147,7 +147,7 @@ FindRopInfo(unsigned RopCode)
       { ROPCODE_SRCINVERT,   "SRCINVERT",  "D ^ S",        1, 1, 0 },
       { ROPCODE_SRCAND,      "SRCAND",     "D & S",        1, 1, 0 },
       { ROPCODE_NOOP,        "NOOP",       "D",            1, 0, 0 },
-      { ROPCODE_MERGEPAINT,  "MERGEPAINT", "D & (~S)",     1, 1, 0 },
+      { ROPCODE_MERGEPAINT,  "MERGEPAINT", "D | (~S)",     1, 1, 0 },
       { ROPCODE_MERGECOPY,   "MERGECOPY",  "S & P",        0, 1, 1 },
       { ROPCODE_SRCCOPY,     "SRCCOPY",    "S",            0, 1, 0 },
       { ROPCODE_SRCPAINT,    "SRCPAINT",   "D | S",        1, 1, 0 },
