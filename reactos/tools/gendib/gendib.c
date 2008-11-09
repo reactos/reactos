@@ -542,7 +542,7 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
   if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
       0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
     {
-      Output(Out, "CenterCount = 2 * (BltInfo->DestRect.right -\n");
+      Output(Out, "CenterCount = %u * (BltInfo->DestRect.right -\n", Bpp >> 3);
       Output(Out, "                   BltInfo->DestRect.left);\n");
     }
   if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
