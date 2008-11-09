@@ -42,7 +42,6 @@
 //======================================================================
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
-#define UNICODE
 #include <windows.h>
 #include <stdio.h>
 #include <ndk/ntndk.h>
