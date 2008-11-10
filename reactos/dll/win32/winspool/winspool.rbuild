@@ -9,5 +9,4 @@
 	<file>info.c</file>
 	<file>stubs.c</file>
 	<file>winspool.rc</file>
-	<file>winspool.spec</file>
 </module>

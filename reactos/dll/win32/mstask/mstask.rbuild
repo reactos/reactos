@@ -16,7 +16,6 @@
 	<file>task_trigger.c</file>
 	<file>mstask_local.idl</file>
 	<file>rsrc.rc</file>
-	<file>mstask.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

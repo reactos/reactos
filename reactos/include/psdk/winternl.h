@@ -1662,9 +1662,6 @@ typedef enum _SYSDBG_COMMAND {
  * Function declarations
  */
 
-extern LPSTR _strlwr(LPSTR str); /* FIXME: Doesn't belong here */
-extern LPSTR _strupr(LPSTR str); /* FIXME: Doesn't belong here */
-
 #if defined(__i386__) && defined(__GNUC__)
 static inline void WINAPI DbgBreakPoint(void) { __asm__ __volatile__("int3"); }
 static inline void WINAPI DbgUserBreakPoint(void) { __asm__ __volatile__("int3"); }

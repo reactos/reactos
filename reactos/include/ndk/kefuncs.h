@@ -205,7 +205,7 @@ BOOLEAN
 NTAPI
 KiIpiServiceRoutine(
     IN PKTRAP_FRAME TrapFrame,
-    IN PVOID ExceptionFrame
+    IN PKEXCEPTION_FRAME ExceptionFrame
 );
 
 //

@@ -366,7 +366,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 
       for (i = 0; i < Size; i++)
       {
-         *UnicodeString = NlsOemToUnicodeTable[(INT)*OemString];
+         *UnicodeString = NlsOemToUnicodeTable[(UCHAR)*OemString];
          UnicodeString++;
          OemString++;
       }

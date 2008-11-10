@@ -117,7 +117,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
         SetWindowLong(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
-        EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+        EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
             SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
         else
@@ -174,7 +174,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 FreeLibrary(pIconContext->hLibrary);
                 pIconContext->hLibrary = hLibrary;
                 wcscpy(pIconContext->szName, szText);
-                EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+                EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
                 if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
                     SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
                 else

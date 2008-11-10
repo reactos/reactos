@@ -183,52 +183,22 @@ _KiRaiseUserExceptionDispatcher@0:
 .globl _KiUserExceptionDispatcher@8
 _KiUserExceptionDispatcher@8:
 
-    /* clear the direct flag 
-     * text from bug 2279
-     * if it not clear it means that if an exception occurs while
-     * the direction flag is set (typically inside memmove), the 
-     * exception handlers will be called with the direction flag still
-     * set.  The Windows x86-32 and x86-64 ABI requires that the 
-     * direction flag be Calling memset() with a compile-time constant 
-     * size on both GCC and MSVC will result in inlining a "rep stosd" 
-     * instruction.  Because of the ABI, they will assume that the 
-     * direction flag is clear and not emit a "cld" instruction. 
-     * Using memset() in an exception handler therefore will 
-     * corrupt memory if the exception occurred during a reverse copy 
-     * such as a forward overlapping memmove().
-     *
-     * For reliability and ease of debugging, please add "cld" to the beginning of
-     * KiUserExceptionDispatcher.  Note that the same will be true of x86-64 whenever
-     * that happens.  This does not affect continuing execution; the CONTEXT of the
-     * exception has the direction flag set and will be restored upon NtContinue. 
-     * KiUserApcDispatcher and KiUserCallbackDispatcher need to be evaluated for this
-     * issue.
-     */
-     
+    /* Clear direction flag */
     cld
 
     /* Save the Context and Exception Records */
     mov ecx, [esp+4]
     mov ebx, [esp]
 
-    /* Call the vectored exception handler */
+    /* Dispatch the exception */
     push ecx
     push ebx
-    call _RtlpExecuteVectoredExceptionHandlers@8
-
-    /* Check for success */
-    or al, al
-    jnz ContinueExecution
-
-    /* Dispatch the exception */
-    sub esp, 8
     call _RtlDispatchException@8
 
     /* Check for success */
     or al, al
     jz RaiseException
 
-ContinueExecution:
     /* Pop off the records */
     pop ebx
     pop ecx

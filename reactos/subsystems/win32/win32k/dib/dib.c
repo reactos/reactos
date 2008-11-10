@@ -173,7 +173,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
     case ROP3_TO_ROP4(PATINVERT):   return(Dest ^ Pattern);
     case ROP3_TO_ROP4(SRCINVERT):   return(Dest ^ Source);
     case ROP3_TO_ROP4(SRCAND):      return(Dest & Source);
-    case ROP3_TO_ROP4(MERGEPAINT):  return(Dest & (~Source));
+    case ROP3_TO_ROP4(MERGEPAINT):  return(Dest | (~Source));
     case ROP3_TO_ROP4(SRCPAINT):    return(Dest | Source);
     case ROP3_TO_ROP4(MERGECOPY):   return(Source & Pattern);
     case ROP3_TO_ROP4(SRCCOPY):     return(Source);

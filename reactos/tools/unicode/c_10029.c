@@ -678,6 +678,7 @@ const struct sbcs_table cptable_10029 =
 {
     { 10029, 1, 0x003f, 0x003f, "Mac Latin 2" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

@@ -17,5 +17,4 @@
 	<file>createlink.c</file>
 	<file>updates.c</file>
 	<file>appwiz.rc</file>
-	<file>appwiz.spec</file>
 </module>

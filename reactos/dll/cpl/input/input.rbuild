@@ -14,5 +14,4 @@
 	<file>add.c</file>
 	<file>changekeyseq.c</file>
 	<file>input.rc</file>
-	<file>input.spec</file>
 </module>

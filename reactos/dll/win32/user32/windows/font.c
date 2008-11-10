@@ -34,7 +34,17 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void _assert(const char *msg, const char *file, int line)
+#ifndef NDEBUG
+
+#ifdef assert
+#undef assert
+#endif
+
+#define assert(e) ((e) ? (void)0 : _font_assert(#e, __FILE__, __LINE__))
+
+#endif
+
+void _font_assert(const char *msg, const char *file, int line)
 {
   /* Assertion failed at foo.c line 45: x<y */
   DbgPrint("Assertion failed at %s line %d: %s\n", file, line, msg);

@@ -860,7 +860,6 @@ NtGdiStretchDIBitsInternal(
          * if it negitve we getting to many scanline for scanline is UINT not
          * a INT, so we need make the negtive value to positve and that make the
          * count correct for negtive bitmap, TODO : we need testcase for this api */
-
          IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
                   BitsInfo, Usage);
 
@@ -1187,7 +1186,7 @@ DIB_CreateDIBSection(
       {
         if (lpRGB != bmi->bmiColors)
           {
-            ExFreePool(lpRGB);
+            ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
           }
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
@@ -1197,7 +1196,7 @@ DIB_CreateDIBSection(
       {
         if (lpRGB != bmi->bmiColors)
           {
-            ExFreePool(lpRGB);
+            ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
           }
 	SetLastWin32Error(ERROR_INVALID_HANDLE);
 	NtGdiDeleteObject(bmp);
@@ -1238,14 +1237,14 @@ DIB_CreateDIBSection(
       VirtualFree(bm.bmBits, 0L, MEM_RELEASE), bm.bmBits = NULL;
     } */
 
-    if (dib) { ExFreePool(dib); dib = NULL; }
+    if (dib) { ExFreePoolWithTag(dib, TAG_DIB); dib = NULL; }
     if (bmp) { bmp = NULL; }
     if (res) { BITMAPOBJ_FreeBitmapByHandle(res); res = 0; }
   }
 
   if (lpRGB != bmi->bmiColors)
     {
-      ExFreePool(lpRGB);
+      ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
     }
 
   if (bmp)

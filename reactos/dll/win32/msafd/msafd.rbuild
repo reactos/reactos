@@ -1,4 +1,4 @@
-<module name="msafd" type="win32dll" baseaddress="${BASEADDRESS_MSAFD}" installbase="system32" installname="msafd.dll" unicode="yes">
+<module name="msafd" type="win32dll" baseaddress="${BASEADDRESS_MSAFD}" installbase="system32" installname="msafd.dll" unicode="yes" allowwarnings="true">
 	<importlibrary definition="msafd.def" />
 	<include base="msafd">.</include>
 	<include base="msafd">include</include>

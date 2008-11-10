@@ -53,19 +53,12 @@
 #include "rpcproxy.h"
 
 #include "rpc_binding.h"
-#include "rpcss_np_client.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 static UUID uuid_nil;
-static HANDLE master_mutex;
-
-HANDLE RPCRT4_GetMasterMutex(void)
-{
-    return master_mutex;
-}
 
 static CRITICAL_SECTION uuid_cs;
 static CRITICAL_SECTION_DEBUG critsect_debug =
@@ -122,9 +115,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        master_mutex = CreateMutexA( NULL, FALSE, RPCSS_MASTER_MUTEX_NAME);
-        if (!master_mutex)
-          ERR("Failed to create master mutex\n");
         break;
 
     case DLL_THREAD_DETACH:
@@ -145,8 +135,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         break;
 
     case DLL_PROCESS_DETACH:
-        CloseHandle(master_mutex);
-        master_mutex = NULL;
         break;
     }
 
@@ -265,7 +253,7 @@ int WINAPI UuidEqual(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
  *
  * PARAMS
  *     UUID *Uuid         [I] Uuid to compare
- *     RPC_STATUS *Status [O] retuns RPC_S_OK
+ *     RPC_STATUS *Status [O] returns RPC_S_OK
  *
  * RETURNS
  *     TRUE/FALSE
@@ -645,102 +633,6 @@ HRESULT WINAPI DllRegisterServer( void )
     return S_OK;
 }
 
-static BOOL RPCRT4_StartRPCSS(void)
-{
-    PROCESS_INFORMATION pi;
-    STARTUPINFOA si;
-    static char cmd[6];
-    BOOL rslt;
-
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&si, sizeof(STARTUPINFOA));
-    si.cb = sizeof(STARTUPINFOA);
-
-    /* apparently it's not OK to use a constant string below */
-    CopyMemory(cmd, "rpcss", 6);
-
-    /* FIXME: will this do the right thing when run as a test? */
-    rslt = CreateProcessA(
-        NULL,           /* executable */
-        cmd,            /* command line */
-        NULL,           /* process security attributes */
-        NULL,           /* primary thread security attributes */
-        FALSE,          /* inherit handles */
-        0,              /* creation flags */
-        NULL,           /* use parent's environment */
-        NULL,           /* use parent's current directory */
-        &si,            /* STARTUPINFO pointer */
-        &pi             /* PROCESS_INFORMATION */
-    );
-
-    if (rslt) {
-      CloseHandle(pi.hProcess);
-      CloseHandle(pi.hThread);
-    }
-
-    return rslt;
-}
-
-/***********************************************************************
- *           RPCRT4_RPCSSOnDemandCall (internal)
- * 
- * Attempts to send a message to the RPCSS process
- * on the local machine, invoking it if necessary.
- * For remote RPCSS calls, use.... your imagination.
- * 
- * PARAMS
- *     msg             [I] pointer to the RPCSS message
- *     vardata_payload [I] pointer vardata portion of the RPCSS message
- *     reply           [O] pointer to reply structure
- *
- * RETURNS
- *     TRUE if successful
- *     FALSE otherwise
- */
-BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPCSS_NP_REPLY reply)
-{
-    HANDLE client_handle;
-    BOOL ret;
-    int i, j = 0;
-
-    TRACE("(msg == %p, vardata_payload == %p, reply == %p)\n", msg, vardata_payload, reply);
-
-    client_handle = RPCRT4_RpcssNPConnect();
-
-    while (INVALID_HANDLE_VALUE == client_handle) {
-        /* start the RPCSS process */
-	if (!RPCRT4_StartRPCSS()) {
-	    ERR("Unable to start RPCSS process.\n");
-	    return FALSE;
-	}
-	/* wait for a connection (w/ periodic polling) */
-        for (i = 0; i < 60; i++) {
-            Sleep(200);
-            client_handle = RPCRT4_RpcssNPConnect();
-            if (INVALID_HANDLE_VALUE != client_handle) break;
-        } 
-        /* we are only willing to try twice */
-	if (j++ >= 1) break;
-    }
-
-    if (INVALID_HANDLE_VALUE == client_handle) {
-        /* no dice! */
-        ERR("Unable to connect to RPCSS process!\n");
-	SetLastError(RPC_E_SERVER_DIED_DNE);
-	return FALSE;
-    }
-
-    /* great, we're connected.  now send the message */
-    ret = TRUE;
-    if (!RPCRT4_SendReceiveNPMsg(client_handle, msg, vardata_payload, reply)) {
-        ERR("Something is amiss: RPC_SendReceive failed.\n");
-	ret = FALSE;
-    }
-    CloseHandle(client_handle);
-
-    return ret;
-}
-
 #define MAX_RPC_ERROR_TEXT 256
 
 /******************************************************************************
@@ -1076,19 +968,9 @@ NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void)
     return context_handle;
 }
 
-/******************************************************************************
- * RpcCancelThread   (rpcrt4.@)
- */
-RPC_STATUS RPC_ENTRY RpcCancelThread(void* ThreadHandle)
+static RPC_STATUS rpc_cancel_thread(DWORD target_tid)
 {
-    DWORD target_tid;
     struct threaddata *tdata;
-
-    TRACE("(%p)\n", ThreadHandle);
-
-    target_tid = GetThreadId(ThreadHandle);
-    if (!target_tid)
-        return RPC_S_INVALID_ARG;
 
     EnterCriticalSection(&threaddata_cs);
     LIST_FOR_EACH_ENTRY(tdata, &threaddata_list, struct threaddata, entry)
@@ -1102,4 +984,35 @@ RPC_STATUS RPC_ENTRY RpcCancelThread(void* ThreadHandle)
     LeaveCriticalSection(&threaddata_cs);
 
     return RPC_S_OK;
+}
+
+/******************************************************************************
+ * RpcCancelThread   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcCancelThread(void* ThreadHandle)
+{
+    TRACE("(%p)\n", ThreadHandle);
+    return RpcCancelThreadEx(ThreadHandle, 0);
+}
+
+/******************************************************************************
+ * RpcCancelThreadEx   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcCancelThreadEx(void* ThreadHandle, LONG Timeout)
+{
+    DWORD target_tid;
+
+    FIXME("(%p, %d)\n", ThreadHandle, Timeout);
+
+    target_tid = GetThreadId(ThreadHandle);
+    if (!target_tid)
+        return RPC_S_INVALID_ARG;
+
+    if (Timeout)
+    {
+        FIXME("(%p, %d)\n", ThreadHandle, Timeout);
+        return RPC_S_OK;
+    }
+    else
+        return rpc_cancel_thread(target_tid);
 }

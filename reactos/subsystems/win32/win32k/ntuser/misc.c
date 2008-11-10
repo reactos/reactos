@@ -14,6 +14,52 @@
 #include <debug.h>
 
 
+SHORT
+FASTCALL
+IntGdiGetLanguageID()
+{
+  HANDLE KeyHandle;
+  ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);
+  OBJECT_ATTRIBUTES ObAttr;
+//  http://support.microsoft.com/kb/324097
+  ULONG Ret = 0x409; // English
+  PVOID KeyInfo;
+  UNICODE_STRING Language;
+  
+  RtlInitUnicodeString( &Language,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
+
+  InitializeObjectAttributes( &ObAttr,
+                            &Language,
+                 OBJ_CASE_INSENSITIVE,
+                                 NULL,
+                                 NULL);
+
+  if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
+  {
+     KeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
+     if ( KeyInfo )
+     {
+        RtlInitUnicodeString(&Language, L"Default");
+
+        if ( NT_SUCCESS(ZwQueryValueKey( KeyHandle,
+                                         &Language,
+                        KeyValuePartialInformation,
+                                           KeyInfo,
+                                              Size,
+                                             &Size)) )
+      {
+        RtlInitUnicodeString(&Language, (PVOID)((char *)KeyInfo + 12));
+        RtlUnicodeStringToInteger(&Language, 16, &Ret);
+      }
+      ExFreePoolWithTag(KeyInfo, TAG_STRING);
+    }
+    ZwClose(KeyHandle);
+  }
+  DPRINT1("Language ID = %x\n",Ret);
+  return (SHORT) Ret;
+}
+
 /*
  * @unimplemented
  */
@@ -298,7 +344,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }
@@ -345,7 +391,7 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }

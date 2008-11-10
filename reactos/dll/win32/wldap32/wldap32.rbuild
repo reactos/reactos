@@ -27,7 +27,6 @@
 	<file>search.c</file>
 	<file>value.c</file>
 	<file>wldap32.rc</file>
-	<file>wldap32.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>kernel32</library>

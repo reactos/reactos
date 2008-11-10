@@ -24,7 +24,6 @@
 typedef struct _IPHLP_RES_INFO {
     DWORD riCount;
     IP_ADDR_STRING * DnsList;
-    struct sockaddr_in *riAddressList;
 } IPHLP_RES_INFO, *PIPHLP_RES_INFO;
 
 /* Get resolver info.  This currently is limited to a list of IP addresses

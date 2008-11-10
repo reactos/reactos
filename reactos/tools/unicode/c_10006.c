@@ -678,6 +678,7 @@ const struct sbcs_table cptable_10006 =
 {
     { 10006, 1, 0x003f, 0x003f, "Mac Greek" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

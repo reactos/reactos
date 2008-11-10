@@ -12,5 +12,4 @@
 	<library>shell32</library>
 	<file>joy.c</file>
 	<file>joy.rc</file>
-	<file>joy.spec</file>
 </module>

@@ -47,6 +47,5 @@
 	<file>control.c</file>
 	<file>avisplit.c</file>
 	<file>version.rc</file>
-	<file>quartz.spec</file>
 </module>
 </group>

@@ -40,10 +40,10 @@ static int get_decomposition( WCHAR src, WCHAR *dst, unsigned int dstlen )
 }
 
 /* check src string for invalid chars; return non-zero if invalid char found */
-static inline int check_invalid_chars_sbcs( const struct sbcs_table *table,
+static inline int check_invalid_chars_sbcs( const struct sbcs_table *table, int flags,
                                             const unsigned char *src, unsigned int srclen )
 {
-    const WCHAR * const cp2uni = table->cp2uni;
+    const WCHAR * const cp2uni = (flags & MB_USEGLYPHCHARS) ? table->cp2uni_glyphs : table->cp2uni;
     while (srclen)
     {
         if (cp2uni[*src] == table->info.def_unicode_char && *src != table->info.def_char)
@@ -56,11 +56,11 @@ static inline int check_invalid_chars_sbcs( const struct sbcs_table *table,
 
 /* mbstowcs for single-byte code page */
 /* all lengths are in characters, not bytes */
-static inline int mbstowcs_sbcs( const struct sbcs_table *table,
+static inline int mbstowcs_sbcs( const struct sbcs_table *table, int flags,
                                  const unsigned char *src, unsigned int srclen,
                                  WCHAR *dst, unsigned int dstlen )
 {
-    const WCHAR * const cp2uni = table->cp2uni;
+    const WCHAR * const cp2uni = (flags & MB_USEGLYPHCHARS) ? table->cp2uni_glyphs : table->cp2uni;
     int ret = srclen;
 
     if (dstlen < srclen)
@@ -101,11 +101,11 @@ static inline int mbstowcs_sbcs( const struct sbcs_table *table,
 }
 
 /* mbstowcs for single-byte code page with char decomposition */
-static int mbstowcs_sbcs_decompose( const struct sbcs_table *table,
+static int mbstowcs_sbcs_decompose( const struct sbcs_table *table, int flags,
                                     const unsigned char *src, unsigned int srclen,
                                     WCHAR *dst, unsigned int dstlen )
 {
-    const WCHAR * const cp2uni = table->cp2uni;
+    const WCHAR * const cp2uni = (flags & MB_USEGLYPHCHARS) ? table->cp2uni_glyphs : table->cp2uni;
     unsigned int len;
 
     if (!dstlen)  /* compute length */
@@ -258,14 +258,14 @@ int wine_cp_mbstowcs( const union cptable *table, int flags,
     {
         if (flags & MB_ERR_INVALID_CHARS)
         {
-            if (check_invalid_chars_sbcs( &table->sbcs, src, srclen )) return -2;
+            if (check_invalid_chars_sbcs( &table->sbcs, flags, src, srclen )) return -2;
         }
         if (!(flags & MB_COMPOSITE))
         {
             if (!dstlen) return srclen;
-            return mbstowcs_sbcs( &table->sbcs, src, srclen, dst, dstlen );
+            return mbstowcs_sbcs( &table->sbcs, flags, src, srclen, dst, dstlen );
         }
-        return mbstowcs_sbcs_decompose( &table->sbcs, src, srclen, dst, dstlen );
+        return mbstowcs_sbcs_decompose( &table->sbcs, flags, src, srclen, dst, dstlen );
     }
     else /* mbcs */
     {

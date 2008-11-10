@@ -25,7 +25,6 @@
 	<file>umstream.c</file>
 	<file>urlmon_main.c</file>
 	<file>rsrc.rc</file>
-	<file>urlmon.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

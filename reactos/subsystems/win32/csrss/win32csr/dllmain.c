@@ -586,8 +586,11 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
+  NTSTATUS Status;
   CsrExports = *Exports;
   Win32CsrApiHeap = CsrssApiHeap;
+
+  Status = NtUserInitialize(0 ,NULL, NULL);
 
   PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();

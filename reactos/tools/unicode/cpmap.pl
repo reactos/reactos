@@ -37,66 +37,68 @@ $DEF_CHAR = ord '?';
 
 @allfiles =
 (
-    [ 37,    "VENDORS/MICSFT/EBCDIC/CP037.TXT",   "IBM EBCDIC US Canada" ],
-    [ 424,   "VENDORS/MISC/CP424.TXT",            "IBM EBCDIC Hebrew" ],
-    [ 437,   "VENDORS/MICSFT/PC/CP437.TXT",       "OEM United States" ],
-    [ 500,   "VENDORS/MICSFT/EBCDIC/CP500.TXT",   "IBM EBCDIC International" ],
-    [ 737,   "VENDORS/MICSFT/PC/CP737.TXT",       "OEM Greek 437G" ],
-    [ 775,   "VENDORS/MICSFT/PC/CP775.TXT",       "OEM Baltic" ],
-    [ 850,   "VENDORS/MICSFT/PC/CP850.TXT",       "OEM Multilingual Latin 1" ],
-    [ 852,   "VENDORS/MICSFT/PC/CP852.TXT",       "OEM Slovak Latin 2" ],
-    [ 855,   "VENDORS/MICSFT/PC/CP855.TXT",       "OEM Cyrillic" ],
-    [ 856,   "VENDORS/MISC/CP856.TXT",            "Hebrew PC" ],
-    [ 857,   "VENDORS/MICSFT/PC/CP857.TXT",       "OEM Turkish" ],
-    [ 860,   "VENDORS/MICSFT/PC/CP860.TXT",       "OEM Portuguese" ],
-    [ 861,   "VENDORS/MICSFT/PC/CP861.TXT",       "OEM Icelandic" ],
-    [ 862,   "VENDORS/MICSFT/PC/CP862.TXT",       "OEM Hebrew" ],
-    [ 863,   "VENDORS/MICSFT/PC/CP863.TXT",       "OEM Canadian French" ],
-    [ 864,   "VENDORS/MICSFT/PC/CP864.TXT",       "OEM Arabic" ],
-    [ 865,   "VENDORS/MICSFT/PC/CP865.TXT",       "OEM Nordic" ],
-    [ 866,   "VENDORS/MICSFT/PC/CP866.TXT",       "OEM Russian" ],
-    [ 869,   "VENDORS/MICSFT/PC/CP869.TXT",       "OEM Greek" ],
-    [ 874,   "VENDORS/MICSFT/PC/CP874.TXT",       "ANSI/OEM Thai" ],
-    [ 875,   "VENDORS/MICSFT/EBCDIC/CP875.TXT",   "IBM EBCDIC Greek" ],
-    [ 878,   "VENDORS/MISC/KOI8-R.TXT",           "Russian KOI8" ],
-    [ 932,   "VENDORS/MICSFT/WINDOWS/CP932.TXT",  "ANSI/OEM Japanese Shift-JIS" ],
-    [ 936,   "VENDORS/MICSFT/WINDOWS/CP936.TXT",  "ANSI/OEM Simplified Chinese GBK" ],
-    [ 949,   "VENDORS/MICSFT/WINDOWS/CP949.TXT",  "ANSI/OEM Korean Unified Hangul" ],
-    [ 950,   "VENDORS/MICSFT/WINDOWS/CP950.TXT",  "ANSI/OEM Traditional Chinese Big5" ],
-    [ 1006,  "VENDORS/MISC/CP1006.TXT",           "IBM Arabic" ],
-    [ 1026,  "VENDORS/MICSFT/EBCDIC/CP1026.TXT",  "IBM EBCDIC Latin 5 Turkish" ],
-    [ 1250,  "VENDORS/MICSFT/WINDOWS/CP1250.TXT", "ANSI Eastern Europe" ],
-    [ 1251,  "VENDORS/MICSFT/WINDOWS/CP1251.TXT", "ANSI Cyrillic" ],
-    [ 1252,  "VENDORS/MICSFT/WINDOWS/CP1252.TXT", "ANSI Latin 1" ],
-    [ 1253,  "VENDORS/MICSFT/WINDOWS/CP1253.TXT", "ANSI Greek" ],
-    [ 1254,  "VENDORS/MICSFT/WINDOWS/CP1254.TXT", "ANSI Turkish" ],
-    [ 1255,  "VENDORS/MICSFT/WINDOWS/CP1255.TXT", "ANSI Hebrew" ],
-    [ 1256,  "VENDORS/MICSFT/WINDOWS/CP1256.TXT", "ANSI Arabic" ],
-    [ 1257,  "VENDORS/MICSFT/WINDOWS/CP1257.TXT", "ANSI Baltic" ],
-    [ 1258,  "VENDORS/MICSFT/WINDOWS/CP1258.TXT", "ANSI/OEM Viet Nam" ],
-    [ 10000, "VENDORS/MICSFT/MAC/ROMAN.TXT",      "Mac Roman" ],
-    [ 10006, "VENDORS/MICSFT/MAC/GREEK.TXT",      "Mac Greek" ],
-    [ 10007, "VENDORS/MICSFT/MAC/CYRILLIC.TXT",   "Mac Cyrillic" ],
-    [ 10029, "VENDORS/MICSFT/MAC/LATIN2.TXT",     "Mac Latin 2" ],
-    [ 10079, "VENDORS/MICSFT/MAC/ICELAND.TXT",    "Mac Icelandic" ],
-    [ 10081, "VENDORS/MICSFT/MAC/TURKISH.TXT",    "Mac Turkish" ],
-    [ 20866, "VENDORS/MISC/KOI8-R.TXT",           "Russian KOI8" ],
-    [ 20932, "OBSOLETE/EASTASIA/JIS/JIS0208.TXT", "EUC-JP" ],
-    [ 21866, "VENDORS/MISC/KOI8-U.TXT",           "Ukrainian KOI8" ],
-    [ 28591, "ISO8859/8859-1.TXT",                "ISO 8859-1 Latin 1" ],
-    [ 28592, "ISO8859/8859-2.TXT",                "ISO 8859-2 Latin 2 (East European)" ],
-    [ 28593, "ISO8859/8859-3.TXT",                "ISO 8859-3 Latin 3 (South European)" ],
-    [ 28594, "ISO8859/8859-4.TXT",                "ISO 8859-4 Latin 4 (Baltic old)" ],
-    [ 28595, "ISO8859/8859-5.TXT",                "ISO 8859-5 Cyrillic" ],
-    [ 28596, "ISO8859/8859-6.TXT",                "ISO 8859-6 Arabic" ],
-    [ 28597, "ISO8859/8859-7.TXT",                "ISO 8859-7 Greek" ],
-    [ 28598, "ISO8859/8859-8.TXT",                "ISO 8859-8 Hebrew" ],
-    [ 28599, "ISO8859/8859-9.TXT",                "ISO 8859-9 Latin 5 (Turkish)" ],
-    [ 28600, "ISO8859/8859-10.TXT",               "ISO 8859-10 Latin 6 (Nordic)" ],
-    [ 28603, "ISO8859/8859-13.TXT",               "ISO 8859-13 Latin 7 (Baltic)" ],
-    [ 28604, "ISO8859/8859-14.TXT",               "ISO 8859-14 Latin 8 (Celtic)" ],
-    [ 28605, "ISO8859/8859-15.TXT",               "ISO 8859-15 Latin 9 (Euro)" ],
-    [ 28606, "ISO8859/8859-16.TXT",               "ISO 8859-16 Latin 10 (Balkan)" ]
+    [ 37,    "VENDORS/MICSFT/EBCDIC/CP037.TXT",   0, "IBM EBCDIC US Canada" ],
+    [ 424,   "VENDORS/MISC/CP424.TXT",            0, "IBM EBCDIC Hebrew" ],
+    [ 437,   "VENDORS/MICSFT/PC/CP437.TXT",       1, "OEM United States" ],
+    [ 500,   "VENDORS/MICSFT/EBCDIC/CP500.TXT",   0, "IBM EBCDIC International" ],
+    [ 737,   "VENDORS/MICSFT/PC/CP737.TXT",       1, "OEM Greek 437G" ],
+    [ 775,   "VENDORS/MICSFT/PC/CP775.TXT",       1, "OEM Baltic" ],
+    [ 850,   "VENDORS/MICSFT/PC/CP850.TXT",       1, "OEM Multilingual Latin 1" ],
+    [ 852,   "VENDORS/MICSFT/PC/CP852.TXT",       1, "OEM Slovak Latin 2" ],
+    [ 855,   "VENDORS/MICSFT/PC/CP855.TXT",       1, "OEM Cyrillic" ],
+    [ 856,   "VENDORS/MISC/CP856.TXT",            0, "Hebrew PC" ],
+    [ 857,   "VENDORS/MICSFT/PC/CP857.TXT",       1, "OEM Turkish" ],
+    [ 860,   "VENDORS/MICSFT/PC/CP860.TXT",       1, "OEM Portuguese" ],
+    [ 861,   "VENDORS/MICSFT/PC/CP861.TXT",       1, "OEM Icelandic" ],
+    [ 862,   "VENDORS/MICSFT/PC/CP862.TXT",       1, "OEM Hebrew" ],
+    [ 863,   "VENDORS/MICSFT/PC/CP863.TXT",       1, "OEM Canadian French" ],
+    [ 864,   "VENDORS/MICSFT/PC/CP864.TXT",       0, "OEM Arabic" ],
+    [ 865,   "VENDORS/MICSFT/PC/CP865.TXT",       1, "OEM Nordic" ],
+    [ 866,   "VENDORS/MICSFT/PC/CP866.TXT",       1, "OEM Russian" ],
+    [ 869,   "VENDORS/MICSFT/PC/CP869.TXT",       1, "OEM Greek" ],
+    [ 874,   "VENDORS/MICSFT/PC/CP874.TXT",       1, "ANSI/OEM Thai" ],
+    [ 875,   "VENDORS/MICSFT/EBCDIC/CP875.TXT",   0, "IBM EBCDIC Greek" ],
+    [ 878,   "VENDORS/MISC/KOI8-R.TXT",           0, "Russian KOI8" ],
+    [ 932,   "VENDORS/MICSFT/WINDOWS/CP932.TXT",  0, "ANSI/OEM Japanese Shift-JIS" ],
+    [ 936,   "VENDORS/MICSFT/WINDOWS/CP936.TXT",  0, "ANSI/OEM Simplified Chinese GBK" ],
+    [ 949,   "VENDORS/MICSFT/WINDOWS/CP949.TXT",  0, "ANSI/OEM Korean Unified Hangul" ],
+    [ 950,   "VENDORS/MICSFT/WINDOWS/CP950.TXT",  0, "ANSI/OEM Traditional Chinese Big5" ],
+    [ 1006,  "VENDORS/MISC/CP1006.TXT",           0, "IBM Arabic" ],
+    [ 1026,  "VENDORS/MICSFT/EBCDIC/CP1026.TXT",  0, "IBM EBCDIC Latin 5 Turkish" ],
+    [ 1250,  "VENDORS/MICSFT/WINDOWS/CP1250.TXT", 0, "ANSI Eastern Europe" ],
+    [ 1251,  "VENDORS/MICSFT/WINDOWS/CP1251.TXT", 0, "ANSI Cyrillic" ],
+    [ 1252,  "VENDORS/MICSFT/WINDOWS/CP1252.TXT", 0, "ANSI Latin 1" ],
+    [ 1253,  "VENDORS/MICSFT/WINDOWS/CP1253.TXT", 0, "ANSI Greek" ],
+    [ 1254,  "VENDORS/MICSFT/WINDOWS/CP1254.TXT", 0, "ANSI Turkish" ],
+    [ 1255,  "VENDORS/MICSFT/WINDOWS/CP1255.TXT", 0, "ANSI Hebrew" ],
+    [ 1256,  "VENDORS/MICSFT/WINDOWS/CP1256.TXT", 0, "ANSI Arabic" ],
+    [ 1257,  "VENDORS/MICSFT/WINDOWS/CP1257.TXT", 0, "ANSI Baltic" ],
+    [ 1258,  "VENDORS/MICSFT/WINDOWS/CP1258.TXT", 0, "ANSI/OEM Viet Nam" ],
+    [ 1361,  "OBSOLETE/EASTASIA/KSC/JOHAB.TXT",   0, "Korean Johab" ],
+    [ 10000, "VENDORS/MICSFT/MAC/ROMAN.TXT",      0, "Mac Roman" ],
+    [ 10006, "VENDORS/MICSFT/MAC/GREEK.TXT",      0, "Mac Greek" ],
+    [ 10007, "VENDORS/MICSFT/MAC/CYRILLIC.TXT",   0, "Mac Cyrillic" ],
+    [ 10029, "VENDORS/MICSFT/MAC/LATIN2.TXT",     0, "Mac Latin 2" ],
+    [ 10079, "VENDORS/MICSFT/MAC/ICELAND.TXT",    0, "Mac Icelandic" ],
+    [ 10081, "VENDORS/MICSFT/MAC/TURKISH.TXT",    0, "Mac Turkish" ],
+    [ 20127, undef,                               0, "US-ASCII (7bit)" ],
+    [ 20866, "VENDORS/MISC/KOI8-R.TXT",           0, "Russian KOI8" ],
+    [ 20932, "OBSOLETE/EASTASIA/JIS/JIS0208.TXT", 0, "EUC-JP" ],
+    [ 21866, "VENDORS/MISC/KOI8-U.TXT",           0, "Ukrainian KOI8" ],
+    [ 28591, "ISO8859/8859-1.TXT",                0, "ISO 8859-1 Latin 1" ],
+    [ 28592, "ISO8859/8859-2.TXT",                0, "ISO 8859-2 Latin 2 (East European)" ],
+    [ 28593, "ISO8859/8859-3.TXT",                0, "ISO 8859-3 Latin 3 (South European)" ],
+    [ 28594, "ISO8859/8859-4.TXT",                0, "ISO 8859-4 Latin 4 (Baltic old)" ],
+    [ 28595, "ISO8859/8859-5.TXT",                0, "ISO 8859-5 Cyrillic" ],
+    [ 28596, "ISO8859/8859-6.TXT",                0, "ISO 8859-6 Arabic" ],
+    [ 28597, "ISO8859/8859-7.TXT",                0, "ISO 8859-7 Greek" ],
+    [ 28598, "ISO8859/8859-8.TXT",                0, "ISO 8859-8 Hebrew" ],
+    [ 28599, "ISO8859/8859-9.TXT",                0, "ISO 8859-9 Latin 5 (Turkish)" ],
+    [ 28600, "ISO8859/8859-10.TXT",               0, "ISO 8859-10 Latin 6 (Nordic)" ],
+    [ 28603, "ISO8859/8859-13.TXT",               0, "ISO 8859-13 Latin 7 (Baltic)" ],
+    [ 28604, "ISO8859/8859-14.TXT",               0, "ISO 8859-14 Latin 8 (Celtic)" ],
+    [ 28605, "ISO8859/8859-15.TXT",               0, "ISO 8859-15 Latin 9 (Euro)" ],
+    [ 28606, "ISO8859/8859-16.TXT",               0, "ISO 8859-16 Latin 10 (Balkan)" ]
 );
 
 
@@ -369,9 +371,6 @@ sub READ_FILE
 {
     my $name = shift;
     open INPUT,$name or die "Cannot open $name";
-    @cp2uni = ();
-    @lead_bytes = ();
-    @uni2cp = ();
 
     while (<INPUT>)
     {
@@ -393,6 +392,11 @@ sub READ_FILE
             $uni = hex $2;
             $cp2uni[$cp] = $uni unless defined($cp2uni[$cp]);
             $uni2cp[$uni] = $cp unless defined($uni2cp[$uni]);
+            if ($cp > 0xff && !defined($cp2uni[$cp >> 8]))
+            {
+                push @lead_bytes,$cp >> 8;
+                $cp2uni[$cp >> 8] = 0;
+            }
             next;
         }
         die "$name: Unrecognized line $_\n";
@@ -401,15 +405,60 @@ sub READ_FILE
 
 
 ################################################################
+# fill input data for the 20127 (us-ascii) codepage
+sub fill_20127_codepage()
+{
+    for (my $i = 0; $i < 128; $i++) { $cp2uni[$i] = $uni2cp[$i] = $i; }
+    for (my $i = 128; $i < 256; $i++) { $cp2uni[$i] = $i & 0x7f; }
+}
+
+################################################################
+# get a mapping including glyph chars for MB_USEGLYPHCHARS
+
+sub get_glyphs_mapping(@)
+{
+    $_[0x01] = 0x263a;  # (WHITE SMILING FACE)
+    $_[0x02] = 0x263b;  # (BLACK SMILING FACE)
+    $_[0x03] = 0x2665;  # (BLACK HEART SUIT)
+    $_[0x04] = 0x2666;  # (BLACK DIAMOND SUIT)
+    $_[0x05] = 0x2663;  # (BLACK CLUB SUIT)
+    $_[0x06] = 0x2660;  # (BLACK SPADE SUIT)
+    $_[0x07] = 0x2022;  # (BULLET)
+    $_[0x08] = 0x25d8;  # (INVERSE BULLET)
+    $_[0x09] = 0x25cb;  # (WHITE CIRCLE)
+    $_[0x0a] = 0x25d9;  # (INVERSE WHITE CIRCLE)
+    $_[0x0b] = 0x2642;  # (MALE SIGN)
+    $_[0x0c] = 0x2640;  # (FEMALE SIGN)
+    $_[0x0d] = 0x266a;  # (EIGHTH NOTE)
+    $_[0x0e] = 0x266b;  # (BEAMED EIGHTH NOTES)
+    $_[0x0f] = 0x263c;  # (WHITE SUN WITH RAYS)
+    $_[0x10] = 0x25ba;  # (BLACK RIGHT-POINTING POINTER)
+    $_[0x11] = 0x25c4;  # (BLACK LEFT-POINTING POINTER)
+    $_[0x12] = 0x2195;  # (UP DOWN ARROW)
+    $_[0x13] = 0x203c;  # (DOUBLE EXCLAMATION MARK)
+    $_[0x14] = 0x00b6;  # (PILCROW SIGN)
+    $_[0x15] = 0x00a7;  # (SECTION SIGN)
+    $_[0x16] = 0x25ac;  # (BLACK RECTANGLE)
+    $_[0x17] = 0x21a8;  # (UP DOWN ARROW WITH BASE)
+    $_[0x18] = 0x2191;  # (UPWARDS ARROW)
+    $_[0x19] = 0x2193;  # (DOWNWARDS ARROW)
+    $_[0x1a] = 0x2192;  # (RIGHTWARDS ARROW)
+    $_[0x1b] = 0x2190;  # (LEFTWARDS ARROW)
+    $_[0x1c] = 0x221f;  # (RIGHT ANGLE)
+    $_[0x1d] = 0x2194;  # (LEFT RIGHT ARROW)
+    $_[0x1e] = 0x25b2;  # (BLACK UP-POINTING TRIANGLE)
+    $_[0x1f] = 0x25bc;  # (BLACK DOWN-POINTING TRIANGLE)
+    $_[0x7f] = 0x2302;  # (HOUSE)
+    return @_;
+}
+
+################################################################
 # build EUC-JP table from the JIS 0208 file
 # FIXME: for proper EUC-JP we should probably read JIS 0212 too
 # but this would require 3-byte DBCS characters
 sub READ_JIS0208_FILE
 {
     my $name = shift;
-    @cp2uni = ();
-    @lead_bytes = ();
-    @uni2cp = ();
 
     # ASCII chars
     for ($i = 0x00; $i <= 0x7f; $i++)
@@ -590,7 +639,7 @@ sub DUMP_SORTKEYS
     # output the default values
 
     printf OUTPUT "    /* defaults */\n";
-    printf OUTPUT "%s", DUMP_ARRAY( "0x%08x", 0, (-1) x 256 );
+    printf OUTPUT "%s", DUMP_ARRAY( "0x%08x", 0, (0xffffffff) x 256 );
 
     # output all the key ranges
 
@@ -598,7 +647,7 @@ sub DUMP_SORTKEYS
     {
         next if $offsets[$i] == 256;
         printf OUTPUT ",\n    /* 0x%02x00 .. 0x%02xff */\n", $i, $i;
-        printf OUTPUT "%s", DUMP_ARRAY( "0x%08x", -1, @keys[($i<<8) .. ($i<<8)+255] );
+        printf OUTPUT "%s", DUMP_ARRAY( "0x%08x", 0xffffffff, @keys[($i<<8) .. ($i<<8)+255] );
     }
     printf OUTPUT "\n};\n";
     close OUTPUT;
@@ -677,13 +726,23 @@ sub DUMP_ARRAY
 # dump an SBCS mapping table
 sub DUMP_SBCS_TABLE
 {
-    my ($codepage, $name) = @_;
+    my ($codepage, $has_glyphs, $name) = @_;
     my $i;
 
     # output the ascii->unicode table
 
-    printf OUTPUT "static const WCHAR cp2uni[256] =\n";
-    printf OUTPUT "{\n%s\n};\n\n", DUMP_ARRAY( "0x%04x", $DEF_CHAR, @cp2uni[0 .. 255] );
+    if ($has_glyphs)
+    {
+        printf OUTPUT "static const WCHAR cp2uni[512] =\n";
+        printf OUTPUT "{\n%s", DUMP_ARRAY( "0x%04x", $DEF_CHAR, @cp2uni[0 .. 255] );
+        printf OUTPUT ",\n    /* glyphs */\n%s\n};\n\n",
+                      DUMP_ARRAY( "0x%04x", $DEF_CHAR, get_glyphs_mapping(@cp2uni[0 .. 255]) );
+    }
+    else
+    {
+        printf OUTPUT "static const WCHAR cp2uni[256] =\n";
+        printf OUTPUT "{\n%s\n};\n\n", DUMP_ARRAY( "0x%04x", $DEF_CHAR, @cp2uni[0 .. 255] );
+    }
 
     # count the number of unicode->ascii subtables that contain something
 
@@ -727,6 +786,8 @@ sub DUMP_SBCS_TABLE
     printf OUTPUT "    { %d, 1, 0x%04x, 0x%04x, \"%s\" },\n",
                   $codepage, $DEF_CHAR, $DEF_CHAR, $name;
     printf OUTPUT "    cp2uni,\n";
+    if ($has_glyphs) { printf OUTPUT "    cp2uni + 256,\n"; }
+    else { printf OUTPUT "    cp2uni,\n"; }
     printf OUTPUT "    uni2cp_low,\n";
     printf OUTPUT "    uni2cp_high\n};\n";
 }
@@ -1142,10 +1203,15 @@ sub DUMP_COMPOSE_TABLES
 # read an input file and generate the corresponding .c file
 sub HANDLE_FILE
 {
-    my ($codepage,$filename,$comment) = @_;
+    my ($codepage,$filename,$has_glyphs,$comment) = @_;
+
+    @cp2uni = ();
+    @lead_bytes = ();
+    @uni2cp = ();
 
     # symbol codepage file is special
     if ($codepage == 20932) { READ_JIS0208_FILE($MAPPREFIX . $filename); }
+    elsif ($codepage == 20127) { fill_20127_codepage(); }
     else { READ_FILE($MAPPREFIX . $filename); }
 
     # hack: 0x00a5 must map to backslash in Shift-JIS
@@ -1156,16 +1222,23 @@ sub HANDLE_FILE
     my $output = sprintf "c_%03d.c", $codepage;
     open OUTPUT,">$output.new" or die "Cannot create $output";
 
-    printf "Building %s from %s (%s)\n", $output, $filename, $comment;
+    printf "Building %s from %s (%s)\n", $output, $filename || "hardcoded data", $comment;
 
     # dump all tables
 
     printf OUTPUT "/* code page %03d (%s) */\n", $codepage, $comment;
-    printf OUTPUT "/* generated from %s */\n", $MAPPREFIX . $filename;
-    printf OUTPUT "/* DO NOT EDIT!! */\n\n";
+    if ($filename)
+    {
+        printf OUTPUT "/* generated from %s */\n", $MAPPREFIX . $filename;
+        printf OUTPUT "/* DO NOT EDIT!! */\n\n";
+    }
+    else
+    {
+        printf OUTPUT "/* Automatically generated; DO NOT EDIT!! */\n\n";
+    }
     printf OUTPUT "#include \"wine/unicode.h\"\n\n";
 
-    if ($#lead_bytes == -1) { DUMP_SBCS_TABLE( $codepage, $comment ); }
+    if ($#lead_bytes == -1) { DUMP_SBCS_TABLE( $codepage, $has_glyphs, $comment ); }
     else { DUMP_DBCS_TABLE( $codepage, $comment ); }
     close OUTPUT;
     save_file($output);
@@ -1177,7 +1250,7 @@ sub HANDLE_FILE
 sub save_file($)
 {
     my $file = shift;
-    if (!system "cmp $file $file.new >/dev/null")
+    if (-f $file && !system "cmp $file $file.new >/dev/null")
     {
         unlink "$file.new";
     }

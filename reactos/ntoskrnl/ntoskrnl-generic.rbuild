@@ -466,6 +466,5 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
-	<file>ntoskrnl.pspec</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>

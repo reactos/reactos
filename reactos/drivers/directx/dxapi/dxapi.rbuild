@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="dxapi" type="kernelmodedriver" 
+<module name="dxapi" type="kernelmodedriver"
 installbase="system32/drivers" installname="dxapi.sys">
 	<importlibrary definition="dxapi.spec" />
 	<include base="dxapi">.</include>
@@ -11,5 +11,4 @@ installbase="system32/drivers" installname="dxapi.sys">
 	<library>videoprt</library>
 	<file>main.c</file>
 	<file>dxapi.rc</file>
-	<file>dxapi.spec</file>
 </module>

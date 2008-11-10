@@ -9,7 +9,6 @@
 	<dependency>mshtml_tlb</dependency>
 	<define name="__WINESRC__" />
 	<library>kernel32</library>
-	<file>mshtml.tlb.spec</file>
 	<file>rsrc.rc</file>
 </module>
 </group>

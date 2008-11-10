@@ -15,5 +15,4 @@
 	<file>msacm32_main.c</file>
 	<file>pcmconverter.c</file>
 	<file>stream.c</file>
-	<file>msacm32.spec</file>
 </module>

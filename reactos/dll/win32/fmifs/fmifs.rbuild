@@ -13,6 +13,5 @@
 	<file>media.c</file>
 	<file>query.c</file>
 	<file>fmifs.rc</file>
-	<file>fmifs.spec</file>
 	<pch>precomp.h</pch>
 </module>

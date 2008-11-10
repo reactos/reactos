@@ -10,7 +10,6 @@
 	<file>msvideo_main.c</file>
 	<file>drawdib.c</file>
 	<file>rsrc.rc</file>
-	<file>msvfw32.spec</file>
 	<library>wine</library>
 	<library>winmm</library>
 	<library>version</library>

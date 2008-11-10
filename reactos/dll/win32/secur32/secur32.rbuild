@@ -11,6 +11,5 @@
 	<file>secext.c</file>
 	<file>sspi.c</file>
 	<file>secur32.rc</file>
-	<file>secur32.spec</file>
 	<pch>precomp.h</pch>
 </module>

@@ -19,13 +19,13 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
 
 #include "wine/unicode.h"
@@ -71,6 +71,7 @@ int parser_error(const char *s, ...)
 	va_list ap;
 	va_start(ap, s);
 	generic_msg(s, "Error", parser_text, ap);
+        fputc( '\n', stderr );
 	va_end(ap);
 	exit(1);
 	return 1;
@@ -241,7 +242,7 @@ string_t *convert_string(const string_t *str, enum str_e type, int codepage)
     int res;
 
     if (!codepage && str->type != type)
-        parser_error( "Current language is Unicode only, cannot convert string\n" );
+        parser_error( "Current language is Unicode only, cannot convert string" );
 
     if((str->type == str_char) && (type == str_unicode))
     {
@@ -256,7 +257,7 @@ string_t *convert_string(const string_t *str, enum str_e type, int codepage)
             res = wine_utf8_mbstowcs( MB_ERR_INVALID_CHARS, str->str.cstr, str->size,
                                       ret->str.wstr, ret->size );
         if (res == -2)
-            parser_error( "Invalid character in string '%.*s' for codepage %u\n",
+            parser_error( "Invalid character in string '%.*s' for codepage %u",
                    str->size, str->str.cstr, codepage );
         ret->str.wstr[ret->size] = 0;
     }
@@ -343,18 +344,18 @@ static const struct lang2cp lang2cps[] =
     { LANG_ALBANIAN,       SUBLANG_NEUTRAL,              1250 },
     { LANG_ARABIC,         SUBLANG_NEUTRAL,              1256 },
     { LANG_ARMENIAN,       SUBLANG_NEUTRAL,              0    },
+    { LANG_ASSAMESE,       SUBLANG_NEUTRAL,              0    },
     { LANG_AZERI,          SUBLANG_NEUTRAL,              1254 },
     { LANG_AZERI,          SUBLANG_AZERI_CYRILLIC,       1251 },
     { LANG_BASQUE,         SUBLANG_NEUTRAL,              1252 },
     { LANG_BELARUSIAN,     SUBLANG_NEUTRAL,              1251 },
-#ifdef LANG_BRETON
+    { LANG_BENGALI,        SUBLANG_NEUTRAL,              0    },
     { LANG_BRETON,         SUBLANG_NEUTRAL,              1252 },
-#endif /* LANG_BRETON */
     { LANG_BULGARIAN,      SUBLANG_NEUTRAL,              1251 },
     { LANG_CATALAN,        SUBLANG_NEUTRAL,              1252 },
     { LANG_CHINESE,        SUBLANG_NEUTRAL,              950  },
-    { LANG_CHINESE,        SUBLANG_CHINESE_SINGAPORE,    936  },
     { LANG_CHINESE,        SUBLANG_CHINESE_SIMPLIFIED,   936  },
+    { LANG_CHINESE,        SUBLANG_CHINESE_SINGAPORE,    936  },
 #ifdef LANG_CORNISH
     { LANG_CORNISH,        SUBLANG_NEUTRAL,              1252 },
 #endif /* LANG_CORNISH */
@@ -385,6 +386,7 @@ static const struct lang2cp lang2cps[] =
     { LANG_HUNGARIAN,      SUBLANG_NEUTRAL,              1250 },
     { LANG_ICELANDIC,      SUBLANG_NEUTRAL,              1252 },
     { LANG_INDONESIAN,     SUBLANG_NEUTRAL,              1252 },
+    { LANG_IRISH,          SUBLANG_NEUTRAL,              1252 },
     { LANG_ITALIAN,        SUBLANG_NEUTRAL,              1252 },
     { LANG_JAPANESE,       SUBLANG_NEUTRAL,              932  },
     { LANG_KANNADA,        SUBLANG_NEUTRAL,              0    },
@@ -394,17 +396,24 @@ static const struct lang2cp lang2cps[] =
     { LANG_KYRGYZ,         SUBLANG_NEUTRAL,              1251 },
     { LANG_LATVIAN,        SUBLANG_NEUTRAL,              1257 },
     { LANG_LITHUANIAN,     SUBLANG_NEUTRAL,              1257 },
+    { LANG_LOWER_SORBIAN,  SUBLANG_NEUTRAL,              1252 },
     { LANG_MACEDONIAN,     SUBLANG_NEUTRAL,              1251 },
     { LANG_MALAY,          SUBLANG_NEUTRAL,              1252 },
+    { LANG_MALAYALAM,      SUBLANG_NEUTRAL,              0    },
+    { LANG_MALTESE,        SUBLANG_NEUTRAL,              0    },
     { LANG_MARATHI,        SUBLANG_NEUTRAL,              0    },
     { LANG_MONGOLIAN,      SUBLANG_NEUTRAL,              1251 },
+    { LANG_NEPALI,         SUBLANG_NEUTRAL,              0    },
     { LANG_NEUTRAL,        SUBLANG_NEUTRAL,              1252 },
     { LANG_NORWEGIAN,      SUBLANG_NEUTRAL,              1252 },
+    { LANG_ORIYA,          SUBLANG_NEUTRAL,              0    },
     { LANG_POLISH,         SUBLANG_NEUTRAL,              1250 },
     { LANG_PORTUGUESE,     SUBLANG_NEUTRAL,              1252 },
     { LANG_PUNJABI,        SUBLANG_NEUTRAL,              0    },
     { LANG_ROMANIAN,       SUBLANG_NEUTRAL,              1250 },
+    { LANG_ROMANSH,        SUBLANG_NEUTRAL,              1252 },
     { LANG_RUSSIAN,        SUBLANG_NEUTRAL,              1251 },
+    { LANG_SAMI,           SUBLANG_NEUTRAL,              1252 },
     { LANG_SANSKRIT,       SUBLANG_NEUTRAL,              0    },
     { LANG_SERBIAN,        SUBLANG_NEUTRAL,              1250 },
     { LANG_SERBIAN,        SUBLANG_SERBIAN_CYRILLIC,     1251 },
@@ -414,22 +423,27 @@ static const struct lang2cp lang2cps[] =
     { LANG_SWAHILI,        SUBLANG_NEUTRAL,              1252 },
     { LANG_SWEDISH,        SUBLANG_NEUTRAL,              1252 },
     { LANG_SYRIAC,         SUBLANG_NEUTRAL,              0    },
+    { LANG_TAJIK,          SUBLANG_NEUTRAL,              1251 },
     { LANG_TAMIL,          SUBLANG_NEUTRAL,              0    },
     { LANG_TATAR,          SUBLANG_NEUTRAL,              1251 },
     { LANG_TELUGU,         SUBLANG_NEUTRAL,              0    },
     { LANG_THAI,           SUBLANG_NEUTRAL,              874  },
+    { LANG_TSWANA,         SUBLANG_NEUTRAL,              1252 },
     { LANG_TURKISH,        SUBLANG_NEUTRAL,              1254 },
     { LANG_UKRAINIAN,      SUBLANG_NEUTRAL,              1251 },
+    { LANG_UPPER_SORBIAN,  SUBLANG_NEUTRAL,              1252 },
     { LANG_URDU,           SUBLANG_NEUTRAL,              1256 },
     { LANG_UZBEK,          SUBLANG_NEUTRAL,              1254 },
     { LANG_UZBEK,          SUBLANG_UZBEK_CYRILLIC,       1251 },
-    { LANG_VIETNAMESE,     SUBLANG_NEUTRAL,              1258 }
+    { LANG_VIETNAMESE,     SUBLANG_NEUTRAL,              1258 },
 #ifdef LANG_WALON
-    , { LANG_WALON,          SUBLANG_NEUTRAL,              1252 }
+    { LANG_WALON,          SUBLANG_NEUTRAL,              1252 },
 #endif /* LANG_WALON */
 #ifdef LANG_WELSH
-    , { LANG_WELSH,          SUBLANG_NEUTRAL,              1252 }
-#endif /* LANG_WELSH */
+    { LANG_WELSH,          SUBLANG_NEUTRAL,              1252 },
+#endif
+    { LANG_XHOSA,          SUBLANG_NEUTRAL,              1252 },
+    { LANG_ZULU,           SUBLANG_NEUTRAL,              1252 }
 };
 
 int get_language_codepage( unsigned short lang, unsigned short sublang )

@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  31-08-2008
- * LAST CHANGE:  19-09-2008
+ * LAST CHANGE:  23-10-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -75,48 +75,48 @@ END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Podrobnosti sieùovÈho pripojenia" //SieùovÈ pripojenie - podrobnosti
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ LTEXT "Po&drobnosti sieùovÈho pripojenia:", -1, 15, 9, 170, 12
  CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
- PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+ PUSHBUTTON "&Zavrieù", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Physical Address"
-	IDS_IP_ADDRESS              "IP Address"
-	IDS_SUBNET_MASK             "Subnet Mask"
-	IDS_DEF_GATEWAY             "Default Gateway"
+	IDS_PHYSICAL_ADDRESS        "Fyzick· adresa"
+	IDS_IP_ADDRESS              "Adresa IP"
+	IDS_SUBNET_MASK             "Maska podsiete"
+	IDS_DEF_GATEWAY             "Predvolen· br·na"
 	IDS_DHCP_SERVER             "DHCP Server"
 	IDS_LEASE_OBTAINED          "Lease Obtained"
 	IDS_LEASE_EXPIRES           "Lease Expires"
-	IDS_DNS_SERVERS             "DNS Servers"
-	IDS_WINS_SERVERS            "WINS Servers"
-	IDS_PROPERTY                "Property"
-	IDS_VALUE                   "Value"
-	IDS_NETWORKCONNECTION       "Network Connection"
+	IDS_DNS_SERVERS             "Servery DNS"
+	IDS_WINS_SERVERS            "Servery WINS"
+	IDS_PROPERTY                "Vlastnosù"
+	IDS_VALUE                   "Hodnota"
+	IDS_NETWORKCONNECTION       "SieùovÈ pripojenie"
 	IDS_SHV_COLUMN_NAME         "N·zov"
 	IDS_SHV_COLUMN_TYPE         "Typ"
-	IDS_SHV_COLUMN_STATE        "Status"
+	IDS_SHV_COLUMN_STATE        "Stav"
 	IDS_SHV_COLUMN_DEVNAME      "N·zov zariadenia"
-	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-	IDS_SHV_COLUMN_OWNER        "Owner"
-	IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-	IDS_STATUS_NON_OPERATIONAL  "Disabled"
-	IDS_STATUS_UNREACHABLE      "Not Connected"
-	IDS_STATUS_DISCONNECTED     "Network cable unplugged"
-	IDS_STATUS_CONNECTING       "Acquiring network address"
-	IDS_STATUS_CONNECTED        "Connected"
-	IDS_STATUS_OPERATIONAL      "Connected"
+	IDS_SHV_COLUMN_PHONE        "TelefÛnne ËÌslo alebo adresa hostiteæa"
+	IDS_SHV_COLUMN_OWNER        "VlastnÌk"
+	IDS_TYPE_ETHERNET           "Lok·lna sieù alebo vysokor˝chlostn˝ Internet"
+	IDS_STATUS_NON_OPERATIONAL  "VypnutÈ"
+	IDS_STATUS_UNREACHABLE      "NepripojenÈ"
+	IDS_STATUS_DISCONNECTED     "Sieùov˝ k·bel je odpojen˝"
+	IDS_STATUS_CONNECTING       "ZÌskavanie sieùovej adresy"
+	IDS_STATUS_CONNECTED        "PripojenÈ"
+	IDS_STATUS_OPERATIONAL      "PripojenÈ"
 
-	IDS_NET_ACTIVATE            "Enable"
-	IDS_NET_DEACTIVATE          "Disable"
+	IDS_NET_ACTIVATE            "Zapn˙ù"
+	IDS_NET_DEACTIVATE          "Vypn˙ù"
 	IDS_NET_STATUS              "Stav"
 	IDS_NET_REPAIR              "Opraviù"
 	IDS_NET_CREATELINK          "Vytvoriù odkaz"
-	IDS_NET_DELETE              "Delete"
+	IDS_NET_DELETE              "Odstr·niù"
 	IDS_NET_RENAME              "Premenovaù"
 	IDS_NET_PROPERTIES          "Vlastnosti"
 

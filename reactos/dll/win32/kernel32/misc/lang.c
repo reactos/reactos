@@ -1267,32 +1267,89 @@ GetCPInfo (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCPInfoExW(
-    UINT          CodePage,
-    DWORD         dwFlags,
-    LPCPINFOEXW  lpCPInfoEx)
+GetCPInfoExW(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXW lpCPInfoEx)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if (!GetCPInfo(CodePage, (LPCPINFO) lpCPInfoEx))
+        return FALSE;
+
+    switch(CodePage)
+    {
+        case CP_UTF7:
+        {
+            static const WCHAR utf7[] = L"Unicode (UTF-7)\0";
+
+            lpCPInfoEx->CodePage = CP_UTF7;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            wcscpy(lpCPInfoEx->CodePageName, utf7);
+        }
+        break;
+
+        case CP_UTF8:
+        {
+            static const WCHAR utf8[] = L"Unicode (UTF-8)\0";
+            
+            lpCPInfoEx->CodePage = CP_UTF8;
+            lpCPInfoEx->UnicodeDefaultChar = 0x3f;
+            wcscpy(lpCPInfoEx->CodePageName, utf8);
+        }
+
+        default:
+        {
+            PCODEPAGE_ENTRY CodePageEntry;
+
+            CodePageEntry = IntGetCodePageEntry(CodePage);
+            if (CodePageEntry == NULL)
+            {
+                DPRINT1("Could not get CodePage Entry! CodePageEntry = 0\n");
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
+
+            lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
+            lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
+            /* FIXME: We need to get a codepage name */
+            DPRINT1("FIXME: We need to get a codepage name!\n");
+            wcscpy(lpCPInfoEx->CodePageName, L"Unknown\0");
+        }
+        break;
+    }
+
+    return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCPInfoExA(
-    UINT          CodePage,
-    DWORD         dwFlags,
-    LPCPINFOEXA  lpCPInfoEx)
+GetCPInfoExA(UINT CodePage,
+             DWORD dwFlags,
+             LPCPINFOEXA lpCPInfoEx)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CPINFOEXW CPInfo;
+
+    if (!GetCPInfoExW(CodePage, dwFlags, &CPInfo))
+        return FALSE;
+
+    /* the layout is the same except for CodePageName */
+    memcpy(lpCPInfoEx, &CPInfo, sizeof(CPINFOEXA));
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        CPInfo.CodePageName,
+                        -1,
+                        lpCPInfoEx->CodePageName,
+                        sizeof(lpCPInfoEx->CodePageName),
+                        NULL,
+                        NULL);
+    return TRUE;
 }
 
 static int
@@ -1712,6 +1769,115 @@ __inline static UINT get_lcid_codepage( LCID lcid )
     UINT ret;
     if (!GetLocaleInfoW( lcid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (WCHAR *)&ret,
                          sizeof(ret)/sizeof(WCHAR) )) ret = 0;
+    return ret;
+}
+
+
+/*************************************************************************
+ *           FoldStringA    (KERNEL32.@)
+ *
+ * Map characters in a string.
+ *
+ * PARAMS
+ *  dwFlags [I] Flags controlling chars to map (MAP_ constants from "winnls.h")
+ *  src     [I] String to map
+ *  srclen  [I] Length of src, or -1 if src is NUL terminated
+ *  dst     [O] Destination for mapped string
+ *  dstlen  [I] Length of dst, or 0 to find the required length for the mapped string
+ *
+ * RETURNS
+ *  Success: The length of the string written to dst, including the terminating NUL. If
+ *           dstlen is 0, the value returned is the same, but nothing is written to dst,
+ *           and dst may be NULL.
+ *  Failure: 0. Use GetLastError() to determine the cause.
+ */
+INT WINAPI FoldStringA(DWORD dwFlags, LPCSTR src, INT srclen,
+                       LPSTR dst, INT dstlen)
+{
+    INT ret = 0, srclenW = 0;
+    WCHAR *srcW = NULL, *dstW = NULL;
+
+    if (!src || !srclen || dstlen < 0 || (dstlen && !dst) || src == dst)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    srclenW = MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                                  src, srclen, NULL, 0);
+    srcW = HeapAlloc(GetProcessHeap(), 0, srclenW * sizeof(WCHAR));
+
+    if (!srcW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto FoldStringA_exit;
+    }
+
+    MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
+                        src, srclen, srcW, srclenW);
+
+    dwFlags = (dwFlags & ~MAP_PRECOMPOSED) | MAP_FOLDCZONE;
+
+    ret = FoldStringW(dwFlags, srcW, srclenW, NULL, 0);
+    if (ret && dstlen)
+    {
+        dstW = HeapAlloc(GetProcessHeap(), 0, ret * sizeof(WCHAR));
+
+        if (!dstW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto FoldStringA_exit;
+        }
+
+        ret = FoldStringW(dwFlags, srcW, srclenW, dstW, ret);
+        if (!WideCharToMultiByte(CP_ACP, 0, dstW, ret, dst, dstlen, NULL, NULL))
+        {
+            ret = 0;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, dstW);
+
+FoldStringA_exit:
+    HeapFree(GetProcessHeap(), 0, srcW);
+    return ret;
+}
+
+extern int wine_fold_string( int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen );
+
+/*************************************************************************
+ *           FoldStringW    (KERNEL32.@)
+ *
+ * See FoldStringA.
+ */
+INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
+                       LPWSTR dst, INT dstlen)
+{
+    int ret;
+
+    switch (dwFlags & (MAP_COMPOSITE|MAP_PRECOMPOSED|MAP_EXPAND_LIGATURES))
+    {
+    case 0:
+        if (dwFlags)
+          break;
+        /* Fall through for dwFlags == 0 */
+    case MAP_PRECOMPOSED|MAP_COMPOSITE:
+    case MAP_PRECOMPOSED|MAP_EXPAND_LIGATURES:
+    case MAP_COMPOSITE|MAP_EXPAND_LIGATURES:
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (!src || !srclen || dstlen < 0 || (dstlen && !dst) || src == dst)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    ret = wine_fold_string(dwFlags, src, srclen, dst, dstlen);
+    if (!ret)
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
     return ret;
 }
 

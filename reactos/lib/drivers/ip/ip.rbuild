@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="ip" type="staticlibrary" allowwarnings="true">
+<module name="ip" type="staticlibrary">
 	<define name="__NTDRIVER__"/>
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>

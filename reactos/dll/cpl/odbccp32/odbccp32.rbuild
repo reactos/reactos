@@ -8,5 +8,4 @@
 	<library>comctl32</library>
 	<file>odbccp32.c</file>
 	<file>odbccp32.rc</file>
-	<file>odbccp32.spec</file>
 </module>

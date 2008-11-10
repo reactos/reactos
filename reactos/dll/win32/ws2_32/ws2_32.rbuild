@@ -26,6 +26,5 @@
 		<file>async.c</file>
 	</directory>
 	<file>ws2_32.rc</file>
-	<file>ws2_32.spec</file>
 </module>
 

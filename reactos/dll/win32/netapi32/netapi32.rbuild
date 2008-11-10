@@ -18,7 +18,6 @@
 	<file>netbios.c</file>
 	<file>share.c</file>
 	<file>wksta.c</file>
-	<file>netapi32.spec</file>
 	<library>wine</library>
 	<library>iphlpapi</library>
 	<library>ws2_32</library>

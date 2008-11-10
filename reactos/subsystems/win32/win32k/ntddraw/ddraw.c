@@ -94,7 +94,7 @@ intEnableReactXDriver(HDC hdc)
         }
         else
         {
-            DPRINT1(" The dxg.sys and graphic card driver interface is enable \n ");
+            DPRINT1(" The dxg.sys and graphic card driver interface is enabled \n ");
             success = TRUE;
         }
     }

@@ -8,7 +8,6 @@
 	<library>comctl32</library>
 	<library>advapi32</library>
 	<library>setupapi</library>
-    <library>msvcrt</library>
 	<library>shell32</library>
 	<file>currency.c</file>
 	<file>date.c</file>
@@ -22,5 +21,4 @@
 	<file>advanced.c</file>
 	<file>sort.c</file>
 	<file>intl.rc</file>
-	<file>intl.spec</file>
 </module>

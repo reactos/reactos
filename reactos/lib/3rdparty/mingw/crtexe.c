@@ -136,7 +136,7 @@ int WinMainCRTStartup (void)
 #endif
 {
   mingw_app_type = 1;
-  __security_init_cookie ();
+  //__security_init_cookie ();
   return __mingw_CRTStartup ();
 }
 
@@ -147,7 +147,7 @@ int mainCRTStartup (void)
 #endif
 {
   mingw_app_type = 0;
-  __security_init_cookie ();
+  //__security_init_cookie ();
   return __mingw_CRTStartup ();
 }
 

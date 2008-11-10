@@ -253,7 +253,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             if (KeGetCurrentProcessorNumber() != Thread->NextProcessor)
             {
                 /* We are, send an IPI */
-                KiIpiSendRequest(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
+                KiIpiSend(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
             }
             return;
         }
@@ -612,7 +612,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         if (KeGetCurrentProcessorNumber() != Processor)
                         {
                             /* We are, send an IPI */
-                            KiIpiSendRequest(AFFINITY_MASK(Processor), IPI_DPC);
+                            KiIpiSend(AFFINITY_MASK(Processor), IPI_DPC);
                         }
                     }
                 }

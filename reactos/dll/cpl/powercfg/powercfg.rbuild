@@ -16,5 +16,4 @@
 	<file>advanced.c</file>
 	<file>hibernate.c</file>
 	<file>powercfg.rc</file>
-	<file>powercfg.spec</file>
 </module>

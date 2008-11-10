@@ -30,636 +30,651 @@ Signature = "$ReactOS$"
 
 
 ; Base files
-;base\applications\cacls\cacls.exe                       1
-;base\applications\calc\calc.exe                         1
-;base\applications\charmap\charmap.exe                   1
-;base\applications\cmdutils\dbgprint\dbgprint.exe        1
-;base\applications\cmdutils\doskey\doskey.exe            1
-;base\applications\cmdutils\find\find.exe                1
-;base\applications\cmdutils\hostname\hostname.exe        1
-;base\applications\cmdutils\more\more.exe                1
-;base\applications\cmdutils\xcopy\xcopy.exe              1
-;base\applications\control\control.exe                   1
-;base\applications\mscutils\devmgmt\devmgmt.exe          1
-;base\applications\mscutils\eventvwr\eventvwr.exe        1
-;base\applications\games\solitaire\sol.exe               1
-;base\applications\games\winemine\winemine.exe           1
-;base\applications\hh\hh.exe                             1
-;base\applications\kbswitch\kbswitch.exe                 1
-;base\applications\kbswitch\kbsdll\kbsdll.dll            1
-;base\applications\logoff\logoff.exe                     1
-;base\applications\msconfig\msconfig.exe                 1
-;base\applications\mstsc\mstsc.exe                       1
-;base\applications\network\arp\arp.exe                   1
-;base\applications\network\dwnl\dwnl.exe                 1
-;base\applications\network\route\route.exe               1
-;base\applications\network\finger\finger.exe             1
-;base\applications\network\ftp\ftp.exe                   1
-;base\applications\network\ipconfig\ipconfig.exe         1
-;base\applications\network\netstat\netstat.exe           1
-;base\applications\network\ping\ping.exe                 1
+base\applications\cacls\cacls.exe                       1
+base\applications\calc\calc.exe                         1
+base\applications\charmap\charmap.exe                   1
+base\applications\cmdutils\dbgprint\dbgprint.exe        1
+base\applications\cmdutils\doskey\doskey.exe            1
+base\applications\cmdutils\find\find.exe                1
+base\applications\cmdutils\hostname\hostname.exe        1
+base\applications\cmdutils\more\more.exe                1
+base\applications\cmdutils\xcopy\xcopy.exe              1
+base\applications\control\control.exe                   1
+base\applications\mscutils\devmgmt\devmgmt.exe          1
+base\applications\mscutils\eventvwr\eventvwr.exe        1
+base\applications\games\solitaire\sol.exe               1
+base\applications\games\winemine\winemine.exe           1
+base\applications\hh\hh.exe                             1
+base\applications\kbswitch\kbswitch.exe                 1
+base\applications\kbswitch\kbsdll\kbsdll.dll            1
+base\applications\logoff\logoff.exe                     1
+base\applications\msconfig\msconfig.exe                 1
+base\applications\mstsc\mstsc.exe                       1
+base\applications\network\arp\arp.exe                   1
+base\applications\network\dwnl\dwnl.exe                 1
+base\applications\network\route\route.exe               1
+base\applications\network\finger\finger.exe             1
+base\applications\network\ftp\ftp.exe                   1
+base\applications\network\ipconfig\ipconfig.exe         1
+base\applications\network\netstat\netstat.exe           1
+base\applications\network\ping\ping.exe                 1
 ;base\applications\network\telnet\telnet.exe             1
-;base\applications\network\tracert\tracert.exe           1
-;base\applications\network\whois\whois.exe               1
-;base\applications\notepad\notepad.exe                   1
-;base\applications\regedit\regedit.exe                   4
-;base\applications\regedit\clb\clb.dll                   1
-;base\applications\sc\sc.exe                             1
-;base\applications\screensavers\3dtext\3dtext.scr        1
-;base\applications\screensavers\logon\logon.scr          1
-;base\applications\mscutils\servman\servman.exe          1
-;base\applications\shutdown\shutdown.exe                 1
-;base\applications\sndvol32\sndvol32.exe                 1
-;base\applications\taskmgr\taskmgr.exe                   1
-;base\applications\winhlp32\winhlp32.exe                 1
-;base\applications\wordpad\wordpad.exe                   1
+base\applications\network\tracert\tracert.exe           1
+base\applications\network\whois\whois.exe               1
+base\applications\notepad\notepad.exe                   1
+base\applications\regedit\regedit.exe                   4
+base\applications\regedit\clb\clb.dll                   1
+base\applications\sc\sc.exe                             1
+base\applications\screensavers\3dtext\3dtext.scr        1
+base\applications\screensavers\logon\logon.scr          1
+base\applications\mscutils\servman\servman.exe          1
+base\applications\shutdown\shutdown.exe                 1
+base\applications\sndvol32\sndvol32.exe                 1
+base\applications\taskmgr\taskmgr.exe                   1
+base\applications\winhlp32\winhlp32.exe                 1
+base\applications\wordpad\wordpad.exe                   1
 
-;base\services\audiosrv\audiosrv.exe                 1
-;base\services\dhcp\dhcp.exe                         1
-;base\services\eventlog\eventlog.exe                 1
-;base\services\rpcss\rpcss.exe                       1
-;base\services\spoolsv\spoolsv.exe                   1
-;base\services\tcpsvcs\tcpsvcs.exe                   1
-;base\services\tcpsvcs\quotes                        5
-;base\services\umpnpmgr\umpnpmgr.exe                 1
-;base\services\audiosrv\audiosrv.exe                 1
+base\services\audiosrv\audiosrv.exe                 1
+base\services\dhcp\dhcp.exe                         1
+base\services\eventlog\eventlog.exe                 1
+base\services\rpcss\rpcss.exe                       1
+base\services\spoolsv\spoolsv.exe                   1
+base\services\tcpsvcs\tcpsvcs.exe                   1
+base\services\tcpsvcs\quotes                        5
+base\services\umpnpmgr\umpnpmgr.exe                 1
+base\services\audiosrv\audiosrv.exe                 1
 
-;base\setup\setup\setup.exe                          1
-;base\setup\vmwinst\vmwinst.exe                      1
+base\setup\setup\setup.exe                          1
+base\setup\vmwinst\vmwinst.exe                      1
 
-;base\shell\cmd\cmd.exe                              1
+base\shell\cmd\cmd.exe                              1
 ;base\shell\explorer\explorer.exe                    4
-;base\shell\explorer\explorer-cfg-template.xml       4
+base\shell\explorer\explorer-cfg-template.xml       4
 ;base\shell\explorer\notifyhook\notifyhook.dll       1
-;base\shell\explorer-new\explorer_new.exe            4   optional
+base\shell\explorer-new\explorer_new.exe            4   optional
 
-;base\system\autochk\autochk.exe                     1
-;base\system\bootok\bootok.exe                       1
-;base\system\format\format.exe                       1
-;base\system\lsass\lsass.exe                         1
-;base\system\msiexec\msiexec.exe                     1
-;base\system\regsvr32\regsvr32.exe                   1
-;base\system\rundll32\rundll32.exe                   1
-;base\system\services\services.exe                   1
-;base\system\userinit\userinit.exe                   1
-;base\system\winlogon\winlogon.exe                   1
-;base\system\expand\expand.exe                       1
-;base\system\smss\smss.exe                           1
+base\system\autochk\autochk.exe                     1
+base\system\bootok\bootok.exe                       1
+base\system\format\format.exe                       1
+base\system\lsass\lsass.exe                         1
+base\system\msiexec\msiexec.exe                     1
+base\system\regsvr32\regsvr32.exe                   1
+base\system\rundll32\rundll32.exe                   1
+base\system\services\services.exe                   1
+base\system\userinit\userinit.exe                   1
+base\system\winlogon\winlogon.exe                   1
+base\system\expand\expand.exe                       1
+base\system\smss\smss.exe                           1
 
 
 ; Dynamic Link Libraries
-;dll\3rdparty\freetype\freetype.dll                  1
-;dll\3rdparty\mesa32\mesa32.dll                      1
-;dll\3rdparty\dxtn\dxtn.dll                          1   optional
+dll\3rdparty\freetype\freetype.dll                  1
+dll\3rdparty\mesa32\mesa32.dll                      1
+dll\3rdparty\dxtn\dxtn.dll                          1   optional
 
-;dll\cpl\access\access.cpl                           1
-;dll\cpl\appwiz\appwiz.cpl                           1
-;dll\cpl\console\console.dll                         1
-;dll\cpl\desk\desk.cpl                               1
-;dll\cpl\intl\intl.cpl                               1
-;dll\cpl\main\main.cpl                               1
-;dll\cpl\mmsys\mmsys.cpl                             1
-;dll\cpl\ncpa\ncpa.cpl                               1
-;dll\cpl\powercfg\powercfg.cpl                       1
-;dll\cpl\sysdm\sysdm.cpl                             1
-;dll\cpl\timedate\timedate.cpl                       1
-;dll\cpl\input\input.dll                             1
-;dll\cpl\joy\joy.cpl                                 1
+dll\cpl\access\access.cpl                           1
+dll\cpl\appwiz\appwiz.cpl                           1
+dll\cpl\console\console.dll                         1
+dll\cpl\desk\desk.cpl                               1
+dll\cpl\intl\intl.cpl                               1
+dll\cpl\main\main.cpl                               1
+dll\cpl\mmsys\mmsys.cpl                             1
+dll\cpl\ncpa\ncpa.cpl                               1
+dll\cpl\powercfg\powercfg.cpl                       1
+dll\cpl\sysdm\sysdm.cpl                             1
+dll\cpl\timedate\timedate.cpl                       1
+dll\cpl\input\input.dll                             1
+dll\cpl\joy\joy.cpl                                 1
 
-;dll\directx\dinput\dinput.dll                       1
-;dll\directx\dinput8\dinput8.dll                     1
-;dll\directx\dplay\dplay.dll                         1
-;dll\directx\dplayx\dplayx.dll                       1
-;dll\directx\dsound\dsound.dll                       1
-;dll\directx\dxdiagn\dxdiagn.dll                     1
-;dll\directx\ddraw\ddraw.dll                         1
-;dll\directx\d3d8thk\d3d8thk.dll                     1
-;dll\directx\devenum\devenum.dll                     1
-;dll\directx\ksproxy\ksproxy.ax                      1
-;dll\directx\ksuser\ksuser.dll                       1
-;dll\directx\msdmo\msdmo.dll                         1
-;dll\directx\quartz\quartz.dll                       1
-;dll\directx\qedit\qedit.dll                         1
+dll\directx\dinput\dinput.dll                       1
+dll\directx\dinput8\dinput8.dll                     1
+dll\directx\dplay\dplay.dll                         1
+dll\directx\dplayx\dplayx.dll                       1
+dll\directx\dsound\dsound.dll                       1
+dll\directx\dxdiagn\dxdiagn.dll                     1
+dll\directx\ddraw\ddraw.dll                         1
+dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\devenum\devenum.dll                     1
+dll\directx\ksproxy\ksproxy.ax                      1
+dll\directx\ksuser\ksuser.dll                       1
+dll\directx\msdmo\msdmo.dll                         1
+dll\directx\quartz\quartz.dll                       1
+dll\directx\qedit\qedit.dll                         1
 ;dll\directx\wine\d3d8\d3d8.dll                      1
 ;dll\directx\wine\wined3d\wined3d.dll                1
 ;dll\directx\wine\d3d9\d3d9.dll                      1
 
-;dll\keyboard\kbda1\kbda1.dll                        1
-;dll\keyboard\kbda2\kbda2.dll                        1
-;dll\keyboard\kbda3\kbda3.dll                        1
-;dll\keyboard\kbdal\kbdal.dll                        1
-;dll\keyboard\kbdarme\kbdarme.dll                    1
-;dll\keyboard\kbdarmw\kbdarmw.dll                    1
-;dll\keyboard\kbdaze\kbdaze.dll                      1
-;dll\keyboard\kbdazel\kbdazel.dll                    1
-;dll\keyboard\kbdbgm\kbdbgm.dll                      1
-;dll\keyboard\kbdbgt\kbdbgt.dll                      1
-;dll\keyboard\kbdblr\kbdblr.dll                      1
-;dll\keyboard\kbdbr\kbdbr.dll                        1
-;dll\keyboard\kbdbga\kbdbga.dll                      1
-;dll\keyboard\kbdbe\kbdbe.dll                        1
-;dll\keyboard\kbdbur\kbdbur.dll                      1
-;dll\keyboard\kbdcan\kbdcan.dll                      1
-;dll\keyboard\kbdcr\kbdcr.dll                        1
-;dll\keyboard\kbdcz1\kbdcz1.dll                      1
-;dll\keyboard\kbdda\kbdda.dll                        1
-;dll\keyboard\kbddv\kbddv.dll                        1
-;dll\keyboard\kbdes\kbdes.dll                        1
-;dll\keyboard\kbdest\kbdest.dll                      1
-;dll\keyboard\kbdfc\kbdfc.dll                        1
-;dll\keyboard\kbdfi\kbdfi.dll                        1
-;dll\keyboard\kbdfr\kbdfr.dll                        1
-;dll\keyboard\kbdgeo\kbdgeo.dll                      1
-;dll\keyboard\kbdgerg\kbdgerg.dll                    1
-;dll\keyboard\kbdgneo\kbdgneo.dll                    1
-;dll\keyboard\kbdgrist\kbdgrist.dll                  1
-;dll\keyboard\kbdgr\kbdgr.dll                        1
-;dll\keyboard\kbdhe\kbdhe.dll                        1
-;dll\keyboard\kbdheb\kbdheb.dll                      1
-;dll\keyboard\kbdhu\kbdhu.dll                        1
-;dll\keyboard\kbdic\kbdic.dll                        1
-;dll\keyboard\kbdinasa\kbdinasa.dll                  1
-;dll\keyboard\kbdinben\kbdinben.dll                  1
-;dll\keyboard\kbdindev\kbdindev.dll                  1
-;dll\keyboard\kbdinguj\kbdinguj.dll                  1
-;dll\keyboard\kbdinmal\kbdinmal.dll                  1
-;dll\keyboard\kbdir\kbdir.dll                        1
-;dll\keyboard\kbdit\kbdit.dll                        1
-;dll\keyboard\kbdja\kbdja.dll                        1
-;dll\keyboard\kbdkaz\kbdkaz.dll                      1
-;dll\keyboard\kbdla\kbdla.dll                        1
-;dll\keyboard\kbdlt\kbdlt.dll                        1
-;dll\keyboard\kbdlv\kbdlv.dll                        1
-;dll\keyboard\kbdmac\kbdmac.dll                      1
-;dll\keyboard\kbdne\kbdne.dll                        1
-;dll\keyboard\kbdno\kbdno.dll                        1
-;dll\keyboard\kbdpl1\kbdpl1.dll                      1
-;dll\keyboard\kbdpo\kbdpo.dll                        1
-;dll\keyboard\kbdro\kbdro.dll                        1
-;dll\keyboard\kbdru\kbdru.dll                        1
-;dll\keyboard\kbdru1\kbdru1.dll                      1
-;dll\keyboard\kbdsg\kbdsg.dll                        1
-;dll\keyboard\kbdsk\kbdsk.dll                        1
-;dll\keyboard\kbdsk1\kbdsk1.dll                      1
-;dll\keyboard\kbdsw\kbdsw.dll                        1
-;dll\keyboard\kbdtat\kbdtat.dll                      1
-;dll\keyboard\kbdth0\kbdth0.dll                      1
-;dll\keyboard\kbdth1\kbdth1.dll                      1
-;dll\keyboard\kbdth2\kbdth2.dll                      1
-;dll\keyboard\kbdth3\kbdth3.dll                      1
-;dll\keyboard\kbdtuf\kbdtuf.dll                      1
-;dll\keyboard\kbdtuq\kbdtuq.dll                      1
-;dll\keyboard\kbduk\kbduk.dll                        1
-;dll\keyboard\kbdur\kbdur.dll                        1
-;dll\keyboard\kbdurs\kbdurs.dll                      1
-;dll\keyboard\kbdus\kbdus.dll                        1
-;dll\keyboard\kbdusa\kbdusa.dll                      1
-;dll\keyboard\kbdusl\kbdusl.dll                      1
-;dll\keyboard\kbdusr\kbdusr.dll                      1
-;dll\keyboard\kbdusx\kbdusx.dll                      1
-;dll\keyboard\kbduzb\kbduzb.dll                      1
-;dll\keyboard\kbdvntc\kbdvntc.dll                    1
-;dll\keyboard\kbdycc\kbdycc.dll                      1
-;dll\keyboard\kbdycl\kbdycl.dll                      1
-;dll\keyboard\kbdko\kbdko.dll                        1
+dll\keyboard\kbda1\kbda1.dll                        1
+dll\keyboard\kbda2\kbda2.dll                        1
+dll\keyboard\kbda3\kbda3.dll                        1
+dll\keyboard\kbdal\kbdal.dll                        1
+dll\keyboard\kbdarme\kbdarme.dll                    1
+dll\keyboard\kbdarmw\kbdarmw.dll                    1
+dll\keyboard\kbdaze\kbdaze.dll                      1
+dll\keyboard\kbdazel\kbdazel.dll                    1
+dll\keyboard\kbdbgm\kbdbgm.dll                      1
+dll\keyboard\kbdbgt\kbdbgt.dll                      1
+dll\keyboard\kbdblr\kbdblr.dll                      1
+dll\keyboard\kbdbr\kbdbr.dll                        1
+dll\keyboard\kbdbga\kbdbga.dll                      1
+dll\keyboard\kbdbe\kbdbe.dll                        1
+dll\keyboard\kbdbur\kbdbur.dll                      1
+dll\keyboard\kbdcan\kbdcan.dll                      1
+dll\keyboard\kbdcr\kbdcr.dll                        1
+dll\keyboard\kbdcz1\kbdcz1.dll                      1
+dll\keyboard\kbdda\kbdda.dll                        1
+dll\keyboard\kbddv\kbddv.dll                        1
+dll\keyboard\kbdes\kbdes.dll                        1
+dll\keyboard\kbdest\kbdest.dll                      1
+dll\keyboard\kbdfc\kbdfc.dll                        1
+dll\keyboard\kbdfi\kbdfi.dll                        1
+dll\keyboard\kbdfr\kbdfr.dll                        1
+dll\keyboard\kbdgeo\kbdgeo.dll                      1
+dll\keyboard\kbdgerg\kbdgerg.dll                    1
+dll\keyboard\kbdgneo\kbdgneo.dll                    1
+dll\keyboard\kbdgrist\kbdgrist.dll                  1
+dll\keyboard\kbdgr\kbdgr.dll                        1
+dll\keyboard\kbdhe\kbdhe.dll                        1
+dll\keyboard\kbdheb\kbdheb.dll                      1
+dll\keyboard\kbdhu\kbdhu.dll                        1
+dll\keyboard\kbdic\kbdic.dll                        1
+dll\keyboard\kbdinasa\kbdinasa.dll                  1
+dll\keyboard\kbdinben\kbdinben.dll                  1
+dll\keyboard\kbdindev\kbdindev.dll                  1
+dll\keyboard\kbdinguj\kbdinguj.dll                  1
+dll\keyboard\kbdinmal\kbdinmal.dll                  1
+dll\keyboard\kbdir\kbdir.dll                        1
+dll\keyboard\kbdit\kbdit.dll                        1
+dll\keyboard\kbdja\kbdja.dll                        1
+dll\keyboard\kbdkaz\kbdkaz.dll                      1
+dll\keyboard\kbdla\kbdla.dll                        1
+dll\keyboard\kbdlt\kbdlt.dll                        1
+dll\keyboard\kbdlv\kbdlv.dll                        1
+dll\keyboard\kbdmac\kbdmac.dll                      1
+dll\keyboard\kbdne\kbdne.dll                        1
+dll\keyboard\kbdno\kbdno.dll                        1
+dll\keyboard\kbdpl1\kbdpl1.dll                      1
+dll\keyboard\kbdpo\kbdpo.dll                        1
+dll\keyboard\kbdro\kbdro.dll                        1
+dll\keyboard\kbdru\kbdru.dll                        1
+dll\keyboard\kbdru1\kbdru1.dll                      1
+dll\keyboard\kbdsg\kbdsg.dll                        1
+dll\keyboard\kbdsk\kbdsk.dll                        1
+dll\keyboard\kbdsk1\kbdsk1.dll                      1
+dll\keyboard\kbdsw\kbdsw.dll                        1
+dll\keyboard\kbdtat\kbdtat.dll                      1
+dll\keyboard\kbdth0\kbdth0.dll                      1
+dll\keyboard\kbdth1\kbdth1.dll                      1
+dll\keyboard\kbdth2\kbdth2.dll                      1
+dll\keyboard\kbdth3\kbdth3.dll                      1
+dll\keyboard\kbdtuf\kbdtuf.dll                      1
+dll\keyboard\kbdtuq\kbdtuq.dll                      1
+dll\keyboard\kbduk\kbduk.dll                        1
+dll\keyboard\kbdur\kbdur.dll                        1
+dll\keyboard\kbdurs\kbdurs.dll                      1
+dll\keyboard\kbdus\kbdus.dll                        1
+dll\keyboard\kbdusa\kbdusa.dll                      1
+dll\keyboard\kbdusl\kbdusl.dll                      1
+dll\keyboard\kbdusr\kbdusr.dll                      1
+dll\keyboard\kbdusx\kbdusx.dll                      1
+dll\keyboard\kbduzb\kbduzb.dll                      1
+dll\keyboard\kbdvntc\kbdvntc.dll                    1
+dll\keyboard\kbdycc\kbdycc.dll                      1
+dll\keyboard\kbdycl\kbdycl.dll                      1
+dll\keyboard\kbdko\kbdko.dll                        1
 
-;dll\nt;dll\ntdll.dll                                 1
+dll\ntdll\ntdll.dll                                 1
 
-;dll\win32\acledit\acledit.dll                       1
-;dll\win32\aclui\aclui.dll                           1
-;dll\win32\advapi32\advapi32.dll                     1
-;dll\win32\advpack\advpack.dll                       1
-;dll\win32\atl\atl.dll                               1
-;dll\win32\authz\authz.dll                           1
-;dll\win32\avifil32\avifil32.dll                     1
-;dll\win32\beepmidi\beepmidi.dll                     1
-;dll\win32\browseui\browseui.dll                     1
-;dll\win32\cabinet\cabinet.dll                       1
-;dll\win32\cards\cards.dll                           1
-;dll\win32\cfgmgr32\cfgmgr32.dll                     1
-;dll\win32\clusapi\clusapi.dll                       1
-;dll\win32\comcat\comcat.dll                         1
-;dll\win32\comctl32\comctl32.dll                     1
-;dll\win32\comdlg32\comdlg32.dll                     1
-;dll\win32\compstui\compstui.dll                     1
-;dll\win32\credui\credui.dll                         1
-;dll\win32\crtdll\crtdll.dll                         1
-;dll\win32\crypt32\crypt32.dll                       1
-;dll\win32\cryptdll\cryptdll.dll                     1
-;dll\win32\cryptnet\cryptnet.dll                     1
-;dll\win32\cryptui\cryptui.dll                       1
-;dll\win32\dbghelp\dbghelp.dll                       1
-;dll\win32\dciman32\dciman32.dll                     1
-;dll\win32\devmgr\devmgr.dll                         1
-;dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
-;dll\win32\dnsapi\dnsapi.dll                         1
-;dll\win32\fmifs\fmifs.dll                           1
-;dll\win32\fusion\fusion.dll                         1
-;dll\win32\gdi32\gdi32.dll                           1
-;dll\win32\gdiplus\gdiplus.dll                       1
-;dll\win32\getuname\getuname.dll                     1
-;dll\win32\glu32\glu32.dll                           1
-;dll\win32\hhctrl.ocx\hhctrl.ocx                     1
-;dll\win32\hid\hid.dll                               1
-;dll\win32\hlink\hlink.dll                           1
-;dll\win32\icmp\icmp.dll                             1
-;dll\win32\imagehlp\imagehlp.dll                     1
-;dll\win32\imm32\imm32.dll                           1
-;dll\win32\inetcomm\inetcomm.dll                     1
-;dll\win32\inetmib1\inetmib1.dll                     1
-;dll\win32\iphlpapi\iphlpapi.dll                     1
-;dll\win32\jscript\jscript.dll                       1
-;dll\win32\kernel32\kernel32.dll                     1
-;dll\win32\lsasrv\lsasrv.dll                         1
-;dll\win32\lz32\lz32.dll                             1
-;dll\win32\mapi32\mapi32.dll                         1
-;dll\win32\mlang\mlang.dll                           1
-;dll\win32\mmdrv\mmdrv.dll                           1
-;dll\win32\modemui\modemui.dll                       1
-;dll\win32\mpr\mpr.dll                               1
-;dll\win32\mprapi\mprapi.dll                         1
-;dll\win32\msacm32\msacm32.dll                       1
-;dll\win32\msafd\msafd.dll                           1
-;dll\win32\mscoree\mscoree.dll                       1
-;dll\win32\msgina\msgina.dll                         1
-;dll\win32\mshtml\mshtml.dll                         1
-;dll\win32\mshtml.tlb\mshtml.tlb                     1
-;dll\win32\msi\msi.dll                               1
-;dll\win32\msimg32\msimg32.dll                       1
-;dll\win32\mstask\mstask.dll                         1
-;dll\win32\msvcrt\msvcrt.dll                         1
-;dll\win32\msvcrt20\msvcrt20.dll                     1
-;dll\win32\msvcrt40\msvcrt40.dll                     1
-;dll\win32\msvfw32\msvfw32.dll                       1
-;dll\win32\mswsock\mswsock.dll                       1
-;dll\win32\msxml3\msxml3.dll                         1
-;dll\win32\nddeapi\nddeapi.dll                       1
-;dll\win32\netapi32\netapi32.dll                     1
-;dll\win32\netcfgx\netcfgx.dll                       1
-;dll\win32\netid\netid.dll                           1
-;dll\win32\netshell\netshell.dll                     1
-;dll\win32\newdev\newdev.dll                         1
-;dll\win32\ntdsapi\ntdsapi.dll                       1
-;dll\win32\ntmarta\ntmarta.dll                       1
-;dll\win32\objsel\objsel.dll                         1
-;dll\win32\odbc32\odbc32.dll                         1
-;dll\win32\odbccp32\odbccp32.dll                     1
-;dll\win32\ole32\ole32.dll                           1
-;dll\win32\oleacc\oleacc.dll                         1
-;dll\win32\oleaut32\oleaut32.dll                     1
-;dll\win32\oledlg\oledlg.dll                         1
-;dll\win32\olepro32\olepro32.dll                     1
-;dll\win32\opengl32\opengl32.dll                     1
-;dll\win32\pdh\pdh.dll                               1
-;dll\win32\powrprof\powrprof.dll                     1
-;dll\win32\printui\printui.dll                       1
-;dll\win32\psapi\psapi.dll                           1
-;dll\win32\pstorec\pstorec.dll                       1
-;dll\win32\rasapi32\rasapi32.dll                     1
-;dll\win32\rasdlg\rasdlg.dll                         1
-;dll\win32\rasman\rasman.dll                         1
-;dll\win32\riched20\riched20.dll                     1
-;dll\win32\riched32\riched32.dll                     1
-;dll\win32\rpcrt4\rpcrt4.dll                         1
-;dll\win32\rsabase\rsabase.dll                       1
-;dll\win32\rsaenh\rsaenh.dll                         1
-;dll\win32\samlib\samlib.dll                         1
-;dll\win32\samsrv\samsrv.dll                         1
-;dll\win32\schannel\schannel.dll                     1
-;dll\win32\secur32\secur32.dll                       1
-;dll\win32\security\security.dll                     1
-;dll\win32\sensapi\sensapi.dll                       1
-;dll\win32\serialui\serialui.dll                     1
-;dll\win32\setupapi\setupapi.dll                     1
-;dll\win32\sfc\sfc.dll                               1
-;dll\win32\sfc_os\sfc_os.dll                         1
-;dll\win32\shdocvw\shdocvw.dll                       1
-;dll\win32\shell32\shell32.dll                       1
-;dll\win32\shfolder\shfolder.dll                     1
-;dll\win32\shimgvw\shimgvw.dll                       1
-;dll\win32\shlwapi\shlwapi.dll                       1
-;dll\win32\smdll\smdll.dll                           1
-;dll\win32\snmpapi\snmpapi.dll                       1
-;dll\win32\stdole2.tlb\stdole2.tlb                   1
-;dll\win32\stdole32.tlb\stdole32.tlb                 1
-;dll\win32\sxs\sxs.dll                               1
-;dll\win32\syssetup\syssetup.dll                     1
-;dll\win32\tapi32\tapi32.dll                         1
-;dll\win32\tapiui\tapiui.dll                         1
-;dll\win32\twain_32\twain_32.dll                     1
-;dll\win32\uext2\uext2.dll                           1
-;dll\win32\ufat\ufat.dll                             1
-;dll\win32\ufatx\ufatx.dll                           1   optional
-;dll\win32\untfs\untfs.dll                           1
-;dll\win32\urlmon\urlmon.dll                         1
-;dll\win32\user32\user32.dll                         1
-;dll\win32\userenv\userenv.dll                       1
-;dll\win32\usp10\usp10.dll                           1
-;dll\win32\uxtheme\uxtheme.dll                       1
-;dll\win32\vdmdbg\vdmdbg.dll                         1
-;dll\win32\version\version.dll                       1
-;dll\win32\winfax\winfax.dll                         1
-;dll\win32\winhttp\winhttp.dll                       1
-;dll\win32\wininet\wininet.dll                       1
-;dll\win32\winmm\winmm.dll                           1
-;dll\win32\winspool\winspool.drv                     1
-;dll\win32\winsta\winsta.dll                         1
-;dll\win32\wintrust\wintrust.dll                     1
-;dll\win32\wldap32\wldap32.dll                       1
-;dll\win32\ws2_32\ws2_32.dll                         1
-;dll\win32\ws2help\ws2help.dll                       1
-;dll\win32\wshirda\wshirda.dll                       1
-;dll\win32\wshtcpip\wshtcpip.dll                     1
-;dll\win32\wsock32\wsock32.dll                       1
-;dll\win32\wtsapi32\wtsapi32.dll                     1
-;dll\win32\winmm\midimap\midimap.dll                 1
-;dll\win32\winmm\wavemap\msacm32.drv                 1   optional
+dll\win32\acledit\acledit.dll                       1
+dll\win32\aclui\aclui.dll                           1
+dll\win32\advapi32\advapi32.dll                     1
+dll\win32\advpack\advpack.dll                       1
+dll\win32\atl\atl.dll                               1
+dll\win32\authz\authz.dll                           1
+dll\win32\avifil32\avifil32.dll                     1
+dll\win32\beepmidi\beepmidi.dll                     1
+dll\win32\browseui\browseui.dll                     1
+dll\win32\cabinet\cabinet.dll                       1
+dll\win32\cards\cards.dll                           1
+dll\win32\cfgmgr32\cfgmgr32.dll                     1
+dll\win32\clusapi\clusapi.dll                       1
+dll\win32\comcat\comcat.dll                         1
+dll\win32\comctl32\comctl32.dll                     1
+dll\win32\comdlg32\comdlg32.dll                     1
+dll\win32\compstui\compstui.dll                     1
+dll\win32\credui\credui.dll                         1
+dll\win32\crtdll\crtdll.dll                         1
+dll\win32\crypt32\crypt32.dll                       1
+dll\win32\cryptdll\cryptdll.dll                     1
+dll\win32\cryptnet\cryptnet.dll                     1
+dll\win32\cryptui\cryptui.dll                       1
+dll\win32\dbghelp\dbghelp.dll                       1
+dll\win32\dciman32\dciman32.dll                     1
+dll\win32\devmgr\devmgr.dll                         1
+dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
+dll\win32\dnsapi\dnsapi.dll                         1
+dll\win32\fmifs\fmifs.dll                           1
+dll\win32\fusion\fusion.dll                         1
+dll\win32\gdi32\gdi32.dll                           1
+dll\win32\gdiplus\gdiplus.dll                       1
+dll\win32\getuname\getuname.dll                     1
+dll\win32\glu32\glu32.dll                           1
+dll\win32\hhctrl.ocx\hhctrl.ocx                     1
+dll\win32\hid\hid.dll                               1
+dll\win32\hlink\hlink.dll                           1
+dll\win32\icmp\icmp.dll                             1
+dll\win32\imagehlp\imagehlp.dll                     1
+dll\win32\imm32\imm32.dll                           1
+dll\win32\inetcomm\inetcomm.dll                     1
+dll\win32\inetmib1\inetmib1.dll                     1
+dll\win32\iphlpapi\iphlpapi.dll                     1
+dll\win32\jscript\jscript.dll                       1
+dll\win32\kernel32\kernel32.dll                     1
+dll\win32\lsasrv\lsasrv.dll                         1
+dll\win32\lz32\lz32.dll                             1
+dll\win32\mapi32\mapi32.dll                         1
+dll\win32\mlang\mlang.dll                           1
+dll\win32\mmdrv\mmdrv.dll                           1
+dll\win32\modemui\modemui.dll                       1
+dll\win32\mpr\mpr.dll                               1
+dll\win32\mprapi\mprapi.dll                         1
+dll\win32\msacm32\msacm32.dll                       1
+dll\win32\msafd\msafd.dll                           1
+dll\win32\mscoree\mscoree.dll                       1
+dll\win32\msgina\msgina.dll                         1
+dll\win32\mshtml\mshtml.dll                         1
+dll\win32\mshtml.tlb\mshtml.tlb                     1
+dll\win32\msi\msi.dll                               1
+dll\win32\msimg32\msimg32.dll                       1
+dll\win32\mstask\mstask.dll                         1
+dll\win32\msvcrt\msvcrt.dll                         1
+dll\win32\msvcrt20\msvcrt20.dll                     1
+dll\win32\msvcrt40\msvcrt40.dll                     1
+dll\win32\msvfw32\msvfw32.dll                       1
+dll\win32\mswsock\mswsock.dll                       1
+dll\win32\msxml3\msxml3.dll                         1
+dll\win32\nddeapi\nddeapi.dll                       1
+dll\win32\netapi32\netapi32.dll                     1
+dll\win32\netcfgx\netcfgx.dll                       1
+dll\win32\netid\netid.dll                           1
+dll\win32\netshell\netshell.dll                     1
+dll\win32\newdev\newdev.dll                         1
+dll\win32\ntdsapi\ntdsapi.dll                       1
+dll\win32\ntmarta\ntmarta.dll                       1
+dll\win32\objsel\objsel.dll                         1
+dll\win32\odbc32\odbc32.dll                         1
+dll\win32\odbccp32\odbccp32.dll                     1
+dll\win32\ole32\ole32.dll                           1
+dll\win32\oleacc\oleacc.dll                         1
+dll\win32\oleaut32\oleaut32.dll                     1
+dll\win32\oledlg\oledlg.dll                         1
+dll\win32\olepro32\olepro32.dll                     1
+dll\win32\opengl32\opengl32.dll                     1
+dll\win32\pdh\pdh.dll                               1
+dll\win32\powrprof\powrprof.dll                     1
+dll\win32\printui\printui.dll                       1
+dll\win32\psapi\psapi.dll                           1
+dll\win32\pstorec\pstorec.dll                       1
+dll\win32\rasapi32\rasapi32.dll                     1
+dll\win32\rasdlg\rasdlg.dll                         1
+dll\win32\rasman\rasman.dll                         1
+dll\win32\riched20\riched20.dll                     1
+dll\win32\riched32\riched32.dll                     1
+dll\win32\rpcrt4\rpcrt4.dll                         1
+dll\win32\rsabase\rsabase.dll                       1
+dll\win32\rsaenh\rsaenh.dll                         1
+dll\win32\samlib\samlib.dll                         1
+dll\win32\samsrv\samsrv.dll                         1
+dll\win32\schannel\schannel.dll                     1
+dll\win32\secur32\secur32.dll                       1
+dll\win32\security\security.dll                     1
+dll\win32\sensapi\sensapi.dll                       1
+dll\win32\serialui\serialui.dll                     1
+dll\win32\setupapi\setupapi.dll                     1
+dll\win32\sfc\sfc.dll                               1
+dll\win32\sfc_os\sfc_os.dll                         1
+dll\win32\shdocvw\shdocvw.dll                       1
+dll\win32\shell32\shell32.dll                       1
+dll\win32\shfolder\shfolder.dll                     1
+dll\win32\shimgvw\shimgvw.dll                       1
+dll\win32\shlwapi\shlwapi.dll                       1
+dll\win32\smdll\smdll.dll                           1
+dll\win32\snmpapi\snmpapi.dll                       1
+dll\win32\stdole2.tlb\stdole2.tlb                   1
+dll\win32\stdole32.tlb\stdole32.tlb                 1
+dll\win32\sxs\sxs.dll                               1
+dll\win32\syssetup\syssetup.dll                     1
+dll\win32\tapi32\tapi32.dll                         1
+dll\win32\tapiui\tapiui.dll                         1
+dll\win32\twain_32\twain_32.dll                     1
+dll\win32\uext2\uext2.dll                           1
+dll\win32\ufat\ufat.dll                             1
+dll\win32\ufatx\ufatx.dll                           1   optional
+dll\win32\untfs\untfs.dll                           1
+dll\win32\urlmon\urlmon.dll                         1
+dll\win32\user32\user32.dll                         1
+dll\win32\userenv\userenv.dll                       1
+dll\win32\usp10\usp10.dll                           1
+dll\win32\uxtheme\uxtheme.dll                       1
+dll\win32\vdmdbg\vdmdbg.dll                         1
+dll\win32\version\version.dll                       1
+dll\win32\winfax\winfax.dll                         1
+dll\win32\winhttp\winhttp.dll                       1
+dll\win32\wininet\wininet.dll                       1
+dll\win32\winmm\winmm.dll                           1
+dll\win32\winspool\winspool.drv                     1
+dll\win32\winsta\winsta.dll                         1
+dll\win32\wintrust\wintrust.dll                     1
+dll\win32\wldap32\wldap32.dll                       1
+dll\win32\ws2_32\ws2_32.dll                         1
+dll\win32\ws2help\ws2help.dll                       1
+dll\win32\wshirda\wshirda.dll                       1
+dll\win32\wshtcpip\wshtcpip.dll                     1
+dll\win32\wsock32\wsock32.dll                       1
+dll\win32\wtsapi32\wtsapi32.dll                     1
+dll\win32\winmm\midimap\midimap.dll                 1
+dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 
 ; Shell Extensions
-;dll\shellext\deskadp\deskadp.dll                    1
-;dll\shellext\deskmon\deskmon.dll                    1
+dll\shellext\deskadp\deskadp.dll                    1
+dll\shellext\deskmon\deskmon.dll                    1
 
 ; Drivers
-;drivers\base\bootvid\bootvid.dll                    1
-;drivers\base\beep\beep.sys                          2
-;drivers\base\null\null.sys                          2
+drivers\base\bootvid\bootvid.dll                    1
+drivers\base\beep\beep.sys                          2
+drivers\base\null\null.sys                          2
 
-;drivers\bus\isapnp\isapnp.sys                       2
+drivers\bus\isapnp\isapnp.sys                       2
 
-;drivers\directx\dxapi\dxapi.sys                     2
-;drivers\directx\dxg\dxg.sys                         2
-;drivers\directx\dxgthk\dxgthk.sys                   2
+drivers\directx\dxapi\dxapi.sys                     2
+drivers\directx\dxg\dxg.sys                         2
+drivers\directx\dxgthk\dxgthk.sys                   2
 
-;drivers\filesystems\fs_rec\fs_rec.sys               2
-;drivers\filesystems\msfs\msfs.sys                   2
-;drivers\filesystems\mup\mup.sys                     2
-;drivers\filesystems\npfs\npfs.sys                   2
+drivers\filesystems\fs_rec\fs_rec.sys               2
+drivers\filesystems\msfs\msfs.sys                   2
+drivers\filesystems\mup\mup.sys                     2
+drivers\filesystems\npfs\npfs.sys                   2
 
-;drivers\input\mouclass\mouclass.sys                 2
-;drivers\input\sermouse\sermouse.sys                 2
+drivers\input\mouclass\mouclass.sys                 2
+drivers\input\sermouse\sermouse.sys                 2
 
-;drivers\network\afd\afd.sys                         2
-;drivers\network\ndis\ndis.sys                       2
-;drivers\network\tcpip\tcpip.sys                     2
-;drivers\network\tdi\tdi.sys                         2
-;drivers\network\dd\ne2000\ne2000.sys                2
-;drivers\network\dd\pcnet\pcnet.sys                  2
+drivers\network\afd\afd.sys                         2
+drivers\network\ndis\ndis.sys                       2
+drivers\network\tcpip\tcpip.sys                     2
+drivers\network\tdi\tdi.sys                         2
+drivers\network\dd\ne2000\ne2000.sys                2
+drivers\network\dd\pcnet\pcnet.sys                  2
 
-;drivers\serial\serenum\serenum.sys                  2
-;drivers\serial\serial\serial.sys                    2
+drivers\serial\serenum\serenum.sys                  2
+drivers\serial\serial\serial.sys                    2
 
-;drivers\storage\ide\pciide\pciide.sys               2
-;drivers\storage\ide\pciidex\pciidex.sys             2
+drivers\storage\ide\pciide\pciide.sys               2
+drivers\storage\ide\pciidex\pciidex.sys             2
 
-;;drivers\usb\miniport\usbohci\usbohci.sys           2
-;;drivers\usb\miniport\usbuhci\usbuhci.sys           2
-;;drivers\usb\usbhub\usbhub.sys                      2
-;;drivers\usb\usbport\usbport.sys                    2
-;drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
+;drivers\usb\miniport\usbohci\usbohci.sys           2
+;drivers\usb\miniport\usbuhci\usbuhci.sys           2
+;drivers\usb\usbhub\usbhub.sys                      2
+;drivers\usb\usbport\usbport.sys                    2
+drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
-;drivers\video\displays\vga\vgaddi.dll               1
-;drivers\video\displays\framebuf\framebuf.dll        1
-;drivers\video\miniport\vga\vgamp.sys                2
-;drivers\video\miniport\vbe\vbemp.sys                2
-;drivers\video\videoprt\videoprt.sys                 2
+drivers\video\displays\vga\vgaddi.dll               1
+drivers\video\displays\framebuf\framebuf.dll        1
+drivers\video\miniport\vga\vgamp.sys                2
+drivers\video\miniport\vbe\vbemp.sys                2
+drivers\video\videoprt\videoprt.sys                 2
 
-;drivers\wmi\wmilib.sys                              2
+drivers\wmi\wmilib.sys                              2
 
 ; Media
-;media\fonts\DejaVuSans.ttf                          3
-;media\fonts\DejaVuSans-Bold.ttf                     3
-;media\fonts\DejaVuSans-BoldOblique.ttf              3
-;media\fonts\DejaVuSansMono.ttf                      3
-;media\fonts\DejaVuSansMono-Bold.ttf                 3
-;media\fonts\DejaVuSansMono-BoldOblique.ttf          3
-;media\fonts\DejaVuSansMono-Oblique.ttf              3
-;media\fonts\DejaVuSans-Oblique.ttf                  3
-;media\fonts\DejaVuSerif.ttf                         3
-;media\fonts\DejaVuSerif-Bold.ttf                    3
-;media\fonts\DejaVuSerif-BoldItalic.ttf              3
-;media\fonts\DejaVuSerif-Italic.ttf                  3
+media\fonts\DejaVuSans.ttf                          3
+media\fonts\DejaVuSans-Bold.ttf                     3
+media\fonts\DejaVuSans-BoldOblique.ttf              3
+media\fonts\DejaVuSansMono.ttf                      3
+media\fonts\DejaVuSansMono-Bold.ttf                 3
+media\fonts\DejaVuSansMono-BoldOblique.ttf          3
+media\fonts\DejaVuSansMono-Oblique.ttf              3
+media\fonts\DejaVuSans-Oblique.ttf                  3
+media\fonts\DejaVuSerif.ttf                         3
+media\fonts\DejaVuSerif-Bold.ttf                    3
+media\fonts\DejaVuSerif-BoldItalic.ttf              3
+media\fonts\DejaVuSerif-Italic.ttf                  3
 
-;media\fonts\FreeMono.ttf                            3
-;media\fonts\FreeMonoBold.ttf                        3
-;media\fonts\FreeMonoBoldOblique.ttf                 3
-;media\fonts\FreeMonoOblique.ttf                     3
+media\fonts\FreeMono.ttf                            3
+media\fonts\FreeMonoBold.ttf                        3
+media\fonts\FreeMonoBoldOblique.ttf                 3
+media\fonts\FreeMonoOblique.ttf                     3
 
-;media\fonts\LiberationMono-Bold.ttf                 3
-;media\fonts\LiberationMono-BoldItalic.ttf           3
-;media\fonts\LiberationMono-Italic.ttf               3
-;media\fonts\LiberationMono-Regular.ttf              3
-;media\fonts\LiberationSans-Bold.ttf                 3
-;media\fonts\LiberationSans-BoldItalic.ttf           3
-;media\fonts\LiberationSans-Italic.ttf               3
-;media\fonts\LiberationSans-Regular.ttf              3
-;media\fonts\LiberationSerif-Bold.ttf                3
-;media\fonts\LiberationSerif-BoldItalic.ttf          3
-;media\fonts\LiberationSerif-Italic.ttf              3
-;media\fonts\LiberationSerif-Regular.ttf             3
+media\fonts\LiberationMono-Bold.ttf                 3
+media\fonts\LiberationMono-BoldItalic.ttf           3
+media\fonts\LiberationMono-Italic.ttf               3
+media\fonts\LiberationMono-Regular.ttf              3
+media\fonts\LiberationSans-Bold.ttf                 3
+media\fonts\LiberationSans-BoldItalic.ttf           3
+media\fonts\LiberationSans-Italic.ttf               3
+media\fonts\LiberationSans-Regular.ttf              3
+media\fonts\LiberationSerif-Bold.ttf                3
+media\fonts\LiberationSerif-BoldItalic.ttf          3
+media\fonts\LiberationSerif-Italic.ttf              3
+media\fonts\LiberationSerif-Regular.ttf             3
 
-;media\fonts\Marlett.ttf                             3
-;media\fonts\tahoma.ttf                              3
-;media\fonts\tahomabd.ttf                            3
+media\fonts\Marlett.ttf                             3
+media\fonts\tahoma.ttf                              3
+media\fonts\tahomabd.ttf                            3
 
-;media\nls\c_037.nls                                 1
-;media\nls\c_500.nls                                 1
-;media\nls\c_737.nls                                 1
-;media\nls\c_775.nls                                 1
-;media\nls\c_850.nls                                 1
-;media\nls\c_852.nls                                 1
-;media\nls\c_855.nls                                 1
-;media\nls\c_856.nls                                 1
-;media\nls\c_857.nls                                 1
-;media\nls\c_860.nls                                 1
-;media\nls\c_861.nls                                 1
-;media\nls\c_862.nls                                 1
-;media\nls\c_863.nls                                 1
-;media\nls\c_864.nls                                 1
-;media\nls\c_865.nls                                 1
-;media\nls\c_866.nls                                 1
-;media\nls\c_869.nls                                 1
-;media\nls\c_874.nls                                 1
-;media\nls\c_875.nls                                 1
-;media\nls\c_878.nls                                 1
-;media\nls\c_932.nls                                 1
-;media\nls\c_936.nls                                 1
-;media\nls\c_949.nls                                 1
-;media\nls\c_950.nls                                 1
-;media\nls\c_1006.nls                                1
-;media\nls\c_1026.nls                                1
-;media\nls\c_1250.nls                                1
-;media\nls\c_1251.nls                                1
-;media\nls\c_1253.nls                                1
-;media\nls\c_1254.nls                                1
-;media\nls\c_1255.nls                                1
-;media\nls\c_1256.nls                                1
-;media\nls\c_1257.nls                                1
-;media\nls\c_1258.nls                                1
-;media\nls\c_10000.nls                               1
-;media\nls\c_10006.nls                               1
-;media\nls\c_10007.nls                               1
-;media\nls\c_10029.nls                               1
-;media\nls\c_10079.nls                               1
-;media\nls\c_10081.nls                               1
-;media\nls\c_20866.nls                               1
-;media\nls\c_28591.nls                               1
-;media\nls\c_28592.nls                               1
-;media\nls\c_28593.nls                               1
-;media\nls\c_28594.nls                               1
-;media\nls\c_28595.nls                               1
-;media\nls\c_28596.nls                               1
-;media\nls\c_28597.nls                               1
-;media\nls\c_28598.nls                               1
-;media\nls\c_28599.nls                               1
-;media\drivers\etc\services                          5
-;media\inf\acpi.inf                                  6
-;media\inf\cdrom.inf                                 6
-;media\inf\display.inf                               6
-;media\inf\font.inf                                  6
-;media\inf\hdc.inf                                   6
-;media\inf\intl.inf                                  6
-;media\inf\layout.inf                                6
-;media\inf\machine.inf                               6
-;media\inf\msmouse.inf                               6
-;media\inf\keyboard.inf                              6
-;media\inf\NET_NIC.inf                               6
-;media\inf\netamd.inf                                6
-;media\inf\netisa.inf                                6
-;media\inf\netrtpnt.inf                              6
-;media\inf\nettcpip.inf                              6
-;media\inf\ports.inf                                 6
-;media\inf\scsi.inf                                  6
-;media\inf\syssetup.inf                              6
-;media\inf\usbport.inf                               6
-;media\inf\usb.inf                                   6
-;media\inf\usbstor.inf                               6
-;media\inf\xboxdisp.inf                              6
+media\nls\c_037.nls                                 1
+media\nls\c_500.nls                                 1
+media\nls\c_737.nls                                 1
+media\nls\c_775.nls                                 1
+media\nls\c_850.nls                                 1
+media\nls\c_852.nls                                 1
+media\nls\c_855.nls                                 1
+media\nls\c_856.nls                                 1
+media\nls\c_857.nls                                 1
+media\nls\c_860.nls                                 1
+media\nls\c_861.nls                                 1
+media\nls\c_862.nls                                 1
+media\nls\c_863.nls                                 1
+media\nls\c_864.nls                                 1
+media\nls\c_865.nls                                 1
+media\nls\c_866.nls                                 1
+media\nls\c_869.nls                                 1
+media\nls\c_874.nls                                 1
+media\nls\c_875.nls                                 1
+media\nls\c_878.nls                                 1
+media\nls\c_932.nls                                 1
+media\nls\c_936.nls                                 1
+media\nls\c_949.nls                                 1
+media\nls\c_950.nls                                 1
+media\nls\c_1006.nls                                1
+media\nls\c_1026.nls                                1
+media\nls\c_1250.nls                                1
+media\nls\c_1251.nls                                1
+media\nls\c_1253.nls                                1
+media\nls\c_1254.nls                                1
+media\nls\c_1255.nls                                1
+media\nls\c_1256.nls                                1
+media\nls\c_1257.nls                                1
+media\nls\c_1258.nls                                1
+media\nls\c_10000.nls                               1
+media\nls\c_10006.nls                               1
+media\nls\c_10007.nls                               1
+media\nls\c_10029.nls                               1
+media\nls\c_10079.nls                               1
+media\nls\c_10081.nls                               1
+media\nls\c_20866.nls                               1
+media\nls\c_28591.nls                               1
+media\nls\c_28592.nls                               1
+media\nls\c_28593.nls                               1
+media\nls\c_28594.nls                               1
+media\nls\c_28595.nls                               1
+media\nls\c_28596.nls                               1
+media\nls\c_28597.nls                               1
+media\nls\c_28598.nls                               1
+media\nls\c_28599.nls                               1
+media\drivers\etc\services                          5
+media\inf\acpi.inf                                  6
+media\inf\cdrom.inf                                 6
+media\inf\display.inf                               6
+media\inf\font.inf                                  6
+media\inf\hdc.inf                                   6
+media\inf\intl.inf                                  6
+media\inf\layout.inf                                6
+media\inf\machine.inf                               6
+media\inf\msmouse.inf                               6
+media\inf\keyboard.inf                              6
+media\inf\NET_NIC.inf                               6
+media\inf\netamd.inf                                6
+media\inf\netisa.inf                                6
+media\inf\netrtpnt.inf                              6
+media\inf\nettcpip.inf                              6
+media\inf\ports.inf                                 6
+media\inf\scsi.inf                                  6
+media\inf\syssetup.inf                              6
+media\inf\usbport.inf                               6
+media\inf\usb.inf                                   6
+media\inf\usbstor.inf                               6
+media\inf\xboxdisp.inf                              6
 
 ; Subsystems
-;subsystems\win32\csrss\csrss.exe                    1
-;subsystems\win32\csrss\win32csr\win32csr.dll        1
-;subsystems\ntvdm\ntvdm.exe                          1
-;subsystems\win32\win32k\win32k.sys                  1
+subsystems\win32\csrss\csrss.exe                    1
+subsystems\win32\csrss\win32csr\win32csr.dll        1
+subsystems\csr\csr.exe                              1   optional
+subsystems\csr\csrsrv\csrsrv.dll                    1   optional
+subsystems\win\basesrv\basesrv.dll                  1   optional
+subsystems\win\winsrv\winsrv.dll                    1   optional
+subsystems\ntvdm\ntvdm.exe                          1
+subsystems\win32\win32k\win32k.sys                  1
+
 boot\bootdata\bootcdregtest\testboot.bat            7   optional
+tools\dbgprint\dbgprint.exe                         7   optional
 
 ; Modules
-;modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
-;modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
-;modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
-;modules\rosapps\applications\screensavers\starfield\starfield.scr          1   optional
-;modules\rosapps\applications\screensavers\mazescr\mazescr.scr              1   optional
-;modules\rosapps\applications\screensavers\butterflies\butterflies.scr      1   optional
-;modules\rosapps\applications\cmdutils\comp\comp.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\mode\mode.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\sort\sort.exe                                     1   optional
-;modules\rosapps\applications\cmdutils\tee\tee.exe                                       1   optional
-;modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
-;modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
-;modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
-;modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
-;modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
-;modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
-;modules\rosapps\applications\devutils\gettype\gettype.exe                               1   optional
-;modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
-;modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
-;modules\rosapps\applications\downloader\downloader.exe                                  1   optional
-;modules\rosapps\applications\downloader\downloader.xml                                  1   optional
-;modules\rosapps\applications\fontview\fontview.exe                                      1   optional
-;modules\rosapps\applications\imagesoft\imagesoft.exe                                    1   optional
-;modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
-;modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
-;modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
-;modules\rosapps\applications\net\roshttpd\roshttpd.exe                                      1   optional
-;modules\rosapps\applications\notevil\notevil.exe                                        1   optional
-;modules\rosapps\applications\magnify\magnify.exe                                        1   optional
-;modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
-;modules\rosapps\applications\packmgr\gui\packmgr.exe                                    1   optional
-;modules\rosapps\applications\packmgr\lib\package.dll                                    1   optional
-;modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
-;modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
-;modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
-;modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
-;modules\rosapps\applications\sysutils\dosfsck\dosfsck.exe                                       1   optional
-;modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
-;modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
-;modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
-;modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
-;modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
-;modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
-;modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
-;modules\rosapps\applications\sysutils\screenshot\screenshot.exe                                  1   optional
-;modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
-;modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
-;modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
-;modules\rosapps\applications\sysutils\utils\driver\unload\unload.exe                    1   optional
-;modules\rosapps\applications\sysutils\utils\infinst\infinst.exe                         1   optional
-;modules\rosapps\applications\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
-;modules\rosapps\applications\sysutils\utils\objdir\objdir.exe                           1   optional
-;modules\rosapps\applications\sysutils\utils\partinfo\partinfo.exe                       1   optional
-;modules\rosapps\applications\sysutils\utils\ps\ps.exe                                   1   optional
-;modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                         1   optional
-;modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
-;modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
-;modules\rosapps\applications\winfile\winfile.exe                                        1   optional
-;modules\rosapps\applications\winver\winver.exe                                          1   optional
-;modules\rosapps\applications\write\write.exe                                            1   optional
-;modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
-;modules\rosapps\demos\maze\maze.exe                                        1   optional
-;modules\rosapps\dflat32\edit.exe                                           1   optional
-;modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
-;modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
-;modules\rosapps\drivers\green\green.sys                                    1   optional
-;modules\rosapps\templates\dialog\dialog.exe                                       1   optional
-;modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
-;modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
-;modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
-;modules\rostests\winetests\cabinet\cabinet_winetest.exe                    7   optional
-;modules\rostests\winetests\comcat\comcat_winetest.exe                      7   optional
-;modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
-;modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
-;modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
-;modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
-;modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
-;modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
-;modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
-;modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
-;modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
-;modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
-;modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
-;modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
-;modules\rostests\winetests\mstask\mstask_winetest.exe                      7   optional
-;modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
-;modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
-;modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
-;modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
-;modules\rostests\winetests\ole32\ole32_winetest.exe                        7   optional
-;modules\rostests\winetests\oleaut32\oleaut32_winetest.exe                  7   optional
-;modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
-;modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
-;modules\rostests\winetests\riched20\riched20_winetest.exe                  7   optional
-;modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
-;modules\rostests\winetests\rsabase\rsabase_winetest.exe                    7   optional
-;modules\rostests\winetests\rsaenh\rsaenh_winetest.exe                      7   optional
-;modules\rostests\winetests\schannel\schannel_winetest.exe                  7   optional
-;modules\rostests\winetests\secur32\secur32_winetest.exe                    7   optional
-;modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
-;modules\rostests\winetests\shdocvw\shdocvw_winetest.exe                    7   optional
-;modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
-;modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
-;modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
-;modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
-;modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
-;modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
-;modules\rostests\winetests\version\version_winetest.exe                    7   optional
-;modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
-;modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
-;modules\wallpaper\lake.bmp                                                 4   optional
+modules\os2\server\os2srv.dll                                              1   optional
+modules\os2\dll\win32\doscalls\doscalls.dll                                1   optional
+modules\posix\server\psxsrv.dll                                            1   optional
+modules\posix\dll\win32\psxdll\psxdll.dll                                  1   optional
+modules\rosky\dll\win32\libsky\libsky.dll                                  1   optional
+modules\rosky\dll\win32\libskygi\libskygi.dll                              1   optional
+modules\vms\server\vmssrv.dll                                              1   optional
+modules\vms\dll\win32\vmsdll\vmsdll.dll                                    1   optional
+modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
+modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
+modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
+modules\rosapps\applications\screensavers\starfield\starfield.scr          1   optional
+modules\rosapps\applications\screensavers\mazescr\mazescr.scr              1   optional
+modules\rosapps\applications\screensavers\butterflies\butterflies.scr      1   optional
+modules\rosapps\applications\cmdutils\comp\comp.exe                                     1   optional
+modules\rosapps\applications\cmdutils\mode\mode.exe                                     1   optional
+modules\rosapps\applications\cmdutils\sort\sort.exe                                     1   optional
+modules\rosapps\applications\cmdutils\tee\tee.exe                                       1   optional
+modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
+modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
+modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
+modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
+modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
+modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
+modules\rosapps\applications\devutils\gettype\gettype.exe                               1   optional
+modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
+modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
+modules\rosapps\applications\downloader\downloader.exe                                  1   optional
+modules\rosapps\applications\downloader\downloader.xml                                  1   optional
+modules\rosapps\applications\fontview\fontview.exe                                      1   optional
+modules\rosapps\applications\imagesoft\imagesoft.exe                                    1   optional
+modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
+modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
+modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
+modules\rosapps\applications\net\roshttpd\roshttpd.exe                                      1   optional
+modules\rosapps\applications\notevil\notevil.exe                                        1   optional
+modules\rosapps\applications\magnify\magnify.exe                                        1   optional
+modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
+modules\rosapps\applications\packmgr\gui\packmgr.exe                                    1   optional
+modules\rosapps\applications\packmgr\lib\package.dll                                    1   optional
+modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
+modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
+modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
+modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
+modules\rosapps\applications\sysutils\dosfsck\dosfsck.exe                                       1   optional
+modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
+modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
+modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
+modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
+modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
+modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
+modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
+modules\rosapps\applications\sysutils\screenshot\screenshot.exe                                  1   optional
+modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
+modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
+modules\rosapps\applications\sysutils\utils\driver\unload\unload.exe                    1   optional
+modules\rosapps\applications\sysutils\utils\infinst\infinst.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
+modules\rosapps\applications\sysutils\utils\objdir\objdir.exe                           1   optional
+modules\rosapps\applications\sysutils\utils\partinfo\partinfo.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\ps\ps.exe                                   1   optional
+modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
+modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
+modules\rosapps\applications\winfile\winfile.exe                                        1   optional
+modules\rosapps\applications\winver\winver.exe                                          1   optional
+modules\rosapps\applications\write\write.exe                                            1   optional
+modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
+modules\rosapps\demos\maze\maze.exe                                        1   optional
+modules\rosapps\dflat32\edit.exe                                           1   optional
+modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
+modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
+modules\rosapps\drivers\green\green.sys                                    1   optional
+modules\rosapps\lib\dflat32\dflat32.dll                                    1   optional
+modules\rosapps\templates\dialog.exe                                       1   optional
+modules\rosapps\templates\mdi.exe                                          1   optional
+modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
+modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
+modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
+modules\rostests\winetests\cabinet\cabinet_winetest.exe                    7   optional
+modules\rostests\winetests\comcat\comcat_winetest.exe                      7   optional
+modules\rostests\winetests\comctl32\comctl32_winetest.exe                  7   optional
+modules\rostests\winetests\comdlg32\comdlg32_winetest.exe                  7   optional
+modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   optional
+modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
+modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
+modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
+modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
+modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
+modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
+modules\rostests\winetests\mlang\mlang_winetest.exe                        7   optional
+modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   optional
+modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
+modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
+modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
+modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
+modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
+modules\rostests\winetests\ole32\ole32_winetest.exe                        7   optional
+modules\rostests\winetests\oleaut32\oleaut32_winetest.exe                  7   optional
+modules\rostests\winetests\powrprof\powrprof_winetest.exe                  7   optional
+modules\rostests\winetests\psapi\psapi_winetest.exe                        7   optional
+modules\rostests\winetests\riched20\riched20_winetest.exe                  7   optional
+modules\rostests\winetests\rpcrt4\rpcrt4_winetest.exe                      7   optional
+modules\rostests\winetests\rsabase\rsabase_winetest.exe                    7   optional
+modules\rostests\winetests\rsaenh\rsaenh_winetest.exe                      7   optional
+modules\rostests\winetests\schannel\schannel_winetest.exe                  7   optional
+modules\rostests\winetests\secur32\secur32_winetest.exe                    7   optional
+modules\rostests\winetests\setupapi\setupapi_winetest.exe                  7   optional
+modules\rostests\winetests\shdocvw\shdocvw_winetest.exe                    7   optional
+modules\rostests\winetests\shell32\shell32_winetest.exe                    7   optional
+modules\rostests\winetests\shlwapi\shlwapi_winetest.exe                    7   optional
+modules\rostests\winetests\urlmon\urlmon_winetest.exe                      7   optional
+modules\rostests\winetests\user32\user32_winetest.exe                      7   optional
+modules\rostests\winetests\usp10\usp10_winetest.exe                        7   optional
+modules\rostests\winetests\uxtheme\uxtheme_winetest.exe                    7   optional
+modules\rostests\winetests\version\version_winetest.exe                    7   optional
+modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   optional
+modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
+modules\wallpaper\lake.bmp                                                 4   optional
 
 ; Native libraries
-;modules\windows\mfc42.dll                                                  1   optional
-;modules\windows\vmx_fb.dll                                                 1   optional
-;modules\windows\vmx_mode.dll                                               1   optional
-;modules\windows\vmx_svga.sys                                               2   optional
-;modules\windows\vmx_svga.inf                                               6   optional
-;modules\windows\kvmnet.sys                                                 2   optional
-;modules\windows\kvmnet.inf                                                 6   optional
+modules\windows\mfc42.dll                                                  1   optional
+modules\windows\vmx_fb.dll                                                 1   optional
+modules\windows\vmx_mode.dll                                               1   optional
+modules\windows\vmx_svga.sys                                               2   optional
+modules\windows\vmx_svga.inf                                               6   optional
+modules\windows\kvmnet.sys                                                 2   optional
+modules\windows\kvmnet.inf                                                 6   optional

@@ -15,5 +15,4 @@
 	<file>appwiz.c</file>
 	<file>createlink.c</file>
 	<file>appwiz.rc</file>
-	<file>appwiz.spec</file>
 </module>

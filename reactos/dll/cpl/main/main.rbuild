@@ -15,5 +15,4 @@
 	<file>main.c</file>
 	<file>mouse.c</file>
 	<file>main.rc</file>
-	<file>main.spec</file>
 </module>

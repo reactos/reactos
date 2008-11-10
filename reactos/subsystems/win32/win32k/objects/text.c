@@ -13,23 +13,30 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL
-FASTCALL
-ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs);
-
-BOOL
-FASTCALL
-TextIntGetTextExtentPoint(PDC dc,
-                          PTEXTOBJ TextObj,
-                          LPCWSTR String,
-                          int Count,
-                          int MaxExtent,
-                          LPINT Fit,
-                          LPINT Dx,
-                          LPSIZE Size);
-
-
 /** Functions ******************************************************************/
+
+DWORD
+APIENTRY
+NtGdiGetCharSet(HDC hDC)
+{
+  PDC Dc;
+  PDC_ATTR Dc_Attr;
+  DWORD cscp;
+  // If here, update everything!
+  Dc = DC_LockDc(hDC);
+  if (!Dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+  cscp = ftGdiGetTextCharsetInfo(Dc,NULL,0);
+  Dc_Attr = Dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+  Dc_Attr->iCS_CP = cscp;
+  Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
+  DC_UnlockDc( Dc );
+  return cscp;
+}
 
 BOOL
 APIENTRY
@@ -66,6 +73,58 @@ NtGdiGetRasterizerCaps(
      }
   }
   return FALSE;
+}
+
+INT
+APIENTRY
+NtGdiGetTextCharsetInfo(
+    IN HDC hdc,
+    OUT OPTIONAL LPFONTSIGNATURE lpSig,
+    IN DWORD dwFlags)
+{
+  PDC Dc;
+  INT Ret;
+  FONTSIGNATURE fsSafe;
+  PFONTSIGNATURE pfsSafe = &fsSafe;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  Dc = DC_LockDc(hdc);
+  if (!Dc)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return DEFAULT_CHARSET;
+  }
+
+  if (!lpSig) pfsSafe = NULL;
+
+  Ret = HIWORD(ftGdiGetTextCharsetInfo( Dc, pfsSafe, dwFlags));
+
+  if (lpSig)
+  {
+     if (Ret == DEFAULT_CHARSET)
+        RtlZeroMemory(pfsSafe, sizeof(FONTSIGNATURE));
+
+     _SEH_TRY
+     {
+         ProbeForWrite( lpSig,
+                        sizeof(FONTSIGNATURE),
+                        1);
+         RtlCopyMemory(lpSig, pfsSafe, sizeof(FONTSIGNATURE));
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         return DEFAULT_CHARSET;
+      }
+  }
+  DC_UnlockDc(Dc);
+  return Ret;
 }
 
 W32KAPI
@@ -119,7 +178,7 @@ NtGdiGetTextExtentExW(
       Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
       if (NULL == Dx)
 	{
-	  ExFreePool(String);
+	  ExFreePoolWithTag(String, TAG_GDITEXT);
 	  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
@@ -134,9 +193,9 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
-      ExFreePool(String);
+      ExFreePoolWithTag(String, TAG_GDITEXT);
       SetLastNtError(Status);
       return FALSE;
     }
@@ -146,15 +205,15 @@ NtGdiGetTextExtentExW(
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
-      ExFreePool(String);
+      ExFreePoolWithTag(String, TAG_GDITEXT);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
   Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  TextObj = TEXTOBJ_LockText(Dc_Attr->hlfntNew);
+  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
   if ( TextObj )
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
@@ -165,12 +224,12 @@ NtGdiGetTextExtentExW(
     Result = FALSE;
   DC_UnlockDc(dc);
 
-  ExFreePool(String);
+  ExFreePoolWithTag(String, TAG_GDITEXT);
   if (! Result)
     {
       if (NULL != Dx)
 	{
-	  ExFreePool(Dx);
+	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
       return FALSE;
     }
@@ -182,7 +241,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePool(Dx);
+	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -196,7 +255,7 @@ NtGdiGetTextExtentExW(
 	{
 	  if (NULL != Dx)
 	    {
-	      ExFreePool(Dx);
+	      ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	    }
 	  SetLastNtError(Status);
 	  return FALSE;
@@ -204,7 +263,7 @@ NtGdiGetTextExtentExW(
     }
   if (NULL != Dx)
     {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx,TAG_GDITEXT);
     }
 
   Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
@@ -284,7 +343,7 @@ NtGdiGetTextFaceW(
    hFont = Dc_Attr->hlfntNew;
    DC_UnlockDc(Dc);
 
-   TextObj = TEXTOBJ_LockText(hFont);
+   TextObj = RealizeFontInit(hFont);
    ASSERT(TextObj != NULL);
    Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
    Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
@@ -296,6 +355,44 @@ NtGdiGetTextFaceW(
    }
 
    return Count;
+}
+
+W32KAPI
+BOOL
+APIENTRY
+NtGdiGetTextMetricsW(
+    IN HDC hDC,
+    OUT TMW_INTERNAL * pUnsafeTmwi,
+    IN ULONG cj
+)
+{
+  TMW_INTERNAL Tmwi;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if ( cj <= sizeof(TMW_INTERNAL) )
+  {
+     if (ftGdiGetTextMetricsW(hDC,&Tmwi))
+     {
+        _SEH_TRY
+        {
+           ProbeForWrite(pUnsafeTmwi, cj, 1);
+           RtlCopyMemory(pUnsafeTmwi,&Tmwi,cj);
+        }
+       _SEH_HANDLE
+        {
+           Status = _SEH_GetExceptionCode();
+        }
+       _SEH_END
+
+        if (!NT_SUCCESS(Status))
+        {
+           SetLastNtError(Status);
+           return FALSE;
+        }
+        return TRUE;
+     }
+  }
+  return FALSE;
 }
 
 /* EOF */

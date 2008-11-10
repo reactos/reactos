@@ -917,6 +917,8 @@ CreateNestedKey(PHKEY KeyHandle,
   LocalObjectAttributes.ObjectName = &LocalKeyName;
   FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
 
+  LocalKeyHandle = NULL;
+
   /* Remove the last part of the key name and try to create the key again. */
   while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
@@ -949,7 +951,8 @@ CreateNestedKey(PHKEY KeyHandle,
   Length = wcslen (LocalKeyName.Buffer);
   while (TRUE)
     {
-      NtClose (LocalKeyHandle);
+      if (LocalKeyHandle)
+	NtClose (LocalKeyHandle);
 
       LocalKeyName.Buffer[Length] = L'\\';
       Length = wcslen (LocalKeyName.Buffer);
@@ -2544,7 +2547,7 @@ RegEnumKeyExA (HKEY hKey,
 		}
 	}
 
-	TRACE("Key Namea0 Length %d\n", StringU.Length);
+	/*TRACE("Key Namea0 Length %d\n", StringU.Length);*/ /* BUGBUG could be uninitialized */
 	TRACE("Key Namea1 Length %d\n", NameLength);
 	TRACE("Key Namea Length %d\n", *lpcbName);
 	TRACE("Key Namea %s\n", lpName);
@@ -4685,12 +4688,13 @@ RegSetValueExA (HKEY hKey,
     {
       RtlCreateUnicodeStringFromAsciiz (&ValueName,
 					(PSTR)lpValueName);
-      pValueName = (LPWSTR)ValueName.Buffer;
     }
   else
     {
-      pValueName = NULL;
+      ValueName.Buffer = NULL;
     }
+
+  pValueName = (LPWSTR)ValueName.Buffer;
 
   if (((dwType == REG_SZ) ||
        (dwType == REG_MULTI_SZ) ||

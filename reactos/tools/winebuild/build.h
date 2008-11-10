@@ -117,7 +117,7 @@ enum target_cpu
 
 enum target_platform
 {
-    PLATFORM_UNSPECIFIED, PLATFORM_APPLE, PLATFORM_WINDOWS
+    PLATFORM_UNSPECIFIED, PLATFORM_APPLE, PLATFORM_SOLARIS, PLATFORM_WINDOWS
 };
 
 extern enum target_cpu target_cpu;
@@ -144,14 +144,22 @@ extern enum target_platform target_platform;
 #define __attribute__(X)
 #endif
 
+#ifndef DECLSPEC_NORETURN
+# if defined(_MSC_VER) && (_MSC_VER >= 1200) && !defined(MIDL_PASS)
+#  define DECLSPEC_NORETURN __declspec(noreturn)
+# else
+#  define DECLSPEC_NORETURN __attribute__((noreturn))
+# endif
+#endif
+
 extern void *xmalloc (size_t size);
 extern void *xrealloc (void *ptr, size_t size);
 extern char *xstrdup( const char *str );
 extern char *strupper(char *s);
 extern int strendswith(const char* str, const char* end);
-extern void fatal_error( const char *msg, ... )
+extern DECLSPEC_NORETURN void fatal_error( const char *msg, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));
-extern void fatal_perror( const char *msg, ... )
+extern DECLSPEC_NORETURN void fatal_perror( const char *msg, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));
 extern void error( const char *msg, ... )
    __attribute__ ((__format__ (__printf__, 1, 2)));

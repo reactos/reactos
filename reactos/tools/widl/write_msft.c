@@ -1317,10 +1317,14 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         expr_t *expr = attr->u.pval;
         switch(attr->type) {
         case ATTR_BINDABLE:
-            funcflags |= 0x4; /* FUNCFLAG_BINDABLE */
+            funcflags |= 0x4; /* FUNCFLAG_FBINDABLE */
+            break;
+        /* FIXME: FUNCFLAG_FDEFAULTBIND */
+        case ATTR_DEFAULTCOLLELEM:
+            funcflags |= 0x100; /* FUNCFLAG_FDEFAULTCOLLELEM */
             break;
         case ATTR_DISPLAYBIND:
-            funcflags |= 0x10; /* FUNCFLAG_DISPLAYBIND */
+            funcflags |= 0x10; /* FUNCFLAG_FDISPLAYBIND */
             break;
         case ATTR_ENTRY_ORDINAL:
             extra_attr = max(extra_attr, 3);
@@ -1349,8 +1353,11 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         case ATTR_ID:
             id = expr->cval;
             break;
+        case ATTR_IMMEDIATEBIND:
+            funcflags |= 0x1000; /* FUNCFLAG_FIMMEDIATEBIND */
+            break;
         case ATTR_NONBROWSABLE:
-            funcflags |= 0x400; /* FUNCFLAG_NONBROWSABLE */
+            funcflags |= 0x400; /* FUNCFLAG_FNONBROWSABLE */
             break;
         case ATTR_OUT:
             break;
@@ -1363,9 +1370,18 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         case ATTR_PROPPUTREF:
             invokekind = 0x8; /* INVOKE_PROPERTYPUTREF */
             break;
+        /* FIXME: FUNCFLAG_FREPLACEABLE */
+        case ATTR_REQUESTEDIT:
+            funcflags |= 0x8; /* FUNCFLAG_FREQUESTEDIT */
+            break;
         case ATTR_RESTRICTED:
             funcflags |= 0x1; /* FUNCFLAG_FRESTRICTED */
             break;
+        case ATTR_SOURCE:
+            funcflags |= 0x2; /* FUNCFLAG_FSOURCE */
+            break;
+        /* FIXME: FUNCFLAG_FUIDEFAULT */
+        /* FIXME: FUNCFLAG_FUSESGETLASTERROR */
         case ATTR_VARARG:
             if (num_optional || num_defaults)
                 warning("add_func_desc: ignoring vararg in function with optional or defaultvalue params\n");
@@ -1373,7 +1389,6 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
                 num_optional = -1;
             break;
         default:
-            warning("add_func_desc: ignoring attr %d\n", attr->type);
             break;
         }
     }
@@ -1595,14 +1610,35 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     if (var->attrs) LIST_FOR_EACH_ENTRY( attr, var->attrs, const attr_t, entry ) {
         expr_t *expr = attr->u.pval;
         switch(attr->type) {
+        case ATTR_BINDABLE:
+            varflags |= 0x04; /* VARFLAG_FBINDABLE */
+            break;
+        /* FIXME: VARFLAG_FDEFAULTBIND */
+        case ATTR_DEFAULTCOLLELEM:
+            varflags |= 0x100; /* VARFLAG_FDEFAULTCOLLELEM */
+            break;
+        case ATTR_DISPLAYBIND:
+            varflags |= 0x10; /* VARFLAG_FDISPLAYBIND */
+            break;
         case ATTR_HIDDEN:
             varflags |= 0x40; /* VARFLAG_FHIDDEN */
             break;
         case ATTR_ID:
             id = expr->cval;
             break;
+        case ATTR_IMMEDIATEBIND:
+            varflags |= 0x1000; /* VARFLAG_FIMMEDIATEBIND */
+            break;
+        case ATTR_NONBROWSABLE:
+            varflags |= 0x400; /* VARFLAG_FNONBROWSABLE */
+            break;
         case ATTR_READONLY:
             varflags |= 0x01; /* VARFLAG_FREADONLY */
+            break;
+        /* FIXME: VARFLAG_FREPLACEABLE */
+            break;
+        case ATTR_REQUESTEDIT:
+            varflags |= 0x08; /* VARFLAG_FREQUESTEDIT */
             break;
         case ATTR_RESTRICTED:
             varflags |= 0x80; /* VARFLAG_FRESTRICTED */
@@ -1610,8 +1646,8 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
         case ATTR_SOURCE:
             varflags |= 0x02; /* VARFLAG_FSOURCE */
             break;
+        /* FIXME: VARFLAG_FUIDEFAULT */
         default:
-            warning("AddVarDesc: unhandled attr type %d\n", attr->type);
             break;
         }
     }
@@ -1799,9 +1835,6 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
                 typeinfo->flags |= 0x20; /* TYPEFLAG_FCONTROL */
             break;
 
-        case ATTR_DISPINTERFACE:
-            break;
-
         case ATTR_DLLNAME:
           {
             int offset = ctl2_alloc_string(typelib, attr->u.pval);
@@ -1838,8 +1871,7 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             typeinfo->flags |= 0x10; /* TYPEFLAG_FHIDDEN */
             break;
 
-        case ATTR_LOCAL:
-            break;
+        /* FIXME: TYPEFLAG_FLICENSED */
 
         case ATTR_NONCREATABLE:
             typeinfo->flags &= ~0x2; /* TYPEFLAG_FCANCREATE */
@@ -1849,18 +1881,15 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             typeinfo->flags |= 0x80; /* TYPEFLAG_FNONEXTENSIBLE */
             break;
 
-        case ATTR_OBJECT:
-            break;
-
-        case ATTR_ODL:
-            break;
-
         case ATTR_OLEAUTOMATION:
             typeinfo->flags |= 0x100; /* TYPEFLAG_FOLEAUTOMATION */
             break;
 
-        case ATTR_PUBLIC:
-            break;
+        /* FIXME: TYPEFLAG_FPREDCLID */
+
+        /* FIXME: TYPEFLAG_FPROXY */
+
+        /* FIXME: TYPEFLAG_FREPLACEABLE */
 
         case ATTR_RESTRICTED:
             typeinfo->flags |= 0x200; /* TYPEFLAG_FRESTRICTED */
@@ -1883,7 +1912,6 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             break;
 
         default:
-            warning("create_msft_typeinfo: ignoring attr %d\n", attr->type);
             break;
         }
     }
@@ -2101,6 +2129,9 @@ static void add_coclass_typeinfo(msft_typelib_t *typelib, type_t *cls)
             switch(attr->type) {
             case ATTR_DEFAULT:
                 ref->flags |= 0x1; /* IMPLTYPEFLAG_FDEFAULT */
+                break;
+            case ATTR_DEFAULTVTABLE:
+                ref->flags |= 0x8; /* IMPLTYPEFLAG_FDEFAULTVTABLE */
                 break;
             case ATTR_RESTRICTED:
                 ref->flags |= 0x4; /* IMPLTYPEFLAG_FRESTRICTED */

@@ -10,7 +10,6 @@
 	<file>fci.c</file>
 	<file>fdi.c</file>
 	<file>cabinet.rc</file>
-	<file>cabinet.spec</file>
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>ntdll</library>

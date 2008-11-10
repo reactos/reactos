@@ -38,7 +38,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
-
+#include <stdlib.h>
 #include "xml.h"
 #include "ssprintf.h"
 

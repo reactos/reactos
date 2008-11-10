@@ -371,7 +371,7 @@ NtUserCreateAcceleratorTable(
       Status = MmCopyFromCaller(Accel->Table, Entries, EntriesCount * sizeof(ACCEL));
       if (!NT_SUCCESS(Status))
       {
-         ExFreePool(Accel->Table);
+         ExFreePoolWithTag(Accel->Table, TAG_ACCEL);
          UserDereferenceObject(Accel);
          UserDeleteObject(hAccel, otAccel);
          SetLastNtError(Status);

@@ -442,9 +442,10 @@ INetCfgComponent_fnRaisePropertyUi(
          hr = CreateNotificationObject(This,iface, pUnk);
          if (FAILED(hr))
              return hr;
-         if (dwFlags == NCRP_QUERY_PROPERTY_UI)
-             return S_OK;
     }
+
+    if (dwFlags == NCRP_QUERY_PROPERTY_UI)
+        return S_OK;
 
     dwDefPages = 0;
     Pages = 0;

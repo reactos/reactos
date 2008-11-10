@@ -42,7 +42,9 @@
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
-#define GDI_ENTRY_FLAG_NEED_UPDATE 4
+#define GDI_ENTRY_UNDELETABLE  1
+#define GDI_ENTRY_DELETING     2
+#define GDI_ENTRY_VALIDATE_VIS 4
 
 /*! \defgroup GDI object types
  *
@@ -230,7 +232,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
     FLONG           flDeviceUniq;              // Device settings uniqueness.
     PVOID           pvLangPack;                // Lanuage Pack.
     CFONT           cfPublic[GDI_CFONT_MAX];   // Public Fonts.
-    DWORD           dwCsbSupported1;           // OEM code-page bitfield.
+    DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
 typedef struct _RGN_ATTR
@@ -328,8 +330,8 @@ typedef struct _BRUSH_ATTR // Used with pen too.
 
 typedef struct _FONT_ATTR
 {
-    DWORD dwUnknown;
-    void *pCharWidthData;
+    BOOL    bSlowWidths;
+    PCFONT  pCharWidthData;
 } FONT_ATTR, *PFONT_ATTR;
 
 

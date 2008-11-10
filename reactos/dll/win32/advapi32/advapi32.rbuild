@@ -18,7 +18,6 @@
 	<library>pseh</library>
 	<library>ntdll</library>
 	<pch>advapi32.h</pch>
-	<file>advapi32.spec</file>
 	<directory name="crypt">
 			<file>crypt.c</file>
 			<file>crypt_arc4.c</file>

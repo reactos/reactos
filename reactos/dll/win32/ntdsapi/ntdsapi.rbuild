@@ -8,5 +8,4 @@
         <library>kernel32</library>
         <library>ntdll</library>
         <file>ntdsapi.c</file>
-        <file>ntdsapi.spec</file>
 </module>

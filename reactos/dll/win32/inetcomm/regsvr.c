@@ -31,8 +31,8 @@
 #include "ocidl.h"
 
 #include "initguid.h"
-#include "inetcomm_private.h"
 #include "mimeole.h"
+#include "inetcomm_private.h"
 
 #include "wine/debug.h"
 
@@ -404,6 +404,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"inetcomm.dll",
 	"Both"
     },
+    {   &CLSID_ISMTPTransport2,
+    "CLSID_ISMTPTransport2",
+    NULL,
+    "inetcomm.dll",
+    "Both"
+    },
     {   &CLSID_IPOP3Transport,
 	"CLSID_IPOP3Transport",
 	NULL,
@@ -448,6 +454,12 @@ static struct regsvr_coclass const coclass_list[] = {
     },
     {   &CLSID_IMimeMessage,
         "CLSID_IMimeMessage",
+        NULL,
+        "inetcomm.dll",
+        "Both"
+    },
+    {   &CLSID_IMimeSecurity,
+        "CLSID_IMimeSecurity",
         NULL,
         "inetcomm.dll",
         "Both"

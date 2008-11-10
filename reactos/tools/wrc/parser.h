@@ -23,7 +23,7 @@
 
 /* From parser.y */
 extern int parser_debug;
-extern int want_nl;		/* Set when getting line-numers */
+extern int want_nl;		/* Set when getting line-numbers */
 extern int want_id;		/* Set when getting the resource name */
 
 int parser_parse(void);
@@ -36,4 +36,3 @@ extern int yy_flex_debug;
 int parser_lex(void);
 
 #endif
-

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="bzip2" type="kernelmodedll" installbase="system32/drivers" installname="bzip2.dll">
-	<importlibrary definition="unbzip2.def" />
+	<importlibrary definition="unbzip2.spec" />
 	<define name="BZ_NO_STDIO" />
 	<define name="BZ_DECOMPRESS_ONLY" />
 	<library>ntoskrnl</library>

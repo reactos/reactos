@@ -1988,6 +1988,7 @@ extern "C" {
 #define DCX_EXCLUDERGN 64
 #define DCX_INTERSECTRGN 128
 #define DCX_VALIDATE 0x200000
+#define DCX_USESTYLE 0x00010000
 #define DCX_EXCLUDEUPDATE   0x100
 #define GMDI_GOINTOPOPUPS 2
 #define GMDI_USEDISABLED 1
@@ -3101,14 +3102,14 @@ typedef struct tagICONMETRICSA {
 	int iVertSpacing;
 	int iTitleWrap;
 	LOGFONTA lfFont;
-} ICONMETRICSA,*LPICONMETRICSA;
+} ICONMETRICSA, *PICONMETRICSA, *LPICONMETRICSA;
 typedef struct tagICONMETRICSW {
 	UINT cbSize;
 	int iHorzSpacing;
 	int iVertSpacing;
 	int iTitleWrap;
 	LOGFONTW lfFont;
-} ICONMETRICSW,*LPICONMETRICSW;
+} ICONMETRICSW, *PICONMETRICSW, *LPICONMETRICSW;
 #endif /*  NOGDI */
 typedef struct tagMINIMIZEDMETRICS {
 	UINT cbSize;
@@ -4475,8 +4476,8 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define WinHelp WinHelpW
 #define wsprintf wsprintfW
 #define wvsprintf wvsprintfW
-#ifndef NOGDI
-typedef ICONMETRICSW ICONMETRICS,*LPICONMETRICS;
+#if defined(_WINGDI_) && !defined(NOGDI)
+typedef ICONMETRICSW ICONMETRICS;
 typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsW
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExW
@@ -4644,7 +4645,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define wsprintf wsprintfA
 #define wvsprintf wvsprintfA
 #if defined(_WINGDI_) && !defined(NOGDI)
-typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
+typedef ICONMETRICSA ICONMETRICS;
 typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #define ChangeDisplaySettings ChangeDisplaySettingsA
 #define ChangeDisplaySettingsEx ChangeDisplaySettingsExA

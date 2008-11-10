@@ -12,6 +12,5 @@
 	<file>hwpage.c</file>
 	<file>misc.c</file>
 	<file>stubs.c</file>
-	<file>devmgr.spec</file>
 	<pch>precomp.h</pch>
 </module>

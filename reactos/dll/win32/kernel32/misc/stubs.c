@@ -128,42 +128,6 @@ ExtendVirtualBuffer (
 /*
  * @unimplemented
  */
-int
-STDCALL
-FoldStringW (
-    DWORD   dwMapFlags,
-    LPCWSTR lpSrcStr,
-    int cchSrc,
-    LPWSTR  lpDestStr,
-    int cchDest
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-FoldStringA (
-    DWORD   dwMapFlags,
-    LPCSTR  lpSrcStr,
-    int cchSrc,
-    LPSTR   lpDestStr,
-    int cchDest
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 FreeVirtualBuffer (
@@ -565,21 +529,6 @@ IsSystemResumeAutomatic(
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-IsWow64Process(
-    HANDLE hProcess,
-    PBOOL Wow64Process
-    )
-{
-    STUB;
-    *Wow64Process = FALSE;
-    return TRUE;
 }
 
 /*

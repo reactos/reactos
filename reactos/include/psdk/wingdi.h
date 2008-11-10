@@ -503,6 +503,7 @@ extern "C" {
 #define FS_HEBREW 32
 #define FS_ARABIC 64
 #define FS_BALTIC 128
+#define FS_VIETNAMESE 256
 #define FS_THAI 0x10000
 #define FS_JISJAPAN 0x20000
 #define FS_CHINESESIMP 0x40000

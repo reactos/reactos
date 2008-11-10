@@ -243,7 +243,7 @@ void write_h_file(const char *fname)
 			cptr = dup_u2c(ndp->u.msg->msgs[idx_en]->cp, ndp->u.msg->msgs[idx_en]->msg);
 			killnl(cptr, 0);
 			killcomment(cptr);
-			fprintf(fp, "/* Approx. msg: %s */\n", cptr);
+			fprintf(fp, "/* Approximate msg: %s */\n", cptr);
 			free(cptr);
 			cptr = dup_u2c(WMC_DEFAULT_CODEPAGE, ndp->u.msg->sym);
 			if(ndp->u.msg->cast)
@@ -274,8 +274,7 @@ void write_h_file(const char *fname)
 				internal_error(__FILE__, __LINE__, "Invalid base for number print\n");
 			}
 			free(cptr);
-			if(cast)
-				free(cast);
+			free(cast);
 			break;
 		default:
 			internal_error(__FILE__, __LINE__, "Invalid node type %d\n", ndp->type);

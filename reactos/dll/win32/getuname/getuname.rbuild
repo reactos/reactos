@@ -6,5 +6,4 @@
 	<library>ntdll</library>
 	<file>getuname.c</file>
 	<file>getuname.rc</file>
-	<file>getuname.spec</file>
 </module>

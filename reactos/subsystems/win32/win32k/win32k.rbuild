@@ -184,12 +184,11 @@
 		<file>stubs.c</file>
 	</directory>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
-	<library>libcntpr</library>
 	<library>hal</library>
 	<library>freetype</library>
 	<library>dxguid</library>

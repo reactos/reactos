@@ -31,7 +31,8 @@ typedef INT
 #define METAFILE_DISK   2
 
 /* MACRO ********************************************************************/
-#define ROP_USES_SOURCE(Rop)   ((Rop << 2) ^ Rop) & 0xCC0000
+
+#define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
 
 /* TYPES *********************************************************************/
 
@@ -101,6 +102,11 @@ typedef struct _UMPDEV
   WCHAR           String[188];
 } UMPDEV, *PUMPDEV;
 
+#define LOCALFONT_COUNT 10
+typedef struct _LOCALFONT
+{
+  FONT_ATTR  lfa[LOCALFONT_COUNT];
+} LOCALFONT, *PLOCALFONT;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -223,6 +229,8 @@ GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
 VOID
 STDCALL
 GdiSetLastError( DWORD dwErrCode );
+
+DWORD STDCALL GdiGetCodePage(HDC);
 
 /* EOF */
 

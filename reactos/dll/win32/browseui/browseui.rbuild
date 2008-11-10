@@ -21,5 +21,4 @@
 	<file>browseui_main.c</file>
 	<file>regsvr.c</file>
 	<file>version.rc</file>
-	<file>browseui.spec</file>
 </module>

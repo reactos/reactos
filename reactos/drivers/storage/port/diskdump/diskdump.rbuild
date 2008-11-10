@@ -11,5 +11,4 @@
 	<file>diskdump.c</file>
 	<file>diskdump_helper.S</file>
 	<file>diskdump.rc</file>
-	<file>diskdump.spec</file>
 </module>

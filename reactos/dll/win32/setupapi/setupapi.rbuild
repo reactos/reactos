@@ -36,5 +36,4 @@
 	<file>stubs.c</file>
 	<file>rpc.c</file>
 	<file>setupapi.rc</file>
-	<file>setupapi.spec</file>
 </module>

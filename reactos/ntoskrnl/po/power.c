@@ -217,6 +217,84 @@ PoInitializePrcb(IN PKPRCB Prcb)
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+PoCancelDeviceNotify(IN PVOID NotifyBlock)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+PoRegisterDeviceNotify(OUT PVOID Unknown0,
+                       IN ULONG Unknown1,
+                       IN ULONG Unknown2,
+                       IN ULONG Unknown3,
+                       IN PVOID Unknown4,
+                       IN PVOID Unknown5)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+PoShutdownBugCheck(IN BOOLEAN LogError,
+                   IN ULONG BugCheckCode,
+                   IN ULONG_PTR BugCheckParameter1,
+                   IN ULONG_PTR BugCheckParameter2,
+                   IN ULONG_PTR BugCheckParameter3,
+                   IN ULONG_PTR BugCheckParameter4)
+{
+    DPRINT1("PoShutdownBugCheck called\n");
+
+    /* FIXME: Log error if requested */
+    /* FIXME: Initiate a shutdown */
+
+    /* Bugcheck the system */
+    KeBugCheckEx(BugCheckCode,
+                 BugCheckParameter1,
+                 BugCheckParameter2,
+                 BugCheckParameter3,
+                 BugCheckParameter4);
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+PoRequestShutdownEvent(OUT PVOID *Event)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+PoSetHiberRange(IN PVOID HiberContext,
+                IN ULONG Flags,
+                IN OUT PVOID StartPage,
+                IN ULONG Length,
+                IN ULONG PageTag)
+{
+    UNIMPLEMENTED;
+    return;
+}
+
+/*
  * @implemented
  */
 NTSTATUS

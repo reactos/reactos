@@ -21,25 +21,28 @@
 /* DEFINES  ****************************************************************/
 
 #define INPUT_BUFFER_SIZE 255
-#define Arguments 7
+#define Arguments 8
 
 /******* Table Indexes ************/
 #define MAIN_INDEX 0x0
 #define WIN32K_INDEX 0x1000
 
 /******* Argument List ************/
-/* First, define the Databases */
+/* Databases */
 #define NativeSystemDb 0
 #define NativeGuiDb 1
 
-/* Now the Service Tables */
+/* Service Tables */
 #define NtosServiceTable 2
 #define Win32kServiceTable 3
 
-/* And finally, the stub files. */
+/* Stub Files */
 #define NtosUserStubs 4
 #define NtosKernelStubs 5
 #define Win32kStubs 6
+
+/* Spec Files */
+#define NtSpec 7
 
 /********** Stub Code ************/
 
@@ -128,26 +131,26 @@
 
 /***** Arch Dependent Stuff ******/
 struct ncitool_data_t {
-	const char *arch;
-	int args_to_bytes;
-	const char *km_stub;
-	const char *um_stub;
-	const char *global_header;
-	const char *declaration;
+    const char *arch;
+    int args_to_bytes;
+    const char *km_stub;
+    const char *um_stub;
+    const char *global_header;
+    const char *declaration;
 };
 
 struct ncitool_data_t ncitool_data[] = {
-	{ "i386", 4, KernelModeStub_x86, UserModeStub_x86,
-	  ".global _%s@%d\n", "_%s@%d:\n" },
-	{ "amd64", 4, KernelModeStub_amd64, UserModeStub_amd64,
-	  ".global _%s\n", "_%s:\n" },
-	{ "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
-	  "\t.globl %s\n", "%s:\n" },
-	{ "mips", 4, KernelModeStub_mips, UserModeStub_mips,
-	  "\t.globl %s\n", "%s:\n" },
-	{ "arm", 4, KernelModeStub_arm, UserModeStub_arm,
+    { "i386", 4, KernelModeStub_x86, UserModeStub_x86,
+      ".global _%s@%d\n", "_%s@%d:\n" },
+    { "amd64", 4, KernelModeStub_amd64, UserModeStub_amd64,
+      ".global _%s\n", "_%s:\n" },
+    { "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
+      "\t.globl %s\n", "%s:\n" },
+    { "mips", 4, KernelModeStub_mips, UserModeStub_mips,
+      "\t.globl %s\n", "%s:\n" },
+    { "arm", 4, KernelModeStub_arm, UserModeStub_arm,
     "\t.globl %s\n", "%s:\n" },
-	{ 0, }
+    { 0, }
 };
 int arch_sel = 0;
 #define ARGS_TO_BYTES(x) (x)*(ncitool_data[arch_sel].args_to_bytes)
@@ -545,6 +548,108 @@ CreateSystemServiceTable(FILE *SyscallDb,
     fprintf(SyscallTable, "ULONG %sNumberOfSysCalls = %d;\n", Name, SyscallId);
 }
 
+/*++
+ * WriteSpec
+ *
+ *     Prints out the Spec Entry for a System Call.
+ *
+ * Params:
+ *     SpecFile - Spec File to which to write the header.
+ *
+ *     SyscallName - Name of System Call for which to add the stub.
+ *
+ *     CountArguments - Number of arguments to the System Call.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+void
+WriteSpec(FILE* StubFile,
+          char* SyscallName,
+          unsigned CountArguments)
+{
+    unsigned i;
+
+    fprintf(StubFile, "@ stdcall %s", SyscallName);
+
+    fputc ('(', StubFile);
+
+    for (i = 0; i < CountArguments; ++ i)
+        fputs ("ptr ", StubFile);
+
+    fputc (')', StubFile);
+    fputc ('\n', StubFile);
+}
+
+/*++
+ * CreateSpec
+ *
+ *     Parses a System Call Database and creates a spec file for all the entries.
+ *
+ * Params:
+ *     SyscallDb - System Call Database to parse.
+ *
+ *     Files - Array of Spec Files to which to write.
+ *
+ *     CountFiles - Number of Spec Files to create
+ *
+ *     UseZw - Use Zw prefix?
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+void
+CreateSpec(FILE * SyscallDb,
+           FILE * Files[],
+           unsigned CountFiles,
+           unsigned UseZw)
+{
+    char Line[INPUT_BUFFER_SIZE];
+    char *NtSyscallName;
+    char *SyscallArguments;
+    unsigned CountArguments;
+
+    /* We loop until the end of the file  */
+    while ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL)) {
+
+        /* Extract the Name and Arguments */
+        GetNameAndArgumentsFromDb(Line, &NtSyscallName, &SyscallArguments);
+        CountArguments = strtoul(SyscallArguments, NULL, 0);
+
+        /* Make sure we really extracted something */
+        if (NtSyscallName) {
+
+            int i;
+            for (i= 0; i < CountFiles; i++) {
+
+                if (!UseZw) {
+                    WriteSpec(Files[i],
+                              NtSyscallName,
+                              CountArguments);
+                }
+
+                if (UseZw && NtSyscallName[0] == 'N' && NtSyscallName[1] == 't') {
+
+                    NtSyscallName[0] = 'Z';
+                    NtSyscallName[1] = 'w';
+                    WriteSpec(Files[i],
+                              NtSyscallName,
+                              CountArguments);
+                }
+
+            }
+        }
+    }
+}
+
 void usage(char * argv0)
 {
     printf("Usage: %s [-arch <arch>] sysfuncs.lst w32ksvc.db napi.h ssdt.h napi.S zw.S win32k.S win32k.S\n"
@@ -556,6 +661,7 @@ void usage(char * argv0)
            "  zw.S          NTOSKRNL Zw stubs\n"
            "  win32k.S      GDI32 stubs\n"
            "  win32k.S      USER32 stubs\n"
+           "  nt.pspec      NTDLL exports\n"
            "  -arch is optional, default is %s\n",
            argv0,
            ncitool_data[0].arch
@@ -630,20 +736,31 @@ int main(int argc, char* argv[])
                 1,
                 0);
 
-    /* Rewind the databases */
-    rewind(Files[NativeSystemDb]);
-    rewind(Files[NativeGuiDb]);
-
     /* Create the Service Tables */
+    rewind(Files[NativeSystemDb]);
     CreateSystemServiceTable(Files[NativeSystemDb],
                             Files[NtosServiceTable],
                             "Main",
                             argv[NtosServiceTable + ArgOffset]);
 
+    rewind(Files[NativeGuiDb]);
     CreateSystemServiceTable(Files[NativeGuiDb],
                             Files[Win32kServiceTable],
                             "Win32k",
                             argv[Win32kServiceTable + ArgOffset]);
+
+    /* Create the Spec Files */
+    rewind(Files[NativeSystemDb]);
+    CreateSpec(Files[NativeSystemDb],
+               &Files[NtSpec],
+               1,
+               0);
+
+    rewind(Files[NativeSystemDb]);
+    CreateSpec(Files[NativeSystemDb],
+               &Files[NtSpec],
+               1,
+               1);
 
     /* Close all files */
     for (FileNumber = 0; FileNumber < Arguments-ArgOffset; FileNumber++) {

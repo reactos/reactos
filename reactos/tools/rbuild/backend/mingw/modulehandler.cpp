@@ -420,8 +420,6 @@ MingwModuleHandler::GetObjectFilename (
 		newExtension = "_" + module.name + ".coff";
 	else if (extension == ".mc")
 		newExtension = ".rc";
-	else if (extension == ".spec" || extension == ".pspec")
-		newExtension = "_" + module.name + ".stubs.o";
 	else if (extension == ".idl")
 	{
 		if ( module.type == RpcServer )
@@ -538,26 +536,6 @@ MingwModuleHandler::GenerateDependsTarget () const
 	fprintf ( fMakefile,
 	          "\t$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) -dm%s mingw\n",
 	          module.name.c_str () );
-}
-
-string
-MingwModuleHandler::GetObjectFilenames ()
-{
-	const vector<CompilationUnit*>& compilationUnits = module.non_if_data.compilationUnits;
-	if ( compilationUnits.size () == 0 )
-		return "";
-
-	string objectFilenames ( "" );
-	for ( size_t i = 0; i < compilationUnits.size (); i++ )
-	{
-		if ( objectFilenames.size () > 0 )
-			objectFilenames += " ";
-		const FileLocation& compilationName = compilationUnits[i]->GetFilename ();
-		const FileLocation *object_file = GetObjectFilename ( &compilationName, module );
-		objectFilenames += backend->GetFullName ( *object_file );
-		delete object_file;
-	}
-	return objectFilenames;
 }
 
 /* static */ string
@@ -1001,6 +979,22 @@ MingwModuleHandler::GenerateObjectMacros (
 		delete object_file;
 	}
 	CleanupCompilationUnitVector ( sourceCompilationUnits );
+
+	if ( IsSpecDefinitionFile() )
+	{
+		const FileLocation *stubs_file = new FileLocation(
+			IntermediateDirectory,
+			module.importLibrary->source->relative_path,
+			ReplaceExtension ( module.importLibrary->source->name, "_" + module.name + ".stubs.o" ) );
+
+		fprintf (
+			fMakefile,
+			"%s += %s\n",
+			objectsMacro.c_str(),
+			backend->GetFullName ( *stubs_file ).c_str () );
+
+		delete stubs_file;
+	}
 }
 
 /* caller needs to delete the returned object */
@@ -1056,31 +1050,34 @@ Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc 
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildPDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildPDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                         "\t$(ECHO_CPP)\n"
+                         "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec\n\n"
+						 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                          "\t$(ECHO_WINEBLD)\n"
-                         "\t${gcc} -xc -E $(source) -I. > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n"
-                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec\n\n",
-                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec --filename $(module_dllname)\n\n",
+                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec",
                          "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
                          "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildPRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c:\n"
-                      "\t${cp} $(NUL) $@ 1>$(NUL)\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+Rule winebuildPRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_WINEBLD)\n"
+                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec --filename $(module_dllname)\n\n"
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
+                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule winebuildDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                         "\t$(ECHO_WINEBLD)\n"
-                        "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(source)\n\n",
+                        "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(source) --filename $(module_dllname)\n\n",
                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildRule (                      "$(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
+Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).stubs.c --pedll $(source_path)$(SEP)$(source_name_noext).spec\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(source_path)$(SEP)$(source_name_noext).spec --filename $(module_dllname)\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
@@ -1256,8 +1253,6 @@ MingwModuleHandler::GenerateCommands (
 		{ HostDontCare, TypeDontCare, ".asm", &nasmRule },
 		{ HostDontCare, TypeDontCare, ".rc", &windresRule },
 		{ HostDontCare, TypeDontCare, ".mc", &wmcRule },
-		{ HostDontCare, TypeDontCare, ".pspec", &winebuildPRule },
-		{ HostDontCare, TypeDontCare, ".spec", &winebuildRule },
 		{ HostDontCare, RpcServer, ".idl", &widlServerRule },
 		{ HostDontCare, RpcClient, ".idl", &widlClientRule },
 		{ HostDontCare, RpcProxy, ".idl", &widlProxyRule },
@@ -1476,15 +1471,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 	else
 		linkerScriptArgument = "";
 
-	fprintf ( fMakefile,
-		"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
-		target_macro.c_str (),
-		definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
-		dependencies.c_str (),
-		target_folder.c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
-	string targetName ( module.output->name );
-
 	/* check if we need to add default C++ libraries, ie if we have
 	 * a C++ user-mode module without the -nostdlib linker flag
 	 */
@@ -1494,6 +1480,14 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	if ( !module.HasImportLibrary() )
 	{
+		fprintf ( fMakefile,
+			"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
+			target_macro.c_str (),
+			definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
+			dependencies.c_str (),
+			target_folder.c_str () );
+		fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
+
 		fprintf ( fMakefile,
 		          "\t%s %s%s %s %s %s %s -o %s\n",
 		          linker.c_str (),
@@ -1507,18 +1501,32 @@ MingwModuleHandler::GenerateLinkerCommand (
 	}
 	else
 	{
-		FileLocation temp_exp ( TemporaryDirectory,
-		                        "",
-		                        module.name + ".temp.exp" );
+		FileLocation temp_exp ( IntermediateDirectory,
+		                        module.output->relative_path,
+		                        module.name + ".exp" );
 		CLEAN_FILE ( temp_exp );
 
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-exp %s%s%s\n",
-		          targetName.c_str (),
+			"%s: %s | %s\n",
+			backend->GetFullName ( temp_exp ).c_str (),
+			definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
+			backend->GetFullPath ( temp_exp ).c_str () );
+		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-exp $@%s%s\n",
+		          module.GetDllName ().c_str (),
 		          definitionFilename ? backend->GetFullName ( *definitionFilename ).c_str () : "",
-		          backend->GetFullName ( temp_exp ).c_str (),
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
+
+		fprintf ( fMakefile,
+			"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
+			target_macro.c_str (),
+			backend->GetFullName ( temp_exp ).c_str (),
+			dependencies.c_str (),
+			target_folder.c_str () );
+		fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
 		fprintf ( fMakefile,
 		          "\t%s %s%s %s %s %s %s %s -o %s\n",
@@ -1537,10 +1545,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports%s\n",
 		          target_macro.c_str (),
 		          pefixupParameters.c_str() );
-
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          backend->GetFullName ( temp_exp ).c_str () );
 	}
 
 	GenerateBuildMapCode ();
@@ -1608,6 +1612,20 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 		                   moduleDependencies );
 	}
 	CleanupCompilationUnitVector ( sourceCompilationUnits );
+
+	SpecFileType spec = IsSpecDefinitionFile ();
+
+	if ( spec )
+	{
+		Rule * defRule;
+
+		if (spec == PSpec)
+			defRule = &winebuildPRule;
+		else
+			defRule = &winebuildRule;
+
+		defRule->Execute ( fMakefile, backend, module, module.importLibrary->source, clean_files );
+	}
 }
 
 void
@@ -1637,10 +1655,11 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
-		          "\t%s -o %s %s -g %s\n\n",
+		          "\t%s -o %s %s %s -g %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          cflagsMacro.c_str(),
+				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
 	}
@@ -1669,7 +1688,7 @@ MingwModuleHandler::GenerateArchiveTarget ()
 
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib $@%s%s\n",
-		          module.importLibrary->dllname.c_str (),
+		          module.GetDllName ().c_str (),
 		          backend->GetFullName ( *definitionFilename ).c_str (),
 		          module.mangledSymbols ? "" : " --kill-at",
 		          module.underscoreSymbols ? " --add-underscore" : "" );
@@ -1873,7 +1892,11 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	string globalCflags = "";
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
+	{
 		globalCflags += " $(PROJECT_CFLAGS)";
+		if ( module.dynamicCRT )
+			globalCflags += " -D_DLL -D__USE_CRTIMP";
+	}
 	else
 		globalCflags += " -Wall -Wpointer-arith";
 	globalCflags += " -g";
@@ -2182,10 +2205,12 @@ MingwModuleHandler::IsSpecDefinitionFile () const
     if(!module.importLibrary)
         return None;
 
-    if(module.importLibrary->source->name.rfind(".spec") != string::npos)
+	std::string ext = GetExtension ( *module.importLibrary->source );
+
+    if ( ext == ".spec" )
         return Spec;
 
-    if(module.importLibrary->source->name.rfind(".pspec") != string::npos)
+    if ( ext == ".pspec" )
         return PSpec;
 
     return None;
@@ -2221,9 +2246,6 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		const FileLocation *defFilename = GetDefinitionFilename ();
 		string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
 
-		vector<FileLocation> deps;
-		GetDefinitionDependencies ( deps );
-
 		fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
 
 		fprintf ( fMakefile, "%s:",
@@ -2235,11 +2257,6 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 			          backend->GetFullName ( *defFilename ).c_str () );
 		}
 
-		size_t i, iend = deps.size();
-		for ( i = 0; i < iend; i++ )
-			fprintf ( fMakefile, " %s",
-			          backend->GetFullName ( deps[i] ).c_str () );
-
 		fprintf ( fMakefile, " | %s\n",
 		          backend->GetFullPath ( *library_target ).c_str () );
 
@@ -2247,7 +2264,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s%s%s\n\n",
-		          module.output->name.c_str (),
+		          module.GetDllName ().c_str (),
 		          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
 		                      : empty.c_str (),
 		          backend->GetFullName ( *library_target ).c_str (),
@@ -2365,6 +2382,38 @@ MingwAddDebugSupportLibraries ( Module& module, DebugSupportType type )
 	module.non_if_data.libraries.push_back(pLibrary);
 }
 
+static void
+MingwAddCRTLibrary( Module &module )
+{
+	const char * crtAttr = module.CRT.c_str ();
+	const char * crtLib = NULL;
+
+	if ( stricmp ( crtAttr, "libc" ) == 0 )
+		crtLib = "crt";
+	else if ( stricmp ( crtAttr, "msvcrt" ) == 0 )
+		crtLib = "msvcrt";
+	else if ( stricmp ( crtAttr, "libcntpr" ) == 0 )
+		crtLib = "libcntpr";
+	else if ( stricmp ( crtAttr, "ntdll" ) == 0 )
+		crtLib = "ntdll";
+
+	if ( crtLib )
+	{
+		Library* pLibrary = new Library ( module, std::string ( crtLib ) );
+
+		if ( pLibrary->importedModule == NULL)
+		{
+			throw XMLInvalidBuildFileException (
+				module.node.location,
+				"module '%s' trying to import non-existant C runtime module '%s'",
+				module.name.c_str(),
+				crtLib );
+		}
+
+		module.non_if_data.libraries.push_back ( pLibrary );
+	}
+}
+
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler ( const Module& module_ )
 	: MingwModuleHandler ( module_ )
 {
@@ -2466,6 +2515,7 @@ MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 void
 MingwKernelModeDLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugKernelMode );
 }
 
@@ -2514,6 +2564,7 @@ MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler (
 void
 MingwNativeDLLModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
@@ -2562,6 +2613,7 @@ MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler (
 void
 MingwNativeCUIModuleHandler::AddImplicitLibraries ( Module& module )
 {
+	MingwAddCRTLibrary ( module );
 	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
@@ -2614,23 +2666,10 @@ MingwWin32OCXModuleHandler::MingwWin32OCXModuleHandler (
 {
 }
 
-static bool
-LinksToCrt( Module &module )
-{
-	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
-	{
-		Library& library = *module.non_if_data.libraries[i];
-		if ( library.name == "libcntpr" || library.name == "crt" )
-			return true;
-	}
-	return false;
-}
-
 static void
 MingwAddImplicitLibraries( Module &module )
 {
 	Library* pLibrary;
-	bool links_to_crt;
 
 	if ( module.type != Win32DLL
 	  && module.type != Win32OCX
@@ -2638,54 +2677,28 @@ MingwAddImplicitLibraries( Module &module )
 	  && module.type != Win32GUI
 	  && module.type != Win32SCR)
 	{
-		// no implicit libraries
 		return;
 	}
 
-	links_to_crt = LinksToCrt ( module );
-
-	if ( !module.isDefaultEntryPoint )
+	if ( module.isDefaultEntryPoint )
 	{
-		if ( module.GetEntryPoint(false) == "0" )
+		if ( module.IsDLL () )
 		{
-			if ( !links_to_crt )
-			{
-				pLibrary = new Library ( module, "mingw_common" );
-				module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() , pLibrary );
-
-				pLibrary = new Library ( module, "msvcrt" );
-				module.non_if_data.libraries.push_back ( pLibrary );
-				links_to_crt = true;
-			}
+			//pLibrary = new Library ( module, "__mingw_dllmain" );
+			//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
 		}
-		pLibrary = new Library ( module, "debugsup_ntdll" );
-		module.non_if_data.libraries.push_back(pLibrary);
-		return;
-	}
-
-	if ( module.IsDLL () )
-	{
-		//pLibrary = new Library ( module, "__mingw_dllmain" );
-		//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
-	}
-	else
-	{
-		pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
-		module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+		else
+		{
+			pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
+			module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+		}
 	}
 
 	pLibrary = new Library ( module, "mingw_common" );
-	module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() + 1, pLibrary );
+	module.non_if_data.libraries.push_back ( pLibrary );
 
-	if ( !links_to_crt )
-	{
-		// always link in msvcrt to get the basic routines
-		pLibrary = new Library ( module, "msvcrt" );
-		module.non_if_data.libraries.push_back ( pLibrary );
-	}
-
-	pLibrary = new Library ( module, "debugsup_ntdll" );
-	module.non_if_data.libraries.push_back(pLibrary);
+	MingwAddCRTLibrary ( module );
+	MingwAddDebugSupportLibraries ( module, DebugUserMode );
 }
 
 void

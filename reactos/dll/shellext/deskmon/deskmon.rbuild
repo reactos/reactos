@@ -11,6 +11,5 @@
 	<file>deskmon.c</file>
 	<file>shxiface.c</file>
 	<file>deskmon.rc</file>
-	<file>deskmon.spec</file>
 	<pch>precomp.h</pch>
 </module>

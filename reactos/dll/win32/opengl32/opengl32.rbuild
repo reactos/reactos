@@ -10,5 +10,4 @@
 	<file>gl.c</file>
 	<file>opengl32.c</file>
 	<file>wgl.c</file>
-	<file>opengl32.spec</file>
 </module>

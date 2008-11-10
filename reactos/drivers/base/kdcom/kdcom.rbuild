@@ -21,5 +21,4 @@
 				<file>kdbg.c</file>
 		</directory>
 	</if>
-	<file>kdcom.spec</file>
 </module>

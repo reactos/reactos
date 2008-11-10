@@ -18,6 +18,5 @@
 	<file>timedate.c</file>
 	<file>timezone.c</file>
 	<file>timedate.rc</file>
-	<file>timedate.spec</file>
 </module>
 

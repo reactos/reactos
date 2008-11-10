@@ -58,6 +58,8 @@ enum target_cpu target_cpu = CPU_x86_64;
 
 #ifdef __APPLE__
 enum target_platform target_platform = PLATFORM_APPLE;
+#elif defined(__sun)
+enum target_platform target_platform = PLATFORM_SOLARIS;
 #elif defined(_WINDOWS)
 enum target_platform target_platform = PLATFORM_WINDOWS;
 #else
@@ -118,6 +120,7 @@ static const struct
 {
     { "macos",   PLATFORM_APPLE },
     { "darwin",  PLATFORM_APPLE },
+    { "solaris", PLATFORM_SOLARIS },
     { "windows", PLATFORM_WINDOWS },
     { "winnt",   PLATFORM_WINDOWS }
 };
@@ -598,10 +601,12 @@ int main(int argc, char **argv)
     case MODE_DLL:
         if (spec->subsystem != IMAGE_SUBSYSTEM_NATIVE)
             spec->characteristics |= IMAGE_FILE_DLL;
+        if (!spec_file_name) fatal_error( "missing .spec file\n" );
+        /* fall through */
+    case MODE_EXE:
         load_resources( argv, spec );
         load_import_libs( argv );
-        if (!spec_file_name) fatal_error( "missing .spec file\n" );
-        if (!parse_input_file( spec )) break;
+        if (spec_file_name && !parse_input_file( spec )) break;
         switch (spec->type)
         {
             case SPEC_WIN16:
@@ -613,15 +618,6 @@ int main(int argc, char **argv)
                 break;
             default: assert(0);
         }
-        break;
-    case MODE_EXE:
-        if (spec->type == SPEC_WIN16) fatal_error( "Cannot build 16-bit exe files\n" );
-	if (!spec->file_name) fatal_error( "executable must be named via the -F option\n" );
-        load_resources( argv, spec );
-        load_import_libs( argv );
-        if (spec_file_name && !parse_input_file( spec )) break;
-        read_undef_symbols( spec, argv );
-        BuildSpec32File( spec );
         break;
     case MODE_DEF:
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );

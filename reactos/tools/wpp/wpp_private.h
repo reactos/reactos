@@ -181,7 +181,7 @@ typedef struct cval {
 	ctype_t	type;
 	union {
 #if 0
-		signed char	sc;	/* Explicitely signed because compilers are stupid */
+		signed char	sc;	/* Explicitly signed because compilers are stupid */
 		unsigned char	uc;
 		short		ss;
 		unsigned short	us;

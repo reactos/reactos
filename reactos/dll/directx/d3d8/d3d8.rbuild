@@ -4,5 +4,4 @@
 	<importlibrary definition="d3d8.spec" />
 	<file>d3d8.c</file>
 	<file>d3d8.rc</file>
-	<file>d3d8.spec</file>
 </module>

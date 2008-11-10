@@ -711,6 +711,7 @@ const struct sbcs_table cptable_856 =
 {
     { 856, 1, 0x003f, 0x003f, "Hebrew PC" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

@@ -11,5 +11,4 @@
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>
-	<file>lsasrv.spec</file>
 </module>

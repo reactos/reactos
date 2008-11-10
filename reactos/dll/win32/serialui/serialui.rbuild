@@ -6,5 +6,4 @@
 	<library>shlwapi</library>
 	<file>serialui.c</file>
 	<file>serialui.rc</file>
-	<file>serialui.spec</file>
 </module>

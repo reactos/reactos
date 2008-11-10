@@ -25,7 +25,6 @@
 	<file>storage.c</file>
 	<file>symbol.c</file>
 	<file>type.c</file>
-	<file>dbghelp.spec</file>
 	<library>wine</library>
 	<library>psapi</library>
 	<library>kernel32</library>

@@ -9,5 +9,4 @@
 	<include base="class2">..</include>
 	<file>class2.c</file>
 	<file>class2.rc</file>
-	<file>class2.spec</file>
 </module>

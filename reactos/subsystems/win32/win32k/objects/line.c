@@ -198,7 +198,7 @@ IntGdiPolyBezier(DC      *dc,
         if ( Pts )
         {
             ret = IntGdiPolyline(dc, Pts, nOut);
-            ExFreePool(Pts);
+            ExFreePoolWithTag(Pts, TAG_BEZIER);
         }
     }
 
@@ -228,7 +228,7 @@ IntGdiPolyBezierTo(DC      *dc,
             npt[0].y = Dc_Attr->ptlCurrent.y;
             memcpy(npt + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyBezier(dc, npt, Count+1);
-            ExFreePool(npt);
+            ExFreePoolWithTag(npt, TAG_BEZIER);
         }
     }
     if ( ret )
@@ -331,7 +331,7 @@ IntGdiPolylineTo(DC      *dc,
             pts[0].y = Dc_Attr->ptlCurrent.y;
             memcpy( pts + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyline(dc, pts, Count + 1);
-            ExFreePool(pts);
+            ExFreePoolWithTag(pts, TAG_SHAPE);
         }
     }
     if ( ret )

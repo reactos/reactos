@@ -323,7 +323,7 @@ NtGdiExtCreatePen(
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ExFreePool(pSafeStyle);
+         ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
          return 0;
       }
    }
@@ -341,7 +341,7 @@ NtGdiExtCreatePen(
                              hBrush);
    if (!hPen && pSafeStyle)
    {
-      ExFreePool(pSafeStyle);
+      ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
    }
    return hPen;
 }

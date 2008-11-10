@@ -29,7 +29,6 @@
 	<file>oleaut32.rc</file>
 	<file>oleaut32_oaidl.idl</file>
 	<include base="oleaut32" root="intermediate">.</include>
-	<file>oleaut32.spec</file>
 	<library>oleaut32_proxy</library>
 	<library>wine</library>
 	<library>ole32</library>

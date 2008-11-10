@@ -10,7 +10,6 @@
 	<library>pseh</library>
 	<library>dxguid</library>
 	<library>ntdll</library>
-
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
@@ -49,5 +48,4 @@
 		<file>path.c</file>
 	</directory>
 	<file>gdi32.rc</file>
-	<file>gdi32.spec</file>
 </module>

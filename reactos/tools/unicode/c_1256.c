@@ -711,6 +711,7 @@ const struct sbcs_table cptable_1256 =
 {
     { 1256, 1, 0x003f, 0x003f, "ANSI Arabic" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

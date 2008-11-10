@@ -30,9 +30,9 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
 
     TRACE("SVCCTL_HANDLEA_bind() called\n");
 
-    status = RpcStringBindingComposeA((UCHAR *)szMachineName,
+    status = RpcStringBindingComposeA(NULL,
                                       (UCHAR *)"ncacn_np",
-                                      NULL,
+                                      (UCHAR *)szMachineName,
                                       (UCHAR *)"\\pipe\\ntsvcs",
                                       NULL,
                                       (UCHAR **)&pszStringBinding);
@@ -85,9 +85,9 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
 
     TRACE("SVCCTL_HANDLEW_bind() called\n");
 
-    status = RpcStringBindingComposeW(szMachineName,
+    status = RpcStringBindingComposeW(NULL,
                                       L"ncacn_np",
-                                      NULL,
+                                      szMachineName,
                                       L"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);

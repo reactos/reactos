@@ -9,5 +9,4 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>version.rc</file>
-	<file>lz32.spec</file>
 </module>

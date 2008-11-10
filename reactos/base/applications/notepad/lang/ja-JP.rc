@@ -201,4 +201,5 @@ STRING_UTF8,                          "UTF-8"
 STRING_CRLF,                          "Windows (CR+LF)"
 STRING_LF,                            "Unix (LF)"
 STRING_CR,                            "Mac (CR)"
+STRING_LINE_COLUMN,                   "Line %d, column %d"
 END

@@ -596,7 +596,7 @@ KiRescheduleThread(IN BOOLEAN NewThread,
     if ((NewThread) && !(KeGetPcr()->Number == Cpu))
     {
         /* Send an IPI to request delivery */
-        KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+        KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
     }
 }
 
@@ -753,7 +753,7 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
         if (KeGetPcr()->Number != Processor)
         {
             /* Send an IPI to request delivery */
-            KiIpiSendRequest(AFFINITY_MASK(Processor), IPI_APC);
+            KiIpiSend(AFFINITY_MASK(Processor), IPI_APC);
         }
         else
         {
@@ -1102,6 +1102,37 @@ KiCheckAlertability(IN PKTHREAD Thread,
 }
 
 //
+// Called from KiCompleteTimer, KiInsertTreeTimer, KeSetSystemTime
+// to remove timer entries
+// See Windows HPI blog for more information.
+VOID
+FORCEINLINE
+KiRemoveEntryTimer(IN PKTIMER Timer)
+{
+    ULONG Hand;
+    PKTIMER_TABLE_ENTRY TableEntry;
+    
+    /* Remove the timer from the timer list and check if it's empty */
+    Hand = Timer->Header.Hand;
+    if (RemoveEntryList(&Timer->TimerListEntry))
+    {
+        /* Get the respective timer table entry */
+        TableEntry = &KiTimerTableListHead[Hand];
+        if (&TableEntry->Entry == TableEntry->Entry.Flink)
+        {
+            /* Set the entry to an infinite absolute time */
+            TableEntry->Time.HighPart = 0xFFFFFFFF;
+        }
+    }
+
+    /* Clear the list entries on dbg builds so we can tell the timer is gone */
+#if DBG
+    Timer->TimerListEntry.Flink = NULL;
+    Timer->TimerListEntry.Blink = NULL;
+#endif
+}
+
+//
 // Called by Wait and Queue code to insert a timer for dispatching.
 // Also called by KeSetTimerEx to insert a timer from the caller.
 //
@@ -1127,6 +1158,57 @@ KxInsertTimer(IN PKTIMER Timer,
         /* Do nothing, just release the lock */
         KiReleaseTimerLock(LockQueue);
     }
+}
+
+//
+// Called by KeSetTimerEx and KiInsertTreeTimer to calculate Due Time
+// See the Windows HPI Blog for more information
+//
+BOOLEAN
+FORCEINLINE
+KiComputeDueTime(IN PKTIMER Timer,
+                 IN LARGE_INTEGER DueTime,
+                 OUT PULONG Hand)
+{
+    LARGE_INTEGER InterruptTime, SystemTime, DifferenceTime;
+    
+    /* Convert to relative time if needed */
+    Timer->Header.Absolute = FALSE;
+    if (DueTime.HighPart >= 0)
+    {
+        /* Get System Time */
+        KeQuerySystemTime(&SystemTime);
+        
+        /* Do the conversion */
+        DifferenceTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
+        
+        /* Make sure it hasn't already expired */
+        Timer->Header.Absolute = TRUE;
+        if (DifferenceTime.HighPart >= 0)
+        {
+            /* Cancel everything */
+            Timer->Header.SignalState = TRUE;
+            Timer->Header.Hand = 0;
+            Timer->DueTime.QuadPart = 0;
+            *Hand = 0;
+            return FALSE;
+        }
+        
+        /* Set the time as Absolute */
+        DueTime = DifferenceTime;
+    }
+    
+    /* Get the Interrupt Time */
+    InterruptTime.QuadPart = KeQueryInterruptTime();
+    
+    /* Recalculate due time */
+    Timer->DueTime.QuadPart = InterruptTime.QuadPart - DueTime.QuadPart;
+    
+    /* Get the handle */
+    *Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
+    Timer->Header.Hand = (UCHAR)*Hand;
+    Timer->Header.Inserted = TRUE;
+    return TRUE;
 }
 
 //

@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>version.rc</file>
-	<file>shfolder.spec</file>
 	<library>wine</library>
 	<library>shell32</library>
 	<library>kernel32</library>

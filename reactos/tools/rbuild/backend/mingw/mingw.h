@@ -142,7 +142,7 @@ private:
 	const Project& project;
 };
 
-typedef struct ModuleHandlerInformations
+struct ModuleHandlerInformations
 {
 	HostType DefaultHost;
 	const char* cflags;

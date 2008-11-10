@@ -112,13 +112,14 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     ListEntry = Listener->ListenRequest.Flink;
     while ( ListEntry != &Listener->ListenRequest ) {
 	Bucket = CONTAINING_RECORD(ListEntry, TDI_BUCKET, Entry);
-	ListEntry = ListEntry->Flink;
 
 	if( Bucket->AssociatedEndpoint == Connection ) {
-	    RemoveEntryList( ListEntry->Blink );
+	    RemoveEntryList( &Bucket->Entry );
 	    ExFreePool( Bucket );
 	    break;
 	}
+
+	ListEntry = ListEntry->Flink;
     }
 
    TcpipRecursiveMutexLeave( &TCPLock );

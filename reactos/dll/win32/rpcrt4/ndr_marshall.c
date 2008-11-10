@@ -361,10 +361,10 @@ typedef struct _NDR_MEMORY_LIST
  *  If the function is unable to allocate memory an ERROR_OUTOFMEMORY
  *  exception is raised.
  */
-void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, size_t len)
+void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, SIZE_T len)
 {
-    size_t aligned_len;
-    size_t adjusted_len;
+    SIZE_T aligned_len;
+    SIZE_T adjusted_len;
     void *p;
     NDR_MEMORY_LIST *mem_list;
 
@@ -373,7 +373,7 @@ void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, size_t len)
     /* check for overflow */
     if (adjusted_len < len)
     {
-        ERR("overflow of adjusted_len %d, len %d\n", adjusted_len, len);
+        ERR("overflow of adjusted_len %ld, len %ld\n", adjusted_len, len);
         RpcRaiseException(RPC_X_BAD_STUB_DATA);
     }
 
@@ -861,7 +861,10 @@ static void PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     if (pointer_id)
       pointer_needs_unmarshaling = 1;
     else
+    {
+      *pPointer = NULL;    
       pointer_needs_unmarshaling = 0;
+    }
     break;
   case RPC_FC_FP:
     pointer_id = NDR_LOCAL_UINT32_READ(Buffer);

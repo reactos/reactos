@@ -42,9 +42,4 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
     RtlFreeHeap(RtlGetProcessHeap(), 0, ptr);
 }
 
-void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hObject)
-{
-}
-
-
 /* EOF */

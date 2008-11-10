@@ -1,0 +1,122 @@
+/*
+ * Endpoint Mapper
+ *
+ * Copyright 2006 Robert Shearman (for CodeWeavers)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* FIXME: should be import */
+#include "dcetypes.idl"
+
+cpp_quote("RPC_STATUS WINAPI TowerExplode(")
+cpp_quote("    const twr_t *tower, PRPC_SYNTAX_IDENTIFIER object, PRPC_SYNTAX_IDENTIFIER syntax,")
+cpp_quote("    char **protseq, char **endpoint, char **address);")
+cpp_quote("RPC_STATUS WINAPI TowerConstruct(")
+cpp_quote("    const RPC_SYNTAX_IDENTIFIER *object, const RPC_SYNTAX_IDENTIFIER *syntax,")
+cpp_quote("    const char *protseq, const char *endpoint, const char *address,")
+cpp_quote("    twr_t **tower);")
+
+[
+    uuid(e1af8308-5d1f-11c9-91a4-08002b14a0fa),
+    version(3.0),
+    pointer_default(ref)
+]
+interface epm
+{
+    const long ept_max_annotation_size = 64;
+
+    typedef struct
+    {
+                    GUID        object;
+                    twr_t      *tower;
+        [string]    char        annotation[ept_max_annotation_size];
+    } ept_entry_t, *ept_entry_p_t;
+
+    typedef [context_handle] void *ept_lookup_handle_t;
+
+    /* Adds entries to an endpoint map */
+    void ept_insert(
+        [in]    handle_t            h,
+        [in]    unsigned32          num_ents,
+        [in, size_is(num_ents)]
+                ept_entry_t         entries[],
+        [in]    boolean32           replace,
+        [out]   error_status_t      *status
+    );
+
+    /* Removes entries from an endpoint map */
+    void ept_delete(
+        [in]    handle_t            h,
+        [in]    unsigned32          num_ents,
+        [in, size_is(num_ents)]
+                ept_entry_t         entries[],
+        [out]   error_status_t      *status
+    );
+
+    /* Lookup entries in an endpoint map */
+    [idempotent]
+    void ept_lookup(
+        [in]        handle_t            h,
+        [in]        unsigned32          inquiry_type,
+        [in]        uuid_p_t            object,
+        [in]        rpc_if_id_p_t       interface_id,
+        [in]        unsigned32          vers_option,
+        [in, out]   ept_lookup_handle_t *entry_handle,
+        [in]        unsigned32          max_ents,
+        [out]       unsigned32          *num_ents,
+        [out, length_is(*num_ents), size_is(max_ents)]
+                    ept_entry_t         entries[],
+        [out]       error_status_t      *status
+    );
+
+    /* Lookup entries in an endpoint map using the given input pattern */
+    [idempotent]
+    void ept_map(
+        [in]        handle_t            h,
+        [in]        uuid_p_t            object,
+        [in]        twr_p_t             map_tower,
+        [in, out]   ept_lookup_handle_t *entry_handle,
+        [in]        unsigned32          max_towers,
+        [out]       unsigned32          *num_towers,
+        [out, length_is(*num_towers), size_is(max_towers)]
+                    twr_p_t             *towers,
+        [out]       error_status_t      *status
+    );
+
+    /* Free the context handle returned by ept_lookup or ept_map */
+    void ept_lookup_handle_free(
+        [in]        handle_t            h,
+        [in, out]   ept_lookup_handle_t *entry_handle,
+        [out]       error_status_t      *status
+    );
+
+    /* Inquires as to the endpoint map's object identifier */
+    [idempotent]
+    void ept_inq_object(
+        [in]        handle_t            h,
+        [out]       GUID                *ept_object,
+        [out]       error_status_t      *status
+    );
+
+    /* Deletes matching entries in the endpoint map */
+    void ept_mgmt_delete(
+        [in]        handle_t            h,
+        [in]        boolean32           object_speced,
+        [in]        uuid_p_t            object,
+        [in]        twr_p_t             tower,
+        [out]       error_status_t      *status
+    );
+}

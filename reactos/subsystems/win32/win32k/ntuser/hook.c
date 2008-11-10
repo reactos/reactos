@@ -553,7 +553,7 @@ IntCallDebugHook(
 
    if (HooklParam) Debug.lParam = (LPARAM)HooklParam;
    lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Debug);
-   if (HooklParam) ExFreePool(HooklParam);
+   if (HooklParam) ExFreePoolWithTag(HooklParam, TAG_HOOK);
    return lResult;
 }
 
@@ -1131,7 +1131,7 @@ NtUserSetWindowsHookEx(
                                 ModuleName.MaximumLength);
       if (! NT_SUCCESS(Status))
       {
-         ExFreePool(Hook->ModuleName.Buffer);
+         ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
          UserDereferenceObject(Hook);
          IntRemoveHook(Hook, WinStaObj, FALSE);
          if (NULL != Thread)

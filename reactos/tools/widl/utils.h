@@ -37,7 +37,9 @@ int parser_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
 int parser_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void error_loc(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void error(const char *s, ...) __attribute__((format (printf, 1, 2)));
+void error_loc_info(const loc_info_t *, const char *s, ...) __attribute__((format (printf, 2, 3)));
 void warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
+void warning_loc_info(const loc_info_t *, const char *s, ...) __attribute__((format (printf, 2, 3)));
 void chat(const char *s, ...) __attribute__((format (printf, 1, 2)));
 
 char *dup_basename(const char *name, const char *ext);

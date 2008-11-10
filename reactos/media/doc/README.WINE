@@ -21,12 +21,12 @@ When porting a new DLL from Wine to ReactOS, please do the following steps
 
 The following build tools are shared with Wine.
 
-reactos/tools/unicode             # Synced to Wine-0_9_5
-reactos/tools/wpp                 # Synced to Wine-0_9_5
-reactos/tools/winebuild           # Synced to Wine-20071217
-reactos/tools/wmc                 # Synced to Wine-20071201
-reactos/tools/wrc                 # Synced to Wine-0_9_53
-reactos/tools/widl                # Synced to Wine-0_9_59
+reactos/tools/unicode             # Synced to Wine-20081105 (~Wine-1.1.7)
+reactos/tools/wpp                 # Synced to Wine-20081105 (~Wine-1.1.7)
+reactos/tools/winebuild           # Synced to Wine-20081105 (~Wine-1.1.7)
+reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
+reactos/tools/wrc                 # Synced to Wine-20081105 (~Wine-1.1.7)
+reactos/tools/widl                # Synced to Wine-0_9_60
 
 The following libraries are shared with Wine.
 

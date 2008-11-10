@@ -69,7 +69,7 @@ static const property_t default_props[] =
     {"Content-Type",                 PID_HDR_CNTTYPE,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
     {"Content-Transfer-Encoding",    PID_HDR_CNTXFER,    MPF_MIME,                        VT_LPSTR},
     {"Content-ID",                   PID_HDR_CNTID,      MPF_MIME,                        VT_LPSTR},
-    {"Content-Disposition",          PID_HDR_CNTDISP,    MPF_MIME,                        VT_LPSTR},
+    {"Content-Disposition",          PID_HDR_CNTDISP,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
     {"To",                           PID_HDR_TO,         MPF_ADDRESS,                     VT_LPSTR},
     {"Cc",                           PID_HDR_CC,         MPF_ADDRESS,                     VT_LPSTR},
     {"Sender",                       PID_HDR_SENDER,     MPF_ADDRESS,                     VT_LPSTR},
@@ -820,8 +820,26 @@ static HRESULT WINAPI MimeBody_SetOption(
                                 const TYPEDID oid,
                                 LPCPROPVARIANT pValue)
 {
-    FIXME("(%p)->(%08x, %p): stub\n", iface, oid, pValue);
-    return E_NOTIMPL;
+    HRESULT hr = E_NOTIMPL;
+    TRACE("(%p)->(%08x, %p)\n", iface, oid, pValue);
+
+    if(pValue->vt != TYPEDID_TYPE(oid))
+    {
+        WARN("Called with vartype %04x and oid %08x\n", pValue->vt, oid);
+        return E_INVALIDARG;
+    }
+
+    switch(oid)
+    {
+    case OID_SECURITY_HWND_OWNER:
+        FIXME("OID_SECURITY_HWND_OWNER (value %08x): ignoring\n", pValue->u.ulVal);
+        hr = S_OK;
+        break;
+    default:
+        FIXME("Unhandled oid %08x\n", oid);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI MimeBody_GetOption(
@@ -846,8 +864,17 @@ static HRESULT WINAPI MimeBody_IsType(
                              IMimeBody* iface,
                              IMSGBODYTYPE bodytype)
 {
-    FIXME("(%p)->(%d): stub\n", iface, bodytype);
-    return E_NOTIMPL;
+    MimeBody *This = impl_from_IMimeBody(iface);
+
+    TRACE("(%p)->(%d)\n", iface, bodytype);
+    switch(bodytype)
+    {
+    case IBT_EMPTY:
+        return This->data ? S_FALSE : S_OK;
+    default:
+        FIXME("Unimplemented bodytype %d - returning S_OK\n", bodytype);
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI MimeBody_SetDisplayName(
@@ -2172,8 +2199,30 @@ static HRESULT WINAPI MimeMessage_SetOption(
     const TYPEDID oid,
     LPCPROPVARIANT pValue)
 {
-    FIXME("(%p)->(%08x, %p)\n", iface, oid, pValue);
-    return E_NOTIMPL;
+    HRESULT hr = E_NOTIMPL;
+    TRACE("(%p)->(%08x, %p)\n", iface, oid, pValue);
+
+    if(pValue->vt != TYPEDID_TYPE(oid))
+    {
+        WARN("Called with vartype %04x and oid %08x\n", pValue->vt, oid);
+        return E_INVALIDARG;
+    }
+
+    switch(oid)
+    {
+    case OID_HIDE_TNEF_ATTACHMENTS:
+        FIXME("OID_HIDE_TNEF_ATTACHMENTS (value %d): ignoring\n", pValue->u.boolVal);
+        hr = S_OK;
+        break;
+    case OID_SHOW_MACBINARY:
+        FIXME("OID_SHOW_MACBINARY (value %d): ignoring\n", pValue->u.boolVal);
+        hr = S_OK;
+        break;
+    default:
+        FIXME("Unhandled oid %08x\n", oid);
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI MimeMessage_GetOption(
@@ -2491,22 +2540,19 @@ static const IMimeMessageVtbl MimeMessageVtbl =
     MimeMessage_GetRootMoniker,
 };
 
-/***********************************************************************
- *              MimeOleCreateMessage (INETCOMM.@)
- */
-HRESULT WINAPI MimeOleCreateMessage(IUnknown *pUnkOuter, IMimeMessage **ppMessage)
+HRESULT MimeMessage_create(IUnknown *outer, void **obj)
 {
     MimeMessage *This;
 
-    TRACE("(%p, %p)\n", pUnkOuter, ppMessage);
+    TRACE("(%p, %p)\n", outer, obj);
 
-    if (pUnkOuter)
+    if (outer)
     {
         FIXME("outer unknown not supported yet\n");
         return E_NOTIMPL;
     }
 
-    *ppMessage = NULL;
+    *obj = NULL;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
@@ -2517,8 +2563,17 @@ HRESULT WINAPI MimeOleCreateMessage(IUnknown *pUnkOuter, IMimeMessage **ppMessag
     list_init(&This->body_tree);
     This->next_hbody = (HBODY)1;
 
-    *ppMessage = (IMimeMessage *)&This->lpVtbl;
+    *obj = (IMimeMessage *)&This->lpVtbl;
     return S_OK;
+}
+
+/***********************************************************************
+ *              MimeOleCreateMessage (INETCOMM.@)
+ */
+HRESULT WINAPI MimeOleCreateMessage(IUnknown *pUnkOuter, IMimeMessage **ppMessage)
+{
+    TRACE("(%p, %p)\n", pUnkOuter, ppMessage);
+    return MimeMessage_create(NULL, (void **)ppMessage);
 }
 
 /***********************************************************************
@@ -2705,16 +2760,13 @@ static const IMimeSecurityVtbl MimeSecurityVtbl =
     MimeSecurity_GetCertData
 };
 
-/***********************************************************************
- *              MimeOleCreateSecurity (INETCOMM.@)
- */
-HRESULT WINAPI MimeOleCreateSecurity(IMimeSecurity **ppSecurity)
+HRESULT MimeSecurity_create(IUnknown *outer, void **obj)
 {
     MimeSecurity *This;
 
-    TRACE("(%p)\n", ppSecurity);
+    *obj = NULL;
 
-    *ppSecurity = NULL;
+    if (outer) return CLASS_E_NOAGGREGATION;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
@@ -2722,10 +2774,17 @@ HRESULT WINAPI MimeOleCreateSecurity(IMimeSecurity **ppSecurity)
     This->lpVtbl = &MimeSecurityVtbl;
     This->refs = 1;
 
-    *ppSecurity = (IMimeSecurity *)&This->lpVtbl;
+    *obj = (IMimeSecurity *)&This->lpVtbl;
     return S_OK;
 }
 
+/***********************************************************************
+ *              MimeOleCreateSecurity (INETCOMM.@)
+ */
+HRESULT WINAPI MimeOleCreateSecurity(IMimeSecurity **ppSecurity)
+{
+    return MimeSecurity_create(NULL, (void **)ppSecurity);
+}
 
 typedef struct
 {
@@ -2929,11 +2988,4 @@ HRESULT MimeAllocator_create(IUnknown *outer, void **obj)
 HRESULT WINAPI MimeOleGetAllocator(IMimeAllocator **alloc)
 {
     return MimeAllocator_create(NULL, (void**)alloc);
-}
-
-HRESULT WINAPI MimeOleGetCharsetInfo(HCHARSET hCharset, LPINETCSETINFO pCsetInfo)
-{
-    FIXME("(%p, %p)\n", hCharset, pCsetInfo);
-    if(!hCharset) return E_INVALIDARG;
-    return E_FAIL;
 }

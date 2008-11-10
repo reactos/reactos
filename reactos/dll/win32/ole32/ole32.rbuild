@@ -14,6 +14,7 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>
+	<library>ole32_irot_client</library>
 	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
 	<library>kernel32</library>
@@ -24,6 +25,7 @@
 	<file>bindctx.c</file>
 	<file>classmoniker.c</file>
 	<file>clipboard.c</file>
+	<file>comcat.c</file>
 	<file>compobj.c</file>
 	<file>compositemoniker.c</file>
 	<file>datacache.c</file>
@@ -59,7 +61,6 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
-	<file>ole32.spec</file>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>

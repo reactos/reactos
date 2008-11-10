@@ -14,19 +14,6 @@
 
 #define NDEBUG
 
-#ifndef _MSC_VER
-
-/* Should be in the header files somewhere (exported by ntdll.dll) */
-long atol(const char *str);
-
-#ifndef __int64
-typedef long long __int64;
-#endif
-
-char * _i64toa(__int64 value, char *string, int radix);
-
-#endif /* _MSC_VER */
-
 /* General ICMP constants */
 #define ICMP_MINSIZE        8     /* Minimum ICMP packet size */
 #define ICMP_MAXSIZE        65535 /* Maximum ICMP packet size */

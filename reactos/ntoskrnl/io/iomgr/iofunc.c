@@ -2070,7 +2070,7 @@ NtReadFile(IN HANDLE FileHandle,
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->RequestorMode = KernelMode;
+    Irp->RequestorMode = PreviousMode;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->UserIosb = IoStatusBlock;
@@ -2929,7 +2929,7 @@ NtWriteFile(IN HANDLE FileHandle,
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->RequestorMode = KernelMode;
+    Irp->RequestorMode = PreviousMode;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
     Irp->UserIosb = IoStatusBlock;

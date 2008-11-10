@@ -51,7 +51,7 @@ typedef unsigned long HOST_DWORD;
 res_t *new_res(void)
 {
 	res_t *r;
-	r = (res_t *)xmalloc(sizeof(res_t));
+	r = xmalloc(sizeof(res_t));
 	r->allocsize = RES_BLOCKSIZE;
 	r->size = 0;
 	r->dataidx = 0;
@@ -62,7 +62,7 @@ res_t *new_res(void)
 res_t *grow_res(res_t *r, unsigned int add)
 {
 	r->allocsize += add;
-	r->data = (char *)xrealloc(r->data, r->allocsize);
+	r->data = xrealloc(r->data, r->allocsize);
 	return r;
 }
 
@@ -118,9 +118,7 @@ void put_word(res_t *res, unsigned w)
 
 void put_dword(res_t *res, unsigned d)
 {
-	assert(sizeof(HOST_DWORD) == 4);
-
-	if(res->allocsize - res->size < sizeof(HOST_DWORD))
+	if(res->allocsize - res->size < sizeof(DWORD))
 		grow_res(res, RES_BLOCKSIZE);
 	switch(byteorder)
 	{
@@ -144,7 +142,7 @@ void put_dword(res_t *res, unsigned d)
 		res->data[res->size+0] = LOBYTE(LOWORD(d));
 		break;
 	}
-	res->size += sizeof(HOST_DWORD);
+	res->size += sizeof(DWORD);
 }
 
 static void put_pad(res_t *res)
@@ -229,7 +227,7 @@ static void set_dword(res_t *res, int ofs, unsigned d)
  * Remarks	:
  *****************************************************************************
 */
-static HOST_DWORD get_dword(res_t *res, int ofs)
+static DWORD get_dword(res_t *res, int ofs)
 {
 	switch(byteorder)
 	{
@@ -423,7 +421,7 @@ static void put_raw_data(res_t *res, raw_data_t *raw, int offset)
 /*
  *****************************************************************************
  * Function	: put_res_header
- * Syntax	: intput_res_header(res_t *res, int type, name_id_t *ntype,
+ * Syntax	: input_res_header(res_t *res, int type, name_id_t *ntype,
  *				    name_id_t *name, DWORD memopt, lvc_t *lvc)
  *
  * Input	:
@@ -440,7 +438,7 @@ static void put_raw_data(res_t *res, raw_data_t *raw, int offset)
  *****************************************************************************
 */
 static int put_res_header(res_t *res, int type, name_id_t *ntype, name_id_t *name,
-                          HOST_DWORD memopt, lvc_t *lvc)
+                          DWORD memopt, lvc_t *lvc)
 {
 	if(win32)
 	{
@@ -458,8 +456,8 @@ static int put_res_header(res_t *res, int type, name_id_t *ntype, name_id_t *nam
 		put_dword(res, 0);		/* DataVersion */
 		put_word(res, memopt);		/* Memory options */
 		put_lvc(res, lvc);		/* Language, version and characts */
-		set_dword(res, 0*sizeof(HOST_DWORD), res->size);	/* Set preliminary resource */
-		set_dword(res, 1*sizeof(HOST_DWORD), res->size);	/* Set HeaderSize */
+		set_dword(res, 0*sizeof(DWORD), res->size);	/* Set preliminary resource */
+		set_dword(res, 1*sizeof(DWORD), res->size);	/* Set HeaderSize */
 		res->dataidx = res->size;
 		return 0;
 	}
@@ -721,7 +719,7 @@ static res_t *dialogex2res(name_id_t *name, dialogex_t *dlgex)
 	{
 		restag = put_res_header(res, WRC_RT_DIALOG, NULL, name, dlgex->memopt, &(dlgex->lvc));
 
-		/* FIXME: MS doc says thet the first word must contain 0xffff
+		/* FIXME: MS doc says that the first word must contain 0xffff
 		 * and the second 0x0001 to signal a DLGTEMPLATEEX. Borland's
 		 * compiler reverses the two words.
 		 * I don't know which one to choose, but I write it as Mr. B
@@ -754,8 +752,8 @@ static res_t *dialogex2res(name_id_t *name, dialogex_t *dlgex)
 		{
 			put_word(res, dlgex->font->size);
 			put_word(res, dlgex->font->weight);
-			/* FIXME: ? TRUE should be sufficient to say that its
-			 * italic, but Borland's compiler says its 0x0101.
+			/* FIXME: ? TRUE should be sufficient to say that it's
+			 * italic, but Borland's compiler says it's 0x0101.
 			 * I just copy it here, and hope for the best.
 			 */
 			put_word(res, dlgex->font->italic ? 0x0101 : 0);
@@ -1025,7 +1023,7 @@ static res_t *cursorgroup2res(name_id_t *name, cursor_group_t *curg)
 			put_word(res, cur->planes);
 			put_word(res, cur->bits);
 			/* FIXME: The +4 is the hotspot in the cursor resource.
-			 * However, I cound not find this in the documentation.
+			 * However, I could not find this in the documentation.
 			 * The hotspot bytes must either be included or MS
 			 * doesn't care.
 			 */
@@ -1062,7 +1060,7 @@ static res_t *cursorgroup2res(name_id_t *name, cursor_group_t *curg)
 			put_word(res, cur->planes);
 			put_word(res, cur->bits);
 			/* FIXME: The +4 is the hotspot in the cursor resource.
-			 * However, I cound not find this in the documentation.
+			 * However, I could not find this in the documentation.
 			 * The hotspot bytes must either be included or MS
 			 * doesn't care.
 			 */
@@ -1450,7 +1448,7 @@ static res_t *stringtable2res(stringtable_t *stt)
 	name_id_t name;
 	int i;
 	int restag;
-	HOST_DWORD lastsize = 0;
+	DWORD lastsize = 0;
 
 	assert(stt != NULL);
 	res = new_res();
@@ -1852,7 +1850,7 @@ char *make_c_name(const char *base, const name_id_t *nid, const language_t *lan)
 	buf = prep_nid_for_label(nid);
 	nlen = strlen(buf) + strlen(lanbuf);
 	nlen += strlen(base) + 4; /* three time '_' and '\0' */
-	ret = (char *)xmalloc(nlen);
+	ret = xmalloc(nlen);
 	strcpy(ret, "_");
 	strcat(ret, base);
 	strcat(ret, "_");

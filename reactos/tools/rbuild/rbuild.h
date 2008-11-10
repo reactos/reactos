@@ -368,6 +368,9 @@ public:
 	bool allowWarnings;
 	bool enabled;
 	bool isStartupLib;
+	bool isCRT;
+	std::string CRT;
+	bool dynamicCRT;
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
 	FileLocation *install;
@@ -392,17 +395,23 @@ public:
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
 	void ProcessXML ();
+	std::string GetDllName() const;
 private:
 	void SetImportLibrary ( ImportLibrary* importLibrary );
 	DirectoryLocation GetTargetDirectoryTree () const;
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
 	std::string GetDefaultModuleBaseaddress () const;
+	std::string GetDefaultModuleCRT () const;
+	bool GetDefaultModuleIsCRT () const;
 	std::string entrypoint;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            DirectoryLocation directory,
 	                            const std::string& relative_path,
 	                            ParseContext& parseContext );
+	bool GetBooleanAttribute ( const XMLElement& moduleNode,
+	                           const char * name,
+	                           bool default_value = false );
 };
 
 

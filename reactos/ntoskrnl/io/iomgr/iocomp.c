@@ -15,7 +15,7 @@
 
 POBJECT_TYPE IoCompletionType;
 
-NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
+GENERAL_LOOKASIDE IoCompletionPacketLookaside;
 
 GENERIC_MAPPING IopCompletionMapping =
 {
@@ -40,8 +40,7 @@ IopUnloadSafeCompletion(IN PDEVICE_OBJECT DeviceObject,
                         IN PVOID Context)
 {
     NTSTATUS Status;
-    PIO_UNLOAD_SAFE_COMPLETION_CONTEXT UnsafeContext =
-        (PIO_UNLOAD_SAFE_COMPLETION_CONTEXT)Context;
+    PIO_UNLOAD_SAFE_COMPLETION_CONTEXT UnsafeContext = Context;
 
     /* Reference the device object */
     ObReferenceObject(UnsafeContext->DeviceObject);
@@ -61,7 +60,7 @@ IopUnloadSafeCompletion(IN PDEVICE_OBJECT DeviceObject,
 
 VOID
 NTAPI
-IopFreeIoCompletionPacket(PIO_COMPLETION_PACKET Packet)
+IopFreeMiniPacket(PIOP_MINI_COMPLETION_PACKET Packet)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     PNPAGED_LOOKASIDE_LIST List;
@@ -104,7 +103,7 @@ IopDeleteIoCompletion(PVOID ObjectBody)
     PLIST_ENTRY FirstEntry;
     PLIST_ENTRY CurrentEntry;
     PIRP Irp;
-    PIO_COMPLETION_PACKET Packet;
+    PIOP_MINI_COMPLETION_PACKET Packet;
 
     /* Rundown the Queue */
     FirstEntry = KeRundownQueue(Queue);
@@ -116,14 +115,14 @@ IopDeleteIoCompletion(PVOID ObjectBody)
         {
             /* Get the Packet */
             Packet = CONTAINING_RECORD(CurrentEntry,
-                                       IO_COMPLETION_PACKET,
+                                       IOP_MINI_COMPLETION_PACKET,
                                        ListEntry);
 
             /* Go to next Entry */
             CurrentEntry = CurrentEntry->Flink;
 
             /* Check if it's part of an IRP, or a separate packet */
-            if (Packet->PacketType == IrpCompletionPacket)
+            if (Packet->PacketType == IopCompletionPacketIrp)
             {
                 /* Get the IRP and free it */
                 Irp = CONTAINING_RECORD(Packet, IRP, Tail.Overlay.ListEntry);
@@ -132,7 +131,7 @@ IopDeleteIoCompletion(PVOID ObjectBody)
             else
             {
                 /* Use common routine */
-                IopFreeIoCompletionPacket(Packet);
+                IopFreeMiniPacket(Packet);
             }
         } while (FirstEntry != CurrentEntry);
     }
@@ -155,7 +154,7 @@ IoSetIoCompletion(IN PVOID IoCompletion,
     PKQUEUE Queue = (PKQUEUE)IoCompletion;
     PNPAGED_LOOKASIDE_LIST List;
     PKPRCB Prcb = KeGetCurrentPrcb();
-    PIO_COMPLETION_PACKET Packet;
+    PIOP_MINI_COMPLETION_PACKET Packet;
 
     /* Get the P List */
     List = (PNPAGED_LOOKASIDE_LIST)Prcb->
@@ -194,11 +193,11 @@ IoSetIoCompletion(IN PVOID IoCompletion,
     if (Packet)
     {
         /* Set up the Packet */
-        Packet->PacketType = IrpMiniCompletionPacket;
-        Packet->Key = KeyContext;
-        Packet->Context = ApcContext;
-        Packet->IoStatus.Status = IoStatus;
-        Packet->IoStatus.Information = IoStatusInformation;
+        Packet->PacketType = IopCompletionPacketMini;
+        Packet->KeyContext = KeyContext;
+        Packet->ApcContext = ApcContext;
+        Packet->IoStatus = IoStatus;
+        Packet->IoStatusInformation = IoStatusInformation;
 
         /* Insert the Queue */
         KeInsertQueue(Queue, &Packet->ListEntry);
@@ -424,9 +423,6 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
             ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->
                 Depth = KeReadStateQueue(Queue);
 
-            /* Dereference the queue */
-            ObDereferenceObject(Queue);
-
             /* Return Result Length if needed */
             if (ResultLength)
             {
@@ -439,6 +435,9 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
+
+        /* Dereference the queue */
+        ObDereferenceObject(Queue);
     }
 
     /* Return Status */
@@ -455,7 +454,7 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
 {
     LARGE_INTEGER SafeTimeout;
     PKQUEUE Queue;
-    PIO_COMPLETION_PACKET Packet;
+    PIOP_MINI_COMPLETION_PACKET Packet;
     PLIST_ENTRY ListEntry;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
@@ -517,11 +516,11 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
         {
             /* Get the Packet Data */
             Packet = CONTAINING_RECORD(ListEntry,
-                                       IO_COMPLETION_PACKET,
+                                       IOP_MINI_COMPLETION_PACKET,
                                        ListEntry);
 
             /* Check if this is piggybacked on an IRP */
-            if (Packet->PacketType == IrpCompletionPacket)
+            if (Packet->PacketType == IopCompletionPacketIrp)
             {
                 /* Get the IRP */
                 Irp = CONTAINING_RECORD(ListEntry,
@@ -539,12 +538,13 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
             else
             {
                 /* Save values */
-                Key = Packet->Key;
-                Apc = Packet->Context;
-                IoStatus = Packet->IoStatus;
+                Key = Packet->KeyContext;
+                Apc = Packet->ApcContext;
+                IoStatus.Status = Packet->IoStatus;
+                IoStatus.Information = Packet->IoStatusInformation;
 
                 /* Free the packet */
-                IopFreeIoCompletionPacket(Packet);
+                IopFreeMiniPacket(Packet);
             }
 
             /* Enter SEH to write back the values */

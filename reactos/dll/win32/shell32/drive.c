@@ -296,6 +296,11 @@ GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumbe
 {
    LARGE_INTEGER Temp, Result, Remainder;
 
+   if (TotalNumberOfFreeBytes.QuadPart == 0LL)
+   {
+      return ConvertUlongToLargeInteger(0);
+   }
+
    Temp = LargeIntegerDivide(TotalNumberOfBytes, ConvertUlongToLargeInteger(100), &Remainder);
    if (Temp.QuadPart >= TotalNumberOfFreeBytes.QuadPart)
    {
@@ -388,7 +393,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
    }
 
    DriveType = GetDriveTypeW(szDrive);
-   if (DriveType == DRIVE_FIXED)
+   if (DriveType == DRIVE_FIXED || DriveType == DRIVE_CDROM)
    {
 
       if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, (PULARGE_INTEGER)&TotalNumberOfBytes, (PULARGE_INTEGER)&TotalNumberOfFreeBytes))

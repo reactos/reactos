@@ -387,7 +387,7 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
             NewMenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, MenuItem->Text.MaximumLength, TAG_STRING);
             if(!NewMenuItem->Text.Buffer)
             {
-               ExFreePool(NewMenuItem);
+               ExFreePoolWithTag(NewMenuItem, TAG_MENUITEM);
                break;
             }
             RtlCopyUnicodeString(&NewMenuItem->Text, &MenuItem->Text);
@@ -938,7 +938,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
    if(!IntSetMenuItemInfo(SubMenu, MenuItem, ItemInfo))
    {
-      ExFreePool(MenuItem);
+      ExFreePoolWithTag(MenuItem, TAG_MENUITEM);
       return FALSE;
    }
 

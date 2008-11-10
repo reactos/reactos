@@ -10,5 +10,4 @@
 	<file>scsiport.c</file>
 	<file>stubs.c</file>
 	<file>scsiport.rc</file>
-	<file>scsiport.pspec</file>
 </module>

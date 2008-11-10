@@ -1,7 +1,7 @@
 /*
  * RPC binding API
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2003 Mike Hearn
  * Copyright 2004 Filip Navara
  * Copyright 2006 CodeWeavers
@@ -435,7 +435,7 @@ static RPC_WSTR unescape_string_binding_componentW(
 {
   RPC_WSTR component, p;
 
-  if (len == -1) len = strlen((const char *)string_binding);
+  if (len == -1) len = strlenW(string_binding);
 
   component = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(*component));
   if (!component) return NULL;

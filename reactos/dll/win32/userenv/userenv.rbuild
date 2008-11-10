@@ -17,5 +17,4 @@
 	<file>setup.c</file>
 	<file>userenv.c</file>
 	<file>userenv.rc</file>
-	<file>userenv.spec</file>
 </module>

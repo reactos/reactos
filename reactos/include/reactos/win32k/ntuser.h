@@ -1724,12 +1724,12 @@ NtUserImpersonateDdeClientWindow(
   HWND hWndClient,
   HWND hWndServer);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserInitialize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent);
 
 NTSTATUS
 NTAPI
@@ -1805,10 +1805,10 @@ NTAPI
 NtUserLockWindowStation(
   HWINSTA hWindowStation);
 
-DWORD
-NTAPI
+BOOL
+STDCALL
 NtUserLockWindowUpdate(
-  DWORD Unknown0);
+  HWND hWnd);
 
 BOOL
 NTAPI

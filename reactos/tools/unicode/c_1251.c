@@ -711,6 +711,7 @@ const struct sbcs_table cptable_1251 =
 {
     { 1251, 1, 0x003f, 0x003f, "ANSI Cyrillic" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

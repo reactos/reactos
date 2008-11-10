@@ -450,7 +450,44 @@ MingwBackend::GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
 		}
 	}
 
-	fprintf ( fMakefile, "\n" );
+	fputs ( "\n", fMakefile );
+
+	// TODO: reference these from somewhere
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCC )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
+
+	fprintf (
+		fMakefile,
+		"PROJECT_GCC_CXXFLAGS %s",
+		assignmentOperation );
+
+	for ( i = 0; i < data.compilerFlags.size(); i++ )
+	{
+		if ( data.compilerFlags[i]->compiler == CompilerTypeCPP )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				data.compilerFlags[i]->flag.c_str() );
+		}
+	}
+
+	fputs ( "\n", fMakefile );
 }
 
 void
@@ -495,7 +532,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
-	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)'\n" );
+	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)' '$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)'\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
 	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );

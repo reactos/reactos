@@ -678,6 +678,7 @@ const struct sbcs_table cptable_28605 =
 {
     { 28605, 1, 0x003f, 0x003f, "ISO 8859-15 Latin 9 (Euro)" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

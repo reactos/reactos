@@ -26,8 +26,10 @@
 #include "wine/port.h"
 
 #include <ctype.h>
+#include <stdarg.h>
 
-#include "thread.h"
+#define __WINESRC__  /* FIXME: for WINE_VM86_TEB_INFO */
+#include "winternl.h"
 #include "wine/winbase16.h"
 
 #include "build.h"
@@ -383,7 +385,7 @@ static void BuildCallFrom16Core( int reg_func, int thunk )
  * All routines expect that the 16-bit stack contents (arguments) and the
  * return address (segptr to CallTo16_Ret) were already set up by the
  * caller; nb_args must contain the number of bytes to be conserved.  The
- * 16-bit SS:SP will be set accordinly.
+ * 16-bit SS:SP will be set accordingly.
  *
  * All other registers are either taken from the CONTEXT86 structure
  * or else set to default values.  The target routine address is either
@@ -891,9 +893,11 @@ static void BuildPendingEventCheck(void)
 
     /* Check for pending events. */
 
-    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", STRUCTOFFSET(TEB,vm86_pending) );
+    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n",
+            STRUCTOFFSET(TEB,GdiTebBatch) + STRUCTOFFSET(WINE_VM86_TEB_INFO,vm86_pending) );
     output( "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
-    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", STRUCTOFFSET(TEB,dpmi_vif) );
+    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n",
+            STRUCTOFFSET(TEB,GdiTebBatch) + STRUCTOFFSET(WINE_VM86_TEB_INFO,dpmi_vif) );
     output( "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
 
     /* Process pending events. */

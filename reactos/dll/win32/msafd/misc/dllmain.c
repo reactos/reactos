@@ -666,7 +666,7 @@ WSPSelect(
     
     if (readfds != NULL) {
 	for (i = 0; i < readfds->fd_count; i++, j++) {
-	    PollInfo->Handles[j].Handle = readfds->fd_array[i];
+	    PollInfo->Handles[j].Handle = LongToHandle(readfds->fd_array[i]);
 	    PollInfo->Handles[j].Events = AFD_EVENT_RECEIVE | 
 	                                  AFD_EVENT_DISCONNECT |
 	                                  AFD_EVENT_ABORT |
@@ -675,14 +675,14 @@ WSPSelect(
     }
     if (writefds != NULL) {
 	for (i = 0; i < writefds->fd_count; i++, j++) {
-	    PollInfo->Handles[j].Handle = writefds->fd_array[i];
+	    PollInfo->Handles[j].Handle = LongToHandle(writefds->fd_array[i]);
 	    PollInfo->Handles[j].Events = AFD_EVENT_SEND |
 	                                  AFD_EVENT_CONNECT;
 	}	
     }
     if (exceptfds != NULL) {
 	for (i = 0; i < exceptfds->fd_count; i++, j++) {
-	    PollInfo->Handles[j].Handle = exceptfds->fd_array[i];
+	    PollInfo->Handles[j].Handle = LongToHandle(exceptfds->fd_array[i]);
 	    PollInfo->Handles[j].Events = AFD_EVENT_OOB_RECEIVE |
 	                                  AFD_EVENT_CONNECT_FAIL;
 	}
@@ -786,9 +786,9 @@ WSPAPI
 WSPAccept(
 	SOCKET Handle, 
 	struct sockaddr *SocketAddress, 
-	int *SocketAddressLength, 
+	LPINT SocketAddressLength, 
 	LPCONDITIONPROC lpfnCondition, 
-	DWORD_PTR dwCallbackData, 
+	DWORD dwCallbackData, 
 	LPINT lpErrno)
 {
 	IO_STATUS_BLOCK				IOSB;

@@ -32,7 +32,9 @@ struct InternetTransport
     union
     {
         const IInternetTransportVtbl *vtbl;
-        const ISMTPTransportVtbl *vtblSMTP;
+        const ISMTPTransport2Vtbl *vtblSMTP2;
+        const IIMAPTransportVtbl *vtblIMAP;
+        const IPOP3TransportVtbl *vtblPOP3;
     } u;
 
     ITransportCallback *pCallback;
@@ -65,9 +67,19 @@ HRESULT InternetTransport_ReadLine(InternetTransport *This,
     INETXPORT_COMPLETION_FUNCTION fnCompletion);
 HRESULT InternetTransport_Write(InternetTransport *This, const char *pvData,
     int cbSize, INETXPORT_COMPLETION_FUNCTION fnCompletion);
+HRESULT InternetTransport_DoCommand(InternetTransport *This,
+    LPCSTR pszCommand, INETXPORT_COMPLETION_FUNCTION fnCompletion);
 
 BOOL InternetTransport_RegisterClass(HINSTANCE hInstance);
 void InternetTransport_UnregisterClass(HINSTANCE hInstance);
 
 HRESULT MimeBody_create(IUnknown *outer, void **obj);
 HRESULT MimeAllocator_create(IUnknown *outer, void **obj);
+HRESULT MimeMessage_create(IUnknown *outer, void **obj);
+HRESULT MimeSecurity_create(IUnknown *outer, void **obj);
+
+HRESULT MimeInternational_Construct(IMimeInternational **internat);
+
+HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv);
+HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv);
+HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv);

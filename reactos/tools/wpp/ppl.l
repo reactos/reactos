@@ -126,7 +126,7 @@
  */
 %option stack
 %option 8bit never-interactive
-%option nounput
+%option noinput nounput
 %option prefix="ppy_"
 
 %x pp_pp
@@ -156,12 +156,27 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 ul	[uUlL]|[uUlL][lL]|[lL][uU]|[lL][lL][uU]|[uU][lL][lL]|[lL][uU][lL]
 
 %{
-#include <config.h>
+#include "config.h"
+#include "wine/port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
+#include <limits.h>
+
+#ifndef LLONG_MAX
+# define LLONG_MAX  ((long long)0x7fffffff << 32 | 0xffffffff)
+# define LLONG_MIN  (-LLONG_MAX - 1)
+#endif
+#ifndef ULLONG_MAX
+# define ULLONG_MAX ((long long)0xffffffff << 32 | 0xffffffff)
+#endif
+
+#ifndef HAVE_UNISTD_H
+#define YY_NO_UNISTD_H
+#endif
 
 #include "wpp_private.h"
 #include "ppy.tab.h"
@@ -200,7 +215,6 @@ typedef struct bufferstackentry {
 	/* Include management */
         include_state_t incl;
 	char 		*include_filename;
-	int 		pass_data;
 } bufferstackentry_t;
 
 #define ALLOCBLOCKSIZE	(1 << 10)	/* Allocate these chunks at a time for string-buffers */
@@ -233,7 +247,6 @@ typedef struct macexpstackentry {
 static void newline(int);
 static int make_number(int radix, YYSTYPE *val, const char *str, int len);
 static void put_buffer(const char *s, int len);
-static int is_c_h_include(char *fname, int quoted);
 /* Buffer management */
 static void push_buffer(pp_entry_t *ppp, char *filename, char *incname, int pop);
 static bufferstackentry_t *pop_buffer(void);
@@ -271,8 +284,6 @@ static int macexpstackidx = 0;
 
 static bufferstackentry_t bufferstack[MAXBUFFERSTACK];
 static int bufferstackidx = 0;
-
-static int pass_data=1;
 
 /*
  * Global variables
@@ -559,8 +570,6 @@ includelogicentry_t *pp_includelogiclist = NULL;
 			return tDQSTRING;
 		case pp_line:
 			ppy_lval.cptr = get_string();
-			if (is_c_h_include(ppy_lval.cptr, 1)) pass_data=0;
-			else pass_data=1;
 			return tDQSTRING;
 		default:
 			put_string();
@@ -791,6 +800,7 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
 	int is_ll = 0;
 	int is_u  = 0;
 	char ext[4];
+	long l;
 
 	ext[3] = '\0';
 	ext[2] = toupper(str[len-1]);
@@ -828,12 +838,18 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
 #ifdef HAVE_LONG_LONG
 		if (is_u)
 		{
+			errno = 0;
 			val->ull = strtoull(str, NULL, radix);
+			if (val->ull == ULLONG_MAX && errno == ERANGE)
+				ppy_error("integer constant %s is too large\n", str);
 			return tULONGLONG;
 		}
 		else
 		{
+			errno = 0;
 			val->sll = strtoll(str, NULL, radix);
+			if ((val->sll == LLONG_MIN || val->sll == LLONG_MAX) && errno == ERANGE)
+				ppy_error("integer constant %s is too large\n", str);
 			return tSLONGLONG;
 		}
 #else
@@ -842,22 +858,38 @@ static int make_number(int radix, YYSTYPE *val, const char *str, int len)
 	}
 	else if(is_u && is_l)
 	{
+		errno = 0;
 		val->ulong = strtoul(str, NULL, radix);
+		if (val->ulong == ULONG_MAX && errno == ERANGE)
+			ppy_error("integer constant %s is too large\n", str);
 		return tULONG;
 	}
 	else if(!is_u && is_l)
 	{
+		errno = 0;
 		val->slong = strtol(str, NULL, radix);
+		if ((val->slong == LONG_MIN || val->slong == LONG_MAX) && errno == ERANGE)
+			ppy_error("integer constant %s is too large\n", str);
 		return tSLONG;
 	}
 	else if(is_u && !is_l)
 	{
-		val->uint = (unsigned int)strtoul(str, NULL, radix);
+		unsigned long ul;
+		errno = 0;
+		ul = strtoul(str, NULL, radix);
+		if ((ul == ULONG_MAX && errno == ERANGE) || (ul > UINT_MAX))
+			ppy_error("integer constant %s is too large\n", str);
+		val->uint = (unsigned int)ul;
 		return tUINT;
 	}
 
 	/* Else it must be an int... */
-	val->sint = (int)strtol(str, NULL, radix);
+	errno = 0;
+	l = strtol(str, NULL, radix);
+	if (((l == LONG_MIN || l == LONG_MAX) && errno == ERANGE) ||
+		(l > INT_MAX) || (l < INT_MIN))
+		ppy_error("integer constant %s is too large\n", str);
+	val->sint = (int)l;
 	return tSINT;
 }
 
@@ -1191,7 +1223,6 @@ static void push_buffer(pp_entry_t *ppp, char *filename, char *incname, int pop)
 	bufferstack[bufferstackidx].ncontinuations	= ncontinuations;
 	bufferstack[bufferstackidx].incl		= pp_incl_state;
 	bufferstack[bufferstackidx].include_filename	= incname;
-	bufferstack[bufferstackidx].pass_data		= pass_data;
 
 	if(ppp)
 		ppp->expanding = 1;
@@ -1254,7 +1285,6 @@ static bufferstackentry_t *pop_buffer(void)
 			}
 			free(pp_incl_state.ppp);
 			pp_incl_state	= bufferstack[bufferstackidx].incl;
-			pass_data	= bufferstack[bufferstackidx].pass_data;
 
 		}
 	}
@@ -1410,10 +1440,8 @@ static void put_buffer(const char *s, int len)
 {
 	if(top_macro())
 		add_text_to_macro(s, len);
-	else {
-           if(pass_data)
+	else
            fwrite(s, 1, len, ppy_out);
-        }
 }
 
 
@@ -1422,15 +1450,6 @@ static void put_buffer(const char *s, int len)
  * Include management
  *-------------------------------------------------------------------------
  */
-static int is_c_h_include(char *fname, int quoted)
-{
-	int sl=strlen(fname);
-	if (sl < 2 + 2 * quoted) return 0;
-	if ((toupper(fname[sl-1-quoted])!='H') && (toupper(fname[sl-1-quoted])!='C')) return 0;
-	if (fname[sl-2-quoted]!='.') return 0;
-	return 1;
-}
-
 void pp_do_include(char *fname, int type)
 {
 	char *newpath;
@@ -1466,12 +1485,10 @@ void pp_do_include(char *fname, int type)
 	pp_incl_state.seen_junk = 0;
 	pp_incl_state.state = 0;
 	pp_incl_state.ppp = NULL;
-	if (is_c_h_include(newpath, 0)) pass_data=0;
-	else pass_data=1;
 
 	if(pp_status.debug)
-		fprintf(stderr, "pp_do_include: %s:%d: include_state=%d, include_ppp='%s', include_ifdepth=%d ,pass_data=%d\n",
-                        pp_status.input, pp_status.line_number, pp_incl_state.state, pp_incl_state.ppp, pp_incl_state.ifdepth, pass_data);
+		fprintf(stderr, "pp_do_include: %s:%d: include_state=%d, include_ppp='%s', include_ifdepth=%d\n",
+                        pp_status.input, pp_status.line_number, pp_incl_state.state, pp_incl_state.ppp, pp_incl_state.ifdepth);
         ppy__switch_to_buffer(ppy__create_buffer(ppy_in, YY_BUF_SIZE));
 
 	fprintf(ppy_out, "# 1 \"%s\" 1%s\n", newpath, type ? "" : " 3");

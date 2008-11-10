@@ -31,5 +31,4 @@
 	<file>monslctl.c</file>
 	<file>general.c</file>
 	<file>desk.rc</file>
-	<file>desk.spec</file>
 </module>

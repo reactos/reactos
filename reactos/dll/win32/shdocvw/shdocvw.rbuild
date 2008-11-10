@@ -28,5 +28,4 @@
 	<file>view.c</file>
 	<file>webbrowser.c</file>
 	<file>shdocvw.rc</file>
-	<file>shdocvw.spec</file>
 </module>

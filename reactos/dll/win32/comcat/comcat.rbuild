@@ -21,5 +21,4 @@
 	<file>register.c</file>
 	<file>regsvr.c</file>
 	<file>version.rc</file>
-	<file>comcat.spec</file>
 </module>

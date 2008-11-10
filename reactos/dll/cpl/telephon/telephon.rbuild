@@ -12,5 +12,4 @@
 	<library>shell32</library>
 	<file>telephon.c</file>
 	<file>telephon.rc</file>
-	<file>telephon.spec</file>
 </module>

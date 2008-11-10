@@ -127,10 +127,10 @@ int access_dirW(const wchar_t *_path);
 #define MB_CUR_MAX __mb_cur_max
 
 
-int _isnanl(long double x);
-int _isinfl(long double x);
-int _isnan(double x);
-int _isinf(double x);
+//int _isnanl(long double x);
+//int _isinfl(long double x);
+//int _isnan(double x);
+//int _isinf(double x);
 
 /* Flags for the iobuf structure (for reference) */
 #if 0
@@ -172,10 +172,9 @@ int _isinf(double x);
 
 wint_t _filwbuf(FILE *f);
 
-#if __MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 2
-   int __cdecl _filbuf (FILE*);
-   int __cdecl _flsbuf (int, FILE*);
-#endif
+//#if __MINGW32_MAJOR_VERSION < 3 || __MINGW32_MINOR_VERSION < 2
+//   int __cdecl _filbuf (FILE*);
+//   int __cdecl _flsbuf (int, FILE*);
+//#endif
 
 #endif /* __dj_include_libc_file_h__ */
-

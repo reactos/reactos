@@ -144,6 +144,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   if (oDc_Attr->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = oDc_Attr->dwLayout;
   NewDC->DcLevel.flPath     = OrigDC->DcLevel.flPath;
   nDc_Attr->ulDirty_        = oDc_Attr->ulDirty_;
+  nDc_Attr->iCS_CP          = oDc_Attr->iCS_CP;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -847,6 +848,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
     NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
     NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
+
+    nDc_Attr->iCS_CP = ftGdiGetTextCharsetInfo(NewDC,NULL,0);
 
     DC_UnlockDc( NewDC );
 
@@ -2216,7 +2219,7 @@ NtGdiSelectFont(
     if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 
     /* FIXME: what if not successful? */
-    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont)))
+    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
     {
         hOrgFont = pDc_Attr->hlfntNew;
         pDc_Attr->hlfntNew = hFont;
@@ -2411,6 +2414,7 @@ NtGdiGetDCDword(
     case GdiGetEMFRestorDc:
       break;
     case GdiGetFontLanguageInfo:
+          SafeResult = IntGetFontLanguageInfo(dc);
       break;
     case GdiGetIsMemDc:
           SafeResult = dc->DC_Type;
@@ -2644,6 +2648,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   Dc_Attr->iMapMode = MM_TEXT;
   Dc_Attr->iGraphicsMode = GM_COMPATIBLE;
+  Dc_Attr->jFillMode = ALTERNATE;
 
   Dc_Attr->szlWindowExt.cx = 1; // Float to Int,,, WRONG!
   Dc_Attr->szlWindowExt.cy = 1;
@@ -2667,7 +2672,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   Dc_Attr->hpen = NtGdiGetStockObject( BLACK_PEN );
 ////
   Dc_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
-  TextIntRealizeFont(Dc_Attr->hlfntNew);
+  TextIntRealizeFont(Dc_Attr->hlfntNew,NULL);
 
   NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
   NewDC->DcLevel.laPath.eMiterLimit = 10.0;

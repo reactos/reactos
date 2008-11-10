@@ -17,6 +17,5 @@
 	<file>oledlg_main.c</file>
 	<file>pastespl.c</file>
 	<file>rsrc.rc</file>
-	<file>oledlg.spec</file>
 </module>
 </group>

@@ -86,13 +86,15 @@ KiTimerExpiration(IN PKDPC Dpc,
     LONG Limit, Index, i;
     ULONG Timers, ActiveTimers, DpcCalls;
     PLIST_ENTRY ListHead, NextEntry;
-    PKTIMER_TABLE_ENTRY TimerEntry;
     KIRQL OldIrql;
     PKTIMER Timer;
     PKDPC TimerDpc;
     ULONG Period;
     DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
     PKSPIN_LOCK_QUEUE LockQueue;
+#ifdef CONFIG_SMP
+    PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
 
     /* Disable interrupts */
     _disable();
@@ -147,16 +149,7 @@ KiTimerExpiration(IN PKDPC Dpc,
             {
                 /* It's expired, remove it */
                 ActiveTimers--;
-                if (RemoveEntryList(&Timer->TimerListEntry))
-                {
-                    /* Get the entry and check if it's empty */
-                    TimerEntry = &KiTimerTableListHead[Timer->Header.Hand];
-                    if (IsListEmpty(&TimerEntry->Entry))
-                    {
-                        /* Clear the time then */
-                        TimerEntry->Time.HighPart = 0xFFFFFFFF;
-                    }
-                }
+                KiRemoveEntryTimer(Timer);
 
                 /* Make it non-inserted, unlock it, and signal it */
                 Timer->Header.Inserted = FALSE;
@@ -194,11 +187,35 @@ KiTimerExpiration(IN PKDPC Dpc,
                 /* Check if we have a DPC */
                 if (TimerDpc)
                 {
-                    /* Setup the DPC Entry */
-                    DpcEntry[DpcCalls].Dpc = TimerDpc;
-                    DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
-                    DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
-                    DpcCalls++;
+#ifdef CONFIG_SMP
+                    /* 
+                     * If the DPC is targeted to another processor,
+                     * then insert it into that processor's DPC queue
+                     * instead of delivering it now.
+                     * If the DPC is a threaded DPC, and the current CPU
+                     * has threaded DPCs enabled (KiExecuteDpc is actively parsing DPCs),
+                     * then also insert it into the DPC queue for threaded delivery,
+                     * instead of doing it here.
+                     */
+                    if (((TimerDpc->Number >= MAXIMUM_PROCESSORS) &&
+                        ((TimerDpc->Number - MAXIMUM_PROCESSORS) != Prcb->Number)) ||
+                        ((TimerDpc->Type == ThreadedDpcObject) && (Prcb->ThreadDpcEnable)))
+                    {
+                        /* Queue it */
+                        KeInsertQueueDpc(TimerDpc,
+                                         UlongToPtr(SystemTime.LowPart),
+                                         UlongToPtr(SystemTime.HighPart));
+                    }
+                    else
+#endif
+                    {
+                        /* Setup the DPC Entry */
+                        DpcEntry[DpcCalls].Dpc = TimerDpc;
+                        DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+                        DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+                        DpcCalls++;
+                        ASSERT(DpcCalls < MAX_TIMER_DPCS);
+                    }
                 }
 
                 /* Check if we're done processing */
@@ -295,6 +312,130 @@ KiTimerExpiration(IN PKDPC Dpc,
 
         /* Lower IRQL if we need to */
         if (OldIrql != DISPATCH_LEVEL) KeLowerIrql(OldIrql);
+    }
+    else
+    {
+        /* Unlock the dispatcher */
+        KiReleaseDispatcherLock(OldIrql);
+    }
+}
+
+VOID
+FASTCALL
+KiTimerListExpire(IN PLIST_ENTRY ExpiredListHead,
+                  IN KIRQL OldIrql)
+{
+    ULARGE_INTEGER SystemTime;
+    LARGE_INTEGER Interval;
+    LONG i;
+    ULONG DpcCalls = 0;
+    PKTIMER Timer;
+    PKDPC TimerDpc;
+    ULONG Period;
+    DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
+#ifdef CONFIG_SMP
+    PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
+
+    /* Query system */
+    KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
+    
+    /* Loop expired list */
+    while (ExpiredListHead->Flink != ExpiredListHead)
+    {
+        /* Get the current timer */
+        Timer = CONTAINING_RECORD(ExpiredListHead->Flink, KTIMER, TimerListEntry);
+        
+        /* Remove it */
+        RemoveEntryList(&Timer->TimerListEntry);
+        
+        /* Not inserted */
+        Timer->Header.Inserted = FALSE;
+        
+        /* Signal it */
+        Timer->Header.SignalState = 1;
+        
+        /* Get the DPC and period */
+        TimerDpc = Timer->Dpc;
+        Period = Timer->Period;
+        
+        /* Check if there's any waiters */
+        if (!IsListEmpty(&Timer->Header.WaitListHead))
+        {
+            /* Check the type of event */
+            if (Timer->Header.Type == TimerNotificationObject)
+            {
+                /* Unwait the thread */
+                KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
+            }
+            else
+            {
+                /* Otherwise unwait the thread and signal the timer */
+                KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
+            }
+        }
+        
+        /* Check if we have a period */
+        if (Period)
+        {
+            /* Calculate the interval and insert the timer */
+            Interval.QuadPart = Int32x32To64(Period, -10000);
+            while (!KiInsertTreeTimer(Timer, Interval));
+        }
+
+        /* Check if we have a DPC */
+        if (TimerDpc)
+        {
+#ifdef CONFIG_SMP
+            /* 
+             * If the DPC is targeted to another processor,
+             * then insert it into that processor's DPC queue
+             * instead of delivering it now.
+             * If the DPC is a threaded DPC, and the current CPU
+             * has threaded DPCs enabled (KiExecuteDpc is actively parsing DPCs),
+             * then also insert it into the DPC queue for threaded delivery,
+             * instead of doing it here.
+             */
+            if (((TimerDpc->Number >= MAXIMUM_PROCESSORS) &&
+                ((TimerDpc->Number - MAXIMUM_PROCESSORS) != Prcb->Number)) ||
+                ((TimerDpc->Type == ThreadedDpcObject) && (Prcb->ThreadDpcEnable)))
+            {
+                /* Queue it */
+                KeInsertQueueDpc(TimerDpc,
+                                 UlongToPtr(SystemTime.LowPart),
+                                 UlongToPtr(SystemTime.HighPart));
+            }
+            else
+#endif
+            {
+                /* Setup the DPC Entry */
+                DpcEntry[DpcCalls].Dpc = TimerDpc;
+                DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+                DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+                DpcCalls++;
+                ASSERT(DpcCalls < MAX_TIMER_DPCS);
+            }
+        }
+    }
+    
+    /* Check if we still have DPC entries */
+    if (DpcCalls)
+    {
+        /* Release the dispatcher while doing DPCs */
+        KiReleaseDispatcherLock(DISPATCH_LEVEL);
+        
+        /* Start looping all DPC Entries */
+        for (i = 0; DpcCalls; DpcCalls--, i++)
+        {
+            /* Call the DPC */
+            DpcEntry[i].Routine(DpcEntry[i].Dpc,
+                                DpcEntry[i].Context,
+                                UlongToPtr(SystemTime.LowPart),
+                                UlongToPtr(SystemTime.HighPart));
+        }
+        
+        /* Lower IRQL */
+        KeLowerIrql(OldIrql);
     }
     else
     {
@@ -683,7 +824,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
         if (Prcb != CurrentPrcb)
         {
             /* It was, request and IPI */
-            KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+            KiIpiSend(AFFINITY_MASK(Cpu), IPI_DPC);
         }
         else
         {

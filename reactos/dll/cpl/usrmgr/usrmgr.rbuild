@@ -18,5 +18,4 @@
 	<file>users.c</file>
 	<file>usrmgr.c</file>
 	<file>usrmgr.rc</file>
-	<file>usrmgr.spec</file>
 </module>

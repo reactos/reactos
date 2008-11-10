@@ -26,8 +26,12 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnt.h"
+#include "winuser.h"
 #include "winsock2.h"
 #include "ws2tcpip.h"
+#include "objbase.h"
+#include "ole2.h"
+#include "mimeole.h"
 
 #include "wine/debug.h"
 
@@ -268,6 +272,23 @@ HRESULT InternetTransport_Write(InternetTransport *This, const char *pvData,
     fnCompletion((IInternetTransport *)&This->u.vtbl, NULL, 0);
 
     return S_OK;
+}
+
+HRESULT InternetTransport_DoCommand(InternetTransport *This,
+    LPCSTR pszCommand, INETXPORT_COMPLETION_FUNCTION fnCompletion)
+{
+    if (This->Status == IXP_DISCONNECTED)
+        return IXP_E_NOT_CONNECTED;
+
+    if (This->fnCompletion)
+        return IXP_E_BUSY;
+
+    if (This->pCallback && This->fCommandLogging)
+    {
+        ITransportCallback_OnCommand(This->pCallback, CMD_SEND, (LPSTR)pszCommand, 0,
+            (IInternetTransport *)&This->u.vtbl);
+    }
+    return InternetTransport_Write(This, pszCommand, strlen(pszCommand), fnCompletion);
 }
 
 static LRESULT CALLBACK InternetTransport_WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

@@ -792,7 +792,7 @@ static void handle_ani_list(riff_tag_t *lst, enum res_e type, int isswapped)
 		}
 		else if(!memcmp(rtp->tag, iart, sizeof(iart)))
 		{
-			/* Ignore the author's name; its a string */
+			/* Ignore the author's name; it's a string */
 			rtp = NEXT_TAG(rtp);
 		}
 		else if(!memcmp(rtp->tag, fram, sizeof(fram)))
@@ -1154,6 +1154,7 @@ stringtable_t *new_stringtable(lvc_t *lvc)
 toolbar_t *new_toolbar(int button_width, int button_height, toolbar_item_t *items, int nitems)
 {
 	toolbar_t *tb = (toolbar_t *)xmalloc(sizeof(toolbar_t));
+	memset( tb, 0, sizeof(*tb) );
 	tb->button_width = button_width;
 	tb->button_height = button_height;
 	tb->nitems = nitems;

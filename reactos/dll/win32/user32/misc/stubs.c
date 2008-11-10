@@ -62,15 +62,14 @@ GetMouseMovePointsEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 LockWindowUpdate(
   HWND hWndLock)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserLockWindowUpdate(hWndLock);
 }
 
 

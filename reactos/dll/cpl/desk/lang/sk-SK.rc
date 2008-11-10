@@ -1,9 +1,9 @@
 /*
  * FILE:        dll/cpl/desk/lang/sk-SK.rc
  * PURPOSE:     Slovak Language File for desk
- * TRANSLATOR:  Kario <kario@szm.sk>
+ * TRANSLATOR:  M·rio KaËm·r aka Kario <kario@szm.sk>
  * DATE OF TR.: 15-09-2007
- * LAST CHANGE: 11-07-2008
+ * LAST CHANGE: 05-10-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -39,12 +39,12 @@ BEGIN
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Nastavenie",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Uk·ûka",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&PoËkaù",IDC_WAITTEXT, 14, 125, 16, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT           "&PoËkaù",IDC_WAITTEXT, 14, 125, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 38, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "min˙t", IDC_MINTEXT, 70, 125, 26, 9
+                    WS_BORDER | WS_GROUP, 58, 123, 12, 13
+    LTEXT           "min˙t", IDC_MINTEXT, 74, 125, 26, 9
     CONTROL         "Pri obnovenÌ chr·niù &heslom.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "Nap·jani&e monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41

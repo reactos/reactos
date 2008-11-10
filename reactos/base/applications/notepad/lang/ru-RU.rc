@@ -200,4 +200,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Макинтош"
+STRING_LINE_COLUMN,                             "Строка %d, столбец %d"
 END

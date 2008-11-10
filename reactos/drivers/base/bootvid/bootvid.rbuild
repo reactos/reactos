@@ -20,6 +20,5 @@
 		</directory>
 	</if>
 	<file>bootvid.rc</file>
-	<file>bootvid.spec</file>
 	<pch>precomp.h</pch>
 </module>

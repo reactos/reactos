@@ -67,12 +67,27 @@ typedef struct _FLOATGDI {
   ULONG Dummy;
 } FLOATGDI;
 
-typedef struct _FONTGDI {
-  FONTOBJ FontObj;
 
-  LPWSTR Filename;
-  FT_Face face;
+#define FDM_TYPE_TEXT_METRIC  0x80000000
+
+typedef struct _FONTGDI {
+  FONTOBJ     FontObj;
+  ULONG       iUnique;
+  FLONG       flType;
+  union{
+  DHPDEV      dhpdev;
+  FT_Face     face;
+  };
+  FLONG       flRealizedType;
+
+  LONG        lMaxNegA;
+  LONG        lMaxNegC;
+  LONG        lMinWidthD;
+
   TEXTMETRICW TextMetric;
+  LPWSTR      Filename;
+  BYTE        Underline;
+  BYTE        StrikeOut;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {

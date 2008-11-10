@@ -10,6 +10,5 @@
 	<file>integrity.c</file>
 	<file>modify.c</file>
 	<file>imagehlp.rc</file>
-	<file>imagehlp.spec</file>
 	<pch>precomp.h</pch>
 </module>

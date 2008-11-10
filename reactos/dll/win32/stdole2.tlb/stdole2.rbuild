@@ -13,7 +13,6 @@
 	<dependency>std_ole_v2</dependency>
 	<define name="__WINESRC__" />
 	<library>kernel32</library>
-	<file>stdole2.tlb.spec</file>
 	<file>rsrc.rc</file>
 </module>
 </group>

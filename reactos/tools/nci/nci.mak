@@ -56,13 +56,15 @@ KERNEL_SVC_DB = ntoskrnl$(SEP)sysfuncs.lst
 KERNEL_SERVICE_TABLE = $(INTERMEDIATE_)ntoskrnl$(SEP)include$(SEP)internal$(SEP)napi.h
 NTDLL_STUBS = $(INTERMEDIATE_)lib$(SEP)ntdllsys$(SEP)ntdll.S
 KERNEL_STUBS = $(INTERMEDIATE_)ntoskrnl$(SEP)ex$(SEP)zw.S
+NT_SPEC = $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def$(SEP)ntsys.pspec
 
 NCI_SERVICE_FILES = \
 	$(KERNEL_SERVICE_TABLE) \
 	$(WIN32K_SERVICE_TABLE) \
 	$(NTDLL_STUBS) \
 	$(KERNEL_STUBS) \
-	$(WIN32K_STUBS)
+	$(WIN32K_STUBS) \
+	$(NT_SPEC)
 
 $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	$(ECHO_NCI)
@@ -71,6 +73,7 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	${mkdir} $(INTERMEDIATE_)ntoskrnl$(SEP)ex$(SEP) 2>$(NUL)
 	${mkdir} $(INTERMEDIATE_)subsystems$(SEP)win32$(SEP)win32k$(SEP)include 2>$(NUL)
 	${mkdir} $(INTERMEDIATE_)lib$(SEP)win32ksys 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def 2>$(NUL)
 
 	$(Q)$(NCI_TARGET) -arch $(ARCH) \
 		$(KERNEL_SVC_DB) \
@@ -79,7 +82,8 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 		$(WIN32K_SERVICE_TABLE) \
 		$(NTDLL_STUBS) \
 		$(KERNEL_STUBS) \
-		$(WIN32K_STUBS)
+		$(WIN32K_STUBS) \
+		$(NT_SPEC)
 
 .PHONY: nci_service_files_clean
 nci_service_files_clean:

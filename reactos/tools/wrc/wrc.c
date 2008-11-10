@@ -1,6 +1,6 @@
 /*
  * Copyright 1994 Martin von Loewis
- * Copyrignt 1998 Bertho A. Stultiens (BS)
+ * Copyright 1998 Bertho A. Stultiens (BS)
  * Copyright 2003 Dimitrie O. Paun
  *
  * This library is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,7 +114,7 @@ int win32 = 1;
 
 /*
  * debuglevel == DEBUGLEVEL_NONE	Don't bother
- * debuglevel & DEBUGLEVEL_CHAT		Say whats done
+ * debuglevel & DEBUGLEVEL_CHAT		Say what's done
  * debuglevel & DEBUGLEVEL_DUMP		Dump internal structures
  * debuglevel & DEBUGLEVEL_TRACE	Create parser trace
  * debuglevel & DEBUGLEVEL_PPMSG	Preprocessor messages

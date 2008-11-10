@@ -846,3 +846,5 @@ EXPORTS
   wctomb @840
   wprintf @841
   wscanf @842
+
+  _swprintf=swprintf

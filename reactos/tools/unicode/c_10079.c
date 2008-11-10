@@ -678,6 +678,7 @@ const struct sbcs_table cptable_10079 =
 {
     { 10079, 1, 0x003f, 0x003f, "Mac Icelandic" },
     cp2uni,
+    cp2uni,
     uni2cp_low,
     uni2cp_high
 };

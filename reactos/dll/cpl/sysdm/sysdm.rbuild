@@ -9,7 +9,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
-	<library>ntdll</library>
 	<library>msimg32</library>
 	<library>shell32</library>
 	<library>shlwapi</library>
@@ -26,6 +25,5 @@
 	<file>userprofile.c</file>
 	<file>virtmem.c</file>
 	<file>sysdm.rc</file>
-	<file>sysdm.spec</file>
 	<pch>precomp.h</pch>
 </module>

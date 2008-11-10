@@ -9,6 +9,5 @@
 	<library>ntdll</library>
 	<file>msdmo.c</file>
 	<file>msdmo.rc</file>
-	<file>msdmo.spec</file>
 </module>
 </group>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="freetype" type="kernelmodedll" entrypoint="0" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" allowwarnings="true">
+<module name="freetype" type="kernelmodedll" entrypoint="0" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" allowwarnings="true" crt="libcntpr">
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -15,7 +15,6 @@
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
 	<library>ntoskrnl</library>
-	<library>libcntpr</library>
 	<if property="ARCH" value="i386">
 	<directory name="i386">
 		<file>setjmplongjmp.s</file>

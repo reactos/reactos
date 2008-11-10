@@ -253,10 +253,12 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   var_t *def = cur->def;
   int has_ret = !is_void(get_func_return_type(cur));
   int has_full_pointer = is_full_pointer_function(cur);
+  const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
+  if (!callconv) callconv = "";
 
   indent = 0;
   write_type_decl_left(proxy, get_func_return_type(cur));
-  print_proxy( " STDMETHODCALLTYPE %s_", iface->name);
+  print_proxy( " %s %s_", callconv, iface->name);
   write_name(proxy, def);
   print_proxy( "_Proxy(\n");
   write_args(proxy, cur->args, iface->name, 1, TRUE);

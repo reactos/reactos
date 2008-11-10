@@ -464,7 +464,7 @@
 @ cdecl __dllonexit(ptr ptr ptr) msvcrt.__dllonexit
 @ cdecl __doserrno() msvcrt.__doserrno
 @ cdecl __fpecode() msvcrt.__fpecode
-@ cdecl __getmainargs(ptr ptr ptr long long) MSVCRT20__getmainargs
+@ cdecl __getmainargs(ptr ptr ptr ptr ptr) MSVCRT20__getmainargs
 @ extern __initenv msvcrt.__initenv
 @ cdecl __isascii(long) msvcrt.__isascii
 @ cdecl __iscsym(long) msvcrt.__iscsym
