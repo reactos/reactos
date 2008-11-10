@@ -538,7 +538,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    CcInitializeCacheMap(DeviceExt->FATFileObject,
                         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-                        FALSE,
+                        TRUE,
                         &VfatGlobalData->CacheMgrCallbacks,
                         Fcb);
 
