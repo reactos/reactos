@@ -50,4 +50,4 @@ include tools/nci/nci.mak
 include tools/pefixup.mak
 include tools/raddr2line.mak
 include tools/rbuild/rbuild.mak
-include tools/rsym.mak
+include tools/rsym/rsym.mak
