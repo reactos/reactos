@@ -11,7 +11,6 @@
 	<file>extserv.c</file>
 	<file>hlink_main.c</file>
 	<file>link.c</file>
-	<file>hlink.spec</file>
 	<library>wine</library>
 	<library>shell32</library>
 	<library>ole32</library>

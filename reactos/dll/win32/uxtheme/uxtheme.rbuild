@@ -15,7 +15,6 @@
 	<file>system.c</file>
 	<file>uxini.c</file>
 	<file>version.rc</file>
-	<file>uxtheme.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

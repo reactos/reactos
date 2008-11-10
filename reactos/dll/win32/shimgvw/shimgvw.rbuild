@@ -11,5 +11,4 @@
 	<library>gdiplus</library>
 	<file>shimgvw.c</file>
 	<file>shimgvw.rc</file>
-	<file>shimgvw.spec</file>
 </module>

@@ -35,5 +35,4 @@
 	<file>ctl.c</file>
 	<file>message.c</file>
 	<file>crypt32.rc</file>
-	<file>crypt32.spec</file>
 </module>

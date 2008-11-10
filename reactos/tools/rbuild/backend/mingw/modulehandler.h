@@ -97,8 +97,6 @@ protected:
 	const FileLocation* GetObjectFilename ( const FileLocation* sourceFile,
 	                                        const Module& module ) const;
 
-	std::string GetObjectFilenames ();
-
 	std::string GetPreconditionDependenciesName () const;
 	std::string GetCFlagsMacro () const;
 	static std::string GetObjectsMacro ( const Module& );

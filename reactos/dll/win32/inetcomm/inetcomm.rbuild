@@ -16,7 +16,6 @@
 	<file>pop3transport.c</file>
 	<file>regsvr.c</file>
 	<file>smtptransport.c</file>
-	<file>inetcomm.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

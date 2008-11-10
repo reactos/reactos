@@ -11,7 +11,6 @@
 	<file>prop.c</file>
 	<file>sendmail.c</file>
 	<file>util.c</file>
-	<file>mapi32.spec</file>
 	<library>wine</library>
 	<library>shlwapi</library>
 	<library>shell32</library>

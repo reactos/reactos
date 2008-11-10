@@ -395,6 +395,7 @@ public:
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
 	void ProcessXML ();
+	std::string GetDllName() const;
 private:
 	void SetImportLibrary ( ImportLibrary* importLibrary );
 	DirectoryLocation GetTargetDirectoryTree () const;

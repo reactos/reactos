@@ -9,6 +9,5 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<file>proxyodbc.c</file>
-	<file>odbc32.spec</file>
 </module>
 </group>

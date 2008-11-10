@@ -10,5 +10,4 @@
 	<file>screen.c</file>
 	<file>surface.c</file>
 	<file>framebufacc.rc</file>
-	<file>framebufacc.spec</file>
 </module>

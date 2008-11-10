@@ -52,7 +52,6 @@
 	<file>where.c</file>
 	<file>msi.rc</file>
 	<include base="msi" root="intermediate">.</include>
-	<file>msi.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>urlmon</library>

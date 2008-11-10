@@ -9,7 +9,6 @@
 	<file>assisted.c</file>
 	<file>line.c</file>
 	<file>phone.c</file>
-	<file>tapi32.spec</file>
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>kernel32</library>

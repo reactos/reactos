@@ -39,7 +39,6 @@
 	<file>rpcrt4.rc</file>
 	<file>epm.idl</file>
 	<include base="rpcrt4" root="intermediate">.</include>
-	<file>rpcrt4.spec</file>
 </module>
 <module name="rpcrt4_epm_client" type="rpcclient">
 	<file>epm.idl</file>

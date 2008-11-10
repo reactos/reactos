@@ -9,5 +9,4 @@
         <library>ntdll</library>
         <file>printui.c</file>
         <file>printui.rc</file>
-        <file>printui.spec</file>
 </module>

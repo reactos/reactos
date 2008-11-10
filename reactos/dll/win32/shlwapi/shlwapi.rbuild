@@ -21,7 +21,6 @@
 	<file>url.c</file>
 	<file>wsprintf.c</file>
 	<file>shlwapi.rc</file>
-	<file>shlwapi.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>user32</library>

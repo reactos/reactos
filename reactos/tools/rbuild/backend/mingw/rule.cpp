@@ -55,6 +55,7 @@ FixString ( const string& str, Backend *backend, const Module& module, const Fil
 	}
 	ReplaceVariable ( ret, "$(dependencies)", dep );
 	ReplaceVariable ( ret, "$(module_name)", module.name );
+	ReplaceVariable ( ret, "$(module_dllname)", module.GetDllName() );
 	ReplaceVariable ( ret, "$(module_output)", GetTargetMacro ( module, true ) );
 	ReplaceVariable ( ret, "$(SEP)", sSep );
 
