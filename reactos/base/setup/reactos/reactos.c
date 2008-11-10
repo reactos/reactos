@@ -61,13 +61,13 @@ struct
 	LONG FSType; // file system type on partition 
 	LONG MBRInstallType; // install bootloader
 	LONG FormatPart; // type of format the partition
-	TCHAR SelectedLangId[9]; // selected language
-	TCHAR SelectedKBLayout[9]; // selected kayboard layout
+	LONG SelectedLangId; // selected language (table index)
+	LONG SelectedKBLayout; // selected keyboard layout (table index)
 	WCHAR InstallationDirectory[MAX_PATH]; // installation directory on hdd
 	BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
 	// txtsetup.sif data
-	TCHAR DefaultLang[20]; // default language
-	TCHAR DefaultKBLayout[20]; // default keyboard layout
+	LONG DefaultLang; // default language (table index)
+	LONG DefaultKBLayout; // default keyboard layout (table index)
 	PLANG pLanguages;
 	LONG LangCount;
 	PKBLAYOUT pKbLayouts;
@@ -225,6 +225,8 @@ LangSelDlgProc(HWND hwndDlg,
 {
   PIMGINFO pImgInfo;
   LONG i;
+  LRESULT tindex;
+  HWND hList;
   pImgInfo = (PIMGINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
   switch (uMsg)
   {
@@ -259,10 +261,23 @@ LangSelDlgProc(HWND hwndDlg,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
+		hList = GetDlgItem(hwndDlg, IDC_LANGUAGES);
 		for (i=0; i< SetupData.LangCount;i++)
-			(void)ComboBox_AddString(GetDlgItem(hwndDlg,IDC_LANGUAGES),SetupData.pLanguages[i].LangName);
+		{
+			tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pLanguages[i].LangName);
+			SendMessage(hList,CB_SETITEMDATA,tindex,i);
+			if (SetupData.DefaultLang == i)
+				SendMessage(hList,CB_SETCURSEL,(WPARAM)tindex,(LPARAM)0);
+
+		}
+		hList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT);
 		for (i=0; i< SetupData.KbLayoutCount;i++)
-			(void)ComboBox_AddString(GetDlgItem(hwndDlg,IDC_KEYLAYOUT),SetupData.pKbLayouts[i].LayoutName);
+		{
+			tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pKbLayouts[i].LayoutName);
+			SendMessage(hList,CB_SETITEMDATA,tindex,i);
+			if (SetupData.DefaultKBLayout == i)
+				SendMessage(hList,CB_SETCURSEL,(WPARAM)tindex,(LPARAM)0);
+		}
           }
 	  break;
           case WM_DRAWITEM:
@@ -306,6 +321,20 @@ LangSelDlgProc(HWND hwndDlg,
 			break;
 		      case PSN_QUERYCANCEL:
 	       		SetWindowLong(hwndDlg, DWL_MSGRESULT,MessageBox(GetParent(hwndDlg), abort_msg, abort_title, MB_YESNO | MB_ICONQUESTION) != IDYES);
+			return TRUE;
+		      case PSN_WIZNEXT: // set the selected data
+			hList =GetDlgItem(hwndDlg, IDC_LANGUAGES); 
+			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (tindex != CB_ERR)
+			{
+				SetupData.SelectedLangId = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+			}
+			hList =GetDlgItem(hwndDlg, IDC_KEYLAYOUT); 
+			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (tindex != CB_ERR)
+			{
+				SetupData.SelectedKBLayout = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+			}
 			return TRUE;
 		      default:
 			break;
@@ -596,6 +625,7 @@ RestartDlgProc(HWND hwndDlg,
 void LoadSetupData()
 {
 	WCHAR szPath[MAX_PATH];
+	TCHAR tmp[10];
 	WCHAR *ch;
 	HINF hTxtsetupSif;
 	INFCONTEXT InfContext;
@@ -654,6 +684,29 @@ void LoadSetupData()
 					}
 					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
 			}
+		}
+    		// get default for keyboard and language
+		SetupData.DefaultKBLayout = -1;
+		SetupData.DefaultLang = -1;
+		if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"),_T("DefaultLayout"),&InfContext))
+		{
+			SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+			for (Count=0;Count<SetupData.KbLayoutCount;Count++)
+				if (_tcscmp(tmp,SetupData.pKbLayouts[Count].LayoutId)==0)
+				{
+					SetupData.DefaultKBLayout = Count;
+					break;
+				}
+		}
+		if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"),_T("DefaultLanguage"),&InfContext))
+		{
+			SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+			for (Count=0;Count<SetupData.LangCount;Count++)
+				if (_tcscmp(tmp,SetupData.pLanguages[Count].LangId)==0)
+				{
+					SetupData.DefaultLang = Count;
+					break;
+				}
 		}
 		SetupCloseInfFile(hTxtsetupSif);
   	}
