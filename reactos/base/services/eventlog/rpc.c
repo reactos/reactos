@@ -194,23 +194,23 @@ NTSTATUS ElfrReportEventW(
         switch (EventType)
         {
             case EVENTLOG_SUCCESS:
-                DPRINT1("Success: %S\n", Strings[i]);
+                DPRINT1("Success: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_ERROR_TYPE:
-                DPRINT1("Error: %S\n", Strings[i]);
+                DPRINT1("Error: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_WARNING_TYPE:
-                DPRINT1("Warning: %S\n", Strings[i]);
+                DPRINT1("Warning: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_INFORMATION_TYPE:
-                DPRINT1("Info: %S\n", Strings[i]);
+                DPRINT1("Info: %wZ\n", Strings[i]);
                 break;
 
             default:
-                DPRINT1("Type %hu: %S\n", EventType, Strings[i]);
+                DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;
         }
     }
