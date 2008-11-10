@@ -388,7 +388,9 @@ extern "C" {
 
 /* Misc stuff */
 char *getlogin(void);
+#ifdef __USE_MINGW_ALARM
 unsigned int alarm(unsigned int seconds);
+#endif
 
 #ifdef __USE_MINGW_ACCESS
 /*  Old versions of MSVCRT access() just ignored X_OK, while the version

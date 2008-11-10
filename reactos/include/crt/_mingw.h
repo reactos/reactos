@@ -15,6 +15,13 @@
 #define MINGW64_VERSION_STATE	"alpha"
 #endif
 
+#ifdef _WIN64
+#ifdef __stdcall
+#undef __stdcall
+#endif
+#define __stdcall
+#endif
+
 #ifndef __GNUC__
 # ifndef __MINGW_IMPORT
 #  define __MINGW_IMPORT  __declspec(dllimport)
@@ -46,12 +53,7 @@ limitations in handling dllimport attribute.  */
 #   define _CRTIMP
 #  endif
 # endif /* __declspec */
-# ifndef __cdecl
-#  define __cdecl __attribute__ ((__cdecl__))
-# endif
-# ifndef __stdcall
-#  define __stdcall __attribute__ ((__stdcall__))
-# endif
+#endif
 
 #if defined (__GNUC__) && defined (__GNUC_MINOR__)
 #define __MINGW_GNUC_PREREQ(major, minor) \
@@ -125,6 +127,17 @@ limitations in handling dllimport attribute.  */
 # define __MSVCRT_VERSION__ 0x0700
 #endif
 
+#if defined(__GNUC__)
+#define __mingw_va_start(v,l) __builtin_va_start(v,l)
+#define __mingw_va_end(v) __builtin_va_end(v)
+#define __mingw_va_arg(v,l)     __builtin_va_arg(v,l)
+#define __mingw_va_copy(d,s) __builtin_va_copy(d,s)
+#elif defined(_MSC_VER)
+#define __mingw_va_start(v,l) __msc_va_start(v,l)
+#define __mingw_va_end(v) __msc_va_end(v)
+#define __mingw_va_arg(v,l)     __msc_va_arg(v,l)
+#define __mingw_va_copy(d,s) __msc_va_copy(d,s)
+#endif
 
 //#ifndef WINVER
 //#define WINVER 0x0502
@@ -156,12 +169,6 @@ typedef int __int128 __attribute__ ((mode (TI)));
 
 #ifndef _WIN32
 #error Only Win32 target is supported!
-#endif
-
-#if defined (__i386__)
-#define _ATTRIBUTES
-#else
-#define _ATTRIBUTES shared
 #endif
 
 #ifdef __cplusplus
@@ -199,7 +206,6 @@ extern "C" {
 #define __CRT_WIDE(_String) L ## _String
 #define _CRT_WIDE(_String) __CRT_WIDE(_String)
 #endif
-
 #ifndef _W64
 #define _W64
 #endif
@@ -393,8 +399,10 @@ extern "C" {
 
 #ifndef _TIME64_T_DEFINED
 #define _TIME64_T_DEFINED
+//#if _INTEGRAL_MAX_BITS >= 64
   typedef __int64 __time64_t;
 #endif
+//#endif
 
 #ifndef _TIME_T_DEFINED
 #define _TIME_T_DEFINED
@@ -504,4 +512,3 @@ extern "C" {
 #pragma pack(pop)
 #endif
 
-#endif

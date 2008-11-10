@@ -239,7 +239,7 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   int __cdecl vfprintf(FILE *_File,const char *_Format,va_list _ArgList);
   int __cdecl vprintf(const char *_Format,va_list _ArgList);
   /* Make sure macros are not defined.  */
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("vsnprintf")
 #pragma push_macro("snprintf")
   #undef vsnprintf
@@ -261,16 +261,23 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   int __cdecl sprintf(char *_Dest,const char *_Format,...);
   int __cdecl vsprintf(char *_Dest,const char *_Format,va_list _Args);
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-  int __cdecl snprintf(char* s, size_t n, const char*  format, ...);
+  __CRT_INLINE int __cdecl snprintf(char* s, size_t n, const char*  format, ...) {
+	  int r;
+	  va_list a;
+	  __mingw_va_start(a, format);
+	  r = _vsnprintf (s, n, format, a);
+	  __mingw_va_end(a);
+	  return r;
+  }
   __CRT_INLINE int __cdecl vsnprintf (char* s, size_t n, const char* format,va_list arg) {
     return _vsnprintf ( s, n, format, arg);
   }
-  int __cdecl vscanf(const char * Format, va_list argp);
-  int __cdecl vfscanf (FILE * fp, const char * Format,va_list argp);
-  int __cdecl vsscanf (const char * _Str,const char * Format,va_list argp);
+  int __cdecl vscanf(const char * __restrict__ Format, va_list argp);
+  int __cdecl vfscanf (FILE * __restrict__ fp, const char * Format,va_list argp);
+  int __cdecl vsscanf (const char * __restrict__ _Str,const char * __restrict__ Format,va_list argp);
 #endif
 /* Restore may prior defined macros snprintf/vsnprintf.  */
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("snprintf")
 #pragma pop_macro("vsnprintf")
 #endif
@@ -331,7 +338,14 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   _CRTIMP int __cdecl _snwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,...);
   _CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,va_list _Args);
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-  int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...);
+  __CRT_INLINE int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...) {
+	  int r;
+	  va_list a;
+	  __mingw_va_start(a, format);
+	  r = _vsnwprintf (s, n, format, a);
+	  __mingw_va_end(a);
+	  return r;
+  }
   __CRT_INLINE int __cdecl vsnwprintf (wchar_t* s, size_t n, const wchar_t* format, va_list arg) { return _vsnwprintf(s,n,format,arg); }
   int __cdecl vwscanf (const wchar_t *, va_list);
   int __cdecl vfwscanf (FILE *,const wchar_t *,va_list);

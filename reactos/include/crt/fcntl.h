@@ -13,8 +13,6 @@
 #define _O_RDONLY 0x0000
 #define _O_WRONLY 0x0001
 #define _O_RDWR 0x0002
-
-#define _O_ACCMODE	(_O_RDONLY|_O_WRONLY|_O_RDWR)
 #define _O_APPEND 0x0008
 #define _O_CREAT 0x0100
 #define _O_TRUNC 0x0200
@@ -24,6 +22,7 @@
 #define _O_WTEXT 0x10000
 #define _O_U16TEXT 0x20000
 #define _O_U8TEXT 0x40000
+#define _O_ACCMODE (_O_RDONLY|_O_WRONLY|_O_RDWR)
 
 #define _O_RAW _O_BINARY
 #define _O_NOINHERIT 0x0080

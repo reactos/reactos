@@ -115,6 +115,7 @@ extern "C" {
   };
 #endif
 
+/* #if _INTEGRAL_MAX_BITS >= 64 */
   struct _stat32i64 {
     _dev_t st_dev;
     _ino_t st_ino;
@@ -156,6 +157,7 @@ extern "C" {
     __time64_t st_mtime;
     __time64_t st_ctime;
   };
+/* #endif */
 
 #define __stat64 _stat64
 

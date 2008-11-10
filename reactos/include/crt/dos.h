@@ -38,10 +38,10 @@ extern "C" {
   _CRTIMP unsigned __cdecl _getdiskfree(unsigned _Drive,struct _diskfree_t *_DiskFree);
 #endif
 
-//#if (defined(_X86_) && !defined(__x86_64))
-//  void __cdecl _disable(void);
-//  void __cdecl _enable(void);
-//#endif
+#if (defined(_X86_) && !defined(__x86_64))
+  void __cdecl _disable(void);
+  void __cdecl _enable(void);
+#endif
 
 #ifndef	NO_OLDNAMES
 #define diskfree_t _diskfree_t

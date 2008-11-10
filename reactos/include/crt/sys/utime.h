@@ -71,10 +71,12 @@ extern "C" {
     __time32_t modtime;
   };
 
+#if _INTEGRAL_MAX_BITS >= 64
   struct __utimbuf64 {
     __time64_t actime;
     __time64_t modtime;
   };
+#endif
 
 #ifndef	NO_OLDNAMES
   struct utimbuf {
@@ -92,11 +94,14 @@ extern "C" {
   _CRTIMP int __cdecl _utime32(const char *_Filename,struct __utimbuf32 *_Time);
   _CRTIMP int __cdecl _futime32(int _FileDes,struct __utimbuf32 *_Time);
   _CRTIMP int __cdecl _wutime32(const wchar_t *_Filename,struct __utimbuf32 *_Time);
+#if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP int __cdecl _utime64(const char *_Filename,struct __utimbuf64 *_Time);
   _CRTIMP int __cdecl _futime64(int _FileDes,struct __utimbuf64 *_Time);
   _CRTIMP int __cdecl _wutime64(const wchar_t *_Filename,struct __utimbuf64 *_Time);
+#endif
 
 #ifndef RC_INVOKED
+#ifdef _USE_32BIT_TIME_T
 __CRT_INLINE int __cdecl _utime(const char *_Filename,struct _utimbuf *_Utimbuf) {
   return _utime32(_Filename,(struct __utimbuf32 *)_Utimbuf);
 }
@@ -106,7 +111,7 @@ __CRT_INLINE int __cdecl _futime(int _Desc,struct _utimbuf *_Utimbuf) {
 __CRT_INLINE int __cdecl _wutime(const wchar_t *_Filename,struct _utimbuf *_Utimbuf) {
   return _wutime32(_Filename,(struct __utimbuf32 *)_Utimbuf);
 }
-#elif defined(_USE_64BIT_TIME_T)
+#else
 __CRT_INLINE int __cdecl _utime(const char *_Filename,struct _utimbuf *_Utimbuf) {
   return _utime64(_Filename,(struct __utimbuf64 *)_Utimbuf);
 }
@@ -116,9 +121,10 @@ __CRT_INLINE int __cdecl _futime(int _Desc,struct _utimbuf *_Utimbuf) {
 __CRT_INLINE int __cdecl _wutime(const wchar_t *_Filename,struct _utimbuf *_Utimbuf) {
   return _wutime64(_Filename,(struct __utimbuf64 *)_Utimbuf);
 }
+#endif
 
 #ifndef	NO_OLDNAMES
-#ifndef _WIN64
+#ifdef _USE_32BIT_TIME_T
 __CRT_INLINE int __cdecl utime(const char *_Filename,struct utimbuf *_Utimbuf) {
   return _utime32(_Filename,(struct __utimbuf32 *)_Utimbuf);
 }

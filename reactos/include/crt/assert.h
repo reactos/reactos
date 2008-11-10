@@ -28,12 +28,12 @@ __CRT_INLINE void __cdecl _Exit(int status)
 {  _exit(status); }
 #endif
 
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("abort")
 #undef abort
 #endif
   void __cdecl __declspec(noreturn) abort(void);
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("abort")
 #endif
 

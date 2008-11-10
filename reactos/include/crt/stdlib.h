@@ -68,7 +68,7 @@ extern "C" {
   typedef struct {
     float f;
   } _CRT_FLOAT;
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("long")
 #undef long
 #endif
@@ -77,7 +77,7 @@ extern "C" {
     long double x;
   } _LONGDOUBLE;
 
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("long")
 #endif
 
@@ -313,12 +313,12 @@ extern "C" {
   __CRT_INLINE void __cdecl _Exit(int status)
   {  _exit(status); }
 #endif
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("abort")
 #undef abort
 #endif
   void __cdecl __declspec(noreturn) abort(void);
-#ifdef _WIN64 //hack for old gcc in ROSBE
+#if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("abort")
 #endif
 #endif
@@ -357,7 +357,7 @@ extern "C" {
   div_t __cdecl div(int _Numerator,int _Denominator);
   char *__cdecl getenv(const char *_VarName);
   _CRTIMP char *__cdecl _itoa(int _Value,char *_Dest,int _Radix);
-
+/* #if _INTEGRAL_MAX_BITS >= 64 */
   _CRTIMP char *__cdecl _i64toa(__int64 _Val,char *_DstBuf,int _Radix);
   _CRTIMP char *__cdecl _ui64toa(unsigned __int64 _Val,char *_DstBuf,int _Radix);
   _CRTIMP __int64 __cdecl _atoi64(const char *_String);
@@ -366,7 +366,7 @@ extern "C" {
   _CRTIMP __int64 __cdecl _strtoi64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
   _CRTIMP unsigned __int64 __cdecl _strtoui64(const char *_String,char **_EndPtr,int _Radix);
   _CRTIMP unsigned __int64 __cdecl _strtoui64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
-
+/* #endif */
   ldiv_t __cdecl ldiv(long _Numerator,long _Denominator);
   _CRTIMP char *__cdecl _ltoa(long _Value,char *_Dest,int _Radix);
   int __cdecl mblen(const char *_Ch,size_t _MaxCount);
@@ -448,6 +448,7 @@ extern "C" {
   _CRTIMP long __cdecl _wtol(const wchar_t *_Str);
   _CRTIMP long __cdecl _wtol_l(const wchar_t *_Str,_locale_t _Locale);
 
+/* #if _INTEGRAL_MAX_BITS >= 64 */
   _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
   _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
   _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
@@ -456,7 +457,7 @@ extern "C" {
   _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
   _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
   _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str ,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
-
+/* #endif */
 #endif
 
 #ifndef _POSIX_

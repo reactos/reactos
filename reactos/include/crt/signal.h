@@ -33,7 +33,9 @@ extern "C" {
 #define SIGSEGV 11
 #define	SIGSYS	12	/* bad argument to system call */
 #define	SIGPIPE	13	/* write on a pipe with no one to read it */
+#ifdef __USE_MINGW_ALARM
 #define	SIGALRM	14	/* alarm clock */
+#endif
 #define SIGTERM 15
 #define SIGBREAK 21
 #define SIGABRT2 22
