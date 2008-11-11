@@ -18,9 +18,15 @@ endif
 RSYM_TARGET = \
 	$(RSYM_OUT_)rsym$(EXEPOSTFIX)
 
+ifeq ($(ARCH),amd64)
+RSYM_SOURCES = \
+	$(RSYM_BASE_)rsym64.c \
+	$(RSYM_BASE_)rsym_common.c
+else
 RSYM_SOURCES = \
 	$(RSYM_BASE_)rsym.c \
 	$(RSYM_BASE_)rsym_common.c
+endif
 
 RSYM_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(RSYM_SOURCES:.c=.o))
@@ -41,6 +47,10 @@ $(RSYM_TARGET): $(RSYM_OBJECTS) | $(RSYM_OUT)
 	${host_gcc} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $@
 
 $(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.c | $(RSYM_INT)
+	$(ECHO_CC)
+	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
+
+$(RSYM_INT_)rsym64.o: $(RSYM_BASE_)rsym64.c | $(RSYM_INT)
 	$(ECHO_CC)
 	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
 
