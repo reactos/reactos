@@ -26,7 +26,6 @@
  */
 
 #include <windows.h>
-#include <windowsx.h>
 #include <commctrl.h>
 #include <tchar.h>
 #include <setupapi.h>
@@ -42,7 +41,6 @@ typedef struct _LANG
 {
     TCHAR LangId[9];
     TCHAR LangName[128];
-    LONG DefaultKBLayout;
 } LANG, *PLANG;
 
 typedef struct _KBLAYOUT
@@ -51,6 +49,14 @@ typedef struct _KBLAYOUT
     TCHAR LayoutName[128];
     TCHAR DllName[128];
 } KBLAYOUT, *PKBLAYOUT;
+
+
+// generic entries with simple 1:1 mapping
+typedef struct _GENENTRY
+{
+    TCHAR Id[24];
+    TCHAR Value[128];
+} GENENTRY, *PGENENTRY;
 
 struct
 {
@@ -64,14 +70,23 @@ struct
 	LONG SelectedLangId; // selected language (table index)
 	LONG SelectedKBLayout; // selected keyboard layout (table index)
 	WCHAR InstallationDirectory[MAX_PATH]; // installation directory on hdd
+	LONG SelectedComputer; // selected computer type (table index)
+	LONG SelectedDisplay; // selected display type (table index)
+	LONG SelectedKeyboard; // selected keyboard type (table index)
 	BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
 	// txtsetup.sif data
 	LONG DefaultLang; // default language (table index)
-	LONG DefaultKBLayout; // default keyboard layout (table index)
 	PLANG pLanguages;
 	LONG LangCount;
+	LONG DefaultKBLayout; // default keyboard layout (table index)
 	PKBLAYOUT pKbLayouts;
 	LONG KbLayoutCount;
+	PGENENTRY pComputers;
+	LONG CompCount;
+	PGENENTRY pDisplays;
+	LONG DispCount;
+	PGENENTRY pKeyboards;
+	LONG KeybCount;
 } SetupData;
 
 typedef struct _IMGINFO
@@ -201,9 +216,8 @@ StartDlgProc(HWND hwndDlg,
 
 		  switch (lpnm->code)
 		  {		
-		      case PSN_SETACTIVE: // Only "Finish" for closing the App
-			PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
-			//PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+		      case PSN_SETACTIVE:
+			PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
 			break;
 		      default:
 			break;
@@ -388,6 +402,10 @@ TypeDlgProc(HWND hwndDlg,
 		      case PSN_QUERYCANCEL:
 	       		SetWindowLong(hwndDlg, DWL_MSGRESULT,MessageBox(GetParent(hwndDlg), abort_msg, abort_title, MB_YESNO | MB_ICONQUESTION) != IDYES);
 			return TRUE;
+		      case PSN_WIZNEXT: // set the selected data
+
+			SetupData.RepairUpdateFlag = !(SendMessage(GetDlgItem(hwndDlg, IDC_INSTALL),BM_GETCHECK,(WPARAM)0,(LPARAM)0) == BST_CHECKED);
+			return TRUE;
 		      default:
 			break;
 		  }
@@ -406,6 +424,9 @@ DeviceDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+  LONG i;
+  LRESULT tindex;
+  HWND hList;
   switch (uMsg)
   {
 	  case WM_INITDIALOG:
@@ -425,6 +446,27 @@ DeviceDlgProc(HWND hwndDlg,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
 }
+		hList = GetDlgItem(hwndDlg, IDC_COMPUTER);
+		for (i=0; i< SetupData.CompCount;i++)
+		{
+			tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pComputers[i].Value);
+			SendMessage(hList,CB_SETITEMDATA,tindex,i);
+		}
+		SendMessage(hList,CB_SETCURSEL,0,0); // set first as default
+		hList = GetDlgItem(hwndDlg, IDC_DISPLAY);
+		for (i=0; i< SetupData.DispCount;i++)
+		{
+			tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pDisplays[i].Value);
+			SendMessage(hList,CB_SETITEMDATA,tindex,i);
+		}
+		SendMessage(hList,CB_SETCURSEL,0,0); // set first as default
+		hList = GetDlgItem(hwndDlg, IDC_KEYBOARD);
+		for (i=0; i< SetupData.KeybCount;i++)
+		{
+			tindex = SendMessage(hList,CB_ADDSTRING,(WPARAM)0,(LPARAM)SetupData.pKeyboards[i].Value);
+			SendMessage(hList,CB_SETITEMDATA,tindex,i);
+		}
+		SendMessage(hList,CB_SETCURSEL,0,0); // set first as default
 	  break;
 	  case WM_NOTIFY:
 	  {
@@ -438,7 +480,27 @@ DeviceDlgProc(HWND hwndDlg,
 		      case PSN_QUERYCANCEL:
 	       		SetWindowLong(hwndDlg, DWL_MSGRESULT,MessageBox(GetParent(hwndDlg), abort_msg, abort_title, MB_YESNO | MB_ICONQUESTION) != IDYES);
 			return TRUE;
-		      default:
+		      case PSN_WIZNEXT: // set the selected data
+			hList =GetDlgItem(hwndDlg, IDC_COMPUTER); 
+			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (tindex != CB_ERR)
+			{
+				SetupData.SelectedComputer = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+			}
+			hList =GetDlgItem(hwndDlg, IDC_DISPLAY); 
+			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (tindex != CB_ERR)
+			{
+				SetupData.SelectedDisplay = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+			}
+			hList =GetDlgItem(hwndDlg, IDC_KEYBOARD); 
+			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+			if (tindex != CB_ERR)
+			{
+				SetupData.SelectedKeyboard = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+			}
+			return TRUE;
+	      default:
 			break;
 		  }
 	  break;
@@ -632,7 +694,6 @@ void LoadSetupData()
 	//TCHAR szValue[MAX_PATH];
 	DWORD LineLength;
 	LONG Count;
-	//HKEY hKey;
 
 	GetModuleFileNameW(NULL,szPath,MAX_PATH);
 	ch = strrchrW(szPath,L'\\');
@@ -647,7 +708,6 @@ void LoadSetupData()
 		Count = SetupGetLineCount(hTxtsetupSif, _T("Language"));
 		if (Count > 0)
 		{
-			// TODO: alloc memory for all entries and read entries
                 	SetupData.pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * Count);
 			if (SetupData.pLanguages != NULL)
 			{
@@ -668,7 +728,6 @@ void LoadSetupData()
 		Count = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
 		if (Count > 0)
 		{
-			// TODO: alloc memory for all entries and read entries
                 	SetupData.pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * Count);
 			if (SetupData.pKbLayouts != NULL)
 			{
@@ -707,6 +766,66 @@ void LoadSetupData()
 					SetupData.DefaultLang = Count;
 					break;
 				}
+		}
+		// get computers list
+		Count = SetupGetLineCount(hTxtsetupSif, _T("Computer"));
+		if (Count > 0)
+		{
+                	SetupData.pComputers = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * Count);
+			if (SetupData.pComputers != NULL)
+			{
+				SetupData.CompCount = Count;
+				Count = 0;
+				if (SetupFindFirstLine(hTxtsetupSif, _T("Computer"),
+				NULL,&InfContext))
+					do
+					{
+						SetupGetStringField(&InfContext, 0, SetupData.pComputers[Count].Id, sizeof(SetupData.pComputers[Count].Id) / sizeof(TCHAR), &LineLength);
+						SetupGetStringField(&InfContext, 1, SetupData.pComputers[Count].Value, sizeof(SetupData.pComputers[Count].Value) / sizeof(TCHAR), &LineLength);
+						++Count;
+					}
+					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.CompCount);
+			}
+		}
+		// get display list
+		Count = SetupGetLineCount(hTxtsetupSif, _T("Display"));
+		if (Count > 0)
+		{
+                	SetupData.pDisplays = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * Count);
+			if (SetupData.pDisplays != NULL)
+			{
+				SetupData.DispCount = Count;
+				Count = 0;
+				if (SetupFindFirstLine(hTxtsetupSif, _T("Display"),
+				NULL,&InfContext))
+					do
+					{
+						SetupGetStringField(&InfContext, 0, SetupData.pDisplays[Count].Id, sizeof(SetupData.pDisplays[Count].Id) / sizeof(TCHAR), &LineLength);
+						SetupGetStringField(&InfContext, 1, SetupData.pDisplays[Count].Value, sizeof(SetupData.pDisplays[Count].Value) / sizeof(TCHAR), &LineLength);
+						++Count;
+					}
+					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.DispCount);
+			}
+		}
+		// get keyboard list
+		Count = SetupGetLineCount(hTxtsetupSif, _T("Keyboard"));
+		if (Count > 0)
+		{
+                	SetupData.pKeyboards = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * Count);
+			if (SetupData.pKeyboards != NULL)
+			{
+				SetupData.KeybCount = Count;
+				Count = 0;
+				if (SetupFindFirstLine(hTxtsetupSif, _T("Keyboard"),
+				NULL,&InfContext))
+					do
+					{
+						SetupGetStringField(&InfContext, 0, SetupData.pKeyboards[Count].Id, sizeof(SetupData.pKeyboards[Count].Id) / sizeof(TCHAR), &LineLength);
+						SetupGetStringField(&InfContext, 1, SetupData.pKeyboards[Count].Value, sizeof(SetupData.pKeyboards[Count].Value) / sizeof(TCHAR), &LineLength);
+						++Count;
+					}
+					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.KeybCount);
+			}
 		}
 		SetupCloseInfFile(hTxtsetupSif);
   	}
