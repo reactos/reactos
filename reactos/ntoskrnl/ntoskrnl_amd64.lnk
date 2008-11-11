@@ -44,7 +44,8 @@ SECTIONS
   {
     *(.rdata)
     *(SORT(.rdata$*))
-    *(.eh_frame)
+   /* For some reason mingw likes to merge it here. I don't! */
+   /* *(.eh_frame) */
   }
   .edata BLOCK(__section_alignment__) :
   {
@@ -164,6 +165,10 @@ SECTIONS
   .debug_ranges BLOCK(__section_alignment__) (NOLOAD) :
   {
     *(.debug_ranges)
+  }
+  .eh_frame BLOCK(__section_alignment__) :
+  {
+    *(.eh_frame)
   }
 }
 
