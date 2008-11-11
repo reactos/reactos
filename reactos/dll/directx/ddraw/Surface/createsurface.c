@@ -39,7 +39,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     DWORD count;
     HRESULT ret;
 
-    if(pDDraw->lpLcl->dwLocalFlags != DDRAWILCL_SETCOOPCALLED)
+    if ( (pDDraw->lpLcl->dwLocalFlags & DDRAWILCL_SETCOOPCALLED) != DDRAWILCL_SETCOOPCALLED)
     {
         return DDERR_NOCOOPERATIVELEVELSET;
     }
