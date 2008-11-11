@@ -19,8 +19,6 @@
 	<property name="usewrc" value="false"/>
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 	<property name="NTOSKRNL_SHARED" value="-shared"/>
-	<linkerflag>-disable-stdcall-fixup</linkerflag>
-	<compilerflag>-U_X86_</compilerflag>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>
@@ -40,6 +38,7 @@
 		<compilerflag>-O3</compilerflag>
 	</if>
 
+	<compilerflag>-U_X86_</compilerflag>
 	<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
@@ -47,6 +46,7 @@
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
+	<linkerflag>--unique=.eh_frame</linkerflag>
 
 <!-- Here starts <xi:include href="ReactOS-generic.rbuild" /> -->
 
