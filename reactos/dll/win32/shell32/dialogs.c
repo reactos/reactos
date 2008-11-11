@@ -338,9 +338,11 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                             {
                             char * ptr;
                             strcpy(pdir, psz);
-                            ptr = strrchr(pdir, '\\');
+                            ptr = strrchr(pdir + 4, '\\');
                             if(ptr)
                                 ptr[0] = '\0';
+                            else
+                                pdir[3] = '\0';
                             }
                         if (ShellExecuteA(NULL, "open", psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
