@@ -197,7 +197,7 @@ SetBoundsRect(HDC hdc,
               CONST RECT *prc,
               UINT flags)
 {
-    /* FIXME add check for vaildate the flags */
+    /* FIXME add check for validate the flags */
     return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
 }
 

@@ -5,7 +5,9 @@
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *  Translation:
- *  Copyleft 2007 Kario <kario@szm.sk>
+ *  TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ *  DATE OF TR.:  xx-xx-2007 
+ *  LAST CHANGE:  04-11-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -189,5 +191,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Riadok %d, ståpec %d"
 END
