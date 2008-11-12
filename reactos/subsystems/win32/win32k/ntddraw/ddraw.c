@@ -132,21 +132,13 @@ DxDdStartupDxGraphics(  ULONG ulc1,
      * no code have been writen for it yet
      */
 
-
     /* FIXME ReactOS does not loading the dxapi.sys or import functions from it yet */
     // DxApiGetVersion()
 
-    /* Loading the kernel interface of directx for win32k */
+    /* Loading the kernel dxg interface of directx for win32k */
+    DPRINT1("Warning: trying loading xp/2003/vista/reactos dxg.sys\n");
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
 
-    DPRINT1("Warning: trying loading vista dxkrnl.sys\n");
-    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxkrnl.sys");
-    if ( ghDxGraphics == NULL)
-    {
-        DPRINT1("Warning: dxkrnl.sys not found\n");
-        /* try loading vista dx kernel */
-        DPRINT1("Warning: trying loading xp/2003/reactos dxg.sys\n");
-        ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
-    }
 
     if ( ghDxGraphics == NULL)
     {
