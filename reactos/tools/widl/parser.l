@@ -25,13 +25,16 @@
 nl	\r?\n
 ws	[ \f\t\r]
 cident	[a-zA-Z_][0-9a-zA-Z_]*
-int	[0-9]+
+u_suffix	(u|U)
+l_suffix	(l|L)
+int	[0-9]+({l_suffix}?{u_suffix}?|{u_suffix}?{l_suffix}?)?
 hexd	[0-9a-fA-F]
-hex	0x{hexd}+
+hex	0(x|X){hexd}+({l_suffix}?{u_suffix}?|{u_suffix}?{l_suffix}?)?
 uuid	{hexd}{8}-{hexd}{4}-{hexd}{4}-{hexd}{4}-{hexd}{12}
 double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
 
 %x QUOTE
+%x WSTRQUOTE
 %x ATTR
 %x PP_LINE
 
@@ -133,10 +136,16 @@ UUID *parse_uuid(const char *u)
 				parser_lval.str = get_buffered_cstring();
 				return aSTRING;
 			}
-<QUOTE>\\\\		|
-<QUOTE>\\\"		addcchar(yytext[1]);
-<QUOTE>\\.		addcchar('\\'); addcchar(yytext[1]);
-<QUOTE>.		addcchar(yytext[0]);
+<INITIAL,ATTR>L\"	yy_push_state(WSTRQUOTE);
+<WSTRQUOTE>\"		{
+				yy_pop_state();
+				parser_lval.str = get_buffered_cstring();
+				return aWSTRING;
+			}
+<QUOTE,WSTRQUOTE>\\\\	|
+<QUOTE,WSTRQUOTE>\\\"	addcchar(yytext[1]);
+<QUOTE,WSTRQUOTE>\\.	addcchar('\\'); addcchar(yytext[1]);
+<QUOTE,WSTRQUOTE>.	addcchar(yytext[0]);
 <INITIAL,ATTR>\[	yy_push_state(ATTR); return '[';
 <ATTR>\]		yy_pop_state(); return ']';
 <ATTR>{cident}		return attr_token(yytext);
@@ -162,6 +171,13 @@ SAFEARRAY{ws}*/\(	return tSAFEARRAY;
 <INITIAL,ATTR>{ws}
 <INITIAL,ATTR>\<\<	return SHL;
 <INITIAL,ATTR>\>\>	return SHR;
+<INITIAL,ATTR>\-\>	return MEMBERPTR;
+<INITIAL,ATTR>==	return EQUALITY;
+<INITIAL,ATTR>!=	return INEQUALITY;
+<INITIAL,ATTR>\>=	return GREATEREQUAL;
+<INITIAL,ATTR>\<=	return LESSEQUAL;
+<INITIAL,ATTR>\|\|	return LOGICALOR;
+<INITIAL,ATTR>&&	return LOGICALAND;
 <INITIAL,ATTR>.		return yytext[0];
 <<EOF>>			{
 				if (import_stack_ptr)
@@ -184,6 +200,7 @@ struct keyword {
 
 static const struct keyword keywords[] = {
 	{"FALSE",			tFALSE},
+	{"NULL",			tNULL},
 	{"TRUE",			tTRUE},
 	{"__cdecl",			tCDECL},
 	{"__fastcall",			tFASTCALL},
@@ -196,13 +213,10 @@ static const struct keyword keywords[] = {
 	{"_stdcall",			tSTDCALL},
 	{"boolean",			tBOOLEAN},
 	{"byte",			tBYTE},
-	{"callback",			tCALLBACK},
 	{"case",			tCASE},
 	{"cdecl",			tCDECL},
 	{"char",			tCHAR},
 	{"coclass",			tCOCLASS},
-	{"code",			tCODE},
-	{"comm_status",			tCOMMSTATUS},
 	{"const",			tCONST},
 	{"cpp_quote",			tCPPQUOTE},
 	{"default",			tDEFAULT},
@@ -216,7 +230,7 @@ static const struct keyword keywords[] = {
 	{"hyper",			tHYPER},
 	{"import",			tIMPORT},
 	{"importlib",			tIMPORTLIB},
-	{"in_line",			tINLINE},
+	{"inline",			tINLINE},
 	{"int",				tINT},
 	{"interface",			tINTERFACE},
 	{"library",			tLIBRARY},
@@ -225,10 +239,12 @@ static const struct keyword keywords[] = {
 	{"module",			tMODULE},
 	{"pascal",			tPASCAL},
 	{"properties",			tPROPERTIES},
+	{"register",			tREGISTER},
 	{"short",			tSHORT},
 	{"signed",			tSIGNED},
 	{"sizeof",			tSIZEOF},
-        {"small",			tSMALL},
+	{"small",			tSMALL},
+	{"static",			tSTATIC},
 	{"stdcall",			tSTDCALL},
 	{"struct",			tSTRUCT},
 	{"switch",			tSWITCH},
@@ -253,6 +269,9 @@ static const struct keyword attr_keywords[] =
         {"broadcast",                   tBROADCAST},
         {"byte_count",                  tBYTECOUNT},
         {"call_as",                     tCALLAS},
+        {"callback",                    tCALLBACK},
+        {"code",                        tCODE},
+        {"comm_status",                 tCOMMSTATUS},
         {"context_handle",              tCONTEXTHANDLE},
         {"context_handle_noserialize",  tCONTEXTHANDLENOSERIALIZE},
         {"context_handle_serialize",    tCONTEXTHANDLENOSERIALIZE},
@@ -279,6 +298,7 @@ static const struct keyword attr_keywords[] =
         {"immediatebind",               tIMMEDIATEBIND},
         {"implicit_handle",             tIMPLICITHANDLE},
         {"in",                          tIN},
+        {"in_line",                     tIN_LINE},
         {"input_sync",                  tINPUTSYNC},
         {"lcid",                        tLCID},
         {"length_is",                   tLENGTHIS},
@@ -383,7 +403,6 @@ void pop_import(void)
 		free(temp_name);
 	}
 	temp_name = import_stack[ptr].temp_name;
-	free( input_name );
 	input_name = import_stack[ptr].input_name;
 	line_number = import_stack[ptr].line_number;
 	import_stack_ptr--;
@@ -397,19 +416,10 @@ struct imports {
 int do_import(char *fname)
 {
 	FILE *f;
-	char *hname, *path, *p;
+	char *path;
 	struct imports *import;
 	int ptr = import_stack_ptr;
 	int ret;
-
-	if (!parse_only && do_header) {
-		hname = dup_basename(fname, ".idl");
-                p = hname + strlen(hname) - 2;
-                if (p <= hname || strcmp( p, ".h" )) strcat(hname, ".h");
-
-		fprintf(header, "#include <%s>\n", hname);
-		free(hname);
-	}
 
 	import = first_import;
 	while (import && strcmp(import->name, fname))

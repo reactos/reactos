@@ -38,15 +38,15 @@ enum remoting_phase
 
 typedef int (*type_pred_t)(const type_t *);
 
-void write_formatstringsdecl(FILE *f, int indent, ifref_list_t *ifaces, type_pred_t pred);
-void write_procformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t pred);
-void write_typeformatstring(FILE *file, const ifref_list_t *ifaces, type_pred_t pred);
+void write_formatstringsdecl(FILE *f, int indent, const statement_list_t *stmts, type_pred_t pred);
+void write_procformatstring(FILE *file, const statement_list_t *stmts, type_pred_t pred);
+void write_typeformatstring(FILE *file, const statement_list_t *stmts, type_pred_t pred);
 void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase, enum pass pass, const var_t *var, const char *varname);
 void write_remoting_arguments(FILE *file, int indent, const func_t *func, enum pass pass, enum remoting_phase phase);
 size_t get_size_procformatstring_type(const char *name, const type_t *type, const attr_list_t *attrs);
 size_t get_size_procformatstring_func(const func_t *func);
-size_t get_size_procformatstring(const ifref_list_t *ifaces, type_pred_t pred);
-size_t get_size_typeformatstring(const ifref_list_t *ifaces, type_pred_t pred);
+size_t get_size_procformatstring(const statement_list_t *stmts, type_pred_t pred);
+size_t get_size_typeformatstring(const statement_list_t *stmts, type_pred_t pred);
 void assign_stub_out_args( FILE *file, int indent, const func_t *func );
 void declare_stub_args( FILE *file, int indent, const func_t *func );
 int write_expr_eval_routines(FILE *file, const char *iface);

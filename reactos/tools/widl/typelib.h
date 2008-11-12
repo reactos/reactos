@@ -22,7 +22,7 @@
 #define __WIDL_TYPELIB_H
 
 extern int in_typelib;
-extern void start_typelib(char *name, const attr_list_t *attrs);
+extern void start_typelib(typelib_t *typelib_type);
 extern void end_typelib(void);
 extern void add_typelib_entry(type_t *t);
 extern void add_importlib(const char *name);
