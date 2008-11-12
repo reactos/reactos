@@ -517,7 +517,7 @@ WriteOutFile(FILE *handle, PFILE_INFO File)
     File->FileHeader->NumberOfSections = File->UsedSections + 2; // FIXME!!!
 
     /* Update SizeOfImage */
-    Size = File->xdata.psh->PointerToRawData
+    Size = File->xdata.psh->VirtualAddress
            + File->xdata.psh->SizeOfRawData;
     File->OptionalHeader->SizeOfImage = Size;
 
