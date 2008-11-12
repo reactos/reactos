@@ -39,6 +39,7 @@
 	<if property="ARCH" value="amd64">
 		<directory name="amd64">
 			<file>debug_asm.S</file>
+			<file>except_asm.S</file>
 			<file>unwind.c</file>
 			<file>stubs.c</file>
 		</directory>
