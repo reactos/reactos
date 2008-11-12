@@ -87,7 +87,7 @@ DwDecodeCie(PDW2CIE Cie, char *pc)
     pc += Cie->AugLength;
     Cie->Instructions = pc;
 
-    return Cie->Length;
+    return Cie->Length + 4;
 }
 
 unsigned long
@@ -103,7 +103,7 @@ DwDecodeFde(PDW2FDE Fde, char *pc)
     Fde->AugData = pc;
     Fde->Instructions = Fde->AugData + Fde->AugLength;
 
-    return Fde->Length;
+    return Fde->Length + 4;
 }
 
 unsigned long
@@ -214,7 +214,6 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
     }
     
     State->FramePtrDiff = State->FramePtr - PrevFramePtr;
-    
 //printf("@%p: code=%x, Loc=%lx, offset=%lx, reg=0x%lx:%s\n", pc, code, State->Location, State->Offset, State->Reg, regnames_64[State->Reg]);
     return Length;
 }
@@ -371,7 +370,7 @@ CountUnwindData(PFILE_INFO File)
 {
     DW2CIEFDE *p;
     DW2FDE Fde;
-    char *pInst;
+    char *pInst, *pmax;
     DW2CFSTATE State;
 
     File->cFuncs = 0;
@@ -380,7 +379,8 @@ CountUnwindData(PFILE_INFO File)
     State.FramePtr = 0;
 
     p = GetSectionPointer(File, File->eh_frame.idx);
-    for (; p->Length; p = NextCIE(p))
+    pmax = (char*)p + File->eh_frame.psh->Misc.VirtualSize;
+    for (; p->Length && (char*)p < pmax; p = NextCIE(p))
     {
         /* Is this an FDE? */
         if (p->CiePointer != 0)
@@ -421,6 +421,7 @@ GeneratePData(PFILE_INFO File)
     ULONG cbSize;
     PIMAGE_SECTION_HEADER pshp, pshx;
     ULONG FileAlignment;
+    char *pmax;
 
     FileAlignment = File->OptionalHeader->FileAlignment;
 
@@ -463,7 +464,9 @@ GeneratePData(PFILE_INFO File)
     Offset = File->eh_frame.psh->VirtualAddress;
     xdata_va = pshx->VirtualAddress;
     xdata_p = File->xdata.p;
-    for (p = eh_frame; p->Length; p = NextCIE(p))
+    pmax = (char*)eh_frame + File->eh_frame.psh->Misc.VirtualSize - 100;
+
+    for (p = eh_frame; p->Length && (char*)p < pmax; p = NextCIE(p))
     {
         /* Is this an FDE? */
         if (p->CiePointer != 0)
