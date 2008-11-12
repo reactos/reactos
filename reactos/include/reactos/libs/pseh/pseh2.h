@@ -234,8 +234,6 @@ _SEHTryLevel_t;
 	__SEH_BEGIN_SCOPE \
 	{ \
 		__SEH_SCOPE_LOCALS; \
- \
-		void _SEHJumpToHandler() { goto _SEHBeginExcept; } \
 \
 		__SEH_BEGIN_TRY \
 		{
@@ -327,6 +325,7 @@ _SEHTryLevel_t;
 		{ \
 			{ \
 				_SEHFrame_t * const _SEHFrameP = _SEHTopTryLevel ? &_SEHFrame : _SEHCurFrameP; \
+				(void)_SEHFrameP; \
 				__SEH_BARRIER;
 
 #define _SEH2_END \
@@ -334,6 +333,12 @@ _SEHTryLevel_t;
 			} \
 		} \
 		_SEHEndExcept: __SEH_SIDE_EFFECT; \
+ \
+		void _SEHJumpToHandler() \
+		{ \
+			if(_SEHFrameP == (_SEHTopTryLevel ? &_SEHFrame : _SEHCurFrameP) && _SEHPrevTryLevelP == _SEHTryLevelP) \
+				goto _SEHBeginExcept; \
+		} \
 	} \
 	__SEH_END_SCOPE;
 
