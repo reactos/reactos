@@ -841,7 +841,7 @@ NTSTATUS DispTdiReceiveDatagram(
   PTRANSPORT_CONTEXT TranContext;
   TDI_REQUEST Request;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesReceived = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -918,7 +918,7 @@ NTSTATUS DispTdiSend(
   PTDI_REQUEST_KERNEL_SEND SendInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesSent;
+  ULONG BytesSent = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
