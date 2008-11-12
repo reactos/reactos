@@ -8,6 +8,7 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>setupapi</library>
+	<library>uuid</library>
 	<file>reactos.c</file>
 	<file>reactos.rc</file>
 </module>

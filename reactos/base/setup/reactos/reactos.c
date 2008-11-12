@@ -29,6 +29,8 @@
 #include <commctrl.h>
 #include <tchar.h>
 #include <setupapi.h>
+#include <initguid.h>
+#include <devguid.h>
 #include <wine/unicode.h>
 
 #include "resource.h"
@@ -69,7 +71,7 @@ struct
 	LONG FormatPart; // type of format the partition
 	LONG SelectedLangId; // selected language (table index)
 	LONG SelectedKBLayout; // selected keyboard layout (table index)
-	WCHAR InstallationDirectory[MAX_PATH]; // installation directory on hdd
+	TCHAR InstallDir[MAX_PATH]; // installation directory on hdd
 	LONG SelectedComputer; // selected computer type (table index)
 	LONG SelectedDisplay; // selected display type (table index)
 	LONG SelectedKeyboard; // selected keyboard type (table index)
@@ -513,11 +515,46 @@ DeviceDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
+MoreOptDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+			CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
+			SendMessage(GetDlgItem(hwndDlg, IDC_PATH),WM_SETTEXT,
+					(WPARAM)0,(LPARAM)SetupData.InstallDir);
+			break;
+		case WM_COMMAND:
+			switch(LOWORD(wParam))
+			{
+				case IDOK:
+					SendMessage(GetDlgItem(hwndDlg, IDC_PATH),WM_GETTEXT,
+					(WPARAM)sizeof(SetupData.InstallDir)/sizeof(TCHAR),(LPARAM)SetupData.InstallDir);
+					
+					EndDialog(hwndDlg, IDOK);
+					break;
+				case IDCANCEL:
+					EndDialog(hwndDlg, IDCANCEL);
+					break;
+			}
+	}
+	return FALSE;
+}
+
+	
+static INT_PTR CALLBACK
 DriveDlgProc(HWND hwndDlg,
                UINT uMsg,
                WPARAM wParam,
                LPARAM lParam)
 {
+  HDEVINFO h;
+  HWND hList;
+  SP_DEVINFO_DATA DevInfoData;
+  DWORD i;
   switch (uMsg)
   {
 	  case WM_INITDIALOG:
@@ -530,15 +567,55 @@ DriveDlgProc(HWND hwndDlg,
           	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 		
-		CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
 		/* Set title font */
 		/*SendDlgItemMessage(hwndDlg,
                              IDC_STARTTITLE,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
-}
+		h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL,
+				DIGCF_PRESENT);
+		if (h != INVALID_HANDLE_VALUE)
+		{
+			hList =GetDlgItem(hwndDlg, IDC_PARTITION); 
+			DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+			for (i=0;SetupDiEnumDeviceInfo(h,i,&DevInfoData);i++)
+			{
+				DWORD DataT;
+	        		LPTSTR buffer = NULL;
+				DWORD buffersize = 0;
+				while (!SetupDiGetDeviceRegistryProperty(
+					h,&DevInfoData,
+					SPDRP_DEVICEDESC,&DataT,(PBYTE)buffer,
+					buffersize,&buffersize))
+				{
+					if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+					{
+						if (buffer) LocalFree(buffer);
+						buffer = LocalAlloc(LPTR,buffersize * 2);
+					} else
+						break;
+				}
+				if (buffer)
+				{
+					SendMessage(hList,LB_ADDSTRING,(WPARAM)0,(LPARAM)buffer);
+					LocalFree(buffer);
+				}
+			}
+			SetupDiDestroyDeviceInfoList(h);
+		}
+	  }
 	  break;
+	  case WM_COMMAND:
+	  {
+		switch(LOWORD(wParam))
+		{
+			case IDC_PARTMOREOPTS:
+				DialogBox(hInstance,MAKEINTRESOURCE(IDD_BOOTOPTIONS),hwndDlg,MoreOptDlgProc);
+			break;
+		}
+
+	  }
 	  case WM_NOTIFY:
 	  {
           LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -601,6 +678,8 @@ ProcessDlgProc(HWND hwndDlg,
 		  {		
 		      case PSN_SETACTIVE: 
 			PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT );
+			// disable all buttons during installation process
+			// PropSheet_SetWizButtons(GetParent(hwndDlg), 0 );
 			break;
 		      default:
 			break;
@@ -827,6 +906,14 @@ void LoadSetupData()
 					while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.KeybCount);
 			}
 		}
+		// get install directory
+		if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"),
+			_T("DefaultPath"),&InfContext))
+		{
+			SetupGetStringField(&InfContext, 1,
+				SetupData.InstallDir,
+				sizeof(SetupData.InstallDir) / sizeof(TCHAR), &LineLength);
+		}
 		SetupCloseInfFile(hTxtsetupSif);
   	}
 }
@@ -859,6 +946,7 @@ BOOL isUnattendSetup()
 			(_tcsicmp(szValue, _T("yes"))==0))
 			{
 				result = 1; // unattendSetup enabled
+
 				// read values and store in SetupData
 			}
 		}
