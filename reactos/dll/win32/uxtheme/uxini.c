@@ -68,7 +68,7 @@ PUXINI_FILE UXINI_LoadINI(HMODULE hTheme, LPCWSTR lpName) {
     TRACE("Loading resource INI %s\n", debugstr_w(lpName));
 
     if((hrsc = FindResourceW(hTheme, lpName, szTextFileResource))) {
-        if(!(lpThemesIni = (LPCWSTR)LoadResource(hTheme, hrsc))) {
+        if(!(lpThemesIni = LoadResource(hTheme, hrsc))) {
             TRACE("%s resource not found\n", debugstr_w(lpName));
             return NULL;
         }
