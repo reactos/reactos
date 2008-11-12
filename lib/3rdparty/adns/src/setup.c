@@ -730,3 +730,8 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r) {
   if (context_r) *context_r= qu->ctx.ext;
   return qu;
 }
+
+/* ReactOS addition */
+void adns_addserver(adns_state ads, struct in_addr addr) {
+    addserver(ads, addr);
+}
