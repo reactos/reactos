@@ -1775,7 +1775,7 @@ supersede:
 				case ACTION_APPEND:
 					len = ip->client->
 					    config->defaults[i].len +
-					    lease->options[i].len;
+					    lease->options[i].len + 1;
 					if (len > sizeof(dbuf)) {
 						warning("no space to %s %s",
 						    "append option",
