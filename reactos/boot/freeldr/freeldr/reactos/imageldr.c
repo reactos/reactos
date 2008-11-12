@@ -543,6 +543,12 @@ FrLdrReadAndMapImage(IN FILE *Image,
                               Section[i].Misc.VirtualSize);
             }
         }
+        else
+        {
+            DbgPrint("Section %s in %s doesn't fit: VA: %lx, Size: %lx\n", 
+                      Section[i].Name, Name, Section[i].VirtualAddress,
+                      Section[i].Misc.VirtualSize);
+        }
     }
 
     /* Calculate Difference between Real Base and Compiled Base*/
