@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="bootcd" type="iso" output="ReactOS.iso">
+<module name="bootcd" type="iso" output="ReactOS-$(ARCH).iso">
 	<bootsector>isoboot</bootsector>
 </module>
