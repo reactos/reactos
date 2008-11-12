@@ -17,19 +17,6 @@
 /*
  * @unimplemented
  */
-PVOID
-NTAPI
-RtlLookupFunctionEntry(IN ULONGLONG ControlPC,
-                       OUT PULONGLONG ImageBase,
-                       OUT PULONGLONG TargetGp)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
 VOID
 NTAPI
 RtlInitializeContext(IN HANDLE ProcessHandle,

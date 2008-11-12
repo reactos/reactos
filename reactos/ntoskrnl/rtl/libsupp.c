@@ -28,6 +28,30 @@ SIZE_T RtlpAllocDeallocQueryBufferSize = 128;
 
 /* FUNCTIONS *****************************************************************/
 
+PVOID
+NTAPI
+RtlpLookupModuleBase(
+    PVOID Address)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InSystem;
+    PVOID p;
+
+    /* Get the base for this file */
+    if ((ULONG_PTR)Address > (ULONG_PTR)MmHighestUserAddress)
+    {
+        /* We are in kernel */
+        p = KiPcToFileHeader(Address, &LdrEntry, FALSE, &InSystem);
+    }
+    else
+    {
+        /* We are in user land */
+        p = KiRosPcToUserFileHeader(Address, &LdrEntry);
+    }
+
+    return p;
+}
+
 VOID
 NTAPI
 RtlInitializeRangeListPackage(VOID)

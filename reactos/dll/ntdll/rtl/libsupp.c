@@ -14,6 +14,8 @@
 #include <debug.h>
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
+#define IMAGE_DOS_MAGIC 0x5a4d
+#define IMAGE_PE_MAGIC 0x00004550
 
 /* FUNCTIONS ***************************************************************/
 
@@ -356,6 +358,62 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    }
 
    return NULL;
+}
+
+PVOID
+NTAPI
+RtlpLookupModuleBase(
+    PVOID Address)
+{
+    NTSTATUS Status;
+    MEMORY_BASIC_INFORMATION MemoryInformation;
+    ULONG_PTR Base, Limit;
+    PIMAGE_DOS_HEADER DosHeader;
+    PIMAGE_NT_HEADERS NtHeader;
+
+    Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                  Address,
+                                  MemoryBasicInformation,
+                                  &MemoryInformation,
+                                  sizeof(MEMORY_BASIC_INFORMATION),
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return NULL;
+    }
+
+    /* FIXME: remove these checks? */
+    Base = (ULONG_PTR)MemoryInformation.BaseAddress;
+    Limit = Base + MemoryInformation.RegionSize;
+    if ( ((ULONG_PTR)Address < Base) ||
+         ((ULONG_PTR)Address >= Limit) )
+    {
+        /* WTF? */
+        return NULL;
+    }
+
+    /* Check if we got the right kind of memory */
+    if ( (MemoryInformation.State != MEM_COMMIT) ||
+         (MemoryInformation.Type != MEM_IMAGE) )
+    {
+        return NULL;
+    }
+
+    /* Check DOS magic */
+    DosHeader = MemoryInformation.AllocationBase;
+    if (DosHeader->e_magic != IMAGE_DOS_MAGIC)
+    {
+        return NULL;
+    }
+
+    /* Check NT header */
+    NtHeader = (PVOID)((ULONG_PTR)DosHeader + DosHeader->e_lfanew);
+    if (NtHeader->Signature != IMAGE_PE_MAGIC)
+    {
+        return NULL;
+    }
+
+    return MemoryInformation.AllocationBase;
 }
 
 

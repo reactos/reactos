@@ -1047,6 +1047,18 @@ KiIdleLoop(
     VOID
 );
 
+PVOID
+NTAPI
+KiPcToFileHeader(IN PVOID Eip,
+                 OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
+                 IN BOOLEAN DriversOnly,
+                 OUT PBOOLEAN InKernel);
+
+PVOID
+NTAPI
+KiRosPcToUserFileHeader(IN PVOID Eip,
+                        OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
+
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */
