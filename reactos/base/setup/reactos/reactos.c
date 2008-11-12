@@ -544,7 +544,30 @@ MoreOptDlgProc(HWND hwndDlg,
 	return FALSE;
 }
 
-	
+static INT_PTR CALLBACK
+PartitionDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+			break;
+		case WM_COMMAND:
+			switch(LOWORD(wParam))
+			{
+				case IDOK:
+					EndDialog(hwndDlg, IDOK);
+					break;
+				case IDCANCEL:
+					EndDialog(hwndDlg, IDCANCEL);
+					break;
+			}
+	}
+	return FALSE;
+}
+
 static INT_PTR CALLBACK
 DriveDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -612,6 +635,11 @@ DriveDlgProc(HWND hwndDlg,
 		{
 			case IDC_PARTMOREOPTS:
 				DialogBox(hInstance,MAKEINTRESOURCE(IDD_BOOTOPTIONS),hwndDlg,MoreOptDlgProc);
+			break;
+			case IDC_PARTCREATE:
+				DialogBox(hInstance,MAKEINTRESOURCE(IDD_PARTITION),hwndDlg,PartitionDlgProc);
+			break;
+			case IDC_PARTDELETE:
 			break;
 		}
 
