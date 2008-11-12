@@ -10,7 +10,11 @@
 	<directory name="dciman32api">
 		<xi:include href="dciman32api/dciman32api.rbuild" />
 	</directory>
-
+	
+	<directory name="ddrawapi">
+		<xi:include href="ddrawapi/ddrawapi.rbuild" />
+	</directory>
+	
 	<directory name="gdi32api">
 		<xi:include href="gdi32api/gdi32api.rbuild" />
 	</directory>
