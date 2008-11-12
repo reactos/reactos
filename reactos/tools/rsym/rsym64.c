@@ -197,10 +197,16 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             break;
         /* PSEH types */
         case 0x1c:
+            printf("found 1c at %lx\n", State->Location);
             State->Scope = 1;
             break;
         case 0x1d:
+            printf("found 1d at %lx\n", State->Location);
             State->Scope = 2;
+            break;
+        case 0x1e:
+            printf("found 1e at %lx\n", State->Location);
+            State->Scope = 3;
             break;
         default:
             fprintf(stderr, "unknown instruction 0x%x at 0x%p\n", Code, pc);
@@ -507,8 +513,13 @@ WriteOutFile(FILE *handle, PFILE_INFO File)
     int ret, Size, Pos;
     DWORD Checksum;
 
-    /* Correct section count */
+    /* Update section count */
     File->FileHeader->NumberOfSections = File->UsedSections + 2; // FIXME!!!
+
+    /* Update SizeOfImage */
+    Size = File->xdata.psh->PointerToRawData
+           + File->xdata.psh->SizeOfRawData;
+    File->OptionalHeader->SizeOfImage = Size;
 
     /* Calculate size of file beginning */
     Size = File->SectionHeaders[File->UsedSections].PointerToRawData;
