@@ -29,6 +29,8 @@
 
 #include <excpt.h>
 
+extern _SEHRegistration_t * __cdecl _SEH2CurrentRegistration(void);
+
 extern int __SEH2Except(void *, void *, void *);
 extern void __SEH2Finally(void *, void *);
 
@@ -154,6 +156,13 @@ void __cdecl _SEH2LeaveFrame()
 		:
 		"ecx"
 	);
+}
+
+extern
+void __cdecl _SEH2Return(void)
+{
+	_SEH2LocalUnwind(CONTAINING_RECORD(_SEH2CurrentRegistration(), _SEHFrame_t, SF_Registration), NULL);
+	_SEH2LeaveFrame();
 }
 
 /* EOF */

@@ -340,6 +340,17 @@ _SEHTryLevel_t;
 #define _SEH2_GetExceptionPointers() ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
 #define _SEH2_GetExceptionCode() ((_SEHFrameP)->SF_Code)
 
+#define _SEH2_YIELD(STMT_) \
+	for(;;) \
+	{ \
+		if(!_SEHScopeKind) \
+			_SEH2Return(); \
+ \
+		STMT_; \
+	}
+
+#define _SEH2_LEAVE goto _SEHEndTry
+
 __SEH_END_SCOPE_CHAIN;
 
 #ifdef __cplusplus
@@ -349,6 +360,7 @@ extern "C"
 
 extern void __cdecl _SEH2EnterFrame(_SEHFrame_t *);
 extern void __cdecl _SEH2LeaveFrame(void);
+extern void __cdecl _SEH2Return(void);
 
 #ifdef __cplusplus
 }

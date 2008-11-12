@@ -21,6 +21,11 @@
 .text
 .intel_syntax noprefix
 
+.globl __SEH2CurrentRegistration
+__SEH2CurrentRegistration:
+	mov eax, [fs:0]
+	ret
+
 .globl ___SEH2Except
 ___SEH2Except:
 	mov eax, [esp+4]
