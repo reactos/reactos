@@ -65,6 +65,73 @@ Author:
 #define KTRAP_FRAME_LENGTH                      0x190
 
 //
+// CONTEXT Offsets
+//
+#define CONTEXT_P1Home 0
+#define CONTEXT_P2Home 0x08
+#define CONTEXT_P3Home 0x10
+#define CONTEXT_P4Home 0x18
+#define CONTEXT_P5Home 0x20
+#define CONTEXT_P6Home 0x28
+#define CONTEXT_ContextFlags 0x30
+#define CONTEXT_MxCsr 0x34
+#define CONTEXT_SegCs 0x38
+#define CONTEXT_SegDs 0x3a
+#define CONTEXT_SegEs 0x3c
+#define CONTEXT_SegFs 0x3e
+#define CONTEXT_SegGs 0x40
+#define CONTEXT_SegSs 0x42
+#define CONTEXT_EFlags 0x44
+#define CONTEXT_Dr0 0x48
+#define CONTEXT_Dr1 0x50
+#define CONTEXT_Dr2 0x58
+#define CONTEXT_Dr3 0x60
+#define CONTEXT_Dr6 0x68
+#define CONTEXT_Dr7 0x70
+#define CONTEXT_Rax 0x78
+#define CONTEXT_Rcx 0x80
+#define CONTEXT_Rdx 0x88
+#define CONTEXT_Rbx 0x90
+#define CONTEXT_Rsp 0x98
+#define CONTEXT_Rbp 0xa0
+#define CONTEXT_Rsi 0xa8
+#define CONTEXT_Rdi 0xb0
+#define CONTEXT_R8  0xb8
+#define CONTEXT_R9  0xc0
+#define CONTEXT_R10 0xc8
+#define CONTEXT_R11 0xd0
+#define CONTEXT_R12 0xd8
+#define CONTEXT_R13 0xe0
+#define CONTEXT_R14 0xe8
+#define CONTEXT_R15 0xf0
+#define CONTEXT_Rip 0xf8
+#define CONTEXT_Header 0x100
+#define CONTEXT_Legacy 0x120
+#define CONTEXT_Xmm0 0x1a0
+#define CONTEXT_Xmm1 0x1b0
+#define CONTEXT_Xmm2 0x1c0
+#define CONTEXT_Xmm3 0x1d0
+#define CONTEXT_Xmm4 0x1e0
+#define CONTEXT_Xmm5 0x1f0
+#define CONTEXT_Xmm6 0x200
+#define CONTEXT_Xmm7 0x210
+#define CONTEXT_Xmm8 0x220
+#define CONTEXT_Xmm9 0x230
+#define CONTEXT_Xmm10 0x240
+#define CONTEXT_Xmm11 0x250
+#define CONTEXT_Xmm12 0x260
+#define CONTEXT_Xmm13 0x270
+#define CONTEXT_Xmm14 0x280
+#define CONTEXT_Xmm15 0x290
+#define CONTEXT_VectorRegister 0x300
+#define CONTEXT_VectorControl 0x4a0
+#define CONTEXT_DebugControl 0x4a8
+#define CONTEXT_LastBranchToRip 0x4b0
+#define CONTEXT_LastBranchFromRip 0x4b8
+#define CONTEXT_LastExceptionToRip 0x4c0
+#define CONTEXT_LastExceptionFromRip 0x4c8
+
+//
 // CR0
 //
 #define CR0_PE                                  0x1
