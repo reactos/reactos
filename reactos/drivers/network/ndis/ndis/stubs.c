@@ -1064,6 +1064,12 @@ NdisScheduleWorkItem(
     return NDIS_STATUS_SUCCESS;
 }
 
-
-
-/* EOF */
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
+{
+    UNIMPLEMENTED;
+}
