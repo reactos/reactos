@@ -2142,61 +2142,6 @@ NtGdiSelectBitmap(
  /*
  * @implemented
  */
-HBRUSH
-APIENTRY
-NtGdiSelectBrush(
-    IN HDC hDC,
-    IN HBRUSH hBrush)
-{
-    PDC pDC;
-    PDC_ATTR pDc_Attr;
-    HBRUSH hOrgBrush;
-    PGDIBRUSHOBJ pBrush;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (hDC == NULL || hBrush == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
-
-    pBrush = BRUSHOBJ_LockBrush(hBrush);
-    if (pBrush == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-    BRUSHOBJ_UnlockBrush(pBrush);
-    if(bFailed)
-    {
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    hOrgBrush = pDc_Attr->hbrush;
-    pDc_Attr->hbrush = hBrush;
-    if (pDC->XlateBrush != NULL)
-    {
-        EngDeleteXlate(pDC->XlateBrush);
-    }
-    pDC->XlateBrush = XlateObj;
-
-    DC_UnlockDc(pDC);
-    return hOrgBrush;
-}
-
- /*
- * @implemented
- */
 HFONT
 APIENTRY
 NtGdiSelectFont(
@@ -2228,60 +2173,6 @@ NtGdiSelectFont(
     DC_UnlockDc(pDC);
 
     return hOrgFont;
-}
-
- /*
- * @implemented
- */
-HPEN
-APIENTRY
-NtGdiSelectPen(
-    IN HDC hDC,
-    IN HPEN hPen)
-{
-    PDC pDC;
-    PDC_ATTR pDc_Attr;
-    HPEN hOrgPen = NULL;
-    PGDIBRUSHOBJ pPen;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (hDC == NULL || hPen == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
-
-    pPen = PENOBJ_LockPen(hPen);
-    if (pPen == NULL)
-    {
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pPen, &bFailed);
-    PENOBJ_UnlockPen(pPen);
-    if (bFailed)
-    {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        return NULL;
-    }
-
-    hOrgPen = pDc_Attr->hpen;
-    pDc_Attr->hpen = hPen;
-    if (pDC->XlatePen != NULL)
-    {
-        EngDeleteXlate(pDC->XlatePen);
-    }
-    pDC->XlatePen = XlateObj;
-
-    DC_UnlockDc(pDC);
-
-    return hOrgPen;
 }
 
 HPALETTE 
