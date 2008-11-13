@@ -3162,23 +3162,10 @@ NtGdiExtTextOutW(
       Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
-        goto fail;
+         goto fail;
       }
    }
    String = SafeString;
-
-   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-   {
-      // At least one of the two flags were specified. Copy lprc. Once.
-      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-      if (!NT_SUCCESS(Status))
-      {
-         DC_UnlockDc(dc);
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
-   }
 
    if (NULL != UnsafeDx && Count > 0)
    {
@@ -3188,10 +3175,38 @@ NtGdiExtTextOutW(
          goto fail;
       }
       Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-      if (! NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status))
       {
          goto fail;
       }
+   }
+
+   if (lprc)
+   {
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         goto fail;
+      }
+   }
+
+   if (PATH_IsPathOpen(dc->DcLevel))
+   {
+      if (!PATH_ExtTextOut( dc,
+                            XStart,
+                            YStart,
+                            fuOptions,
+             (const RECT *)&SpecifiedDestRect,
+                            SafeString,
+                            Count,
+               (const INT *)Dx)) goto fail;
+      goto good;
+   }
+
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -3636,13 +3651,14 @@ NtGdiExtTextOutW(
    }
    BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
+good:
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc( dc );
 
@@ -3669,11 +3685,11 @@ fail:
    }
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc(dc);
 
