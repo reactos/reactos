@@ -229,7 +229,7 @@ KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
 
 VOID
 FASTCALL
-KeRosDumpStackFrameArray(IN PULONG Frames,
+KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
                          IN ULONG FrameCount)
 {
     ULONG i;
@@ -267,13 +267,13 @@ KeRosDumpStackFrameArray(IN PULONG Frames,
             {
                 /* Print out the module name */
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%wZ: %x>\n", &LdrEntry->FullDllName, Addr);
+                DbgPrint("<%wZ: %p>", &LdrEntry->FullDllName, (PVOID)Addr);
             }
         }
         else
         {
             /* Print only the address */
-            DbgPrint("<%x>\n", Addr);
+            DbgPrint("<%p>", (PVOID)Addr);
         }
 
         /* Go to the next frame */
@@ -283,10 +283,10 @@ KeRosDumpStackFrameArray(IN PULONG Frames,
 
 VOID
 NTAPI
-KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
+KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
                      IN ULONG FrameCount OPTIONAL)
 {
-    ULONG Frames[32];
+    ULONG_PTR Frames[32];
     ULONG RealFrameCount;
 
     /* If the caller didn't ask, assume 32 frames */
