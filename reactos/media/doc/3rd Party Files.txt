@@ -9,7 +9,7 @@ Website: https://www.redhat.com/promo/fonts/
 
 Title: DejaVu Fonts
 Version: 2.26
-Actual Version: 2.26
+Actual Version: 2.27
 Website: http://dejavu.sourceforge.net
 
 Title: DXTN OpenGL Compression Libs
@@ -23,12 +23,12 @@ Actual Version: 2.3.7
 Website: http://www.freetype.org
 
 Title: Mesa3D
-Version: 7.0.2
-Actual Version: 7.1
+Version: 7.2
+Actual Version: 7.2
 Website: http://www.mesa3d.org
 
 Title: GNU adns
-Version: 1.0 REV 1
+Version: 1.0 REV 5
 Actual Version: 1.0 REV 5
 Website: http://www.chiark.greenend.org.uk/~ian/adns | http://adns.jgaa.com
 
