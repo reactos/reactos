@@ -6,6 +6,11 @@
 #include "rsym64.h"
 #include "dwarf2.h"
 
+char DoPrint = 0;
+ULONG g_ehframep;
+
+#define DPRINT if(DoPrint) printf
+
 struct {char *name; char regnt;} regs[] =
 { {"rax", REG_RAX}, {"rdx", REG_RDX}, {"rcx", REG_RCX}, {"rbx", REG_RBX},
   {"rsi", REG_RSI}, {"rdi", REG_RDI}, {"rbp", REG_RBP}, {"rsp", REG_RSP},
@@ -35,7 +40,7 @@ DwDecodeUleb128(unsigned long *pResult, char *pc)
 	{
 		current = pc[ulSize];
 		ulSize++;
-		ulResult |= current & 0x7f << ulShift;
+		ulResult |= (current & 0x7f) << ulShift;
 		ulShift += 7;
 	}
 	while (current & 0x80);
@@ -56,7 +61,7 @@ DwDecodeSleb128(long *pResult, char *pc)
 	{
 		current = pc[ulSize];
 		ulSize++;
-		lResult |= current & 0x7f << ulShift;
+		lResult |= (current & 0x7f) << ulShift;
 		ulShift += 7;
 	}
 	while (current & 0x80);
@@ -214,7 +219,8 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
     }
     
     State->FramePtrDiff = State->FramePtr - PrevFramePtr;
-//printf("@%p: code=%x, Loc=%lx, offset=%lx, reg=0x%lx:%s\n", pc, code, State->Location, State->Offset, State->Reg, regnames_64[State->Reg]);
+    DPRINT("@%p: code=%x, Loc=%lx, offset=%lx, reg=0x%lx:%s\n", 
+        (void*)((ULONG)pc - g_ehframep), Code, State->Location, State->Offset, State->Reg, regs[State->Reg].name);
     return Length;
 }
 
@@ -427,6 +433,7 @@ GeneratePData(PFILE_INFO File)
 
     /* Get pointer to eh_frame section */
     eh_frame = GetSectionPointer(File, File->eh_frame.idx);
+    g_ehframep = (ULONG)eh_frame;
 
     /* Get sizes */
     CountUnwindData(File);
