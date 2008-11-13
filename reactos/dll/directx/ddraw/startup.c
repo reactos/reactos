@@ -33,8 +33,8 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
-    /* fixme linking too second link when we shall not doing it */
-    if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
+    if ( (IsBadWritePtr(This,sizeof(LPDDRAWI_DIRECTDRAW_INT)) != 0) || 
+         (IsBadWritePtr(This->lpLcl,sizeof(LPDDRAWI_DIRECTDRAW_LCL)) != 0) )
     {
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
