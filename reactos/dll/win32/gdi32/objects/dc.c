@@ -1064,7 +1064,7 @@ SetBkColor(
 
   if ( Dc_Attr->crBackgroundClr != crColor )
   {
-     Dc_Attr->ulDirty_ |= DIRTY_LINE;
+     Dc_Attr->ulDirty_ |= (DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL);
      Dc_Attr->crBackgroundClr = crColor;
   }
   return OldColor;
