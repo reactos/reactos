@@ -2644,8 +2644,6 @@ ExWaitForRundownProtectionRelease (
     (_advhdr)->FileContextSupportPointer = NULL;                            \
 }
 
-#define FlagOn(x, f) ((x) & (f))
-
 NTKERNELAPI
 VOID
 NTAPI
