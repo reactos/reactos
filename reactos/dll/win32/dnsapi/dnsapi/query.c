@@ -64,7 +64,7 @@ DnsQuery_A(LPCSTR Name,
     switch(Type)
     {
         case DNS_TYPE_A:
-            adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn | (Servers ? adns_if_noserver : 0), 0);
+            adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
 
             if(adns_error != adns_s_ok)
                 return DnsIntTranslateAdnsToDNS_STATUS(adns_error);

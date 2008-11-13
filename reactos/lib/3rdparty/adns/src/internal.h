@@ -31,7 +31,7 @@
 #define ADNS_INTERNAL_H_INCLUDED
 
 #include "config.h"
-/*typedef unsigned char byte;*/ /* FIXME: horrible kludge to avoid conflicts with an SDK type */
+typedef unsigned char byte;
 
 #include <stdarg.h>
 #include <assert.h>
@@ -575,7 +575,7 @@ typedef enum {
 } parsedomain_flags;
 
 adns_status adns__parse_domain(adns_state ads, int serv, adns_query qu,
-			       vbuf *vb, parsedomain_flags flags,
+			       vbuf *vb, adns_queryflags flags,
 			       const byte *dgram, int dglen, int *cbyte_io, int max);
 /* vb must already have been initialised; it will be reset if necessary.
  * If there is truncation, vb->used will be set to 0; otherwise
@@ -690,17 +690,17 @@ void adns__consistency(adns_state ads, adns_query qu, consistency_checks cc);
 
 /* Useful static inline functions: */
 
-static __inline int ctype_whitespace(int c) { return c==' ' || c=='\n' || c=='\t'; }
-static __inline int ctype_digit(int c) { return c>='0' && c<='9'; }
-static __inline int ctype_alpha(int c) {
+static inline int ctype_whitespace(int c) { return c==' ' || c=='\n' || c=='\t'; }
+static inline int ctype_digit(int c) { return c>='0' && c<='9'; }
+static inline int ctype_alpha(int c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
-static __inline int ctype_822special(int c) { return strchr("()<>@,;:\\\".[]",c) != 0; }
-static __inline int ctype_domainunquoted(int c) {
+static inline int ctype_822special(int c) { return strchr("()<>@,;:\\\".[]",c) != 0; }
+static inline int ctype_domainunquoted(int c) {
   return ctype_alpha(c) || ctype_digit(c) || (strchr("-_/+",c) != 0);
 }
 
-static __inline int errno_resources(int e) { return e==ENOMEM || e==ENOBUFS; }
+static inline int errno_resources(int e) { return e==ENOMEM || e==ENOBUFS; }
 
 /* Useful macros */
 

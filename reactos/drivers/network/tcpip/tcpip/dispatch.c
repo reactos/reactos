@@ -188,6 +188,8 @@ VOID NTAPI DispCancelRequest(
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
             break;
         }
+
+        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_RECEIVE_DATAGRAM:
@@ -767,7 +769,7 @@ NTSTATUS DispTdiReceive(
   PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesReceived = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -839,7 +841,7 @@ NTSTATUS DispTdiReceiveDatagram(
   PTRANSPORT_CONTEXT TranContext;
   TDI_REQUEST Request;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesReceived = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -916,7 +918,7 @@ NTSTATUS DispTdiSend(
   PTDI_REQUEST_KERNEL_SEND SendInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesSent;
+  ULONG BytesSent = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
