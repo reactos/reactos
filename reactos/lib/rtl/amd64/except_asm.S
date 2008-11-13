@@ -23,6 +23,41 @@
 _RtlCaptureContext:
     .cfi_startproc
 
+    /* Push eflags */
+    pushfq
+
+    /* Save the basic register context */
+    mov [rcx + CONTEXT_Rax], rax
+    mov [rcx + CONTEXT_Rcx], rcx
+    mov [rcx + CONTEXT_Rdx], rdx
+    mov [rcx + CONTEXT_Rbx], rbx
+
+    /* pop eflags */
+    pop [rcx + CONTEXT_EFlags]
+
+    mov [rcx + CONTEXT_Rsi], rsi
+    mov [rcx + CONTEXT_Rdi], rdi
+    mov [rcx + CONTEXT_Rbp], rbp
+
+    /* Load former stack pointer in rax */
+    lea rax, [rsp + 8]
+
+    mov [rcx + CONTEXT_R8], r8
+    mov [rcx + CONTEXT_R9], r9
+    mov [rcx + CONTEXT_R10], r10
+    mov [rcx + CONTEXT_R11], r11
+
+    /* Store stack pointer */
+    mov [rcx + CONTEXT_Rsp], rax
+
+    mov [rcx + CONTEXT_R12], r12
+    mov [rcx + CONTEXT_R13], r13
+    mov [rcx + CONTEXT_R14], r14
+    mov [rcx + CONTEXT_R15], r15
+
+    /* Load return address in rax */
+    mov rax, [rsp]
+
     /* Safe segment selectors */
     mov [rcx + CONTEXT_SegCs], cs
     mov [rcx + CONTEXT_SegDs], ds
@@ -31,31 +66,7 @@ _RtlCaptureContext:
     mov [rcx + CONTEXT_SegGs], gs
     mov [rcx + CONTEXT_SegSs], ss
 
-    /* Save the basic register context */
-    mov [rcx + CONTEXT_Rax], rax
-    mov [rcx + CONTEXT_Rcx], rcx
-    mov [rcx + CONTEXT_Rdx], rdx
-    mov [rcx + CONTEXT_Rbx], rbx
-    mov [rcx + CONTEXT_Rsp], rsp
-    mov [rcx + CONTEXT_Rbp], rbp
-    mov [rcx + CONTEXT_Rsi], rsi
-    mov [rcx + CONTEXT_Rdi], rdi
-    mov [rcx + CONTEXT_R8], r8
-    mov [rcx + CONTEXT_R9], r9
-    mov [rcx + CONTEXT_R10], r10
-    mov [rcx + CONTEXT_R11], r11
-    mov [rcx + CONTEXT_R12], r12
-    mov [rcx + CONTEXT_R13], r13
-    mov [rcx + CONTEXT_R14], r14
-    mov [rcx + CONTEXT_R15], r15
-
-    /* Capture eflags */
-    pushfq
-    pop rax
-    mov [rcx + CONTEXT_EFlags], rax
-
-    /* Put return address in rip member */
-    mov rax, [rsp]
+    /* Store return address */
     mov [rcx + CONTEXT_Rip], rax
 
     /* Safe mmx registers */
