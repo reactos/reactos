@@ -32,17 +32,6 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
 /*
  * @unimplemented
  */
-VOID
-NTAPI
-RtlCaptureContext(OUT PCONTEXT ContextRecord)
-{
-    UNIMPLEMENTED;
-    return;
-}
-
-/*
- * @unimplemented
- */
 PVOID
 NTAPI
 RtlpGetExceptionAddress(VOID)
