@@ -334,7 +334,7 @@ _SEHTryLevel_t;
 		} \
 		_SEHEndExcept: __SEH_SIDE_EFFECT; \
  \
-		void _SEHJumpToHandler() \
+		void _SEHJumpToHandler(void) \
 		{ \
 			if(_SEHFrameP == (_SEHTopTryLevel ? &_SEHFrame : _SEHCurFrameP) && _SEHPrevTryLevelP == _SEHTryLevelP) \
 				goto _SEHBeginExcept; \
