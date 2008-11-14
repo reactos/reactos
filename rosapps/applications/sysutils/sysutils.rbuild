@@ -12,10 +12,6 @@
 		<xi:include href="chklib/chklib.rbuild" />
 	</directory>
 
-	<directory name="dosfsck">
-		<xi:include href="dosfsck/dosfsck.rbuild" />
-	</directory>
-
 	<directory name="gettype">
 		<xi:include href="gettype/gettype.rbuild" />
 	</directory>
