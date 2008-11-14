@@ -103,6 +103,21 @@
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
 #endif
 
+//
+// PAGE_SIZE definition
+//
+#ifndef PAGE_SIZE
+#if defined(_M_IX86)
+#define PAGE_SIZE 0x1000
+#elif defined(_M_AMD64)
+#define PAGE_SIZE 0x1000
+#elif defined(_M_ARM)
+#define PAGE_SIZE 0x1000
+#else
+#error Local PAGE_SIZE definition required
+#endif
+#endif
+
 #define TAG_CM 0x68742020
 
 #define CMAPI NTAPI

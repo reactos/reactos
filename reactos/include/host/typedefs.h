@@ -40,11 +40,7 @@
 #define OPTIONAL
 
 #define FALSE 0
-#define TRUE (!(FALSE))
-
-/* FIXME: this value is target specific, host tools MUST not use it
- * and this line has to be removed */
-#define PAGE_SIZE 4096
+#define TRUE  1
 
 #define ANYSIZE_ARRAY 1
 
