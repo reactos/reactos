@@ -1287,7 +1287,7 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
    DWORD dwSize;
 
 
-   if (RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, KEY_WRITE, &hKey) != ERROR_SUCCESS)
+   if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Bitbucket\\Volume", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
       return FALSE;
 
    iCount = ListView_GetItemCount(hDlgCtrl);
