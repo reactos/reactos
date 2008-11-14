@@ -610,7 +610,8 @@ NdisOpenAdapter(
 }
 
 VOID
-ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protocol, IN PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics)
+NTAPI
+ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics)
 {
   /*
    * bind the protocol to all of its miniports
@@ -845,13 +846,19 @@ NdisRegisterProtocol(
 
   InitializeListHead(&Protocol->AdapterListHead);
 
-  ndisBindMiniportsToProtocol(Status, Protocol, ProtocolCharacteristics);
+  /* We must set this before the call to ndisBindMiniportsToProtocol because the protocol's 
+   * BindAdapter handler might need it */
+
+  *NdisProtocolHandle = Protocol;
+
+  ndisBindMiniportsToProtocol(Status, &Protocol->Chars);
 
   if (*Status == NDIS_STATUS_SUCCESS) {
       ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
-      *NdisProtocolHandle = Protocol;
-  } else
+  } else {
       ExFreePool(Protocol);
+      *NdisProtocolHandle = NULL;
+  }
 }
 
 
@@ -970,7 +977,7 @@ NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
     PPROTOCOL_BINDING Protocol = NdisProtocolHandle;
     NDIS_STATUS NdisStatus;
 
-    ndisBindMiniportsToProtocol(&NdisStatus, Protocol, &Protocol->Chars);
+    ndisBindMiniportsToProtocol(&NdisStatus, &Protocol->Chars);
 }
 
 /* EOF */
