@@ -620,6 +620,8 @@ STDCALL
 EnumFormsA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumFormsA stub called\n");
+  *Needed = 0;
+  *Returned = 0;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -634,6 +636,8 @@ STDCALL
 EnumFormsW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumFormsW stub called\n");
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -647,6 +651,9 @@ STDCALL
 EnumJobsA(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumJobsA stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -661,6 +668,9 @@ STDCALL
 EnumJobsW(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumJobsW stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -675,6 +685,9 @@ STDCALL
 EnumMonitorsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumMonitorsA stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -689,6 +702,9 @@ STDCALL
 EnumMonitorsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumMonitorsW stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -703,6 +719,9 @@ STDCALL
 EnumPortsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPortsA stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -717,6 +736,9 @@ STDCALL
 EnumPortsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPortsW stub called\n");
+  *Needed = 0;
+  *Returned = 0;
+
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
   return FALSE;
@@ -758,6 +780,8 @@ EnumPrinterDriversA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DW
 {
   OutputDebugStringW(L"winspool EnumPrinterDriversA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -772,6 +796,8 @@ EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, 
 {
   OutputDebugStringW(L"winspool EnumPrinterDriversW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -786,6 +812,8 @@ EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize,
 {
   OutputDebugStringW(L"winspool EnumPrintersA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -800,6 +828,8 @@ EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize
 {
   OutputDebugStringW(L"winspool EnumPrintersW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -814,6 +844,8 @@ EnumPrintProcessorDatatypesA(LPSTR Name, LPSTR PrintProcessor, DWORD Level, PBYT
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorDatatypesA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -828,6 +860,8 @@ EnumPrintProcessorDatatypesW(LPWSTR Name, LPWSTR PrintProcessor, DWORD Level, PB
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorDatatypesW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -842,6 +876,8 @@ EnumPrintProcessorsA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, D
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorsA stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
@@ -856,6 +892,8 @@ EnumPrintProcessorsW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer,
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorsW stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  *Needed = 0;
+  *Returned = 0;
 
   return FALSE;
 }
