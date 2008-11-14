@@ -391,7 +391,7 @@ GeneralPageProc(HWND hwndDlg,
                         if (NewLcid == (LCID)CB_ERR)
                             break;
 
-                         SetupApplet(NewLcid);
+                         SetupApplet(GetParent(hwndDlg), NewLcid);
                     }
                     break;
             }
