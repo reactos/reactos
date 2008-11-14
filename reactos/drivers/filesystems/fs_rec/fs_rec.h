@@ -23,7 +23,7 @@
 //
 // UDFS Offsets
 //
-#define UDFS_VRS_START_SECTOR   16
+#define UDFS_VRS_START_OFFSET  32768
 #define UDFS_AVDP_SECTOR       256
 
 //
