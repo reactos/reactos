@@ -592,14 +592,9 @@ NdisOpenAdapter(
   AdapterBinding->NdisOpenBlock.RequestCompleteHandler =
     Protocol->Chars.RequestCompleteHandler;
 
-#if 0
-  /* XXX this looks fishy */
-  /* OK, this really *is* fishy - it bugchecks */
   /* Put on protocol's bound adapters list */
   ExInterlockedInsertTailList(&Protocol->AdapterListHead, &AdapterBinding->ProtocolListEntry, &Protocol->Lock);
-#endif
 
-  /* XXX so does this */
   /* Put protocol on adapter's bound protocols list */
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   ExInterlockedInsertTailList(&Adapter->ProtocolListHead, &AdapterBinding->AdapterListEntry, &Adapter->NdisMiniportBlock.Lock);
