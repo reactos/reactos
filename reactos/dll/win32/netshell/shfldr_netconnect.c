@@ -33,6 +33,7 @@ typedef struct {
     LONG                       ref;
 
     const IPersistFolder2Vtbl *lpVtblPersistFolder2;
+    const IShellExecuteHookWVtbl *lpVtblShellExecuteHookW;
     //const IPersistIDListVtbl *lpVtblPersistIDList;
 
     /* both paths are parsible from the desktop */
@@ -71,6 +72,8 @@ static const shvheader NetConnectSFHeader[] = {
 #define COLUMN_PHONE    4
 #define COLUMN_OWNER    5
 
+HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * pNetConnect, HWND hwnd);
+
 static const IContextMenu3Vtbl vt_ContextMenu3;
 static const IObjectWithSiteVtbl vt_ObjectWithSite;
 static const IQueryInfoVtbl vt_QueryInfo;
@@ -90,6 +93,11 @@ static LPIContextMenuImpl __inline impl_from_IObjectWithSite(IObjectWithSite *if
 static LPIGenericSFImpl __inline impl_from_IPersistFolder2(IPersistFolder2 *iface)
 {
     return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
+}
+
+static LPIGenericSFImpl __inline impl_from_IShellExecuteHookW(IShellExecuteHookW *iface)
+{
+    return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblShellExecuteHookW));
 }
 
 static LPIContextMenuImpl __inline impl_from_IQueryInfo(IQueryInfo *iface)
@@ -120,6 +128,10 @@ static HRESULT WINAPI ISF_NetConnect_fnQueryInterface (IShellFolder2 *iface, REF
              IsEqualIID (riid, &IID_IPersistFolder2))
     {
         *ppvObj = (LPVOID *)&This->lpVtblPersistFolder2;
+    }
+    else if (IsEqualIID(riid, &IID_IShellExecuteHookW))
+    {
+        *ppvObj = (LPVOID *)&This->lpVtblShellExecuteHookW;
     }
 #if 0
     else if (IsEqualIID(riid, &IID_IPersistIDList))
@@ -382,12 +394,14 @@ static HRESULT IContextMenuImpl_Constructor(REFIID riid, LPCITEMIDLIST apidl, LP
     pMenu->lpOleCmd = lpOleCmd;
     pMenu->ref = 1;
 
-    if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualIID(riid, &IID_IContextMenu2))// || IsEqualIID(riid, &IID_IContextMenu3))
+    if (IsEqualIID(riid, &IID_IContextMenu) || IsEqualIID(riid, &IID_IContextMenu2)|| IsEqualIID(riid, &IID_IContextMenu3))
         pObj = (IUnknown*)(&pMenu->lpVtblContextMenu);
     else if(IsEqualIID(riid, &IID_IQueryInfo))
         pObj = (IUnknown*)(&pMenu->lpVtblQueryInfo);
     else if(IsEqualIID(riid, &IID_IExtractIconW))
         pObj = (IUnknown*)(&pMenu->lpVtblExtractIconW);
+    else
+        return E_NOINTERFACE;
 
     IUnknown_AddRef(pObj);
 
@@ -462,7 +476,7 @@ static HRESULT WINAPI ISF_NetConnect_fnGetDisplayNameOf (IShellFolder2 * iface,
                     wcscpy(pszName, pProperties->pszwName);
                     hr = S_OK;
                 }
-                //NcFreeNetconProperties(pProperties);
+                NcFreeNetconProperties(pProperties);
             }
         }
 
@@ -842,7 +856,7 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu3_QueryContextMenu(
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
-
+    NcFreeNetconProperties(pProperties);
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
 
@@ -862,23 +876,23 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 
 HRESULT
 ShowNetConnectionStatus(
-    IContextMenuImpl * This,
+    IOleCommandTarget * lpOleCmd,
     INetConnection * pNetConnect,
     HWND hwnd)
 {
     NETCON_PROPERTIES * pProperties;
     HRESULT hr;
 
-    if (!This->lpOleCmd)
+    if (!lpOleCmd)
         return E_FAIL;
 
     if (INetConnection_GetProperties(pNetConnect, &pProperties) != NOERROR)
         return E_FAIL;
 
-    hr = IOleCommandTarget_Exec(This->lpOleCmd, &pProperties->guidId, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    hr = IOleCommandTarget_Exec(lpOleCmd, &pProperties->guidId, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
 
     NcFreeNetconProperties(pProperties);
-    return E_FAIL;
+    return hr;
 }
 
 HRESULT
@@ -951,7 +965,7 @@ static HRESULT WINAPI ISF_NetConnect_IContextMenu3_InvokeCommand(
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS) ||
         lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS-1)) //HACK for Windows XP
     {
-        return ShowNetConnectionStatus(This, val->pItem, lpcmi->hwnd);
+        return ShowNetConnectionStatus(This->lpOleCmd, val->pItem, lpcmi->hwnd);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES) ||
              lpcmi->lpVerb == MAKEINTRESOURCEA(10099)) //HACK for Windows XP
@@ -1310,6 +1324,75 @@ static const IPersistFolder2Vtbl vt_PersistFolder2 =
     ISF_NetConnect_PersistFolder2_GetCurFolder
 };
 
+/************************************************************************
+ *	ISF_NetConnect_ShellExecuteHookW_QueryInterface
+ */
+static HRESULT WINAPI ISF_NetConnect_ShellExecuteHookW_QueryInterface (IShellExecuteHookW * iface,
+               REFIID iid, LPVOID * ppvObj)
+{
+    IGenericSFImpl * This = impl_from_IShellExecuteHookW(iface);
+
+    return IShellFolder2_QueryInterface ((IShellFolder2*)This, iid, ppvObj);
+}
+
+/************************************************************************
+ *	ISF_NetConnect_ShellExecuteHookW_AddRef
+ */
+static ULONG WINAPI ISF_NetConnect_ShellExecuteHookW_AddRef (IShellExecuteHookW * iface)
+{
+    IGenericSFImpl * This = impl_from_IShellExecuteHookW(iface);
+
+    return IShellFolder2_AddRef((IShellFolder2*)This);
+}
+
+/************************************************************************
+ *	ISF_NetConnect_PersistFolder2_Release
+ */
+static ULONG WINAPI ISF_NetConnect_ShellExecuteHookW_Release (IShellExecuteHookW * iface)
+{
+    IGenericSFImpl * This = impl_from_IShellExecuteHookW(iface);
+
+    return IShellFolder2_Release((IShellFolder2*)This);
+}
+
+
+/************************************************************************
+ *	ISF_NetConnect_ShellExecuteHookW_Execute
+ */
+static HRESULT WINAPI ISF_NetConnect_ShellExecuteHookW_Execute (IShellExecuteHookW * iface,
+               LPSHELLEXECUTEINFOW pei)
+{
+    VALUEStruct * val;
+    NETCON_PROPERTIES * pProperties;
+    IGenericSFImpl * This = impl_from_IShellExecuteHookW(iface);
+
+    val = _ILGetValueStruct(ILFindLastID(pei->lpIDList));
+    if (!val)
+        return E_FAIL;
+
+    if (INetConnection_GetProperties((INetConnection*)val->pItem, &pProperties) != NOERROR)
+        return E_FAIL;
+
+    if (pProperties->Status == NCS_CONNECTED)
+    {
+        NcFreeNetconProperties(pProperties);
+        return ShowNetConnectionStatus(This->lpOleCmd, val->pItem, pei->hwnd);
+    }
+
+    NcFreeNetconProperties(pProperties);
+
+    return S_OK;
+}
+
+
+static const IShellExecuteHookWVtbl vt_ShellExecuteHookW =
+{
+    ISF_NetConnect_ShellExecuteHookW_QueryInterface,
+    ISF_NetConnect_ShellExecuteHookW_AddRef,
+    ISF_NetConnect_ShellExecuteHookW_Release,
+    ISF_NetConnect_ShellExecuteHookW_Execute
+};
+
 #if 0
 static const IPersistIDListVtbl vt_PersistIDList =
 {
@@ -1413,6 +1496,7 @@ HRESULT WINAPI ISF_NetConnect_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     sf->ref = 1;
     sf->lpVtbl = &vt_ShellFolder2;
     sf->lpVtblPersistFolder2 = &vt_PersistFolder2;
+    sf->lpVtblShellExecuteHookW = &vt_ShellExecuteHookW;
 
     hr = CoCreateInstance(&CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, &IID_IOleCommandTarget, (LPVOID*)&sf->lpOleCmd);
     if (FAILED(hr))
