@@ -107,14 +107,10 @@
 // PAGE_SIZE definition
 //
 #ifndef PAGE_SIZE
-#if defined(_M_IX86)
-#define PAGE_SIZE 0x1000
-#elif defined(_M_AMD64)
-#define PAGE_SIZE 0x1000
-#elif defined(_M_ARM)
+#if defined(TARGET_i386) || defined(TARGET_amd64) || defined(TARGET_arm)
 #define PAGE_SIZE 0x1000
 #else
-#error Local PAGE_SIZE definition required
+#error Local PAGE_SIZE definition required when built as host
 #endif
 #endif
 
