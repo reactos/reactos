@@ -140,7 +140,11 @@ _TYPE_wchar_t;
 #define ___int_ptrdiff_t_h
 #define _GCC_PTRDIFF_T
 #ifndef __PTRDIFF_TYPE__
-#define __PTRDIFF_TYPE__ long long int
+# ifdef _WIN64
+  #define __PTRDIFF_TYPE__ long long int
+# else
+# #define __PTRDIFF_TYPE__ long int
+# endif  
 #endif
 #ifndef _PTRDIFF_T_DEFINED
 #define _PTRDIFF_T_DEFINED
@@ -204,7 +208,11 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #define __size_t
 #endif
 #ifndef __SIZE_TYPE__
-#define __SIZE_TYPE__ long long unsigned int
+# ifdef _WIN64
+#  define __SIZE_TYPE__ long long unsigned int
+# else
+#  define __SIZE_TYPE__ long unsigned int
+# endif
 #endif
 #if !(defined (__GNUG__) && defined (size_t))
 typedef __SIZE_TYPE__ size_t;
@@ -379,12 +387,12 @@ typedef __WCHAR_TYPE__ wchar_t;
 #endif	/* NULL not defined and <stddef.h> or need NULL.  */
 #undef	__need_NULL
 
-#ifdef _STDDEF_H
+#ifndef offsetof
 
 /* Offset of member MEMBER in a struct of type TYPE. */
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
 
-#endif /* _STDDEF_H was defined this time */
+#endif /* !offsetof */
 
 #endif /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
 	  || __need_XXX was not defined before */
