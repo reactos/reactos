@@ -44,7 +44,6 @@ int getit(int argc, const char *argv[], int restartit, const char *mode);
 int sleep(int time);
 
 char *tail();
-int errno;
 char *mktemp();
 void	setbell(), setdebug();
 void	setglob(), sethash(), setport();
