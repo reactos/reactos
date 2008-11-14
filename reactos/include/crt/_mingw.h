@@ -22,28 +22,50 @@
 #define __stdcall
 #endif
 
-#ifndef __GNUC__
+#if defined(_MSC_VER)
+# ifdef _DLL
 # ifndef __MINGW_IMPORT
 #  define __MINGW_IMPORT  __declspec(dllimport)
 # endif
 # ifndef _CRTIMP
 #  define _CRTIMP  __declspec(dllimport)
 # endif
+# else
+#  ifndef __MINGW_IMPORT
+#   define __MINGW_IMPORT
+#  endif
+# ifndef _CRTIMP
+#  define _CRTIMP
+# endif
+#endif
 # define __DECLSPEC_SUPPORTED
 # define __attribute__(x) /* nothing */
-#else /* __GNUC__ */
+# define __restrict__/* nothing */
+#elif defined(__GNUC__)
 # ifdef __declspec
 #  ifndef __MINGW_IMPORT
+#   ifdef _DLL
 /* Note the extern. This is needed to work around GCC's
 limitations in handling dllimport attribute.  */
 #   define __MINGW_IMPORT  extern __attribute__ ((__dllimport__))
+#   else
+#    define __MINGW_IMPORT extern
+#   endif
 #  endif
 #  ifndef _CRTIMP
-#   ifdef __USE_CRTIMP
-#    define _CRTIMP  __attribute__ ((dllimport))
-#   else
-#    define _CRTIMP
-#   endif
+#    undef __USE_CRTIMP
+#    if !defined (_CRTBLD) && !defined (_SYSCRT)
+#      define __USE_CRTIMP 1
+#    endif
+#    ifdef __USE_CRTIMP
+#     ifdef _DLL
+#      define _CRTIMP  __attribute__ ((dllimport))
+#    else
+#      define _CRTIMP
+#    endif
+#    else
+#     define _CRTIMP
+#    endif
 #  endif
 #  define __DECLSPEC_SUPPORTED
 # else /* __declspec */
@@ -53,6 +75,15 @@ limitations in handling dllimport attribute.  */
 #   define _CRTIMP
 #  endif
 # endif /* __declspec */
+#else
+# ifndef __MINGW_IMPORT
+#  define __MINGW_IMPORT __declspec(dllimport)
+# endif
+# ifndef _CRTIMP
+#  define _CRTIMP __declspec(dllimport)
+# endif
+# define __DECLSPEC_SUPPORTED
+# define __attribute__(x)/* nothing */
 #endif
 
 #if defined (__GNUC__) && defined (__GNUC_MINOR__)
@@ -63,12 +94,22 @@ limitations in handling dllimport attribute.  */
 #define __MINGW_GNUC_PREREQ(major, minor)  0
 #endif
 
+#if defined (_MSC_VER)
+#define __MINGW_MSC_PREREQ(major,minor) \
+  ((_MSC_VER /100) > (major) \
+   || ((_MSC)VER /100) == (major) && (_MSC_VER) % 100) >=(minor)))
+#else
+#define __MINGW_MSC_PREREQ(major, minor) 0
+#endif
+
 #define USE___UUIDOF	0
 
 #ifdef __cplusplus
 # define __CRT_INLINE inline
 #else
-# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+# if defined(_MSC_VER)
+#  define __CRT_INLINE __inline
+# elif  __GNUC_STDC_INLINE__
 #  define __CRT_INLINE extern inline __attribute__((__gnu_inline__))
 # else
 #  define __CRT_INLINE extern __inline__
@@ -88,6 +129,9 @@ limitations in handling dllimport attribute.  */
 #ifdef __GNUC__
 #define __MINGW_ATTRIB_NORETURN __attribute__ ((__noreturn__))
 #define __MINGW_ATTRIB_CONST __attribute__ ((__const__))
+#elif __MINGW_MSC_PREREQ(12, 0)
+#define __MINGW_ATTRIB_NORETURN __declspec(noreturn)
+#define __MINGW_ATTRIB_CONST
 #else
 #define __MINGW_ATTRIB_NORETURN
 #define __MINGW_ATTRIB_CONST
@@ -112,15 +156,22 @@ limitations in handling dllimport attribute.  */
 
 #if  __MINGW_GNUC_PREREQ (3, 1)
 #define __MINGW_ATTRIB_DEPRECATED __attribute__ ((__deprecated__))
+#elif __MINGW_MSC_PREREQ(12, 0)
+#define __MINGW_ATTRIB_DEPRECATED __declspec(deprecated)
 #else
 #define __MINGW_ATTRIB_DEPRECATED
-#endif /* GNUC >= 3.1 */
+#endif
  
 #if  __MINGW_GNUC_PREREQ (3, 3)
 #define __MINGW_NOTHROW __attribute__ ((__nothrow__))
+#elif __MINGW_MSC_PREREQ(12, 0) && defined (__cplusplus)
+#define __MINGW_NOTHROW __declspec(nothrow)
 #else
 #define __MINGW_NOTHROW
-#endif /* GNUC >= 3.3 */
+#endif
+
+/* TODO: Mark (almost) all CRT functions as __MINGW_NOTHROW.  This will
+allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 
 #ifndef __MSVCRT_VERSION__
 /*  High byte is the major version, low byte is the minor. */
