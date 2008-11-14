@@ -110,7 +110,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
-                if( FCB->Connection.Object == NULL ) {
+                if( FCB->Connection.Object == NULL || (FCB->State != SOCKET_STATE_BOUND && FCB->State != SOCKET_STATE_CONNECTED) ) {
 	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
 	                                           NULL );
                 }
