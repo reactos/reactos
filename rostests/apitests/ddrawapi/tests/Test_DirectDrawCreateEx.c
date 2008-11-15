@@ -4,6 +4,7 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
 {
 
     LPDIRECTDRAW7 DirectDraw7;
+    LPDIRECTDRAW DirectDraw;
     LPDDRAWI_DIRECTDRAW_INT pIntDirectDraw7;
     HRESULT ret;
 
@@ -19,47 +20,438 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         RTEST(pIntDirectDraw7->lpLcl != NULL);
         RTEST(pIntDirectDraw7->lpLink == NULL);
         RTEST(pIntDirectDraw7->dwIntRefCnt == 1);
-        
+
         RTEST(pIntDirectDraw7->lpLcl->lpDDMore == 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl != NULL);
         RTEST(pIntDirectDraw7->lpLcl->dwUnused0 == 0);
         RTEST(pIntDirectDraw7->lpLcl->dwLocalFlags == DDRAWILCL_DIRECTDRAW7);
         RTEST(pIntDirectDraw7->lpLcl->dwLocalRefCnt == 1);
-        
-        /* pIntDirectDraw7->lpLcl->dwProcessId call see if we have same ProcessId */
-        RTEST(pIntDirectDraw7->lpLcl->dwProcessId != 0); 
-
+        RTEST(pIntDirectDraw7->lpLcl->dwProcessId == GetCurrentProcessId());
         RTEST(pIntDirectDraw7->lpLcl->pUnkOuter == NULL);
-        RTEST(pIntDirectDraw7->lpLcl->dwObsolete1 == 0);        
+        RTEST(pIntDirectDraw7->lpLcl->dwObsolete1 == 0);
         RTEST(pIntDirectDraw7->lpLcl->hWnd == 0);
-        
-        /* FIXME vaildate pIntDirectDraw7->lpLcl->hDC */
-        RTEST(pIntDirectDraw7->lpLcl->hDC != 0);  
-        
-        RTEST(pIntDirectDraw7->lpLcl->dwErrorMode == 0); 
+        RTEST(pIntDirectDraw7->lpLcl->hDC != 0);
+        RTEST(pIntDirectDraw7->lpLcl->dwErrorMode == 0);
         RTEST(pIntDirectDraw7->lpLcl->lpPrimary == NULL);
         RTEST(pIntDirectDraw7->lpLcl->lpCB == NULL);
-        RTEST(pIntDirectDraw7->lpLcl->dwPreferredMode == 0); 
-        RTEST(pIntDirectDraw7->lpLcl->hD3DInstance == NULL); 
-        RTEST(pIntDirectDraw7->lpLcl->pD3DIUnknown == NULL); 
-        
-        RTEST(pIntDirectDraw7->lpLcl->lpDDCB != NULL); 
-        //RTEST(pIntDirectDraw7->lpLcl->hDDVxd != -1); fixme
-        RTEST(pIntDirectDraw7->lpLcl->hFocusWnd == 0); 
-        RTEST(pIntDirectDraw7->lpLcl->dwHotTracking == 0); 
-        RTEST(pIntDirectDraw7->lpLcl->dwIMEState == 0); 
-        
-        RTEST(pIntDirectDraw7->lpLcl->hWndPopup == 0); 
-        RTEST(pIntDirectDraw7->lpLcl->hDD != 0); 
-        RTEST(pIntDirectDraw7->lpLcl->hGammaCalibrator != 0); 
+        RTEST(pIntDirectDraw7->lpLcl->dwPreferredMode == 0);
+        RTEST(pIntDirectDraw7->lpLcl->hD3DInstance == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->pD3DIUnknown == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpDDCB != NULL);
+        //RTEST(pIntDirectDraw7->lpLcl->hDDVxd != 0xFFFFFFFF);
+        RTEST(pIntDirectDraw7->lpLcl->dwAppHackFlags == 0);
+        RTEST(pIntDirectDraw7->lpLcl->hFocusWnd == 0);
+        RTEST(pIntDirectDraw7->lpLcl->dwHotTracking == 0);
+        RTEST(pIntDirectDraw7->lpLcl->dwIMEState == 0);
+        RTEST(pIntDirectDraw7->lpLcl->hWndPopup == 0);
+        RTEST(pIntDirectDraw7->lpLcl->hDD != 0);
+        RTEST(pIntDirectDraw7->lpLcl->hGammaCalibrator != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGammaCalibrator != NULL);
+
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwRefCnt == 1);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwFlags == 0x21804020);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->fpPrimaryOrig == 0x00000000);
+
+        /* ddCaps is Hal caps from the drv */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSize == 0x0000013c);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps2 != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCKeyCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXAlphaCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwPalCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltConstBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltPixelBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltSurfaceBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayConstBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayPixelBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlaySurfaceBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwZBufferBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemTotal == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemFree == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVisibleOverlays != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwNumFourCCCodes != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundarySrc == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignSizeSrc == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundaryDest == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignSizeDest == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignStrideAlign == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x00] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x06] != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x07] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.ddsCaps.dwCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinOverlayStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxOverlayStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinLiveVideoStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxLiveVideoStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinHwCodecStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxHwCodecStretch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved1 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved2 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved3 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCKeyCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBFXCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x00] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x06] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x07] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCKeyCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBFXCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x00] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x06] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x07] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCKeyCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBFXCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x00] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x06] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x07] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVideoPorts == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCurrVideoPorts == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps2 != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwInternal1 == 0x00000902 );
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[0] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[1] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[2] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[3] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[4] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[5] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[6] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[7] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused1[8] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpDDCBtmp != NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dsList == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->palList == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->clipperList == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lp16DD == NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwMaxOverlays == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwCurrOverlays == 0);
+
+        /* fixme check with current res freq */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwMonitorFrequency != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSize == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps == 0xf4c08241);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps2 == 0x00000001);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCKeyCaps == 0x00000200);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXCaps == 0x0003fce3);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXAlphaCaps == 0x00000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwPalCaps == 0x00000347);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVCaps == 0x00000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltConstBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltPixelBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltSurfaceBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayConstBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayPixelBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlaySurfaceBitDepths == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwZBufferBitDepths != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemTotal == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemFree == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVisibleOverlays == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCurrVisibleOverlays == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwNumFourCCCodes == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundarySrc == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignSizeSrc == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundaryDest == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignSizeDest == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignStrideAlign == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x00] == 1);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x06] == 0x00001000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x07] == 0x80000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.ddsCaps.dwCaps == 0x00c21350);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinOverlayStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxOverlayStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinLiveVideoStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxLiveVideoStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinHwCodecStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxHwCodecStretch == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved1 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved2 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved3 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps == 0xf4c08241);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCKeyCaps == 0x00000200);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBFXCaps == 0x0003fce3);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x00] == 1);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x06] == 0x00001000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x07] == 0x80000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCaps == 0xf4c08241);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCKeyCaps == 0x00000200);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBFXCaps == 0x0003fce3);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x00] == 1);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x06] == 0x00001000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x07] == 0x80000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCaps == 0xf4c08241);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCKeyCaps == 0x00000200);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBFXCaps == 0x0003fce3);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x00] == 0x00000001);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x01] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x02] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x03] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x04] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x05] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x06] == 0x00001000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x07] == 0x80000000);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVideoPorts == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCurrVideoPorts == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps2 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[0] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[1] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[2] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[3] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[4] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[5] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[6] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[7] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[8] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[9] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[10] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[11] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[12] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[13] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[14] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[15] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[16] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[17] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[18] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[19] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[20] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[21] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[22] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[23] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[24] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[25] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[26] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[27] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[28] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[29] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[30] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[31] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[32] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[33] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[34] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[35] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[36] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[37] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[38] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[39] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[40] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[41] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[42] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[43] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[44] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[45] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[46] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[47] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[48] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused2[49] == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.fpPrimary == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwFlags == 0x00000000);
+        /* get current res and compare it with dwDisplayWidth, lDisplayPitch,  currenr res fixme */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwDisplayWidth != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwDisplayHeight != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.lDisplayPitch != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwOffscreenAlign != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwOverlayAlign != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwTextureAlign != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwZBufferAlign != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwAlphaAlign == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.dwNumHeaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->vmiData.pvmList == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpDriverHandle != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpExclusiveOwner == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwModeIndex == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwModeIndexOrig == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwNumFourCC != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpdwFourCC != NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwNumModes != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpModeInfo != NULL);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwSurfaceLockCount == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwAliasedLockCnt == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwReserved3 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hDD != 0);
+        /* ms ddraw send in the string "display" when it create the hDC */
+        RTEST(strcmp(pIntDirectDraw7->lpLcl->lpGbl->cObsolete,"display") == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwReserved1 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwReserved2 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dbnOverlayRoot.next != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dbnOverlayRoot.object == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dbnOverlayRoot.object_int == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpwPDeviceFlags == (LPVOID)0x737A07F0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwPDevice == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwWin16LockCnt == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwUnused3 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hInstance == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwEvent16 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwSaveNumModes == 1);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpD3DGlobalDriverData != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpD3DHALCallbacks != 0);
+
+        /* both caps pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps. and pIntDirectDraw7->lpLcl->lpGbl->ddCaps. */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSize == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSize, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSize));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps2));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCKeyCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwFXAlphaCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXAlphaCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXAlphaCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwPalCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwPalCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwPalCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaBltConstBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltConstBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltConstBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaBltPixelBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltPixelBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltPixelBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaBltSurfaceBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltSurfaceBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltSurfaceBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlayConstBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayConstBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayConstBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlayPixelBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayPixelBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayPixelBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlaySurfaceBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlaySurfaceBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlaySurfaceBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwZBufferBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwZBufferBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwZBufferBitDepths));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVidMemTotal == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemTotal, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemTotal));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVidMemFree == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemFree, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemFree));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxVisibleOverlays == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVisibleOverlays, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVisibleOverlays));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCurrVisibleOverlays == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCurrVisibleOverlays, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCurrVisibleOverlays));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwNumFourCCCodes == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwNumFourCCCodes, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwNumFourCCCodes));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignBoundarySrc == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundarySrc, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundarySrc));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignSizeSrc == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignSizeSrc, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignSizeSrc));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignBoundaryDest == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundaryDest, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundaryDest));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x00]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x01]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x02]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x03]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x04]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x05]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x06]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x07]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.ddsCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.ddsCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.ddsCaps.dwCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMinOverlayStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinOverlayStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinOverlayStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxOverlayStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxOverlayStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxOverlayStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMinLiveVideoStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinLiveVideoStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinLiveVideoStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxLiveVideoStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxLiveVideoStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxLiveVideoStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMinHwCodecStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinHwCodecStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinHwCodecStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxHwCodecStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxHwCodecStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxHwCodecStretch));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved1 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved1, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved1));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved2));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved3 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved3, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved3));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCKeyCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBFXCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x00]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x01]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x02]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x03]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x04]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x05]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x06]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x07]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCKeyCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBFXCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x00]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x01]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x02]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x03]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x04]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x05]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x06]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x07]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCKeyCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBFXCaps));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x00]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x01]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x02]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x03]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x04]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x05]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x06]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x07]));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxVideoPorts == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVideoPorts, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVideoPorts));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCurrVideoPorts == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCurrVideoPorts, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCurrVideoPorts));
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCaps2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps2));
+
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpDDVideoPortCaps == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dvpList == 0);
+
+        /* The res height */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.bottom != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.left == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.right == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.top == 0);
+
+        /* how many  Monitors */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->cMonitors != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->gpbmiSrc != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->gpbmiDest != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->phaiHeapAliases != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hKernelHandle != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->pfnNotifyProc != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpDDKernelCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpddNLVCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpddNLVHELCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpD3DExtendedCaps != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwDOSBoxEvent == 0);
+
+        /* The res height */
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.bottom != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.left == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.right == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.top == 0);
+
+        /* ms ddraw send in the string "display" when it create the hDC */
+        RTEST(strcmp(pIntDirectDraw7->lpLcl->lpGbl->cDriverName,"display") == 0);
+
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpD3DHALCallbacks3 != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->dwNumZPixelFormats != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpZPixelFormats != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->mcList == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hDDVxd == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddsCapsMore.dwCaps2 == 0x00000200);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddsCapsMore.dwCaps3 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddsCapsMore.dwCaps4 == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddsCapsMore.dwVolumeDepth == 0);
+
+
     }
+
+
+    ret = DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, &IID_IDirectDraw, NULL); 
 
 #if DUMP_ON
     if (pIntDirectDraw7 != NULL)
     {
-        dump_ddrawi_directdraw_int(pIntDirectDraw7);
-        dump_ddrawi_directdraw_lcl(pIntDirectDraw7->lpLcl);
+        dump_DDRAWI_DIRECTDRAW_INT("PDraw->", pIntDirectDraw7, 0);
     }
 #endif
 
