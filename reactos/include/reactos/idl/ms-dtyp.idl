@@ -17,9 +17,6 @@ typedef signed int INT32;
 typedef signed __int64 INT64;
 typedef signed int LONG32;
 typedef signed __int64 LONG64;
-cpp_quote("#if 0")
-typedef long NTSTATUS;
-cpp_quote("#endif")
 typedef unsigned __int64 QWORD;
 typedef short SHORT;
 typedef __int64 TIME;
@@ -50,9 +47,6 @@ typedef LONG LONG_PTR;
 typedef ULONG ULONG_PTR;
 #endif
 typedef ULONG_PTR SIZE_T;
-cpp_quote("#if 0")
-typedef UCHAR *STRING;
-cpp_quote("#endif")
 typedef DWORD NET_API_STATUS;
 typedef ULONG_PTR DWORD_PTR;
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;

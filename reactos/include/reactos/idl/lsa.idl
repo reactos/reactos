@@ -10,13 +10,11 @@ typedef [context_handle] PVOID LSAPR_HANDLE;
 typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
 cpp_quote("#ifndef _WINNT_H")
-typedef LARGE_INTEGER LUID;
+typedef LARGE_INTEGER LUID, *PLUID;
 cpp_quote("#endif")
 
 cpp_quote("#ifndef _NTDEF_")
-
 typedef long NTSTATUS;
-
 typedef struct _STRING {
     WORD Length;
     WORD MaximumLength;
@@ -74,8 +72,6 @@ typedef struct _LSAPR_OBJECT_ATTRIBUTES {
     PLSAPR_SECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
 } LSAPR_OBJECT_ATTRIBUTES, *PLSAPR_OBJECT_ATTRIBUTES;
-
-typedef unsigned long SECURITY_INFORMATION;
 
 typedef struct _LSAPR_POLICY_PRIVILEGE_DEF {
     RPC_UNICODE_STRING Name;
@@ -517,13 +513,6 @@ typedef
     [case(TrustedDomainFullInformation2Internal)] LSAPR_TRUSTED_DOMAIN_FULL_INFORMATION2 TrustedFullInfo2;
     [case(TrustedDomainSupportedEncryptionTypes)] TRUSTED_DOMAIN_SUPPORTED_ENCRYPTION_TYPES TrustedDomainSETs;
 } LSAPR_TRUSTED_DOMAIN_INFO, *PLSAPR_TRUSTED_DOMAIN_INFO;
-
-cpp_quote("#ifndef _WINNT_H")
-typedef struct _LUID {
-    ULONG LowPart;
-    LONG HightPart;
-} LUID, *PLUID;
-cpp_quote("#endif")
 
 typedef struct _LSAPR_LUID_AND_ATTRIBUTES {
     LUID Luid;
