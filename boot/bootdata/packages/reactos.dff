@@ -365,6 +365,7 @@ drivers\directx\dxg\dxg.sys                         2
 drivers\directx\dxgthk\dxgthk.sys                   2
 
 drivers\filesystems\fs_rec\fs_rec.sys               2
+drivers\filesystems\ksecdd\ksecdd.sys               2
 drivers\filesystems\msfs\msfs.sys                   2
 drivers\filesystems\mup\mup.sys                     2
 drivers\filesystems\npfs\npfs.sys                   2

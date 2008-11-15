@@ -10,6 +10,9 @@
 <directory name="fs_rec">
 	<xi:include href="fs_rec/fs_rec.rbuild" />
 </directory>
+<directory name="ksecdd">
+	<xi:include href="ksecdd/ksecdd.rbuild" />
+</directory>
 <directory name="msfs">
 	<xi:include href="msfs/msfs.rbuild" />
 </directory>

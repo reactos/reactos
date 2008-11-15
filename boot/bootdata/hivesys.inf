@@ -939,6 +939,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Type",0x00010001,0x00000002
 
+; KSecDD driver
+HKLM,"SYSTEM\CurrentControlSet\Services\KSecDD","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\KSecDD","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\KSecDD","ImagePath",0x00020000,"system32\drivers\ksecdd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\KSecDD","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\KSecDD","Type",0x00010001,0x00000001
+
 ; NTFS filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
