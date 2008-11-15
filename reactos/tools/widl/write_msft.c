@@ -294,16 +294,23 @@ static int ctl2_encode_name(
 
     length = strlen(name);
     memcpy(converted_name + 4, name, length);
-    converted_name[0] = length & 0xff;
 
     converted_name[length + 4] = 0;
 
-    converted_name[1] = 0x00;
 
     value = lhash_val_of_name_sys(typelib->typelib_header.varflags & 0x0f, typelib->typelib_header.lcid, converted_name + 4);
 
+#ifdef WORDS_BIGENDIAN
+    converted_name[3] = length & 0xff;
+    converted_name[2] = 0x00;
+    converted_name[1] = value;
+    converted_name[0] = value >> 8;
+#else
+    converted_name[0] = length & 0xff;
+    converted_name[1] = 0x00;
     converted_name[2] = value;
     converted_name[3] = value >> 8;
+#endif
 
     for (offset = (4 - length) & 3; offset; offset--) converted_name[length + offset + 3] = 0x57;
 
@@ -337,8 +344,14 @@ static int ctl2_encode_string(
 
     length = strlen(string);
     memcpy(converted_string + 2, string, length);
+
+#ifdef WORDS_BIGENDIAN
+    converted_string[1] = length & 0xff;
+    converted_string[0] = (length >> 8) & 0xff;
+#else
     converted_string[0] = length & 0xff;
     converted_string[1] = (length >> 8) & 0xff;
+#endif
 
     if(length < 3) { /* strings of this length are padded with up to 8 bytes incl the 2 byte length */
         for(offset = 0; offset < 4; offset++)

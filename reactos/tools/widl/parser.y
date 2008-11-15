@@ -874,8 +874,8 @@ coclass_int:
 	  m_attributes interfacedec		{ $$ = make_ifref($2); $$->attrs = $1; }
 	;
 
-dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(0, $2, 0); $$->kind = TKIND_DISPATCH; }
-	|      tDISPINTERFACE aKNOWNTYPE	{ $$ = get_type(0, $2, 0); $$->kind = TKIND_DISPATCH; }
+dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_DISPATCH; }
+	|      tDISPINTERFACE aKNOWNTYPE	{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_DISPATCH; }
 	;
 
 dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
@@ -1479,6 +1479,14 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
     error_loc("'%s': [string] attribute applied to non-pointer, non-array type\n",
               v->name);
 
+  if (is_attr(v->attrs, ATTR_V1ENUM))
+  {
+    if (v->type->type == RPC_FC_ENUM16)
+      v->type->type = RPC_FC_ENUM32;
+    else
+      error_loc("'%s': [v1_enum] attribute applied to non-enum type\n", v->name);
+  }
+
   sizeless = FALSE;
   if (arr) LIST_FOR_EACH_ENTRY_REV(dim, arr, expr_t, entry)
   {
@@ -1900,16 +1908,22 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   return type;
 }
 
-type_t *find_type(const char *name, int t)
+static type_t *find_type_helper(const char *name, int t)
 {
   struct rtype *cur = type_hash[hash_ident(name)];
   while (cur && (cur->t != t || strcmp(cur->name, name)))
     cur = cur->next;
-  if (!cur) {
+  return cur ? cur->type : NULL;
+}
+
+type_t *find_type(const char *name, int t)
+{
+  type_t *type = find_type_helper(name, t);
+  if (!type) {
     error_loc("type '%s' not found\n", name);
     return NULL;
   }
-  return cur->type;
+  return type;
 }
 
 static type_t *find_type2(char *name, int t)
@@ -1921,25 +1935,18 @@ static type_t *find_type2(char *name, int t)
 
 int is_type(const char *name)
 {
-  struct rtype *cur = type_hash[hash_ident(name)];
-  while (cur && (cur->t || strcmp(cur->name, name)))
-    cur = cur->next;
-  if (cur) return TRUE;
-  return FALSE;
+  return find_type_helper(name, 0) != NULL;
 }
 
 static type_t *get_type(unsigned char type, char *name, int t)
 {
-  struct rtype *cur = NULL;
   type_t *tp;
   if (name) {
-    cur = type_hash[hash_ident(name)];
-    while (cur && (cur->t != t || strcmp(cur->name, name)))
-      cur = cur->next;
-  }
-  if (cur) {
-    free(name);
-    return cur->type;
+    tp = find_type_helper(name, t);
+    if (tp) {
+      free(name);
+      return tp;
+    }
   }
   tp = make_type(type, NULL);
   tp->name = name;
@@ -2616,7 +2623,7 @@ static void check_remoting_fields(const var_t *var, type_t *type)
             fields = type->fields_or_args;
     }
 
-    if (fields) LIST_FOR_EACH_ENTRY( field, type->fields_or_args, const var_t, entry )
+    if (fields) LIST_FOR_EACH_ENTRY( field, fields, const var_t, entry )
         if (field->type) check_field_common(type, type->name, field);
 }
 
