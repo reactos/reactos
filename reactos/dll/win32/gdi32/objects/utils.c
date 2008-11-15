@@ -188,9 +188,10 @@ ConvertBitmapInfo(
     * description).
     */
 
-   if (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
+   if ( !BitmapInfo || 
+        (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
        (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER) ||
-        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER)))
+        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER))))
    {
       return NULL;
    }
