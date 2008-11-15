@@ -1329,7 +1329,9 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     if (pPath->state != PATH_Closed)
         return FALSE;
 
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+
     /* Save the mapping mode info */
     mapMode = Dc_Attr->iMapMode;
     IntGetViewportExtEx(dc, &szViewportExt);
@@ -2265,8 +2267,9 @@ BOOL
 STDCALL
 NtGdiFillPath(HDC  hDC)
 {
-  BOOL ret = TRUE;
+  BOOL ret = FALSE;
   PPATH pPath;
+  PDC_ATTR pDc_Attr;
   PDC dc = DC_LockDc ( hDC );
  
   if ( !dc )
@@ -2280,6 +2283,12 @@ NtGdiFillPath(HDC  hDC)
      DC_UnlockDc ( dc );
      return FALSE;
   }
+
+  pDc_Attr = dc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2534,6 +2543,7 @@ STDCALL
 NtGdiStrokeAndFillPath(HDC hDC)
 {
   DC *pDc;
+  PDC_ATTR pDc_Attr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2550,6 +2560,15 @@ NtGdiStrokeAndFillPath(HDC hDC)
      DC_UnlockDc ( pDc );
      return FALSE;
   }
+
+  pDc_Attr = pDc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(pDc,pDc_Attr->hbrush);
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pDc_Attr->hpen);
+
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
   if (bRet) PATH_EmptyPath(pPath);
@@ -2564,6 +2583,7 @@ STDCALL
 NtGdiStrokePath(HDC hDC)
 {
   DC *pDc;
+  PDC_ATTR pDc_Attr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2580,6 +2600,12 @@ NtGdiStrokePath(HDC hDC)
      DC_UnlockDc ( pDc );
      return FALSE;
   }
+
+  pDc_Attr = pDc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pDc_Attr->hpen);
 
   bRet = PATH_StrokePath(pDc, pPath);
   PATH_EmptyPath(pPath);

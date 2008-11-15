@@ -225,6 +225,9 @@ NtGdiBitBlt(
 	Dc_Attr = DCDest->pDc_Attr;
 	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
 
+        if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+           IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
+
 	/* Offset the destination and source by the origin of their DCs. */
         XDest += DCDest->ptlDCOrig.x;
         YDest += DCDest->ptlDCOrig.y;
@@ -484,6 +487,7 @@ done:
  *
  * Someone thought it would be faster to do it here and then switch back
  * to GDI32. I dunno. Write a test and let me know.
+ * A. It should be in here!
  */
 
 static __inline BYTE
@@ -781,6 +785,12 @@ NtGdiStretchBlt(
 		}
 	}
 
+	Dc_Attr = DCDest->pDc_Attr;
+	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+
+	if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+	   IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
+
 	/* Offset the destination and source by the origin of their DCs. */
 	// FIXME: ptlDCOrig is in device coordinates!
 	XOriginDest += DCDest->ptlDCOrig.x;
@@ -880,8 +890,6 @@ NtGdiStretchBlt(
 
 	if (UsesPattern)
 	{
-		Dc_Attr = DCDest->pDc_Attr;
-		if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
 		BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
 		if (NULL == BrushObj)
 		{
@@ -1008,6 +1016,7 @@ IntGdiPolyPatBlt(
    int i;
    PPATRECT r;
    PGDIBRUSHOBJ BrushObj;
+   PDC_ATTR Dc_Attr;
    DC *dc;
 
    dc = DC_LockDc(hDC);
@@ -1022,6 +1031,12 @@ IntGdiPolyPatBlt(
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
+
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+   if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+      IntGdiSelectBrush(dc,Dc_Attr->hbrush);
 
    for (r = pRects, i = 0; i < cRects; i++)
    {
@@ -1074,14 +1089,18 @@ NtGdiPatBlt(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
+
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+   if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+      IntGdiSelectBrush(dc,Dc_Attr->hbrush);
 
    BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
    if (BrushObj == NULL)

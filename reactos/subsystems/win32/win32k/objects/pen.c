@@ -260,6 +260,8 @@ IntGdiSelectPen(
     XLATEOBJ *XlateObj;
     BOOLEAN bFailed;
 
+    if (pDC == NULL || hPen == NULL) return NULL;
+
     pDc_Attr = pDC->pDc_Attr;
     if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 

@@ -115,6 +115,12 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
+       if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+          IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+       if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+          IntGdiSelectPen(dc,Dc_Attr->hpen);
+
         BitmapObj = BITMAPOBJ_LockBitmap ( dc->w.hBitmap );
         if (NULL == BitmapObj)
         {
@@ -257,8 +263,15 @@ IntGdiPolyline(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
     if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_Polyline(dc, pt, Count);
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);

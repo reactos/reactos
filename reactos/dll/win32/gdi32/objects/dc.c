@@ -1561,23 +1561,19 @@ SelectObject(HDC hDC,
             return NtGdiSelectBitmap(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_BRUSH:
-#if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hbrush;
             pDc_Attr->ulDirty_ |= DC_BRUSH_DIRTY;
             pDc_Attr->hbrush = hGdiObj;
             return hOldObj;
-#endif
-            return NtGdiSelectBrush(hDC, hGdiObj);
+//            return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
         case GDI_OBJECT_TYPE_EXTPEN:
-#if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hpen;
             pDc_Attr->ulDirty_ |= DC_PEN_DIRTY;
             pDc_Attr->hpen = hGdiObj;
             return hOldObj;
-#endif
-            return NtGdiSelectPen(hDC, hGdiObj);
+//            return NtGdiSelectPen(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_FONT:
             hOldObj = pDc_Attr->hlfntNew;

@@ -130,8 +130,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DC_Type        = DC_TYPE_MEMORY; // Always!
   NewDC->w.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
   NewDC->pPDev          = OrigDC->pPDev;
+  NewDC->DcLevel.hpal    = OrigDC->DcLevel.hpal;
 
-  NewDC->DcLevel.hpal = OrigDC->DcLevel.hpal;
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
   nDc_Attr->ulForegroundClr = oDc_Attr->ulForegroundClr;
   nDc_Attr->ulBackgroundClr = oDc_Attr->ulBackgroundClr;
@@ -1138,6 +1138,13 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
   }
   Dc_Attr = dc->pDc_Attr;
   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+  if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,Dc_Attr->hpen);
+
   switch(ObjectType)
   {
     case GDI_OBJECT_TYPE_EXTPEN:
