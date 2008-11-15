@@ -2,10 +2,6 @@
 cpp_quote("#if 0")
 
     import "unknwn.idl";
-    typedef int DWORD;
-    typedef int REFERENCE_TIME;
-    typedef int HMONITOR;
-    typedef int AM_MEDIA_TYPE;
 
     typedef DWORD* LPDIRECTDRAW7;
     typedef DWORD* LPDIRECTDRAWSURFACE7;
