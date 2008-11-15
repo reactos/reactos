@@ -1659,14 +1659,20 @@ static size_t write_array_tfs(FILE *file, const attr_list_t *attrs, type_t *type
 
 static const var_t *find_array_or_string_in_struct(const type_t *type)
 {
-    const var_t *last_field = LIST_ENTRY( list_tail(type->fields_or_args), const var_t, entry );
-    const type_t *ft = last_field->type;
+    const var_t *last_field;
+    const type_t *ft;
+
+    if (!type->fields_or_args || list_empty(type->fields_or_args))
+        return NULL;
+
+    last_field = LIST_ENTRY( list_tail(type->fields_or_args), const var_t, entry );
+    ft = last_field->type;
 
     if (ft->declarray && is_conformant_array(ft))
         return last_field;
 
     if (ft->type == RPC_FC_CSTRUCT || ft->type == RPC_FC_CPSTRUCT || ft->type == RPC_FC_CVSTRUCT)
-        return find_array_or_string_in_struct(last_field->type);
+        return find_array_or_string_in_struct(ft);
     else
         return NULL;
 }
