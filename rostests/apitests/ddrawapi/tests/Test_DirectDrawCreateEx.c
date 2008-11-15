@@ -324,12 +324,12 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
 
         /* both caps pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps. and pIntDirectDraw7->lpLcl->lpGbl->ddCaps. */
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSize == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSize, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSize));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps2));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCKeyCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCaps2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCaps2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCaps2));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCKeyCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXCaps));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwFXAlphaCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwFXAlphaCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwFXAlphaCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwPalCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwPalCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwPalCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwPalCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwPalCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwPalCaps));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVCaps));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaBltConstBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltConstBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltConstBitDepths));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaBltPixelBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaBltPixelBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaBltPixelBitDepths));
@@ -337,7 +337,7 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlayConstBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayConstBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayConstBitDepths));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlayPixelBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlayPixelBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlayPixelBitDepths));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlphaOverlaySurfaceBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlphaOverlaySurfaceBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlphaOverlaySurfaceBitDepths));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwZBufferBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwZBufferBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwZBufferBitDepths));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwZBufferBitDepths == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwZBufferBitDepths, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwZBufferBitDepths));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVidMemTotal == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemTotal, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemTotal));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVidMemFree == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVidMemFree, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVidMemFree));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxVisibleOverlays == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVisibleOverlays, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVisibleOverlays));
@@ -346,15 +346,15 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignBoundarySrc == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundarySrc, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundarySrc));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignSizeSrc == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignSizeSrc, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignSizeSrc));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwAlignBoundaryDest == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwAlignBoundaryDest, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwAlignBoundaryDest));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x00]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x00]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x01]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x02]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x03]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x04]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x05]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x06]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x07]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.ddsCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.ddsCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.ddsCaps.dwCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwRops[0x07]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.ddsCaps.dwCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.ddsCaps.dwCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.ddsCaps.dwCaps));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMinOverlayStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinOverlayStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinOverlayStretch));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxOverlayStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxOverlayStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxOverlayStretch));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMinLiveVideoStretch == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMinLiveVideoStretch, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMinLiveVideoStretch));
@@ -364,39 +364,39 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved1 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved1, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved1));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved2));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwReserved3 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwReserved3, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwReserved3));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCKeyCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBFXCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x00]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCKeyCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBFXCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x00]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x01]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x02]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x03]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x04]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x05]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x06]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x07]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCKeyCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBFXCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x00]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x06]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBRops[0x07]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBCKeyCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBFXCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x00]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x01]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x02]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x03]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x04]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x05]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x06]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x07]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCKeyCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBFXCaps));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x00]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x06]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwVSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwVSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwVSBRops[0x07]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBCKeyCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBCKeyCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBCKeyCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBFXCaps == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBFXCaps, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBFXCaps));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x00] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x00], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x00]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x01] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x01], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x01]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x02] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x02], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x02]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x03] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x03], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x03]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x04] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x04], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x04]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x05] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x05], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x05]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x06]));
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x07]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x06] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x06], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x06]));
+        // RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSSBRops[0x07] == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSSBRops[0x07], pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSSBRops[0x07]));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwMaxVideoPorts == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwMaxVideoPorts, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwMaxVideoPorts));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwCurrVideoPorts == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwCurrVideoPorts, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwCurrVideoPorts));
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->ddBothCaps.dwSVBCaps2 == MIX_BOTH_CAPS(pIntDirectDraw7->lpLcl->lpGbl->ddHELCaps.dwSVBCaps2, pIntDirectDraw7->lpLcl->lpGbl->ddCaps.dwSVBCaps2));
@@ -407,16 +407,16 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         /* The res height */
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.bottom != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.left == 0);
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.right == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.right != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDevice.top == 0);
 
         /* how many  Monitors */
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->cMonitors != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->gpbmiSrc != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->gpbmiDest != 0);
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->phaiHeapAliases != 0);
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hKernelHandle != 0);
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->pfnNotifyProc != 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->phaiHeapAliases == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->hKernelHandle == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->pfnNotifyProc == 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpDDKernelCaps != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpddNLVCaps != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->lpddNLVHELCaps != 0);
@@ -426,7 +426,7 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
         /* The res height */
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.bottom != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.left == 0);
-        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.right == 0);
+        RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.right != 0);
         RTEST(pIntDirectDraw7->lpLcl->lpGbl->rectDesktop.top == 0);
 
         /* ms ddraw send in the string "display" when it create the hDC */
