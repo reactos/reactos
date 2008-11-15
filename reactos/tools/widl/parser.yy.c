@@ -1996,6 +1996,7 @@ struct keyword {
 	int token;
 };
 
+/* This table MUST be alphabetically sorted on the kw field */
 static const struct keyword keywords[] = {
 	{"FALSE",			tFALSE},
 	{"NULL",			tNULL},
@@ -2054,7 +2055,9 @@ static const struct keyword keywords[] = {
 };
 #define NKEYWORDS (sizeof(keywords)/sizeof(keywords[0]))
 
-/* keywords only recognized in attribute lists */
+/* keywords only recognized in attribute lists
+ * This table MUST be alphabetically sorted on the kw field
+ */
 static const struct keyword attr_keywords[] =
 {
         {"aggregatable",                tAGGREGATABLE},

@@ -100,8 +100,9 @@ int is_array(const type_t *t)
 }
 
 /* List of oleauto types that should be recognized by name.
- * (most of) these seem to be intrinsic types in mktyplib. */
-
+ * (most of) these seem to be intrinsic types in mktyplib.
+ * This table MUST be alphabetically sorted on the kw field.
+ */
 static const struct oatype {
   const char *kw;
   unsigned short vt;

@@ -4905,7 +4905,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
         }
   }
 
-  /* v->type is currently pointing the the type on the left-side of the
+  /* v->type is currently pointing to the type on the left-side of the
    * declaration, so we need to fix this up so that it is the return type of the
    * function and make v->type point to the function side of the declaration */
   if (func_type)
