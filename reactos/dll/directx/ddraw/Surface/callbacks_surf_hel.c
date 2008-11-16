@@ -17,7 +17,38 @@ DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDest
 
 DWORD CALLBACK HelDdSurfBlt(LPDDHAL_BLTDATA lpBltData)
 {
-    DX_STUB;
+
+    if (lpBltData->dwFlags & DDBLT_COLORFILL)
+    {
+
+        HBRUSH hbr = CreateSolidBrush(lpBltData->bltFX.dwFillColor );
+
+        FillRect( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC, 
+                  (CONST RECT *)&lpBltData->rDest,
+                  hbr);
+
+        DeleteObject(hbr);
+
+        lpBltData->ddRVal = DD_OK;
+     }
+    
+     else if (lpBltData->dwFlags  & DDBLT_ROP)
+     {
+        
+        BitBlt( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC,
+                lpBltData->rDest.top,
+                lpBltData->rDest.left,
+                lpBltData->rDest.right,
+                lpBltData->rDest.bottom,
+                (HDC)lpBltData->lpDDSrcSurface->lpSurfMore->lpDD_lcl->hDC, 
+                lpBltData->rSrc.top,
+                lpBltData->rSrc.right,
+                lpBltData->bltFX.dwROP);
+
+        lpBltData->ddRVal = DD_OK;
+     }
+
+    return DDHAL_DRIVER_HANDLED;
 }
 
 DWORD CALLBACK HelDdSurfDestroySurface(LPDDHAL_DESTROYSURFACEDATA lpDestroySurfaceData)

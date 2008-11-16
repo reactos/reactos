@@ -11,6 +11,7 @@
 #include "rosdraw.h"
 
 
+
 /* FIXME adding hal and hel stub
     DestroySurface;
     SetClipList;
@@ -272,117 +273,132 @@ ULONG WINAPI Main_DDrawSurface_Release(LPDDRAWI_DDRAWSURFACE_INT This)
     return This->dwIntRefCnt;
 }
 
+
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT rdst,
-			  LPDDRAWI_DDRAWSURFACE_INT ThisSrc, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
+                                     LPDDRAWI_DDRAWSURFACE_INT ThisSrc, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
+    DDHAL_BLTDATA mDdBlt;
 
-	 DDHAL_BLTDATA mDdBlt;
+    DX_WINDBG_trace();
 
-	 DX_WINDBG_trace();
+    if (ThisDest == NULL)
+    {
+        return DDERR_INVALIDPARAMS; 
+    }
 
-     if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags
-		   & DDHAL_SURFCB32_BLT) != DDHAL_SURFCB32_BLT)
-	 {
-		 return DDERR_GENERIC;
-	 }
+    /* Zero out members in DDHAL_BLTDATA */
+    ZeroMemory(&mDdBlt, sizeof(DDHAL_BLTDATA));
+    ZeroMemory(&mDdBlt.bltFX, sizeof(DDBLTFX));
 
-	 ZeroMemory(&mDdBlt, sizeof(DDHAL_BLTDATA));
-     ZeroMemory(&mDdBlt.bltFX, sizeof(DDBLTFX));
+    /* Check if we got HAL support for this api */
+    if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
+          DDHAL_SURFCB32_BLT) == DDHAL_SURFCB32_BLT)
+    {
+        mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HALDDSurface.Blt;
+    }
+    /* Check if we got HEL support for this api */
+    else if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HELDDSurface.dwFlags &
+          DDHAL_SURFCB32_BLT) == DDHAL_SURFCB32_BLT)
+    {
+        mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HELDDSurface.Blt;
+    }
 
-     if (!DdResetVisrgn( ThisDest->lpLcl->lpSurfMore->slist[0], NULL))
-     {
-		 DX_STUB_str("DdResetVisrgn failed");
-     }
+    /* check see if we got any of them */
+    if (mDdBlt.Blt == NULL)
+    {
+        return DDERR_GENERIC;
+    }
 
-	 mDdBlt.lpDD = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
-     mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HALDDSurface.Blt;
-     mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
+    /* Prepare for draw, if we do not rest the DdResetVisrgn some graphice card will not draw on the screen */
+    if (!DdResetVisrgn( ThisDest->lpLcl->lpSurfMore->slist[0], NULL))
+    {
+        DX_STUB_str("DdResetVisrgn failed");
+    }
 
-	 ThisDest->lpLcl->lpSurfMore->slist[0]->hDC =
-		       ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+    mDdBlt.lpDD = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+    mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
+    ThisDest->lpLcl->lpSurfMore->slist[0]->hDC = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hDC;
 
-     /* Setup Src */
-	 if (ThisSrc != NULL)
-	 {
-		 mDdBlt.lpDDSrcSurface = ThisSrc->lpLcl->lpSurfMore->slist[0];
+    /* Setup Src */
+    if (( ThisSrc != NULL ) )
+    {
 
-		 ThisSrc->lpLcl->lpSurfMore->slist[0]->hDC =
-			      ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+        mDdBlt.lpDDSrcSurface = ThisSrc->lpLcl->lpSurfMore->slist[0];
+        ThisSrc->lpLcl->lpSurfMore->slist[0]->hDC = ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hDC;
 
-		 if (rsrc != NULL)
-		 {
-			 memmove(&mDdBlt.rSrc, rsrc, sizeof (RECTL));
-		 }
-		 else
-		 {
-			 if(!GetWindowRect((HWND)ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hWnd,
-				     (RECT *)&mDdBlt.rSrc))
-			 {
-				DX_STUB_str("GetWindowRect failed");
-			 }
-		 }
+        if (rsrc != NULL)
+        {
+            memmove(&mDdBlt.rSrc, rsrc, sizeof (RECTL));
+        }
+        else
+        {
+            if(!GetWindowRect((HWND)ThisSrc->lpLcl->lpSurfMore->lpDD_lcl->hWnd,
+                (RECT *)&mDdBlt.rSrc))
+            {
+                DX_STUB_str("GetWindowRect failed");
+            }
+        }
 
-	 /* FIXME
-	  *  compare so we do not write to far
-	  *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
-	  *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
-	  *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
-	  */
+    /* FIXME
+    *  compare so we do not write to far
+    *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
+    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+    *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
+    */
 
-	 }
+    }
 
-	 /* Setup dest */
-	 if (rdst != NULL)
-	 {
-         memmove(&mDdBlt.rDest, rdst, sizeof (RECTL));
-	 }
-	 else
-	 {
-		if(!GetWindowRect((HWND)ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hWnd,
-				(RECT *)&mDdBlt.rDest))
-		{
+    /* Setup dest */
+    if (rdst != NULL)
+    {
+        memmove(&mDdBlt.rDest, rdst, sizeof (RECTL));
+    }
+    else
+    {
+        if (!GetWindowRect((HWND)ThisDest->lpLcl->lpSurfMore->lpDD_lcl->hWnd,
+            (RECT *)&mDdBlt.rDest))
+        {
             DX_STUB_str("GetWindowRect failed");
-		}
+        }
+    }
 
-	 }
-
-	 /* FIXME
-	  *  compare so we do not write to far
-	  *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
-	  *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
-	  *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
-	  */
+    /* FIXME
+    *  compare so we do not write to far
+    *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
+    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+    *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
+    */
 
 
-	 /* setup bltFX */
-	 if (lpbltfx != NULL)
-	 {
-		 memmove(&mDdBlt.bltFX, lpbltfx, sizeof (DDBLTFX));
-	 }
+    /* setup bltFX */
+    if (lpbltfx != NULL)
+    {
+        memmove(&mDdBlt.bltFX, lpbltfx, sizeof (DDBLTFX));
+    }
 
-	 /* setup value that are not config yet */
-	 mDdBlt.dwFlags = dwFlags;
-	 mDdBlt.IsClipped = FALSE;
-	 mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
+    /* setup value that are not config yet */
+    mDdBlt.dwFlags = dwFlags;
+    mDdBlt.IsClipped = FALSE;
+    mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
 
 
      /* FIXME
-		BltData.dwRectCnt
-	    BltData.dwROPFlags
-	    BltData.IsClipped
-	    BltData.prDestRects
-	    BltData.rOrigDest
-	    BltData.rOrigSrc
-		BltData.ddRVal
-	*/
+        BltData.dwRectCnt
+        BltData.dwROPFlags
+        BltData.IsClipped
+        BltData.prDestRects
+        BltData.rOrigDest
+        BltData.rOrigSrc
+        BltData.ddRVal
+    */
 
-     if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
-	 {
+    if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
+    {
         DX_STUB_str("mDdBlt DDHAL_DRIVER_HANDLED");
-		return DDERR_NOBLTHW;
+        return DDERR_NOBLTHW;
      }
 
-	 return mDdBlt.ddRVal;
+    return mDdBlt.ddRVal;
 }
 
 

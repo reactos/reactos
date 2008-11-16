@@ -13,9 +13,6 @@
 #include "rosdraw.h"
 HMODULE hDllModule = 0;
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
@@ -99,7 +96,7 @@ DirectDrawCreate (LPGUID lpGUID,
     */
 
     DX_WINDBG_trace();
-     _SEH_TRY
+    _SEH_TRY
     {
         /* check if pUnkOuter is null or not */
         if (pUnkOuter)
