@@ -1238,29 +1238,54 @@ GetCalendarInfoW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetCPInfo (
-    UINT        CodePage,
-    LPCPINFO    CodePageInfo
-    )
+GetCPInfo(UINT CodePage,
+          LPCPINFO CodePageInfo)
 {
-    unsigned i;
+    PCODEPAGE_ENTRY CodePageEntry;
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if (!CodePageInfo)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-    CodePageInfo->MaxCharSize = 1;
-    CodePageInfo->DefaultChar[0] = '?';
-    for (i = 1; i < MAX_DEFAULTCHAR; i++)
-	{
-	CodePageInfo->DefaultChar[i] = 0;
-	}
-    for (i = 0; i < MAX_LEADBYTES; i++)
-	{
-	CodePageInfo->LeadByte[i] = 0;
-	}
+    CodePageEntry = IntGetCodePageEntry(CodePage);
+    if (CodePageEntry == NULL)
+    {
+        switch(CodePage)
+        {
+            case CP_UTF7:
+            case CP_UTF8:
+                CodePageInfo->DefaultChar[0] = 0x3f;
+                CodePageInfo->DefaultChar[1] = 0;
+                CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
+                CodePageInfo->MaxCharSize = (CodePage == CP_UTF7) ? 5 : 4;
+                return TRUE;
+        }
+
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
+    if (CodePageEntry->CodePageTable.DefaultChar & 0xff00)
+    {
+        CodePageInfo->DefaultChar[0] = (CodePageEntry->CodePageTable.DefaultChar & 0xff00) >> 8;
+        CodePageInfo->DefaultChar[1] = CodePageEntry->CodePageTable.DefaultChar & 0x00ff;
+    }
+    else
+    {
+        CodePageInfo->DefaultChar[0] = CodePageEntry->CodePageTable.DefaultChar & 0xff;
+        CodePageInfo->DefaultChar[1] = 0;
+    }
+
+    if ((CodePageInfo->MaxCharSize = CodePageEntry->CodePageTable.MaximumCharacterSize) == 2)
+        memcpy(CodePageInfo->LeadByte, CodePageEntry->CodePageTable.LeadByte, sizeof(CodePageInfo->LeadByte));
+    else
+        CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
 
     return TRUE;
 }
