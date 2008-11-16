@@ -96,11 +96,24 @@ NtGdiAlphaBlend(
 	DestRect.top    = YOriginDest;
 	DestRect.right  = XOriginDest + WidthDest;
 	DestRect.bottom = YOriginDest + HeightDest;
+	IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
 	SourceRect.left   = XOriginSrc;
 	SourceRect.top    = YOriginSrc;
 	SourceRect.right  = XOriginSrc + WidthSrc;
 	SourceRect.bottom = YOriginSrc + HeightSrc;
+	IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+        if (!DestRect.right ||
+            !DestRect.bottom ||
+            !SourceRect.right ||
+            !SourceRect.bottom)
+            {
+               if (hDCSrc != hDCDest)
+                   DC_UnlockDc(DCSrc);
+               DC_UnlockDc(DCDest);
+               return TRUE;
+            }
 
 	/* Determine surfaces to be used in the bitblt */
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
