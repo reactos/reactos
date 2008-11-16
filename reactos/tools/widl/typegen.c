@@ -3091,7 +3091,7 @@ size_t get_size_procformatstring(const statement_list_t *stmts, type_pred_t pred
             size += get_size_procformatstring(stmt->u.lib->stmts, pred) - 1;
             continue;
         }
-        else if (stmt->type != STMT_TYPE && stmt->u.type->type != RPC_FC_IP)
+        else if (stmt->type != STMT_TYPE || stmt->u.type->type != RPC_FC_IP)
             continue;
 
         iface = stmt->u.type;
