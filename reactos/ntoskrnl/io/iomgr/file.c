@@ -1355,14 +1355,6 @@ IopQueryNameFile(IN PVOID ObjectBody,
         return Status;
     }
 
-    /* ROS HACK. VFAT SUCKS */
-    if (NT_WARNING(Status))
-    {
-        DPRINT("Status 0x%08x, LRN 0x%x, FileLength 0x%x\n", Status,
-            LocalReturnLength, FileLength);
-        LocalReturnLength = FileLength;
-    }
-
     /* If the provided buffer is too small, return the required size */
     if (LengthMismatch)
     {
