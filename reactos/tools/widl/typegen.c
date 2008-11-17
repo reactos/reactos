@@ -984,7 +984,7 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
 {
     unsigned int start, absoff, flags;
     unsigned int align = 0, ualign = 0;
-    const char *name;
+    const char *name = NULL;
     type_t *utype = get_user_type(type, &name);
     size_t usize = user_type_has_variable_size(utype) ? 0 : type_memsize(utype, &ualign);
     size_t size = type_memsize(type, &align);
@@ -1437,6 +1437,14 @@ static int write_varying_array_pointer_descriptions(
             if (offset_in_memory && offset_in_buffer)
             {
                 size_t padding;
+
+                if (is_array(v->type) && v->type->length_is)
+                {
+                    *offset_in_buffer = ROUND_SIZE(*offset_in_buffer, 4);
+                    /* skip over variance and offset in buffer */
+                    *offset_in_buffer += 8;
+                }
+
                 align = 0;
                 type_memsize(v->type, &align);
                 padding = ROUNDING(*offset_in_memory, align);
@@ -1470,19 +1478,13 @@ static void write_pointer_description(FILE *file, type_t *type,
 {
     size_t offset_in_buffer;
     size_t offset_in_memory;
-    size_t conformance = 0;
-
-    if (type->type == RPC_FC_CVSTRUCT)
-        conformance = 8;
-    else if (type->type == RPC_FC_CSTRUCT || type->type == RPC_FC_CPSTRUCT)
-        conformance = 4;
 
     /* pass 1: search for single instance of a pointer (i.e. don't descend
      * into arrays) */
     if (!is_array(type))
     {
         offset_in_memory = 0;
-        offset_in_buffer = conformance;
+        offset_in_buffer = 0;
         write_no_repeat_pointer_descriptions(
             file, type,
             &offset_in_memory, &offset_in_buffer, typestring_offset);
@@ -1490,7 +1492,7 @@ static void write_pointer_description(FILE *file, type_t *type,
 
     /* pass 2: search for pointers in fixed arrays */
     offset_in_memory = 0;
-    offset_in_buffer = conformance;
+    offset_in_buffer = 0;
     write_fixed_array_pointer_descriptions(
         file, NULL, type,
         &offset_in_memory, &offset_in_buffer, typestring_offset);
@@ -1512,7 +1514,7 @@ static void write_pointer_description(FILE *file, type_t *type,
 
     /* pass 4: search for pointers in varying arrays */
     offset_in_memory = 0;
-    offset_in_buffer = conformance;
+    offset_in_buffer = 0;
     write_varying_array_pointer_descriptions(
             file, NULL, type,
             &offset_in_memory, &offset_in_buffer, typestring_offset);
@@ -2032,6 +2034,34 @@ static size_t write_union_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
             error("union switch type must be an integer, char, or enum\n");
         }
     }
+    else if (is_attr(type->attrs, ATTR_SWITCHTYPE))
+    {
+        static const expr_t dummy_expr;  /* FIXME */
+        const type_t *st = get_attrp(type->attrs, ATTR_SWITCHTYPE);
+
+        switch (st->type)
+        {
+        case RPC_FC_CHAR:
+        case RPC_FC_SMALL:
+        case RPC_FC_USMALL:
+        case RPC_FC_SHORT:
+        case RPC_FC_USHORT:
+        case RPC_FC_LONG:
+        case RPC_FC_ULONG:
+        case RPC_FC_ENUM16:
+        case RPC_FC_ENUM32:
+            print_file(file, 2, "0x%x,\t/* %s */\n", type->type, string_of_type(type->type));
+            print_file(file, 2, "0x%x,\t/* Switch type= %s */\n",
+                       st->type, string_of_type(st->type));
+            *tfsoff += 2;
+            break;
+        default:
+            error("union switch type must be an integer, char, or enum\n");
+        }
+
+        *tfsoff += write_conf_or_var_desc(file, NULL, *tfsoff, st, &dummy_expr );
+    }
+
     print_file(file, 2, "NdrFcShort(0x%x),\t/* %d */\n", size, size);
     print_file(file, 2, "NdrFcShort(0x%x),\t/* %d */\n", nbranch, nbranch);
     *tfsoff += 4;
@@ -2427,11 +2457,12 @@ void write_typeformatstring(FILE *file, const statement_list_t *stmts, type_pred
 static unsigned int get_required_buffer_size_type(
     const type_t *type, const char *name, unsigned int *alignment)
 {
+    const char *uname;
+    const type_t *utype;
+
     *alignment = 0;
-    if (is_user_type(type))
+    if ((utype = get_user_type(type, &uname)))
     {
-        const char *uname;
-        const type_t *utype = get_user_type(type, &uname);
         return get_required_buffer_size_type(utype, uname, alignment);
     }
     else
@@ -2740,7 +2771,7 @@ void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase,
 
 /* returns whether the MaxCount, Offset or ActualCount members need to be
  * filled in for the specified phase */
-static inline int is_size_needed_for_phase(enum remoting_phase phase)
+static inline int is_conformance_needed_for_phase(enum remoting_phase phase)
 {
     return (phase != PHASE_UNMARSHAL);
 }
@@ -2761,6 +2792,67 @@ expr_t *get_size_is_expr(const type_t *t, const char *name)
         }
 
     return x;
+}
+
+static void write_parameter_conf_or_var_exprs(FILE *file, int indent,
+                                              enum remoting_phase phase,
+                                              const var_t *var)
+{
+    const type_t *type = var->type;
+    /* get fundamental type for the argument */
+    for (;;)
+    {
+        if (is_attr(type->attrs, ATTR_WIREMARSHAL))
+            break;
+        else if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
+            break;
+        else if (is_array(type) || is_string_type(var->attrs, type))
+        {
+            if (is_conformance_needed_for_phase(phase))
+            {
+                if (type->size_is)
+                {
+                    print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
+                    write_expr(file, type->size_is, 1, 1, NULL, NULL);
+                    fprintf(file, ";\n\n");
+                }
+                if (type->length_is)
+                {
+                    print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
+                               print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
+                               write_expr(file, type->length_is, 1, 1, NULL, NULL);
+                               fprintf(file, ";\n\n");
+                }
+            }
+            break;
+        }
+        else if (type->type == RPC_FC_NON_ENCAPSULATED_UNION)
+        {
+            if (is_conformance_needed_for_phase(phase))
+            {
+                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
+                write_expr(file, get_attrp(var->attrs, ATTR_SWITCHIS), 1, 1, NULL, NULL);
+                fprintf(file, ";\n\n");
+            }
+            break;
+        }
+        else if (type->type == RPC_FC_IP)
+        {
+            expr_t *iid;
+
+            if (is_conformance_needed_for_phase(phase) && (iid = get_attrp( var->attrs, ATTR_IIDIS )))
+            {
+                print_file( file, indent, "_StubMsg.MaxCount = (unsigned long) " );
+                write_expr( file, iid, 1, 1, NULL, NULL );
+                fprintf( file, ";\n\n" );
+            }
+            break;
+        }
+        else if (is_ptr(type))
+            type = type->ref;
+        else
+            break;
+    }
 }
 
 static void write_remoting_arg(FILE *file, int indent, const func_t *func,
@@ -2794,6 +2886,7 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             break;
         }
 
+    write_parameter_conf_or_var_exprs(file, indent, phase, var);
     rtype = type->type;
 
     if (is_context_handle(type))
@@ -2849,13 +2942,6 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             print_phase_function(file, indent, "NonConformantString", phase, var, start_offset);
         else
         {
-            if (type->size_is && is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n");
-            }
-
             if (phase == PHASE_FREE || pass == PASS_RETURN || pointer_type == RPC_FC_UP)
                 print_phase_function(file, indent, "Pointer", phase, var,
                                      start_offset - (type->size_is ? 4 : 2));
@@ -2878,43 +2964,14 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
 
         if (tc == RPC_FC_SMVARRAY || tc == RPC_FC_LGVARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
-                print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
-                write_expr(file, type->length_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             array_type = "VaryingArray";
         }
         else if (tc == RPC_FC_CARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             array_type = "ConformantArray";
         }
         else if (tc == RPC_FC_CVARRAY || tc == RPC_FC_BOGUS_ARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                if (type->size_is)
-                {
-                    print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                    write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                    fprintf(file, ";\n");
-                }
-                if (type->length_is)
-                {
-                    print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
-                    print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
-                    write_expr(file, type->length_is, 1, 1, NULL, NULL);
-                    fprintf(file, ";\n\n");
-                }
-            }
             array_type = (tc == RPC_FC_BOGUS_ARRAY
                           ? "ComplexArray"
                           : "ConformantVaryingArray");
@@ -2999,21 +3056,6 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
         }
         else
         {
-            expr_t *iid;
-            expr_t *sx = get_size_is_expr(type, var->name);
-
-            if ((iid = get_attrp( var->attrs, ATTR_IIDIS )))
-            {
-                print_file( file, indent, "_StubMsg.MaxCount = (unsigned long) " );
-                write_expr( file, iid, 1, 1, NULL, NULL );
-                fprintf( file, ";\n\n" );
-            }
-            else if (sx)
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long) ");
-                write_expr(file, sx, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             if (var->type->ref->type == RPC_FC_IP)
                 print_phase_function(file, indent, "InterfacePointer", phase, var, start_offset);
             else

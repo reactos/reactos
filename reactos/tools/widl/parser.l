@@ -19,7 +19,7 @@
  */
 
 %option stack
-%option nounput noyy_top_state
+%option noinput nounput noyy_top_state
 %option 8bit never-interactive prefix="parser_"
 
 nl	\r?\n
