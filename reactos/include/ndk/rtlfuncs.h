@@ -2063,6 +2063,15 @@ RtlQueueWorkItem(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlSetIoCompletionCallback(
+    IN HANDLE FileHandle,
+    IN PRTL_OVERLAPPED_COMPLETION_ROUTINE Function,
+    IN ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlRegisterWait(
     IN PHANDLE phNewWaitObject,
     IN HANDLE hObject,

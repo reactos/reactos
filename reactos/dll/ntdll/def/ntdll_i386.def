@@ -869,7 +869,7 @@ RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
 RtlSetHeapInformation@16
 RtlSetInformationAcl@16
-;RtlSetIoCompletionCallback
+RtlSetIoCompletionCallback@12
 RtlSetLastWin32Error@4
 RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 ;RtlSetMemoryStreamSize

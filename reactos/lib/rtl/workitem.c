@@ -879,3 +879,16 @@ Cleanup:
 
     return Status;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlSetIoCompletionCallback(IN HANDLE hFileHandle,
+                           IN PRTL_OVERLAPPED_COMPLETION_ROUTINE Function,
+                           IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

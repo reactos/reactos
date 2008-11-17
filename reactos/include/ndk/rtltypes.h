@@ -406,6 +406,16 @@ typedef EXCEPTION_DISPOSITION
 );
 
 //
+// Callback for RtlSetIoCompletionCallback
+//
+typedef VOID
+(NTAPI *PRTL_OVERLAPPED_COMPLETION_ROUTINE)(
+    ULONG,
+    ULONG,
+    PVOID
+);
+
+//
 // RTL Library Allocation/Free Routines
 //
 typedef PVOID
