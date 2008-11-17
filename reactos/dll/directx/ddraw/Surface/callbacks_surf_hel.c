@@ -8,54 +8,59 @@
 *
 */
 #include "rosdraw.h"
+
 DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDestroySurface)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfBlt(LPDDHAL_BLTDATA lpBltData)
 {
-if (lpBltData->dwFlags & DDBLT_COLORFILL)
-{
-HBRUSH hbr = CreateSolidBrush(lpBltData->bltFX.dwFillColor );
-FillRect( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC,
-(CONST RECT *)&lpBltData->rDest,
-hbr);
-DeleteObject(hbr);
-lpBltData->ddRVal = DD_OK;
+    if (lpBltData->dwFlags & DDBLT_COLORFILL)
+    {
+        HBRUSH hbr = CreateSolidBrush(lpBltData->bltFX.dwFillColor );
+        FillRect( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC,
+                  (CONST RECT *)&lpBltData->rDest,
+                  hbr);
+        DeleteObject(hbr);
+        lpBltData->ddRVal = DD_OK;
+    }
+    else if (lpBltData->dwFlags & DDBLT_ROP)
+    {
+        BitBlt( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC,
+                lpBltData->rDest.top,
+                lpBltData->rDest.left,
+                lpBltData->rDest.right,
+                lpBltData->rDest.bottom,
+                (HDC)lpBltData->lpDDSrcSurface->lpSurfMore->lpDD_lcl->hDC,
+                lpBltData->rSrc.top,
+                lpBltData->rSrc.right,
+                lpBltData->bltFX.dwROP);
+                lpBltData->ddRVal = DD_OK;
+    }
+    return DDHAL_DRIVER_HANDLED;
 }
 
-else if (lpBltData->dwFlags & DDBLT_ROP)
-{
-
-BitBlt( (HDC)lpBltData->lpDDDestSurface->lpSurfMore->lpDD_lcl->hDC,
-lpBltData->rDest.top,
-lpBltData->rDest.left,
-lpBltData->rDest.right,
-lpBltData->rDest.bottom,
-(HDC)lpBltData->lpDDSrcSurface->lpSurfMore->lpDD_lcl->hDC,
-lpBltData->rSrc.top,
-lpBltData->rSrc.right,
-lpBltData->bltFX.dwROP);
-lpBltData->ddRVal = DD_OK;
-}
-return DDHAL_DRIVER_HANDLED;
-}
 DWORD CALLBACK HelDdSurfDestroySurface(LPDDHAL_DESTROYSURFACEDATA lpDestroySurfaceData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfFlip(LPDDHAL_FLIPDATA lpFlipData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfGetBltStatus(LPDDHAL_GETBLTSTATUSDATA lpGetBltStatusData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA lpGetFlipStatusData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 {
     HDC hDC;
@@ -102,7 +107,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
             else
             {
                 /* Extract the bitmap bits data from RGB bitmap */
-                retvalue = GetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_PAL_COLORS);
+                retvalue = GetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_RGB_COLORS);
             }
 
             /* Check see if we susccess it to get the memory pointer and fill it for the bitmap pixel data */
@@ -136,33 +141,83 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
 DWORD CALLBACK HelDdSurfreserved4(DWORD *lpPtr)
 {
-/*
-This api is not doucment by MS So I leave it
-as stub.
-*/
-DX_STUB;
+    /*
+    This api is not doucment by MS So I leave it
+    as stub.
+    */
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfSetClipList(LPDDHAL_SETCLIPLISTDATA lpSetClipListData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfSetColorKey(LPDDHAL_SETCOLORKEYDATA lpSetColorKeyData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA lpSetOverlayPositionData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfSetPalette(LPDDHAL_SETPALETTEDATA lpSetPaletteData)
 {
-DX_STUB;
+    DX_STUB;
 }
+
 DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
 {
-DX_STUB;
+    HDC hDC;
+    BITMAP bm;
+    PDWORD pixels = NULL;
+    HGDIOBJ hBmp;
+    BITMAPINFO bmi;
+    int retvalue = 0;
+
+    /* Get our hdc for the surface */
+    hDC = (HDC)lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
+
+    /* Get our bitmap handle from hdc, we need it if we want extract the Bitmap pixel data */
+    hBmp = GetCurrentObject(hDC, OBJ_BITMAP);
+
+    /* Get our bitmap information from hBmp, we need it if we want extract the Bitmap pixel data */
+    if (GetObject(hBmp, sizeof(BITMAP), &bm) )
+    {
+        /* Zero out all members in bmi so no junk data are left */
+        ZeroMemory(&bmi, sizeof(BITMAPINFO));
+
+        /* Setup BITMAPINFOHEADER for bmi header */
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = bm.bmWidth;
+        bmi.bmiHeader.biHeight = bm.bmHeight;
+        bmi.bmiHeader.biPlanes = bm.bmPlanes;
+        bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
+        bmi.bmiHeader.biCompression = BI_RGB;
+
+        /* Check if it the bitmap is palete or not */
+        if ( bm.bmBitsPixel <= 8)
+        {
+            /* Upload the bitmap bits data from palete bitmap */
+            retvalue = SetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_PAL_COLORS);
+        }
+        else
+        {
+            /* Upload the bitmap bits data from RGB bitmap */
+            retvalue = SetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_RGB_COLORS);
+        }
+    }
+    if (retvalue)
+    {
+        lpUnLockData->ddRVal = DD_OK;
+    }
+    return DDHAL_DRIVER_HANDLED;
 }
+
 DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLayData)
 {
-DX_STUB;
+    DX_STUB;
 }
+

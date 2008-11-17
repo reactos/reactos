@@ -303,10 +303,10 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
         mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HELDDSurface.Blt;
     }
 
-    /* check see if we got any of them */
     if (mDdBlt.Blt == NULL)
     {
-        return DDERR_GENERIC;
+        /* This api are unsupported */
+        return DDERR_UNSUPPORTED;
     }
 
     /* Prepare for draw, if we do not rest the DdResetVisrgn some graphice card will not draw on the screen */
@@ -412,8 +412,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
 
     DX_WINDBG_trace_res( (DWORD)ThisDest->lpLcl->lpGbl->wWidth, (DWORD)ThisDest->lpLcl->lpGbl->wHeight, (DWORD)ThisDest->lpLcl->lpGbl->lPitch, (DWORD) 0);
 
-
-     /* Zero out members in DDHAL_BLTDATA */
+     /* Zero out members in DDHAL_LOCKDATA */
     ZeroMemory(&mdLock, sizeof(DDHAL_LOCKDATA));
 
      /* Check if we got HAL support for this api */
@@ -427,6 +426,12 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
           DDHAL_SURFCB32_LOCK) == DDHAL_SURFCB32_LOCK)
     {
         mdLock.Lock = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HELDDSurface.Lock;
+    }
+
+    if (mdLock.Lock == NULL)
+    {
+        /* This api are unsupported */
+        return DDERR_UNSUPPORTED;
     }
 
     if (events != NULL)
@@ -505,30 +510,45 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
 
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT pRect)
 {
-	DDHAL_UNLOCKDATA mdUnLock;
+    DDHAL_UNLOCKDATA mdUnLock;
 
-	DX_WINDBG_trace();
+    DX_WINDBG_trace();
 
-	if (!This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UNLOCK)
-	{
-	   DX_STUB_str("DDERR_UNSUPPORTED");
-	   return DDERR_UNSUPPORTED;
-	}
+    /* Zero out members in DDHAL_UNLOCKDATA */
+    ZeroMemory(&mdUnLock, sizeof(DDHAL_UNLOCKDATA));
+
+     /* Check if we got HAL support for this api */
+    if (( This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
+        DDHAL_SURFCB32_UNLOCK) == DDHAL_SURFCB32_UNLOCK)
+    {
+        mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HALDDSurface.Unlock;
+    }
+    /* Check if we got HEL support for this api */
+    else if (( This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HELDDSurface.dwFlags &
+          DDHAL_SURFCB32_UNLOCK) == DDHAL_SURFCB32_UNLOCK)
+    {
+        mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HELDDSurface.Unlock;
+    }
+
+    if (mdUnLock.Unlock == NULL)
+    {
+        /* This api are unsupported */
+        return DDERR_UNSUPPORTED;
+    }
 
     mdUnLock.ddRVal = DDERR_NOTPALETTIZED;
     mdUnLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
-	mdUnLock.lpDDSurface =  This->lpLcl->lpSurfMore->slist[0];
-	mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Unlock;
+    mdUnLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
 
     if (!DdResetVisrgn( mdUnLock.lpDDSurface, NULL))
     {
-        DX_STUB_str("DDERR_UNSUPPORTED");
-		return DDERR_UNSUPPORTED;
+        DX_STUB_str("DdResetVisrgn fail");
+        //return DDERR_UNSUPPORTED; /* this can fail */
     }
 
     if (mdUnLock.Unlock(&mdUnLock)!= DDHAL_DRIVER_HANDLED)
     {
-		DX_STUB_str("unLock fail");
+        DX_STUB_str("unLock fail");
         return DDERR_UNSUPPORTED;
     }
 
