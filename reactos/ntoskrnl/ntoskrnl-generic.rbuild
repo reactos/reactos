@@ -36,6 +36,9 @@
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
+	<if property="ARCH" value="amd64">
+		<file>amd64stubs.c</file>
+	</if>
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -87,6 +90,19 @@
 				<file>ctxhelp.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file first="true">boot.S</file>
+				<file>cpu.c</file>
+				<file>ctxswitch.S</file>
+				<file>except.c</file>
+				<file>irql.c</file>
+				<file>kiinit.c</file>
+				<file>spinlock.c</file>
+				<file>thrdini.c</file>
+				<file>trap.S</file>
+			</directory>
+		</if>
 		<file>apc.c</file>
 		<file>balmgr.c</file>
 		<file>bug.c</file>
@@ -122,6 +138,11 @@
 	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>cmhardwr.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
 			<directory name="i386">
 				<file>cmhardwr.c</file>
 			</directory>
@@ -294,11 +315,18 @@
 				</directory>
 			</if>
 			<if property="KDBG" value="1">
-				<file>kdb.c</file>
-				<file>kdb_cli.c</file>
-				<file>kdb_expr.c</file>
+				<ifnot property="ARCH" value="amd64">
+					<file>kdb.c</file>
+					<file>kdb_cli.c</file>
+					<file>kdb_expr.c</file>
+				</ifnot>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
+				<if property="ARCH" value="amd64">
+					<directory name="amd64">
+						<file>kdb.c</file>
+					</directory>
+				</if>
 			</if>
 			<if property="DBG_OR_KDBG" value="true">
 				<file>kdb_symbols.c</file>
@@ -355,6 +383,11 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>pfault.c</file>
+				<file>page.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
 				<file>page.c</file>
 			</directory>
 		</if>

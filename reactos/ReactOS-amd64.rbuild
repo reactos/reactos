@@ -214,7 +214,7 @@
 	</directory>
 
 	<directory name="ntoskrnl">
-		<xi:include href="ntoskrnl/ntoskrnl-amd64hack.rbuild" />
+		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 
 	<!-- directory name="subsystems">
