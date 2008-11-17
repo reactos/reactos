@@ -535,10 +535,10 @@ MoreOptDlgProc(HWND hwndDlg,
 					(WPARAM)sizeof(SetupData.InstallDir)/sizeof(TCHAR),(LPARAM)SetupData.InstallDir);
 					
 					EndDialog(hwndDlg, IDOK);
-					break;
+					return TRUE;
 				case IDCANCEL:
 					EndDialog(hwndDlg, IDCANCEL);
-					break;
+					return TRUE;
 			}
 	}
 	return FALSE;
@@ -559,10 +559,10 @@ PartitionDlgProc(HWND hwndDlg,
 			{
 				case IDOK:
 					EndDialog(hwndDlg, IDOK);
-					break;
+					return TRUE;
 				case IDCANCEL:
 					EndDialog(hwndDlg, IDCANCEL);
-					break;
+					return TRUE;
 			}
 	}
 	return FALSE;
@@ -574,10 +574,12 @@ DriveDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
+#if 0
   HDEVINFO h;
   HWND hList;
   SP_DEVINFO_DATA DevInfoData;
   DWORD i;
+#endif
   switch (uMsg)
   {
 	  case WM_INITDIALOG:
@@ -596,6 +598,7 @@ DriveDlgProc(HWND hwndDlg,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
+#if 0
 		h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL,
 				DIGCF_PRESENT);
 		if (h != INVALID_HANDLE_VALUE)
@@ -627,6 +630,7 @@ DriveDlgProc(HWND hwndDlg,
 			}
 			SetupDiDestroyDeviceInfoList(h);
 		}
+#endif
 	  }
 	  break;
 	  case WM_COMMAND:
@@ -634,14 +638,15 @@ DriveDlgProc(HWND hwndDlg,
 		switch(LOWORD(wParam))
 		{
 			case IDC_PARTMOREOPTS:
-				DialogBox(hInstance,MAKEINTRESOURCE(IDD_BOOTOPTIONS),hwndDlg,MoreOptDlgProc);
+				DialogBox(hInstance,MAKEINTRESOURCE(IDD_BOOTOPTIONS),hwndDlg,(DLGPROC)MoreOptDlgProc);
 			break;
 			case IDC_PARTCREATE:
-				DialogBox(hInstance,MAKEINTRESOURCE(IDD_PARTITION),hwndDlg,PartitionDlgProc);
+				DialogBox(hInstance,MAKEINTRESOURCE(IDD_PARTITION),hwndDlg,(DLGPROC)PartitionDlgProc);
 			break;
 			case IDC_PARTDELETE:
 			break;
 		}
+		break;
 
 	  }
 	  case WM_NOTIFY:
