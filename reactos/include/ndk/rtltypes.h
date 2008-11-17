@@ -406,16 +406,6 @@ typedef EXCEPTION_DISPOSITION
 );
 
 //
-// Callback for RtlSetIoCompletionCallback
-//
-typedef VOID
-(NTAPI *PRTL_OVERLAPPED_COMPLETION_ROUTINE)(
-    ULONG,
-    ULONG,
-    PVOID
-);
-
-//
 // RTL Library Allocation/Free Routines
 //
 typedef PVOID
@@ -440,6 +430,16 @@ extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 
 #endif
+
+//
+// Callback for RtlSetIoCompletionCallback
+//
+typedef VOID
+(NTAPI *PRTL_OVERLAPPED_COMPLETION_ROUTINE)(
+    ULONG,
+    ULONG,
+    PVOID
+);
 
 //
 // Callback for RTL Heap Enumeration
