@@ -225,9 +225,9 @@ StartDlgProc(HWND hwndDlg,
 			break;
 		  }
 	  break;
+	  }
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -355,10 +355,10 @@ LangSelDlgProc(HWND hwndDlg,
 		      default:
 			break;
 		  }
+	  }
 	  break;
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -411,10 +411,10 @@ TypeDlgProc(HWND hwndDlg,
 		      default:
 			break;
 		  }
+	  }
 	  break;
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -505,10 +505,10 @@ DeviceDlgProc(HWND hwndDlg,
 	      default:
 			break;
 		  }
+	  }
 	  break;
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -665,9 +665,9 @@ DriveDlgProc(HWND hwndDlg,
 			break;
 		  }
 	  break;
+	  }
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -701,7 +701,7 @@ SummaryDlgProc(HWND hwndDlg,
                              WM_SETFONT,
                              (WPARAM)hTitleFont,
                              (LPARAM)TRUE);*/
-}
+          }
 	  break;
 	  case WM_NOTIFY:
 	  {
@@ -716,10 +716,9 @@ SummaryDlgProc(HWND hwndDlg,
 			break;
 		  }
 	  break;
+	  }
 	  default:
 	  	break;
-	  }
-
   }
   return FALSE;
 }
@@ -768,10 +767,10 @@ ProcessDlgProc(HWND hwndDlg,
 		      default:
 			break;
 		  }
+	  }
 	  break;
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
@@ -839,9 +838,9 @@ RestartDlgProc(HWND hwndDlg,
 			break;
 		  }
 	  break;
+	  }
 	  default:
 	  	break;
-	  }
 
   }
   return FALSE;
