@@ -7,9 +7,6 @@
 	<directory name="alive">
 		<xi:include href="alive/alive.rbuild" />
 	</directory>
-	<directory name="alphablend">
-		<xi:include href="alphablend/alphablend.rbuild" />
-	</directory>
 	<directory name="apc">
 		<xi:include href="apc/apc.rbuild" />
 	</directory>
@@ -24,9 +21,6 @@
 	</directory>
 	<directory name="bench">
 		<xi:include href="bench/bench.rbuild" />
-	</directory>
-	<directory name="bitblt">
-		<xi:include href="bitblt/bitblt.rbuild" />
 	</directory>
 	<directory name="button">
 		<xi:include href="button/button.rbuild" />
@@ -54,9 +48,6 @@
 	</directory>
 	<directory name="create-links">
 		<xi:include href="create-links/create-links.rbuild" />
-	</directory>
-	<directory name="dibtest">
-		<xi:include href="dibtest/dibtest.rbuild" />
 	</directory>
 	<directory name="dirdlg">
 		<xi:include href="dirdlg/dirdlg.rbuild" />
@@ -114,9 +105,6 @@
 	</directory>
 	<directory name="hivetest">
 		<xi:include href="hivetest/hivetest.rbuild" />
-	</directory>
-	<directory name="icontest">
-		<xi:include href="icontest/icontest.rbuild" />
 	</directory>
 	<directory name="Imagelistviewer">
 		<xi:include href="Imagelistviewer/imagelistviewer.rbuild" />
@@ -177,12 +165,6 @@
 
 <!-- fixme: oskittcp -->
 
-	<directory name="palbitblt">
-		<xi:include href="palbitblt/palbitblt.rbuild" />
-	</directory>
-	<directory name="patblt">
-		<xi:include href="patblt/patblt.rbuild" />
-	</directory>
 	<directory name="polytest">
 		<xi:include href="polytest/polytest.rbuild" />
 	</directory>
@@ -227,9 +209,6 @@
 	</directory>
 	<directory name="statst2">
 		<xi:include href="statst2/statst2.rbuild" />
-	</directory>
-	<directory name="stretchblt">
-		<xi:include href="stretchblt/stretchblt.rbuild" />
 	</directory>
 	<directory name="subclass">
 		<xi:include href="subclass/subclass.rbuild" />
