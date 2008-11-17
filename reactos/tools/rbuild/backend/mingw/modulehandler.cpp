@@ -1915,8 +1915,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	{
 		if ( module.cplusplus )
 		{
-			// HACK: use host headers when building C++
-			globalCflags += " $(HOST_CPPFLAGS)";
+			globalCflags += " $(TARGET_CPPFLAGS)";
 		}
 		else
 			globalCflags += " -nostdinc";
@@ -2684,8 +2683,8 @@ MingwAddImplicitLibraries( Module &module )
 	{
 		if ( module.IsDLL () )
 		{
-			//pLibrary = new Library ( module, "__mingw_dllmain" );
-			//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+			pLibrary = new Library ( module, "mingw_dllmain" );
+			module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
 		}
 		else
 		{
