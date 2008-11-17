@@ -403,14 +403,31 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
 
 
 HRESULT WINAPI
-Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT prect,
+Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
                         LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE events)
 {
     DDHAL_LOCKDATA mdLock;
 
     DX_WINDBG_trace();
 
-    DX_WINDBG_trace_res( (DWORD)This->lpLcl->lpGbl->wWidth, (DWORD)This->lpLcl->lpGbl->wHeight, (DWORD)This->lpLcl->lpGbl->lPitch, (DWORD) 0);
+    DX_WINDBG_trace_res( (DWORD)ThisDest->lpLcl->lpGbl->wWidth, (DWORD)ThisDest->lpLcl->lpGbl->wHeight, (DWORD)ThisDest->lpLcl->lpGbl->lPitch, (DWORD) 0);
+
+
+     /* Zero out members in DDHAL_BLTDATA */
+    ZeroMemory(&mdLock, sizeof(DDHAL_LOCKDATA));
+
+     /* Check if we got HAL support for this api */
+    if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
+        DDHAL_SURFCB32_LOCK) == DDHAL_SURFCB32_LOCK)
+    {
+        mdLock.Lock = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HALDDSurface.Lock;
+    }
+    /* Check if we got HEL support for this api */
+    else if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HELDDSurface.dwFlags &
+          DDHAL_SURFCB32_LOCK) == DDHAL_SURFCB32_LOCK)
+    {
+        mdLock.Lock = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HELDDSurface.Lock;
+    }
 
     if (events != NULL)
     {
@@ -431,20 +448,18 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT prect,
 
     //FIXME check if it primary or not and use primary or pixelformat data, at moment it is hardcode to primary
 
-    mdLock.ddRVal = DDERR_NOTPALETTIZED;
-    mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Lock;
+    mdLock.ddRVal = DDERR_CANTLOCKSURFACE;
     mdLock.dwFlags = flags;
-    mdLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
-    mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+    mdLock.lpDDSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
+    mdLock.lpDD = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
     mdLock.lpSurfData = NULL;
 
 
-    if (!DdResetVisrgn(This->lpLcl->lpSurfMore->slist[0], NULL))
+    if (!DdResetVisrgn(ThisDest->lpLcl->lpSurfMore->slist[0], NULL))
     {
       DX_STUB_str("Here DdResetVisrgn lock");
       return DDERR_UNSUPPORTED;
     }
-
 
     if (mdLock.Lock(&mdLock)!= DDHAL_DRIVER_HANDLED)
     {
@@ -476,11 +491,11 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT prect,
 
         pDDSD->lpSurface = (LPVOID)  mdLock.lpSurfData;
 
-        pDDSD->dwHeight = This->lpLcl->lpGbl->wHeight;
-        pDDSD->dwWidth = This->lpLcl->lpGbl->wWidth;
+        pDDSD->dwHeight = ThisDest->lpLcl->lpGbl->wHeight;
+        pDDSD->dwWidth = ThisDest->lpLcl->lpGbl->wWidth;
 
-        pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lpDD->lpModeInfo->dwBPP;// .lpModeInfo->dwBPP; //This->lpLcl->lpGbl->lPitch/ 8;
-        pDDSD->lPitch = This->lpLcl->lpGbl->lPitch;
+        pDDSD->ddpfPixelFormat.dwRGBBitCount = ThisDest->lpLcl->lpGbl->lpDD->lpModeInfo->dwBPP;// .lpModeInfo->dwBPP; //This->lpLcl->lpGbl->lPitch/ 8;
+        pDDSD->lPitch = ThisDest->lpLcl->lpGbl->lPitch;
         pDDSD->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
     }
 
