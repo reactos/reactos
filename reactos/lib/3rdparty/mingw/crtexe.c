@@ -1,5 +1,5 @@
 #undef CRTDLL
-#define _DLL
+//#define _DLL
 
 #define SPECIAL_CRTEXE
 
@@ -31,7 +31,7 @@ extern void _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
 
-_CRTIMP void __setusermatherr(int (__cdecl *)(struct _exception *));
+__declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
 
 extern int *_imp___fmode;
 extern int *_imp___commode;
@@ -68,9 +68,9 @@ static char **argv;
 static char **envp;
 #endif
 
-static int argret=0;
+static int argret;
 static int mainret=0;
-static int managedapp=0;
+static int managedapp;
 static int has_cctor = 0;
 static _startupinfo startinfo;
 
@@ -102,8 +102,10 @@ pre_c_init (void)
   *_imp___fmode = _fmode;
   *_imp___commode = _commode;
 
-#ifndef WPRFLAG
-  _dowildcard = 1;
+#ifdef WPRFLAG
+  _wsetargv();
+#else
+  _setargv();
 #endif
 
   if (! __defaultmatherr)
@@ -119,15 +121,15 @@ static void __cdecl
 pre_cpp_init (void)
 {
   startinfo.newmode = _newmode;
+
 #ifdef WPRFLAG
   argret = __wgetmainargs(&argc,&argv,&envp,_dowildcard,&startinfo);
 #else
   argret = __getmainargs(&argc,&argv,&envp,_dowildcard,&startinfo);
 #endif
-
 }
 
-static int __mingw_CRTStartup (void);
+static int __tmainCRTStartup (void);
 
 #ifdef WPRFLAG
 int wWinMainCRTStartup (void)
@@ -136,8 +138,8 @@ int WinMainCRTStartup (void)
 #endif
 {
   mingw_app_type = 1;
-  //__security_init_cookie ();
-  return __mingw_CRTStartup ();
+  __security_init_cookie ();
+  return __tmainCRTStartup ();
 }
 
 #ifdef WPRFLAG
@@ -147,26 +149,25 @@ int mainCRTStartup (void)
 #endif
 {
   mingw_app_type = 0;
-  //__security_init_cookie ();
-  return __mingw_CRTStartup ();
+  __security_init_cookie ();
+  return __tmainCRTStartup ();
 }
 
 
 __declspec(noinline) int
-__mingw_CRTStartup (void)
+__tmainCRTStartup (void)
 {
   _TCHAR *lpszCommandLine = NULL;
   STARTUPINFO StartupInfo;
   BOOL inDoubleQuote = FALSE;
   memset (&StartupInfo, 0, sizeof (STARTUPINFO));
-  int nested = FALSE;
-
+  
   if (mingw_app_type)
     GetStartupInfo (&StartupInfo);
   {
-#if 0 //not ready for this yet
     void *lock_free = NULL;
     void *fiberid = ((PNT_TIB)NtCurrentTeb())->StackBase;
+    int nested = FALSE;
     while((lock_free = InterlockedCompareExchangePointer ((volatile PVOID *) &__native_startup_lock,
 							  fiberid, 0)) != 0)
       {
@@ -177,7 +178,6 @@ __mingw_CRTStartup (void)
 	  }
 	Sleep(1000);
       }
-#endif
     if (__native_startup_state == __initializing)
       {
 	_amsg_exit (31);
@@ -404,7 +404,7 @@ _gnu_exception_handler (EXCEPTION_POINTERS * exception_data)
 static LONG __mingw_vex(EXCEPTION_POINTERS * exception_data)
 {
   /* TODO this is not chainablem, therefore need rewrite. Disabled the ill code. */
-
+  #if 0
   #ifdef _WIN64
   __asm__ __volatile__ (
       "movq %gs:0,%rax" "\n\t"
@@ -421,6 +421,7 @@ static LONG __mingw_vex(EXCEPTION_POINTERS * exception_data)
       "jmp *4(%eax)\n\r"
       "l1:\n\t"
       "nop\n");
+#endif
 #endif
   return _gnu_exception_handler(exception_data);
 }
