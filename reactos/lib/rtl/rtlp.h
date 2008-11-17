@@ -28,8 +28,8 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 VOID
 NTAPI
-RtlpGetStackLimits(PULONG_PTR StackBase,
-                   PULONG_PTR StackLimit);
+RtlpGetStackLimits(PULONG_PTR LowLimit,
+                   PULONG_PTR HighLimit);
 
 PEXCEPTION_REGISTRATION_RECORD
 NTAPI
