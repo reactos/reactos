@@ -995,7 +995,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
   HBITMAP Bmp;
 
   if (!hDc)
-  {
+  {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
      hDc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
      if (!hDc)
      {
