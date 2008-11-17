@@ -342,18 +342,29 @@ AllocateUserPhysicalPages(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-BindIoCompletionCallback (
-    HANDLE FileHandle,
-    LPOVERLAPPED_COMPLETION_ROUTINE Function,
-    ULONG Flags
-    )
+BindIoCompletionCallback(HANDLE FileHandle,
+                         LPOVERLAPPED_COMPLETION_ROUTINE Function,
+                         ULONG Flags)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status = 0;
+
+    DPRINT("(%p, %p, %d)\n", FileHandle, Function, Flags);
+
+    Status = RtlSetIoCompletionCallback(FileHandle,
+                                        (PRTL_OVERLAPPED_COMPLETION_ROUTINE) Function,
+                                        Flags);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -562,20 +573,45 @@ MapUserPhysicalPagesScatter(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-ReadFileScatter(
-    HANDLE hFile,
-    FILE_SEGMENT_ELEMENT aSegmentArray[],
-    DWORD nNumberOfBytesToRead,
-    LPDWORD lpReserved,
-    LPOVERLAPPED lpOverlapped
-    )
+ReadFileScatter(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToRead,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
 {
-    STUB;
-    return 0;
+    PIO_STATUS_BLOCK pIOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("(%p %p %u %p)\n", hFile, aSegmentArray, nNumberOfBytesToRead, lpOverlapped);
+
+    Offset.LowPart  = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    pIOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    pIOStatus->Status = STATUS_PENDING;
+    pIOStatus->Information = 0;
+
+    Status = NtReadFileScatter(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               pIOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToRead,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -678,20 +714,45 @@ SetThreadExecutionState(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-WriteFileGather(
-    HANDLE hFile,
-    FILE_SEGMENT_ELEMENT aSegmentArray[],
-    DWORD nNumberOfBytesToWrite,
-    LPDWORD lpReserved,
-    LPOVERLAPPED lpOverlapped
-    )
+WriteFileGather(HANDLE hFile,
+                FILE_SEGMENT_ELEMENT aSegmentArray[],
+                DWORD nNumberOfBytesToWrite,
+                LPDWORD lpReserved,
+                LPOVERLAPPED lpOverlapped)
 {
-    STUB;
-    return 0;
+    PIO_STATUS_BLOCK IOStatus;
+    LARGE_INTEGER Offset;
+    NTSTATUS Status;
+
+    DPRINT("%p %p %u %p\n", hFile, aSegmentArray, nNumberOfBytesToWrite, lpOverlapped);
+
+    Offset.LowPart = lpOverlapped->Offset;
+    Offset.HighPart = lpOverlapped->OffsetHigh;
+    IOStatus = (PIO_STATUS_BLOCK) lpOverlapped;
+    IOStatus->Status = STATUS_PENDING;
+    IOStatus->Information = 0;
+
+    Status = NtWriteFileGather(hFile,
+                               NULL,
+                               NULL,
+                               NULL,
+                               IOStatus,
+                               aSegmentArray,
+                               nNumberOfBytesToWrite,
+                               &Offset,
+                               NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -705,39 +766,6 @@ DeleteVolumeMountPointW(
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DnsHostnameToComputerNameW (
-	LPCWSTR hostname,
-    LPWSTR computername,
-	LPDWORD size
-    )
-{
-    DWORD len;
-
-    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
-
-    if (!hostname || !size) return FALSE;
-    len = lstrlenW(hostname);
-
-    if (len > MAX_COMPUTERNAME_LENGTH)
-        len = MAX_COMPUTERNAME_LENGTH;
-
-    if (*size < len)
-    {
-        *size = len;
-        return FALSE;
-    }
-    if (!computername) return FALSE;
-
-    memcpy( computername, hostname, len * sizeof(WCHAR) );
-    computername[len + 1] = 0;
-    return TRUE;
 }
 
 /*
@@ -919,21 +947,6 @@ DeleteVolumeMountPointA(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-DnsHostnameToComputerNameA (
-    LPCSTR Hostname,
-    LPSTR ComputerName,
-    LPDWORD nSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 HANDLE
 STDCALL
 FindFirstVolumeMountPointA(
@@ -947,23 +960,22 @@ FindFirstVolumeMountPointA(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-FindNextVolumeA(
-	HANDLE handle,
-	LPSTR volume,
-	DWORD len
-    )
+FindNextVolumeA(HANDLE handle,
+                LPSTR volume,
+                DWORD len)
 {
-    WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    WCHAR *buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     BOOL ret;
 
     if ((ret = FindNextVolumeW( handle, buffer, len )))
     {
         if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL )) ret = FALSE;
     }
+
     HeapFree( GetProcessHeap(), 0, buffer );
     return ret;
 }

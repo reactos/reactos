@@ -461,4 +461,73 @@ SetComputerNameExW (
   }
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+DnsHostnameToComputerNameA(LPCSTR Hostname,
+                           LPSTR ComputerName,
+                           LPDWORD nSize)
+{
+    DWORD len;
+
+    DPRINT("(%s, %p, %p)\n", Hostname, ComputerName, nSize);
+
+    if (!Hostname || !nSize)
+        return FALSE;
+
+    len = lstrlenA(Hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*nSize < len)
+    {
+        *nSize = len;
+        return FALSE;
+    }
+
+    if (!ComputerName) return FALSE;
+
+    memcpy( ComputerName, Hostname, len );
+    ComputerName[len + 1] = 0;
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+DnsHostnameToComputerNameW (
+	LPCWSTR hostname,
+    LPWSTR computername,
+	LPDWORD size
+    )
+{
+    DWORD len;
+
+    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
+
+    if (!hostname || !size) return FALSE;
+    len = lstrlenW(hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*size < len)
+    {
+        *size = len;
+        return FALSE;
+    }
+    if (!computername) return FALSE;
+
+    memcpy( computername, hostname, len * sizeof(WCHAR) );
+    computername[len + 1] = 0;
+    return TRUE;
+}
+
 /* EOF */
