@@ -372,6 +372,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    PDEVICE_OBJECT DeviceToMount;
+   PVPB Vpb;
    UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
    UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
    ULONG HashTableSize;
@@ -389,6 +390,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
 
    DeviceToMount = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
+   Vpb = IrpContext->Stack->Parameters.MountVolume.Vpb;
 
    Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS, &FatInfo);
    if (!NT_SUCCESS(Status))
@@ -438,7 +440,9 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DeviceExt->HashTableSize = HashTableSize;
 
    /* use same vpb as device disk */
-   DeviceObject->Vpb = DeviceToMount->Vpb;
+   DeviceObject->Vpb = Vpb;
+   DeviceToMount->Vpb = Vpb;
+
    Status = VfatMountDevice(DeviceExt, DeviceToMount);
    if (!NT_SUCCESS(Status))
    {
