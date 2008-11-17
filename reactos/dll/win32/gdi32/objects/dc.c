@@ -507,7 +507,7 @@ GetDeviceCaps(HDC hDC,
   {
      // HAX!!!!
      // Due to winlogon process/thread mapping issues we have this hax!
-     //
+     // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
      return NtGdiGetDeviceCaps(hDC,i);
 
      if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))

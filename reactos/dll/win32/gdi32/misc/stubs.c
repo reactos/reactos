@@ -24,31 +24,6 @@
 /*
  * @unimplemented
  */
-int
-STDCALL
-StretchDIBits(HDC hdc,
-              int XDest,
-              int YDest,
-              int nDestWidth,
-              int nDestHeight,
-              int XSrc,
-              int YSrc,
-              int nSrcWidth,
-              int nSrcHeight,
-              CONST VOID *lpBits,
-              CONST BITMAPINFO *lpBitsInfo,
-              UINT iUsage,
-              DWORD dwRop)
-
-{
-    /* FIXME share memory */
-    return NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
-                              nSrcWidth, nSrcHeight, (LPBYTE)lpBits, (LPBITMAPINFO)lpBitsInfo, (DWORD)iUsage, dwRop, 0, 0, NULL);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 PtInRegion(IN HRGN hrgn,

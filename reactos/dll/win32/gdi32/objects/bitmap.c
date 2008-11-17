@@ -315,7 +315,7 @@ CreateDIBitmap( HDC hDC,
                                     0);
 }
 
-#if 0
+#if 0 // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
 /*
  * @implemented
  */
@@ -461,4 +461,29 @@ SetDIBitsToDevice(
 }
 
 
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+StretchDIBits(HDC hdc,
+              int XDest,
+              int YDest,
+              int nDestWidth,
+              int nDestHeight,
+              int XSrc,
+              int YSrc,
+              int nSrcWidth,
+              int nSrcHeight,
+              CONST VOID *lpBits,
+              CONST BITMAPINFO *lpBitsInfo,
+              UINT iUsage,
+              DWORD dwRop)
+
+{
+   DPRINT("StretchDIBits %x : %x\n", lpBits, lpBitsInfo);
+    /* FIXME share memory */
+    return NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
+                              nSrcWidth, nSrcHeight, (LPBYTE)lpBits, (LPBITMAPINFO)lpBitsInfo, (DWORD)iUsage, dwRop, 0, 0, NULL);
+}
 
