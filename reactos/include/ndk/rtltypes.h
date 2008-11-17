@@ -432,16 +432,6 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif
 
 //
-// Callback for RtlSetIoCompletionCallback
-//
-typedef VOID
-(NTAPI *PRTL_OVERLAPPED_COMPLETION_ROUTINE)(
-    ULONG,
-    ULONG,
-    PVOID
-);
-
-//
 // Callback for RTL Heap Enumeration
 //
 typedef NTSTATUS

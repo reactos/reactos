@@ -885,8 +885,8 @@ Cleanup:
  */
 NTSTATUS
 NTAPI
-RtlSetIoCompletionCallback(IN HANDLE hFileHandle,
-                           IN PRTL_OVERLAPPED_COMPLETION_ROUTINE Function,
+RtlSetIoCompletionCallback(IN HANDLE FileHandle,
+                           IN PIO_APC_ROUTINE Callback,
                            IN ULONG Flags)
 {
     UNIMPLEMENTED;

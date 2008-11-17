@@ -355,7 +355,7 @@ BindIoCompletionCallback(HANDLE FileHandle,
     DPRINT("(%p, %p, %d)\n", FileHandle, Function, Flags);
 
     Status = RtlSetIoCompletionCallback(FileHandle,
-                                        (PRTL_OVERLAPPED_COMPLETION_ROUTINE) Function,
+                                        (PIO_APC_ROUTINE)Function,
                                         Flags);
 
     if (!NT_SUCCESS(Status))

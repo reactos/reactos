@@ -2065,7 +2065,7 @@ NTSTATUS
 NTAPI
 RtlSetIoCompletionCallback(
     IN HANDLE FileHandle,
-    IN PRTL_OVERLAPPED_COMPLETION_ROUTINE Function,
+    IN PIO_APC_ROUTINE Callback,
     IN ULONG Flags
 );
 
