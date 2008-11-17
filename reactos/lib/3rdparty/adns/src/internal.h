@@ -31,7 +31,11 @@
 #define ADNS_INTERNAL_H_INCLUDED
 
 #include "config.h"
+
+#ifndef ADNS_JGAA_WIN32
 typedef unsigned char byte;
+#endif
+
 
 #include <stdarg.h>
 #include <assert.h>
