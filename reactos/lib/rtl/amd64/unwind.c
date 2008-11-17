@@ -1,7 +1,8 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Exception related functions
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -132,7 +133,6 @@ RtlLookupFunctionEntry(
     /* Do a binary search */
     IndexLo = 0;
     IndexHi = TableLength;
-
     while (IndexHi > IndexLo)
     {
         IndexMid = (IndexLo + IndexHi) / 2;
@@ -293,7 +293,7 @@ RtlVirtualUnwind(
 
     /* Unwind is finished, pop new Rip from Stack */
     Context->Rip = *(DWORD64*)Context->Rsp;
-    Context->Rsp += 8;
+    Context->Rsp += sizeof(DWORD64);
 
     return 0;
 }
@@ -307,6 +307,18 @@ RtlUnwindEx(
    IN PVOID ReturnValue,
    OUT PCONTEXT OriginalContext,
    IN PUNWIND_HISTORY_TABLE HistoryTable)
+{
+    UNIMPLEMENTED;
+    return;
+}
+
+VOID
+NTAPI
+RtlUnwind(
+  IN PVOID TargetFrame,
+  IN PVOID TargetIp,
+  IN PEXCEPTION_RECORD ExceptionRecord,
+  IN PVOID ReturnValue)
 {
     UNIMPLEMENTED;
     return;
@@ -345,9 +357,9 @@ DPRINT1("RtlWalkFrameChain called\n");
         /* Is this a leaf function? */
         if (!FunctionEntry)
         {
-            Context.Rip = *(ULONG64*)Context.Rsp;
-            Context.Rsp += sizeof(ULONG64);
-            DPRINT1("leaf funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
+            Context.Rip = *(DWORD64*)Context.Rsp;
+            Context.Rsp += sizeof(DWORD64);
+            DPRINT("leaf funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
         }
         else
         {
@@ -359,7 +371,7 @@ DPRINT1("RtlWalkFrameChain called\n");
                              &HandlerData,
                              &EstablisherFrame,
                              NULL);
-            DPRINT1("normal funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
+            DPRINT("normal funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
         }
 
         ControlPc = Context.Rip;
