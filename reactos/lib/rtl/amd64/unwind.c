@@ -332,7 +332,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 {
     CONTEXT Context;
     ULONG64 ControlPc, ImageBase, EstablisherFrame;
-    ULONG64 StackBegin, StackEnd;
+    ULONG64 StackLow, StackHigh;
     PVOID HandlerData;
     INT i;
     PRUNTIME_FUNCTION FunctionEntry;
@@ -341,7 +341,7 @@ DPRINT1("RtlWalkFrameChain called\n");
 
     ControlPc = Context.Rip;
 
-    RtlpGetStackLimits(&StackBegin, &StackEnd);
+    RtlpGetStackLimits(&StackLow, &StackHigh);
 
     /* Check if we want the user-mode stack frame */
     if (Flags == 1)
@@ -384,3 +384,29 @@ DPRINT1("RtlWalkFrameChain called\n");
     return i;
 }
 
+// CHEKCME: return PVOID?
+// http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Debug/RtlGetCallersAddress.html
+VOID
+NTAPI
+RtlGetCallersAddress(
+    OUT PVOID *CallersAddress,
+    OUT PVOID *CallersCaller )
+{
+    PVOID Callers[4];
+    ULONG Number;
+
+    /* Get callers:
+     * RtlWalkFrameChain -> RtlGetCallersAddress -> x -> y */
+    Number = RtlWalkFrameChain(Callers, 4, 0);
+
+    if (CallersAddress)
+    {
+        *CallersAddress = (Number >= 3) ? Callers[2] : NULL;
+    }
+    if (CallersCaller)
+    {
+        *CallersCaller = (Number == 4) ? Callers[3] : NULL;
+    }
+
+    return;
+}
