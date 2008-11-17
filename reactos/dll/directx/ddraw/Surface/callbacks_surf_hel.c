@@ -67,7 +67,6 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
     /* ToDo tell ddraw internal this surface are locked */
     /* ToDo add support for dwFlags */
-    /* ToDo fill in LPDDHALSURFCB_LOCK Lock ? */
 
     /* Get our hdc for the surface */
     hDC = (HDC)lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
