@@ -674,6 +674,57 @@ DriveDlgProc(HWND hwndDlg,
 }
 
 static INT_PTR CALLBACK
+SummaryDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+  switch (uMsg)
+  {
+	  case WM_INITDIALOG:
+	  {
+		HWND hwndControl;
+		DWORD dwStyle;
+
+          	hwndControl = GetParent(hwndDlg);
+
+          	dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
+	        SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+		
+		hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+		ShowWindow (hwndControl, SW_HIDE);
+		EnableWindow (hwndControl, FALSE);
+
+		/* Set title font */
+		/*SendDlgItemMessage(hwndDlg,
+                             IDC_STARTTITLE,
+                             WM_SETFONT,
+                             (WPARAM)hTitleFont,
+                             (LPARAM)TRUE);*/
+}
+	  break;
+	  case WM_NOTIFY:
+	  {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+		  switch (lpnm->code)
+		  {		
+		      case PSN_SETACTIVE: 
+			PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT  | PSWIZB_BACK);
+			break;
+		      default:
+			break;
+		  }
+	  break;
+	  default:
+	  	break;
+	  }
+
+  }
+  return FALSE;
+}
+
+static INT_PTR CALLBACK
 ProcessDlgProc(HWND hwndDlg,
                UINT uMsg,
                WPARAM wParam,
@@ -995,7 +1046,7 @@ WinMain(HINSTANCE hInst,
 	int nCmdShow)
 {
   PROPSHEETHEADER psh;
-  HPROPSHEETPAGE ahpsp[7];
+  HPROPSHEETPAGE ahpsp[8];
   PROPSHEETPAGE psp = {0};
   UINT nPages = 0;
   hInstance = hInst;
@@ -1052,7 +1103,7 @@ WinMain(HINSTANCE hInst,
   psp.pszTemplate = MAKEINTRESOURCE(IDD_DEVICEPAGE);
   ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-  /* Create install device settings page / boot method / install directory*/
+  /* Create install device settings page / boot method / install directory */
   psp.dwSize = sizeof(PROPSHEETPAGE);
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_DRIVETITLE);
@@ -1061,6 +1112,17 @@ WinMain(HINSTANCE hInst,
   psp.lParam = 0;
   psp.pfnDlgProc = DriveDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_DRIVEPAGE);
+  ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+  /* Create summary page */
+  psp.dwSize = sizeof(PROPSHEETPAGE);
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SUMMARYTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUMMARYSUBTITLE);
+  psp.hInstance = hInst;
+  psp.lParam = 0;
+  psp.pfnDlgProc = SummaryDlgProc;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_SUMMARYPAGE);
   ahpsp[nPages++] = CreatePropertySheetPage(&psp);
   
   }
