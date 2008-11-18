@@ -1013,7 +1013,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
   HBITMAP Bmp;
   UINT bpp;
 
-  if (!hDc)
+  if (!hDc) // CreateBitmap
   {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
      hDc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
      if (!hDc)
@@ -1029,13 +1029,13 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return NULL;
      }
-     bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);     
+     bpp = 1;
      Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
 
      DC_UnlockDc(Dc);
      NtGdiDeleteObjectApp(hDc);
   }
-  else
+  else // CreateCompatibleBitmap
   {
      Dc = DC_LockDc(hDc);
      if (!Dc)
@@ -1050,8 +1050,29 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
      if (pbmi)
         bpp = pbmi->bmiHeader.biBitCount;
      else
-        bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);
-
+     {
+        if (Dc->DC_Type != DC_TYPE_MEMORY )
+           bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);
+        else
+        {
+           DIBSECTION dibs;
+           INT Count;           
+           BITMAPOBJ *BitmapObject = BITMAPOBJ_LockBitmap(Dc->w.hBitmap);
+           Count = BITMAP_GetObject(BitmapObject, sizeof(dibs), &dibs);
+           if (!Count)
+              bpp = 1;
+           else
+           {
+              if (Count == sizeof(BITMAP))
+              /* A device-dependent bitmap is selected in the DC */
+                 bpp = dibs.dsBm.bmBitsPixel;
+              else
+              /* A DIB section is selected in the DC */
+                 bpp = dibs.dsBmih.biBitCount;
+           }
+           BITMAPOBJ_UnlockBitmap(BitmapObject);           
+        }
+     }
      Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
      DC_UnlockDc(Dc);
   }
