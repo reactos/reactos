@@ -1085,7 +1085,7 @@ typedef struct _ETHREAD
 #endif
     PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
     LIST_ENTRY IrpList;
-    ULONG TopLevelIrp;
+    ULONG_PTR TopLevelIrp;
     PDEVICE_OBJECT DeviceToVerify;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PPSP_RATE_APC RateControlApc;
